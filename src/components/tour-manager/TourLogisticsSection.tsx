@@ -97,81 +97,98 @@ const CollapsibleDateGroup = ({
     <Collapsible defaultOpen={defaultOpen}>
       <CollapsibleTrigger className="flex items-center gap-2 w-full group cursor-pointer">
         <div className={cn(
-          "px-3 py-1 rounded-md text-sm font-semibold",
+          "px-2.5 py-1 rounded-md text-xs sm:text-sm font-semibold shrink-0",
           muted ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"
         )}>
           {format(parseISO(date), 'EEE, MMM d')}
         </div>
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-muted-foreground">{events.length} events</span>
-        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+        <span className="text-xs text-muted-foreground shrink-0">{events.length}</span>
+        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90 shrink-0" />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className={cn("relative ml-4 mt-3", muted && "opacity-60")}>
-          <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
+        <div className={cn("relative mt-2 sm:ml-4 sm:mt-3", muted && "opacity-60")}>
+          {/* Timeline line - hidden on mobile for space */}
+          <div className="hidden sm:block absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
           <div className="space-y-2">
             {events.map(event => {
               const catConfig = getCategoryConfig(event.event_category);
               const CatIcon = catConfig.icon;
               const targetLabel = TARGET_GROUPS.find(g => g.value === event.target_group)?.label || 'Everyone';
               return (
-                <div key={event.id} className="relative flex gap-3 pl-8">
+                <div key={event.id} className="relative sm:pl-8">
+                  {/* Category dot - positioned differently on mobile */}
                   <div className={cn(
-                    "absolute left-1 top-3 w-5 h-5 rounded-full flex items-center justify-center",
+                    "hidden sm:flex absolute left-1 top-3 w-5 h-5 rounded-full items-center justify-center",
                     catConfig.color
                   )}>
                     <CatIcon className="h-2.5 w-2.5 text-white" />
                   </div>
-                  <div className="flex-1 bg-card border border-border rounded-lg p-3 hover:bg-muted/30 transition-colors group">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        {event.event_time && (
-                          <span className="text-sm font-bold text-primary font-mono">
-                            {formatTime12(event.event_time)}
-                          </span>
-                        )}
-                        {event.end_time && (
-                          <span className="text-xs text-muted-foreground">
-                            – {formatTime12(event.end_time)}
-                          </span>
-                        )}
-                        <h4 className="text-sm font-medium text-foreground">{event.label}</h4>
+                  <div className="bg-card border border-border rounded-lg p-3 active:bg-muted/30 sm:hover:bg-muted/30 transition-colors">
+                    {/* Mobile: stacked layout / Desktop: inline */}
+                    <div className="flex items-start gap-2">
+                      {/* Mobile category icon */}
+                      <div className={cn(
+                        "sm:hidden w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                        catConfig.color
+                      )}>
+                        <CatIcon className="h-3.5 w-3.5 text-white" />
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        {event.target_group !== 'all' && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            <Users className="h-2.5 w-2.5 mr-0.5" />
-                            {targetLabel}
-                          </Badge>
+                      <div className="flex-1 min-w-0">
+                        {/* Title + time row */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {event.event_time && (
+                            <span className="text-xs sm:text-sm font-bold text-primary font-mono shrink-0">
+                              {formatTime12(event.event_time)}
+                            </span>
+                          )}
+                          {event.end_time && (
+                            <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">
+                              – {formatTime12(event.end_time)}
+                            </span>
+                          )}
+                          <h4 className="text-sm font-medium text-foreground truncate">{event.label}</h4>
+                        </div>
+                        {/* Badges row */}
+                        <div className="flex items-center gap-1 mt-1 flex-wrap">
+                          {event.target_group !== 'all' && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                              <Users className="h-2.5 w-2.5 mr-0.5" />
+                              {targetLabel}
+                            </Badge>
+                          )}
+                          {getStatusBadge(event.status, event.source)}
+                        </div>
+                        {event.description && (
+                          <p className="mt-1.5 text-xs text-foreground/70 whitespace-pre-line line-clamp-3">{event.description}</p>
                         )}
-                        {getStatusBadge(event.status, event.source)}
-                        {event.source === 'manual' && (
-                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(event)}>
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleStatusToggle(event.id, event.status)}>
-                              <CheckCircle2 className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDeleteEvent(event.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                        {(event.location || event.notes) && (
+                          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                            {event.location && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{event.location}</span>
+                              </span>
+                            )}
+                            {event.notes && <span className="truncate">{event.notes}</span>}
                           </div>
                         )}
                       </div>
                     </div>
-                    {event.description && (
-                      <p className="mt-1 text-xs text-foreground/70 whitespace-pre-line">{event.description}</p>
-                    )}
-                    {(event.location || event.notes || event.city_name) && (
-                      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                        {event.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {event.location}
-                          </span>
-                        )}
-                        {event.notes && <span>{event.notes}</span>}
+                    {/* Action buttons - always visible on mobile (touch), hover on desktop */}
+                    {event.source === 'manual' && (
+                      <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-border/50 sm:mt-0 sm:pt-0 sm:border-0 sm:opacity-0 sm:hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => openEditDialog(event)}>
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleStatusToggle(event.id, event.status)}>
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Status
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-destructive" onClick={() => handleDeleteEvent(event.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     )}
                   </div>
