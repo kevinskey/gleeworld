@@ -371,16 +371,23 @@ export const TourManagerDashboard = ({
       {/* Content Area with Sidebar */}
       <div className="flex-1 flex flex-row">
         {/* Sidebar - hidden on mobile, shown on desktop */}
-        <aside className={cn("fixed top-[6.5rem] bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-[calc(100vh-48px)] lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-          <div className="flex flex-col h-full px-0 pt-4 overflow-y-auto overscroll-contain touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <aside className={cn("fixed top-12 bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-[calc(100vh-48px)] lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
+          <div 
+            className="flex flex-col h-full px-0 pt-2 overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide" 
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
+              paddingTop: 'env(safe-area-inset-top, 0px)'
+            }}
+          >
             {/* Navigation */}
-            <nav className="flex flex-col space-y-1 px-2 w-full pb-20">
+            <nav className="flex flex-col space-y-1 px-2 w-full">
               {navItems.map(item => (
                 <button 
                   key={item.value} 
                   onClick={() => handleSectionChange(item.value)} 
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-left",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-left min-h-[44px] touch-manipulation",
                     activeSection === item.value 
                       ? "bg-primary/10 text-primary font-medium" 
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
