@@ -14,8 +14,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Clock, Bus, MapPin, Music, Users, Package, CheckCircle2, Plus, Edit, Save, Calendar,
   ShoppingBag, ClipboardList, UserCheck, Timer, DoorOpen, Trash2, Utensils, Megaphone,
-  ArrowRight, Mic, Loader2, AlertCircle, CalendarPlus
+  ArrowRight, Mic, Loader2, AlertCircle, CalendarPlus, ChevronDown, ChevronRight
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
