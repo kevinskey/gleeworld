@@ -70,7 +70,7 @@ export const BusTripAnimation: React.FC<BusTripAnimationProps> = ({ cities, tour
       const depart = parseISO(departDate + 'T08:00:00');
       const arrive = parseISO(arriveDate + 'T18:00:00');
 
-      if ((isBefore(now, arrive) || i === sortedCities.length - 2)) {
+      if (isAfter(now, depart) && (isBefore(now, arrive) || i === sortedCities.length - 2)) {
         const totalMs = arrive.getTime() - depart.getTime();
         const elapsedMs = now.getTime() - depart.getTime();
         const segProgress = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
@@ -127,19 +127,19 @@ export const BusTripAnimation: React.FC<BusTripAnimationProps> = ({ cities, tour
           <div className="relative">
             <Bus className="h-4 w-4 text-primary" />
             {tripState.status === 'in-transit' && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full animate-pulse" />
             )}
           </div>
           <span className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
             {tripState.status === 'pre-tour' ? 'Upcoming' : tripState.status === 'completed' ? 'Completed' : 'En Route'}
           </span>
         </div>
-        {'fromLabel' in tripState && tripState.fromLabel && (
-          <span className="text-xs font-medium text-foreground/60">{tripState.fromLabel} •</span>
-        )}
         <div className="flex items-center gap-1.5 bg-primary/10 rounded-full px-3 py-1">
           <Navigation className="h-3 w-3 text-primary" />
-          <span className="text-xs font-bold text-primary">{tripState.timeLabel}</span>
+          <span className="text-xs font-bold text-primary">
+            {'fromLabel' in tripState && tripState.fromLabel ? `${tripState.fromLabel} • ` : ''}
+            {tripState.timeLabel}
+          </span>
         </div>
       </div>
 
