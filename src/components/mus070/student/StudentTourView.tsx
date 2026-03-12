@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane, FileSignature, CheckCircle2, ListChecks, AlertCircle, UserCheck } from 'lucide-react';
 import { format, differenceInDays, isValid, parseISO } from 'date-fns';
 import { TourContractSigningModal } from './TourContractSigningModal';
+import { BusTripAnimation } from './BusTripAnimation';
 
 const safeFormat = (dateStr: string | null | undefined, fmt: string, fallback = '—') => {
   if (!dateStr) return fallback;
@@ -302,6 +303,15 @@ export const StudentTourView: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Bus Trip Animation */}
+      {cities.length >= 2 && (
+        <BusTripAnimation 
+          cities={cities as any} 
+          tourStartDate={tour.start_date} 
+          tourEndDate={tour.end_date} 
+        />
+      )}
+
       {/* Tour Header */}
       <div className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary)/0.8)] rounded-xl p-6 text-primary-foreground">
         <div className="flex items-start justify-between">
