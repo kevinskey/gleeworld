@@ -590,69 +590,73 @@ export const TourLogisticsSection = () => {
         </div>
       )}
 
-      {/* Category filter chips */}
-      <div className="flex flex-wrap gap-1.5">
-        <button
-          onClick={() => setCategoryFilter('all')}
-          className={cn(
-            "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-            categoryFilter === 'all'
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:text-foreground"
-          )}
-        >
-          All
-        </button>
-        {EVENT_CATEGORIES.map(cat => {
-          const count = timelineEvents.filter(e => e.event_category === cat.value).length;
-          if (count === 0) return null;
-          const Icon = cat.icon;
-          return (
-            <button
-              key={cat.value}
-              onClick={() => setCategoryFilter(cat.value)}
-              className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1",
-                categoryFilter === cat.value
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className="h-3 w-3" />
-              {cat.label} ({count})
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Date filter */}
-      {uniqueDates.length > 1 && (
-        <div className="flex flex-wrap gap-1.5">
+      {/* Category filter chips - horizontally scrollable on mobile */}
+      <div className="overflow-x-auto -mx-1 px-1 pb-1">
+        <div className="flex gap-1.5 w-max">
           <button
-            onClick={() => setDateFilter('all')}
+            onClick={() => setCategoryFilter('all')}
             className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-              dateFilter === 'all'
-                ? "bg-accent text-accent-foreground"
-                : "bg-muted/50 text-muted-foreground hover:text-foreground"
+              "px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+              categoryFilter === 'all'
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:text-foreground"
             )}
           >
-            All Dates
+            All
           </button>
-          {uniqueDates.map(d => (
+          {EVENT_CATEGORIES.map(cat => {
+            const count = timelineEvents.filter(e => e.event_category === cat.value).length;
+            if (count === 0) return null;
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.value}
+                onClick={() => setCategoryFilter(cat.value)}
+                className={cn(
+                  "px-2.5 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1 whitespace-nowrap",
+                  categoryFilter === cat.value
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="h-3 w-3" />
+                {cat.label} ({count})
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Date filter - horizontally scrollable on mobile */}
+      {uniqueDates.length > 1 && (
+        <div className="overflow-x-auto -mx-1 px-1 pb-1">
+          <div className="flex gap-1.5 w-max">
             <button
-              key={d}
-              onClick={() => setDateFilter(d)}
+              onClick={() => setDateFilter('all')}
               className={cn(
-                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-                dateFilter === d
+                "px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                dateFilter === 'all'
                   ? "bg-accent text-accent-foreground"
                   : "bg-muted/50 text-muted-foreground hover:text-foreground"
               )}
             >
-              {format(parseISO(d), 'EEE, MMM d')}
+              All Dates
             </button>
-          ))}
+            {uniqueDates.map(d => (
+              <button
+                key={d}
+                onClick={() => setDateFilter(d)}
+                className={cn(
+                  "px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                  dateFilter === d
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-muted/50 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {format(parseISO(d), 'EEE, MMM d')}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
