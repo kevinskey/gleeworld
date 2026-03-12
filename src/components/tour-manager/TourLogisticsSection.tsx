@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarWidget } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +14,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Clock, Bus, MapPin, Music, Users, Package, CheckCircle2, Plus, Edit, Save, Calendar,
   ShoppingBag, ClipboardList, UserCheck, Timer, DoorOpen, Trash2, Utensils, Megaphone,
-  ArrowRight, Mic, Loader2, AlertCircle, CalendarPlus
+  ArrowRight, Mic, Loader2, AlertCircle, CalendarPlus, ChevronDown, ChevronRight
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,6 +75,114 @@ const formatTime12 = (time24: string | null) => {
   const ampm = h >= 12 ? 'PM' : 'AM';
   const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
   return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+};
+
+// Collapsible day group sub-component
+const CollapsibleDateGroup = ({
+  date, events, defaultOpen, getCategoryConfig, formatTime12, getStatusBadge,
+  openEditDialog, handleStatusToggle, handleDeleteEvent, muted = false,
+}: {
+  date: string;
+  events: UnifiedTimelineEvent[];
+  defaultOpen: boolean;
+  getCategoryConfig: (cat: string) => typeof EVENT_CATEGORIES[number];
+  formatTime12: (t: string | null) => string;
+  getStatusBadge: (status: string, source: string) => React.ReactNode;
+  openEditDialog: (event: UnifiedTimelineEvent) => void;
+  handleStatusToggle: (id: string, status: string) => Promise<void>;
+  handleDeleteEvent: (id: string) => Promise<void>;
+  muted?: boolean;
+}) => {
+  return (
+    <Collapsible defaultOpen={defaultOpen}>
+      <CollapsibleTrigger className="flex items-center gap-2 w-full group cursor-pointer">
+        <div className={cn(
+          "px-3 py-1 rounded-md text-sm font-semibold",
+          muted ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"
+        )}>
+          {format(parseISO(date), 'EEE, MMM d')}
+        </div>
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-xs text-muted-foreground">{events.length} events</span>
+        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className={cn("relative ml-4 mt-3", muted && "opacity-60")}>
+          <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
+          <div className="space-y-2">
+            {events.map(event => {
+              const catConfig = getCategoryConfig(event.event_category);
+              const CatIcon = catConfig.icon;
+              const targetLabel = TARGET_GROUPS.find(g => g.value === event.target_group)?.label || 'Everyone';
+              return (
+                <div key={event.id} className="relative flex gap-3 pl-8">
+                  <div className={cn(
+                    "absolute left-1 top-3 w-5 h-5 rounded-full flex items-center justify-center",
+                    catConfig.color
+                  )}>
+                    <CatIcon className="h-2.5 w-2.5 text-white" />
+                  </div>
+                  <div className="flex-1 bg-card border border-border rounded-lg p-3 hover:bg-muted/30 transition-colors group">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {event.event_time && (
+                          <span className="text-sm font-bold text-primary font-mono">
+                            {formatTime12(event.event_time)}
+                          </span>
+                        )}
+                        {event.end_time && (
+                          <span className="text-xs text-muted-foreground">
+                            – {formatTime12(event.end_time)}
+                          </span>
+                        )}
+                        <h4 className="text-sm font-medium text-foreground">{event.label}</h4>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {event.target_group !== 'all' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            <Users className="h-2.5 w-2.5 mr-0.5" />
+                            {targetLabel}
+                          </Badge>
+                        )}
+                        {getStatusBadge(event.status, event.source)}
+                        {event.source === 'manual' && (
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(event)}>
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleStatusToggle(event.id, event.status)}>
+                              <CheckCircle2 className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDeleteEvent(event.id)}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {event.description && (
+                      <p className="mt-1 text-xs text-foreground/70 whitespace-pre-line">{event.description}</p>
+                    )}
+                    {(event.location || event.notes || event.city_name) && (
+                      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                        {event.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {event.location}
+                          </span>
+                        )}
+                        {event.notes && <span>{event.notes}</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
 };
 
 export const TourLogisticsSection = () => {
@@ -241,13 +350,40 @@ export const TourLogisticsSection = () => {
     return true;
   });
 
-  // Group by date
-  const groupedByDate = filteredEvents.reduce<Record<string, UnifiedTimelineEvent[]>>((acc, e) => {
-    const key = e.event_date || 'unknown';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(e);
-    return acc;
-  }, {});
+  // Separate completed vs active, sort active newest-first (most current on top), completed oldest-first (at bottom)
+  const now = new Date();
+  const todayStr = format(now, 'yyyy-MM-dd');
+  const nowTimeStr = format(now, 'HH:mm');
+
+  const activeEvents = filteredEvents.filter(e => e.status !== 'completed' && e.status !== 'cancelled');
+  const completedEvents = filteredEvents.filter(e => e.status === 'completed' || e.status === 'cancelled');
+
+  // Sort active: soonest first (today at top, then tomorrow, etc.)
+  // Within each day, sort by time ascending
+  activeEvents.sort((a, b) => {
+    const dateComp = (a.event_date || '').localeCompare(b.event_date || '');
+    if (dateComp !== 0) return dateComp;
+    return (a.event_time || '').localeCompare(b.event_time || '');
+  });
+
+  // Sort completed: most recently completed first
+  completedEvents.sort((a, b) => {
+    const dateComp = (b.event_date || '').localeCompare(a.event_date || '');
+    if (dateComp !== 0) return dateComp;
+    return (b.event_time || '').localeCompare(a.event_time || '');
+  });
+
+  // Group helper
+  const groupByDate = (events: UnifiedTimelineEvent[]) =>
+    events.reduce<Record<string, UnifiedTimelineEvent[]>>((acc, e) => {
+      const key = e.event_date || 'unknown';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(e);
+      return acc;
+    }, {});
+
+  const activeGrouped = groupByDate(activeEvents);
+  const completedGrouped = groupByDate(completedEvents);
 
   const handleAddEvent = async () => {
     if (!newEvent.label || !newEvent.event_date || !selectedTourId) {
@@ -623,114 +759,47 @@ export const TourLogisticsSection = () => {
         </Card>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedByDate).map(([date, events]) => (
-            <div key={date}>
-              {/* Day header */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-semibold">
-                  {format(parseISO(date), 'EEE, MMM d')}
-                </div>
+          {/* Active / Upcoming Section */}
+          {activeEvents.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Current & Upcoming</h3>
+                <Badge variant="secondary" className="text-xs">{activeEvents.length}</Badge>
                 <div className="flex-1 h-px bg-border" />
-                <span className="text-xs text-muted-foreground">{events.length} events</span>
               </div>
-
-              {/* Events for this day */}
-              <div className="relative ml-4">
-                {/* Vertical line */}
-                <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-border" />
-
-                <div className="space-y-2">
-                  {events.map(event => {
-                    const catConfig = getCategoryConfig(event.event_category);
-                    const CatIcon = catConfig.icon;
-                    const targetLabel = TARGET_GROUPS.find(g => g.value === event.target_group)?.label || 'Everyone';
-
-                    return (
-                      <div key={event.id} className="relative flex gap-3 pl-8">
-                        {/* Dot */}
-                        <div className={cn(
-                          "absolute left-1 top-3 w-5 h-5 rounded-full flex items-center justify-center",
-                          catConfig.color
-                        )}>
-                          <CatIcon className="h-2.5 w-2.5 text-white" />
-                        </div>
-
-                        {/* Card */}
-                        <div className="flex-1 bg-card border border-border rounded-lg p-3 hover:bg-muted/30 transition-colors group">
-                          <div className="flex flex-wrap items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              {event.event_time && (
-                                <span className="text-sm font-bold text-primary font-mono">
-                                  {formatTime12(event.event_time)}
-                                </span>
-                              )}
-                              {event.end_time && (
-                                <span className="text-xs text-muted-foreground">
-                                  – {formatTime12(event.end_time)}
-                                </span>
-                              )}
-                              <h4 className="text-sm font-medium text-foreground">{event.label}</h4>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              {event.target_group !== 'all' && (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                  <Users className="h-2.5 w-2.5 mr-0.5" />
-                                  {targetLabel}
-                                </Badge>
-                              )}
-                              {getStatusBadge(event.status, event.source)}
-                              {event.source === 'manual' && (
-                                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() => openEditDialog(event)}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6"
-                                    onClick={() => handleStatusToggle(event.id, event.status)}
-                                  >
-                                    <CheckCircle2 className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 text-destructive"
-                                    onClick={() => handleDeleteEvent(event.id)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          {event.description && (
-                            <p className="mt-1 text-xs text-foreground/70 whitespace-pre-line">{event.description}</p>
-                          )}
-                          {(event.location || event.notes || event.city_name) && (
-                            <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                              {event.location && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  {event.location}
-                                </span>
-                              )}
-                              {event.notes && <span>{event.notes}</span>}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              {Object.entries(activeGrouped).map(([date, events]) => (
+                <CollapsibleDateGroup key={`active-${date}`} date={date} events={events} defaultOpen={true}
+                  getCategoryConfig={getCategoryConfig} formatTime12={formatTime12}
+                  getStatusBadge={getStatusBadge} openEditDialog={openEditDialog}
+                  handleStatusToggle={handleStatusToggle} handleDeleteEvent={handleDeleteEvent}
+                />
+              ))}
             </div>
-          ))}
+          )}
+
+          {/* Completed Section */}
+          {completedEvents.length > 0 && (
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger className="flex items-center gap-2 w-full group cursor-pointer py-2">
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Completed</h3>
+                <Badge variant="outline" className="text-xs text-muted-foreground">{completedEvents.length}</Badge>
+                <div className="flex-1 h-px bg-border" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-90" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                {Object.entries(completedGrouped).map(([date, events]) => (
+                  <CollapsibleDateGroup key={`done-${date}`} date={date} events={events} defaultOpen={false}
+                    getCategoryConfig={getCategoryConfig} formatTime12={formatTime12}
+                    getStatusBadge={getStatusBadge} openEditDialog={openEditDialog}
+                    handleStatusToggle={handleStatusToggle} handleDeleteEvent={handleDeleteEvent}
+                    muted
+                  />
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
         </div>
       )}
 
