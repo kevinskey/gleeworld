@@ -241,13 +241,40 @@ export const TourLogisticsSection = () => {
     return true;
   });
 
-  // Group by date
-  const groupedByDate = filteredEvents.reduce<Record<string, UnifiedTimelineEvent[]>>((acc, e) => {
-    const key = e.event_date || 'unknown';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(e);
-    return acc;
-  }, {});
+  // Separate completed vs active, sort active newest-first (most current on top), completed oldest-first (at bottom)
+  const now = new Date();
+  const todayStr = format(now, 'yyyy-MM-dd');
+  const nowTimeStr = format(now, 'HH:mm');
+
+  const activeEvents = filteredEvents.filter(e => e.status !== 'completed' && e.status !== 'cancelled');
+  const completedEvents = filteredEvents.filter(e => e.status === 'completed' || e.status === 'cancelled');
+
+  // Sort active: soonest first (today at top, then tomorrow, etc.)
+  // Within each day, sort by time ascending
+  activeEvents.sort((a, b) => {
+    const dateComp = (a.event_date || '').localeCompare(b.event_date || '');
+    if (dateComp !== 0) return dateComp;
+    return (a.event_time || '').localeCompare(b.event_time || '');
+  });
+
+  // Sort completed: most recently completed first
+  completedEvents.sort((a, b) => {
+    const dateComp = (b.event_date || '').localeCompare(a.event_date || '');
+    if (dateComp !== 0) return dateComp;
+    return (b.event_time || '').localeCompare(a.event_time || '');
+  });
+
+  // Group helper
+  const groupByDate = (events: UnifiedTimelineEvent[]) =>
+    events.reduce<Record<string, UnifiedTimelineEvent[]>>((acc, e) => {
+      const key = e.event_date || 'unknown';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(e);
+      return acc;
+    }, {});
+
+  const activeGrouped = groupByDate(activeEvents);
+  const completedGrouped = groupByDate(completedEvents);
 
   const handleAddEvent = async () => {
     if (!newEvent.label || !newEvent.event_date || !selectedTourId) {
