@@ -916,7 +916,7 @@ export const TourManagerLanding = ({
         onOpenChange={(open) => !open && setEditingStop(null)}
         onSaved={() => {
           const fetchTourEvents = async () => {
-            const { data } = await supabase.from('gw_tour_events').select('*').order('start_date', { ascending: true });
+            const { data } = await supabase.from('gw_tour_events').select('*').order('start_date', { ascending: false });
             if (data) setTourEvents(data as TourStopFull[]);
           };
           fetchTourEvents();
