@@ -88,6 +88,7 @@ export const BusTripAnimation: React.FC<BusTripAnimationProps> = ({ cities, tour
           toCity: next,
           progress: overallProgress,
           segmentProgress: segProgress,
+          fromLabel: `From ${current.city_name}`,
           timeLabel: remainingMins <= 0 
             ? 'Arriving now' 
             : remainingHrs > 0 
