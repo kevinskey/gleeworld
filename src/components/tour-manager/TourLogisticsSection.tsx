@@ -539,26 +539,16 @@ export const TourLogisticsSection = () => {
 
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Header with tour selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="space-y-2">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Unified Operations Timeline</h2>
-          <p className="text-sm text-muted-foreground">All call times, transport, performances, meals, and crew schedules</p>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground">Operations Timeline</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">Call times, transport, performances, meals & crew</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePublishToCalendar}
-            disabled={publishing || !selectedTourId}
-            className="gap-1.5"
-          >
-            {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CalendarPlus className="h-3.5 w-3.5" />}
-            {publishing ? 'Publishing...' : 'Publish to MUS 070 Calendar'}
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
           <Select value={selectedTourId} onValueChange={setSelectedTourId}>
-            <SelectTrigger className="w-[260px] bg-card border-border">
+            <SelectTrigger className="w-full sm:w-[260px] bg-card border-border">
               <SelectValue placeholder="Select Tour" />
             </SelectTrigger>
             <SelectContent>
@@ -569,6 +559,16 @@ export const TourLogisticsSection = () => {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePublishToCalendar}
+            disabled={publishing || !selectedTourId}
+            className="gap-1.5 w-full sm:w-auto"
+          >
+            {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CalendarPlus className="h-3.5 w-3.5" />}
+            <span className="truncate">{publishing ? 'Publishing...' : 'Publish to Calendar'}</span>
+          </Button>
         </div>
       </div>
 
