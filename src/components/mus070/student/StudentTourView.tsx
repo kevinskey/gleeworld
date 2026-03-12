@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MapPin, Calendar, Clock, Hotel, Music, Bus, Utensils, Users, ChevronRight, Plane, FileSignature, CheckCircle2, ListChecks, AlertCircle, UserCheck } from 'lucide-react';
 import { format, differenceInDays, isValid, parseISO } from 'date-fns';
 import { TourContractSigningModal } from './TourContractSigningModal';
+import { BusTripAnimation } from './BusTripAnimation';
 
 const safeFormat = (dateStr: string | null | undefined, fmt: string, fallback = '—') => {
   if (!dateStr) return fallback;
