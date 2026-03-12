@@ -715,32 +715,32 @@ export const TourLogisticsSection = () => {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-10 text-sm", !newEvent.event_date && "text-muted-foreground")}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {newEvent.event_date ? format(parseISO(newEvent.event_date), 'MMM d, yyyy') : 'Pick date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-white text-black" align="start">
+                    <CalendarWidget
+                      mode="single"
+                      selected={newEvent.event_date ? parseISO(newEvent.event_date) : undefined}
+                      onSelect={(date) => setNewEvent(p => ({ ...p, event_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-10 text-sm", !newEvent.event_date && "text-muted-foreground")}>
-                        <Calendar className="mr-2 h-4 w-4" />
-                        {newEvent.event_date ? format(parseISO(newEvent.event_date), 'MMM d, yyyy') : 'Pick date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white text-black" align="start">
-                      <CalendarWidget
-                        mode="single"
-                        selected={newEvent.event_date ? parseISO(newEvent.event_date) : undefined}
-                        onSelect={(date) => setNewEvent(p => ({ ...p, event_date: date ? format(date, 'yyyy-MM-dd') : '' }))}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Start</Label>
+                  <Label className="text-xs">Start Time</Label>
                   <Input type="time" value={newEvent.event_time} onChange={e => setNewEvent(p => ({ ...p, event_time: e.target.value }))} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">End</Label>
+                  <Label className="text-xs">End Time</Label>
                   <Input type="time" value={newEvent.end_time} onChange={e => setNewEvent(p => ({ ...p, end_time: e.target.value }))} />
                 </div>
               </div>
