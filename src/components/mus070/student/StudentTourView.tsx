@@ -303,6 +303,15 @@ export const StudentTourView: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Bus Trip Animation */}
+      {cities.length >= 2 && (
+        <BusTripAnimation 
+          cities={cities as any} 
+          tourStartDate={tour.start_date} 
+          tourEndDate={tour.end_date} 
+        />
+      )}
+
       {/* Tour Header */}
       <div className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary)/0.8)] rounded-xl p-6 text-primary-foreground">
         <div className="flex items-start justify-between">
