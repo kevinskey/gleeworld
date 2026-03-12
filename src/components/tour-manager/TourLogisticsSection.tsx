@@ -872,17 +872,17 @@ export const TourLogisticsSection = () => {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Date *</Label>
+              <Input type="date" value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs">Date *</Label>
-                <Input type="date" value={editForm.event_date} onChange={e => setEditForm(p => ({ ...p, event_date: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Start</Label>
+                <Label className="text-xs">Start Time</Label>
                 <Input type="time" value={editForm.event_time} onChange={e => setEditForm(p => ({ ...p, event_time: e.target.value }))} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">End</Label>
+                <Label className="text-xs">End Time</Label>
                 <Input type="time" value={editForm.end_time} onChange={e => setEditForm(p => ({ ...p, end_time: e.target.value }))} />
               </div>
             </div>
