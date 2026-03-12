@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye, Wallet, Plus, Pencil, Trash2, AlertTriangle, Hotel } from 'lucide-react';
+import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye, Wallet, Plus, Pencil, Trash2, AlertTriangle, Hotel, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isSameDay, isWithinInterval } from 'date-fns';
@@ -370,74 +370,161 @@ export const TourManagerLanding = ({
         </Card>
       </Collapsible>
 
-      {/* Tour Itinerary */}
-      <Collapsible>
-        <Card>
-          <CollapsibleTrigger asChild>
-            <CardHeader className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors">
+      {/* Tour Itinerary - Grouped by City */}
+      {(() => {
+        // Group tour events by city (extracted from location field)
+        const getCityKey = (event: TourStopFull) => {
+          if (!event.location) return 'Unknown Location';
+          // Extract city from "City, ST" format
+          return event.location.split(',')[0].trim() || event.location;
+        };
+
+        const cityGroups = tourEvents.reduce<Record<string, { cityLabel: string; events: TourStopFull[] }>>((acc, event) => {
+          const cityKey = getCityKey(event);
+          if (!acc[cityKey]) {
+            acc[cityKey] = { cityLabel: event.location || cityKey, events: [] };
+          }
+          acc[cityKey].events.push(event);
+          return acc;
+        }, {});
+
+        // Sort cities by earliest event date
+        const sortedCities = Object.entries(cityGroups).sort(([, a], [, b]) => {
+          const aDate = new Date(a.events[0]?.start_date || 0);
+          const bDate = new Date(b.events[0]?.start_date || 0);
+          return aDate.getTime() - bDate.getTime();
+        });
+
+        return (
+          <Card>
+            <CardHeader className="py-3 px-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <MapPinned className="h-4 w-4 text-primary" />
                   Tour Itinerary
                   <Badge variant="secondary" className="text-[10px] ml-1">{tourEvents.length} stops</Badge>
                 </CardTitle>
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
+                  Manage <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
               </div>
             </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
             <CardContent className="px-4 pb-4 pt-0">
               {tourEvents.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">No itinerary events yet</p>
               ) : (
-                <div className="relative">
-                  {/* Timeline line */}
-                  <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-border" />
-                  <div className="space-y-0">
-                    {tourEvents.map((event, i) => {
-                      const eventDate = new Date(event.start_date);
-                      const isPast = eventDate < new Date();
-                      const isToday = isSameDay(eventDate, new Date());
-                      const typeColors: Record<string, string> = {
-                        performance: 'bg-primary',
-                        travel: 'bg-amber-500',
-                        free: 'bg-emerald-500',
-                        workshop: 'bg-violet-500',
-                      };
-                      const dotColor = typeColors[event.event_type || ''] || 'bg-muted-foreground';
-                      return (
-                        <div key={event.id} className={cn("flex gap-3 py-1.5 pl-0 relative cursor-pointer hover:bg-muted/30 rounded-md px-1 -mx-1 transition-colors", isPast && !isToday && "opacity-50")} onClick={() => setSelectedStop(event)}>
-                          <div className={cn("w-[11px] h-[11px] rounded-full flex-shrink-0 mt-1 z-10 ring-2 ring-background", isToday ? "ring-primary bg-primary animate-pulse" : dotColor)} />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
-                                {format(eventDate, 'EEE, MMM d')}
-                              </span>
-                              {isToday && <Badge className="text-[8px] h-4 px-1 bg-primary">Today</Badge>}
-                              {event.event_type && (
-                                <Badge variant="outline" className="text-[8px] h-4 px-1 capitalize">{event.event_type}</Badge>
-                              )}
+                <div className="space-y-2">
+                  {sortedCities.map(([cityKey, { cityLabel, events: cityEvents }]) => {
+                    const earliestDate = new Date(cityEvents[0]?.start_date);
+                    const latestDate = cityEvents.length > 1 ? new Date(cityEvents[cityEvents.length - 1]?.start_date) : null;
+                    const hasPerformance = cityEvents.some(e => e.event_type === 'performance');
+                    const allPast = cityEvents.every(e => new Date(e.start_date) < new Date());
+                    const hasToday = cityEvents.some(e => isSameDay(new Date(e.start_date), new Date()));
+
+                    return (
+                      <Collapsible key={cityKey} defaultOpen={hasToday || !allPast}>
+                        <Card className={cn("border", hasToday && "ring-2 ring-primary/40", allPast && !hasToday && "opacity-60")}>
+                          <CollapsibleTrigger asChild>
+                            <div className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg">
+                              <div className={cn("h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0", hasPerformance ? "bg-primary/10" : "bg-muted")}>
+                                <MapPin className={cn("h-4 w-4", hasPerformance ? "text-primary" : "text-muted-foreground")} />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-foreground">{cityKey}</p>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {format(earliestDate, 'MMM d')}
+                                  {latestDate && ` – ${format(latestDate, 'MMM d')}`}
+                                  {' · '}{cityEvents.length} event{cityEvents.length !== 1 ? 's' : ''}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {hasToday && <Badge className="text-[8px] h-4 px-1 bg-primary">Now</Badge>}
+                                {hasPerformance && <Badge variant="outline" className="text-[8px] h-4 px-1">🎶</Badge>}
+                                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+                              </div>
                             </div>
-                            <p className="text-xs font-medium text-foreground truncate">{event.title}</p>
-                            {event.location && (
-                              <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 truncate">
-                                <MapPin className="h-2.5 w-2.5 flex-shrink-0" /> {event.location}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <Button variant="ghost" size="sm" className="w-full mt-2 text-xs" onClick={() => onNavigate('tour-dates')}>
-                    Manage Itinerary <ChevronRight className="h-3 w-3 ml-1" />
-                  </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="px-3 pb-3 space-y-1.5 border-t">
+                              {cityEvents.map((event) => {
+                                const eventDate = new Date(event.start_date);
+                                const isPast = eventDate < new Date();
+                                const isEventToday = isSameDay(eventDate, new Date());
+                                const typeColors: Record<string, string> = {
+                                  performance: 'bg-primary',
+                                  travel: 'bg-amber-500',
+                                  free: 'bg-emerald-500',
+                                  workshop: 'bg-violet-500',
+                                };
+                                const dotColor = typeColors[event.event_type || ''] || 'bg-muted-foreground';
+
+                                return (
+                                  <div
+                                    key={event.id}
+                                    className={cn(
+                                      "flex gap-2.5 py-2 px-2 rounded-md cursor-pointer hover:bg-muted/40 transition-colors mt-1.5",
+                                      isPast && !isEventToday && "opacity-50"
+                                    )}
+                                    onClick={() => setSelectedStop(event)}
+                                  >
+                                    <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5", isEventToday ? "bg-primary animate-pulse" : dotColor)} />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[10px] font-medium text-muted-foreground">
+                                          {format(eventDate, 'EEE, MMM d')}
+                                        </span>
+                                        {isEventToday && <Badge className="text-[8px] h-4 px-1 bg-primary">Today</Badge>}
+                                        {event.event_type && (
+                                          <Badge variant="outline" className="text-[8px] h-4 px-1 capitalize">{event.event_type}</Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-xs font-medium text-foreground">{event.title}</p>
+                                      {/* Show full details */}
+                                      {event.venue_name && (
+                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 mt-0.5">
+                                          <Building2 className="h-2.5 w-2.5 flex-shrink-0" /> {event.venue_name}
+                                        </p>
+                                      )}
+                                      {(event.concert_time || event.arrival_time) && (
+                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                          <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                                          {event.concert_time ? `Concert: ${event.concert_time}` : `Arrival: ${event.arrival_time}`}
+                                        </p>
+                                      )}
+                                      {event.host_name && (
+                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                          <Users className="h-2.5 w-2.5 flex-shrink-0" /> Host: {event.host_name}
+                                        </p>
+                                      )}
+                                      {event.lodging_name && (
+                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                          <Hotel className="h-2.5 w-2.5 flex-shrink-0" /> {event.lodging_name}
+                                        </p>
+                                      )}
+                                      {event.meal_info && (
+                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                          🍽️ {event.meal_info}
+                                        </p>
+                                      )}
+                                      {event.description && (
+                                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{event.description}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </CollapsibleContent>
+                        </Card>
+                      </Collapsible>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
+          </Card>
+        );
+      })()}
 
       <Collapsible open={rosterOpen} onOpenChange={setRosterOpen}>
         <Card>
