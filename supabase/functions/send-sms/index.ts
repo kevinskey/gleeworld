@@ -180,7 +180,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Send SMS/MMS to each recipient
       const results = await Promise.all(
         phoneNumbers.map(phone =>
-          sendSingleSMS(phone, messageBody, twilioAccountSid, twilioAuthToken, twilioFromNumber, payload.mediaUrl)
+          sendSingleSMS(phone, messageBody, twilioAccountSid, twilioAuthToken, twilioFromNumber, mediaUrls)
         )
       );
 
@@ -200,7 +200,7 @@ const handler = async (req: Request): Promise<Response> => {
             recipient_phones: phoneNumbers,
             status: failed === 0 ? 'sent' : (successful > 0 ? 'sent' : 'failed'),
             error_message: failed > 0 ? `${failed} of ${phoneNumbers.length} messages failed` : null,
-            metadata: { successful, failed, total: phoneNumbers.length, hasMedia: Boolean(payload.mediaUrl) },
+            metadata: { successful, failed, total: phoneNumbers.length, mediaCount: mediaUrls.length },
             sent_at: new Date().toISOString(),
           });
           console.log("Bulk SMS logged to history");
