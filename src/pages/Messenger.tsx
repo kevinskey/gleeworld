@@ -517,6 +517,19 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     loadManualGroups();
   }, [loadManualGroups]);
 
+  const openManageMembersDialog = (group: RecipientGroup) => {
+    if (group.type !== 'manual') return;
+
+    const matchedGroup = manualGroups.find((manualGroup) => `manual:${manualGroup.id}` === group.id);
+    if (!matchedGroup) return;
+
+    setGroupForMemberManagement({
+      id: matchedGroup.id,
+      name: matchedGroup.name,
+    });
+    setShowManageMembersDialog(true);
+  };
+
   const handleSendEmail = async () => {
     if (recipients.length === 0 || !subject.trim()) return;
     setIsSending(true);
