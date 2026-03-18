@@ -32,6 +32,7 @@ import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 import { uploadFileAndGetUrl } from '@/utils/storage';
 
 const MAX_SMS_ATTACHMENT_SIZE_BYTES = 150 * 1024 * 1024;
+const MAX_SMS_ATTACHMENTS = 10;
 const ACCEPTED_SMS_ATTACHMENTS = 'audio/mpeg,audio/mp3,audio/*';
 
 interface RecipientGroup {
@@ -111,7 +112,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     full_name: string;
     phone_number: string;
   }>>([]);
-  const [smsAttachment, setSmsAttachment] = useState<File | null>(null);
+  const [smsAttachments, setSmsAttachments] = useState<File[]>([]);
   const smsAttachmentInputRef = useRef<HTMLInputElement>(null);
 
   // Groups
@@ -228,25 +229,43 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   const removeSmsRecipient = (userId: string) => {
     setSmsRecipients(smsRecipients.filter(r => r.user_id !== userId));
   };
-  const clearSmsAttachment = () => {
-    setSmsAttachment(null);
+  const removeSmsAttachment = (indexToRemove: number) => {
+    setSmsAttachments(current => current.filter((_, index) => index !== indexToRemove));
+  };
+  const clearSmsAttachments = () => {
+    setSmsAttachments([]);
   };
   const handleSmsAttachmentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files ?? []);
     event.target.value = '';
 
-    if (!file) return;
+    if (files.length === 0) return;
 
-    if (file.size > MAX_SMS_ATTACHMENT_SIZE_BYTES) {
+    const oversizedFile = files.find(file => file.size > MAX_SMS_ATTACHMENT_SIZE_BYTES);
+    if (oversizedFile) {
       toast({
         title: 'File too large',
-        description: 'MMS attachments must be 150MB or less',
+        description: `${oversizedFile.name} exceeds the 150MB limit`,
         variant: 'destructive',
       });
       return;
     }
 
-    setSmsAttachment(file);
+    setSmsAttachments(current => {
+      const existingKeys = new Set(current.map(file => `${file.name}-${file.size}-${file.lastModified}`));
+      const nextFiles = files.filter(file => !existingKeys.has(`${file.name}-${file.size}-${file.lastModified}`));
+      const combinedFiles = [...current, ...nextFiles];
+
+      if (combinedFiles.length > MAX_SMS_ATTACHMENTS) {
+        toast({
+          title: 'Too many attachments',
+          description: `You can attach up to ${MAX_SMS_ATTACHMENTS} audio files per SMS`,
+          variant: 'destructive',
+        });
+      }
+
+      return combinedFiles.slice(0, MAX_SMS_ATTACHMENTS);
+    });
   };
   const handleAddGroup = async (group: RecipientGroup) => {
     try {
@@ -652,10 +671,10 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       return;
     }
 
-    if (!smsContent.trim() && !smsAttachment) {
+    if (!smsContent.trim() && smsAttachments.length === 0) {
       toast({
         title: "No message",
-        description: "Please type a message or add an MP3",
+        description: "Please type a message or add audio files",
         variant: "destructive"
       });
       return;
@@ -663,15 +682,18 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
 
     setIsSending(true);
     try {
-      let mediaUrl: string | undefined;
+      const mediaUploads = await Promise.all(
+        smsAttachments.map(file => uploadFileAndGetUrl(file, 'message-attachments', 'sms'))
+      );
 
-      if (smsAttachment) {
-        const uploadResult = await uploadFileAndGetUrl(smsAttachment, 'message-attachments', 'sms');
-        if (!uploadResult?.url) {
-          throw new Error('Could not upload attachment for SMS');
-        }
-        mediaUrl = uploadResult.url;
+      const failedUpload = mediaUploads.find(upload => !upload?.url);
+      if (failedUpload) {
+        throw new Error('Could not upload one or more attachments for SMS');
       }
+
+      const mediaUrls = mediaUploads
+        .map(upload => upload?.url)
+        .filter((url): url is string => Boolean(url));
 
       const senderName = userProfile?.full_name || user?.email?.split('@')[0] || 'GleeWorld';
       const trimmedSmsContent = smsContent.trim();
@@ -687,7 +709,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           sendToAll,
           recipients: sendToAll ? [] : smsRecipients.map(r => r.phone_number),
           senderId: user?.id,
-          mediaUrl,
+          mediaUrls,
         }
       });
       if (error) throw error;
@@ -698,7 +720,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       });
       setSmsContent('');
       setSmsRecipients([]);
-      setSmsAttachment(null);
+      setSmsAttachments([]);
     } catch (error: any) {
       toast({
         title: "Failed to send",
@@ -990,40 +1012,58 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                             ref={smsAttachmentInputRef}
                             type="file"
                             accept={ACCEPTED_SMS_ATTACHMENTS}
+                            multiple
                             className="hidden"
                             onChange={handleSmsAttachmentSelect}
                           />
 
                           <div className="flex items-center justify-between gap-2 pt-1">
-                            <span className="text-xs text-muted-foreground">Optional: attach an MP3 (max 150MB)</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-7 gap-1 text-xs"
-                              onClick={() => smsAttachmentInputRef.current?.click()}
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                              Add MP3
-                            </Button>
+                            <span className="text-xs text-muted-foreground">Optional: attach up to {MAX_SMS_ATTACHMENTS} audio files (150MB each)</span>
+                            <div className="flex items-center gap-2">
+                              {smsAttachments.length > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={clearSmsAttachments}
+                                >
+                                  Clear all
+                                </Button>
+                              )}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 gap-1 text-xs"
+                                onClick={() => smsAttachmentInputRef.current?.click()}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Add files
+                              </Button>
+                            </div>
                           </div>
 
-                          {smsAttachment && (
-                            <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-2">
-                              <div className="min-w-0">
-                                <p className="truncate text-xs font-medium text-foreground">{smsAttachment.name}</p>
-                                <p className="text-[11px] text-muted-foreground">
-                                  {(smsAttachment.size / (1024 * 1024)).toFixed(2)} MB
-                                </p>
-                              </div>
-                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={clearSmsAttachment}>
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
+                          {smsAttachments.length > 0 && (
+                            <div className="space-y-2">
+                              {smsAttachments.map((attachment, index) => (
+                                <div key={`${attachment.name}-${attachment.lastModified}-${index}`} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-2">
+                                  <div className="min-w-0">
+                                    <p className="truncate text-xs font-medium text-foreground">{attachment.name}</p>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      {(attachment.size / (1024 * 1024)).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeSmsAttachment(index)}>
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              ))}
                             </div>
                           )}
 
                           <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{smsContent.length}/480 characters</span>
+                            <span>{smsContent.length}/480 characters · {smsAttachments.length}/{MAX_SMS_ATTACHMENTS} files</span>
                             <span>{Math.ceil(smsContent.length / 160) || 1} SMS segment{smsContent.length > 160 ? 's' : ''}</span>
                           </div>
                         </div>
@@ -1031,7 +1071,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       
                       {/* Send Button */}
                       <div className="flex-shrink-0 p-3 bg-muted border-t border-border">
-                        <Button onClick={handleSendSMS} disabled={isSending || (!sendToAll && smsRecipients.length === 0) || (!smsContent.trim() && !smsAttachment)} className="w-full h-9 text-sm">
+                        <Button onClick={handleSendSMS} disabled={isSending || (!sendToAll && smsRecipients.length === 0) || (!smsContent.trim() && smsAttachments.length === 0)} className="w-full h-9 text-sm">
                           {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>}
                         </Button>
                       </div>
