@@ -29,7 +29,10 @@ const driverTipReceiptSchema = z.object({
   driver_phone: z.string().trim().max(30, 'Phone number is too long').optional().or(z.literal('')),
   payment_method: z.enum(['cash', 'check', 'cash_app', 'venmo', 'other']),
   notes: z.string().trim().max(500, 'Notes must be 500 characters or less').optional().or(z.literal('')),
-  signature_data: z.string().trim().min(1, 'Driver signature is required'),
+  signature_data: z.preprocess(
+    (value) => (typeof value === 'string' ? value : ''),
+    z.string().trim().min(1, 'Driver signature is required'),
+  ),
 });
 
 interface SavedBusCompany {
@@ -160,13 +163,19 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
       return;
     }
 
+    const signatureData = signatureRef.current ?? signature;
+    if (!signatureData || !signatureData.trim()) {
+      toast.error('Driver signature is required');
+      return;
+    }
+
     const parsed = driverTipReceiptSchema.safeParse({
       driver_name: driverName,
       bus_company_name: busCompanyName,
       driver_phone: driverPhone,
       payment_method: paymentMethod,
       notes,
-      signature_data: signatureRef.current ?? signature ?? '',
+      signature_data: signatureData,
     });
 
     if (!parsed.success) {
@@ -198,7 +207,11 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
     } catch (error) {
       console.error('Error saving driver tip receipt:', error);
       const message = error instanceof Error ? error.message : 'Failed to save driver tip receipt';
-      toast.error(message);
+      if (message.includes('Expected string, received null')) {
+        toast.error('Driver signature is required');
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
