@@ -30,6 +30,7 @@ interface FinderSidebarProps {
   onNewFolder?: () => void;
   isAdmin?: boolean;
   onNativeFileDrop?: (files: File[], folderId: string) => void;
+  className?: string;
 }
 
 export const FinderSidebar = ({
@@ -41,7 +42,8 @@ export const FinderSidebar = ({
   onFolderSelect,
   onNewFolder,
   isAdmin,
-  onNativeFileDrop
+  onNativeFileDrop,
+  className
 }: FinderSidebarProps) => {
   const [favoritesOpen, setFavoritesOpen] = useState(true);
   const [locationsOpen, setLocationsOpen] = useState(true);
@@ -176,7 +178,7 @@ export const FinderSidebar = ({
   const rootFolders = folders.filter(f => !f.parent_id);
 
   return (
-    <div className="w-56 border-r border-border bg-muted/30 flex flex-col overflow-hidden">
+    <div className={cn("w-56 border-r border-border bg-muted/30 flex flex-col overflow-hidden", className)}>
       <div className="flex-1 overflow-y-auto">
         {/* Favorites section */}
         <Collapsible open={favoritesOpen} onOpenChange={setFavoritesOpen}>

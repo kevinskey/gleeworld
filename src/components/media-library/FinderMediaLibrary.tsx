@@ -4,6 +4,7 @@ import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, DragOve
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { MediaFile, ViewMode, SortBy, SortOrder } from './types';
 import { FinderSidebar } from './FinderSidebar';
 import { FinderToolbar } from './FinderToolbar';
@@ -13,8 +14,12 @@ import { FinderInspector } from './FinderInspector';
 import { FinderBreadcrumb } from './FinderBreadcrumb';
 import { MediaPreviewModal } from './MediaPreviewModal';
 import { NewFolderDialog } from './NewFolderDialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
-import { FolderPlus, Upload, Clipboard, File } from 'lucide-react';
+import { FolderPlus, Upload, Clipboard, File, PanelLeft, Search, ArrowUpDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMoveToFolder } from '@/hooks/useMediaFolders';
 import { cleanDisplayTitle } from '@/lib/music-library/file-naming';
@@ -59,6 +64,7 @@ export const FinderMediaLibrary = () => {
   });
 
   // State
+  const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState('all');
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -75,6 +81,7 @@ export const FinderMediaLibrary = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [draggingFileId, setDraggingFileId] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { toast } = useToast();
   const moveToFolder = useMoveToFolder();
 
@@ -130,6 +137,12 @@ export const FinderMediaLibrary = () => {
     checkAdminStatus();
   }, []);
 
+  useEffect(() => {
+    if (isMobile && viewMode !== 'grid') {
+      setViewMode('grid');
+    }
+  }, [isMobile, viewMode]);
+
   const checkAdminStatus = async () => {
     try {
       const { data } = await supabase.rpc('is_current_user_admin_safe');
@@ -142,6 +155,10 @@ export const FinderMediaLibrary = () => {
   // Invalidate and refetch media
   const refreshMedia = () => {
     queryClient.invalidateQueries({ queryKey: ['media-library'] });
+  };
+
+  const handleUploadClick = () => {
+    document.getElementById('file-upload-input')?.click();
   };
 
   // File type detection
@@ -550,6 +567,12 @@ export const FinderMediaLibrary = () => {
 
 
   const handleFileSelect = (file: MediaFile, event: React.MouseEvent) => {
+    if (isMobile) {
+      setSelectedFiles([file.id]);
+      setPreviewFile(file);
+      return;
+    }
+
     if (event.shiftKey && selectedFiles.length > 0) {
       // Range selection
       const files = getFilteredFiles();
@@ -601,60 +624,187 @@ export const FinderMediaLibrary = () => {
 
   const filteredFiles = getFilteredFiles();
 
+  const mobileSectionTitle = selectedFolderId
+    ? 'Folder'
+    : activeSection === 'trash'
+      ? 'Trash'
+      : activeSection === 'favorites'
+        ? 'Favorites'
+        : activeSection === 'recents'
+          ? 'Recents'
+          : 'Media Library';
+
   const draggingFile = draggingFileId ? allFiles.find(f => f.id === draggingFileId) : null;
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex h-[calc(100vh-200px)] min-h-[600px] bg-background border border-border rounded-lg overflow-hidden shadow-xl">
+      <div className={cn(
+        'bg-background shadow-xl overflow-hidden',
+        isMobile
+          ? 'flex h-[calc(100dvh-8.5rem)] min-h-[24rem] flex-col rounded-xl border border-border'
+          : 'flex h-[calc(100vh-200px)] min-h-[600px] rounded-lg border border-border'
+      )}>
         {/* Sidebar */}
-        <FinderSidebar 
-          activeSection={activeSection}
-          onSectionChange={(section) => {
-            setActiveSection(section);
-            setSelectedFiles([]);
-          }}
-          fileCounts={{
-            all: allFiles.filter(f => !f.is_deleted).length,
-            images: allFiles.filter(f => getFileType(f) === 'image').length,
-            videos: allFiles.filter(f => getFileType(f) === 'video').length,
-            audio: allFiles.filter(f => getFileType(f) === 'audio').length,
-            documents: allFiles.filter(f => getFileType(f) === 'document').length,
-            'quick-capture': allFiles.filter(f => (f as any).source === 'quick_capture').length,
-            favorites: allFiles.filter(f => f.is_favorite).length,
-            trash: allFiles.filter(f => f.is_deleted).length
-          }}
-          usedStorage={usedGB}
-          selectedFolderId={selectedFolderId}
-          onFolderSelect={(folderId) => {
-            setSelectedFolderId(folderId);
-            setSelectedFiles([]);
-          }}
-          onNewFolder={() => setNewFolderDialogOpen(true)}
-          isAdmin={isAdmin}
-          onNativeFileDrop={handleNativeFileDrop}
-        />
+        {!isMobile && (
+          <FinderSidebar 
+            activeSection={activeSection}
+            onSectionChange={(section) => {
+              setActiveSection(section);
+              setSelectedFiles([]);
+            }}
+            fileCounts={{
+              all: allFiles.filter(f => !f.is_deleted).length,
+              images: allFiles.filter(f => getFileType(f) === 'image').length,
+              videos: allFiles.filter(f => getFileType(f) === 'video').length,
+              audio: allFiles.filter(f => getFileType(f) === 'audio').length,
+              documents: allFiles.filter(f => getFileType(f) === 'document').length,
+              'quick-capture': allFiles.filter(f => (f as any).source === 'quick_capture').length,
+              favorites: allFiles.filter(f => f.is_favorite).length,
+              trash: allFiles.filter(f => f.is_deleted).length
+            }}
+            usedStorage={usedGB}
+            selectedFolderId={selectedFolderId}
+            onFolderSelect={(folderId) => {
+              setSelectedFolderId(folderId);
+              setSelectedFiles([]);
+            }}
+            onNewFolder={() => setNewFolderDialogOpen(true)}
+            isAdmin={isAdmin}
+            onNativeFileDrop={handleNativeFileDrop}
+          />
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Toolbar */}
-          <FinderToolbar
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            sortBy={sortBy}
-            onSortByChange={setSortBy}
-            sortOrder={sortOrder}
-            onSortOrderChange={setSortOrder}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onUpload={() => document.getElementById('file-upload-input')?.click()}
-            onUploadFolder={handleFolderUpload}
-            onNewFolder={() => setNewFolderDialogOpen(true)}
-            isAdmin={isAdmin}
-            uploading={uploading}
-            activeFilters={activeFilters}
-            onFilterToggle={handleFilterToggle}
-            onClearFilters={handleClearFilters}
-          />
+          {isMobile ? (
+            <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+              <div className="flex items-center gap-2 p-3">
+                <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                      <PanelLeft className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-[88vw] max-w-[320px] p-0">
+                    <SheetHeader className="border-b border-border px-4 py-3 text-left">
+                      <SheetTitle>Media Library</SheetTitle>
+                    </SheetHeader>
+                    <FinderSidebar
+                      activeSection={activeSection}
+                      onSectionChange={(section) => {
+                        setActiveSection(section);
+                        setSelectedFiles([]);
+                        setMobileSidebarOpen(false);
+                      }}
+                      fileCounts={{
+                        all: allFiles.filter(f => !f.is_deleted).length,
+                        images: allFiles.filter(f => getFileType(f) === 'image').length,
+                        videos: allFiles.filter(f => getFileType(f) === 'video').length,
+                        audio: allFiles.filter(f => getFileType(f) === 'audio').length,
+                        documents: allFiles.filter(f => getFileType(f) === 'document').length,
+                        'quick-capture': allFiles.filter(f => (f as any).source === 'quick_capture').length,
+                        favorites: allFiles.filter(f => f.is_favorite).length,
+                        trash: allFiles.filter(f => f.is_deleted).length
+                      }}
+                      usedStorage={usedGB}
+                      selectedFolderId={selectedFolderId}
+                      onFolderSelect={(folderId) => {
+                        setSelectedFolderId(folderId);
+                        setSelectedFiles([]);
+                        setMobileSidebarOpen(false);
+                      }}
+                      onNewFolder={() => {
+                        setNewFolderDialogOpen(true);
+                        setMobileSidebarOpen(false);
+                      }}
+                      isAdmin={isAdmin}
+                      onNativeFileDrop={handleNativeFileDrop}
+                      className="h-full w-full border-r-0"
+                    />
+                  </SheetContent>
+                </Sheet>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-foreground">{mobileSectionTitle}</p>
+                  <p className="text-xs text-muted-foreground">{filteredFiles.length} item{filteredFiles.length === 1 ? '' : 's'}</p>
+                </div>
+
+                {isAdmin && (
+                  <Button size="sm" onClick={handleUploadClick} disabled={uploading} className="h-9 shrink-0 gap-2">
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    Add File
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2 px-3 pb-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search files..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-9 pl-9"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortBy)}>
+                    <SelectTrigger className="h-9 min-w-[132px] shrink-0 bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="size">Size</SelectItem>
+                      <SelectItem value="type">Type</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  >
+                    <ArrowUpDown className={cn('h-4 w-4 transition-transform', sortOrder === 'desc' && 'rotate-180')} />
+                  </Button>
+
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 shrink-0 gap-2"
+                      onClick={() => setNewFolderDialogOpen(true)}
+                    >
+                      <FolderPlus className="h-4 w-4" />
+                      Folder
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <FinderToolbar
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onUpload={handleUploadClick}
+              onUploadFolder={handleFolderUpload}
+              onNewFolder={() => setNewFolderDialogOpen(true)}
+              isAdmin={isAdmin}
+              uploading={uploading}
+              activeFilters={activeFilters}
+              onFilterToggle={handleFilterToggle}
+              onClearFilters={handleClearFilters}
+            />
+          )}
 
           {/* Breadcrumb */}
           <FinderBreadcrumb 
@@ -669,21 +819,27 @@ export const FinderMediaLibrary = () => {
               <div 
                 {...getRootProps()}
                 className={cn(
-                  "flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 transition-colors",
-                  isDragActive && "bg-primary/5 border-2 border-dashed border-primary"
+                  'flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 transition-colors',
+                  isDragActive && 'border-2 border-dashed border-primary bg-primary/5'
                 )}
               >
                 <input {...getInputProps()} id="file-upload-input" />
                 
                 {loading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                  <div className="flex h-full items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
                   </div>
                 ) : filteredFiles.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                    <Upload className="h-16 w-16 mb-4 opacity-50" />
-                    <p className="text-lg font-medium">No files found</p>
-                    <p className="text-sm">Drag and drop files here to upload</p>
+                  <div className="flex h-full flex-col items-center justify-center px-4 text-center text-muted-foreground">
+                    <Upload className="mb-4 h-16 w-16 opacity-50" />
+                    <p className="text-lg font-medium text-foreground">No files found</p>
+                    <p className="text-sm">{isAdmin ? 'Tap Add File to upload from your phone.' : 'No media matches this view yet.'}</p>
+                    {isAdmin && (
+                      <Button onClick={handleUploadClick} className="mt-4 gap-2">
+                        <Upload className="h-4 w-4" />
+                        Add your first file
+                      </Button>
+                    )}
                   </div>
                 ) : viewMode === 'grid' ? (
                   <FinderFileGrid
@@ -733,7 +889,7 @@ export const FinderMediaLibrary = () => {
         </div>
 
         {/* Inspector Panel */}
-        {showInspector && inspectorFile && (
+        {!isMobile && showInspector && inspectorFile && (
           <FinderInspector
             key={`${inspectorFile.id}-${startEditing}`}
             file={inspectorFile}
