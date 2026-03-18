@@ -16,6 +16,7 @@ interface SMSPayload {
   to?: string;
   message?: string;
   mediaUrl?: string;
+  mediaUrls?: string[];
   notificationId?: string;
   senderId?: string; // User ID for logging
   // Bulk SMS fields
