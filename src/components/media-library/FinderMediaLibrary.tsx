@@ -64,6 +64,7 @@ export const FinderMediaLibrary = () => {
   });
 
   // State
+  const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState('all');
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -80,6 +81,7 @@ export const FinderMediaLibrary = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [draggingFileId, setDraggingFileId] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { toast } = useToast();
   const moveToFolder = useMoveToFolder();
 
