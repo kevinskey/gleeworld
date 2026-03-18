@@ -671,10 +671,10 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       return;
     }
 
-    if (!smsContent.trim() && !smsAttachment) {
+    if (!smsContent.trim() && smsAttachments.length === 0) {
       toast({
         title: "No message",
-        description: "Please type a message or add an MP3",
+        description: "Please type a message or add audio files",
         variant: "destructive"
       });
       return;
@@ -682,15 +682,18 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
 
     setIsSending(true);
     try {
-      let mediaUrl: string | undefined;
+      const mediaUploads = await Promise.all(
+        smsAttachments.map(file => uploadFileAndGetUrl(file, 'message-attachments', 'sms'))
+      );
 
-      if (smsAttachment) {
-        const uploadResult = await uploadFileAndGetUrl(smsAttachment, 'message-attachments', 'sms');
-        if (!uploadResult?.url) {
-          throw new Error('Could not upload attachment for SMS');
-        }
-        mediaUrl = uploadResult.url;
+      const failedUpload = mediaUploads.find(upload => !upload?.url);
+      if (failedUpload) {
+        throw new Error('Could not upload one or more attachments for SMS');
       }
+
+      const mediaUrls = mediaUploads
+        .map(upload => upload?.url)
+        .filter((url): url is string => Boolean(url));
 
       const senderName = userProfile?.full_name || user?.email?.split('@')[0] || 'GleeWorld';
       const trimmedSmsContent = smsContent.trim();
@@ -706,7 +709,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           sendToAll,
           recipients: sendToAll ? [] : smsRecipients.map(r => r.phone_number),
           senderId: user?.id,
-          mediaUrl,
+          mediaUrls,
         }
       });
       if (error) throw error;
@@ -717,7 +720,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       });
       setSmsContent('');
       setSmsRecipients([]);
-      setSmsAttachment(null);
+      setSmsAttachments([]);
     } catch (error: any) {
       toast({
         title: "Failed to send",
