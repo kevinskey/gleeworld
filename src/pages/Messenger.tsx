@@ -31,7 +31,7 @@ import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
 import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 import { uploadFileAndGetUrl } from '@/utils/storage';
 
-const MAX_SMS_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_SMS_ATTACHMENT_SIZE_BYTES = 150 * 1024 * 1024;
 const ACCEPTED_SMS_ATTACHMENTS = 'audio/mpeg,audio/mp3,audio/*';
 
 interface RecipientGroup {
