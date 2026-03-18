@@ -108,11 +108,12 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const payload: SMSPayload = await req.json();
-    console.log('SMS request received:', { 
-      sendToAll: payload.sendToAll, 
+    console.log('SMS request received:', {
+      sendToAll: payload.sendToAll,
       recipientCount: payload.recipients?.length || (payload.to ? 1 : 0),
       messageLength: payload.message?.length,
-      senderId: payload.senderId
+      hasMedia: Boolean(payload.mediaUrl),
+      senderId: payload.senderId,
     });
 
     const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
@@ -127,9 +128,10 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    if (!payload.message?.trim()) {
+    const messageBody = payload.message?.trim() || '';
+    if (!messageBody && !payload.mediaUrl) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Message is required' }),
+        JSON.stringify({ success: false, error: 'Message or media attachment is required' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
     }
@@ -170,10 +172,10 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log(`Sending bulk SMS to ${phoneNumbers.length} recipients`);
 
-      // Send SMS to each recipient
+      // Send SMS/MMS to each recipient
       const results = await Promise.all(
-        phoneNumbers.map(phone => 
-          sendSingleSMS(phone, payload.message, twilioAccountSid, twilioAuthToken, twilioFromNumber)
+        phoneNumbers.map(phone =>
+          sendSingleSMS(phone, messageBody, twilioAccountSid, twilioAuthToken, twilioFromNumber, payload.mediaUrl)
         )
       );
 
@@ -189,12 +191,12 @@ const handler = async (req: Request): Promise<Response> => {
             user_id: payload.senderId,
             direction: 'sent',
             channel: 'sms',
-            content: payload.message.slice(0, 5000),
+            content: messageBody.slice(0, 5000),
             recipient_phones: phoneNumbers,
             status: failed === 0 ? 'sent' : (successful > 0 ? 'sent' : 'failed'),
             error_message: failed > 0 ? `${failed} of ${phoneNumbers.length} messages failed` : null,
-            metadata: { successful, failed, total: phoneNumbers.length },
-            sent_at: new Date().toISOString()
+            metadata: { successful, failed, total: phoneNumbers.length, hasMedia: Boolean(payload.mediaUrl) },
+            sent_at: new Date().toISOString(),
           });
           console.log("Bulk SMS logged to history");
         } catch (logError) {
@@ -203,11 +205,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          sent: successful, 
-          failed: failed,
-          total: phoneNumbers.length
+        JSON.stringify({
+          success: true,
+          sent: successful,
+          failed,
+          total: phoneNumbers.length,
         }),
         { status: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
       );
@@ -216,11 +218,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Handle single SMS (legacy support)
     if (payload.to) {
       const result = await sendSingleSMS(
-        payload.to, 
-        payload.message, 
-        twilioAccountSid, 
-        twilioAuthToken, 
-        twilioFromNumber
+        payload.to,
+        messageBody,
+        twilioAccountSid,
+        twilioAuthToken,
+        twilioFromNumber,
+        payload.mediaUrl,
       );
 
       if (result.success && payload.notificationId) {

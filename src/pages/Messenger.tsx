@@ -985,6 +985,43 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                         <div className="space-y-0.5 flex-1 flex flex-col">
                           <Label className="text-sm font-medium text-foreground">Message:</Label>
                           <Textarea value={smsContent} onChange={e => setSmsContent(e.target.value)} placeholder="Type your SMS message..." className="flex-1 min-h-[100px] resize-none bg-background border-border text-foreground text-sm placeholder:text-muted-foreground" maxLength={480} />
+
+                          <input
+                            ref={smsAttachmentInputRef}
+                            type="file"
+                            accept={ACCEPTED_SMS_ATTACHMENTS}
+                            className="hidden"
+                            onChange={handleSmsAttachmentSelect}
+                          />
+
+                          <div className="flex items-center justify-between gap-2 pt-1">
+                            <span className="text-xs text-muted-foreground">Optional: attach an MP3 (max 5MB)</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 gap-1 text-xs"
+                              onClick={() => smsAttachmentInputRef.current?.click()}
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              Add MP3
+                            </Button>
+                          </div>
+
+                          {smsAttachment && (
+                            <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-medium text-foreground">{smsAttachment.name}</p>
+                                <p className="text-[11px] text-muted-foreground">
+                                  {(smsAttachment.size / (1024 * 1024)).toFixed(2)} MB
+                                </p>
+                              </div>
+                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={clearSmsAttachment}>
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          )}
+
                           <div className="flex justify-between text-xs text-muted-foreground">
                             <span>{smsContent.length}/480 characters</span>
                             <span>{Math.ceil(smsContent.length / 160) || 1} SMS segment{smsContent.length > 160 ? 's' : ''}</span>
@@ -994,7 +1031,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       
                       {/* Send Button */}
                       <div className="flex-shrink-0 p-3 bg-muted border-t border-border">
-                        <Button onClick={handleSendSMS} disabled={isSending || !sendToAll && smsRecipients.length === 0 || !smsContent.trim()} className="w-full h-9 text-sm">
+                        <Button onClick={handleSendSMS} disabled={isSending || (!sendToAll && smsRecipients.length === 0) || (!smsContent.trim() && !smsAttachment)} className="w-full h-9 text-sm">
                           {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>}
                         </Button>
                       </div>
