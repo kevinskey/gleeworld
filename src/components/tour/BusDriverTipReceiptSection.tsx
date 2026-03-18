@@ -73,6 +73,7 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'check' | 'cash_app' | 'venmo' | 'other'>('cash');
   const [notes, setNotes] = useState('');
   const [signature, setSignature] = useState<string | null>(null);
+  const signatureRef = useRef<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: queriedCompanies = [] } = useQuery({
