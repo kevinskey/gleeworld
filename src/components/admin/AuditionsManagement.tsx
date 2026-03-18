@@ -18,8 +18,6 @@ import {
   Pie, 
   BarChart, 
   Bar, 
-  XAxis, 
-  YAxis, 
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer 
