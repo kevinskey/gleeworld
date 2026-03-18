@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -73,6 +73,7 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'check' | 'cash_app' | 'venmo' | 'other'>('cash');
   const [notes, setNotes] = useState('');
   const [signature, setSignature] = useState<string | null>(null);
+  const signatureRef = useRef<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: queriedCompanies = [] } = useQuery({
@@ -142,9 +143,15 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
     enabled: Boolean(user),
   });
 
+  const handleSignatureChange = (value: string | null) => {
+    signatureRef.current = value;
+    setSignature(value);
+  };
+
   const resetForm = () => {
     setNotes('');
     setSignature(null);
+    signatureRef.current = null;
   };
 
   const handleSubmit = async () => {
@@ -159,7 +166,7 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
       driver_phone: driverPhone,
       payment_method: paymentMethod,
       notes,
-      signature_data: signature ?? '',
+      signature_data: signatureRef.current ?? signature ?? '',
     });
 
     if (!parsed.success) {
@@ -288,7 +295,7 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
             />
           </div>
 
-          <SignatureCanvas onSignatureChange={setSignature} disabled={isSubmitting} />
+          <SignatureCanvas onSignatureChange={handleSignatureChange} disabled={isSubmitting} />
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">

@@ -94,6 +94,8 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     ctx.arc(x, y, 0.75, 0, Math.PI * 2);
     ctx.fillStyle = '#000000';
     ctx.fill();
+    const immediateSignature = canvas.toDataURL();
+    onSignatureChange(immediateSignature);
     ctx.beginPath();
     ctx.moveTo(x, y);
     console.log('Started drawing signature at:', x, y);
@@ -182,6 +184,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
             onTouchStart={startDrawing}
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
+            onTouchCancel={stopDrawing}
           />
         </div>
         
