@@ -1124,6 +1124,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       <>
         {mainContent}
         {groupEditorDialog}
+        {manageMembersDialog}
       </>
     );
   }
@@ -1135,6 +1136,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
         {mainContent}
       </UniversalLayout>
       {groupEditorDialog}
+      {manageMembersDialog}
     </>
   );
 };
