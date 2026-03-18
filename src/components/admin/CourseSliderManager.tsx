@@ -213,36 +213,38 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
       {/* Header Card */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="rounded-lg bg-primary/10 p-2">
                 {icon || <Images className="h-5 w-5 text-primary" />}
               </div>
-              <div>
+              <div className="min-w-0">
                 <CardTitle className="text-lg">{courseCode} Topic Photos</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {courseTitle} - Manage course topic photos
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
+              <Badge variant="secondary" className="justify-center px-3 py-2 text-xs sm:py-1">
                 {slider.slides?.length || 0} slides
               </Badge>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
+                className="w-full"
                 onClick={() => window.open(coursePath, '_blank')}
               >
-                <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                <ExternalLink className="mr-1 h-3.5 w-3.5" />
                 Preview
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
-            <span className="font-medium">Placement Key:</span> <code className="font-mono">{placementKey}</code>
+          <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+            <span className="font-medium">Placement Key:</span>{' '}
+            <code className="font-mono break-all">{placementKey}</code>
           </div>
         </CardContent>
       </Card>
@@ -250,18 +252,23 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
       {/* Slides Manager */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Slides</CardTitle>
-            <Button size="sm" onClick={handleAddSlide} disabled={createSlide.isPending}>
-              <Plus className="h-4 w-4 mr-1" />
+            <Button
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={handleAddSlide}
+              disabled={createSlide.isPending}
+            >
+              <Plus className="mr-1 h-4 w-4" />
               Add Slide
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
           {slider.slides?.length === 0 && (
-            <div className="text-center py-6 text-muted-foreground border border-dashed rounded-lg">
-              <Images className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <div className="rounded-lg border border-dashed py-6 text-center text-muted-foreground">
+              <Images className="mx-auto mb-2 h-8 w-8 opacity-50" />
               <p className="text-sm">No slides yet. Add one to get started.</p>
             </div>
           )}
@@ -272,107 +279,123 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
               open={expandedSlide === slide.id}
               onOpenChange={() => setExpandedSlide(expandedSlide === slide.id ? null : slide.id)}
             >
-              <div className={cn(
-                "border rounded-lg overflow-hidden transition-colors",
-                expandedSlide === slide.id ? "border-primary/50 bg-accent/30" : "border-border"
-              )}>
+              <div
+                className={cn(
+                  'overflow-hidden rounded-lg border transition-colors',
+                  expandedSlide === slide.id ? 'border-primary/50 bg-accent/30' : 'border-border',
+                )}
+              >
                 <CollapsibleTrigger className="w-full">
-                  <div className="flex items-center gap-3 p-3 hover:bg-accent/50 transition-colors">
-                    {/* Thumbnail */}
-                    <div className="w-16 h-12 rounded overflow-hidden bg-muted flex-shrink-0">
-                      {slide.slide_type === 'youtube' && slide.youtube_video_id ? (
-                        <img 
-                          src={`https://img.youtube.com/vi/${slide.youtube_video_id}/default.jpg`} 
-                          alt={slide.title || `Slide ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : slide.slide_type === 'video' && slide.video_url ? (
-                        <div className="w-full h-full flex items-center justify-center bg-muted">
-                          <Video className="h-4 w-4 text-primary" />
-                        </div>
-                      ) : slide.image_url ? (
-                        <img 
-                          src={slide.image_url} 
-                          alt={slide.title || `Slide ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Images className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 text-left">
-                      <div className="font-medium text-sm flex items-center gap-1.5">
-                        {slide.slide_type === 'youtube' ? (
-                          <Youtube className="h-3.5 w-3.5 text-red-500" />
-                        ) : slide.slide_type === 'video' ? (
-                          <Video className="h-3.5 w-3.5 text-primary" />
+                  <div className="flex flex-col gap-3 p-3 text-left transition-colors hover:bg-accent/50 sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 items-start gap-3 sm:flex-1 sm:items-center">
+                      <div className="h-12 w-16 flex-shrink-0 overflow-hidden rounded bg-muted">
+                        {slide.slide_type === 'youtube' && slide.youtube_video_id ? (
+                          <img
+                            src={`https://img.youtube.com/vi/${slide.youtube_video_id}/default.jpg`}
+                            alt={slide.title || `Slide ${index + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : slide.slide_type === 'video' && slide.video_url ? (
+                          <div className="flex h-full w-full items-center justify-center bg-muted">
+                            <Video className="h-4 w-4 text-primary" />
+                          </div>
+                        ) : slide.image_url ? (
+                          <img
+                            src={slide.image_url}
+                            alt={slide.title || `Slide ${index + 1}`}
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
-                          <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                          <div className="flex h-full w-full items-center justify-center">
+                            <Images className="h-4 w-4 text-muted-foreground" />
+                          </div>
                         )}
-                        {slide.title || `Slide ${index + 1}`}
                       </div>
-                      <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                        {slide.slide_type === 'youtube' 
-                          ? `YouTube: ${slide.youtube_video_id || 'No video ID'}`
-                          : slide.slide_type === 'video'
-                          ? `Video: ${slide.video_url ? 'Uploaded' : 'No video'}`
-                          : (slide.description || 'No description')}
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 text-sm font-medium">
+                          {slide.slide_type === 'youtube' ? (
+                            <Youtube className="h-3.5 w-3.5 text-red-500" />
+                          ) : slide.slide_type === 'video' ? (
+                            <Video className="h-3.5 w-3.5 text-primary" />
+                          ) : (
+                            <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                          <span className="truncate">{slide.title || `Slide ${index + 1}`}</span>
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          {slide.slide_type === 'youtube'
+                            ? `YouTube: ${slide.youtube_video_id || 'No video ID'}`
+                            : slide.slide_type === 'video'
+                              ? `Video: ${slide.video_url ? 'Uploaded' : 'No video'}`
+                              : (slide.description || 'No description')}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Reorder & Status */}
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        disabled={index === 0}
-                        onClick={(e) => { e.stopPropagation(); handleMoveSlide(index, 'up'); }}
-                      >
-                        <ArrowUp className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        disabled={index === (slider.slides?.length || 1) - 1}
-                        onClick={(e) => { e.stopPropagation(); handleMoveSlide(index, 'down'); }}
-                      >
-                        <ArrowDown className="h-3.5 w-3.5" />
-                      </Button>
-                      <Badge variant={slide.is_active ? "default" : "secondary"} className="text-xs">
-                        {slide.is_active ? <Eye className="h-3 w-3 mr-1" /> : <EyeOff className="h-3 w-3 mr-1" />}
-                        {slide.is_active ? 'Active' : 'Hidden'}
-                      </Badge>
-                      <ChevronDown className={cn(
-                        "h-4 w-4 text-muted-foreground transition-transform",
-                        expandedSlide === slide.id && "rotate-180"
-                      )} />
+                    <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={index === 0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveSlide(index, 'up');
+                          }}
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={index === (slider.slides?.length || 1) - 1}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveSlide(index, 'down');
+                          }}
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Badge variant={slide.is_active ? 'default' : 'secondary'} className="shrink-0 text-xs">
+                          {slide.is_active ? <Eye className="mr-1 h-3 w-3" /> : <EyeOff className="mr-1 h-3 w-3" />}
+                          {slide.is_active ? 'Active' : 'Hidden'}
+                        </Badge>
+                        <ChevronDown
+                          className={cn(
+                            'h-4 w-4 shrink-0 text-muted-foreground transition-transform',
+                            expandedSlide === slide.id && 'rotate-180',
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
                 </CollapsibleTrigger>
 
                 <CollapsibleContent>
-                  <div className="border-t p-4 space-y-4 bg-background">
+                  <div className="space-y-4 border-t bg-background p-4">
                     {/* Slide Type Selector */}
                     <div>
                       <Label className="text-sm font-medium">Slide Type</Label>
                       <Select
                         value={slide.slide_type}
                         onValueChange={(value: 'image' | 'youtube' | 'video') => {
-                          updateSlide.mutate({ id: slide.id, slide_type: value }, {
-                            onSuccess: () => refetch()
-                          });
+                          updateSlide.mutate(
+                            { id: slide.id, slide_type: value },
+                            {
+                              onSuccess: () => refetch(),
+                            },
+                          );
                         }}
                       >
                         <SelectTrigger className="mt-1 w-full">
                           <SelectValue placeholder="Select slide type" />
                         </SelectTrigger>
-                        <SelectContent className="z-[100] bg-background border shadow-lg">
+                        <SelectContent className="z-[100] border bg-background shadow-lg">
                           <SelectItem value="image">
                             <div className="flex items-center gap-2">
                               <ImageIcon className="h-4 w-4" />
@@ -399,17 +422,17 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                     {slide.slide_type === 'image' && (
                       <div>
                         <Label className="text-sm font-medium">Image</Label>
-                        <div className="mt-1 flex gap-2">
+                        <div className="mt-1 flex flex-col gap-2 sm:flex-row">
                           <Input
                             value={slide.image_url || ''}
                             onChange={(e) => updateSlide.mutate({ id: slide.id, image_url: e.target.value })}
                             placeholder="https://..."
                             className="flex-1 text-sm"
                           />
-                          <label className="cursor-pointer">
-                            <Button variant="outline" size="sm" asChild>
+                          <label className="cursor-pointer sm:self-start">
+                            <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
                               <span>
-                                <Upload className="h-4 w-4 mr-1" />
+                                <Upload className="mr-1 h-4 w-4" />
                                 Upload
                               </span>
                             </Button>
@@ -449,17 +472,17 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                             className="mt-1 text-sm"
                           />
                           {slide.youtube_video_id && (
-                            <div className="mt-2 rounded overflow-hidden border">
-                              <img 
+                            <div className="mt-2 overflow-hidden rounded border">
+                              <img
                                 src={`https://img.youtube.com/vi/${slide.youtube_video_id}/mqdefault.jpg`}
                                 alt="Video thumbnail"
-                                className="w-full h-auto"
+                                className="h-auto w-full"
                               />
                             </div>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-4">
-                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <label className="flex cursor-pointer items-center gap-2 text-sm">
                             <input
                               type="checkbox"
                               checked={slide.youtube_autoplay || false}
@@ -468,7 +491,7 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                             />
                             Autoplay
                           </label>
-                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <label className="flex cursor-pointer items-center gap-2 text-sm">
                             <input
                               type="checkbox"
                               checked={slide.youtube_muted || false}
@@ -477,7 +500,7 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                             />
                             Muted
                           </label>
-                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <label className="flex cursor-pointer items-center gap-2 text-sm">
                             <input
                               type="checkbox"
                               checked={slide.youtube_loop || false}
@@ -495,17 +518,17 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                       <div className="space-y-3">
                         <div>
                           <Label className="text-sm font-medium">Video File</Label>
-                          <div className="mt-1 flex gap-2">
+                          <div className="mt-1 flex flex-col gap-2 sm:flex-row">
                             <Input
                               value={slide.video_url || ''}
                               onChange={(e) => updateSlide.mutate({ id: slide.id, video_url: e.target.value })}
                               placeholder="https://... or upload a file"
                               className="flex-1 text-sm"
                             />
-                            <label className="cursor-pointer">
-                              <Button variant="outline" size="sm" asChild>
+                            <label className="cursor-pointer sm:self-start">
+                              <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
                                 <span>
-                                  <Upload className="h-4 w-4 mr-1" />
+                                  <Upload className="mr-1 h-4 w-4" />
                                   Upload
                                 </span>
                               </Button>
@@ -522,10 +545,10 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                           </div>
                         </div>
                         {slide.video_url && (
-                          <div className="mt-2 rounded overflow-hidden border bg-black">
+                          <div className="mt-2 overflow-hidden rounded border bg-black">
                             <video
                               src={slide.video_url}
-                              className="w-full h-auto max-h-48"
+                              className="h-auto max-h-48 w-full"
                               controls
                               muted
                             />
@@ -572,28 +595,31 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between pt-2 border-t">
+                    <div className="flex flex-col gap-3 border-t pt-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-2">
                         <Label className="text-sm">Active</Label>
                         <button
                           onClick={() => updateSlide.mutate({ id: slide.id, is_active: !slide.is_active })}
                           className={cn(
-                            "w-10 h-5 rounded-full transition-colors relative",
-                            slide.is_active ? "bg-primary" : "bg-muted"
+                            'relative h-5 w-10 rounded-full transition-colors',
+                            slide.is_active ? 'bg-primary' : 'bg-muted',
                           )}
                         >
-                          <span className={cn(
-                            "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform",
-                            slide.is_active ? "left-5" : "left-0.5"
-                          )} />
+                          <span
+                            className={cn(
+                              'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform',
+                              slide.is_active ? 'left-5' : 'left-0.5',
+                            )}
+                          />
                         </button>
                       </div>
                       <Button
                         variant="destructive"
                         size="sm"
+                        className="w-full sm:w-auto"
                         onClick={() => handleDeleteSlide(slide.id)}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
+                        <Trash2 className="mr-1 h-4 w-4" />
                         Delete
                       </Button>
                     </div>
