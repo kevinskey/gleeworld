@@ -116,7 +116,7 @@ export const CreateTourGroupButton = () => {
 
       if (membersResponse.error) throw membersResponse.error;
 
-      const existingMembers = (membersResponse.data || []) as MessengerGroupMemberRecord[];
+      const existingMembers = ((membersResponse.data as unknown) || []) as MessengerGroupMemberRecord[];
       const existingIds = new Set(existingMembers.map((member) => member.user_id));
       const newMembers = rosterUserIds
         .filter((userId) => !existingIds.has(userId))
