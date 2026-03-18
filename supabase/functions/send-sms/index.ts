@@ -14,7 +14,8 @@ const corsHeaders = {
 
 interface SMSPayload {
   to?: string;
-  message: string;
+  message?: string;
+  mediaUrl?: string;
   notificationId?: string;
   senderId?: string; // User ID for logging
   // Bulk SMS fields
