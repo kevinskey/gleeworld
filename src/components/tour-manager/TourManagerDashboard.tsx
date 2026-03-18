@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft, MessageSquare, CloudSun } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft, MessageSquare, CloudSun, Receipt } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -29,6 +29,7 @@ import { RisersSection } from '@/components/tour/RisersSection';
 import { TourNotesSection } from '@/components/tour/TourNotesSection';
 import { TourRollCallSection } from './TourRollCallSection';
 import { TourWeatherSection } from './TourWeatherSection';
+import { BusDriverTipReceiptSection } from '@/components/tour/BusDriverTipReceiptSection';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -97,6 +98,10 @@ const navItems = [{
   value: 'bus-info',
   label: 'Bus Info',
   icon: Bus
+}, {
+  value: 'driver-tip',
+  label: 'Driver Tip',
+  icon: Receipt
 }, {
   value: 'documents',
   label: 'Docs',
@@ -182,6 +187,10 @@ const contentConfig: Record<string, {
     title: 'Bus Info',
     description: 'Bus details, rules, amenities, and important information'
   },
+  'driver-tip': {
+    title: 'Driver Tip',
+    description: 'Collect the bus driver signature for the $300 tip receipt'
+  },
   'documents': {
     title: 'Documents',
     description: 'Manage important tour documentation'
@@ -215,7 +224,6 @@ export const TourManagerDashboard = ({
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
     setSidebarOpen(false);
-    // Scroll main content to top
     if (mainContentRef.current) {
       mainContentRef.current.scrollTop = 0;
     }
@@ -232,46 +240,36 @@ export const TourManagerDashboard = ({
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Fetch tour dates count
         const {
           count: datesCount
         } = await supabase.from('gw_tour_events').select('*', {
           count: 'exact',
           head: true
         }).gte('start_date', new Date().toISOString());
-
-        // Fetch roster count
         const {
           count: rosterCount
         } = await supabase.from('gw_tour_roster').select('*', {
           count: 'exact',
           head: true
         }).eq('status', 'confirmed');
-
-        // Fetch pending contracts
         const {
           count: contractsCount
         } = await supabase.from('contracts_v2').select('*', {
           count: 'exact',
           head: true
         }).eq('status', 'pending');
-
-        // Fetch booking requests as contacts proxy
         const {
           count: requestsCount
         } = await supabase.from('booking_requests').select('*', {
           count: 'exact',
           head: true
         });
-
-        // Fetch active routes count
         const {
           count: routesCount
         } = await supabase.from('gw_tours').select('*', {
           count: 'exact',
           head: true
         });
-
         setStats({
           upcomingDates: datesCount || 0,
           activeRoutes: routesCount || 0,
@@ -321,6 +319,8 @@ export const TourManagerDashboard = ({
         return <BusBuddiesSection />;
       case 'bus-info':
         return <BusInfoSection />;
+      case 'driver-tip':
+        return <BusDriverTipReceiptSection />;
       case 'documents':
         return <TourDocumentsSection />;
       case 'wardrobe':
@@ -338,7 +338,6 @@ export const TourManagerDashboard = ({
     }
   };
   return <div className="min-h-screen bg-background flex flex-col">
-      {/* Top Bar - Full Width */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between px-3 lg:px-4 h-12 bg-brand-900">
           <div className="flex items-center gap-2">
@@ -368,28 +367,25 @@ export const TourManagerDashboard = ({
         </div>
       </header>
 
-      {/* Content Area with Sidebar */}
       <div className="flex-1 flex flex-row">
-        {/* Sidebar - hidden on mobile, shown on desktop */}
         <aside className={cn("fixed top-12 bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-[calc(100vh-48px)] lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-          <div 
-            className="flex flex-col h-full px-0 pt-2 overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide" 
-            style={{ 
+          <div
+            className="flex flex-col h-full px-0 pt-2 overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide"
+            style={{
               WebkitOverflowScrolling: 'touch',
               paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
               paddingTop: 'env(safe-area-inset-top, 0px)'
             }}
           >
-            {/* Navigation */}
             <nav className="flex flex-col space-y-1 px-2 w-full">
               {navItems.map(item => (
-                <button 
-                  key={item.value} 
-                  onClick={() => handleSectionChange(item.value)} 
+                <button
+                  key={item.value}
+                  onClick={() => handleSectionChange(item.value)}
                   className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-left min-h-[44px] touch-manipulation",
-                    activeSection === item.value 
-                      ? "bg-primary/10 text-primary font-medium" 
+                    activeSection === item.value
+                      ? "bg-primary/10 text-primary font-medium"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
@@ -401,10 +397,8 @@ export const TourManagerDashboard = ({
           </div>
         </aside>
 
-        {/* Mobile Overlay */}
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        {/* Main Content */}
         <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
           <div ref={mainContentRef} className="flex-1 overflow-auto p-4">
             {renderContent()}
@@ -412,7 +406,6 @@ export const TourManagerDashboard = ({
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation - Scrollable */}
       <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-[99998]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="overflow-x-auto scrollbar-hide overscroll-x-contain touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="flex items-center h-14 px-2 min-w-max">
