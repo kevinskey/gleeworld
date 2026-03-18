@@ -143,9 +143,15 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
     enabled: Boolean(user),
   });
 
+  const handleSignatureChange = (value: string | null) => {
+    signatureRef.current = value;
+    setSignature(value);
+  };
+
   const resetForm = () => {
     setNotes('');
     setSignature(null);
+    signatureRef.current = null;
   };
 
   const handleSubmit = async () => {
