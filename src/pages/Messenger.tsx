@@ -228,6 +228,26 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   const removeSmsRecipient = (userId: string) => {
     setSmsRecipients(smsRecipients.filter(r => r.user_id !== userId));
   };
+  const clearSmsAttachment = () => {
+    setSmsAttachment(null);
+  };
+  const handleSmsAttachmentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) return;
+
+    if (file.size > MAX_SMS_ATTACHMENT_SIZE_BYTES) {
+      toast({
+        title: 'File too large',
+        description: 'MMS attachments must be 5MB or less',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSmsAttachment(file);
+  };
   const handleAddGroup = async (group: RecipientGroup) => {
     try {
       // Validate group has required properties
