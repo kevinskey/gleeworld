@@ -372,8 +372,13 @@ const Profile = () => {
     try {
       const { error } = await supabase
         .from("gw_profiles")
-        .update(updatePayload)
-        .eq("user_id", user.id);
+        .upsert({
+          user_id: user.id,
+          email: user.email ?? null,
+          ...updatePayload,
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) {
         throw error;
