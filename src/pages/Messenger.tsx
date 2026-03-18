@@ -31,7 +31,7 @@ import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
 import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 import { uploadFileAndGetUrl } from '@/utils/storage';
 
-const MAX_SMS_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_SMS_ATTACHMENT_SIZE_BYTES = 150 * 1024 * 1024;
 const ACCEPTED_SMS_ATTACHMENTS = 'audio/mpeg,audio/mp3,audio/*';
 
 interface RecipientGroup {
@@ -240,7 +240,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     if (file.size > MAX_SMS_ATTACHMENT_SIZE_BYTES) {
       toast({
         title: 'File too large',
-        description: 'MMS attachments must be 5MB or less',
+        description: 'MMS attachments must be 150MB or less',
         variant: 'destructive',
       });
       return;
@@ -995,7 +995,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           />
 
                           <div className="flex items-center justify-between gap-2 pt-1">
-                            <span className="text-xs text-muted-foreground">Optional: attach an MP3 (max 5MB)</span>
+                            <span className="text-xs text-muted-foreground">Optional: attach an MP3 (max 150MB)</span>
                             <Button
                               type="button"
                               variant="outline"
