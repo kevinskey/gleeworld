@@ -5,7 +5,7 @@ import path from "path";
 const localModule = (modulePath: string) => path.resolve(__dirname, `./node_modules/${modulePath}`);
 
 // https://vitejs.dev/config/
-export default defineConfig(() => ({
+export default defineConfig({
   server: {
     host: "::",
     port: 8080,
@@ -35,4 +35,4 @@ export default defineConfig(() => ({
     exclude: ["pdfjs-dist"],
     include: ["react", "react-dom", "react/jsx-runtime", "react-router-dom", "@tanstack/query-core"],
   },
-}));
+});
