@@ -206,7 +206,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
         </div>
         
         <p className={`text-sm text-gray-600 text-center ${isMobile ? 'text-xs' : ''}`}>
-          Please sign in the box above using your {isMobile ? 'finger or' : 'mouse or'} touchscreen
+          Please sign in the box above using your {isMobile ? 'finger or' : 'mouse or'} touchscreen. A tap will place a dot.
         </p>
       </CardContent>
     </Card>
