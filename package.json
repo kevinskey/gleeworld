@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10",
-    "build": "NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 build",
-    "build:dev": "NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 build --mode development",
+    "dev": "NODE_PATH=./node_modules NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10",
+    "build": "NODE_PATH=./node_modules NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 build",
+    "build:dev": "NODE_PATH=./node_modules NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 build --mode development",
     "lint": "eslint .",
-    "preview": "NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 preview"
+    "preview": "NODE_PATH=./node_modules NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 preview"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",
