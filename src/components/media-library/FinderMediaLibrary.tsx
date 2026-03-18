@@ -137,6 +137,12 @@ export const FinderMediaLibrary = () => {
     checkAdminStatus();
   }, []);
 
+  useEffect(() => {
+    if (isMobile && viewMode !== 'grid') {
+      setViewMode('grid');
+    }
+  }, [isMobile, viewMode]);
+
   const checkAdminStatus = async () => {
     try {
       const { data } = await supabase.rpc('is_current_user_admin_safe');
