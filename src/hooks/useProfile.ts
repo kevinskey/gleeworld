@@ -138,11 +138,14 @@ export const useProfile = () => {
       
       const { error } = await supabase
         .from("gw_profiles")
-        .update({
+        .upsert({
+          user_id: user.id,
+          email: user.email ?? null,
           ...updates,
           updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) {
         console.error('Profile update error:', error.message);
