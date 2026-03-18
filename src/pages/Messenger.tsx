@@ -1012,40 +1012,58 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                             ref={smsAttachmentInputRef}
                             type="file"
                             accept={ACCEPTED_SMS_ATTACHMENTS}
+                            multiple
                             className="hidden"
                             onChange={handleSmsAttachmentSelect}
                           />
 
                           <div className="flex items-center justify-between gap-2 pt-1">
-                            <span className="text-xs text-muted-foreground">Optional: attach an MP3 (max 150MB)</span>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-7 gap-1 text-xs"
-                              onClick={() => smsAttachmentInputRef.current?.click()}
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                              Add MP3
-                            </Button>
+                            <span className="text-xs text-muted-foreground">Optional: attach up to {MAX_SMS_ATTACHMENTS} audio files (150MB each)</span>
+                            <div className="flex items-center gap-2">
+                              {smsAttachments.length > 0 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={clearSmsAttachments}
+                                >
+                                  Clear all
+                                </Button>
+                              )}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 gap-1 text-xs"
+                                onClick={() => smsAttachmentInputRef.current?.click()}
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Add files
+                              </Button>
+                            </div>
                           </div>
 
-                          {smsAttachment && (
-                            <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-2">
-                              <div className="min-w-0">
-                                <p className="truncate text-xs font-medium text-foreground">{smsAttachment.name}</p>
-                                <p className="text-[11px] text-muted-foreground">
-                                  {(smsAttachment.size / (1024 * 1024)).toFixed(2)} MB
-                                </p>
-                              </div>
-                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={clearSmsAttachment}>
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
+                          {smsAttachments.length > 0 && (
+                            <div className="space-y-2">
+                              {smsAttachments.map((attachment, index) => (
+                                <div key={`${attachment.name}-${attachment.lastModified}-${index}`} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-2">
+                                  <div className="min-w-0">
+                                    <p className="truncate text-xs font-medium text-foreground">{attachment.name}</p>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      {(attachment.size / (1024 * 1024)).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeSmsAttachment(index)}>
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              ))}
                             </div>
                           )}
 
                           <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>{smsContent.length}/480 characters</span>
+                            <span>{smsContent.length}/480 characters · {smsAttachments.length}/{MAX_SMS_ATTACHMENTS} files</span>
                             <span>{Math.ceil(smsContent.length / 160) || 1} SMS segment{smsContent.length > 160 ? 's' : ''}</span>
                           </div>
                         </div>
@@ -1053,7 +1071,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       
                       {/* Send Button */}
                       <div className="flex-shrink-0 p-3 bg-muted border-t border-border">
-                        <Button onClick={handleSendSMS} disabled={isSending || (!sendToAll && smsRecipients.length === 0) || (!smsContent.trim() && !smsAttachment)} className="w-full h-9 text-sm">
+                        <Button onClick={handleSendSMS} disabled={isSending || (!sendToAll && smsRecipients.length === 0) || (!smsContent.trim() && smsAttachments.length === 0)} className="w-full h-9 text-sm">
                           {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>}
                         </Button>
                       </div>
