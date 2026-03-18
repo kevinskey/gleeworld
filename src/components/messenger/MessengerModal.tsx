@@ -33,6 +33,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Mail, Smartphone, X, Send, Users, Search, Loader2, Maximize2, Minimize2, Video } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 
 interface RecipientGroup {
   id: string;
@@ -177,7 +178,7 @@ export const MessengerModal: React.FC = () => {
         .from('messenger_group_members' as any)
         .select(`
           user_id,
-          gw_profiles!inner(full_name, email, phone_number)
+          gw_profiles!inner(full_name, first_name, last_name, email, phone, phone_number)
         `)
         .eq('group_id', group.id);
       
@@ -188,11 +189,20 @@ export const MessengerModal: React.FC = () => {
         return;
       }
 
+      const normalizedMembers = members
+        .map((member: any) => ({
+          user_id: member.user_id,
+          ...normalizeMessengerProfile({
+            user_id: member.user_id,
+            ...member.gw_profiles,
+          }),
+        }))
+        .filter((member) => member.user_id);
+
       if (composerMode === 'email') {
-        // Add emails to recipients
-        const emails = members
-          .map((m: any) => m.gw_profiles?.email)
-          .filter((e: string) => e && !recipients.includes(e));
+        const emails = normalizedMembers
+          .map((member) => member.email)
+          .filter((email) => email && !recipients.includes(email));
         
         if (emails.length > 0) {
           setRecipients([...recipients, ...emails]);
@@ -201,13 +211,12 @@ export const MessengerModal: React.FC = () => {
           toast({ title: 'Already added', description: 'All members from this group are already in recipients' });
         }
       } else {
-        // Add phone numbers to SMS recipients
-        const newRecipients = members
-          .filter((m: any) => m.gw_profiles?.phone_number && !smsRecipients.find(r => r.user_id === m.user_id))
-          .map((m: any) => ({
-            user_id: m.user_id,
-            full_name: m.gw_profiles?.full_name || 'Unknown',
-            phone_number: m.gw_profiles?.phone_number
+        const newRecipients = normalizedMembers
+          .filter((member) => member.phone_number && !smsRecipients.find(r => r.user_id === member.user_id))
+          .map((member) => ({
+            user_id: member.user_id,
+            full_name: member.full_name,
+            phone_number: member.phone_number!,
           }));
         
         if (newRecipients.length > 0) {
@@ -262,12 +271,15 @@ export const MessengerModal: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('gw_profiles')
-          .select('user_id, full_name, email, phone_number')
-          .or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
+          .select('user_id, full_name, first_name, last_name, email, phone, phone_number, status')
+          .eq('status', 'active')
+          .not('user_id', 'is', null)
+          .neq('user_id', user?.id || '')
+          .or(`full_name.ilike.%${searchQuery}%,first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,phone_number.ilike.%${searchQuery}%`)
           .limit(10);
         
         if (error) throw error;
-        setSearchResults(data || []);
+        setSearchResults((data || []).map((profile) => normalizeMessengerProfile(profile)).filter((profile) => profile.user_id));
       } catch (err) {
         console.error('Search error:', err);
       } finally {
@@ -277,7 +289,7 @@ export const MessengerModal: React.FC = () => {
 
     const debounce = setTimeout(searchRecipients, 300);
     return () => clearTimeout(debounce);
-  }, [searchQuery]);
+  }, [searchQuery, user?.id]);
 
   const addRecipient = (email: string) => {
     if (email && !recipients.includes(email)) {
