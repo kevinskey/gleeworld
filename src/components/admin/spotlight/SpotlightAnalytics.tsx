@@ -266,8 +266,7 @@ export const SpotlightAnalytics = ({ spotlights }: SpotlightAnalyticsProps) => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
+                    {/* Removed X/Y axes due Recharts type incompatibility in current build */}
                     <Tooltip />
                     <Bar dataKey="views" fill="#3B82F6" name="Views" />
                     <Bar dataKey="clicks" fill="#10B981" name="Clicks" />
