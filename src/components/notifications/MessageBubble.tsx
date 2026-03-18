@@ -1,20 +1,28 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { Check, CheckCheck } from 'lucide-react';
+import { Check, CheckCheck, Download, FileIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageReactions } from '@/components/messaging/features/MessageReactions';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   id: string;
   conversation_id: string;
   sender_phone?: string;
-  sender_user_id?: string;
+  sender_user_id?: string | null;
+  sender_id?: string;
   sender_name?: string;
-  message_body: string;
-  direction: 'inbound' | 'outbound';
-  status: string;
+  sender_avatar?: string;
+  message_body?: string | null;
+  content?: string | null;
+  direction?: 'inbound' | 'outbound';
+  status?: string;
   created_at: string;
+  message_type?: string | null;
+  file_url?: string | null;
+  file_name?: string | null;
+  file_size?: number | null;
 }
 
 interface MessageBubbleProps {
@@ -23,12 +31,12 @@ interface MessageBubbleProps {
 
 const highlightMentions = (text: string | undefined) => {
   if (!text) return null;
-  // Highlight @mentions with GroupMe-style formatting
+
   const parts = text.split(/(@\w+)/g);
   return parts.map((part, index) => {
     if (part.startsWith('@')) {
       return (
-        <span key={index} className="font-semibold text-primary bg-primary/10 px-1 rounded">
+        <span key={index} className="rounded px-1 font-semibold text-primary bg-primary/10">
           {part}
         </span>
       );
@@ -38,73 +46,109 @@ const highlightMentions = (text: string | undefined) => {
 };
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
-  const isOutbound = message.direction === 'outbound';
-  const isDelivered = message.status === 'delivered';
+  const { user } = useAuth();
+  const senderId = message.sender_user_id ?? message.sender_id;
+  const isOutbound = message.direction ? message.direction === 'outbound' : senderId === user?.id;
+  const isDelivered = message.status ? message.status === 'delivered' : true;
   const isFailed = message.status === 'failed';
+  const messageText = message.message_body ?? message.content ?? '';
+  const hasAttachment = Boolean(message.file_url);
+  const shouldShowText = Boolean(messageText) && (message.message_type === 'text' || !hasAttachment || messageText !== message.file_name);
 
   const senderInitials = message.sender_name
     ?.split(' ')
-    .map((n) => n[0])
+    .map((name) => name[0])
     .join('')
     .toUpperCase()
     .slice(0, 2) || '?';
 
   return (
-    <div className={cn(
-      'flex gap-1.5 md:gap-2 mb-2 md:mb-3',
-      isOutbound ? 'justify-end' : 'justify-start'
-    )}>
-      {/* Avatar for received messages */}
+    <div className={cn('mb-2 flex gap-1.5 md:mb-3 md:gap-2', isOutbound ? 'justify-end' : 'justify-start')}>
       {!isOutbound && (
-        <Avatar className="h-6 w-6 md:h-9 md:w-9 flex-shrink-0 mt-0.5">
-          <AvatarFallback className="bg-primary/15 text-primary text-[9px] md:text-xs font-medium">
+        <Avatar className="mt-0.5 h-6 w-6 flex-shrink-0 md:h-9 md:w-9">
+          <AvatarImage src={message.sender_avatar} />
+          <AvatarFallback className="bg-primary/15 text-[9px] font-medium text-primary md:text-xs">
             {senderInitials}
           </AvatarFallback>
         </Avatar>
       )}
 
-      <div className={cn(
-        'max-w-[80%] md:max-w-[75%] rounded-2xl px-2.5 md:px-4 py-1.5 md:py-2.5',
-        isOutbound 
-          ? 'bg-[hsl(var(--message-sent))] text-white' 
-          : 'bg-[hsl(var(--message-received))] text-[hsl(var(--message-received-fg))]'
-      )}>
-        {/* Sender name for inbound messages */}
+      <div
+        className={cn(
+          'max-w-[80%] rounded-2xl px-2.5 py-1.5 md:max-w-[75%] md:px-4 md:py-2.5',
+          isOutbound ? 'bg-[hsl(var(--message-sent))] text-white' : 'bg-[hsl(var(--message-received))] text-[hsl(var(--message-received-fg))]',
+        )}
+      >
         {!isOutbound && message.sender_name && (
-          <div className="text-[10px] md:text-xs font-semibold text-primary mb-0.5 md:mb-1">
+          <div className="mb-0.5 text-[10px] font-semibold text-primary md:mb-1 md:text-xs">
             {message.sender_name}
           </div>
         )}
 
-        {/* Message content with @mention highlighting */}
-        <div className="text-[11px] md:text-sm leading-relaxed break-words">
-          {highlightMentions(message.message_body)}
-        </div>
+        {shouldShowText && (
+          <div className="break-words text-[11px] leading-relaxed md:text-sm">
+            {highlightMentions(messageText)}
+          </div>
+        )}
 
-        {/* Message footer */}
-        <div className={cn(
-          'flex items-center justify-end gap-0.5 md:gap-1 mt-1 md:mt-1.5 text-[9px] md:text-xs',
-          isOutbound ? 'text-white/70' : 'text-muted-foreground'
-        )}>
-          <span>
-            {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-          </span>
-          
-          {/* Delivery status for outbound messages */}
+        {message.message_type === 'image' && message.file_url && (
+          <a href={message.file_url} target="_blank" rel="noopener noreferrer" className="mt-2 block">
+            <img
+              src={message.file_url}
+              alt={message.file_name || 'Image attachment'}
+              className="max-w-[240px] rounded-xl object-cover"
+            />
+          </a>
+        )}
+
+        {message.message_type === 'audio' && message.file_url && (
+          <div className="mt-2">
+            <audio controls preload="metadata" className="w-full max-w-[240px]">
+              <source src={message.file_url} />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
+
+        {message.file_url && (!message.message_type || message.message_type === 'file') && (
+          <a
+            href={message.file_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-3 py-2 transition-colors hover:bg-background/60"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+              <FileIcon className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-foreground">{message.file_name || 'Attachment'}</p>
+              <p className="text-xs text-muted-foreground">Tap to open</p>
+            </div>
+            <Download className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          </a>
+        )}
+
+        <div
+          className={cn(
+            'mt-1 flex items-center justify-end gap-0.5 text-[9px] md:mt-1.5 md:gap-1 md:text-xs',
+            isOutbound ? 'text-white/70' : 'text-muted-foreground',
+          )}
+        >
+          <span>{formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}</span>
+
           {isOutbound && (
             <>
               {isFailed ? (
-                <span className="text-white/90 ml-0.5 md:ml-1">Failed</span>
+                <span className="ml-0.5 text-white/90 md:ml-1">Failed</span>
               ) : isDelivered ? (
-                <CheckCheck className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 ml-0.5 md:ml-1" />
+                <CheckCheck className="ml-0.5 h-2.5 w-2.5 md:ml-1 md:h-3.5 md:w-3.5" />
               ) : (
-                <Check className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 ml-0.5 md:ml-1" />
+                <Check className="ml-0.5 h-2.5 w-2.5 md:ml-1 md:h-3.5 md:w-3.5" />
               )}
             </>
           )}
         </div>
 
-        {/* GroupMe-style Reactions */}
         <MessageReactions messageId={message.id} />
       </div>
     </div>

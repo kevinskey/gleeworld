@@ -3956,7 +3956,11 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
           id: string
+          message_type: string
           read: boolean | null
           sender_id: string
         }
@@ -3964,7 +3968,11 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
           id?: string
+          message_type?: string
           read?: boolean | null
           sender_id: string
         }
@@ -3972,7 +3980,11 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
           id?: string
+          message_type?: string
           read?: boolean | null
           sender_id?: string
         }
