@@ -20172,6 +20172,57 @@ export type Database = {
           },
         ]
       }
+      gw_tour_driver_tip_receipts: {
+        Row: {
+          amount: number
+          bus_company_name: string | null
+          created_at: string
+          created_by: string
+          driver_name: string
+          driver_phone: string | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          signature_data: string
+          signed_at: string
+          signed_by_name: string
+          tour_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          bus_company_name?: string | null
+          created_at?: string
+          created_by: string
+          driver_name: string
+          driver_phone?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          signature_data: string
+          signed_at?: string
+          signed_by_name: string
+          tour_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bus_company_name?: string | null
+          created_at?: string
+          created_by?: string
+          driver_name?: string
+          driver_phone?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          signature_data?: string
+          signed_at?: string
+          signed_by_name?: string
+          tour_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_tour_events: {
         Row: {
           arrival_time: string | null
