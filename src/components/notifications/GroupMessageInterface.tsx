@@ -147,18 +147,18 @@ export const GroupMessageInterface: React.FC = () => {
     setShowMessages(false);
   };
 
-  const handleSendMessage = async (message: string, sendSMS?: boolean) => {
+  const handleSendMessage = async (message: string, file?: File, sendSMS?: boolean) => {
     if (!selectedConversationId || !user) return;
 
     try {
       if (conversationType === 'group') {
-        await sendMessage(selectedConversationId, message, sendSMS ?? true);
+        await sendMessage(selectedConversationId, message, sendSMS ?? true, file);
         toast({
           title: 'Message Sent',
           description: sendSMS ? 'Your message has been delivered via in-app and SMS.' : 'Your message has been delivered.',
         });
       } else {
-        await sendDirectMessage(selectedConversationId, message);
+        await sendDirectMessage(selectedConversationId, message, file);
         toast({
           title: 'Message Sent',
           description: 'Your direct message has been sent.',

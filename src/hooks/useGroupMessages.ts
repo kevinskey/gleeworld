@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadFileAndGetUrl } from '@/utils/storage';
 
 interface Message {
   id: string;
   conversation_id: string;
   sender_phone?: string;
-  sender_user_id?: string;
+  sender_user_id?: string | null;
   sender_name?: string;
-  message_body: string;
+  message_body?: string | null;
   direction: 'inbound' | 'outbound';
   status: string;
   created_at: string;
+  message_type?: 'text' | 'image' | 'file' | 'audio';
+  file_url?: string | null;
+  file_name?: string | null;
+  file_size?: number | null;
 }
 
 interface Conversation {
@@ -67,10 +72,9 @@ export const useGroupMessages = () => {
   const fetchConversations = async () => {
     try {
       setLoading(true);
-      
+
       if (!user) return;
 
-      // Fetch actual message groups from database
       const { data: groups, error: groupsError } = await supabase
         .from('gw_message_groups')
         .select('*')
@@ -80,7 +84,6 @@ export const useGroupMessages = () => {
 
       if (groupsError) throw groupsError;
 
-      // Fetch user's membership roles for all groups
       const { data: memberships, error: membershipsError } = await supabase
         .from('gw_group_members')
         .select('group_id, role')
@@ -88,23 +91,17 @@ export const useGroupMessages = () => {
 
       if (membershipsError) throw membershipsError;
 
-      // Create a map of group_id to user's role
-      const roleMap = new Map(
-        (memberships || []).map(m => [m.group_id, m.role])
-      );
-
-      // Check user access
+      const roleMap = new Map((memberships || []).map((membership) => [membership.group_id, membership.role]));
       const userProfile = await getUserProfile();
-      
-      // Transform database groups to Conversation format and deduplicate by id
+
       const seenIds = new Set<string>();
       const accessibleConversations: Conversation[] = (groups || [])
-        .filter(group => {
+        .filter((group) => {
           if (seenIds.has(group.id)) return false;
           seenIds.add(group.id);
           return true;
         })
-        .map(group => ({
+        .map((group) => ({
           id: group.id,
           name: group.name,
           group_type: group.type || group.group_type || 'general',
@@ -112,20 +109,19 @@ export const useGroupMessages = () => {
           is_active: true,
           unread_count: 0,
           user_role: roleMap.get(group.id),
-          folder_id: group.folder_id
+          folder_id: group.folder_id,
         }))
-        .filter(conv => hasAccessToGroup(conv, userProfile))
-        // Sort: "All Members" first, then alphabetically
+        .filter((conversation) => hasAccessToGroup(conversation, userProfile))
         .sort((a, b) => {
           const aIsAllMembers = a.name.toLowerCase().includes('all members');
           const bIsAllMembers = b.name.toLowerCase().includes('all members');
-          
+
           if (aIsAllMembers && !bIsAllMembers) return -1;
           if (!aIsAllMembers && bIsAllMembers) return 1;
-          
+
           return a.name.localeCompare(b.name);
         });
-      
+
       setConversations(accessibleConversations);
       setError(null);
     } catch (err: any) {
@@ -138,72 +134,67 @@ export const useGroupMessages = () => {
 
   const getUserProfile = async () => {
     if (!user) return null;
-    
+
     const { data, error } = await supabase
       .from('gw_profiles')
       .select('role, voice_part, is_exec_board, is_admin, is_super_admin')
       .eq('user_id', user.id)
       .single();
-    
+
     if (error) throw error;
     return data;
   };
 
   const hasAccessToGroup = (conversation: Conversation, userProfile: any) => {
     if (!userProfile) return false;
-    
-    // Admins and super admins can see all conversations
+
     if (userProfile.is_admin || userProfile.is_super_admin) {
       return true;
     }
-    
-    // If user has a role in this group (is a member), allow access
+
     if (conversation.user_role) {
       return true;
     }
-    
-    // Check access based on group name for groups without explicit membership
+
     const groupName = conversation.name.toLowerCase();
-    
+
     if (groupName.includes('executive') || groupName.includes('exec')) {
       return userProfile.is_exec_board;
     }
-    
+
     if (groupName.includes('section leader')) {
       return userProfile.is_exec_board;
     }
-    
+
     if (groupName.includes('soprano 1') || groupName.includes('s1')) {
       return userProfile.voice_part === 'S1';
     }
-    
+
     if (groupName.includes('soprano 2') || groupName.includes('s2')) {
       return userProfile.voice_part === 'S2';
     }
-    
+
     if (groupName.includes('alto 1') || groupName.includes('a1')) {
       return userProfile.voice_part === 'A1';
     }
-    
+
     if (groupName.includes('alto 2') || groupName.includes('a2')) {
       return userProfile.voice_part === 'A2';
     }
-    
+
     if (groupName.includes('all members')) {
       return ['member', 'executive', 'staff'].includes(userProfile.role);
     }
-    
+
     if (groupName.includes('alumnae')) {
       return userProfile.role === 'alumna';
     }
-    
-    // Default: allow general groups for members
+
     return ['member', 'executive', 'staff'].includes(userProfile.role);
   };
 
   const fetchMessagesForConversation = async (conversationId: string) => {
     try {
-      // Fetch in-app messages from gw_group_messages table
       const { data: groupMessages, error: messagesError } = await supabase
         .from('gw_group_messages')
         .select(`
@@ -219,24 +210,27 @@ export const useGroupMessages = () => {
 
       if (messagesError) throw messagesError;
 
-      // Transform to Message format
-      const conversationMessages: Message[] = (groupMessages || []).map(msg => ({
-        id: msg.id,
+      const conversationMessages: Message[] = (groupMessages || []).map((message) => ({
+        id: message.id,
         conversation_id: conversationId,
-        sender_phone: msg.user_profile?.phone_number,
-        sender_user_id: msg.user_id,
-        sender_name: msg.user_profile?.full_name,
-        message_body: msg.content,
-        direction: 'outbound' as const,
+        sender_phone: message.user_profile?.phone_number,
+        sender_user_id: message.user_id,
+        sender_name: message.user_profile?.full_name || 'Unknown',
+        message_body: message.content,
+        direction: message.user_id === user?.id ? 'outbound' : 'inbound',
         status: 'delivered',
-        created_at: msg.created_at
+        created_at: message.created_at,
+        message_type: message.message_type,
+        file_url: message.file_url,
+        file_name: message.file_name,
+        file_size: message.file_size,
       }));
-      
-      setMessages(prev => ({
+
+      setMessages((prev) => ({
         ...prev,
-        [conversationId]: conversationMessages
+        [conversationId]: conversationMessages,
       }));
-      
+
       return conversationMessages;
     } catch (err: any) {
       console.error('Error fetching messages:', err);
@@ -245,63 +239,83 @@ export const useGroupMessages = () => {
     }
   };
 
-  const sendMessage = async (conversationId: string, message: string, sendSMS: boolean = true) => {
+  const sendMessage = async (conversationId: string, message: string, sendSMS: boolean = true, file?: File) => {
     if (!user) throw new Error('User not authenticated');
-    
+
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage && !file) {
+      throw new Error('Message content is required');
+    }
+
     try {
-      // First, send as in-app message to gw_group_messages
+      let fileUrl: string | null = null;
+      let fileName: string | null = null;
+      let fileSize: number | null = null;
+      let messageType: 'text' | 'image' | 'file' | 'audio' = 'text';
+
+      if (file) {
+        const uploadResult = await uploadFileAndGetUrl(file, 'message-attachments', `messages/${conversationId}`);
+        if (!uploadResult) {
+          throw new Error('Failed to upload attachment');
+        }
+
+        fileUrl = uploadResult.url;
+        fileName = file.name;
+        fileSize = file.size;
+        messageType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file';
+      }
+
+      const messagePreview = trimmedMessage || (file ? `${messageType === 'audio' ? 'Audio' : 'File'} attachment: ${file.name}` : 'New message');
+
       const { error: inAppError } = await supabase
         .from('gw_group_messages')
         .insert({
           group_id: conversationId,
           user_id: user.id,
-          content: message,
-          message_type: 'text'
+          content: trimmedMessage || fileName || null,
+          message_type: messageType,
+          file_url: fileUrl,
+          file_name: fileName,
+          file_size: fileSize,
         });
 
       if (inAppError) throw inAppError;
 
-      // Send via SMS only if enabled (non-blocking - if it fails, in-app message still succeeds)
       if (sendSMS) {
         try {
-          console.log('📱 Sending SMS to group members...');
           const response = await supabase.functions.invoke('send-group-sms', {
             body: {
               conversationId,
-              message,
+              message: messagePreview,
               senderUserId: user.id,
-              senderName: user.user_metadata?.full_name || 'Unknown User'
-            }
+              senderName: user.user_metadata?.full_name || 'Unknown User',
+            },
           });
 
           if (response.error) {
             console.log('SMS delivery issue:', response.error);
-          } else {
-            console.log('✅ SMS sent successfully:', response.data);
           }
         } catch (smsErr) {
           console.log('SMS send failed (in-app message still delivered):', smsErr);
         }
-      } else {
-        console.log('📱 SMS sending skipped by user preference');
       }
 
-      // Refresh messages for this conversation
       await fetchMessagesForConversation(conversationId);
-      
+
       return { success: true, smsSent: sendSMS };
     } catch (err: any) {
       console.error('Error sending message:', err);
       throw err;
     }
   };
+
   const markConversationAsRead = async (conversationId: string) => {
-    setConversations(prev => 
-      prev.map(conv => 
-        conv.id === conversationId 
-          ? { ...conv, unread_count: 0 }
-          : conv
-      )
+    setConversations((prev) =>
+      prev.map((conversation) =>
+        conversation.id === conversationId
+          ? { ...conversation, unread_count: 0 }
+          : conversation,
+      ),
     );
   };
 
