@@ -43,6 +43,7 @@ import {
 import { SignatureSettings } from '@/components/messenger/SignatureSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 
 interface MessengerGroup {
   id: string;
@@ -124,20 +125,27 @@ export const MessengerAdminModule: React.FC = () => {
           id,
           user_id,
           role,
-          gw_profiles!inner(full_name, email, phone_number)
+          gw_profiles!inner(full_name, first_name, last_name, email, phone, phone_number)
         `)
         .eq('group_id', groupId);
       
       if (error) throw error;
       
-      const members = (data || []).map((m: any) => ({
-        id: m.id,
-        user_id: m.user_id,
-        full_name: m.gw_profiles?.full_name || 'Unknown',
-        email: m.gw_profiles?.email || '',
-        phone_number: m.gw_profiles?.phone_number,
-        role: m.role
-      }));
+      const members = (data || []).map((member: any) => {
+        const normalizedProfile = normalizeMessengerProfile({
+          user_id: member.user_id,
+          ...member.gw_profiles,
+        });
+
+        return {
+          id: member.id,
+          user_id: member.user_id,
+          full_name: normalizedProfile.full_name,
+          email: normalizedProfile.email,
+          phone_number: normalizedProfile.phone_number,
+          role: member.role,
+        };
+      });
       
       setGroupMembers(members);
     } catch (err: any) {
@@ -158,15 +166,18 @@ export const MessengerAdminModule: React.FC = () => {
       setSearchingMembers(true);
       const { data, error } = await supabase
         .from('gw_profiles')
-        .select('user_id, full_name, email, phone_number')
-        .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+        .select('user_id, full_name, first_name, last_name, email, phone, phone_number, status')
+        .eq('status', 'active')
+        .not('user_id', 'is', null)
+        .or(`full_name.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%,phone_number.ilike.%${query}%`)
         .limit(10);
       
       if (error) throw error;
       
-      // Filter out users already in the group
       const existingIds = groupMembers.map(m => m.user_id);
-      const filtered = (data || []).filter(u => !existingIds.includes(u.user_id));
+      const filtered = (data || [])
+        .map((profile) => normalizeMessengerProfile(profile))
+        .filter((profile) => profile.user_id && !existingIds.includes(profile.user_id));
       setMemberSearchResults(filtered);
     } catch (err) {
       console.error('Search error:', err);

@@ -33,6 +33,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Mail, Smartphone, X, Send, Users, Search, Loader2, Maximize2, Minimize2, Video } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 
 interface RecipientGroup {
   id: string;
