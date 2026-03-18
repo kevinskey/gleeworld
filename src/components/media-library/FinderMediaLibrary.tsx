@@ -567,6 +567,12 @@ export const FinderMediaLibrary = () => {
 
 
   const handleFileSelect = (file: MediaFile, event: React.MouseEvent) => {
+    if (isMobile) {
+      setSelectedFiles([file.id]);
+      setPreviewFile(file);
+      return;
+    }
+
     if (event.shiftKey && selectedFiles.length > 0) {
       // Range selection
       const files = getFilteredFiles();
