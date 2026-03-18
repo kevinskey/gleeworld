@@ -30,6 +30,7 @@ interface FinderSidebarProps {
   onNewFolder?: () => void;
   isAdmin?: boolean;
   onNativeFileDrop?: (files: File[], folderId: string) => void;
+  className?: string;
 }
 
 export const FinderSidebar = ({
@@ -41,7 +42,8 @@ export const FinderSidebar = ({
   onFolderSelect,
   onNewFolder,
   isAdmin,
-  onNativeFileDrop
+  onNativeFileDrop,
+  className
 }: FinderSidebarProps) => {
   const [favoritesOpen, setFavoritesOpen] = useState(true);
   const [locationsOpen, setLocationsOpen] = useState(true);
