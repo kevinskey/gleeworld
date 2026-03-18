@@ -638,34 +638,41 @@ export const FinderMediaLibrary = () => {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex h-[calc(100vh-200px)] min-h-[600px] bg-background border border-border rounded-lg overflow-hidden shadow-xl">
+      <div className={cn(
+        'bg-background shadow-xl overflow-hidden',
+        isMobile
+          ? 'flex h-[calc(100dvh-8.5rem)] min-h-[24rem] flex-col rounded-xl border border-border'
+          : 'flex h-[calc(100vh-200px)] min-h-[600px] rounded-lg border border-border'
+      )}>
         {/* Sidebar */}
-        <FinderSidebar 
-          activeSection={activeSection}
-          onSectionChange={(section) => {
-            setActiveSection(section);
-            setSelectedFiles([]);
-          }}
-          fileCounts={{
-            all: allFiles.filter(f => !f.is_deleted).length,
-            images: allFiles.filter(f => getFileType(f) === 'image').length,
-            videos: allFiles.filter(f => getFileType(f) === 'video').length,
-            audio: allFiles.filter(f => getFileType(f) === 'audio').length,
-            documents: allFiles.filter(f => getFileType(f) === 'document').length,
-            'quick-capture': allFiles.filter(f => (f as any).source === 'quick_capture').length,
-            favorites: allFiles.filter(f => f.is_favorite).length,
-            trash: allFiles.filter(f => f.is_deleted).length
-          }}
-          usedStorage={usedGB}
-          selectedFolderId={selectedFolderId}
-          onFolderSelect={(folderId) => {
-            setSelectedFolderId(folderId);
-            setSelectedFiles([]);
-          }}
-          onNewFolder={() => setNewFolderDialogOpen(true)}
-          isAdmin={isAdmin}
-          onNativeFileDrop={handleNativeFileDrop}
-        />
+        {!isMobile && (
+          <FinderSidebar 
+            activeSection={activeSection}
+            onSectionChange={(section) => {
+              setActiveSection(section);
+              setSelectedFiles([]);
+            }}
+            fileCounts={{
+              all: allFiles.filter(f => !f.is_deleted).length,
+              images: allFiles.filter(f => getFileType(f) === 'image').length,
+              videos: allFiles.filter(f => getFileType(f) === 'video').length,
+              audio: allFiles.filter(f => getFileType(f) === 'audio').length,
+              documents: allFiles.filter(f => getFileType(f) === 'document').length,
+              'quick-capture': allFiles.filter(f => (f as any).source === 'quick_capture').length,
+              favorites: allFiles.filter(f => f.is_favorite).length,
+              trash: allFiles.filter(f => f.is_deleted).length
+            }}
+            usedStorage={usedGB}
+            selectedFolderId={selectedFolderId}
+            onFolderSelect={(folderId) => {
+              setSelectedFolderId(folderId);
+              setSelectedFiles([]);
+            }}
+            onNewFolder={() => setNewFolderDialogOpen(true)}
+            isAdmin={isAdmin}
+            onNativeFileDrop={handleNativeFileDrop}
+          />
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
