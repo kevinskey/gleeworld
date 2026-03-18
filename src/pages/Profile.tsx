@@ -325,6 +325,13 @@ const Profile = () => {
     setLoading(true);
 
     const normalizedPhoneNumber = formatPhoneNumber(data.phone_number || '');
+    const normalizedJoinDate = data.join_date?.trim() ? data.join_date : null;
+    const normalizedVoicePart = data.voice_part === 'DOC' ? null : data.voice_part || null;
+    const parseOptionalNumber = (value?: string) => {
+      if (!value?.trim()) return null;
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
 
     const updatePayload = {
       first_name: data.first_name,
@@ -339,7 +346,7 @@ const Profile = () => {
       workplace: data.workplace,
       school_address: data.school_address,
       home_address: data.home_address,
-      voice_part: data.voice_part || null,
+      voice_part: normalizedVoicePart,
       can_dance: data.can_dance,
       preferred_payment_method: data.preferred_payment_method || null,
       shoe_size: data.shoe_size,
@@ -352,7 +359,7 @@ const Profile = () => {
       emergency_contact: data.emergency_contact,
       allergies: data.allergies,
       parent_guardian_contact: data.parent_guardian_contact,
-      join_date: data.join_date,
+      join_date: normalizedJoinDate,
       mentor_opt_in: data.mentor_opt_in,
       reunion_rsvp: data.reunion_rsvp,
       instruments_played: selectedInstruments,
@@ -361,12 +368,13 @@ const Profile = () => {
       twitter: data.twitter,
       facebook: data.facebook,
       youtube: data.youtube,
-      bust_measurement: data.bust_measurement ? parseFloat(data.bust_measurement) : null,
-      waist_measurement: data.waist_measurement ? parseFloat(data.waist_measurement) : null,
-      hips_measurement: data.hips_measurement ? parseFloat(data.hips_measurement) : null,
-      height_measurement: data.height_measurement ? parseFloat(data.height_measurement) : null,
+      bust_measurement: parseOptionalNumber(data.bust_measurement),
+      waist_measurement: parseOptionalNumber(data.waist_measurement),
+      hips_measurement: parseOptionalNumber(data.hips_measurement),
+      height_measurement: parseOptionalNumber(data.height_measurement),
       dress_size: data.dress_size,
       classification: data.classification,
+      ...(data.voice_part === 'DOC' ? { music_role: 'DOC' } : {}),
     };
 
     try {
@@ -395,7 +403,7 @@ const Profile = () => {
       console.error("Error updating profile:", error);
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     } finally {
