@@ -45,6 +45,8 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     // Fill with white background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    hasDrawnRef.current = false;
+    setHasSignature(false);
 
     console.log('SignatureCanvas initialized');
   }, [isMobile]);
