@@ -178,7 +178,7 @@ export const FinderSidebar = ({
   const rootFolders = folders.filter(f => !f.parent_id);
 
   return (
-    <div className="w-56 border-r border-border bg-muted/30 flex flex-col overflow-hidden">
+    <div className={cn("w-56 border-r border-border bg-muted/30 flex flex-col overflow-hidden", className)}>
       <div className="flex-1 overflow-y-auto">
         {/* Favorites section */}
         <Collapsible open={favoritesOpen} onOpenChange={setFavoritesOpen}>
