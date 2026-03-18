@@ -744,7 +744,7 @@ export const FinderMediaLibrary = () => {
                   <Input
                     placeholder="Search files..."
                     value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="h-9 pl-9"
                   />
                 </div>
