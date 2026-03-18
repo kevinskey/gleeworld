@@ -163,13 +163,19 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
       return;
     }
 
+    const signatureData = signatureRef.current ?? signature;
+    if (!signatureData || !signatureData.trim()) {
+      toast.error('Driver signature is required');
+      return;
+    }
+
     const parsed = driverTipReceiptSchema.safeParse({
       driver_name: driverName,
       bus_company_name: busCompanyName,
       driver_phone: driverPhone,
       payment_method: paymentMethod,
       notes,
-      signature_data: signatureRef.current ?? signature ?? '',
+      signature_data: signatureData,
     });
 
     if (!parsed.success) {
@@ -201,7 +207,11 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
     } catch (error) {
       console.error('Error saving driver tip receipt:', error);
       const message = error instanceof Error ? error.message : 'Failed to save driver tip receipt';
-      toast.error(message);
+      if (message.includes('Expected string, received null')) {
+        toast.error('Driver signature is required');
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsSubmitting(false);
     }
