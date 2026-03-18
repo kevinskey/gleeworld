@@ -240,7 +240,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     if (file.size > MAX_SMS_ATTACHMENT_SIZE_BYTES) {
       toast({
         title: 'File too large',
-        description: 'MMS attachments must be 5MB or less',
+        description: 'MMS attachments must be 150MB or less',
         variant: 'destructive',
       });
       return;
