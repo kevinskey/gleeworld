@@ -111,6 +111,8 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     full_name: string;
     phone_number: string;
   }>>([]);
+  const [smsAttachment, setSmsAttachment] = useState<File | null>(null);
+  const smsAttachmentInputRef = useRef<HTMLInputElement>(null);
 
   // Groups
   const [recipientGroups, setRecipientGroups] = useState<RecipientGroup[]>([]);
