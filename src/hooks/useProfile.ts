@@ -220,27 +220,17 @@ export const useProfile = () => {
       
       const { error } = await supabase
         .from("gw_profiles")
-        .update({
+        .upsert({
+          user_id: user.id,
+          email: user.email ?? null,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) {
         throw error;
-      }
-
-      // Also update gw_profiles table to keep data in sync
-      const { error: gwError } = await supabase
-        .from("gw_profiles")
-        .update({
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
-
-      if (gwError) {
-        // Don't throw error since profiles update succeeded
       }
       
       // Update local state immediately without full refetch
