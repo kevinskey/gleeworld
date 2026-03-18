@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node ./node_modules/vite/bin/vite.js",
-    "build": "node ./node_modules/vite/bin/vite.js build",
-    "build:dev": "node ./node_modules/vite/bin/vite.js build --mode development",
+    "dev": "bunx vite@5.4.10",
+    "build": "bunx vite@5.4.10 build",
+    "build:dev": "bunx vite@5.4.10 build --mode development",
     "lint": "eslint .",
-    "preview": "node ./node_modules/vite/bin/vite.js preview"
+    "preview": "bunx vite@5.4.10 preview"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",
