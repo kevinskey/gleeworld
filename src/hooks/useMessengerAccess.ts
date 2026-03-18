@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 
 export type MessengerRole = 'super-admin' | 'admin' | 'student' | 'alumna' | 'fan' | 'none';
 
@@ -39,31 +40,21 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
   const [contacts, setContacts] = useState<MessengerContact[]>([]);
   const [courseGroups, setCourseGroups] = useState<MessengerCourseGroup[]>([]);
 
-  // Determine messenger role based on profile
   const messengerRole = useMemo((): MessengerRole => {
     if (!userProfile) return 'none';
-    
-    // Super admin has full access
+
     if (userProfile.is_super_admin) return 'super-admin';
-    
-    // Admin access (includes exec board members)
     if (userProfile.is_admin || userProfile.is_exec_board) return 'admin';
-    
-    // Check for alumna role
+
     const role = userProfile.role?.toLowerCase();
     if (role === 'alumna' || role === 'alumnae') return 'alumna';
-    
-    // Check for student role
     if (role === 'student' || role === 'member') return 'student';
-    
-    // Fan role
     if (role === 'fan') return 'fan';
-    
+
     return 'none';
   }, [userProfile]);
 
   const hasAccess = messengerRole !== 'fan' && messengerRole !== 'none';
-  // Allow everyone with access to message anyone
   const canMessageAnyone = hasAccess;
   const canSendSMS = messengerRole === 'super-admin' || messengerRole === 'admin';
 
@@ -91,29 +82,40 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
       const groups: MessengerCourseGroup[] = [];
       const seenUserIds = new Set<string>();
 
-      // ALL users with access can see everyone in the dropdown
       const { data: allUsers } = await supabase
         .from('gw_profiles')
-        .select('user_id, full_name, email, phone_number, role')
-        .neq('user_id', user.id)
-        .order('full_name');
-      
+        .select('user_id, full_name, first_name, last_name, email, phone, phone_number, role, status')
+        .eq('status', 'active')
+        .not('user_id', 'is', null)
+        .neq('user_id', user.id);
+
       if (allUsers) {
-        allUsers.forEach(u => {
-          if (!seenUserIds.has(u.user_id)) {
-            seenUserIds.add(u.user_id);
-            allContacts.push({ ...u, source: 'all' });
-          }
+        const normalizedUsers = allUsers
+          .map(normalizeMessengerProfile)
+          .filter((profile) => profile.user_id)
+          .sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+        normalizedUsers.forEach((profile) => {
+          if (seenUserIds.has(profile.user_id)) return;
+
+          seenUserIds.add(profile.user_id);
+          allContacts.push({
+            user_id: profile.user_id,
+            full_name: profile.full_name,
+            email: profile.email,
+            phone_number: profile.phone_number || undefined,
+            role: profile.role || undefined,
+            source: 'all',
+          });
         });
       }
 
-      // Load course groups for admins and super-admins
       if (messengerRole === 'super-admin' || messengerRole === 'admin') {
         const { data: allCourses } = await supabase
           .from('gw_courses')
           .select('id, title')
           .eq('is_active', true);
-        
+
         if (allCourses) {
           for (const course of allCourses) {
             const { count } = await supabase
@@ -122,18 +124,15 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
               .eq('course_id', course.id)
               .eq('role', 'student')
               .eq('enrollment_status', 'enrolled');
-            
+
             groups.push({
               id: course.id,
               title: course.title,
-              studentCount: count || 0
+              studentCount: count || 0,
             });
           }
         }
-      }
-
-      // Course groups for students (enrolled courses)
-      else if (messengerRole === 'student') {
+      } else if (messengerRole === 'student') {
         const { data: enrolledCourses } = await supabase
           .from('gw_course_enrollments')
           .select('course_id, gw_courses!inner(id, title, is_active)')
@@ -156,7 +155,7 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
             groups.push({
               id: course.id,
               title: course.title,
-              studentCount: count || 0
+              studentCount: count || 0,
             });
           }
         }
@@ -175,7 +174,6 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
     loadContacts();
   }, [user, messengerRole, hasAccess]);
 
-  // Include profile loading in overall loading state
   const isLoading = profileLoading || contactsLoading;
 
   return {
@@ -187,6 +185,6 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
     canMessageAnyone,
     canSendSMS,
     noAccessReason,
-    refreshContacts: loadContacts
+    refreshContacts: loadContacts,
   };
 };

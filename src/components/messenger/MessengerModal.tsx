@@ -271,12 +271,15 @@ export const MessengerModal: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('gw_profiles')
-          .select('user_id, full_name, email, phone_number')
-          .or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
+          .select('user_id, full_name, first_name, last_name, email, phone, phone_number, status')
+          .eq('status', 'active')
+          .not('user_id', 'is', null)
+          .neq('user_id', user?.id || '')
+          .or(`full_name.ilike.%${searchQuery}%,first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%,phone_number.ilike.%${searchQuery}%`)
           .limit(10);
         
         if (error) throw error;
-        setSearchResults(data || []);
+        setSearchResults((data || []).map((profile) => normalizeMessengerProfile(profile)).filter((profile) => profile.user_id));
       } catch (err) {
         console.error('Search error:', err);
       } finally {
@@ -286,7 +289,7 @@ export const MessengerModal: React.FC = () => {
 
     const debounce = setTimeout(searchRecipients, 300);
     return () => clearTimeout(debounce);
-  }, [searchQuery]);
+  }, [searchQuery, user?.id]);
 
   const addRecipient = (email: string) => {
     if (email && !recipients.includes(email)) {

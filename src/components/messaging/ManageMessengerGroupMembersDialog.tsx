@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, UserMinus, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 
 interface ManageGroup {
   id: string;
@@ -74,20 +75,27 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
         .select(`
           id,
           user_id,
-          gw_profiles!inner(full_name, email, avatar_url)
+          gw_profiles!inner(full_name, first_name, last_name, email, avatar_url)
         `)
         .eq('group_id', groupId)
         .order('joined_at', { ascending: false });
 
       if (error) throw error;
 
-      const mappedMembers = (data || []).map((member: any) => ({
-        id: member.id,
-        user_id: member.user_id,
-        full_name: member.gw_profiles?.full_name || 'Unknown',
-        email: member.gw_profiles?.email || '',
-        avatar_url: member.gw_profiles?.avatar_url,
-      }));
+      const mappedMembers = (data || []).map((member: any) => {
+        const normalizedProfile = normalizeMessengerProfile({
+          user_id: member.user_id,
+          ...member.gw_profiles,
+        });
+
+        return {
+          id: member.id,
+          user_id: member.user_id,
+          full_name: normalizedProfile.full_name,
+          email: normalizedProfile.email,
+          avatar_url: member.gw_profiles?.avatar_url,
+        };
+      });
 
       setGroupMembers(mappedMembers);
     } catch (error: any) {
@@ -140,15 +148,26 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
         setSearchingMembers(true);
         const { data, error } = await supabase
           .from('gw_profiles')
-          .select('user_id, full_name, email, avatar_url')
-          .or(`full_name.ilike.%${memberSearch}%,email.ilike.%${memberSearch}%`)
+          .select('user_id, full_name, first_name, last_name, email, avatar_url, status')
+          .eq('status', 'active')
+          .not('user_id', 'is', null)
+          .or(`full_name.ilike.%${memberSearch}%,first_name.ilike.%${memberSearch}%,last_name.ilike.%${memberSearch}%,email.ilike.%${memberSearch}%`)
           .order('full_name')
           .limit(12);
 
         if (error) throw error;
 
         const existingMemberIds = new Set(groupMembers.map((member) => member.user_id));
-        const filteredResults = (data || []).filter((user) => !existingMemberIds.has(user.user_id));
+        const filteredResults = (data || [])
+          .map((candidate) => normalizeMessengerProfile(candidate))
+          .filter((candidate) => candidate.user_id && !existingMemberIds.has(candidate.user_id))
+          .map((candidate) => ({
+            user_id: candidate.user_id,
+            full_name: candidate.full_name,
+            email: candidate.email,
+            avatar_url: candidate.avatar_url,
+          }));
+
         setMemberSearchResults(filteredResults);
       } catch (error: any) {
         console.error('Error searching users for messenger group:', error);
@@ -327,9 +346,7 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
                     <Loader2 className="h-5 w-5 animate-spin" />
                   </div>
                 ) : groupMembers.length === 0 ? (
-                  <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    No members yet.
-                  </p>
+                  <p className="px-4 py-8 text-center text-sm text-muted-foreground">No members in this group yet.</p>
                 ) : (
                   <div className="space-y-2 p-3">
                     {groupMembers.map((member) => (
@@ -337,23 +354,22 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
                         key={member.id}
                         className="flex items-center gap-3 rounded-lg border bg-card p-3"
                       >
-                        <Avatar className="h-9 w-9 flex-shrink-0">
+                        <Avatar className="h-10 w-10 flex-shrink-0">
                           <AvatarImage src={member.avatar_url || undefined} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          <AvatarFallback className="bg-primary/10 text-primary">
                             {getInitials(member.full_name || 'U')}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">{member.full_name}</p>
-                          <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                          <p className="truncate font-medium">{member.full_name}</p>
+                          <p className="truncate text-sm text-muted-foreground">{member.email}</p>
                         </div>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          className="h-9 w-9 text-destructive hover:text-destructive"
                           disabled={updatingMemberId === member.id}
                           onClick={() => handleRemoveMember(member)}
-                          aria-label={`Remove ${member.full_name}`}
                         >
                           {updatingMemberId === member.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

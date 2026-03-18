@@ -274,14 +274,18 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           
           const { data: profiles, error: profileError } = await supabase
             .from('gw_profiles')
-            .select('user_id, full_name, email, phone_number')
+            .select('user_id, full_name, first_name, last_name, email, phone, phone_number')
             .in('user_id', userIds);
           
           if (profileError) throw profileError;
+
+          const normalizedProfiles = (profiles || [])
+            .map((profile) => normalizeMessengerProfile(profile))
+            .filter((profile) => profile.user_id);
           
           if (composerMode === 'email') {
-            const emails = (profiles || [])
-              .map(p => p.email)
+            const emails = normalizedProfiles
+              .map((profile) => profile.email)
               .filter((email): email is string => !!email && !recipients.includes(email));
             
             if (emails.length > 0) {
@@ -297,12 +301,12 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
               });
             }
           } else if (composerMode === 'sms') {
-            const newRecipients = (profiles || [])
-              .filter(p => p.phone_number && !smsRecipients.find(r => r.user_id === p.user_id))
-              .map(p => ({
-                user_id: p.user_id,
-                full_name: p.full_name || 'Unknown',
-                phone_number: p.phone_number!
+            const newRecipients = normalizedProfiles
+              .filter((profile) => profile.phone_number && !smsRecipients.find(r => r.user_id === profile.user_id))
+              .map((profile) => ({
+                user_id: profile.user_id,
+                full_name: profile.full_name,
+                phone_number: profile.phone_number!,
               }));
             
             if (newRecipients.length > 0) {
@@ -343,7 +347,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           .from('messenger_group_members')
           .select(`
             user_id,
-            gw_profiles!inner(user_id, full_name, email, phone_number)
+            gw_profiles!inner(user_id, full_name, first_name, last_name, email, phone, phone_number)
           `)
           .eq('group_id', groupId);
         
@@ -358,9 +362,19 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           return;
         }
 
+        const normalizedMembers = members
+          .map((member: any) => ({
+            user_id: member.user_id,
+            ...normalizeMessengerProfile({
+              user_id: member.user_id,
+              ...member.gw_profiles,
+            }),
+          }))
+          .filter((member) => member.user_id);
+
         if (composerMode === 'email') {
-          const emails = members
-            .map((m: any) => m.gw_profiles?.email)
+          const emails = normalizedMembers
+            .map((member) => member.email)
             .filter((email: string) => email && !recipients.includes(email));
           
           if (emails.length > 0) {
@@ -376,12 +390,12 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
             });
           }
         } else if (composerMode === 'sms') {
-          const newRecipients = members
-            .filter((m: any) => m.gw_profiles?.phone_number && !smsRecipients.find(r => r.user_id === m.user_id))
-            .map((m: any) => ({
-              user_id: m.user_id,
-              full_name: m.gw_profiles?.full_name || 'Unknown',
-              phone_number: m.gw_profiles?.phone_number
+          const newRecipients = normalizedMembers
+            .filter((member) => member.phone_number && !smsRecipients.find(r => r.user_id === member.user_id))
+            .map((member) => ({
+              user_id: member.user_id,
+              full_name: member.full_name,
+              phone_number: member.phone_number!,
             }));
           
           if (newRecipients.length > 0) {

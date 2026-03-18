@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 
 interface AddMembersDialogProps {
   open: boolean;
@@ -55,11 +56,13 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
 
       if (membersError) throw membersError;
 
-      const currentMemberIds = currentMembers?.map((member) => member.user_id) || [];
+      const currentMemberIds = currentMembers?.map((member) => member.user_id).filter(Boolean) || [];
 
       let usersQuery = supabase
         .from('gw_profiles')
-        .select('user_id, full_name, email, avatar_url')
+        .select('user_id, full_name, first_name, last_name, email, avatar_url, status')
+        .eq('status', 'active')
+        .not('user_id', 'is', null)
         .order('full_name');
 
       if (currentMemberIds.length > 0) {
@@ -71,7 +74,17 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
 
       if (usersError) throw usersError;
 
-      setAvailableUsers(users || []);
+      const normalizedUsers = (users || [])
+        .map((user) => normalizeMessengerProfile(user))
+        .filter((user) => user.user_id)
+        .map((user) => ({
+          user_id: user.user_id,
+          full_name: user.full_name,
+          email: user.email,
+          avatar_url: user.avatar_url || undefined,
+        }));
+
+      setAvailableUsers(normalizedUsers);
     } catch (error: any) {
       console.error('Error fetching available users:', error);
       toast({
@@ -98,7 +111,7 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
     try {
       setAdding(true);
 
-      const membersToAdd = selectedUserIds.map(userId => ({
+      const membersToAdd = selectedUserIds.map((userId) => ({
         group_id: groupId,
         user_id: userId,
         role: 'member',
@@ -129,7 +142,7 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
     }
   };
 
-  const filteredUsers = availableUsers.filter(user =>
+  const filteredUsers = availableUsers.filter((user) =>
     user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
@@ -137,7 +150,7 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
