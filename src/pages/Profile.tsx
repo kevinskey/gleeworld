@@ -174,7 +174,7 @@ const Profile = () => {
   };
 
   const formatPhoneNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
+    const cleaned = value.replace(/\D/g, '').slice(0, 10);
     if (cleaned.length === 0) return '';
     if (cleaned.length <= 3) return `(${cleaned}`;
     if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
@@ -184,7 +184,7 @@ const Profile = () => {
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value);
     setPhoneDisplay(formatted);
-    setValue('phone_number', formatted, { shouldValidate: true });
+    setValue('phone_number', formatted, { shouldValidate: true, shouldDirty: true });
   };
 
   // Basic SEO for Profile page
@@ -252,13 +252,14 @@ const Profile = () => {
 
   useEffect(() => {
     if (profile) {
-      console.log("Setting form values from profile:", profile);
+      const savedPhoneNumber = profile.phone_number || '';
+
       setValue("first_name", profile.first_name || "");
       setValue("middle_name", profile.middle_name || "");
       setValue("last_name", profile.last_name || "");
       setValue("bio", profile.bio || "");
       setValue("website_url", profile.website_url || "");
-      setValue("phone_number", profile.phone_number || "");
+      setValue("phone_number", savedPhoneNumber);
       setValue("student_number", profile.student_number || "");
       setValue("workplace", profile.workplace || "");
       setValue("school_address", profile.school_address || "");
@@ -289,8 +290,7 @@ const Profile = () => {
       setValue("height_measurement", profile.height_measurement?.toString() || "");
       setValue("dress_size", profile.dress_size || "");
       setValue("classification", profile.classification || "");
-
-      setPhoneDisplay(profile.phone_number || '');
+      setPhoneDisplay(savedPhoneNumber);
 
       if (profile.instruments_played) {
         setSelectedInstruments(profile.instruments_played);
@@ -318,14 +318,13 @@ const Profile = () => {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
-    console.log("🎯 onSubmit called with data:", data);
     if (!user) {
-      console.log("🎯 No user found, aborting");
       return;
     }
 
     setLoading(true);
-    console.log("🎯 Starting profile update...");
+
+    const normalizedPhoneNumber = formatPhoneNumber(data.phone_number || '');
 
     const updatePayload = {
       first_name: data.first_name,
@@ -334,7 +333,8 @@ const Profile = () => {
       full_name: `${data.first_name} ${data.middle_name ? data.middle_name + ' ' : ''}${data.last_name}`.trim(),
       bio: data.bio,
       website_url: data.website_url,
-      phone_number: data.phone_number,
+      phone_number: normalizedPhoneNumber || null,
+      phone: normalizedPhoneNumber || null,
       student_number: data.student_number,
       workplace: data.workplace,
       school_address: data.school_address,
@@ -369,8 +369,6 @@ const Profile = () => {
       classification: data.classification,
     };
 
-    console.log("🎯 Update payload:", updatePayload);
-
     try {
       const { error } = await supabase
         .from("gw_profiles")
@@ -378,10 +376,10 @@ const Profile = () => {
         .eq("user_id", user.id);
 
       if (error) {
-        console.error("Supabase error:", error);
         throw error;
       }
 
+      setPhoneDisplay(normalizedPhoneNumber);
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
