@@ -621,32 +621,41 @@ export const MessengerModal: React.FC = () => {
                       {/* Individual Recipients (when not sending to all) */}
                       {!sendToAll && (
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between gap-2">
                             <Label className="text-sm font-medium">Recipients:</Label>
-                            {isMobile && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setShowGroupsPanel(true)}
-                                className="h-7 text-xs gap-1"
-                              >
-                                <Users className="h-3 w-3" />
-                                Groups
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {smsRecipients.length > 0 && (
+                                <span className="text-xs text-muted-foreground">{smsRecipients.length} selected</span>
+                              )}
+                              {isMobile && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowGroupsPanel(true)}
+                                  className="h-7 text-xs gap-1"
+                                >
+                                  <Users className="h-3 w-3" />
+                                  Groups
+                                </Button>
+                              )}
+                            </div>
                           </div>
                           <div className="border rounded-lg bg-background">
-                            <div className="flex flex-wrap gap-2 p-2 min-h-[44px] max-h-[120px] overflow-y-auto">
-                              {smsRecipients.map((r) => (
-                                <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1 shrink-0">
-                                  {r.full_name}
-                                  <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
-                            <div className="relative border-t">
+                            {smsRecipients.length > 0 && (
+                              <div className="max-h-[8.5rem] overflow-y-auto p-2">
+                                <div className="flex flex-wrap gap-2">
+                                  {smsRecipients.map((r) => (
+                                    <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1 shrink-0">
+                                      {r.full_name}
+                                      <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            <div className={`relative ${smsRecipients.length > 0 ? 'border-t' : ''}`}>
                               <Input
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
