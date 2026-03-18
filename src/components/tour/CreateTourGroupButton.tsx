@@ -1,58 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageSquarePlus, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+const TOUR_GROUP_NAME = 'Tour 26';
+const TOUR_GROUP_DESCRIPTION = 'Confirmed Tour 26 roster messenger group';
+
 export const CreateTourGroupButton = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [existingGroupId, setExistingGroupId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const checkExisting = async () => {
-      const { data } = await supabase
-        .from('gw_message_groups')
-        .select('id')
-        .eq('name', 'Tour Group')
-        .eq('group_type', 'general')
-        .maybeSingle();
-      if (data) setExistingGroupId(data.id);
-    };
-    checkExisting();
+  const loadExistingGroup = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('messenger_groups' as any)
+      .select('id')
+      .eq('name', TOUR_GROUP_NAME)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error loading Tour 26 messenger group:', error);
+      return null;
+    }
+
+    const groupId = data?.id ?? null;
+    setExistingGroupId(groupId);
+    return groupId;
   }, []);
+
+  useEffect(() => {
+    loadExistingGroup();
+  }, [loadExistingGroup]);
+
+  const syncMemberCount = async (groupId: string) => {
+    const { count, error } = await supabase
+      .from('messenger_group_members' as any)
+      .select('id', { count: 'exact', head: true })
+      .eq('group_id', groupId);
+
+    if (error) {
+      console.error('Error counting Tour 26 members:', error);
+      return;
+    }
+
+    if (typeof count === 'number') {
+      const { error: updateError } = await supabase
+        .from('messenger_groups' as any)
+        .update({ member_count: count })
+        .eq('id', groupId);
+
+      if (updateError) {
+        console.error('Error updating Tour 26 member count:', updateError);
+      }
+    }
+  };
 
   const handleCreateOrSync = async () => {
     if (!user) return;
     setLoading(true);
 
     try {
-      // 1. Fetch confirmed roster members
       const { data: roster, error: rosterError } = await supabase
         .from('gw_tour_roster')
         .select('user_id')
         .eq('status', 'confirmed');
 
       if (rosterError) throw rosterError;
-      if (!roster || roster.length === 0) {
+
+      const rosterUserIds = Array.from(
+        new Set((roster || []).map((member) => member.user_id).filter(Boolean)),
+      );
+
+      if (rosterUserIds.length === 0) {
         toast.error('No confirmed members on the tour roster');
-        setLoading(false);
         return;
       }
 
-      const rosterUserIds = roster.map(r => r.user_id);
+      let groupId = existingGroupId ?? (await loadExistingGroup());
+      const groupAlreadyExists = Boolean(groupId);
 
-      let groupId = existingGroupId;
-
-      // 2. Create group if it doesn't exist
       if (!groupId) {
         const { data: newGroup, error: createError } = await supabase
-          .from('gw_message_groups')
+          .from('messenger_groups' as any)
           .insert({
-            name: 'Tour Group',
-            description: 'Tour roster messaging group',
-            group_type: 'general',
+            name: TOUR_GROUP_NAME,
+            description: TOUR_GROUP_DESCRIPTION,
+            is_active: true,
+            member_count: 0,
             created_by: user.id,
           })
           .select('id')
@@ -63,27 +99,25 @@ export const CreateTourGroupButton = () => {
         setExistingGroupId(groupId);
       }
 
-      // 3. Get existing members
-      const { data: existingMembers } = await supabase
-        .from('gw_group_members')
-        .select('user_id')
+      const { data: existingMembers, error: membersError } = await supabase
+        .from('messenger_group_members' as any)
+        .select('id, user_id, role')
         .eq('group_id', groupId);
 
-      const existingIds = new Set((existingMembers || []).map(m => m.user_id));
+      if (membersError) throw membersError;
 
-      // 4. Build member rows to insert (skip existing)
+      const existingIds = new Set((existingMembers || []).map((member: any) => member.user_id));
       const newMembers = rosterUserIds
-        .filter(uid => !existingIds.has(uid))
-        .map(uid => ({
-          group_id: groupId!,
-          user_id: uid,
-          role: uid === user.id ? 'admin' : 'member',
+        .filter((userId) => !existingIds.has(userId))
+        .map((userId) => ({
+          group_id: groupId,
+          user_id: userId,
+          role: userId === user.id ? 'admin' : 'member',
         }));
 
-      // Ensure creator is admin
       if (!existingIds.has(user.id) && !rosterUserIds.includes(user.id)) {
         newMembers.push({
-          group_id: groupId!,
+          group_id: groupId,
           user_id: user.id,
           role: 'admin',
         });
@@ -91,34 +125,45 @@ export const CreateTourGroupButton = () => {
 
       if (newMembers.length > 0) {
         const { error: insertError } = await supabase
-          .from('gw_group_members')
+          .from('messenger_group_members' as any)
           .insert(newMembers);
 
         if (insertError) throw insertError;
       }
 
-      // 5. Remove members no longer on roster (except creator)
-      const rosterSet = new Set(rosterUserIds);
-      const toRemove = (existingMembers || [])
-        .filter(m => !rosterSet.has(m.user_id) && m.user_id !== user.id)
-        .map(m => m.user_id);
+      const creatorMembership = (existingMembers || []).find((member: any) => member.user_id === user.id);
+      if (creatorMembership && creatorMembership.role !== 'admin') {
+        const { error: promoteError } = await supabase
+          .from('messenger_group_members' as any)
+          .update({ role: 'admin' })
+          .eq('id', creatorMembership.id);
 
-      if (toRemove.length > 0) {
-        await supabase
-          .from('gw_group_members')
-          .delete()
-          .eq('group_id', groupId!)
-          .in('user_id', toRemove);
+        if (promoteError) throw promoteError;
       }
 
+      const rosterSet = new Set(rosterUserIds);
+      const membersToRemove = (existingMembers || [])
+        .filter((member: any) => !rosterSet.has(member.user_id) && member.user_id !== user.id)
+        .map((member: any) => member.id);
+
+      if (membersToRemove.length > 0) {
+        const { error: removeError } = await supabase
+          .from('messenger_group_members' as any)
+          .delete()
+          .in('id', membersToRemove);
+
+        if (removeError) throw removeError;
+      }
+
+      await syncMemberCount(groupId);
       toast.success(
-        existingGroupId
-          ? `Tour Group synced — ${rosterUserIds.length} roster members`
-          : `Tour Group created with ${rosterUserIds.length} members`
+        groupAlreadyExists
+          ? `Tour 26 synced with ${rosterUserIds.length} confirmed roster members`
+          : `Tour 26 created with ${rosterUserIds.length} confirmed roster members`,
       );
     } catch (error: any) {
-      console.error('Error creating/syncing tour group:', error);
-      toast.error(error.message || 'Failed to create tour group');
+      console.error('Error creating/syncing Tour 26 messenger group:', error);
+      toast.error(error.message || 'Failed to sync Tour 26 messenger group');
     } finally {
       setLoading(false);
     }
@@ -128,19 +173,19 @@ export const CreateTourGroupButton = () => {
     <Button
       variant="outline"
       size="sm"
-      className="text-xs gap-1.5"
+      className="gap-1.5 text-xs"
       onClick={handleCreateOrSync}
       disabled={loading}
     >
       {existingGroupId ? (
         <>
           <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-          Sync Tour Group
+          Sync Tour 26
         </>
       ) : (
         <>
           <MessageSquarePlus className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-          Create Tour Group
+          Create Tour 26
         </>
       )}
     </Button>
