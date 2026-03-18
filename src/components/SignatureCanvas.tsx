@@ -118,9 +118,9 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   const stopDrawing = () => {
     if (isDrawing) {
       setIsDrawing(false);
-      
-      // Capture the signature when drawing stops
-      if (hasSignature) {
+
+      // Use ref so state timing doesn't drop quick mobile signatures
+      if (hasDrawnRef.current) {
         const canvas = canvasRef.current;
         if (canvas) {
           const signatureData = canvas.toDataURL();
@@ -128,7 +128,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
           onSignatureChange(signatureData);
         }
       }
-      
+
       console.log('Stopped drawing signature');
     }
   };
