@@ -57,7 +57,7 @@ const sendSingleSMS = async (
   twilioAccountSid: string,
   twilioAuthToken: string,
   twilioFromNumber: string,
-  mediaUrl?: string,
+  mediaUrls: string[] = [],
 ): Promise<{ success: boolean; messageId?: string; error?: string }> => {
   const formattedTo = formatPhoneNumber(to);
   if (!formattedTo) {
@@ -71,9 +71,11 @@ const sendSingleSMS = async (
       Body: message,
     });
 
-    if (mediaUrl) {
-      params.append('MediaUrl', mediaUrl);
-    }
+    mediaUrls.forEach((mediaUrl) => {
+      if (mediaUrl) {
+        params.append('MediaUrl', mediaUrl);
+      }
+    });
 
     const response = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
