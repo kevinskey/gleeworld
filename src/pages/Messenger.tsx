@@ -115,7 +115,9 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   const [editingGroup, setEditingGroup] = useState<{id: string; name: string; description: string} | null>(null);
   const [groupFormData, setGroupFormData] = useState({ name: '', description: '' });
   const [savingGroup, setSavingGroup] = useState(false);
-  
+  const [showManageMembersDialog, setShowManageMembersDialog] = useState(false);
+  const [groupForMemberManagement, setGroupForMemberManagement] = useState<{ id: string; name: string } | null>(null);
+
   const [isExecBoard, setIsExecBoard] = useState(false);
   
   // Check for exec-board role from app_roles
