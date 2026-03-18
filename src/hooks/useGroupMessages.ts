@@ -289,6 +289,7 @@ export const useGroupMessages = () => {
               message: messagePreview,
               senderUserId: user.id,
               senderName: user.user_metadata?.full_name || 'Unknown User',
+              mediaUrl: fileUrl,
             },
           });
 

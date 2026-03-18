@@ -243,6 +243,7 @@ export const useDirectMessages = () => {
             body: {
               to: senderProfile.phone_number,
               message: `[GleeWorld] You sent: "${previewText.substring(0, 90)}${previewText.length > 90 ? '...' : ''}"`,
+              mediaUrl: fileUrl,
             },
           });
         } catch (smsError) {
@@ -277,6 +278,7 @@ export const useDirectMessages = () => {
               body: {
                 to: recipientProfile.phone_number,
                 message: `[GleeWorld] ${user.user_metadata?.full_name || 'Someone'}: ${previewText.substring(0, 90)}${previewText.length > 90 ? '...' : ''}`,
+                mediaUrl: fileUrl,
               },
             });
           }

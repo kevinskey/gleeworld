@@ -10,6 +10,7 @@ interface SendSMSRequest {
   to: string;
   message: string;
   from?: string;
+  mediaUrl?: string;
 }
 
 // Format phone number to E.164 format (adds +1 for US numbers if missing)
@@ -57,21 +58,20 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, message, from }: SendSMSRequest = await req.json();
+    const { to, message, from, mediaUrl }: SendSMSRequest = await req.json();
     
     // Format phone number to E.164 format
     const formattedTo = formatPhoneNumber(to);
     
     console.log("GleeWorld SMS Request:", {
-      to: formattedTo.substring(0, 6) + "***", // Mask phone number in logs
+      to: formattedTo.substring(0, 6) + "***",
       message_length: message.length,
-      from
+      from,
+      has_media: Boolean(mediaUrl),
     });
 
-    // Check if Twilio credentials are available
     const twilioPhone = from || TWILIO_PHONE_NUMBER;
 
-    // Validate phone number format (should be E.164 after formatting)
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
     if (!phoneRegex.test(formattedTo)) {
       return new Response(JSON.stringify({
@@ -83,7 +83,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Prepare Twilio API request
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
     const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
 
@@ -91,6 +90,9 @@ const handler = async (req: Request): Promise<Response> => {
     formData.append('To', formattedTo);
     formData.append('From', twilioPhone);
     formData.append('Body', message);
+    if (mediaUrl) {
+      formData.append('MediaUrl', mediaUrl);
+    }
 
     const response = await fetch(twilioUrl, {
       method: 'POST',

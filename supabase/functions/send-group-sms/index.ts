@@ -13,6 +13,7 @@ interface GroupSMSRequest {
   message: string;
   senderUserId: string;
   senderName: string;
+  mediaUrl?: string;
 }
 
 // Format phone number to E.164 format (adds +1 for US numbers if missing)
@@ -67,11 +68,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { conversationId, message, senderUserId, senderName }: GroupSMSRequest = await req.json();
+    const { conversationId, message, senderUserId, senderName, mediaUrl }: GroupSMSRequest = await req.json();
     
-    console.log('Processing group SMS:', { conversationId, senderUserId, senderName });
+    console.log('Processing group SMS:', { conversationId, senderUserId, senderName, hasMedia: Boolean(mediaUrl) });
 
-    // Validate required fields
     if (!conversationId) {
       console.error('Missing conversationId in request body');
       throw new Error('Missing conversationId');
@@ -85,10 +85,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Missing senderUserId');
     }
 
-    // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get conversation details - conversationId is actually the group_id
     const { data: conversation, error: convError } = await supabase
       .from('gw_sms_conversations')
       .select(`
@@ -114,7 +112,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get sender's phone number
     const { data: senderProfile, error: senderError } = await supabase
       .from('gw_profiles')
       .select('phone_number')
@@ -125,15 +122,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Sender phone number not found');
     }
 
-    // Get all group members' phone numbers except sender
-    // If "All Members" group, fetch ALL users with member role, not just group members
     const groupName = conversation.gw_message_groups.name;
     const isAllMembersGroup = groupName.toLowerCase().includes('all members');
     
     let targetPhoneNumbers: string[] = [];
     
     if (isAllMembersGroup) {
-      // Fetch ALL users with phone numbers (regardless of role)
       const { data: allUsers, error: allUsersError } = await supabase
         .from('gw_profiles')
         .select('phone_number, user_id, role')
@@ -146,14 +140,11 @@ const handler = async (req: Request): Promise<Response> => {
         throw new Error('Failed to get all users');
       }
       
-      console.log(`All Members group: Found ${allUsers?.length || 0} users with phone numbers (all roles)`);
-      
       targetPhoneNumbers = (allUsers || [])
         .map(profile => profile.phone_number)
         .filter(phone => phone)
         .map(phone => formatPhoneNumber(phone as string));
     } else {
-      // Regular group - fetch only explicit group members
       const { data: members, error: membersError } = await supabase
         .from('gw_group_members')
         .select(`
@@ -181,12 +172,10 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Format message for group SMS: "[Group Name] FirstName: message"
     const firstName = senderName.split(' ')[0];
     const smsText = `${groupName}: ${firstName}: ${message}`;
     const truncatedMessage = smsText.length > 160 ? smsText.substring(0, 157) + '...' : smsText;
 
-    // Store the outbound message in database
     const { data: storedMessage, error: storeError } = await supabase
       .from('gw_sms_messages')
       .insert({
@@ -205,7 +194,6 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to store message');
     }
 
-    // Send SMS to all group members via Twilio
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
     const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
 
@@ -215,6 +203,9 @@ const handler = async (req: Request): Promise<Response> => {
         formData.append('From', TWILIO_PHONE_NUMBER);
         formData.append('To', phoneNumber);
         formData.append('Body', truncatedMessage);
+        if (mediaUrl) {
+          formData.append('MediaUrl', mediaUrl);
+        }
 
         const response = await fetch(twilioUrl, {
           method: 'POST',
