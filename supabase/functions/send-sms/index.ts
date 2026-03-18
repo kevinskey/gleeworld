@@ -111,11 +111,13 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const payload: SMSPayload = await req.json();
+    const mediaUrls = payload.mediaUrls?.filter(Boolean) ?? (payload.mediaUrl ? [payload.mediaUrl] : []);
+
     console.log('SMS request received:', {
       sendToAll: payload.sendToAll,
       recipientCount: payload.recipients?.length || (payload.to ? 1 : 0),
       messageLength: payload.message?.length,
-      hasMedia: Boolean(payload.mediaUrl),
+      mediaCount: mediaUrls.length,
       senderId: payload.senderId,
     });
 
@@ -132,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const messageBody = payload.message?.trim() || '';
-    if (!messageBody && !payload.mediaUrl) {
+    if (!messageBody && mediaUrls.length === 0) {
       return new Response(
         JSON.stringify({ success: false, error: 'Message or media attachment is required' }),
         { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
