@@ -15,6 +15,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   disabled = false 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hasDrawnRef = useRef(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
   const isMobile = useIsMobile();
@@ -44,6 +45,8 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     // Fill with white background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    hasDrawnRef.current = false;
+    setHasSignature(false);
 
     console.log('SignatureCanvas initialized');
   }, [isMobile]);
@@ -105,8 +108,9 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     ctx.lineTo(x, y);
     ctx.stroke();
     
-    // Mark that we have started drawing but don't capture yet
-    if (!hasSignature) {
+    // Mark immediately so quick taps/strokes on mobile still save
+    if (!hasDrawnRef.current) {
+      hasDrawnRef.current = true;
       setHasSignature(true);
     }
   };
@@ -114,9 +118,9 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   const stopDrawing = () => {
     if (isDrawing) {
       setIsDrawing(false);
-      
-      // Capture the signature when drawing stops
-      if (hasSignature) {
+
+      // Use ref so state timing doesn't drop quick mobile signatures
+      if (hasDrawnRef.current) {
         const canvas = canvasRef.current;
         if (canvas) {
           const signatureData = canvas.toDataURL();
@@ -124,7 +128,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
           onSignatureChange(signatureData);
         }
       }
-      
+
       console.log('Stopped drawing signature');
     }
   };
@@ -138,7 +142,8 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
+    hasDrawnRef.current = false;
     setHasSignature(false);
     onSignatureChange(null);
     console.log('Signature cleared');
