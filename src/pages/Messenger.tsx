@@ -995,7 +995,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           />
 
                           <div className="flex items-center justify-between gap-2 pt-1">
-                            <span className="text-xs text-muted-foreground">Optional: attach an MP3 (max 5MB)</span>
+                            <span className="text-xs text-muted-foreground">Optional: attach an MP3 (max 150MB)</span>
                             <Button
                               type="button"
                               variant="outline"
