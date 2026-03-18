@@ -159,8 +159,14 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
       return;
     }
 
-    const signatureData = signatureRef.current ?? signature;
-    if (!signatureData || !signatureData.trim()) {
+    const signatureData =
+      typeof signatureRef.current === 'string'
+        ? signatureRef.current
+        : typeof signature === 'string'
+          ? signature
+          : '';
+
+    if (!signatureData.trim()) {
       toast.error('Driver signature is required');
       return;
     }
@@ -171,7 +177,6 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
       driver_phone: driverPhone,
       payment_method: paymentMethod,
       notes,
-      signature_data: signatureData,
     });
 
     if (!parsed.success) {
@@ -190,7 +195,7 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
         driver_phone: parsed.data.driver_phone || null,
         payment_method: parsed.data.payment_method,
         signed_by_name: parsed.data.driver_name,
-        signature_data: parsed.data.signature_data,
+        signature_data: signatureData,
         notes: parsed.data.notes || null,
         created_by: user.id,
       });
