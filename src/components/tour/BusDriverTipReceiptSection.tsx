@@ -295,7 +295,7 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
             />
           </div>
 
-          <SignatureCanvas onSignatureChange={setSignature} disabled={isSubmitting} />
+          <SignatureCanvas onSignatureChange={handleSignatureChange} disabled={isSubmitting} />
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">

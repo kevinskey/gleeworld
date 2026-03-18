@@ -184,6 +184,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
             onTouchStart={startDrawing}
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
+            onTouchCancel={stopDrawing}
           />
         </div>
         
