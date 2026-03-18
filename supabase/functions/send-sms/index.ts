@@ -49,13 +49,14 @@ const formatPhoneNumber = (phone: string): string => {
   return `+1${cleaned}`;
 };
 
-// Send a single SMS via Twilio
+// Send a single SMS/MMS via Twilio
 const sendSingleSMS = async (
   to: string,
   message: string,
   twilioAccountSid: string,
   twilioAuthToken: string,
-  twilioFromNumber: string
+  twilioFromNumber: string,
+  mediaUrl?: string,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> => {
   const formattedTo = formatPhoneNumber(to);
   if (!formattedTo) {
@@ -63,6 +64,16 @@ const sendSingleSMS = async (
   }
 
   try {
+    const params = new URLSearchParams({
+      To: formattedTo,
+      From: twilioFromNumber,
+      Body: message,
+    });
+
+    if (mediaUrl) {
+      params.append('MediaUrl', mediaUrl);
+    }
+
     const response = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
       {
@@ -71,11 +82,7 @@ const sendSingleSMS = async (
           'Authorization': `Basic ${btoa(`${twilioAccountSid}:${twilioAuthToken}`)}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          To: formattedTo,
-          From: twilioFromNumber,
-          Body: message,
-        }),
+        body: params,
       }
     );
 
