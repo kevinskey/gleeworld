@@ -819,21 +819,27 @@ export const FinderMediaLibrary = () => {
               <div 
                 {...getRootProps()}
                 className={cn(
-                  "flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 transition-colors",
-                  isDragActive && "bg-primary/5 border-2 border-dashed border-primary"
+                  'flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 transition-colors',
+                  isDragActive && 'border-2 border-dashed border-primary bg-primary/5'
                 )}
               >
                 <input {...getInputProps()} id="file-upload-input" />
                 
                 {loading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                  <div className="flex h-full items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
                   </div>
                 ) : filteredFiles.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                    <Upload className="h-16 w-16 mb-4 opacity-50" />
-                    <p className="text-lg font-medium">No files found</p>
-                    <p className="text-sm">Drag and drop files here to upload</p>
+                  <div className="flex h-full flex-col items-center justify-center px-4 text-center text-muted-foreground">
+                    <Upload className="mb-4 h-16 w-16 opacity-50" />
+                    <p className="text-lg font-medium text-foreground">No files found</p>
+                    <p className="text-sm">{isAdmin ? 'Tap Add File to upload from your phone.' : 'No media matches this view yet.'}</p>
+                    {isAdmin && (
+                      <Button onClick={handleUploadClick} className="mt-4 gap-2">
+                        <Upload className="h-4 w-4" />
+                        Add your first file
+                      </Button>
+                    )}
                   </div>
                 ) : viewMode === 'grid' ? (
                   <FinderFileGrid
