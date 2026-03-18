@@ -994,8 +994,11 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <CreateTourGroupButton />
+                <div className="mb-4 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Tour 26 Group</p>
+                  <div className="[&>button]:w-full [&>button]:justify-center">
+                    <CreateTourGroupButton />
+                  </div>
                 </div>
                 
                 {loadingGroups ? <div className="flex items-center justify-center py-4">
