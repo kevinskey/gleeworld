@@ -1109,6 +1109,15 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     </Dialog>
   );
 
+  const manageMembersDialog = (
+    <ManageMessengerGroupMembersDialog
+      open={showManageMembersDialog}
+      onOpenChange={setShowManageMembersDialog}
+      group={groupForMemberManagement}
+      onMembersUpdated={loadManualGroups}
+    />
+  );
+
   // Return embedded mode (no layout wrapper)
   if (embedded) {
     return (
