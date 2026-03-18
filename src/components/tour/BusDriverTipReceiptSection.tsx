@@ -29,7 +29,10 @@ const driverTipReceiptSchema = z.object({
   driver_phone: z.string().trim().max(30, 'Phone number is too long').optional().or(z.literal('')),
   payment_method: z.enum(['cash', 'check', 'cash_app', 'venmo', 'other']),
   notes: z.string().trim().max(500, 'Notes must be 500 characters or less').optional().or(z.literal('')),
-  signature_data: z.string().trim().min(1, 'Driver signature is required'),
+  signature_data: z.preprocess(
+    (value) => (typeof value === 'string' ? value : ''),
+    z.string().trim().min(1, 'Driver signature is required'),
+  ),
 });
 
 interface SavedBusCompany {
