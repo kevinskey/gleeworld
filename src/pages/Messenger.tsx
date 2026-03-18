@@ -1024,16 +1024,27 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                 <Badge variant="secondary" className="ml-2 text-xs">{group.count}</Badge>
                               </Button>
                               {canEditGroups && (
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => {
-                                  const g = manualGroups.find(mg => `manual:${mg.id}` === group.id);
-                                  if (g) {
-                                    setEditingGroup({ id: g.id, name: g.name, description: g.description || '' });
-                                    setGroupFormData({ name: g.name, description: g.description || '' });
-                                    setShowGroupEditor(true);
-                                  }
-                                }}>
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() => openManageMembersDialog(group)}
+                                    aria-label={`Manage members for ${group.name}`}
+                                  >
+                                    <UserPlus className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => {
+                                    const g = manualGroups.find(mg => `manual:${mg.id}` === group.id);
+                                    if (g) {
+                                      setEditingGroup({ id: g.id, name: g.name, description: g.description || '' });
+                                      setGroupFormData({ name: g.name, description: g.description || '' });
+                                      setShowGroupEditor(true);
+                                    }
+                                  }}>
+                                    <Pencil className="h-3 w-3" />
+                                  </Button>
+                                </>
                               )}
                             </div>
                           ))}
