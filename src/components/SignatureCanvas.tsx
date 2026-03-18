@@ -15,6 +15,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   disabled = false 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hasDrawnRef = useRef(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
   const isMobile = useIsMobile();
