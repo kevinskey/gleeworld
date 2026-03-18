@@ -108,8 +108,9 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     ctx.lineTo(x, y);
     ctx.stroke();
     
-    // Mark that we have started drawing but don't capture yet
-    if (!hasSignature) {
+    // Mark immediately so quick taps/strokes on mobile still save
+    if (!hasDrawnRef.current) {
+      hasDrawnRef.current = true;
       setHasSignature(true);
     }
   };
