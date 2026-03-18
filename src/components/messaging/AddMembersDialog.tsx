@@ -55,13 +55,19 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
 
       if (membersError) throw membersError;
 
-      const currentMemberIds = currentMembers?.map(m => m.user_id) || [];
+      const currentMemberIds = currentMembers?.map((member) => member.user_id) || [];
 
-      const { data: users, error: usersError } = await supabase
+      let usersQuery = supabase
         .from('gw_profiles')
         .select('user_id, full_name, email, avatar_url')
-        .not('user_id', 'in', `(${currentMemberIds.join(',') || 'null'})`)
         .order('full_name');
+
+      if (currentMemberIds.length > 0) {
+        const excludedIds = currentMemberIds.map((id) => `"${id}"`).join(',');
+        usersQuery = usersQuery.not('user_id', 'in', `(${excludedIds})`);
+      }
+
+      const { data: users, error: usersError } = await usersQuery;
 
       if (usersError) throw usersError;
 
@@ -78,18 +84,12 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
     }
   };
 
-  const setUserSelection = (userId: string, checked: boolean) => {
-    setSelectedUserIds(prev => {
-      if (checked) {
-        return prev.includes(userId) ? prev : [...prev, userId];
-      }
-
-      return prev.filter(id => id !== userId);
-    });
-  };
-
   const handleToggleUser = (userId: string) => {
-    setUserSelection(userId, !selectedUserIds.includes(userId));
+    setSelectedUserIds((prev) => (
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    ));
   };
 
   const handleAddMembers = async () => {
@@ -145,7 +145,7 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-[500px] overflow-hidden p-0 sm:w-full">
+      <DialogContent className="z-[200000] w-[calc(100vw-1rem)] max-w-[500px] overflow-hidden p-0 sm:w-full">
         <div className="flex max-h-[85vh] flex-col">
           <DialogHeader className="px-4 pb-3 pt-4 sm:px-6">
             <DialogTitle className="text-xl font-semibold">
@@ -178,11 +178,11 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
                       return (
                         <div
                           key={user.user_id}
-                          className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                          className={`flex cursor-pointer touch-manipulation items-center gap-3 rounded-lg border p-3 transition-colors ${
                             isSelected
                               ? 'border-primary/40 bg-accent/40'
                               : 'bg-card hover:bg-accent/50'
-                          } cursor-pointer`}
+                          }`}
                           onClick={() => handleToggleUser(user.user_id)}
                           role="button"
                           tabIndex={0}
@@ -193,12 +193,12 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
                             }
                           }}
                           aria-pressed={isSelected}
+                          aria-label={`Toggle ${user.full_name || user.email || 'user'}`}
                         >
                           <Checkbox
                             checked={isSelected}
-                            onClick={(e) => e.stopPropagation()}
-                            onCheckedChange={(checked) => setUserSelection(user.user_id, checked === true)}
-                            aria-label={`Select ${user.full_name || user.email || 'user'}`}
+                            className="pointer-events-none"
+                            aria-hidden="true"
                           />
                           <Avatar className="h-10 w-10 flex-shrink-0">
                             <AvatarImage src={user.avatar_url} />
