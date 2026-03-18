@@ -27,6 +27,7 @@ import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
 import { SMSHistoryPanel } from '@/components/messaging/SMSHistoryPanel';
 import { CommunicationHistoryPanel } from '@/components/messaging/CommunicationHistoryPanel';
 import { ManageMessengerGroupMembersDialog } from '@/components/messaging/ManageMessengerGroupMembersDialog';
+import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
 interface RecipientGroup {
   id: string;
   name: string;
@@ -966,12 +967,13 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
 
             {/* Groups Panel */}
             {showGroupsPanel && <div className="w-full sm:w-72 border-l bg-muted/30 p-4 overflow-y-auto">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 gap-2">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Quick Add Groups
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <CreateTourGroupButton />
                     {canEditGroups && (
                       <Button
                         variant="outline"
