@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
+import {
   Bus, Search, MapPin, Star, Phone, Mail, User, FileText,
   Loader2, Building2, DollarSign, ExternalLink, StickyNote,
   Copy, Send, Calendar, Route, Clock
@@ -13,6 +13,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { BusDriverTipReceiptSection } from '@/components/tour/BusDriverTipReceiptSection';
 
 interface BusCompanyResult {
   id: string;
@@ -179,7 +180,6 @@ export const BusInfoSection = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
-                  {/* Contact Info */}
                   {(bus.contact_name || bus.contact_phone || bus.contact_email) && (
                     <div className="space-y-1.5">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact</p>
@@ -204,7 +204,6 @@ export const BusInfoSection = () => {
                     </div>
                   )}
 
-                  {/* Driver Info */}
                   {(bus.driver_name || bus.driver_phone) && (
                     <div className="space-y-1.5">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Driver</p>
@@ -223,7 +222,6 @@ export const BusInfoSection = () => {
                     </div>
                   )}
 
-                  {/* Notes */}
                   {bus.notes && (
                     <div className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Notes</p>
@@ -231,7 +229,6 @@ export const BusInfoSection = () => {
                     </div>
                   )}
 
-                  {/* Contract PDF */}
                   {bus.contract_pdf_url && (
                     <Button
                       variant="outline"
@@ -249,6 +246,10 @@ export const BusInfoSection = () => {
           </div>
         )}
       </div>
+
+      <Separator />
+
+      <BusDriverTipReceiptSection activeTour={tourData?.tour ?? null} savedCompanies={savedCompanies} />
 
       <Separator />
 
@@ -318,7 +319,6 @@ export const BusInfoSection = () => {
                 </div>
               ))}
 
-              {/* Copyable raw text */}
               <details className="pt-2">
                 <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
                   View plain text version
@@ -374,7 +374,6 @@ export const BusInfoSection = () => {
           </CardContent>
         </Card>
 
-        {/* Search Results */}
         {hasSearched && (
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground">
@@ -437,7 +436,6 @@ export const BusInfoSection = () => {
           </div>
         )}
 
-        {/* Tips */}
         {!hasSearched && (
           <Card className="border-dashed">
             <CardContent className="p-6">
