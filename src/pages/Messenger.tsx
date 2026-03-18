@@ -651,19 +651,34 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       });
       return;
     }
-    if (!smsContent.trim()) {
+
+    if (!smsContent.trim() && !smsAttachment) {
       toast({
         title: "No message",
-        description: "Please type a message",
+        description: "Please type a message or add an MP3",
         variant: "destructive"
       });
       return;
     }
+
     setIsSending(true);
     try {
-      // Prepend sender name to message
+      let mediaUrl: string | undefined;
+
+      if (smsAttachment) {
+        const uploadResult = await uploadFileAndGetUrl(smsAttachment, 'message-attachments', 'sms');
+        if (!uploadResult?.url) {
+          throw new Error('Could not upload attachment for SMS');
+        }
+        mediaUrl = uploadResult.url;
+      }
+
       const senderName = userProfile?.full_name || user?.email?.split('@')[0] || 'GleeWorld';
-      const messageWithSender = `[From: ${senderName}]\n\n${smsContent}`;
+      const trimmedSmsContent = smsContent.trim();
+      const messageWithSender = trimmedSmsContent
+        ? `[From: ${senderName}]\n\n${trimmedSmsContent}`
+        : `[From: ${senderName}]`;
+
       const {
         error
       } = await supabase.functions.invoke('send-sms', {
@@ -671,16 +686,19 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           message: messageWithSender,
           sendToAll,
           recipients: sendToAll ? [] : smsRecipients.map(r => r.phone_number),
-          senderId: user?.id
+          senderId: user?.id,
+          mediaUrl,
         }
       });
       if (error) throw error;
+
       toast({
         title: "SMS sent!",
         description: sendToAll ? "Sent to all members" : `Sent to ${smsRecipients.length} recipient(s)`
       });
       setSmsContent('');
       setSmsRecipients([]);
+      setSmsAttachment(null);
     } catch (error: any) {
       toast({
         title: "Failed to send",
