@@ -27,6 +27,7 @@ import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
 import { SMSHistoryPanel } from '@/components/messaging/SMSHistoryPanel';
 import { CommunicationHistoryPanel } from '@/components/messaging/CommunicationHistoryPanel';
 import { ManageMessengerGroupMembersDialog } from '@/components/messaging/ManageMessengerGroupMembersDialog';
+import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
 interface RecipientGroup {
   id: string;
   name: string;
