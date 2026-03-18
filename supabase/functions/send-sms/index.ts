@@ -228,7 +228,7 @@ const handler = async (req: Request): Promise<Response> => {
         twilioAccountSid,
         twilioAuthToken,
         twilioFromNumber,
-        payload.mediaUrl,
+        mediaUrls,
       );
 
       if (result.success && payload.notificationId) {
