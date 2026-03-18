@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "npx vite@5.4.10",
-    "build": "npx vite@5.4.10 build",
-    "build:dev": "npx vite@5.4.10 build --mode development",
+    "dev": "NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10",
+    "build": "NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 build",
+    "build:dev": "NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 build --mode development",
     "lint": "eslint .",
-    "preview": "npx vite@5.4.10 preview"
+    "preview": "NODE_OPTIONS='--experimental-loader ./scripts/fdir-loader.mjs' bun x vite@5.4.10 preview"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",
