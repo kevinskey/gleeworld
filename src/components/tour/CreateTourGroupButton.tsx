@@ -35,7 +35,7 @@ export const CreateTourGroupButton = () => {
       return null;
     }
 
-    const groupId = ((response.data as MessengerGroupRecord | null)?.id ?? null);
+    const groupId = ((((response.data as unknown) as MessengerGroupRecord | null)?.id) ?? null);
     setExistingGroupId(groupId);
     return groupId;
   }, []);
