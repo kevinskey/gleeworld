@@ -151,6 +151,10 @@ export const FinderMediaLibrary = () => {
     queryClient.invalidateQueries({ queryKey: ['media-library'] });
   };
 
+  const handleUploadClick = () => {
+    document.getElementById('file-upload-input')?.click();
+  };
+
   // File type detection
   const getFileType = (file: MediaFile): string => {
     const url = file.file_url?.toLowerCase() || '';
