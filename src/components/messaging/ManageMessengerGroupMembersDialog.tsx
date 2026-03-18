@@ -77,7 +77,7 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
           gw_profiles!inner(full_name, email, avatar_url)
         `)
         .eq('group_id', groupId)
-        .order('created_at', { ascending: false });
+        .order('joined_at', { ascending: false });
 
       if (error) throw error;
 
