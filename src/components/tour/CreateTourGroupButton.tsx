@@ -105,7 +105,7 @@ export const CreateTourGroupButton = () => {
           .single();
 
         if (createResponse.error) throw createResponse.error;
-        groupId = (createResponse.data as MessengerGroupRecord).id;
+        groupId = ((createResponse.data as unknown) as MessengerGroupRecord).id;
         setExistingGroupId(groupId);
       }
 
