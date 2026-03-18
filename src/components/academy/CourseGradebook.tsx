@@ -58,7 +58,16 @@ export const CourseGradebook: React.FC<CourseGradebookProps> = ({ courseId, isEn
         .eq('student_id', user?.id)
         .in('assignment_id', assignments.map(a => a.id));
 
-      const submissionMap = new Map(submissions?.map(s => [s.assignment_id, s]) || []);
+      type SubmissionRow = {
+        assignment_id: string;
+        grade: number | null;
+        status: string | null;
+      };
+
+      const typedSubmissions = (submissions ?? []) as SubmissionRow[];
+      const submissionMap = new Map<string, SubmissionRow>(
+        typedSubmissions.map((submission) => [submission.assignment_id, submission]),
+      );
 
       let totalPoints = 0;
       let earnedPoints = 0;

@@ -4,6 +4,8 @@ import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
 import { cn } from "@/lib/utils"
 
 interface ScrollAreaProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> {
+  children?: React.ReactNode;
+  className?: string;
   viewportRef?: React.RefObject<HTMLDivElement>;
 }
 

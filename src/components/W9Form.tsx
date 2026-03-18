@@ -348,11 +348,7 @@ export const W9Form = ({ onSuccess }: W9FormProps) => {
 
       // Check current auth state before database insertion
       console.log('=== STEP 3: CHECKING AUTH STATE ===');
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('Current session:', session?.user?.id || 'No session');
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-      }
+      console.log('Current session:', user?.id || 'No session');
 
       // Save form record to database with proper structure
       console.log('=== STEP 4: SAVING TO DATABASE ===');

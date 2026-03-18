@@ -967,13 +967,12 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
 
             {/* Groups Panel */}
             {showGroupsPanel && <div className="w-full sm:w-72 border-l bg-muted/30 p-4 overflow-y-auto">
-                <div className="flex items-center justify-between mb-4 gap-2">
+                <div className="flex items-center justify-between mb-3 gap-2">
                   <h3 className="font-semibold flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Quick Add Groups
                   </h3>
-                  <div className="flex items-center gap-2 flex-wrap justify-end">
-                    <CreateTourGroupButton />
+                  <div className="flex items-center gap-2">
                     {canEditGroups && (
                       <Button
                         variant="outline"
@@ -992,6 +991,13 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                     <button onClick={() => setShowGroupsPanel(false)} className="p-2 hover:bg-muted rounded-lg sm:hidden">
                       <X className="h-5 w-5" />
                     </button>
+                  </div>
+                </div>
+
+                <div className="mb-4 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Tour 26 Group</p>
+                  <div className="[&>button]:w-full [&>button]:justify-center">
+                    <CreateTourGroupButton />
                   </div>
                 </div>
                 
