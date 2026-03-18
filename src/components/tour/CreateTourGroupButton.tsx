@@ -8,24 +8,34 @@ import { toast } from 'sonner';
 const TOUR_GROUP_NAME = 'Tour 26';
 const TOUR_GROUP_DESCRIPTION = 'Confirmed Tour 26 roster messenger group';
 
+type MessengerGroupRecord = {
+  id: string;
+};
+
+type MessengerGroupMemberRecord = {
+  id: string;
+  user_id: string;
+  role: string;
+};
+
 export const CreateTourGroupButton = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [existingGroupId, setExistingGroupId] = useState<string | null>(null);
 
   const loadExistingGroup = useCallback(async () => {
-    const { data, error } = await supabase
+    const response = await supabase
       .from('messenger_groups' as any)
       .select('id')
       .eq('name', TOUR_GROUP_NAME)
       .maybeSingle();
 
-    if (error) {
-      console.error('Error loading Tour 26 messenger group:', error);
+    if (response.error) {
+      console.error('Error loading Tour 26 messenger group:', response.error);
       return null;
     }
 
-    const groupId = data?.id ?? null;
+    const groupId = ((response.data as MessengerGroupRecord | null)?.id ?? null);
     setExistingGroupId(groupId);
     return groupId;
   }, []);
@@ -35,20 +45,20 @@ export const CreateTourGroupButton = () => {
   }, [loadExistingGroup]);
 
   const syncMemberCount = async (groupId: string) => {
-    const { count, error } = await supabase
+    const response = await supabase
       .from('messenger_group_members' as any)
       .select('id', { count: 'exact', head: true })
       .eq('group_id', groupId);
 
-    if (error) {
-      console.error('Error counting Tour 26 members:', error);
+    if (response.error) {
+      console.error('Error counting Tour 26 members:', response.error);
       return;
     }
 
-    if (typeof count === 'number') {
+    if (typeof response.count === 'number') {
       const { error: updateError } = await supabase
         .from('messenger_groups' as any)
-        .update({ member_count: count })
+        .update({ member_count: response.count })
         .eq('id', groupId);
 
       if (updateError) {
@@ -82,7 +92,7 @@ export const CreateTourGroupButton = () => {
       const groupAlreadyExists = Boolean(groupId);
 
       if (!groupId) {
-        const { data: newGroup, error: createError } = await supabase
+        const createResponse = await supabase
           .from('messenger_groups' as any)
           .insert({
             name: TOUR_GROUP_NAME,
@@ -94,19 +104,20 @@ export const CreateTourGroupButton = () => {
           .select('id')
           .single();
 
-        if (createError) throw createError;
-        groupId = newGroup.id;
+        if (createResponse.error) throw createResponse.error;
+        groupId = (createResponse.data as MessengerGroupRecord).id;
         setExistingGroupId(groupId);
       }
 
-      const { data: existingMembers, error: membersError } = await supabase
+      const membersResponse = await supabase
         .from('messenger_group_members' as any)
         .select('id, user_id, role')
         .eq('group_id', groupId);
 
-      if (membersError) throw membersError;
+      if (membersResponse.error) throw membersResponse.error;
 
-      const existingIds = new Set((existingMembers || []).map((member: any) => member.user_id));
+      const existingMembers = (membersResponse.data || []) as MessengerGroupMemberRecord[];
+      const existingIds = new Set(existingMembers.map((member) => member.user_id));
       const newMembers = rosterUserIds
         .filter((userId) => !existingIds.has(userId))
         .map((userId) => ({
@@ -131,7 +142,7 @@ export const CreateTourGroupButton = () => {
         if (insertError) throw insertError;
       }
 
-      const creatorMembership = (existingMembers || []).find((member: any) => member.user_id === user.id);
+      const creatorMembership = existingMembers.find((member) => member.user_id === user.id);
       if (creatorMembership && creatorMembership.role !== 'admin') {
         const { error: promoteError } = await supabase
           .from('messenger_group_members' as any)
@@ -142,9 +153,9 @@ export const CreateTourGroupButton = () => {
       }
 
       const rosterSet = new Set(rosterUserIds);
-      const membersToRemove = (existingMembers || [])
-        .filter((member: any) => !rosterSet.has(member.user_id) && member.user_id !== user.id)
-        .map((member: any) => member.id);
+      const membersToRemove = existingMembers
+        .filter((member) => !rosterSet.has(member.user_id) && member.user_id !== user.id)
+        .map((member) => member.id);
 
       if (membersToRemove.length > 0) {
         const { error: removeError } = await supabase
