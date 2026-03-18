@@ -624,6 +624,16 @@ export const FinderMediaLibrary = () => {
 
   const filteredFiles = getFilteredFiles();
 
+  const mobileSectionTitle = selectedFolderId
+    ? 'Folder'
+    : activeSection === 'trash'
+      ? 'Trash'
+      : activeSection === 'favorites'
+        ? 'Favorites'
+        : activeSection === 'recents'
+          ? 'Recents'
+          : 'Media Library';
+
   const draggingFile = draggingFileId ? allFiles.find(f => f.id === draggingFileId) : null;
 
   return (
