@@ -48,7 +48,6 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
     try {
       setLoading(true);
 
-      // Get current group members
       const { data: currentMembers, error: membersError } = await supabase
         .from('gw_group_members')
         .select('user_id')
@@ -58,7 +57,6 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
 
       const currentMemberIds = currentMembers?.map(m => m.user_id) || [];
 
-      // Get all users who are not in the group
       const { data: users, error: usersError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email, avatar_url')
@@ -80,12 +78,18 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
     }
   };
 
+  const setUserSelection = (userId: string, checked: boolean) => {
+    setSelectedUserIds(prev => {
+      if (checked) {
+        return prev.includes(userId) ? prev : [...prev, userId];
+      }
+
+      return prev.filter(id => id !== userId);
+    });
+  };
+
   const handleToggleUser = (userId: string) => {
-    setSelectedUserIds(prev =>
-      prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
+    setUserSelection(userId, !selectedUserIds.includes(userId));
   };
 
   const handleAddMembers = async () => {
@@ -127,7 +131,7 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
 
   const filteredUsers = availableUsers.filter(user =>
     user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getInitials = (name: string) => {
@@ -141,85 +145,112 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] pb-2">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            Add Members to Group
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-[500px] overflow-hidden p-0 sm:w-full">
+        <div className="flex max-h-[85vh] flex-col">
+          <DialogHeader className="px-4 pb-3 pt-4 sm:px-6">
+            <DialogTitle className="text-xl font-semibold">
+              Add Members to Group
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          <Input
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-
-          <ScrollArea className="h-[400px] pr-4">
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                {searchQuery ? 'No users found' : 'No available users to add'}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredUsers.map((user) => (
-                  <div
-                    key={user.user_id}
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                    onClick={() => handleToggleUser(user.user_id)}
-                  >
-                    <Checkbox
-                      checked={selectedUserIds.includes(user.user_id)}
-                      onCheckedChange={() => handleToggleUser(user.user_id)}
-                    />
-                    <Avatar className="h-10 w-10 flex-shrink-0">
-                      <AvatarImage src={user.avatar_url} />
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {getInitials(user.full_name || 'U')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{user.full_name}</p>
-                      {user.email && (
-                        <p className="text-sm text-muted-foreground truncate">
-                          {user.email}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </div>
-
-        <DialogFooter className="flex-col items-center gap-3 sm:flex-col">
-          <div className="flex gap-2 w-full justify-end">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddMembers}
-              disabled={selectedUserIds.length === 0 || adding}
-            >
-              {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add {selectedUserIds.length > 0 && `(${selectedUserIds.length})`}
-            </Button>
-          </div>
-          
-          {/* Glee Club Logo Footer - similar to Carl Fischer reference */}
-          <div className="w-full border-t pt-3 flex justify-center">
-            <img 
-              src="/lovable-uploads/gleeworld-logo.png" 
-              alt="GleeWorld"
-              className="h-12 object-contain opacity-80"
+          <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-4 sm:px-6">
+            <Input
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
+
+            <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-background">
+              <ScrollArea className="h-full">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-muted-foreground">
+                    {searchQuery ? 'No users found' : 'No available users to add'}
+                  </div>
+                ) : (
+                  <div className="space-y-2 p-3">
+                    {filteredUsers.map((user) => {
+                      const isSelected = selectedUserIds.includes(user.user_id);
+
+                      return (
+                        <div
+                          key={user.user_id}
+                          className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                            isSelected
+                              ? 'border-primary/40 bg-accent/40'
+                              : 'bg-card hover:bg-accent/50'
+                          } cursor-pointer`}
+                          onClick={() => handleToggleUser(user.user_id)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleToggleUser(user.user_id);
+                            }
+                          }}
+                          aria-pressed={isSelected}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onClick={(e) => e.stopPropagation()}
+                            onCheckedChange={(checked) => setUserSelection(user.user_id, checked === true)}
+                            aria-label={`Select ${user.full_name || user.email || 'user'}`}
+                          />
+                          <Avatar className="h-10 w-10 flex-shrink-0">
+                            <AvatarImage src={user.avatar_url} />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {getInitials(user.full_name || 'U')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{user.full_name}</p>
+                            {user.email && (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {user.email}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
           </div>
-        </DialogFooter>
+
+          <DialogFooter className="border-t bg-background px-4 py-3 sm:px-6">
+            <div className="flex w-full flex-col gap-3">
+              <div className="text-sm text-muted-foreground">
+                {selectedUserIds.length} selected
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[auto_auto] sm:justify-end">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddMembers}
+                  disabled={selectedUserIds.length === 0 || adding}
+                >
+                  {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Add {selectedUserIds.length > 0 && `(${selectedUserIds.length})`}
+                </Button>
+              </div>
+
+              <div className="flex w-full justify-center border-t pt-3">
+                <img
+                  src="/lovable-uploads/gleeworld-logo.png"
+                  alt="GleeWorld"
+                  className="h-12 object-contain opacity-80"
+                />
+              </div>
+            </div>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
