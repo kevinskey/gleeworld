@@ -86,7 +86,7 @@ const SortableHeroItem = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: hero.id });
+  } = useSortable({ id: hero.id, resizeObserverConfig: {} });
 
   const style = {
     transform: CSS.Transform.toString(transform),

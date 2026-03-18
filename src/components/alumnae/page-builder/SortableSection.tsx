@@ -19,7 +19,7 @@ export const SortableSection = ({ section, onEdit, onDelete }: SortableSectionPr
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: section.id });
+  } = useSortable({ id: section.id, resizeObserverConfig: {} });
 
   const style = {
     transform: CSS.Transform.toString(transform),
