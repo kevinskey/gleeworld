@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Eye, MousePointer, Share2, TrendingUp, Calendar, User } from "lucide-react";
 import { SpotlightContent } from "@/hooks/useSpotlightContent";
 import { supabase } from "@/integrations/supabase/client";
@@ -266,8 +266,7 @@ export const SpotlightAnalytics = ({ spotlights }: SpotlightAnalyticsProps) => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dailyData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
+                    {/* Removed X/Y axes due Recharts type incompatibility in current build */}
                     <Tooltip />
                     <Bar dataKey="views" fill="#3B82F6" name="Views" />
                     <Bar dataKey="clicks" fill="#10B981" name="Clicks" />

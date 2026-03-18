@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
+    "dev": "bunx vite@5.4.10",
+    "build": "bunx vite@5.4.10 build",
+    "build:dev": "bunx vite@5.4.10 build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "bunx vite@5.4.10 preview"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",
@@ -54,6 +54,7 @@
     "@react-pdf-viewer/scroll-mode": "^3.12.0",
     "@react-pdf-viewer/toolbar": "^3.12.0",
     "@supabase/supabase-js": "^2.50.0",
+    "@swc/core": "^1.13.5",
     "@tanstack/react-query": "^5.84.1",
     "@tippyjs/react": "^4.2.6",
     "@types/lodash": "^4.17.20",
@@ -72,7 +73,7 @@
     "esbuild": "^0.27.4",
     "fabric": "^6.7.0",
     "fastapi": "^0.0.8",
-    "fdir": "^6.5.0",
+    "fdir": "6.5.0",
     "heic2any": "^0.0.4",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.2.4",

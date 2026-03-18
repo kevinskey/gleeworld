@@ -129,7 +129,7 @@ export const AuditionTimeGrid = () => {
             const dateOnly = new Date(easternTime.getFullYear(), easternTime.getMonth(), easternTime.getDate());
             return dateOnly.toDateString();
           })
-        )).map(dateString => new Date(dateString)).sort((a, b) => a.getTime() - b.getTime());
+        )).map((dateString) => new Date(String(dateString))).sort((a, b) => a.getTime() - b.getTime());
         
         setAuditionDates(uniqueDates);
         console.log(`📊 Found ${uniqueDates.length} unique audition dates (Eastern Time):`, uniqueDates);

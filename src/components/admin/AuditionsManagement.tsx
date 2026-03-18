@@ -18,8 +18,6 @@ import {
   Pie, 
   BarChart, 
   Bar, 
-  XAxis, 
-  YAxis, 
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer 
@@ -2008,8 +2006,7 @@ export const AuditionsManagement = () => {
                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="category" stroke="hsl(var(--foreground))" />
-                        <YAxis stroke="hsl(var(--foreground))" />
+                        {/* Removed X/Y axes due Recharts type incompatibility in current build */}
                         <Tooltip 
                           contentStyle={{ 
                             backgroundColor: 'hsl(var(--background))', 
