@@ -229,25 +229,43 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   const removeSmsRecipient = (userId: string) => {
     setSmsRecipients(smsRecipients.filter(r => r.user_id !== userId));
   };
-  const clearSmsAttachment = () => {
-    setSmsAttachment(null);
+  const removeSmsAttachment = (indexToRemove: number) => {
+    setSmsAttachments(current => current.filter((_, index) => index !== indexToRemove));
+  };
+  const clearSmsAttachments = () => {
+    setSmsAttachments([]);
   };
   const handleSmsAttachmentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(event.target.files ?? []);
     event.target.value = '';
 
-    if (!file) return;
+    if (files.length === 0) return;
 
-    if (file.size > MAX_SMS_ATTACHMENT_SIZE_BYTES) {
+    const oversizedFile = files.find(file => file.size > MAX_SMS_ATTACHMENT_SIZE_BYTES);
+    if (oversizedFile) {
       toast({
         title: 'File too large',
-        description: 'MMS attachments must be 150MB or less',
+        description: `${oversizedFile.name} exceeds the 150MB limit`,
         variant: 'destructive',
       });
       return;
     }
 
-    setSmsAttachment(file);
+    setSmsAttachments(current => {
+      const existingKeys = new Set(current.map(file => `${file.name}-${file.size}-${file.lastModified}`));
+      const nextFiles = files.filter(file => !existingKeys.has(`${file.name}-${file.size}-${file.lastModified}`));
+      const combinedFiles = [...current, ...nextFiles];
+
+      if (combinedFiles.length > MAX_SMS_ATTACHMENTS) {
+        toast({
+          title: 'Too many attachments',
+          description: `You can attach up to ${MAX_SMS_ATTACHMENTS} audio files per SMS`,
+          variant: 'destructive',
+        });
+      }
+
+      return combinedFiles.slice(0, MAX_SMS_ATTACHMENTS);
+    });
   };
   const handleAddGroup = async (group: RecipientGroup) => {
     try {
