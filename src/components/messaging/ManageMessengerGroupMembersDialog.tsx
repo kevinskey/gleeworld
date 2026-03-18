@@ -158,7 +158,7 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [memberSearch, groupMembers, open, group]);
+  }, [memberSearch, groupMembers, open, group?.id]);
 
   const handleAddMember = async (userId: string) => {
     if (!group) return;
