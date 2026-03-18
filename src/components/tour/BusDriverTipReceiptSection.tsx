@@ -21,7 +21,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-const RECEIPTS_TABLE = 'gw_tour_driver_tip_receipts' as never;
 const TIP_AMOUNT = 300;
 
 const driverTipReceiptSchema = z.object({
@@ -58,8 +57,8 @@ interface DriverTipReceiptRow {
 }
 
 interface BusDriverTipReceiptSectionProps {
-  activeTour: ActiveTour | null;
-  savedCompanies: SavedBusCompany[];
+  activeTour?: ActiveTour | null;
+  savedCompanies?: SavedBusCompany[];
 }
 
 export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProps> = ({
@@ -76,9 +75,43 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
   const [signature, setSignature] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { data: queriedCompanies = [] } = useQuery({
+    queryKey: ['tour-bus-companies-driver-tip'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tour_bus_companies')
+        .select('id, company_name, driver_name, driver_phone')
+        .eq('is_active', true)
+        .order('company_name');
+      if (error) throw error;
+      return (data ?? []) as SavedBusCompany[];
+    },
+    enabled: !savedCompanies,
+  });
+
+  const { data: queriedTour } = useQuery({
+    queryKey: ['active-tour-driver-tip'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tours')
+        .select('id, name, start_date, end_date, status')
+        .in('status', ['active', 'planning', 'draft'])
+        .order('start_date', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return (data as ActiveTour | null) ?? null;
+    },
+    enabled: !activeTour,
+  });
+
+  const resolvedCompanies = savedCompanies ?? queriedCompanies;
+  const resolvedTour = activeTour ?? queriedTour ?? null;
+
   const defaultCompany = useMemo(
-    () => savedCompanies.find((company) => company.driver_name || company.driver_phone) || savedCompanies[0],
-    [savedCompanies],
+    () => resolvedCompanies.find((company) => company.driver_name || company.driver_phone) || resolvedCompanies[0],
+    [resolvedCompanies],
   );
 
   useEffect(() => {
@@ -90,16 +123,16 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
   }, [defaultCompany]);
 
   const { data: receipts = [], isLoading } = useQuery({
-    queryKey: ['tour-driver-tip-receipts', activeTour?.id ?? 'none'],
+    queryKey: ['tour-driver-tip-receipts', resolvedTour?.id ?? 'none'],
     queryFn: async () => {
       let query = supabase
-        .from(RECEIPTS_TABLE)
+        .from('gw_tour_driver_tip_receipts')
         .select('id, driver_name, bus_company_name, driver_phone, payment_method, amount, signed_at')
         .order('signed_at', { ascending: false })
         .limit(8);
 
-      if (activeTour?.id) {
-        query = query.eq('tour_id', activeTour.id);
+      if (resolvedTour?.id) {
+        query = query.eq('tour_id', resolvedTour.id);
       }
 
       const { data, error } = await query;
@@ -137,8 +170,8 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from(RECEIPTS_TABLE).insert({
-        tour_id: activeTour?.id ?? null,
+      const { error } = await supabase.from('gw_tour_driver_tip_receipts').insert({
+        tour_id: resolvedTour?.id ?? null,
         amount: TIP_AMOUNT,
         driver_name: parsed.data.driver_name,
         bus_company_name: parsed.data.bus_company_name || null,
@@ -148,7 +181,7 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
         signature_data: parsed.data.signature_data,
         notes: parsed.data.notes || null,
         created_by: user.id,
-      } as never);
+      });
 
       if (error) throw error;
 
@@ -185,10 +218,10 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
           <p className="text-sm text-muted-foreground">
             Capture the driver’s signature in Tour Manager after the tip is paid.
           </p>
-          {activeTour && (
+          {resolvedTour && (
             <p className="text-xs text-muted-foreground">
-              Tour: {activeTour.name}
-              {activeTour.start_date ? ` · ${format(new Date(activeTour.start_date), 'MMM d, yyyy')}` : ''}
+              Tour: {resolvedTour.name}
+              {resolvedTour.start_date ? ` · ${format(new Date(resolvedTour.start_date), 'MMM d, yyyy')}` : ''}
             </p>
           )}
         </CardHeader>
