@@ -40,6 +40,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const { toast } = useToast();
 
   const isMus070 = course.courseCode === 'MUS 070';
+  const isMus240 = course.courseCode === 'MUS 240';
   const isAdmin = profile?.is_admin || profile?.is_super_admin || profile?.role === 'instructor';
 
   // Glass styling helpers for MUS 070
@@ -53,7 +54,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
     queryKey: ['current-module', course.id],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const { data, error } = await supabase
         .from('gw_course_modules')
         .select('*')
@@ -94,7 +95,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
     const due = new Date(dueDate);
     const now = new Date();
     const diffHours = (due.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffHours < 24 && diffHours > 0) {
       return 'Due Tonight';
     }
@@ -181,7 +182,9 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
         qc.invalidateQueries({ queryKey: ['student-checkin-response'] });
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [activeTour?.id, isMus070, qc]);
 
   // Check-in mutation
@@ -201,15 +204,226 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   });
 
   const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
+  const upcomingAssignments = assignments.slice(0, isMus240 ? 3 : assignments.length);
+
+  if (isMus240) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="px-4 py-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <button
+                onClick={() => navigate(-1)}
+                className="mb-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Go back"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Back
+              </button>
+              <Badge variant="secondary" className="mb-2 w-fit">
+                {course.courseCode}
+              </Badge>
+              <p className="text-lg font-semibold leading-tight">
+                {course.title}
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigate(`/grading/student/course/${course.id}`)}
+              className="rounded-2xl border border-border bg-card px-3 py-2 text-right shadow-sm transition-colors hover:bg-muted/50"
+              aria-label="View grade breakdown"
+            >
+              <div className="text-xs text-muted-foreground">Current grade</div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-bold text-foreground">
+                  {gradeLoading ? '--' : `${percentage}%`}
+                </span>
+                <span className="text-sm font-semibold text-primary">
+                  {gradeLoading ? '' : letterGrade}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <main className="px-4 py-4 space-y-4 pb-32">
+          <section className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-sm">
+            <div className="border-b border-border bg-muted/40 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                Course Landing
+              </p>
+            </div>
+            <div className="space-y-5 p-5">
+              <div className="space-y-3">
+                <h1 className="text-3xl font-black leading-none tracking-tight text-foreground">
+                  Black music as archive, movement, and memory.
+                </h1>
+                <p className="max-w-[28rem] text-sm leading-6 text-muted-foreground">
+                  Enter the week’s listening, readings, and discussions for Survey of African American Music.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-[1.4fr_0.9fr] gap-3">
+                <div className="rounded-3xl border border-border bg-primary/5 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                    Current focus
+                  </p>
+                  <p className="mt-2 text-xl font-bold leading-tight text-foreground">
+                    {currentModule
+                      ? `Week ${currentModule.week_number}: ${currentModule.title?.replace(/^Week \d+:\s*/, '')}`
+                      : 'Course materials are being prepared'}
+                  </p>
+                  <Button
+                    onClick={() => navigate(`/academy/${courseSlug}?tab=modules`)}
+                    className="mt-4 w-full justify-between"
+                  >
+                    Open module
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="rounded-3xl border border-border bg-secondary/30 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Semester rhythm
+                  </p>
+                  <p className="mt-2 text-sm font-medium leading-6 text-foreground">
+                    Read, listen, discuss, and trace the cultural impact behind every era.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/academy/${courseSlug}?tab=syllabus`)}
+                    className="mt-4 w-full"
+                  >
+                    View syllabus
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid grid-cols-2 gap-3">
+            <QuickActionButton icon={LayoutGrid} label="Modules" onClick={() => navigate(`/academy/${courseSlug}?tab=modules`)} />
+            <QuickActionButton icon={ClipboardList} label="Assignments" onClick={() => navigate(`/academy/${courseSlug}?tab=assignments`)} />
+            <QuickActionButton icon={Play} label="Listening" onClick={() => setPlaylistOpen(!playlistOpen)} />
+            <QuickActionButton icon={MessageSquare} label="Messages" onClick={() => navigate(`/academy/${courseSlug}?tab=messages`)} />
+          </div>
+
+          <div className="relative">
+            <Card className="border border-border shadow-sm">
+              <CardContent className="py-3">
+                <Button
+                  onClick={() => setPlaylistOpen(!playlistOpen)}
+                  variant="ghost"
+                  className="h-auto w-full justify-between px-0 py-0 text-left hover:bg-transparent"
+                >
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      Listening shelf
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-foreground">
+                      Open this week’s playlists and listening examples.
+                    </p>
+                  </div>
+                  {playlistOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <MobilePlaylistDropdown
+              courseId={course.id}
+              isOpen={playlistOpen}
+              onOpenChange={setPlaylistOpen}
+            />
+          </div>
+
+          <section className="rounded-[2rem] border border-border bg-card shadow-sm">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Coming up
+                </p>
+                <h2 className="text-lg font-bold text-foreground">Assignments & deadlines</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/academy/${courseSlug}?tab=assignments`)}
+              >
+                All
+              </Button>
+            </div>
+            <div className="p-5 space-y-3">
+              {upcomingAssignments.length > 0 ? upcomingAssignments.map((assignment) => {
+                const isPast = assignment.due_date && new Date(assignment.due_date) < new Date();
+                return (
+                  <button
+                    key={assignment.id}
+                    onClick={() => navigate(`/academy/${courseSlug}?tab=assignments`)}
+                    className="flex w-full items-center justify-between rounded-2xl border border-border bg-background p-4 text-left transition-colors hover:bg-muted/40"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{assignment.title}</p>
+                      <p className={`mt-1 text-xs ${isPast ? 'text-muted-foreground' : 'text-primary'}`}>
+                        {assignment.due_date ? formatDueDate(assignment.due_date) : 'No due date'}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                );
+              }) : (
+                <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                  No assignments are posted yet.
+                </div>
+              )}
+            </div>
+          </section>
+
+          <Card className="overflow-hidden rounded-[2rem] border border-border shadow-sm">
+            <CardHeader className="border-b border-border bg-muted/30 pb-4">
+              <CardTitle className="text-lg">Course highlights</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <CourseTopicSlider courseCode={course.courseCode} />
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[2rem] border border-border bg-accent/30 shadow-sm">
+            <CardContent className="flex items-center justify-between gap-3 p-5">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Need supporting material?</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Open readings, references, and study links for the course.
+                </p>
+              </div>
+              <Button variant="outline" onClick={() => navigate(`/academy/${courseSlug}?tab=resources`)}>
+                Resources
+              </Button>
+            </CardContent>
+          </Card>
+
+          {isAdmin && (
+            <Button
+              onClick={() => navigate(`/${courseSlug}/instructor/console`)}
+              variant="default"
+              className="w-full h-12 text-sm font-semibold"
+              size="lg"
+            >
+              <Settings className="h-5 w-5 mr-2" />
+              Instructor Control Center
+            </Button>
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div 
-      className={isMus070 ? 'min-h-screen relative' : 'bg-white text-foreground'}
+    <div
+      className={isMus070 ? 'min-h-screen relative' : 'bg-background text-foreground'}
       style={isMus070 ? {
         background: 'linear-gradient(160deg, #0a1628, #0d1f3c, #081430, #060e1f, #030812)',
       } : undefined}
     >
-      {/* Deep-sea glow orbs & grain for MUS 070 */}
       {isMus070 && (
         <>
           <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -220,8 +434,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
         </>
       )}
 
-      {/* Course Title Bar */}
-      <div className={`relative z-10 ${isMus070 ? 'bg-white/[0.05] backdrop-blur-xl border-b border-white/10' : 'bg-white border-b border-gray-200'}`}>
+      <div className={`relative z-10 ${isMus070 ? 'bg-white/[0.05] backdrop-blur-xl border-b border-white/10' : 'bg-card border-b border-border'}`}>
         <div className="px-3 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 shrink-0">
             <button
@@ -235,11 +448,11 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
               {course.courseCode}
             </Badge>
           </div>
-          
+
           <span className={`font-semibold text-base text-center flex-1 truncate ${glassText}`}>
             {course.title}
           </span>
-          
+
           <button
             onClick={() => navigate(`/grading/student/course/${course.id}`)}
             className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md transition-colors touch-manipulation shrink-0 ${isMus070 ? 'bg-white/[0.08] hover:bg-white/[0.12]' : 'bg-primary/10 hover:bg-primary/20'}`}
@@ -255,13 +468,10 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="relative z-10">
         <AdvertisingHero />
 
         <main className="p-4 space-y-4 pb-32">
-
-          {/* Active Roll Call - MUS 070 only */}
           {isMus070 && activeCheckin && (
             <Card className="border-primary/40 bg-primary/5 shadow-md animate-in fade-in slide-in-from-top-2">
               <CardContent className="py-4">
@@ -299,15 +509,10 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
             </Card>
           )}
 
-          {/* Tour Contract Signing - MUS 070 only */}
           {isMus070 && hasSigned === false && (
             <Card className={`shadow-sm ${glass} border-amber-400/50`}>
               <CardContent className="py-3">
-                <Button
-                  onClick={() => setContractOpen(true)}
-                  className="w-full gap-2"
-                  variant="default"
-                >
+                <Button onClick={() => setContractOpen(true)} className="w-full gap-2" variant="default">
                   <FileSignature className="h-4 w-4" />
                   Sign Tour Participation Contract
                 </Button>
@@ -317,7 +522,6 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
           {isMus070 && <TourContractSigningModal open={contractOpen} onOpenChange={setContractOpen} />}
 
-          {/* Stipend Receipt - MUS 070 only */}
           {isMus070 && (
             <Card className={`shadow-sm ${glass}`}>
               <CardContent className="py-3">
@@ -334,11 +538,10 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
           )}
           {isMus070 && <StipendReceiptDialog open={stipendDialogOpen} onOpenChange={setStipendDialogOpen} />}
 
-          {/* Listen to Tracks */}
           <div className="relative">
             <Card variant="outline" className={`shadow-sm ${glass}`}>
               <CardContent className="py-3">
-                <Button 
+                <Button
                   onClick={() => setPlaylistOpen(!playlistOpen)}
                   variant="outline"
                   className={`w-full h-10 text-sm font-semibold justify-between ${isMus070 ? 'border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]' : 'border-border hover:bg-muted/50'}`}
@@ -363,17 +566,16 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
             />
           </div>
 
-          {/* Current Module Card */}
           {currentModule && (
             <Card className={isMus070 ? glass : 'border-0 shadow-sm bg-card'}>
               <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className={`font-semibold text-lg ${glassText}`}>
                       Week {currentModule.week_number} — {currentModule.title?.replace(/^Week \d+:\s*/, '')}
                     </p>
                   </div>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={() => navigate(`/academy/${courseSlug}?tab=modules`)}
                     className={isMus070 ? 'border-white/10 text-sky-400 hover:bg-white/[0.08]' : 'text-primary border-primary hover:bg-primary/10'}
@@ -385,7 +587,6 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
             </Card>
           )}
 
-          {/* Assignments (hidden for MUS 070) */}
           {!isMus070 && assignments.length > 0 && (
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-2">
@@ -420,7 +621,6 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
             </Card>
           )}
 
-          {/* Quick Actions Row */}
           <div className="grid grid-cols-4 gap-3">
             {isMus070 ? (
               <>
@@ -431,25 +631,22 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
               </>
             ) : (
               <>
-                <QuickActionButton icon={LayoutGrid} label="Modules" onClick={() => navigate(`/academy/${courseSlug}?tab=modules`)} isMus070={isMus070} />
-                <QuickActionButton icon={ClipboardList} label="Assignments" onClick={() => navigate(`/academy/${courseSlug}?tab=assignments`)} isMus070={isMus070} />
-                <QuickActionButton icon={MessageSquare} label="Messages" onClick={() => navigate(`/academy/${courseSlug}?tab=messages`)} isMus070={isMus070} />
-                <QuickActionButton icon={BookOpen} label="Resources" onClick={() => navigate(`/academy/${courseSlug}?tab=resources`)} isMus070={isMus070} />
+                <QuickActionButton icon={LayoutGrid} label="Modules" onClick={() => navigate(`/academy/${courseSlug}?tab=modules`)} />
+                <QuickActionButton icon={ClipboardList} label="Assignments" onClick={() => navigate(`/academy/${courseSlug}?tab=assignments`)} />
+                <QuickActionButton icon={MessageSquare} label="Messages" onClick={() => navigate(`/academy/${courseSlug}?tab=messages`)} />
+                <QuickActionButton icon={BookOpen} label="Resources" onClick={() => navigate(`/academy/${courseSlug}?tab=resources`)} />
               </>
             )}
           </div>
 
-          {/* Glee Cam Photos */}
           <GleeCamCard className={isMus070 ? glass : ''} />
 
-          {/* Announcements / Media Slider */}
           <Card className={isMus070 ? `${glass} overflow-hidden relative z-0` : 'border-0 shadow-sm overflow-hidden relative z-0'}>
             <div className="pointer-events-auto">
               <CourseTopicSlider courseCode={course.courseCode} />
             </div>
           </Card>
 
-          {/* Class Schedule Form - Only for MUS 070 */}
           {course.courseCode === 'MUS 070' && (
             <Collapsible open={scheduleOpen} onOpenChange={setScheduleOpen}>
               <Card variant="outline" className={isMus070 ? `${glass} border-2 border-red-500/50` : 'border-2 border-red-500'}>
@@ -477,7 +674,6 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
             </Collapsible>
           )}
 
-          {/* Instructor Console - for admins/instructors on tablet */}
           {isAdmin && (
             <Button
               onClick={() => navigate(`/${courseSlug}/instructor/console`)}
@@ -507,9 +703,9 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({ icon: Icon, label
   <button
     onClick={onClick}
     className={`flex flex-col items-center justify-center p-4 rounded-2xl transition-all touch-manipulation min-h-[80px] ${
-      isMus070 
-        ? 'bg-white/[0.05] backdrop-blur-xl border border-white/10 hover:bg-white/[0.08] hover:scale-[1.02]' 
-        : 'bg-card rounded-lg border border-border hover:bg-muted/50'
+      isMus070
+        ? 'bg-white/[0.05] backdrop-blur-xl border border-white/10 hover:bg-white/[0.08] hover:scale-[1.02]'
+        : 'bg-card border border-border hover:bg-muted/50'
     }`}
   >
     <Icon className={`h-6 w-6 mb-2 ${isMus070 ? 'text-sky-400' : 'text-primary'}`} />
