@@ -670,24 +670,134 @@ export const FinderMediaLibrary = () => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Toolbar */}
-          <FinderToolbar
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            sortBy={sortBy}
-            onSortByChange={setSortBy}
-            sortOrder={sortOrder}
-            onSortOrderChange={setSortOrder}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onUpload={() => document.getElementById('file-upload-input')?.click()}
-            onUploadFolder={handleFolderUpload}
-            onNewFolder={() => setNewFolderDialogOpen(true)}
-            isAdmin={isAdmin}
-            uploading={uploading}
-            activeFilters={activeFilters}
-            onFilterToggle={handleFilterToggle}
-            onClearFilters={handleClearFilters}
-          />
+          {isMobile ? (
+            <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+              <div className="flex items-center gap-2 p-3">
+                <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                      <PanelLeft className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-[88vw] max-w-[320px] p-0">
+                    <SheetHeader className="border-b border-border px-4 py-3 text-left">
+                      <SheetTitle>Media Library</SheetTitle>
+                    </SheetHeader>
+                    <FinderSidebar
+                      activeSection={activeSection}
+                      onSectionChange={(section) => {
+                        setActiveSection(section);
+                        setSelectedFiles([]);
+                        setMobileSidebarOpen(false);
+                      }}
+                      fileCounts={{
+                        all: allFiles.filter(f => !f.is_deleted).length,
+                        images: allFiles.filter(f => getFileType(f) === 'image').length,
+                        videos: allFiles.filter(f => getFileType(f) === 'video').length,
+                        audio: allFiles.filter(f => getFileType(f) === 'audio').length,
+                        documents: allFiles.filter(f => getFileType(f) === 'document').length,
+                        'quick-capture': allFiles.filter(f => (f as any).source === 'quick_capture').length,
+                        favorites: allFiles.filter(f => f.is_favorite).length,
+                        trash: allFiles.filter(f => f.is_deleted).length
+                      }}
+                      usedStorage={usedGB}
+                      selectedFolderId={selectedFolderId}
+                      onFolderSelect={(folderId) => {
+                        setSelectedFolderId(folderId);
+                        setSelectedFiles([]);
+                        setMobileSidebarOpen(false);
+                      }}
+                      onNewFolder={() => {
+                        setNewFolderDialogOpen(true);
+                        setMobileSidebarOpen(false);
+                      }}
+                      isAdmin={isAdmin}
+                      onNativeFileDrop={handleNativeFileDrop}
+                      className="h-full w-full border-r-0"
+                    />
+                  </SheetContent>
+                </Sheet>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-foreground">{mobileSectionTitle}</p>
+                  <p className="text-xs text-muted-foreground">{filteredFiles.length} item{filteredFiles.length === 1 ? '' : 's'}</p>
+                </div>
+
+                {isAdmin && (
+                  <Button size="sm" onClick={handleUploadClick} disabled={uploading} className="h-9 shrink-0 gap-2">
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    Add File
+                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2 px-3 pb-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search files..."
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    className="h-9 pl-9"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortBy)}>
+                    <SelectTrigger className="h-9 min-w-[132px] shrink-0 bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="date">Date</SelectItem>
+                      <SelectItem value="size">Size</SelectItem>
+                      <SelectItem value="type">Type</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  >
+                    <ArrowUpDown className={cn('h-4 w-4 transition-transform', sortOrder === 'desc' && 'rotate-180')} />
+                  </Button>
+
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 shrink-0 gap-2"
+                      onClick={() => setNewFolderDialogOpen(true)}
+                    >
+                      <FolderPlus className="h-4 w-4" />
+                      Folder
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <FinderToolbar
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onUpload={handleUploadClick}
+              onUploadFolder={handleFolderUpload}
+              onNewFolder={() => setNewFolderDialogOpen(true)}
+              isAdmin={isAdmin}
+              uploading={uploading}
+              activeFilters={activeFilters}
+              onFilterToggle={handleFilterToggle}
+              onClearFilters={handleClearFilters}
+            />
+          )}
 
           {/* Breadcrumb */}
           <FinderBreadcrumb 
