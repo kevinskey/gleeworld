@@ -102,9 +102,14 @@ export const useProfile = () => {
         .from("gw_profiles")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      if (!data) {
+        setProfile(null);
+        return;
+      }
 
       setProfile({
         ...data,
