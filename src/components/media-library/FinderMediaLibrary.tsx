@@ -889,7 +889,7 @@ export const FinderMediaLibrary = () => {
         </div>
 
         {/* Inspector Panel */}
-        {showInspector && inspectorFile && (
+        {!isMobile && showInspector && inspectorFile && (
           <FinderInspector
             key={`${inspectorFile.id}-${startEditing}`}
             file={inspectorFile}
