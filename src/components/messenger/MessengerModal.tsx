@@ -178,7 +178,7 @@ export const MessengerModal: React.FC = () => {
         .from('messenger_group_members' as any)
         .select(`
           user_id,
-          gw_profiles!inner(full_name, email, phone_number)
+          gw_profiles!inner(full_name, first_name, last_name, email, phone, phone_number)
         `)
         .eq('group_id', group.id);
       
@@ -189,11 +189,20 @@ export const MessengerModal: React.FC = () => {
         return;
       }
 
+      const normalizedMembers = members
+        .map((member: any) => ({
+          user_id: member.user_id,
+          ...normalizeMessengerProfile({
+            user_id: member.user_id,
+            ...member.gw_profiles,
+          }),
+        }))
+        .filter((member) => member.user_id);
+
       if (composerMode === 'email') {
-        // Add emails to recipients
-        const emails = members
-          .map((m: any) => m.gw_profiles?.email)
-          .filter((e: string) => e && !recipients.includes(e));
+        const emails = normalizedMembers
+          .map((member) => member.email)
+          .filter((email) => email && !recipients.includes(email));
         
         if (emails.length > 0) {
           setRecipients([...recipients, ...emails]);
@@ -202,13 +211,12 @@ export const MessengerModal: React.FC = () => {
           toast({ title: 'Already added', description: 'All members from this group are already in recipients' });
         }
       } else {
-        // Add phone numbers to SMS recipients
-        const newRecipients = members
-          .filter((m: any) => m.gw_profiles?.phone_number && !smsRecipients.find(r => r.user_id === m.user_id))
-          .map((m: any) => ({
-            user_id: m.user_id,
-            full_name: m.gw_profiles?.full_name || 'Unknown',
-            phone_number: m.gw_profiles?.phone_number
+        const newRecipients = normalizedMembers
+          .filter((member) => member.phone_number && !smsRecipients.find(r => r.user_id === member.user_id))
+          .map((member) => ({
+            user_id: member.user_id,
+            full_name: member.full_name,
+            phone_number: member.phone_number!,
           }));
         
         if (newRecipients.length > 0) {
