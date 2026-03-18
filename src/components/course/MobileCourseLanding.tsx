@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin, Settings, FileSignature, CheckCircle2, UserCheck, DollarSign } from 'lucide-react';
+import { Play, LayoutGrid, ClipboardList, MessageSquare, BookOpen, ChevronRight, Calendar, ChevronLeft, ChevronDown, ChevronUp, Mic, MapPin, Settings, FileSignature, CheckCircle2, UserCheck } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
@@ -19,7 +19,6 @@ import { ClassScheduleForm } from '@/components/academy/ClassScheduleForm';
 import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { MobilePlaylistDropdown } from './MobilePlaylistDropdown';
 import { TourContractSigningModal } from '@/components/mus070/student/TourContractSigningModal';
-import { StipendReceiptDialog } from '@/components/mus070/StipendReceiptDialog';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -35,7 +34,6 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const [playlistOpen, setPlaylistOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [contractOpen, setContractOpen] = useState(false);
-  const [stipendDialogOpen, setStipendDialogOpen] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
 
