@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History, ChevronDown, ChevronRight } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History, ChevronDown, ChevronRight, UserPlus } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
@@ -26,6 +26,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
 import { SMSHistoryPanel } from '@/components/messaging/SMSHistoryPanel';
 import { CommunicationHistoryPanel } from '@/components/messaging/CommunicationHistoryPanel';
+import { ManageMessengerGroupMembersDialog } from '@/components/messaging/ManageMessengerGroupMembersDialog';
 interface RecipientGroup {
   id: string;
   name: string;
@@ -114,7 +115,9 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   const [editingGroup, setEditingGroup] = useState<{id: string; name: string; description: string} | null>(null);
   const [groupFormData, setGroupFormData] = useState({ name: '', description: '' });
   const [savingGroup, setSavingGroup] = useState(false);
-  
+  const [showManageMembersDialog, setShowManageMembersDialog] = useState(false);
+  const [groupForMemberManagement, setGroupForMemberManagement] = useState<{ id: string; name: string } | null>(null);
+
   const [isExecBoard, setIsExecBoard] = useState(false);
   
   // Check for exec-board role from app_roles
@@ -513,6 +516,19 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   useEffect(() => {
     loadManualGroups();
   }, [loadManualGroups]);
+
+  const openManageMembersDialog = (group: RecipientGroup) => {
+    if (group.type !== 'manual') return;
+
+    const matchedGroup = manualGroups.find((manualGroup) => `manual:${manualGroup.id}` === group.id);
+    if (!matchedGroup) return;
+
+    setGroupForMemberManagement({
+      id: matchedGroup.id,
+      name: matchedGroup.name,
+    });
+    setShowManageMembersDialog(true);
+  };
 
   const handleSendEmail = async () => {
     if (recipients.length === 0 || !subject.trim()) return;
@@ -1008,16 +1024,27 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                 <Badge variant="secondary" className="ml-2 text-xs">{group.count}</Badge>
                               </Button>
                               {canEditGroups && (
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => {
-                                  const g = manualGroups.find(mg => `manual:${mg.id}` === group.id);
-                                  if (g) {
-                                    setEditingGroup({ id: g.id, name: g.name, description: g.description || '' });
-                                    setGroupFormData({ name: g.name, description: g.description || '' });
-                                    setShowGroupEditor(true);
-                                  }
-                                }}>
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() => openManageMembersDialog(group)}
+                                    aria-label={`Manage members for ${group.name}`}
+                                  >
+                                    <UserPlus className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => {
+                                    const g = manualGroups.find(mg => `manual:${mg.id}` === group.id);
+                                    if (g) {
+                                      setEditingGroup({ id: g.id, name: g.name, description: g.description || '' });
+                                      setGroupFormData({ name: g.name, description: g.description || '' });
+                                      setShowGroupEditor(true);
+                                    }
+                                  }}>
+                                    <Pencil className="h-3 w-3" />
+                                  </Button>
+                                </>
                               )}
                             </div>
                           ))}
@@ -1082,12 +1109,22 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     </Dialog>
   );
 
+  const manageMembersDialog = (
+    <ManageMessengerGroupMembersDialog
+      open={showManageMembersDialog}
+      onOpenChange={setShowManageMembersDialog}
+      group={groupForMemberManagement}
+      onMembersUpdated={loadManualGroups}
+    />
+  );
+
   // Return embedded mode (no layout wrapper)
   if (embedded) {
     return (
       <>
         {mainContent}
         {groupEditorDialog}
+        {manageMembersDialog}
       </>
     );
   }
@@ -1099,6 +1136,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
         {mainContent}
       </UniversalLayout>
       {groupEditorDialog}
+      {manageMembersDialog}
     </>
   );
 };
