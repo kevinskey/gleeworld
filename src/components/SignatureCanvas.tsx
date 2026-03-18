@@ -88,6 +88,12 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     if (!ctx) return;
 
     setIsDrawing(true);
+    hasDrawnRef.current = true;
+    setHasSignature(true);
+    ctx.beginPath();
+    ctx.arc(x, y, 0.75, 0, Math.PI * 2);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
     ctx.beginPath();
     ctx.moveTo(x, y);
     console.log('Started drawing signature at:', x, y);
@@ -200,7 +206,7 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
         </div>
         
         <p className={`text-sm text-gray-600 text-center ${isMobile ? 'text-xs' : ''}`}>
-          Please sign in the box above using your {isMobile ? 'finger or' : 'mouse or'} touchscreen
+          Please sign in the box above using your {isMobile ? 'finger or' : 'mouse or'} touchscreen. A tap will place a dot.
         </p>
       </CardContent>
     </Card>

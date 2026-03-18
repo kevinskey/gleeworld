@@ -159,7 +159,7 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
       driver_phone: driverPhone,
       payment_method: paymentMethod,
       notes,
-      signature_data: signature,
+      signature_data: signature ?? '',
     });
 
     if (!parsed.success) {
