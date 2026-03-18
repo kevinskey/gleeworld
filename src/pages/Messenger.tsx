@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History, ChevronDown, ChevronRight } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History, ChevronDown, ChevronRight, UserPlus } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
@@ -26,6 +26,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { syncCourseMessengerGroup } from '@/hooks/useCourseMessengerSync';
 import { SMSHistoryPanel } from '@/components/messaging/SMSHistoryPanel';
 import { CommunicationHistoryPanel } from '@/components/messaging/CommunicationHistoryPanel';
+import { ManageMessengerGroupMembersDialog } from '@/components/messaging/ManageMessengerGroupMembersDialog';
 interface RecipientGroup {
   id: string;
   name: string;
