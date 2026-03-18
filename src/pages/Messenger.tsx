@@ -973,22 +973,29 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                         </div>
 
                         {/* Individual Recipients */}
-                        {!sendToAll && <div className="space-y-0.5">
-                            <Label className="text-sm font-medium text-foreground">Recipients:</Label>
-                            <div className="flex flex-wrap gap-1.5 p-2 min-h-[36px] border border-border rounded-md bg-background">
-                              {smsRecipients.map(r => <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1 text-xs">
-                                  {r.full_name}
-                                  <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </Badge>)}
-                              <div className="relative flex-1 min-w-[120px] sm:min-w-[200px]" ref={smsDropdownRef}>
+                        {!sendToAll && <div className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <Label className="text-sm font-medium text-foreground">Recipients:</Label>
+                              {smsRecipients.length > 0 && <span className="text-xs text-muted-foreground">{smsRecipients.length} selected</span>}
+                            </div>
+                            <div className="border border-border rounded-md bg-background">
+                              {smsRecipients.length > 0 && <div className="max-h-[8.5rem] overflow-y-auto p-2">
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {smsRecipients.map(r => <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1 text-xs shrink-0">
+                                        {r.full_name}
+                                        <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </Badge>)}
+                                  </div>
+                                </div>}
+                              <div className={`relative ${smsRecipients.length > 0 ? 'border-t border-border' : ''}`} ref={smsDropdownRef}>
                                 <Input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true); }} onFocus={() => setShowDropdown(true)} onKeyDown={e => {
                                   if (e.key === 'Escape') {
                                     setShowDropdown(false);
                                     (e.target as HTMLInputElement).blur();
                                   }
-                                }} placeholder="Search members..." className="border-0 h-7 p-0 focus-visible:ring-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground" />
+                                }} placeholder="Search members..." className="border-0 h-9 px-2 focus-visible:ring-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground" />
                                 {showDropdown && filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                                     {filteredContacts.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => { addSmsRecipient({
                                 user_id: result.user_id,
