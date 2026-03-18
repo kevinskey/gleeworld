@@ -142,7 +142,8 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
+    hasDrawnRef.current = false;
     setHasSignature(false);
     onSignatureChange(null);
     console.log('Signature cleared');

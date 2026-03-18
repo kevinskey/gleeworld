@@ -190,7 +190,8 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
       queryClient.invalidateQueries({ queryKey: ['tour-driver-tip-receipts'] });
     } catch (error) {
       console.error('Error saving driver tip receipt:', error);
-      toast.error('Failed to save driver tip receipt');
+      const message = error instanceof Error ? error.message : 'Failed to save driver tip receipt';
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
