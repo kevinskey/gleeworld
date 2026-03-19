@@ -33,7 +33,7 @@ import { uploadFileAndGetUrl } from '@/utils/storage';
 
 const MAX_SMS_ATTACHMENT_SIZE_BYTES = 150 * 1024 * 1024;
 const MAX_SMS_ATTACHMENTS = 10;
-const ACCEPTED_SMS_ATTACHMENTS = 'audio/mpeg,audio/mp3,audio/*';
+const ACCEPTED_SMS_ATTACHMENTS = 'image/*,audio/*,.mp3,.wav,.m4a,.ogg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
 
 interface RecipientGroup {
   id: string;
@@ -259,7 +259,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       if (combinedFiles.length > MAX_SMS_ATTACHMENTS) {
         toast({
           title: 'Too many attachments',
-          description: `You can attach up to ${MAX_SMS_ATTACHMENTS} audio files per SMS`,
+          description: `You can attach up to ${MAX_SMS_ATTACHMENTS} files per SMS`,
           variant: 'destructive',
         });
       }
@@ -674,7 +674,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     if (!smsContent.trim() && smsAttachments.length === 0) {
       toast({
         title: "No message",
-        description: "Please type a message or add audio files",
+        description: "Please type a message or attach files",
         variant: "destructive"
       });
       return;
@@ -1032,7 +1032,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           />
 
                           <div className="flex items-center justify-between gap-2 pt-1">
-                            <span className="text-xs text-muted-foreground">Optional: attach up to {MAX_SMS_ATTACHMENTS} audio files (150MB each)</span>
+                            <span className="text-xs text-muted-foreground">Optional: attach up to {MAX_SMS_ATTACHMENTS} files (150MB each)</span>
                             <div className="flex items-center gap-2">
                               {smsAttachments.length > 0 && (
                                 <Button
