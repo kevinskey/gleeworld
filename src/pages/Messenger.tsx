@@ -33,7 +33,7 @@ import { uploadFileAndGetUrl } from '@/utils/storage';
 
 const MAX_SMS_ATTACHMENT_SIZE_BYTES = 150 * 1024 * 1024;
 const MAX_SMS_ATTACHMENTS = 10;
-const ACCEPTED_SMS_ATTACHMENTS = 'audio/mpeg,audio/mp3,audio/*';
+const ACCEPTED_SMS_ATTACHMENTS = 'image/*,audio/*,.mp3,.wav,.m4a,.ogg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
 
 interface RecipientGroup {
   id: string;
