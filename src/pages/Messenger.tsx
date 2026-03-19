@@ -939,7 +939,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                         </div>
 
                         {/* Send Button - fixed at bottom on phone only */}
-                        <div className="flex-shrink-0 p-3 border-t border-border bg-card sm:hidden">
+                        <div className="flex-shrink-0 border-t border-border bg-card p-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:hidden">
                           <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-14 text-base">
                             {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : recipients.length === 0 ? <><Send className="h-4 w-4 mr-2" /> Add Recipients</> : !subject.trim() ? <><Send className="h-4 w-4 mr-2" /> Add Subject</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
                           </Button>
