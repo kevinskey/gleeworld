@@ -466,7 +466,7 @@ export const GroupMessageInterface: React.FC = () => {
           </div>
 
           {/* Messages and Input - Takes remaining space */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ maxHeight: 'calc(100dvh - 120px)' }}>
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ maxHeight: 'calc(100dvh - 120px - 5rem)' }}>
             {selectedConversation ? (
               <>
                 {/* Group Header for mobile */}
