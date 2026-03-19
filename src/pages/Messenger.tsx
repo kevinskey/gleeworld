@@ -107,7 +107,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   // Email attachment state
   const [emailAttachments, setEmailAttachments] = useState<File[]>([]);
   const emailAttachmentInputRef = useRef<HTMLInputElement>(null);
-  const MAX_EMAIL_ATTACHMENT_SIZE = 150 * 1024 * 1024; // 150MB per file
+  const MAX_EMAIL_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file (Edge Function memory limit)
   const MAX_EMAIL_ATTACHMENTS = 5;
   const ACCEPTED_EMAIL_ATTACHMENTS = 'image/*,audio/*,.mp3,.wav,.m4a,.ogg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
 
