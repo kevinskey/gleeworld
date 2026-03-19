@@ -259,7 +259,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
       if (combinedFiles.length > MAX_SMS_ATTACHMENTS) {
         toast({
           title: 'Too many attachments',
-          description: `You can attach up to ${MAX_SMS_ATTACHMENTS} audio files per SMS`,
+          description: `You can attach up to ${MAX_SMS_ATTACHMENTS} files per SMS`,
           variant: 'destructive',
         });
       }
