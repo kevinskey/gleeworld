@@ -672,6 +672,14 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   </table>
 </body>
 </html>`;
+      // Convert email attachments to base64
+      const attachments = await Promise.all(
+        emailAttachments.map(async (file) => ({
+          filename: file.name,
+          content: await fileToBase64(file),
+        }))
+      );
+
       const {
         error
       } = await supabase.functions.invoke('send-branded-email', {
@@ -680,17 +688,19 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           subject,
           html: htmlContent,
           senderName: userProfile?.full_name,
-          senderId: user?.id
+          senderId: user?.id,
+          attachments: attachments.length > 0 ? attachments : undefined,
         }
       });
       if (error) throw error;
       toast({
         title: "Email sent!",
-        description: `Sent to ${recipients.length} recipient(s)`
+        description: `Sent to ${recipients.length} recipient(s)${emailAttachments.length > 0 ? ` with ${emailAttachments.length} attachment(s)` : ''}`
       });
       setRecipients([]);
       setSubject('');
       setContent('');
+      setEmailAttachments([]);
     } catch (error: any) {
       toast({
         title: "Failed to send",
