@@ -980,6 +980,58 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                             <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="100%" />
                           </div>
 
+                          {/* Email Attachments */}
+                          <div className="flex-shrink-0 pt-1.5">
+                            <input
+                              ref={emailAttachmentInputRef}
+                              type="file"
+                              accept={ACCEPTED_EMAIL_ATTACHMENTS}
+                              multiple
+                              className="hidden"
+                              onChange={handleEmailAttachmentSelect}
+                            />
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {emailAttachments.length > 0
+                                  ? `${emailAttachments.length} file(s) attached`
+                                  : 'Attach files (PDFs, images, docs — 25MB each)'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {emailAttachments.length > 0 && (
+                                  <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setEmailAttachments([])}>
+                                    Clear
+                                  </Button>
+                                )}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 gap-1 text-xs"
+                                  onClick={() => emailAttachmentInputRef.current?.click()}
+                                >
+                                  <Paperclip className="h-3.5 w-3.5" />
+                                  Attach
+                                </Button>
+                              </div>
+                            </div>
+                            {emailAttachments.length > 0 && (
+                              <div className="space-y-1 mt-1">
+                                {emailAttachments.map((file, index) => (
+                                  <div key={`${file.name}-${file.lastModified}-${index}`} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-1.5">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <FileIcon className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+                                      <span className="truncate text-xs font-medium text-foreground">{file.name}</span>
+                                      <span className="text-[11px] text-muted-foreground flex-shrink-0">{(file.size / (1024 * 1024)).toFixed(1)}MB</span>
+                                    </div>
+                                    <button onClick={() => removeEmailAttachment(index)} className="hover:bg-muted rounded-full p-0.5 flex-shrink-0">
+                                      <X className="h-3 w-3 text-muted-foreground" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
                           {/* Send Button - desktop & tablet */}
                           <div className="pt-1.5 hidden sm:block flex-shrink-0">
                             <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} className="w-full h-8 text-sm">
