@@ -330,20 +330,56 @@ export const MessengerModal: React.FC = () => {
     try {
       const htmlContent = generateEmailHtml();
       
-      const { error } = await supabase.functions.invoke('send-branded-email', {
-        body: {
-          to: recipients,
-          subject,
-          html: htmlContent,
-          senderName: userProfile?.full_name || 'GleeWorld',
-          senderId: user?.id
+      const RECIPIENT_CHUNK_SIZE = 50;
+      const recipientChunks: string[][] = [];
+      for (let i = 0; i < recipients.length; i += RECIPIENT_CHUNK_SIZE) {
+        recipientChunks.push(recipients.slice(i, i + RECIPIENT_CHUNK_SIZE));
+      }
+
+      let sentRecipients = 0;
+      const failedRecipients: string[] = [];
+      const chunkErrors: string[] = [];
+
+      for (let i = 0; i < recipientChunks.length; i++) {
+        const chunk = recipientChunks[i];
+        const { error } = await supabase.functions.invoke('send-branded-email', {
+          body: {
+            to: chunk,
+            subject,
+            html: htmlContent,
+            senderName: userProfile?.full_name || 'GleeWorld',
+            senderId: user?.id,
+          },
+        });
+
+        if (error) {
+          failedRecipients.push(...chunk);
+          chunkErrors.push(`Batch ${i + 1}: ${error.message}`);
+          continue;
         }
-      });
 
-      if (error) throw error;
+        sentRecipients += chunk.length;
 
-      toast({ title: "Email sent!", description: `Sent to ${recipients.length} recipient(s)` });
-      confirmClose();
+        if (i < recipientChunks.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+      }
+
+      if (sentRecipients === 0) {
+        throw new Error(chunkErrors[0] || 'Failed to send email');
+      }
+
+      if (failedRecipients.length > 0) {
+        setRecipients(failedRecipients);
+        toast({
+          title: 'Email partially sent',
+          description: `Sent to ${sentRecipients} recipient(s). ${failedRecipients.length} failed and were kept for retry.`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'Email sent!', description: `Sent to ${sentRecipients} recipient(s)` });
+        confirmClose();
+      }
     } catch (err: any) {
       toast({ title: "Send failed", description: err.message, variant: "destructive" });
     } finally {

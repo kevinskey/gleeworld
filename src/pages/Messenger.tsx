@@ -680,27 +680,63 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
         }))
       );
 
-      const {
-        error
-      } = await supabase.functions.invoke('send-branded-email', {
-        body: {
-          to: recipients,
-          subject,
-          html: htmlContent,
-          senderName: userProfile?.full_name,
-          senderId: user?.id,
-          attachments: attachments.length > 0 ? attachments : undefined,
+      const RECIPIENT_CHUNK_SIZE = 50;
+      const recipientChunks: string[][] = [];
+      for (let i = 0; i < recipients.length; i += RECIPIENT_CHUNK_SIZE) {
+        recipientChunks.push(recipients.slice(i, i + RECIPIENT_CHUNK_SIZE));
+      }
+
+      let sentRecipients = 0;
+      const failedRecipients: string[] = [];
+      const chunkErrors: string[] = [];
+
+      for (let i = 0; i < recipientChunks.length; i++) {
+        const chunk = recipientChunks[i];
+        const { error } = await supabase.functions.invoke('send-branded-email', {
+          body: {
+            to: chunk,
+            subject,
+            html: htmlContent,
+            senderName: userProfile?.full_name,
+            senderId: user?.id,
+            attachments: attachments.length > 0 ? attachments : undefined,
+          },
+        });
+
+        if (error) {
+          failedRecipients.push(...chunk);
+          chunkErrors.push(`Batch ${i + 1}: ${error.message}`);
+          continue;
         }
-      });
-      if (error) throw error;
-      toast({
-        title: "Email sent!",
-        description: `Sent to ${recipients.length} recipient(s)${emailAttachments.length > 0 ? ` with ${emailAttachments.length} attachment(s)` : ''}`
-      });
-      setRecipients([]);
-      setSubject('');
-      setContent('');
-      setEmailAttachments([]);
+
+        sentRecipients += chunk.length;
+
+        if (i < recipientChunks.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 150));
+        }
+      }
+
+      if (sentRecipients === 0) {
+        throw new Error(chunkErrors[0] || 'Failed to send email');
+      }
+
+      if (failedRecipients.length > 0) {
+        setRecipients(failedRecipients);
+        toast({
+          title: 'Email partially sent',
+          description: `Sent to ${sentRecipients} recipient(s). ${failedRecipients.length} failed and were kept for retry.`,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Email sent!',
+          description: `Sent to ${sentRecipients} recipient(s)${emailAttachments.length > 0 ? ` with ${emailAttachments.length} attachment(s)` : ''}`,
+        });
+        setRecipients([]);
+        setSubject('');
+        setContent('');
+        setEmailAttachments([]);
+      }
     } catch (error: any) {
       toast({
         title: "Failed to send",
