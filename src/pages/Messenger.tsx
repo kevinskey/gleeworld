@@ -104,7 +104,47 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   const emailDropdownRef = useRef<HTMLDivElement>(null);
   const smsDropdownRef = useRef<HTMLDivElement>(null);
 
-  // SMS specific state
+  // Email attachment state
+  const [emailAttachments, setEmailAttachments] = useState<File[]>([]);
+  const emailAttachmentInputRef = useRef<HTMLInputElement>(null);
+  const MAX_EMAIL_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file
+  const MAX_EMAIL_ATTACHMENTS = 5;
+  const ACCEPTED_EMAIL_ATTACHMENTS = 'image/*,audio/*,.mp3,.wav,.m4a,.ogg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
+
+  const handleEmailAttachmentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = '';
+    if (files.length === 0) return;
+    const oversized = files.find(f => f.size > MAX_EMAIL_ATTACHMENT_SIZE);
+    if (oversized) {
+      toast({ title: 'File too large', description: `${oversized.name} exceeds 25MB`, variant: 'destructive' });
+      return;
+    }
+    setEmailAttachments(current => {
+      const combined = [...current, ...files];
+      if (combined.length > MAX_EMAIL_ATTACHMENTS) {
+        toast({ title: 'Too many attachments', description: `Max ${MAX_EMAIL_ATTACHMENTS} files per email`, variant: 'destructive' });
+      }
+      return combined.slice(0, MAX_EMAIL_ATTACHMENTS);
+    });
+  };
+
+  const removeEmailAttachment = (index: number) => {
+    setEmailAttachments(current => current.filter((_, i) => i !== index));
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]); // strip data:...;base64, prefix
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const [smsContent, setSmsContent] = useState('');
   const [sendToAll, setSendToAll] = useState(false);
   const [smsRecipients, setSmsRecipients] = useState<Array<{
