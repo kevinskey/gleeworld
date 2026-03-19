@@ -732,10 +732,9 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           body: {
             to: chunk,
             subject,
-            html: htmlContent,
+            html: finalHtml,
             senderName: userProfile?.full_name,
             senderId: user?.id,
-            attachments: attachments.length > 0 ? attachments : undefined,
           },
         });
 
