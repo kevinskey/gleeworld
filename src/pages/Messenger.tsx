@@ -674,7 +674,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     if (!smsContent.trim() && smsAttachments.length === 0) {
       toast({
         title: "No message",
-        description: "Please type a message or add audio files",
+        description: "Please type a message or attach files",
         variant: "destructive"
       });
       return;
