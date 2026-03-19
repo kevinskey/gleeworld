@@ -505,7 +505,7 @@ export const GroupMessageInterface: React.FC = () => {
                 </div>
 
                 {/* Message Input - Fixed at bottom with safe area */}
-                <div className="flex-shrink-0 border-t border-border p-2 bg-background" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
+                <div className="flex-shrink-0 border-t border-border p-2 bg-background" style={{ paddingBottom: 'calc(max(0.5rem, env(safe-area-inset-bottom)) + 4.5rem)' }}>
                   <MessageInput 
                     onSendMessage={handleSendMessage} 
                     groupId={conversationType === 'group' ? selectedConversationId || undefined : undefined}
