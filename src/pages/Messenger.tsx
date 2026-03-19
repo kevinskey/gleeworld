@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History, ChevronDown, ChevronRight, UserPlus } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle, ArrowLeft, Settings, Plus, Pencil, Trash2, History, ChevronDown, ChevronRight, UserPlus, Paperclip, FileIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
@@ -104,7 +104,47 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   const emailDropdownRef = useRef<HTMLDivElement>(null);
   const smsDropdownRef = useRef<HTMLDivElement>(null);
 
-  // SMS specific state
+  // Email attachment state
+  const [emailAttachments, setEmailAttachments] = useState<File[]>([]);
+  const emailAttachmentInputRef = useRef<HTMLInputElement>(null);
+  const MAX_EMAIL_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file
+  const MAX_EMAIL_ATTACHMENTS = 5;
+  const ACCEPTED_EMAIL_ATTACHMENTS = 'image/*,audio/*,.mp3,.wav,.m4a,.ogg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
+
+  const handleEmailAttachmentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = '';
+    if (files.length === 0) return;
+    const oversized = files.find(f => f.size > MAX_EMAIL_ATTACHMENT_SIZE);
+    if (oversized) {
+      toast({ title: 'File too large', description: `${oversized.name} exceeds 25MB`, variant: 'destructive' });
+      return;
+    }
+    setEmailAttachments(current => {
+      const combined = [...current, ...files];
+      if (combined.length > MAX_EMAIL_ATTACHMENTS) {
+        toast({ title: 'Too many attachments', description: `Max ${MAX_EMAIL_ATTACHMENTS} files per email`, variant: 'destructive' });
+      }
+      return combined.slice(0, MAX_EMAIL_ATTACHMENTS);
+    });
+  };
+
+  const removeEmailAttachment = (index: number) => {
+    setEmailAttachments(current => current.filter((_, i) => i !== index));
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]); // strip data:...;base64, prefix
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const [smsContent, setSmsContent] = useState('');
   const [sendToAll, setSendToAll] = useState(false);
   const [smsRecipients, setSmsRecipients] = useState<Array<{
@@ -632,6 +672,14 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   </table>
 </body>
 </html>`;
+      // Convert email attachments to base64
+      const attachments = await Promise.all(
+        emailAttachments.map(async (file) => ({
+          filename: file.name,
+          content: await fileToBase64(file),
+        }))
+      );
+
       const {
         error
       } = await supabase.functions.invoke('send-branded-email', {
@@ -640,17 +688,19 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           subject,
           html: htmlContent,
           senderName: userProfile?.full_name,
-          senderId: user?.id
+          senderId: user?.id,
+          attachments: attachments.length > 0 ? attachments : undefined,
         }
       });
       if (error) throw error;
       toast({
         title: "Email sent!",
-        description: `Sent to ${recipients.length} recipient(s)`
+        description: `Sent to ${recipients.length} recipient(s)${emailAttachments.length > 0 ? ` with ${emailAttachments.length} attachment(s)` : ''}`
       });
       setRecipients([]);
       setSubject('');
       setContent('');
+      setEmailAttachments([]);
     } catch (error: any) {
       toast({
         title: "Failed to send",
@@ -928,6 +978,58 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           <Label className="text-xs font-semibold text-foreground mb-0.5 flex-shrink-0">Message:</Label>
                           <div className="flex-1 min-h-0 border border-border rounded-md overflow-hidden bg-background">
                             <RichTextEditor value={content} onChange={setContent} placeholder="Compose your email with rich formatting..." minHeight="100%" />
+                          </div>
+
+                          {/* Email Attachments */}
+                          <div className="flex-shrink-0 pt-1.5">
+                            <input
+                              ref={emailAttachmentInputRef}
+                              type="file"
+                              accept={ACCEPTED_EMAIL_ATTACHMENTS}
+                              multiple
+                              className="hidden"
+                              onChange={handleEmailAttachmentSelect}
+                            />
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {emailAttachments.length > 0
+                                  ? `${emailAttachments.length} file(s) attached`
+                                  : 'Attach files (PDFs, images, docs — 25MB each)'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                {emailAttachments.length > 0 && (
+                                  <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setEmailAttachments([])}>
+                                    Clear
+                                  </Button>
+                                )}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 gap-1 text-xs"
+                                  onClick={() => emailAttachmentInputRef.current?.click()}
+                                >
+                                  <Paperclip className="h-3.5 w-3.5" />
+                                  Attach
+                                </Button>
+                              </div>
+                            </div>
+                            {emailAttachments.length > 0 && (
+                              <div className="space-y-1 mt-1">
+                                {emailAttachments.map((file, index) => (
+                                  <div key={`${file.name}-${file.lastModified}-${index}`} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-1.5">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <FileIcon className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+                                      <span className="truncate text-xs font-medium text-foreground">{file.name}</span>
+                                      <span className="text-[11px] text-muted-foreground flex-shrink-0">{(file.size / (1024 * 1024)).toFixed(1)}MB</span>
+                                    </div>
+                                    <button onClick={() => removeEmailAttachment(index)} className="hover:bg-muted rounded-full p-0.5 flex-shrink-0">
+                                      <X className="h-3 w-3 text-muted-foreground" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
                           {/* Send Button - desktop & tablet */}
