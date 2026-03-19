@@ -702,17 +702,19 @@ export const MessengerModal: React.FC = () => {
                       </div>
 
                       {/* Send Button */}
-                      <Button 
-                        onClick={handleSendSMS} 
-                        disabled={isSending || (!sendToAll && smsRecipients.length === 0) || !smsContent.trim()}
-                        className="w-full"
-                      >
-                        {isSending ? (
-                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
-                        ) : (
-                          <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>
-                        )}
-                      </Button>
+                      <div className="pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-0">
+                        <Button 
+                          onClick={handleSendSMS} 
+                          disabled={isSending || (!sendToAll && smsRecipients.length === 0) || !smsContent.trim()}
+                          className="w-full"
+                        >
+                          {isSending ? (
+                            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
+                          ) : (
+                            <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>
+                          )}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
