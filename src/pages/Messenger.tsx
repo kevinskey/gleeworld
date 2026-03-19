@@ -107,7 +107,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   // Email attachment state
   const [emailAttachments, setEmailAttachments] = useState<File[]>([]);
   const emailAttachmentInputRef = useRef<HTMLInputElement>(null);
-  const MAX_EMAIL_ATTACHMENT_SIZE = 150 * 1024 * 1024; // 150MB per file
+  const MAX_EMAIL_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file (Edge Function memory limit)
   const MAX_EMAIL_ATTACHMENTS = 5;
   const ACCEPTED_EMAIL_ATTACHMENTS = 'image/*,audio/*,.mp3,.wav,.m4a,.ogg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
 
@@ -117,7 +117,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     if (files.length === 0) return;
     const oversized = files.find(f => f.size > MAX_EMAIL_ATTACHMENT_SIZE);
     if (oversized) {
-      toast({ title: 'File too large', description: `${oversized.name} exceeds 150MB`, variant: 'destructive' });
+      toast({ title: 'File too large', description: `${oversized.name} exceeds 25MB limit`, variant: 'destructive' });
       return;
     }
     setEmailAttachments(current => {
