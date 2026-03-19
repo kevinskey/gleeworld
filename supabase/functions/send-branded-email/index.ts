@@ -15,13 +15,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface EmailAttachment {
+  filename: string;
+  content: string; // base64-encoded
+}
+
 interface SendBrandedEmailRequest {
   to: string | string[];
   subject: string;
   html: string;
   senderName?: string;
   replyTo?: string;
-  senderId?: string; // User ID for logging
+  senderId?: string;
+  attachments?: EmailAttachment[];
 }
 
 // Strip HTML tags for plain text storage
@@ -30,7 +36,6 @@ const stripHtml = (html: string): string => {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -42,16 +47,22 @@ const handler = async (req: Request): Promise<Response> => {
       to: emailData.to,
       subject: emailData.subject,
       senderName: emailData.senderName,
-      senderId: emailData.senderId
+      senderId: emailData.senderId,
+      attachmentCount: emailData.attachments?.length ?? 0,
     });
 
-    // Validate required fields
     if (!emailData.to || !emailData.subject || !emailData.html) {
       throw new Error("Missing required fields: to, subject, and html are required");
     }
 
     const recipients = Array.isArray(emailData.to) ? emailData.to : [emailData.to];
     const senderName = emailData.senderName || "GleeWorld";
+
+    // Build Resend attachments from base64
+    const resendAttachments = (emailData.attachments || []).map((att) => ({
+      filename: att.filename,
+      content: Uint8Array.from(atob(att.content), (c) => c.charCodeAt(0)),
+    }));
 
     // Resend has a 50 recipient limit per API call - batch if needed
     const BATCH_SIZE = 50;
@@ -74,7 +85,10 @@ const handler = async (req: Request): Promise<Response> => {
         html: emailData.html,
       };
 
-      // Add reply-to if provided
+      if (resendAttachments.length > 0) {
+        emailPayload.attachments = resendAttachments;
+      }
+
       if (emailData.replyTo) {
         emailPayload.reply_to = emailData.replyTo;
       }
