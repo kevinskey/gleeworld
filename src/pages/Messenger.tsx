@@ -107,7 +107,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   // Email attachment state
   const [emailAttachments, setEmailAttachments] = useState<File[]>([]);
   const emailAttachmentInputRef = useRef<HTMLInputElement>(null);
-  const MAX_EMAIL_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file
+  const MAX_EMAIL_ATTACHMENT_SIZE = 150 * 1024 * 1024; // 150MB per file
   const MAX_EMAIL_ATTACHMENTS = 5;
   const ACCEPTED_EMAIL_ATTACHMENTS = 'image/*,audio/*,.mp3,.wav,.m4a,.ogg,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip';
 
@@ -117,7 +117,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     if (files.length === 0) return;
     const oversized = files.find(f => f.size > MAX_EMAIL_ATTACHMENT_SIZE);
     if (oversized) {
-      toast({ title: 'File too large', description: `${oversized.name} exceeds 25MB`, variant: 'destructive' });
+      toast({ title: 'File too large', description: `${oversized.name} exceeds 150MB`, variant: 'destructive' });
       return;
     }
     setEmailAttachments(current => {
@@ -994,7 +994,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                               <span className="text-xs text-muted-foreground">
                                 {emailAttachments.length > 0
                                   ? `${emailAttachments.length} file(s) attached`
-                                  : 'Attach files (PDFs, images, docs — 25MB each)'}
+                                  : 'Attach files (PDFs, images, docs — 150MB each)'}
                               </span>
                               <div className="flex items-center gap-2">
                                 {emailAttachments.length > 0 && (
