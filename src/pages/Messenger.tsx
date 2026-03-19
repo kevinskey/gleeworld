@@ -117,7 +117,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     if (files.length === 0) return;
     const oversized = files.find(f => f.size > MAX_EMAIL_ATTACHMENT_SIZE);
     if (oversized) {
-      toast({ title: 'File too large', description: `${oversized.name} exceeds 25MB`, variant: 'destructive' });
+      toast({ title: 'File too large', description: `${oversized.name} exceeds 150MB`, variant: 'destructive' });
       return;
     }
     setEmailAttachments(current => {
