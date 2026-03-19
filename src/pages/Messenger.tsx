@@ -672,13 +672,49 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
   </table>
 </body>
 </html>`;
-      // Convert email attachments to base64
-      const attachments = await Promise.all(
-        emailAttachments.map(async (file) => ({
-          filename: file.name,
-          content: await fileToBase64(file),
-        }))
-      );
+      // Upload attachments to storage and generate download links
+      const uploadedAttachments: { filename: string; url: string; size: number }[] = [];
+      if (emailAttachments.length > 0) {
+        for (const file of emailAttachments) {
+          const safeName = file.name.replace(/\s+/g, '-');
+          const filePath = `email/${Date.now()}-${Math.random().toString(36).substring(2)}-${safeName}`;
+          const { error: uploadError } = await supabase.storage
+            .from('message-attachments')
+            .upload(filePath, file);
+          if (uploadError) {
+            console.error('Failed to upload attachment:', uploadError);
+            toast({ title: 'Upload failed', description: `Could not upload ${file.name}`, variant: 'destructive' });
+            continue;
+          }
+          const { data: urlData } = supabase.storage
+            .from('message-attachments')
+            .getPublicUrl(filePath);
+          uploadedAttachments.push({ filename: file.name, url: urlData.publicUrl, size: file.size });
+        }
+      }
+
+      // Append attachment download links to the email HTML
+      let finalHtml = htmlContent;
+      if (uploadedAttachments.length > 0) {
+        const attachmentHtml = uploadedAttachments.map(att => {
+          const sizeStr = att.size > 1024 * 1024
+            ? `${(att.size / (1024 * 1024)).toFixed(1)} MB`
+            : `${Math.round(att.size / 1024)} KB`;
+          return `<tr><td style="padding: 6px 0;">
+            <a href="${att.url}" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background-color: #f1f5f9; border-radius: 8px; text-decoration: none; color: #1e293b; font-size: 14px; border: 1px solid #e2e8f0;">
+              📎 <strong>${att.filename}</strong> <span style="color: #64748b; font-size: 12px;">(${sizeStr})</span>
+            </a>
+          </td></tr>`;
+        }).join('');
+        // Insert before closing </body>
+        finalHtml = finalHtml.replace(
+          '</body>',
+          `<table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto;">
+            <tr><td style="padding: 16px 40px 8px;"><p style="margin: 0 0 8px; color: #475569; font-size: 14px; font-weight: 600;">📎 Attachments</p></td></tr>
+            <tr><td style="padding: 0 40px 24px;"><table cellpadding="0" cellspacing="0">${attachmentHtml}</table></td></tr>
+          </table></body>`
+        );
+      }
 
       const RECIPIENT_CHUNK_SIZE = 50;
       const recipientChunks: string[][] = [];
