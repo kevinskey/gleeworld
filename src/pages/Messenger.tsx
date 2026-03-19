@@ -994,7 +994,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                               <span className="text-xs text-muted-foreground">
                                 {emailAttachments.length > 0
                                   ? `${emailAttachments.length} file(s) attached`
-                                  : 'Attach files (PDFs, images, docs — 25MB each)'}
+                                  : 'Attach files (PDFs, images, docs — 150MB each)'}
                               </span>
                               <div className="flex items-center gap-2">
                                 {emailAttachments.length > 0 && (
