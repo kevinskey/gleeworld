@@ -1032,7 +1032,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                           />
 
                           <div className="flex items-center justify-between gap-2 pt-1">
-                            <span className="text-xs text-muted-foreground">Optional: attach up to {MAX_SMS_ATTACHMENTS} audio files (150MB each)</span>
+                            <span className="text-xs text-muted-foreground">Optional: attach up to {MAX_SMS_ATTACHMENTS} files (150MB each)</span>
                             <div className="flex items-center gap-2">
                               {smsAttachments.length > 0 && (
                                 <Button
