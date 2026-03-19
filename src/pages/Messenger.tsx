@@ -1077,7 +1077,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                       </div>
                       
                       {/* Send Button */}
-                      <div className="flex-shrink-0 p-3 bg-muted border-t border-border">
+                      <div className="flex-shrink-0 border-t border-border bg-muted p-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
                         <Button onClick={handleSendSMS} disabled={isSending || (!sendToAll && smsRecipients.length === 0) || (!smsContent.trim() && smsAttachments.length === 0)} className="w-full h-9 text-sm">
                           {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send SMS {sendToAll ? 'to All Members' : ''}</>}
                         </Button>
