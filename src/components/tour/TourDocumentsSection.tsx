@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from "@/components/ui/dialog";
+import { convertToSecureUrl, getSecureFileUrl } from "@/utils/secureFileAccess";
 
 interface MediaDoc {
   id: string;
@@ -80,6 +81,7 @@ export const TourDocumentsSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState("");
+  const [previewDoc, setPreviewDoc] = useState<MediaDoc | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ name: string; done: boolean }[]>([]);
   const [rootFolderId, setRootFolderId] = useState<string | null>(null);
@@ -364,20 +366,50 @@ export const TourDocumentsSection = () => {
     noKeyboard: true,
   });
 
-  const handleDownload = (doc: MediaDoc) => {
-    const a = document.createElement('a');
-    a.href = doc.file_url;
-    a.download = doc.title;
-    a.target = '_blank';
-    a.click();
+  const resolveDocumentUrl = async (doc: MediaDoc) => {
+    const secureFromPublicUrl = await convertToSecureUrl(doc.file_url);
+    if (secureFromPublicUrl) {
+      return secureFromPublicUrl;
+    }
+
+    const secureFromPath = await getSecureFileUrl('media-library', doc.file_path);
+    if (secureFromPath) {
+      return secureFromPath;
+    }
+
+    return doc.file_url;
+  };
+
+  const scheduleBlobCleanup = (url: string) => {
+    if (url.startsWith('blob:')) {
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    }
+  };
+
+  const handleDownload = async (doc: MediaDoc) => {
+    try {
+      const downloadUrl = await resolveDocumentUrl(doc);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = doc.title;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      scheduleBlobCleanup(downloadUrl);
+    } catch (error) {
+      console.error('Error downloading tour document:', error);
+      toast.error('Failed to download document');
+    }
   };
 
   const handlePreview = (doc: MediaDoc) => {
     if (doc.file_type.includes('pdf') || doc.file_type.startsWith('image/')) {
       setPreviewUrl(doc.file_url);
       setPreviewTitle(doc.title);
+      setPreviewDoc(doc);
     } else {
-      handleDownload(doc);
+      void handleDownload(doc);
     }
   };
 
@@ -692,7 +724,7 @@ export const TourDocumentsSection = () => {
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDownload(doc)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void handleDownload(doc)}>
                       <Download className="h-3.5 w-3.5" />
                     </Button>
                     <Button
@@ -749,11 +781,11 @@ export const TourDocumentsSection = () => {
           <div className="flex items-center justify-between px-4 py-3 bg-background border-b border-border">
             <h3 className="text-sm font-semibold truncate text-foreground">{previewTitle}</h3>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => window.open(previewUrl, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => previewDoc && void handleDownload(previewDoc)}>
                 <Download className="h-3.5 w-3.5 mr-1.5" />
                 Download
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPreviewUrl(null); setPreviewTitle(''); }}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPreviewUrl(null); setPreviewTitle(''); setPreviewDoc(null); }}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
