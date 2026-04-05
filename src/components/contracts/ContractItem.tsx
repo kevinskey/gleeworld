@@ -214,6 +214,17 @@ export const ContractItem = ({
             <Eye className="h-3 w-3" />
           </Button>
           
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleDownload}
+            disabled={isDownloading}
+            title="Download PDF"
+            className="h-8 w-8 p-0"
+          >
+            <Download className="h-3 w-3" />
+          </Button>
+          
           {userIsAdmin && onEditTitle && (
             <Button 
               variant="outline" 
