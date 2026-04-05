@@ -41,7 +41,8 @@ export const getFileUrl = async (bucket: string, path: string): Promise<string |
     'budget-documents',
     'executive-board-files',
     'media-audio',
-    'media-docs'
+    'media-docs',
+    'user-files'
   ];
 
   if (privateBuckets.includes(bucket)) {
