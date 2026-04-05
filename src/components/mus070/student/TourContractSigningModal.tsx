@@ -183,13 +183,11 @@ export const TourContractSigningModal: React.FC<TourContractSigningModalProps> =
       const folderId = STUDENT_TOUR_DOCS_FOLDER_ID;
 
       // 5. Add document to media library for tour docs page
-      const { data: publicUrl } = supabase.storage.from('user-files').getPublicUrl(fileName);
-
       await supabase
         .from('gw_media_library')
         .insert({
           title: `Tour Contract - ${profile.full_name}`,
-          file_url: publicUrl.publicUrl,
+          file_url: fileName,
           file_path: fileName,
           file_type: 'application/pdf',
           file_size: pdfBlob.size,
