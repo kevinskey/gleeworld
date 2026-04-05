@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from "@/components/ui/dialog";
-import { convertToSecureUrl, getSecureFileUrl } from "@/utils/secureFileAccess";
+import { convertToSecureUrl, getSecureFileUrl, parseStorageUrl } from "@/utils/secureFileAccess";
 
 interface MediaDoc {
   id: string;
@@ -95,6 +95,7 @@ export const TourDocumentsSection = () => {
   const [editingDocName, setEditingDocName] = useState("");
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [draggingDocId, setDraggingDocId] = useState<string | null>(null);
+  const previewBlobUrlRef = useRef<string | null>(null);
 
   // Find the root "Tour Documents" folder
   useEffect(() => {
@@ -366,15 +367,56 @@ export const TourDocumentsSection = () => {
     noKeyboard: true,
   });
 
+  const clearPreviewBlobUrl = () => {
+    if (previewBlobUrlRef.current?.startsWith('blob:')) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+    }
+
+    previewBlobUrlRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      clearPreviewBlobUrl();
+    };
+  }, []);
+
+  const resolveDocumentStorage = (doc: MediaDoc) => {
+    const parsedUrl = parseStorageUrl(doc.file_url);
+    if (parsedUrl) {
+      return parsedUrl;
+    }
+
+    if (doc.file_path?.startsWith('tour-contracts/')) {
+      return {
+        bucket: 'user-files',
+        path: doc.file_path,
+      };
+    }
+
+    if (doc.file_path) {
+      return {
+        bucket: 'media-library',
+        path: doc.file_path,
+      };
+    }
+
+    return null;
+  };
+
   const resolveDocumentUrl = async (doc: MediaDoc) => {
+    const storageLocation = resolveDocumentStorage(doc);
+
+    if (storageLocation) {
+      const secureFromStorage = await getSecureFileUrl(storageLocation.bucket, storageLocation.path);
+      if (secureFromStorage) {
+        return secureFromStorage;
+      }
+    }
+
     const secureFromPublicUrl = await convertToSecureUrl(doc.file_url);
     if (secureFromPublicUrl) {
       return secureFromPublicUrl;
-    }
-
-    const secureFromPath = await getSecureFileUrl('media-library', doc.file_path);
-    if (secureFromPath) {
-      return secureFromPath;
     }
 
     return doc.file_url;
@@ -403,13 +445,33 @@ export const TourDocumentsSection = () => {
     }
   };
 
-  const handlePreview = (doc: MediaDoc) => {
-    if (doc.file_type.includes('pdf') || doc.file_type.startsWith('image/')) {
-      setPreviewUrl(doc.file_url);
+  const closePreview = () => {
+    clearPreviewBlobUrl();
+    setPreviewUrl(null);
+    setPreviewTitle('');
+    setPreviewDoc(null);
+  };
+
+  const handlePreview = async (doc: MediaDoc) => {
+    if (!(doc.file_type.includes('pdf') || doc.file_type.startsWith('image/'))) {
+      void handleDownload(doc);
+      return;
+    }
+
+    try {
+      const resolvedUrl = await resolveDocumentUrl(doc);
+      clearPreviewBlobUrl();
+
+      if (resolvedUrl.startsWith('blob:')) {
+        previewBlobUrlRef.current = resolvedUrl;
+      }
+
+      setPreviewUrl(resolvedUrl);
       setPreviewTitle(doc.title);
       setPreviewDoc(doc);
-    } else {
-      void handleDownload(doc);
+    } catch (error) {
+      console.error('Error previewing tour document:', error);
+      toast.error('Failed to preview document');
     }
   };
 
@@ -660,7 +722,7 @@ export const TourDocumentsSection = () => {
               }}
               onDragEnd={() => setDraggingDocId(null)}
               onClick={() => {
-                if (editingDocId !== doc.id) handlePreview(doc);
+                if (editingDocId !== doc.id) void handlePreview(doc);
               }}
             >
               <CardContent className="p-3">
@@ -720,7 +782,7 @@ export const TourDocumentsSection = () => {
                     onClick={e => e.stopPropagation()}
                   >
                     {doc.file_type.includes('pdf') && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePreview(doc)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void handlePreview(doc)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                     )}
@@ -785,7 +847,7 @@ export const TourDocumentsSection = () => {
                 <Download className="h-3.5 w-3.5 mr-1.5" />
                 Download
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setPreviewUrl(null); setPreviewTitle(''); setPreviewDoc(null); }}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={closePreview}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
