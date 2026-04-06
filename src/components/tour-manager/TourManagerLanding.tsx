@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye, Wallet, Plus, Pencil, Trash2, AlertTriangle, Hotel, Clock } from 'lucide-react';
+import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink, ChevronLeft, ChevronDown, Bus, Building2, FileCheck, Upload, Eye, Wallet, Plus, Pencil, Trash2, AlertTriangle, Hotel, Clock, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, isSameDay, isWithinInterval } from 'date-fns';
@@ -14,6 +14,7 @@ import { TourRouteTimeline } from './TourRouteTimeline';
 import { TourStopDetailDialog, type TourStopFull } from './TourStopDetailDialog';
 import { TourStopEditForm } from './TourStopEditForm';
 import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
+import { exportItineraryPdf, exportRosterPdf } from '@/utils/tourPdfExport';
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -404,8 +405,14 @@ export const TourManagerLanding = ({
                   Tour Itinerary
                   <Badge variant="secondary" className="text-[10px] ml-1">{tourEvents.length} stops</Badge>
                 </CardTitle>
-                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
-                  Manage <ChevronRight className="h-3 w-3 ml-1" />
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => exportItineraryPdf(tourEvents, tourTitle || undefined)}>
+                    <Download className="h-3 w-3 mr-1" /> PDF
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
+                    Manage <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </div>
                 </Button>
               </div>
             </CardHeader>
@@ -594,6 +601,9 @@ export const TourManagerLanding = ({
                     <Button variant="ghost" size="sm" className="flex-1 text-xs" onClick={() => onNavigate('roster')}>
                       Manage Roster
                       <ChevronRight className="h-3 w-3 ml-1" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => exportRosterPdf(rosterMembers, tourTitle || undefined)}>
+                      <Download className="h-3 w-3 mr-1" /> PDF
                     </Button>
                     <CreateTourGroupButton />
                   </div>
