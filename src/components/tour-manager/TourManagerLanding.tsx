@@ -413,7 +413,6 @@ export const TourManagerLanding = ({
                     Manage <ChevronRight className="h-3 w-3 ml-1" />
                   </Button>
                 </div>
-                </Button>
               </div>
             </CardHeader>
             <CardContent className="px-4 pb-4 pt-0">
