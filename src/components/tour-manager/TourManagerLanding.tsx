@@ -163,6 +163,7 @@ export const TourManagerLanding = ({
       setCitiesWithoutHotels(gaps);
     };
     fetchTourEvents();
+    fetchTourName();
     fetchRoster();
     fetchHosts();
     fetchContracts();
