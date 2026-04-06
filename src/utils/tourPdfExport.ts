@@ -30,261 +30,344 @@ interface RosterMember {
 }
 
 const COLORS = {
-  primary: [79, 70, 229] as [number, number, number],    // indigo
-  dark: [30, 30, 50] as [number, number, number],
-  gray: [100, 100, 120] as [number, number, number],
-  lightBg: [245, 245, 250] as [number, number, number],
+  primary: [0, 51, 102] as [number, number, number],       // Spelman blue
+  primaryLight: [0, 71, 132] as [number, number, number],
+  dark: [30, 30, 45] as [number, number, number],
+  gray: [100, 100, 115] as [number, number, number],
+  lightBg: [240, 242, 248] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
-  accent: [220, 220, 235] as [number, number, number],
+  accent: [210, 215, 228] as [number, number, number],
+  performance: [0, 100, 60] as [number, number, number],
+  travel: [140, 100, 20] as [number, number, number],
+  free: [60, 120, 60] as [number, number, number],
 };
 
-function addHeader(doc: jsPDF, title: string, subtitle?: string) {
-  const pageWidth = doc.internal.pageSize.getWidth();
-  
-  // Header bar
-  doc.setFillColor(...COLORS.primary);
-  doc.rect(0, 0, pageWidth, 32, 'F');
-  
-  doc.setTextColor(...COLORS.white);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text(title, 14, 18);
-  
-  if (subtitle) {
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(subtitle, 14, 26);
-  }
-  
-  // Date generated
-  doc.setFontSize(8);
-  doc.text(`Generated: ${format(new Date(), 'MMM d, yyyy h:mm a')}`, pageWidth - 14, 26, { align: 'right' });
+const PAGE_MARGIN = 14;
+const BOTTOM_MARGIN = 22;
+
+function getPageContentBottom(doc: jsPDF) {
+  return doc.internal.pageSize.getHeight() - BOTTOM_MARGIN;
 }
 
-function addFooter(doc: jsPDF, pageNum: number) {
+function addPageHeader(doc: jsPDF, title: string, subtitle?: string) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  doc.setFillColor(...COLORS.primary);
+  doc.rect(0, 0, pageWidth, 28, 'F');
+  
+  doc.setTextColor(...COLORS.white);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, PAGE_MARGIN, 15);
+  
+  if (subtitle) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(subtitle, PAGE_MARGIN, 22);
+  }
+  
+  const pageNum = doc.getNumberOfPages();
+  doc.setFontSize(7);
+  doc.text(`Page ${pageNum}`, pageWidth - PAGE_MARGIN, 22, { align: 'right' });
+}
+
+function addPageFooter(doc: jsPDF) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   
   doc.setDrawColor(...COLORS.accent);
-  doc.setLineWidth(0.5);
-  doc.line(14, pageHeight - 15, pageWidth - 14, pageHeight - 15);
+  doc.setLineWidth(0.3);
+  doc.line(PAGE_MARGIN, pageHeight - 14, pageWidth - PAGE_MARGIN, pageHeight - 14);
   
-  doc.setFontSize(7);
+  doc.setFontSize(6);
   doc.setTextColor(...COLORS.gray);
-  doc.text('Spelman College Glee Club', 14, pageHeight - 9);
-  doc.text(`Page ${pageNum}`, pageWidth - 14, pageHeight - 9, { align: 'right' });
+  doc.text('Spelman College Glee Club  |  Confidential', PAGE_MARGIN, pageHeight - 9);
+  doc.text(`Generated ${format(new Date(), 'MMM d, yyyy h:mm a')}`, pageWidth - PAGE_MARGIN, pageHeight - 9, { align: 'right' });
 }
 
-function checkPageBreak(doc: jsPDF, y: number, needed: number): number {
-  const pageHeight = doc.internal.pageSize.getHeight();
-  if (y + needed > pageHeight - 25) {
-    addFooter(doc, doc.getNumberOfPages());
-    doc.addPage();
-    addFooter(doc, doc.getNumberOfPages());
-    return 42;
+function newPage(doc: jsPDF, title: string, subtitle?: string): number {
+  doc.addPage();
+  addPageHeader(doc, title, subtitle);
+  addPageFooter(doc);
+  return 34;
+}
+
+function ensureSpace(doc: jsPDF, y: number, needed: number, title: string, subtitle?: string): number {
+  if (y + needed > getPageContentBottom(doc)) {
+    return newPage(doc, title, subtitle);
   }
   return y;
+}
+
+function getEventTypeColor(type: string | null): [number, number, number] {
+  switch (type) {
+    case 'performance': return COLORS.performance;
+    case 'travel': return COLORS.travel;
+    case 'free': return COLORS.free;
+    default: return COLORS.gray;
+  }
 }
 
 export function exportItineraryPdf(events: TourEvent[], tourName?: string) {
   const doc = new jsPDF('p', 'mm', 'letter');
   const pageWidth = doc.internal.pageSize.getWidth();
-  const contentWidth = pageWidth - 28;
+  const contentWidth = pageWidth - (PAGE_MARGIN * 2);
   
   const title = tourName || 'Tour Itinerary';
   
-  // Sort events by date
+  // Sort events by date ascending
   const sorted = [...events].sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
   
-  // Group by city
-  const getCityKey = (e: TourEvent) => {
-    if (!e.location) return 'Unknown Location';
-    return e.location.split(',')[0].trim();
-  };
+  if (sorted.length === 0) {
+    addPageHeader(doc, title, 'No events found');
+    addPageFooter(doc);
+    doc.save(`${title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')}_Itinerary.pdf`);
+    return;
+  }
   
-  const cityGroups: { city: string; fullLocation: string; events: TourEvent[] }[] = [];
-  const cityMap = new Map<string, number>();
+  // Date range
+  const firstDate = format(new Date(sorted[0].start_date), 'MMM d, yyyy');
+  const lastDate = format(new Date(sorted[sorted.length - 1].start_date), 'MMM d, yyyy');
+  const subtitle = `${firstDate} - ${lastDate}  |  ${sorted.length} events`;
   
-  sorted.forEach(event => {
-    const city = getCityKey(event);
-    if (cityMap.has(city)) {
-      cityGroups[cityMap.get(city)!].events.push(event);
-    } else {
-      cityMap.set(city, cityGroups.length);
-      cityGroups.push({ city, fullLocation: event.location, events: [event] });
+  addPageHeader(doc, title, subtitle);
+  addPageFooter(doc);
+  
+  let y = 34;
+  
+  // Summary table at top
+  y = ensureSpace(doc, y, 20, title, subtitle);
+  doc.setFillColor(...COLORS.lightBg);
+  doc.roundedRect(PAGE_MARGIN, y, contentWidth, 14, 2, 2, 'F');
+  
+  const performances = sorted.filter(e => e.event_type === 'performance').length;
+  const travelDays = sorted.filter(e => e.event_type === 'travel').length;
+  const workshops = sorted.filter(e => e.event_type === 'workshop').length;
+  const freeDays = sorted.filter(e => e.event_type === 'free').length;
+  
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...COLORS.dark);
+  doc.text(`SUMMARY:  ${performances} Performances  |  ${travelDays} Travel Days  |  ${workshops} Workshops  |  ${freeDays} Free Days  |  ${sorted.length} Total`, PAGE_MARGIN + 4, y + 9);
+  y += 20;
+  
+  // Render each event as its own block
+  sorted.forEach((event, index) => {
+    // Estimate space needed for this event
+    const details = buildEventDetails(event);
+    const estimatedHeight = 18 + (details.length * 5) + 6;
+    
+    y = ensureSpace(doc, y, Math.min(estimatedHeight, 50), title, subtitle);
+    
+    // Event type color bar
+    const typeColor = getEventTypeColor(event.event_type);
+    doc.setFillColor(...typeColor);
+    doc.rect(PAGE_MARGIN, y, 3, 14, 'F');
+    
+    // Event card background
+    doc.setFillColor(...COLORS.lightBg);
+    doc.rect(PAGE_MARGIN + 3, y, contentWidth - 3, 14, 'F');
+    
+    // Event number
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.white);
+    doc.setFillColor(...typeColor);
+    doc.circle(PAGE_MARGIN + 10, y + 5, 3.5, 'F');
+    doc.text(`${index + 1}`, PAGE_MARGIN + 10, y + 6.5, { align: 'center' });
+    
+    // Event title
+    doc.setTextColor(...COLORS.dark);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    const titleText = doc.splitTextToSize(event.title, contentWidth - 50);
+    doc.text(titleText[0], PAGE_MARGIN + 17, y + 6);
+    
+    // Event type badge
+    const typeLabel = event.event_type ? event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1) : 'Event';
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...typeColor);
+    doc.text(typeLabel.toUpperCase(), pageWidth - PAGE_MARGIN - 4, y + 5, { align: 'right' });
+    
+    // Date line
+    const startDate = new Date(event.start_date);
+    let dateStr = format(startDate, 'EEEE, MMMM d, yyyy');
+    if (event.end_date) {
+      const endDate = new Date(event.end_date);
+      if (startDate.toDateString() !== endDate.toDateString()) {
+        dateStr += ` - ${format(endDate, 'EEEE, MMMM d, yyyy')}`;
+      }
+    }
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...COLORS.gray);
+    doc.text(dateStr, PAGE_MARGIN + 17, y + 11);
+    
+    // Location
+    if (event.location) {
+      doc.setTextColor(...COLORS.primaryLight);
+      doc.text(event.location, pageWidth - PAGE_MARGIN - 4, y + 11, { align: 'right' });
+    }
+    
+    y += 16;
+    
+    // Details
+    if (details.length > 0) {
+      doc.setFontSize(7.5);
+      doc.setTextColor(...COLORS.dark);
+      
+      details.forEach(detail => {
+        y = ensureSpace(doc, y, 5, title, subtitle);
+        
+        // Label in bold
+        doc.setFont('helvetica', 'bold');
+        doc.text(detail.label + ':', PAGE_MARGIN + 6, y);
+        
+        // Value in normal
+        doc.setFont('helvetica', 'normal');
+        const labelWidth = doc.getTextWidth(detail.label + ':  ');
+        const valueWidth = contentWidth - 10 - labelWidth;
+        const valueLines = doc.splitTextToSize(detail.value, Math.max(valueWidth, 80));
+        doc.text(valueLines, PAGE_MARGIN + 6 + labelWidth, y);
+        
+        y += valueLines.length * 3.8;
+      });
+    }
+    
+    y += 4;
+    
+    // Separator
+    if (index < sorted.length - 1) {
+      doc.setDrawColor(...COLORS.accent);
+      doc.setLineWidth(0.2);
+      doc.line(PAGE_MARGIN + 4, y, pageWidth - PAGE_MARGIN - 4, y);
+      y += 4;
     }
   });
   
-  addHeader(doc, title, `${sorted.length} stops · ${cityGroups.length} cities`);
-  addFooter(doc, 1);
+  const fileName = `${title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')}_Itinerary.pdf`;
+  doc.save(fileName);
+}
+
+function buildEventDetails(event: TourEvent): { label: string; value: string }[] {
+  const details: { label: string; value: string }[] = [];
   
-  let y = 42;
+  if (event.venue_name) details.push({ label: 'Venue', value: event.venue_name });
+  if (event.venue_address) details.push({ label: 'Address', value: event.venue_address });
+  if (event.concert_time) details.push({ label: 'Concert Time', value: event.concert_time });
+  if (event.host_name) {
+    let hostStr = event.host_name;
+    if (event.host_phone) hostStr += `  |  ${event.host_phone}`;
+    if (event.host_email) hostStr += `  |  ${event.host_email}`;
+    details.push({ label: 'Host', value: hostStr });
+  }
+  if (event.departure_time) details.push({ label: 'Departure', value: event.departure_time });
+  if (event.arrival_time) details.push({ label: 'Arrival', value: event.arrival_time });
+  if (event.lodging_name) {
+    let lodgingStr = event.lodging_name;
+    if (event.lodging_address) lodgingStr += `  |  ${event.lodging_address}`;
+    details.push({ label: 'Lodging', value: lodgingStr });
+  }
+  if (event.meal_info) details.push({ label: 'Meals', value: event.meal_info });
+  if (event.description) details.push({ label: 'Description', value: event.description });
+  if (event.notes) details.push({ label: 'Notes', value: event.notes });
   
-  cityGroups.forEach((group, gi) => {
-    y = checkPageBreak(doc, y, 25);
-    
-    // City header
-    doc.setFillColor(...COLORS.lightBg);
-    doc.roundedRect(14, y, contentWidth, 10, 2, 2, 'F');
-    doc.setTextColor(...COLORS.primary);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`📍 ${group.city}`, 18, y + 7);
-    
-    const dateRange = group.events.length > 1
-      ? `${format(new Date(group.events[0].start_date), 'MMM d')} – ${format(new Date(group.events[group.events.length - 1].start_date), 'MMM d, yyyy')}`
-      : format(new Date(group.events[0].start_date), 'MMM d, yyyy');
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(...COLORS.gray);
-    doc.text(dateRange, pageWidth - 18, y + 7, { align: 'right' });
-    
-    y += 14;
-    
-    group.events.forEach((event, ei) => {
-      y = checkPageBreak(doc, y, 30);
-      
-      // Event card
-      const typeLabel = event.event_type ? event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1) : 'Event';
-      
-      doc.setTextColor(...COLORS.dark);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text(event.title, 18, y);
-      
-      doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...COLORS.gray);
-      
-      const dateLine = format(new Date(event.start_date), 'EEE, MMM d, yyyy');
-      doc.text(`${typeLabel} · ${dateLine}`, 18, y + 5);
-      
-      y += 10;
-      
-      const details: string[] = [];
-      if (event.venue_name) details.push(`Venue: ${event.venue_name}`);
-      if (event.venue_address) details.push(`Address: ${event.venue_address}`);
-      if (event.concert_time) details.push(`Time: ${event.concert_time}`);
-      if (event.host_name) details.push(`Host: ${event.host_name}${event.host_phone ? ` · ${event.host_phone}` : ''}${event.host_email ? ` · ${event.host_email}` : ''}`);
-      if (event.departure_time) details.push(`Departure: ${event.departure_time}`);
-      if (event.arrival_time) details.push(`Arrival: ${event.arrival_time}`);
-      if (event.lodging_name) details.push(`Lodging: ${event.lodging_name}${event.lodging_address ? ` — ${event.lodging_address}` : ''}`);
-      if (event.meal_info) details.push(`Meals: ${event.meal_info}`);
-      if (event.notes) details.push(`Notes: ${event.notes}`);
-      if (event.description) details.push(`Details: ${event.description}`);
-      
-      doc.setFontSize(8);
-      doc.setTextColor(...COLORS.dark);
-      details.forEach(line => {
-        y = checkPageBreak(doc, y, 5);
-        const lines = doc.splitTextToSize(line, contentWidth - 8);
-        doc.text(lines, 20, y);
-        y += lines.length * 4;
-      });
-      
-      // Divider between events in same city
-      if (ei < group.events.length - 1) {
-        doc.setDrawColor(...COLORS.accent);
-        doc.setLineWidth(0.3);
-        doc.line(20, y + 1, pageWidth - 20, y + 1);
-        y += 5;
-      }
-    });
-    
-    y += 6;
-  });
-  
-  doc.save(`${title.replace(/[^a-zA-Z0-9]/g, '_')}_Itinerary.pdf`);
+  return details;
 }
 
 export function exportRosterPdf(members: RosterMember[], tourName?: string) {
   const doc = new jsPDF('p', 'mm', 'letter');
   const pageWidth = doc.internal.pageSize.getWidth();
-  const contentWidth = pageWidth - 28;
+  const contentWidth = pageWidth - (PAGE_MARGIN * 2);
   
-  const title = tourName ? `${tourName} — Roster` : 'Tour Roster';
+  const title = tourName ? `${tourName} - Roster` : 'Tour Roster';
+  const subtitle = `${members.length} confirmed members`;
   
-  addHeader(doc, title, `${members.length} members`);
-  addFooter(doc, 1);
+  addPageHeader(doc, title, subtitle);
+  addPageFooter(doc);
   
-  let y = 42;
+  let y = 34;
   
   // Voice part groups
   const voiceParts = ['S1', 'S2', 'A1', 'A2'];
-  const grouped: Record<string, RosterMember[]> = {};
+  const grouped: { part: string; members: RosterMember[] }[] = [];
   
   voiceParts.forEach(vp => {
     const m = members.filter(m => m.voice_part === vp);
-    if (m.length > 0) grouped[vp] = m;
+    if (m.length > 0) grouped.push({ part: vp, members: m });
   });
   
   const unassigned = members.filter(m => !m.voice_part || !voiceParts.includes(m.voice_part));
-  if (unassigned.length > 0) grouped['Unassigned'] = unassigned;
+  if (unassigned.length > 0) grouped.push({ part: 'Unassigned', members: unassigned });
   
   // Summary bar
   doc.setFillColor(...COLORS.lightBg);
-  doc.roundedRect(14, y, contentWidth, 12, 2, 2, 'F');
+  doc.roundedRect(PAGE_MARGIN, y, contentWidth, 12, 2, 2, 'F');
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...COLORS.dark);
   
-  const summaryParts = Object.entries(grouped).map(([part, members]) => `${part}: ${members.length}`);
-  doc.text(`Total: ${members.length}  ·  ${summaryParts.join('  ·  ')}`, 18, y + 8);
+  const summaryText = grouped.map(g => `${g.part}: ${g.members.length}`).join('   |   ');
+  doc.text(`Total: ${members.length}   |   ${summaryText}`, PAGE_MARGIN + 4, y + 8);
   y += 18;
   
-  // Table header
-  const colX = { num: 14, name: 24, voicePart: 140, status: 170 };
+  const colX = { num: PAGE_MARGIN + 2, name: PAGE_MARGIN + 12, voicePart: 140, status: 172 };
+  let globalNum = 0;
   
-  Object.entries(grouped).forEach(([part, partMembers]) => {
-    y = checkPageBreak(doc, y, 20);
+  grouped.forEach(group => {
+    y = ensureSpace(doc, y, 22, title, subtitle);
     
     // Section header
     doc.setFillColor(...COLORS.primary);
-    doc.roundedRect(14, y, contentWidth, 8, 1.5, 1.5, 'F');
+    doc.roundedRect(PAGE_MARGIN, y, contentWidth, 8, 1.5, 1.5, 'F');
     doc.setTextColor(...COLORS.white);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.text(`${part} (${partMembers.length})`, 18, y + 5.5);
-    y += 12;
+    doc.text(`${group.part}  (${group.members.length})`, PAGE_MARGIN + 4, y + 5.5);
+    y += 11;
     
     // Column headers
     doc.setTextColor(...COLORS.gray);
-    doc.setFontSize(7);
+    doc.setFontSize(6.5);
     doc.setFont('helvetica', 'bold');
     doc.text('#', colX.num, y);
-    doc.text('Name', colX.name, y);
-    doc.text('Voice Part', colX.voicePart, y);
-    doc.text('Status', colX.status, y);
-    y += 2;
+    doc.text('NAME', colX.name, y);
+    doc.text('VOICE PART', colX.voicePart, y);
+    doc.text('STATUS', colX.status, y);
+    y += 1.5;
     doc.setDrawColor(...COLORS.accent);
-    doc.setLineWidth(0.4);
-    doc.line(14, y, pageWidth - 14, y);
-    y += 4;
+    doc.setLineWidth(0.3);
+    doc.line(PAGE_MARGIN, y, pageWidth - PAGE_MARGIN, y);
+    y += 3.5;
     
-    partMembers.sort((a, b) => a.full_name.localeCompare(b.full_name)).forEach((member, i) => {
-      y = checkPageBreak(doc, y, 7);
+    group.members.sort((a, b) => a.full_name.localeCompare(b.full_name)).forEach((member, i) => {
+      y = ensureSpace(doc, y, 6, title, subtitle);
+      globalNum++;
       
-      // Alternating row bg
       if (i % 2 === 0) {
         doc.setFillColor(...COLORS.lightBg);
-        doc.rect(14, y - 3, contentWidth, 6, 'F');
+        doc.rect(PAGE_MARGIN, y - 3, contentWidth, 5.5, 'F');
       }
       
       doc.setTextColor(...COLORS.dark);
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
       doc.setFont('helvetica', 'normal');
-      doc.text(`${i + 1}`, colX.num, y);
+      doc.text(`${globalNum}`, colX.num, y);
+      doc.setFont('helvetica', 'bold');
       doc.text(member.full_name, colX.name, y);
-      doc.text(member.voice_part || '—', colX.voicePart, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(member.voice_part || '-', colX.voicePart, y);
       
       const statusText = member.status.charAt(0).toUpperCase() + member.status.slice(1);
       doc.text(statusText, colX.status, y);
       
-      y += 6;
+      y += 5.5;
     });
     
-    y += 4;
+    y += 5;
   });
   
-  doc.save(`${(tourName || 'Tour').replace(/[^a-zA-Z0-9]/g, '_')}_Roster.pdf`);
+  const fileName = `${(tourName || 'Tour').replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_')}_Roster.pdf`;
+  doc.save(fileName);
 }
