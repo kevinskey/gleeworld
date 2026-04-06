@@ -75,8 +75,17 @@ export const TourManagerLanding = ({
       const { data } = await supabase
         .from('gw_tour_events')
         .select('*')
-        .order('start_date', { ascending: false });
+        .order('start_date', { ascending: true });
       if (data) setTourEvents(data as TourStopFull[]);
+    };
+    const fetchTourName = async () => {
+      const { data } = await supabase
+        .from('gw_tours')
+        .select('name')
+        .eq('status', 'planning')
+        .limit(1)
+        .single();
+      if (data) setTourTitle(data.name);
     };
     const fetchRoster = async () => {
       const { data: roster } = await supabase
