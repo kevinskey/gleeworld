@@ -124,7 +124,7 @@ export const GleeWorldLanding = () => {
   if (loading || authLoading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center brand-blue-theme"
+        className="w-full flex items-center justify-center brand-blue-theme"
         style={{
           background:
             "linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)",
@@ -143,7 +143,7 @@ export const GleeWorldLanding = () => {
   // Tenant clone — public landing for an individual choir/band/school.
   return (
     <div
-      className="min-h-screen w-full relative brand-blue-theme"
+      className="w-full w-full relative brand-blue-theme"
       style={{
         background:
           "linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)",
@@ -164,7 +164,7 @@ export const GleeWorldLanding = () => {
           <div className="w-full">
             <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
               {adaptedSlides.length > 0 ? (
-                <div className="min-h-screen flex items-center justify-center">
+                <div className="w-full flex items-center justify-center">
                   <HeroSlider
                     slides={adaptedSlides}
                     defaultDurationMs={6000}
@@ -175,7 +175,7 @@ export const GleeWorldLanding = () => {
                   />
                 </div>
               ) : (
-                <div className="min-h-screen w-full bg-muted flex items-center justify-center">
+                <div className="w-full w-full bg-muted flex items-center justify-center">
                   <div className="text-center p-4">
                     <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground text-sm sm:text-base">No hero slides configured</p>
@@ -526,7 +526,7 @@ const IMG = {
 
 function MarketingSite() {
   return (
-    <div className="min-h-screen w-full bg-white text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+    <div className="w-full w-full bg-white text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
       <AppleNav />
       <AppleHero />
       <AppleVideo />
@@ -636,13 +636,13 @@ function AppleHero() {
   const objectPosition = `${slide?.imagePositionX || 'center'} ${slide?.imagePositionY || 'center'}`;
 
   return (
-    <section className="relative bg-[#0a0518] min-h-screen flex items-center justify-center">
+    <section className="relative bg-[#0a0518] w-full flex items-center justify-center">
       {slide?.imageUrl ? (
         <img
           src={slide.imageUrl}
           alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
-          className="absolute inset-0 w-full h-full block"
-          style={{ objectFit: 'cover', objectPosition }}
+          className="w-full h-auto block"
+          style={{ objectPosition }}
         />
       ) : (
         // No hero configured — just the gradient backdrop with the CTA strip.

@@ -167,7 +167,7 @@ export default function TenantLanding() {
           autoplaySec={heroSpeedSec}
         />
       ) : heroMode === 'slider-fade' && activeSlides.length > 0 ? (
-        <section className="relative bg-[hsl(var(--brand-navy))] text-white overflow-hidden min-h-screen">
+        <section className="relative bg-[hsl(var(--brand-navy))] text-white overflow-hidden">
           {activeSlides.map((s, i) => (
             <div key={s.id} className={`absolute inset-0 transition-opacity duration-700 ${i === fadeIndex ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'}`}>
               <HeroSlideRender slide={s} fallbackTitle={`Welcome to ${orgName}`} fallbackBody={tagline || ''} accent={accent} className="h-full" />
@@ -466,14 +466,14 @@ function HeroSlideRender({
           <img
             src={(slide.mobile_image_url || slide.image_url) ?? ''}
             alt={slide.title ?? ''}
-            className="absolute inset-0 w-full h-full object-cover block sm:hidden"
+            className="w-full h-auto block sm:hidden"
             style={{ objectPosition: `${slide.image_position_x || 'center'} ${slide.image_position_y || 'center'}` }}
           />
           {/* Desktop ≥640px */}
           <img
             src={slide.image_url}
             alt={slide.title ?? ''}
-            className="absolute inset-0 w-full h-full object-cover hidden sm:block"
+            className="w-full h-auto hidden sm:block"
             style={{ objectPosition: `${slide.image_position_x || 'center'} ${slide.image_position_y || 'center'}` }}
           />
         </>
