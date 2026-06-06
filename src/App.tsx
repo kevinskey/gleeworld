@@ -31,6 +31,25 @@ import { ScrollToTop } from "@/components/routing/ScrollToTop";
 import { ModuleRouteRedirect } from "@/components/routing/module-route-redirect";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { UsageTracker } from "@/components/tracking/UsageTracker";
+import SiteSetup from "./pages/admin/SiteSetup";
+import ModulesSettings from "./pages/admin/ModulesSettings";
+import LandingEditor from "./pages/admin/LandingEditor";
+import AIRehearsalAssistant from "./pages/admin/AIRehearsalAssistant";
+import StudentsList from "./pages/admin/StudentsList";
+import StudentDetail from "./pages/admin/StudentDetail";
+import RehearsalPlans from "./pages/admin/RehearsalPlans";
+import Prospects from "./pages/admin/Prospects";
+import PracticeLog from "./pages/PracticeLog";
+import AcademyHome from "./pages/academy/AcademyHome";
+import StudentOnboarding from "./pages/admin/StudentOnboarding";
+import JoinCourse from "./pages/JoinCourse";
+import EnrollLanding from "./pages/EnrollLanding";
+import AuthCallback from "./pages/AuthCallback";
+import Messenger from "./pages/admin/Messenger";
+import { Terms, Privacy } from "./pages/Legal";
+import ThankYou from "./pages/ThankYou";
+import RehearsalTonight from "./pages/academy/RehearsalTonight";
+import CourseShell from "./pages/academy/CourseShell";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
 import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
 import Mus210 from "./pages/Mus210";
@@ -84,7 +103,7 @@ import FeedControl from "./pages/FeedControl";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 import TestBuilderPage from "./pages/mus240/TestBuilderPage";
 import TestBuilderEdit from "./pages/TestBuilderEdit";
-import TestPreview from "./pages/TestPreview";
+// (TestPreview page deleted with the radio purge 2026-05-31 — was the only consumer of useRadioPlayer.)
 import StudentTestPage from "./pages/StudentTestPage";
 import TestScoresPage from "./pages/TestScoresPage";
 import PollViewPage from "./pages/PollViewPage";
@@ -103,7 +122,8 @@ import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Calendar from "./pages/Calendar";
-import Messenger from "./pages/Messenger";
+// Note: Messenger is imported once at line 43 from pages/admin/Messenger (the merged
+// Communications hub). The old pages/Messenger.tsx is unused and should be deleted.
 
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
@@ -146,10 +166,7 @@ import Handbook from "./pages/Handbook";
 import ScholarshipHub from "./pages/ScholarshipHub";
 import AdminScholarships from "./pages/AdminScholarships";
 import AdminProducts from "./pages/AdminProducts";
-import { SectionLeaderDashboard } from "./pages/SectionLeaderDashboard";
 import { SectionalManagement } from "./pages/SectionalManagement";
-import ExecutiveBoardMonitor from "./pages/admin/ExecutiveBoardMonitor";
-import { ExecutiveBoardPermissionPanel } from '@/components/admin/ExecutiveBoardPermissionPanel';
 import { SRFManagement } from "./pages/SRFManagement";
 import { MemberViewDashboard } from "@/components/member-view/MemberViewDashboard";
 import GleeClubContactsManagement from "./pages/GleeClubContactsManagement";
@@ -158,16 +175,13 @@ import GleeClubContactsManagement from "./pages/GleeClubContactsManagement";
 import FinancialManagement from "./pages/admin/FinancialManagement";
 import EventManagement from "./pages/admin/EventManagement";
 import MediaLibrary from "./pages/admin/MediaLibrary";
-import Communications from "./pages/admin/Communications";
 import InventoryShop from "./pages/admin/InventoryShop";
 import Analytics from "./pages/admin/Analytics";
 import Settings from "./pages/Settings";
 import SystemSettings from "./pages/admin/SystemSettings";
 import AccessControl from "./pages/admin/AccessControl";
 import DatabaseAdmin from "./pages/admin/DatabaseAdmin";
-import ExecutiveBoard from "./pages/admin/ExecutiveBoard";
 import DocumentsForms from "./pages/admin/DocumentsForms";
-import { StudentConductorDashboard } from "./pages/StudentConductorDashboard";
 import TourPlanner from "./pages/TourPlanner";
 import Weather from "./pages/Weather";
 import BookingRequest from "./pages/BookingRequest";
@@ -181,9 +195,6 @@ const SharedAnnotation = lazy(() => import("./pages/SharedAnnotation").then(m =>
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
 import UserManagement from "./pages/UserManagement";
-import ExitInterviewsPage from "./pages/ExitInterviewsPage";
-import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule";
-import { RadioStationPage } from "./components/radio/RadioStationPage";
 import { AuditionsManagement } from "./components/admin/AuditionsManagement";
 import SoundCloudSearch from "./pages/SoundCloudSearch";
 import { ShoutcastManagement } from "./pages/admin/ShoutcastManagement";
@@ -195,13 +206,11 @@ import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
 import AssignmentCreatorPage from "./pages/AssignmentCreator";
-import KaraokeChallenge from "./pages/KaraokeChallenge";
 import PracticeStudioPage from "./pages/PracticeStudioPage";
 import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
 import { MessagingInterface } from "./components/messaging/MessagingInterface";
 
 import BookAppointmentPage from "./pages/BookAppointmentPage";
-import ExecutiveBoardMemberDashboard from "./pages/ExecutiveBoardMemberDashboard";
 import GoogleDocsPage from "./pages/GoogleDocs";
 import LibrarianDashboardPage from "./pages/LibrarianDashboardPage";
 import QRGeneratorPage from "./pages/QRGenerator";
@@ -211,7 +220,6 @@ import ModuleAccess from "./pages/admin/ModuleAccess";
 import WardrobeAppointments from "./pages/WardrobeAppointments";
 import SearchPage from "./pages/SearchPage";
 import FirstYearHub from "./pages/FirstYearHub";
-import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
 import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
 import AcademyStudentRegistration from "./pages/AcademyStudentRegistration";
@@ -223,7 +231,6 @@ import TimesheetPage from "./pages/TimesheetPage";
 import BownaScholarLanding from "./pages/BownaScholarLanding";
 import SMSTest from "./pages/SMSTest";
 import MemberExitInterview from "./pages/MemberExitInterview";
-import ExecBoardExitInterview from "./pages/ExecBoardExitInterview";
 
 
 import ClassLanding from "./pages/mus240/ClassLanding";
@@ -260,11 +267,6 @@ import { Mus240PollPage } from "./pages/Mus240PollPage";
 import JazzPage from "./pages/mus240/JazzPage";
 import Tour2026Page from "./pages/Tour2026Page";
 import BusInformation from "./pages/BusInformation";
-import ExecutiveBoardWorkshopPage from "./pages/ExecutiveBoardWorkshopPage";
-import ExecBoardTrainingVideosPage from "./pages/ExecBoardTrainingVideosPage";
-import MeetingAgendasPage from "./pages/exec-board/MeetingAgendasPage";
-import TransitionDocumentsPage from "./pages/exec-board/TransitionDocumentsPage";
-import PolicyManualPage from "./pages/exec-board/PolicyManualPage";
 import StudentSchedulesPage from "./pages/StudentSchedulesPage";
 
 // Grading System
@@ -280,6 +282,7 @@ import StudentCoursePage from "./pages/grading/student/StudentCoursePage";
 import StudentAssignmentPage from "./pages/grading/student/StudentAssignmentPage";
 import CourseAudioPage from "./pages/courses/CourseAudioPage";
 import { GlobalMiniPlayer } from "./components/audio/GlobalMiniPlayer";
+import { ModuleGate } from "./components/auth/ModuleGate";
 
 // Legacy MUS240 redirect component
 const LegacyMus240Redirect = () => {
@@ -379,15 +382,34 @@ const App = () => {
                     <Routes>
                     {/* Root route */}
                     <Route 
-                      path="/" 
+                      path="/"
                       element={
                         <PublicRoute>
                           <HomeRoute />
                         </PublicRoute>
-                      } 
+                      }
                     />
-              <Route 
-                path="/auth" 
+              <Route path="/terms" element={<PublicRoute><Terms /></PublicRoute>} />
+              <Route path="/privacy" element={<PublicRoute><Privacy /></PublicRoute>} />
+              <Route path="/thank-you" element={<PublicRoute><ThankYou /></PublicRoute>} />
+              <Route
+                path="/academy/:courseCode/rehearsal-today"
+                element={
+                  <ProtectedRoute>
+                    <RehearsalTonight />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/c/:code"
+                element={
+                  <ProtectedRoute>
+                    <CourseShell />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/auth"
                 element={
                   <PublicRoute>
                     <AuthPage />
@@ -537,9 +559,34 @@ const App = () => {
               <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
               
+              {/* /academy base — landing on the course selection grid */}
+              <Route
+                path="/academy"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false}>
+                      <AcademyHome />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/students/onboard"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <StudentOnboarding />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/join/:code" element={<PublicRoute><JoinCourse /></PublicRoute>} />
+              <Route path="/enroll" element={<PublicRoute><EnrollLanding /></PublicRoute>} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+
               {/* Printable Syllabi Page - must be before wildcard route */}
-              <Route 
-                path="/academy/printable-syllabi" 
+              <Route
+                path="/academy/printable-syllabi"
                 element={
                   <ProtectedRoute>
                     <PrintableSyllabiPage />
@@ -615,15 +662,124 @@ const App = () => {
                 } 
               />
               {/* Control Center alias */}
-              <Route 
-                path="/control-center" 
+              <Route
+                path="/control-center"
                 element={
                   <ProtectedRoute>
                     <UniversalLayout>
                       <UnifiedDashboard />
                     </UniversalLayout>
                   </ProtectedRoute>
-                } 
+                }
+              />
+              {/* Tenant onboarding: branding setup for new admins */}
+              <Route
+                path="/admin/site-setup"
+                element={
+                  <ProtectedRoute>
+                    <SiteSetup />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/ai-rehearsal"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <AIRehearsalAssistant />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/students"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <StudentsList />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/students/:id"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <StudentDetail />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/rehearsal-plans"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <RehearsalPlans />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/prospects"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <Prospects />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/practice/log"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <PracticeLog />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/messenger"
+                element={<Navigate to="/communications" replace />}
+              />
+              <Route
+                path="/admin/communications"
+                element={<Navigate to="/communications" replace />}
+              />
+              <Route
+                path="/communications"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <Messenger />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* Modules catalog + add-on activation */}
+              <Route
+                path="/settings/modules"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <ModulesSettings />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* Landing page editor (admin) */}
+              <Route
+                path="/admin/landing-editor"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <LandingEditor />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
               />
 
               {/* Legacy redirects to new academy structure */}
@@ -732,14 +888,7 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/community-hub" 
-                element={
-                  <ProtectedRoute>
-                    <Navigate to="/dashboard" replace />
-                  </ProtectedRoute>
-                } 
-              />
+              {/* /community-hub route removed with Community Hub module. */}
               <Route 
                 path="/community" 
                 element={
@@ -782,19 +931,7 @@ const App = () => {
                   </ProtectedRoute>
                 } 
                />
-               {/* Admin routes - place before dashboard routes for proper matching */}
-                 <Route 
-                  path="/admin" 
-                  element={
-                    <ProtectedRoute>
-                      <AdminOnlyRoute>
-                        <UniversalLayout>
-                          <UnifiedDashboard />
-                        </UniversalLayout>
-                      </AdminOnlyRoute>
-                    </ProtectedRoute>
-                   } 
-                 />
+               {/* /admin routes — only deep links below, no bare /admin home. */}
                  <Route 
                    path="/admin/academy-courses" 
                    element={
@@ -884,16 +1021,6 @@ const App = () => {
                       </UniversalLayout>
                     </ProtectedRoute>
                    } 
-                  />
-                 <Route 
-                   path="/dashboard/executive-board/member/:userId" 
-                   element={
-                     <ProtectedRoute>
-                       <UniversalLayout>
-                         <ExecutiveBoardMemberDashboard />
-                       </UniversalLayout>
-                     </ProtectedRoute>
-                    } 
                   />
                <Route 
                  path="/fan" 
@@ -1216,46 +1343,6 @@ const App = () => {
                     </ProtectedRoute>
                   } 
                 />
-                <Route 
-                  path="/executive-board-workshop" 
-                  element={
-                    <ProtectedRoute>
-                      <ExecutiveBoardWorkshopPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/exec-board-training-videos" 
-                  element={
-                    <ProtectedRoute>
-                      <ExecBoardTrainingVideosPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/exec-board/meeting-agendas" 
-                  element={
-                    <ProtectedRoute>
-                      <MeetingAgendasPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/exec-board/transition-documents" 
-                  element={
-                    <ProtectedRoute>
-                      <TransitionDocumentsPage />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/exec-board/policy-manual" 
-                  element={
-                    <ProtectedRoute>
-                      <PolicyManualPage />
-                    </ProtectedRoute>
-                  } 
-                />
                <Route 
                  path="/contracts"
                  element={
@@ -1368,13 +1455,22 @@ const App = () => {
                              </ProtectedRoute>
                            } 
                          />
-                        <Route 
-                           path="/alumnae" 
+                        <Route
+                           path="/alumni"
                            element={
                              <PublicRoute>
                                <AlumnaePageView />
                              </PublicRoute>
-                           } 
+                           }
+                         />
+                        {/* Legacy alias — old code/links to /alumnae still work. */}
+                        <Route
+                           path="/alumnae"
+                           element={
+                             <PublicRoute>
+                               <AlumnaePageView />
+                             </PublicRoute>
+                           }
                          />
                          <Route 
                            path="/admin/alumnae" 
@@ -1389,22 +1485,6 @@ const App = () => {
                            element={
                              <ProtectedRoute>
                                <AlumnaeManagement />
-                             </ProtectedRoute>
-                           } 
-                         />
-                         <Route 
-                           path="/admin/exec-board-monitor" 
-                           element={
-                             <ProtectedRoute>
-                               <ExecutiveBoardMonitor />
-                             </ProtectedRoute>
-                           } 
-                          />
-                         <Route 
-                           path="/admin/executive-board" 
-                           element={
-                             <ProtectedRoute>
-                               <ExecutiveBoardPermissionPanel />
                              </ProtectedRoute>
                            } 
                          />
@@ -1503,14 +1583,7 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                               />
-                              <Route 
-                                path="/admin/communications" 
-                                element={
-                                  <ProtectedRoute>
-                                    <Communications />
-                                  </ProtectedRoute>
-                                } 
-                              />
+                              {/* /admin/communications redirects to merged /communications above. */}
                               <Route 
                                 path="/admin/inventory" 
                                 element={
@@ -1578,14 +1651,6 @@ const App = () => {
                                 } 
                               />
                               <Route 
-                                path="/admin/executive" 
-                                element={
-                                  <ProtectedRoute>
-                                    <ExecutiveBoard />
-                                  </ProtectedRoute>
-                                } 
-                              />
-                              <Route 
                                 path="/admin/documents" 
                                 element={
                                   <ProtectedRoute>
@@ -1625,22 +1690,7 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/exit-interviews" 
-                element={
-                  <ProtectedRoute>
-                    <ExitInterviewsPage />
-                  </ProtectedRoute>
-                } 
-              />
-                              <Route 
-                                path="/amazon-shopping" 
-                                element={
-                                  <ProtectedRoute>
-                                    <AmazonShoppingModule />
-                                  </ProtectedRoute>
-                                } 
-                              />
+                              {/* /amazon-shopping route removed with Amazon Affiliate module. */}
                               <Route
                                path="/dashboard/pr-hub" 
                                element={
@@ -1649,22 +1699,7 @@ const App = () => {
                                  </ProtectedRoute>
                                } 
                              />
-                             <Route 
-                               path="/dashboard/section-leader" 
-                               element={
-                                 <ProtectedRoute>
-                                   <SectionLeaderDashboard />
-                                 </ProtectedRoute>
-                              } 
-                             />
-                            <Route 
-                              path="/dashboard/student-conductor" 
-                              element={
-                                <ProtectedRoute>
-                                  <StudentConductorDashboard />
-                                </ProtectedRoute>
-                              } 
-                              />
+                            {/* Section Leader, Student Conductor, and Karaoke routes removed. */}
                              <Route 
                                path="/sectional-management" 
                                element={
@@ -1781,14 +1816,7 @@ const App = () => {
                                    </ProtectedRoute>
                                  } 
                                 />
-                                <Route 
-                                  path="/radio" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <RadioStationPage />
-                                    </ProtectedRoute>
-                                  } 
-                                 />
+                                {/* /radio route + RadioStationPage removed 2026-05-31 — Radio.co integration deleted. */}
                                  <Route 
                                    path="/soundcloud" 
                                    element={
@@ -1810,14 +1838,6 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <MemberExitInterview />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/exec-board-exit-interview" 
-                  element={
-                    <ProtectedRoute>
-                      <ExecBoardExitInterview />
                     </ProtectedRoute>
                   } 
                 />
@@ -1897,15 +1917,8 @@ const App = () => {
                                      </ProtectedRoute>
                                    } 
                                  />
-                                 <Route 
-                                   path="/console/first-year" 
-                                   element={
-                                     <ProtectedRoute>
-                                       <FirstYearConsolePage />
-                                     </ProtectedRoute>
-                                   } 
-                                 />
-                                
+                                 {/* /console/first-year route removed with First Year Console module. */}
+
                                   <Route 
                                     path="/modules" 
                                     element={
@@ -1966,14 +1979,7 @@ const App = () => {
                                           </ProtectedRoute>
                                         } 
                                       />
-                                      <Route 
-                                        path="/karaoke-challenge" 
-                                        element={
-                                          <ProtectedRoute>
-                                            <KaraokeChallenge />
-                                          </ProtectedRoute>
-                                        } 
-                                      />
+                                      {/* /karaoke-challenge route removed with Karaoke module. */}
                                       <Route 
                                         path="/assignment-creator"
                                         element={
@@ -1998,14 +2004,6 @@ const App = () => {
                                           </ProtectedRoute>
                                         } 
                                       />
-                                           <Route 
-                                            path="/executive-board-dashboard" 
-                                            element={<Navigate to="/dashboard" replace />} 
-                                          />
-                                           <Route 
-                                             path="/executive-board-dashboard" 
-                                             element={<Navigate to="/dashboard" replace />} 
-                                           />
                                            <Route 
                                              path="/setup-crews" 
                                              element={
@@ -2314,14 +2312,7 @@ const App = () => {
                                         </ProtectedRoute>
                                       } 
                                     />
-                                    <Route 
-                                      path="/test/:testId/preview"
-                                      element={
-                                        <ProtectedRoute>
-                                          <TestPreview />
-                                        </ProtectedRoute>
-                                      } 
-                                    />
+                                    {/* /test/:testId/preview route removed with TestPreview page (radio purge 2026-05-31). */}
                                     <Route 
                                       path="/test/:testId/take" 
                                       element={

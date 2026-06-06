@@ -54,7 +54,6 @@ const adminModules = [
   { id: 'media-library', name: 'Media Library', icon: Music, description: 'Photos, audio, video', route: '/admin/media' },
   { id: 'member-directory', name: 'Member Directory', icon: Users, description: 'Browse and manage members', route: '/member-directory' },
   { id: 'wardrobe', name: 'Wardrobe', icon: FileText, description: 'Costumes and attire', route: '/wardrobe' },
-  { id: 'executive-board', name: 'Executive Board', icon: Shield, description: 'Board dashboards', route: '/admin/executive' },
   { id: 'documents', name: 'Documents & Forms', icon: FileText, description: 'Contracts, W9s, and official paperwork', route: '/admin/documents' },
   { id: 'access-control', name: 'Access Control', icon: Shield, description: 'Role assignments and security policies', route: '/admin/access' },
   { id: 'analytics', name: 'Analytics', icon: BarChart3, description: 'Platform analytics', route: '/admin/analytics' },

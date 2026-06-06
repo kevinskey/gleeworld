@@ -1,13 +1,10 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { 
-  BookOpen, 
-  QrCode, 
-  Plane, 
-  Music, 
-  Church, 
-  Calendar, 
+import {
+  BookOpen,
+  QrCode,
+  Calendar,
   ChevronRight,
   ExternalLink,
   Users
@@ -31,9 +28,6 @@ interface QuickAction {
 const QUICK_ACTIONS: QuickAction[] = [
   { id: 'courses', label: 'Course Pages', icon: BookOpen, route: '/academy', color: '#B8860B' },
   { id: 'attendance', label: 'Attendance QR', icon: QrCode, route: '/attendance', color: '#003366' },
-  { id: 'tour', label: 'Tour Manager', icon: Plane, route: '/tour', color: '#CD853F' },
-  { id: 'repertoire', label: 'Repertoire', icon: Music, route: '/repertoire', color: '#8B0000' },
-  { id: 'liturgy', label: 'Liturgical Planner', icon: Church, route: '/liturgy', color: '#6B4C9A' },
 ];
 
 interface DailyRunSheetProps {
@@ -136,10 +130,6 @@ export const DailyRunSheet = ({
                       onClick={() => {
                         if (event.course_id) {
                           navigate(`/academy/course/${event.course_id}`);
-                        } else if (category === 'liturgy') {
-                          navigate('/liturgy');
-                        } else if (category === 'tour') {
-                          navigate('/tour');
                         }
                       }}
                     />

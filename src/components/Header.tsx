@@ -25,7 +25,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
-import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
 import { 
   Home, 
   Library, 
@@ -91,12 +90,12 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             {/* GleeWorld Logo */}
-            <img src="/favicon.png?v=3" alt="GleeWorld" className="w-10 h-10 rounded-lg object-contain" />
+            <img src="/lovable-uploads/gleeworld-logo.png?v=6" alt="GleeWorld" className="w-10 h-10 rounded-lg object-contain" />
             
             {/* Branding Text */}
             <div className="flex flex-col">
               <h1 className="text-2xl font-bold text-primary">GleeWorld</h1>
-              <p className="text-xs text-muted-foreground">Spelman College Glee Club</p>
+              <p className="text-xs text-muted-foreground">Your favorite band or choir</p>
             </div>
           </div>
         </div>
@@ -228,8 +227,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   };
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
-  const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
-  const canAccessPR = isAdmin || isPRCoordinator;
+  const canAccessPR = isAdmin;
   const isSuperAdmin = userProfile?.role === 'super-admin';
   const isOnUserDashboard = location.pathname.startsWith('/dashboard/member-view/');
 
@@ -358,7 +356,6 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
 
             {/* Radio Controls */}
             <div className="flex items-center">
-              <HeaderRadioControls />
             </div>
 
             {/* Dashboard Views Dropdown - Only for admins */}

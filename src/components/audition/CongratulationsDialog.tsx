@@ -35,7 +35,7 @@ export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({
               Your audition is scheduled with the
             </p>
             <p className="text-xl font-bold text-primary bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              World Renowned Spelman College Glee Club
+              World Renowned Your favorite band or choir
             </p>
             <p className="text-muted-foreground">
               We look forward to hearing your beautiful voice and welcoming you to our musical family.

@@ -25,7 +25,7 @@ export const ReceiptsManagement = () => {
         
         <div className="glass-card p-6">
           <div className="flex items-center space-x-2 mb-4">
-            <Receipt className="h-6 w-6 text-spelman-400" />
+            <Receipt className="h-6 w-6 text-brand-400" />
             <h3 className="text-2xl font-semibold text-white">Error Loading Receipts</h3>
           </div>
           <p className="text-red-300">{error}</p>
@@ -56,7 +56,7 @@ export const ReceiptsManagement = () => {
                 setShowTemplateAssignment(true);
               }}
               variant="outline"
-              className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20 w-full sm:w-auto"
+              className="glass border-brand-400/30 text-brand-300 hover:bg-brand-500/20 w-full sm:w-auto"
             >
               <DollarSign className="h-4 w-4 mr-2" />
               Template Stipends

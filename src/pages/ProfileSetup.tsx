@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -39,9 +40,12 @@ import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 // Enhanced schema with all new fields
 const profileSetupSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
+  email: z.string().email("Enter a valid email address"),
   bio: z.string().optional(),
   website_url: z.string().url().optional().or(z.literal("")),
-  phone_number: z.string().optional(),
+  phone_number: z.string()
+    .min(7, "Phone number is required")
+    .regex(/^[+()\-\s\d]{7,20}$/, "Enter a valid phone number"),
   student_number: z.string().optional(),
   workplace: z.string().optional(),
   school_address: z.string().optional(),
@@ -113,6 +117,8 @@ const pronounOptions = ["She/Her", "He/Him", "They/Them", "Other"];
 const ProfileSetup = () => {
   const { user } = useAuth();
   const { profile: userRole, loading: roleLoading } = useUserRole();
+  const { settings: branding } = useBrandingSettings();
+  const siteName = branding.short_name || branding.org_name || 'GleeWorld';
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -128,7 +134,15 @@ const ProfileSetup = () => {
     formState: { errors },
   } = useForm<ProfileSetupFormData>({
     resolver: zodResolver(profileSetupSchema),
+    defaultValues: {
+      email: user?.email ?? '',
+    },
   });
+
+  // Keep the email field in sync once auth.user resolves
+  useEffect(() => {
+    if (user?.email) setValue('email', user.email);
+  }, [user?.email, setValue]);
 
   const watchedFields = watch();
 
@@ -238,10 +252,11 @@ const ProfileSetup = () => {
         youtube: data.youtube,
       };
 
-      const { error } = await supabase
+      const { data: updatedRows, error } = await supabase
         .from("gw_profiles")
         .update({
           full_name: data.full_name,
+          email: data.email,
           bio: data.bio,
           website_url: data.website_url,
           phone_number: data.phone_number,
@@ -271,15 +286,31 @@ const ProfileSetup = () => {
           
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id);
+        .eq("user_id", user.id)
+        .select('id');
 
       if (error) throw error;
+
+      if (!updatedRows || updatedRows.length === 0) {
+        // RLS or row didn't exist — try upserting on user_id so first-time users
+        // (whose row may not have been auto-created) still save.
+        const { error: upsertErr } = await supabase
+          .from("gw_profiles")
+          .insert({
+            user_id: user.id,
+            email: data.email,
+            full_name: data.full_name,
+            bio: data.bio,
+            phone_number: data.phone_number,
+          });
+        if (upsertErr) throw upsertErr;
+      }
 
       toast({
         title: "Success",
         description: "Profile setup completed successfully!",
       });
-      
+
       navigate('/dashboard');
     } catch (error) {
       console.error("Error setting up profile:", error);
@@ -309,8 +340,8 @@ const ProfileSetup = () => {
     <UniversalLayout>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome to GleeWorld!</h1>
-          <p className="text-white/80 mb-4">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Welcome to {siteName}!</h1>
+          <p className="text-muted-foreground mb-4">
             Let's set up your profile to get you started. Complete your profile to unlock all features.
           </p>
           
@@ -323,7 +354,7 @@ const ProfileSetup = () => {
               </div>
               <Progress value={profileProgress} className="h-2" />
               <p className="text-xs text-gray-500 mt-2">
-                Complete more fields to unlock all GleeWorld features
+                Complete more fields to unlock all {siteName} features
               </p>
             </CardContent>
           </Card>
@@ -341,19 +372,34 @@ const ProfileSetup = () => {
                 <CardDescription>Tell us about yourself</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="full_name">Full Name *</Label>
-                  <Input
-                    id="full_name"
-                    {...register("full_name")}
-                    className="mt-1"
-                    placeholder="Enter your full name"
-                  />
-                  {errors.full_name && (
-                    <p className="text-red-500 text-sm mt-1">{errors.full_name.message}</p>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="full_name">Full Name *</Label>
+                    <Input
+                      id="full_name"
+                      {...register("full_name")}
+                      className="mt-1"
+                      placeholder="Enter your full name"
+                    />
+                    {errors.full_name && (
+                      <p className="text-red-500 text-sm mt-1">{errors.full_name.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      {...register("email")}
+                      className="mt-1"
+                      placeholder="you@example.com"
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                    )}
+                  </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea
@@ -367,13 +413,16 @@ const ProfileSetup = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="phone_number">Phone Number</Label>
+                    <Label htmlFor="phone_number">Phone Number *</Label>
                     <Input
                       id="phone_number"
                       {...register("phone_number")}
                       className="mt-1"
                       placeholder="(555) 123-4567"
                     />
+                    {errors.phone_number && (
+                      <p className="text-red-500 text-sm mt-1">{errors.phone_number.message}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="pronouns">Pronouns</Label>

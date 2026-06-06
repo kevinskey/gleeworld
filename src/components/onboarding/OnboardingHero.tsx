@@ -20,12 +20,11 @@ export const OnboardingHero = ({ onGetStarted }: OnboardingHeroProps) => {
                   <Music className="h-12 w-12 text-primary" />
                 </div>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Welcome to GleeWorld
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+                Welcome
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Join 100+ years of musical excellence at the Spelman College Glee Club. 
-                Let's complete your profile to get you started on this incredible journey.
+                Let's complete your profile to get you started.
               </p>
             </div>
 

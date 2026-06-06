@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
 import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
+import { useUniversalHeroSlides } from '@/hooks/useUniversalSlider';
 
 interface HeroSlide {
   id: string;
@@ -19,10 +19,22 @@ interface HeroSlide {
 
 const getTitleSize = () => 'text-sm sm:text-base';
 
-// DashboardHeroCarousel - uses the same hero slides as the landing page (usage_context = 'homepage')
+// DashboardHeroCarousel - pulls from the universal slider system via the
+// "dashboard_hero" placement_key.
 export const DashboardHeroCarousel: React.FC = () => {
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: universalSlides = [], isLoading: loading } = useUniversalHeroSlides('dashboard_hero');
+  const heroSlides: HeroSlide[] = universalSlides.map((s) => ({
+    id: s.id,
+    title: s.title ?? null,
+    description: s.description ?? null,
+    image_url: s.imageUrl || '',
+    mobile_image_url: s.mobileImageUrl ?? null,
+    ipad_image_url: s.ipadImageUrl ?? null,
+    link_url: s.buttonUrl ?? null,
+    link_target: null,
+    display_order: 0,
+    is_active: true,
+  }));
   
   // Embla carousel with infinite loop and swipe support
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
@@ -47,24 +59,6 @@ export const DashboardHeroCarousel: React.FC = () => {
       emblaApi.reInit();
     }
   }, [emblaApi, heroSlides]);
-
-  useEffect(() => {
-    const fetchSlides = async () => {
-      try {
-        const { data } = await supabase
-          .from('dashboard_hero_slides')
-          .select('*')
-          .eq('is_active', true)
-          .order('display_order', { ascending: true });
-        setHeroSlides(data || []);
-      } catch (e) {
-        console.error('Failed to load dashboard hero slides', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSlides();
-  }, []);
 
   if (loading) {
     return (

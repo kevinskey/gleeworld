@@ -80,7 +80,7 @@ export const TourContractSigningModal: React.FC<TourContractSigningModalProps> =
     // Title
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    const titleLines = doc.splitTextToSize('Spelman College Glee Club Tour Participation Contract & Code of Conduct', contentWidth);
+    const titleLines = doc.splitTextToSize('Your favorite band or choir Tour Participation Contract & Code of Conduct', contentWidth);
     doc.text(titleLines, margin, y);
     y += titleLines.length * 7 + 5;
 

@@ -266,7 +266,7 @@ export const AttendanceDashboard = () => {
 
       {/* ── Tabbed Navigation ── */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-        <TabsList className="w-full justify-start bg-card border border-border rounded-xl p-1 h-auto flex-wrap gap-1">
+        <TabsList className="w-full justify-start bg-card border border-border rounded-xl px-3 py-2 h-auto flex-wrap gap-2">
           <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-1.5 text-sm">
             <BarChart3 className="h-4 w-4" /> Overview
           </TabsTrigger>

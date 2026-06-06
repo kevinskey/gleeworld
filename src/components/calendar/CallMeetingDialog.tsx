@@ -177,7 +177,7 @@ export const CallMeetingDialog = ({
       const eventData = {
         title: formData.title,
         description: formData.description + (formData.agenda ? `\n\nAgenda:\n${formData.agenda}` : ''),
-        event_type: 'exec-meeting',
+        event_type: 'meeting',
         start_date: meetingDateTime.toISOString(),
         end_date: endDateTime.toISOString(),
         is_public: false,

@@ -14,7 +14,6 @@ import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
-import { SettingsModule } from '@/components/dashboard/modules/SettingsModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { BudgetsModule } from '@/components/modules/BudgetsModule';
 import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
@@ -24,30 +23,20 @@ import { ContractsModule } from '@/components/modules/ContractsModule';
 import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
 import { EventPlannerModule } from '@/components/modules/EventPlannerModule';
-import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { PRHubModule } from '@/components/modules/PRHubModule';
-import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
-
-import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
 
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 
-import { RadioManagement } from '@/components/admin/RadioManagement';
 import { ReceiptsModule } from '@/components/receipts/ReceiptsModule';
 import { ReimbursementsManager } from '@/components/reimbursements/ReimbursementsManager';
 import { AppointmentServiceManager } from '@/components/appointments/AppointmentServiceManager';
-import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
-import { WellnessModule } from '@/components/modules/WellnessModule';
 import { MonthlyStatements } from '@/components/admin/financial/MonthlyStatements';
 import { PressKitManager } from '@/components/pr-coordinator/PressKitManager';
 import MediaLibrary from '@/pages/admin/MediaLibrary';
-import { ExecutiveBoardNavigationHub } from '@/components/executive-board/ExecutiveBoardNavigationHub';
-import { MediaLibrary as MediaLibraryComponent } from '@/components/radio/MediaLibrary';
-import { HeroManagement } from '@/components/admin/HeroManagement';
-import { FirstYearConsole } from '@/components/console/first-year/FirstYearConsole';
+import SliderManager from '@/components/admin/sliders/SliderManager';
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
 
 interface MemberModulesProps {
@@ -56,8 +45,6 @@ interface MemberModulesProps {
     email: string;
     full_name: string;
     role: string;
-    exec_board_role?: string;
-    is_exec_board?: boolean;
     is_admin?: boolean;
     is_super_admin?: boolean;
   };
@@ -76,7 +63,6 @@ const getModuleComponent = (moduleName: string) => {
     'attendance': AttendanceModule,
     'sight-reading-preview': SightSingingPreviewModule,
     'sight-reading-generator': SightSingingPreviewModule,
-    'settings': SettingsModule,
     'booking-forms': TourManagerModule, // Booking is now part of Tour Manager
     
     // Extended modules
@@ -90,13 +76,9 @@ const getModuleComponent = (moduleName: string) => {
     'dues-collection': DuesCollectionModule,
     'email-management': EmailManagementModule,
     'event-planner': EventPlannerModule,
-    'karaoke': KaraokeModule,
     'notifications': NotificationsModule,
     'pr-hub': PRHubModule,
-    'fan-engagement': FanEngagementModule,
-    'fans': FanEngagementModule,
     'scheduling': CalendarManagementModule,
-    'section-leader': SectionLeaderModule,
     
     // Legacy/alternative naming patterns
     'auditions-management': AuditionsModule,
@@ -116,26 +98,20 @@ const getModuleComponent = (moduleName: string) => {
     // Additional missing modules
     'glee-ledger': GleeLedgerModule,
     
-    'radio-management': RadioManagement,
     'receipts-records': ReceiptsModule,
     'check-requests': ReimbursementsManager,
     'service-management': AppointmentServiceManager,
-    'student-conductor': StudentConductorModule,
-    'wellness': WellnessModule,
     'monthly-statements': MonthlyStatements,
     'press-kits': PressKitManager,
     'media-library': MediaLibrary,
-    'executive-board': ExecutiveBoardNavigationHub,
-    'executive-functions': ExecutiveBoardNavigationHub,
-    
+
     'merch-store': PRHubModule, // Placeholder - needs actual component
     'tour-management': TourManagerModule,
     'ai-tools': BudgetsModule, // Placeholder
-    'hero-manager': HeroManagement, // Fixed to use proper HeroManagement component
+    'hero-manager': SliderManager, // Universal slider admin (replaces former per-hero admins)
     'pr-manager': PRHubModule,
     'sight-reading': SightSingingPreviewModule,
     'pr-coordinator': PRHubModule,
-    'first-year-console': FirstYearConsole,
     'librarian': LibrarianModule,
   };
   

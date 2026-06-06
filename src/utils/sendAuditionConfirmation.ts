@@ -5,7 +5,7 @@ export const sendAuditionConfirmation = async () => {
     console.log('🎭 Sending audition confirmation...');
     
     // Mya's confirmation message
-    const myaMessage = `Hi Mya! 🎵 Thank you for signing up for the Spelman College Glee Club audition! Your audition is confirmed for August 15, 2025 at 3:30 PM. We're excited to hear you sing! Please arrive 15 minutes early. Break a leg! 🌟 - Spelman Glee Club`;
+    const myaMessage = `Hi Mya! 🎵 Thank you for signing up for the Your favorite band or choir audition! Your audition is confirmed for August 15, 2025 at 3:30 PM. We're excited to hear you sing! Please arrive 15 minutes early. Break a leg! 🌟 - Riverside Concert Choir`;
     
     // Admin notification message
     const adminMessage = `SMS COPY: Sent to Mya Jones (443) 688-3051: "${myaMessage}"`;

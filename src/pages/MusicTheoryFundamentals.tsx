@@ -478,7 +478,7 @@ const MusicTheoryFundamentals = () => {
                     <div>
                       <h4 className="font-semibold text-primary mb-2">Accessibility</h4>
                       <p className="text-sm text-muted-foreground">
-                        Spelman College is committed to ensuring full participation of all students. If you have a documented 
+                        Riverside Music Institute is committed to ensuring full participation of all students. If you have a documented 
                         disability and need reasonable accommodations, contact the Student Access Center at 404-270-5289. 
                         Located in MacVicar Hall, Room 106.
                       </p>
@@ -500,7 +500,7 @@ const MusicTheoryFundamentals = () => {
                     <div>
                       <h4 className="font-semibold text-primary mb-2">Title IX</h4>
                       <p className="text-sm text-muted-foreground">
-                        Spelman provides a safe learning environment free from discrimination and harassment. 
+                        Our institution provides a safe learning environment free from discrimination and harassment. 
                         Faculty are "responsible employees" and must report incidents to the Title IX Director. 
                         Support services are available through Counseling Services, Health Services, and Public Safety.
                       </p>

@@ -1,36 +1,34 @@
-import React from 'react';
+import React, { Suspense } from 'react';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmailModule } from './modules/EmailModule';
 import { MusicLibraryModule } from './modules/MusicLibraryModule';
 import { CalendarModule } from './modules/CalendarModule';
 import { WardrobeModule } from './modules/WardrobeModule';
 import { FinancesModule } from './modules/FinancesModule';
 import { AttendanceModule } from '../modules/AttendanceModule';
-import { RadioModule } from './modules/RadioModule';
 import { HandbookModule } from './modules/HandbookModule';
 import { DirectoryModule } from './modules/DirectoryModule';
 import { MediaModule } from './modules/MediaModule';
-import { ExecutiveModule } from './modules/ExecutiveModule';
-import { SettingsModule } from './modules/SettingsModule';
-import { CommunityHubModule } from './modules/CommunityHubModule';
 import { AuditionsModule } from '../modules/AuditionsModule';
 import { LibrarianModule } from '../modules/LibrarianModule';
-import { SimpleModuleHub } from '../executive/SimpleModuleHub';
 import { NotificationsModule } from '../modules/NotificationsModule';
-import { KaraokeModule } from '../modules/KaraokeModule';
 import { SightSingingModule } from '../modules/SightSingingModule';
 import { EmailManagementModule } from '../modules/EmailManagementModule';
+import { CommunicationsHub } from '../modules/CommunicationsHub';
+import { SightReadingHub } from '../modules/SightReadingHub';
+import { FinanceHub } from '../modules/FinanceHub';
+import { AppointmentsHub } from '../modules/AppointmentsHub';
+import { PRHub } from '../modules/PRHub';
+import { AssessmentHub } from '../modules/AssessmentHub';
+import { AIHub } from '../modules/AIHub';
 import { CalendarManagementModule } from '../modules/CalendarManagementModule';
 import { BucketsOfLoveModule } from '../modules/BucketsOfLoveModule';
-import { FanEngagementModule } from '../modules/FanEngagementModule';
 
 
-import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 import { PermissionsModule } from '../modules/PermissionsModule';
 import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
-import { RadioManagement } from '../admin/RadioManagement';
 import { GleeAcademyModule } from '../modules/GleeAcademyModule';
 import { QRCodeManagementModule } from '../modules/QRCodeManagementModule';
-import { Mus240GroupsModule } from '../modules/Mus240GroupsModule';
 import { TestBuilder } from '../test-builder/TestBuilder';
 import { AlumnaePortalModule } from '../modules/AlumnaePortalModule';
 import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
@@ -40,14 +38,13 @@ import { GradingModule } from '../modules/GradingModule';
 import { ConcertTicketRequestsModule } from '../modules/ConcertTicketRequestsModule';
 import { AnnouncementsModule } from '../modules/AnnouncementsModule';
 import { TourManagerDashboard } from '../tour-manager/TourManagerDashboard';
-import TreeLightingSurveyModule from '../modules/TreeLightingSurveyModule';
-import ExitInterviewsModule from '../modules/ExitInterviewsModule';
 import { TheLabModule } from '@/components/modules/TheLabModule';
 
-import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '../modules/MessengerAdminModule';
-import { AmazonAffiliateModule } from '../modules/AmazonAffiliateModule';
+import { ContractsModule } from '../modules/ContractsModule';
+import { DonationsModule, NetworkingMarketplaceModule } from '../modules/alumni';
+import { UsageAnalyticsModule } from '../modules/UsageAnalyticsModule';
 import FeedControl from '@/pages/FeedControl';
 import { ProductManagement } from '@/pages/ProductManagement';
 import { CourseAttendanceLedger } from '../attendance/CourseAttendanceLedger';
@@ -59,12 +56,24 @@ interface ModuleDisplayProps {
 export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
   const renderModule = () => {
     switch (selectedModule) {
+      case 'communications-hub':
+        return <CommunicationsHub />;
+      case 'sight-reading':
+        return <SightReadingHub />;
+      case 'finance-hub':
+        return <FinanceHub />;
+      case 'appointments-hub':
+        return <AppointmentsHub />;
+      case 'pr-hub':
+        return <PRHub />;
+      case 'assessment-hub':
+        return <AssessmentHub />;
+      case 'ai-hub':
+        return <AIHub />;
       case 'email':
         return <EmailModule />;
       case 'email-management':
         return <EmailManagementModule />;
-      case 'community-hub':
-        return <CommunityHubModule />;
       case 'music-library':
         return <MusicLibraryModule />;
       case 'calendar':
@@ -79,10 +88,6 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <AttendanceModule />;
       case 'course-attendance-ledger':
         return <CourseAttendanceLedger />;
-      case 'radio':
-        return <RadioModule />;
-      case 'radio-management':
-        return <RadioManagement />;
       case 'handbook':
         return <HandbookModule />;
       case 'directory':
@@ -91,31 +96,19 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <MediaModule />;
       case 'media-library':
         return <MediaModule />;
-      case 'executive':
-      case 'student-conductor':
-      case 'section-leader':
-        return <SimpleModuleHub />;
-      case 'settings':
-        return <SettingsModule />;
       case 'auditions':
       case 'auditions-management':
         return <AuditionsModule />;
       case 'librarian':
         return <LibrarianModule />;
-      case 'simple-executive-hub':
-        return <SimpleModuleHub />;
       case 'notifications':
         return <NotificationsModule />;
-      case 'karaoke':
-        return <KaraokeModule />;
       case 'sight-singing-management':
         return <SightSingingModule />;
       case 'calendar-management':
         return <CalendarManagementModule />;
       case 'buckets-of-love':
         return <BucketsOfLoveModule />;
-      case 'fan-engagement':
-        return <FanEngagementModule />;
       case 'concert-ticket-requests':
         return <ConcertTicketRequestsModule />;
       case 'service-management':
@@ -125,8 +118,6 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
             <p>Service management module coming soon!</p>
           </div>
         );
-      case 'first-year-console':
-        return <FirstYearConsoleModule />;
       case 'user-management':
         return <PermissionsModule />;
       case 'bowman-scholars':
@@ -135,9 +126,7 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <GleeAcademyModule isFullPage={false} />;
       case 'qr-code-management':
         return <QRCodeManagementModule />;
-      case 'mus240-groups':
-        return <Mus240GroupsModule />;
-      case 'test-builder':
+case 'test-builder':
         return <TestBuilder courseId="all" courseName="All Courses" />;
       case 'grading-admin':
         window.location.href = '/grading/admin/dashboard';
@@ -159,25 +148,25 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <AnnouncementsModule />;
       case 'tour-management':
         return <TourManagerDashboard />;
-      case 'survey-module':
-        return <TreeLightingSurveyModule />;
-      case 'exit-interviews':
-        return <ExitInterviewsModule />;
       case 'the-lab':
         return <TheLabModule />;
       case 'appointments':
       case 'assignable-appointments':
         return <div className="p-4 text-muted-foreground">Use /book-appointment for Office Hours booking.</div>;
-      case 'section-assignment':
-        return <SectionAssignmentModule />;
       case 'messenger-admin':
         return <MessengerAdminModule />;
-      case 'amazon-affiliate':
-        return <AmazonAffiliateModule />;
       case 'feed-control':
         return <FeedControl />;
       case 'merch-store':
         return <ProductManagement />;
+      case 'contracts':
+        return <ContractsModule />;
+      case 'donations':
+        return <DonationsModule />;
+      case 'networking-marketplace':
+        return <NetworkingMarketplaceModule />;
+      case 'usage-analytics':
+        return <UsageAnalyticsModule />;
       default:
         return (
           <div className="p-6">
@@ -190,7 +179,9 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
 
   return (
     <div className="h-full">
-      {renderModule()}
+      <Suspense fallback={<div className="p-8 flex justify-center"><LoadingSpinner /></div>}>
+        {renderModule()}
+      </Suspense>
     </div>
   );
 };

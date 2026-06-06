@@ -23,7 +23,7 @@ interface ClassSession {
   image_url?: string | null;
 }
 
-interface SpelmanEvent {
+interface CampusEvent {
   id: string;
   title: string;
   location?: string;
@@ -32,7 +32,7 @@ interface SpelmanEvent {
 interface CalendarDayDetailProps {
   date: Date;
   sessions: ClassSession[];
-  spelmanEvents?: SpelmanEvent[];
+  campusEvents?: CampusEvent[];
   isHoliday?: boolean;
   isInstructor?: boolean;
   onGenerateQR?: (session: ClassSession) => void;
@@ -51,7 +51,7 @@ const SESSION_CONFIG: Record<string, { icon: React.ElementType; color: string; l
 export const CalendarDayDetail: React.FC<CalendarDayDetailProps> = ({
   date,
   sessions,
-  spelmanEvents = [],
+  campusEvents = [],
   isHoliday = false,
   isInstructor = false,
   onGenerateQR,
@@ -98,13 +98,13 @@ export const CalendarDayDetail: React.FC<CalendarDayDetailProps> = ({
               </div>
             )}
 
-            {/* Spelman Events */}
-            {spelmanEvents.length > 0 && (
+            {/* Campus Events */}
+            {campusEvents.length > 0 && (
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   College Events
                 </h4>
-                {spelmanEvents.map(event => (
+                {campusEvents.map(event => (
                   <div 
                     key={event.id} 
                     className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl"

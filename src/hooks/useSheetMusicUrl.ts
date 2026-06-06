@@ -30,6 +30,19 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
       return;
     }
 
+    // DO Spaces URLs OR our same-origin /cdn/ proxy paths are public —
+    // use as-is, no signing or fetch needed.
+    if (
+      pdfUrl.includes('digitaloceanspaces.com') ||
+      pdfUrl.includes('/cdn/') ||
+      pdfUrl.startsWith('https://gleeworld.org/cdn/')
+    ) {
+      setSignedUrl(pdfUrl);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     const trackObjectUrl = (url: string | null) => {
       if (url?.startsWith('blob:')) {
         objectUrlsToRevoke.push(url);

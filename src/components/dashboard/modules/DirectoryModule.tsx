@@ -18,7 +18,7 @@ export const DirectoryModule = () => {
       role: 'Soprano I',
       section: 'Soprano',
       year: 'Senior',
-      email: 'swilliams@spelman.edu',
+      email: 'swilliams@riversidechoir.example',
       phone: '(404) 555-0123',
       avatar: '',
       status: 'active'
@@ -29,7 +29,7 @@ export const DirectoryModule = () => {
       role: 'Alto II',
       section: 'Alto',
       year: 'Junior',
-      email: 'mjohnson@spelman.edu',
+      email: 'mjohnson@riversidechoir.example',
       phone: '(404) 555-0456',
       avatar: '',
       status: 'active'
@@ -40,7 +40,7 @@ export const DirectoryModule = () => {
       role: 'Director',
       section: 'Faculty',
       year: 'Faculty',
-      email: 'kbrown@spelman.edu',
+      email: 'kbrown@riversidechoir.example',
       phone: '(404) 555-0789',
       avatar: '',
       status: 'faculty'
@@ -51,7 +51,7 @@ export const DirectoryModule = () => {
       role: 'Soprano II',
       section: 'Soprano',
       year: 'Sophomore',
-      email: 'adavis@spelman.edu',
+      email: 'adavis@riversidechoir.example',
       phone: '(404) 555-0321',
       avatar: '',
       status: 'active'

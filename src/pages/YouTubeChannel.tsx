@@ -132,7 +132,7 @@ export const YouTubeChannel: React.FC = () => {
                   <Youtube className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Spelman College Glee Club</h1>
+                  <h1 className="text-xl font-bold text-foreground">Your favorite band or choir</h1>
                   <p className="text-sm text-muted-foreground">
                     {totalCount > 0 ? `${totalCount} videos` : `${videos.length} videos`}
                   </p>

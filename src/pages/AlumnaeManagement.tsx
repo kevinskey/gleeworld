@@ -1,15 +1,17 @@
-import { useExecutiveBoardAccess } from "@/hooks/useExecutiveBoardAccess";
 import { Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { AlumnaeManagementModule } from "@/components/modules/AlumnaeManagementModule";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
 export default function AlumnaeManagement() {
-  const { canAccessAdminModules, loading } = useExecutiveBoardAccess();
+  const { user, loading: authLoading } = useAuth();
+  const { userProfile, loading: profileLoading } = useUserProfile(user);
   const navigate = useNavigate();
 
-  if (loading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner />
@@ -17,7 +19,8 @@ export default function AlumnaeManagement() {
     );
   }
 
-  if (!canAccessAdminModules) {
+  const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'admin' || userProfile?.role === 'super-admin';
+  if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 

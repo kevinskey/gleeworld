@@ -76,7 +76,7 @@ const CheckoutSlipComponent = ({ userId, userName, assignments, issuedBy }: Chec
       
       {/* Header */}
       <div className="text-center mb-6 border-b-2 border-primary pb-4">
-        <h1 className="text-2xl font-bold text-primary">Spelman College Glee Club</h1>
+        <h1 className="text-2xl font-bold text-primary">Your favorite band or choir</h1>
         <h2 className="text-xl font-semibold text-gray-700">Uniform Checkout Slip</h2>
       </div>
 
@@ -289,7 +289,7 @@ export const UniformCheckoutSlipGenerator = () => {
     // Header
     pdf.setFontSize(18);
     pdf.setFont("helvetica", "bold");
-    pdf.text("Spelman College Glee Club", 105, 20, { align: "center" });
+    pdf.text("Your favorite band or choir", 105, 20, { align: "center" });
     pdf.setFontSize(14);
     pdf.text("Uniform Checkout Slip", 105, 30, { align: "center" });
     

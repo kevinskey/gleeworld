@@ -113,7 +113,7 @@ export const useInvoices = () => {
           donor_email: invoiceData.donor_email || null,
           donor_phone: invoiceData.donor_phone || null,
           director_name: invoiceData.director_name || 'Dr. Kevin Phillip Johnson',
-          director_title: invoiceData.director_title || 'Director, Spelman College Glee Club',
+          director_title: invoiceData.director_title || 'Director, Your favorite band or choir',
           line_items: invoiceData.line_items as any,
           subtotal: invoiceData.subtotal,
           total_amount: invoiceData.total_amount,

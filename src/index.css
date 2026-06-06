@@ -1,4 +1,4 @@
-@import './styles/spacing-reduction.css';
+/* @import './styles/spacing-reduction.css'; — missing file, harmless to skip */
 
 @tailwind base;
 @tailwind components;
@@ -22,6 +22,21 @@
 
 /* Full-bleed utility - extends background colors edge-to-edge while keeping content padded */
 @layer utilities {
+  /* Brand gradient — cyan → purple, matches the music-note logo */
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, hsl(var(--brand-blue-light)) 0%, hsl(var(--brand-blue-dark)) 100%);
+  }
+  /* Deeper variant for large surfaces — same gradient but darker, keeps text legible */
+  .bg-brand-gradient-deep {
+    background: linear-gradient(135deg, hsl(187 70% 22%) 0%, hsl(271 60% 22%) 100%);
+  }
+  .text-brand-gradient {
+    background: linear-gradient(135deg, hsl(var(--brand-blue-light)) 0%, hsl(var(--brand-blue-dark)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
   .full-bleed {
     width: 100vw;
     position: relative;
@@ -101,7 +116,9 @@
     line-height: 1.45 !important;
   }
   
-  /* Headings - consistent scale, not oversized */
+  /* Headings - consistent scale. Use semantic foreground so the heading
+     adapts to whatever theme is active (dark cards get light text, light
+     surfaces get dark text). */
   h1 { font-size: 1.5rem; font-weight: 700; color: hsl(var(--foreground)); }
   h2 { font-size: 1.25rem; font-weight: 600; color: hsl(var(--foreground)); }
   h3 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); }
@@ -111,26 +128,26 @@
   :root {
     /* High-Contrast Design System for GleeWorld */
     
-    /* Core Brand Colors - Bold and Professional */
-    --spelman-blue-dark: 219 78% 31%; /* Spelman dark blue #11448B */
-    --spelman-blue-light: 203 85% 63%; /* Sky blue accent #55BBEE */
-    --spelman-gold: 45 100% 55%; /* Elegant gold accent */
+    /* Core Brand Colors — GleeWorld cyan→purple gradient (matches music-note logo) */
+    --brand-blue-dark: 271 76% 53%; /* Vivid purple #9333ea */
+    --brand-blue-light: 187 95% 53%; /* Cyan #22d3ee */
+    --brand-gold: 45 100% 55%; /* Elegant gold accent */
 
-    /* Spelman Navy (legacy web blue) */
-    --spelman-navy: 208 100% 20%; /* #003666 */
-    --spelman-navy-hover: 208 100% 17%; /* slightly darker */
-    --spelman-navy-foreground: 0 0% 100%;
-    
+    /* Brand background (dark cool purple — sits inside the logo's cyan→purple palette) */
+    --brand-navy: 263 50% 10%; /* #150d26 — dark purple */
+    --brand-navy-hover: 263 50% 7%; /* slightly darker */
+    --brand-navy-foreground: 0 0% 100%;
+
     /* Primary Brand Palette */
-    --primary: 219 78% 31%; /* Spelman dark blue */
+    --primary: 271 76% 53%; /* Brand purple */
     --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
 
     /* Secondary Accent Colors */
-    --secondary: var(--spelman-blue-light);
+    --secondary: var(--brand-blue-light);
     --secondary-foreground: 0 0% 100%; /* White text on blue */
     
     /* Messenger colors — high-contrast, brand-aligned */
-    --message-header: 208 100% 20%; /* Spelman Navy — matches brand header */
+    --message-header: 208 100% 20%; /* Brand Navy — matches brand header */
     --message-sent: 217 72% 48%; /* Vivid blue — clearly "yours" */
     --message-received: 210 20% 95%; /* Very light blue-gray — clearly "theirs" */
     --message-received-fg: 220 20% 18%; /* Near-black text for readability */
@@ -167,7 +184,7 @@
     /* Border and Input Styling - Warm neutral borders */
     --border: 40 5% 88%; /* Warm gray borders */
     --input: 0 0% 100%; /* White inputs */
-    --ring: 219 78% 31%; /* Blue focus rings */
+    --ring: 271 76% 53%; /* Purple focus rings */
 
     --radius: 0.375rem;
 
@@ -242,14 +259,14 @@
   /* Primary backgrounds (solid blue) always get white text */
   .bg-primary:not([class*="bg-primary/"]),
   .bg-secondary:not([class*="bg-secondary/"]),
-  .bg-spelman-blue-dark,
-  .bg-spelman-blue-light,
+  .bg-brand-blue-dark,
+  .bg-brand-blue-light,
   .bg-brand-600,
   .bg-brand-700,
   .bg-brand-800,
   .bg-brand-900,
   [class*="from-[#002244]"],
-  [class*="from-[#003666]"],
+  [class*="from-[#150d26]"],
   .bg-gradient-to-r[class*="from-[#002"] {
     color: hsl(0 0% 100%) !important;
   }
@@ -257,7 +274,7 @@
   /* Force white text on gradient buttons with dark blue — DIRECT children only
      to prevent bleeding into nested light-background containers */
   [class*="from-[#002244]"] > *,
-  [class*="from-[#003666]"] > *,
+  [class*="from-[#150d26]"] > *,
   [class*="bg-gradient"][class*="002244"] > *,
   [class*="bg-gradient"][class*="003666"] > * {
     color: hsl(0 0% 100%) !important;
@@ -279,10 +296,9 @@
     color: hsl(0 0% 100%) !important;
   }
   
-  /* Force text-primary-foreground to always be white */
-  .text-primary-foreground {
-    color: hsl(0 0% 100%) !important;
-  }
+  /* text-primary-foreground uses whatever the theme defines.
+     (Removed a forced-white override that made buttons unreadable on the
+     light sky-blue --primary background.) */
   
   /* Destructive backgrounds get white text - only solid, not tints */
   .bg-destructive:not([class*="bg-destructive/"]) {
@@ -317,60 +333,25 @@
    restore the original dark text colors for proper contrast.
    ======================================== */
 
-/* Dark text → light on dark backgrounds */
-.dark .text-gray-900 { color: hsl(var(--foreground)) !important; }
-.dark .text-gray-800 { color: hsl(var(--foreground)) !important; }
-.dark .text-gray-700 { color: hsl(var(--foreground) / 0.85) !important; }
-.dark .text-gray-600 { color: hsl(var(--muted-foreground)) !important; }
-.dark .text-gray-500 { color: hsl(var(--muted-foreground)) !important; }
-.dark .text-slate-900 { color: hsl(var(--foreground)) !important; }
-.dark .text-slate-800 { color: hsl(var(--foreground)) !important; }
-.dark .text-slate-700 { color: hsl(var(--foreground) / 0.85) !important; }
-.dark .text-slate-600 { color: hsl(var(--muted-foreground)) !important; }
-.dark .text-slate-500 { color: hsl(var(--muted-foreground)) !important; }
-.dark .text-zinc-900 { color: hsl(var(--foreground)) !important; }
-.dark .text-zinc-800 { color: hsl(var(--foreground)) !important; }
-.dark .text-neutral-900 { color: hsl(var(--foreground)) !important; }
-.dark .text-black { color: hsl(var(--foreground)) !important; }
+/* (Removed an earlier block that remapped every .text-slate-*, .text-gray-*,
+   .text-zinc-*, .text-neutral-*, and .text-black to var(--foreground) when
+   the root has .dark. The remap was forcing white text on every component
+   that used literal slate/gray classes, which made modules sitting on the
+   cream page background unreadable. Components that actually want dark-mode
+   semantic text should use `text-foreground` / `text-muted-foreground`
+   directly; literal slate-* classes now render in their actual Tailwind
+   values, which is the correct behavior on light surfaces.) */
 
-/* Gray background utilities → dark-theme equivalents */
-.dark .bg-gray-50 { background-color: hsl(var(--muted)) !important; }
-.dark .bg-gray-100 { background-color: hsl(var(--muted)) !important; }
-.dark .bg-gray-200 { background-color: hsl(var(--border)) !important; }
-.dark .bg-slate-50 { background-color: hsl(var(--muted)) !important; }
-.dark .bg-slate-100 { background-color: hsl(var(--muted)) !important; }
-
-/* Restore original dark text INSIDE white containers (dialogs, modals, light cards) */
-.dark .bg-white .text-gray-900,
-.dark .bg-white .text-slate-900 { color: rgb(17 24 39) !important; }
-.dark .bg-white .text-gray-800,
-.dark .bg-white .text-slate-800 { color: rgb(30 41 59) !important; }
-.dark .bg-white .text-gray-700,
-.dark .bg-white .text-slate-700 { color: rgb(55 65 81) !important; }
-.dark .bg-white .text-gray-600,
-.dark .bg-white .text-slate-600 { color: rgb(75 85 99) !important; }
-.dark .bg-white .text-gray-500,
-.dark .bg-white .text-slate-500 { color: rgb(107 114 128) !important; }
-.dark .bg-white .text-black { color: rgb(0 0 0) !important; }
-
-/* Also restore inside academy-neutral zones */
-.academy-neutral .text-gray-900,
-.academy-neutral .text-slate-900 { color: rgb(17 24 39) !important; }
-.academy-neutral .text-gray-800,
-.academy-neutral .text-slate-800 { color: rgb(30 41 59) !important; }
-.academy-neutral .text-gray-700,
-.academy-neutral .text-slate-700 { color: rgb(55 65 81) !important; }
-.academy-neutral .text-gray-600,
-.academy-neutral .text-slate-600 { color: rgb(75 85 99) !important; }
-.academy-neutral .text-gray-500,
-.academy-neutral .text-slate-500 { color: rgb(107 114 128) !important; }
+/* (Restore rules for .dark .bg-white .text-* and .academy-neutral .text-*
+   were removed alongside the .dark .text-slate-* remaps above — the literal
+   Tailwind values render correctly on light surfaces without intervention.) */
 
 /* Theme overrides should respect design tokens (especially in dark mode).
    These theme classes are meant to tweak accent styling, not hard-force white UI. */
 .glass-theme [data-component="card"],
 .glass-theme .bg-card,
-.spelman-blue-theme [data-component="card"],
-.spelman-blue-theme .bg-card {
+.brand-blue-theme [data-component="card"],
+.brand-blue-theme .bg-card {
   background: hsl(var(--card)) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -397,8 +378,8 @@ button.module-card-solid:hover,
 }
 
 /* Module cards should follow tokens (works for both light + dark) */
-.spelman-blue-theme button.module-card-solid,
-.spelman-blue-theme .module-card-solid,
+.brand-blue-theme button.module-card-solid,
+.brand-blue-theme .module-card-solid,
 .glass-theme button.module-card-solid,
 .glass-theme .module-card-solid {
   background-color: hsl(var(--card)) !important;
@@ -411,65 +392,15 @@ button.module-card-solid:hover,
 }
 
 /* Theme classes should not override the base background token */
-.spelman-blue-theme .bg-background,
+.brand-blue-theme .bg-background,
 .glass-theme .bg-background {
   background-color: hsl(var(--background)) !important;
   background-image: none !important;
 }
 
-/* Header styling - Spelman Navy to match module cards */
-header,
-.spelman-blue-theme header,
-.glass-theme header,
-[class*="theme"] header {
-  background-color: hsl(208 100% 20%) !important;
-  background: hsl(208 100% 20%) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  color: hsl(0 0% 100%) !important;
-}
-
-/* HBCU theme keeps same navy header */
-.hbcu-theme header {
-  background-color: hsl(208 100% 20%) !important;
-  background: hsl(208 100% 20%) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* Force header text and icons to #003666 Spelman blue */
-header *,
-.spelman-blue-theme header *,
-.glass-theme header * {
-  --tw-text-opacity: 1;
-}
-
-header a,
-header button:not([style*="background"]),
-header svg,
-.spelman-blue-theme header a,
-.spelman-blue-theme header button:not([style*="background"]),
-.spelman-blue-theme header svg {
-  color: #FFFFFF !important;
-}
-
-/* Exception: buttons with explicit background styling (like Sign In button) should have white text */
-header button[style*="background"] span,
-header button[style*="background"] a,
-header a[style*="color"],
-header button.bg-\[\#003666\] a,
-header button.bg-\[\#003666\] span,
-header a.bg-\[\#003666\],
-header a.bg-\[\#003666\] span {
-  color: white !important;
-}
-
-header button.bg-\[\#003666\]:hover a,
-header button.bg-\[\#003666\]:hover span,
-header a.bg-\[\#003666\]:hover,
-header a.bg-\[\#003666\]:hover span {
-  color: white !important;
-}
+/* Theme-driven header color overrides removed — each page/header
+   component now owns its own background and text colors via Tailwind
+   classes or inline styles. */
 
 /* Use on pages that must stay white even when a theme class is present on <html>.
    This class OVERRIDES all theme tokens to ensure light, readable content areas.
@@ -603,16 +534,16 @@ header a.bg-\[\#003666\]:hover span {
     --popover: 0 0% 100%; /* Pure white */
     --popover-foreground: 0 0% 8%; /* Dark text */
 
-    --primary: var(--spelman-blue-dark);
+    --primary: var(--brand-blue-dark);
     --primary-foreground: 0 0% 100%;
 
-    --secondary: var(--spelman-blue-light);
+    --secondary: var(--brand-blue-light);
     --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 96%; /* Very light gray */
     --muted-foreground: 0 0% 30%; /* WCAG AA compliant - 4.5:1 contrast */
 
-    --accent: var(--spelman-blue-light);
+    --accent: var(--brand-blue-light);
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -620,7 +551,7 @@ header a.bg-\[\#003666\]:hover span {
 
     --border: 0 0% 85%;
     --input: 0 0% 98%;
-    --ring: var(--spelman-blue-light);
+    --ring: var(--brand-blue-light);
   }
 
   .dark {
@@ -633,7 +564,7 @@ header a.bg-\[\#003666\]:hover span {
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: var(--spelman-blue-light);
+    --primary: var(--brand-blue-light);
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 14.9%;
@@ -650,23 +581,23 @@ header a.bg-\[\#003666\]:hover span {
 
     --border: 40 5% 88%;
     --input: 0 0% 98%;
-    --ring: var(--spelman-blue-light);
+    --ring: var(--brand-blue-light);
   }
 
 /* ========================================
-   SPELMAN BLUE THEME - Modern & Professional
+   BRAND THEME - Modern & Professional
    ======================================== */
 
-/* Spelman Blue Theme - Clean, LIGHT, professional aesthetic */
-.spelman-blue-theme,
-html[data-theme="spelman-blue"] {
-  /* Official Spelman Blue palette - used for accents only */
-  --spelman-primary: 219 78% 31%;      /* #11448B - Spelman dark blue */
-  --spelman-accent: 203 85% 63%;        /* #55BBEE - Sky blue accent */
-  --spelman-highlight: 208 100% 43%;    /* #0073c9 - Lighter blue */
+/* Brand Blue Theme - Clean, LIGHT, professional aesthetic */
+.brand-blue-theme,
+html[data-theme="brand-blue"] {
+  /* Official Brand Blue palette - used for accents only */
+  --brand-primary: 219 78% 31%;      /* #9333ea - brand dark */
+  --brand-accent: 203 85% 63%;        /* #22d3ee - Sky blue accent */
+  --brand-highlight: 208 100% 43%;    /* #0073c9 - Lighter blue */
   
   /* LIGHT UI - blue only for buttons/links */
-  --primary: 219 78% 31%;
+  --primary: 271 76% 53%;
   --primary-foreground: 0 0% 100%;
   --secondary: 203 85% 63%;
   --secondary-foreground: 0 0% 100%;
@@ -679,44 +610,44 @@ html[data-theme="spelman-blue"] {
   --muted: 40 10% 97%;                 /* Warm off-white muted */
   --muted-foreground: 0 0% 45%;        /* Gray muted text */
   --border: 40 5% 90%;                 /* Warm neutral borders */
-  --ring: 219 78% 31%;
+  --ring: 271 76% 53%;
   --input: 0 0% 100%;                  /* White inputs */
   --popover: 0 0% 100%;                /* White popovers */
   --popover-foreground: 0 0% 10%;      /* Dark text on popovers */
 }
 
-/* Spelman Blue Theme Typography - Clean sans-serif */
-.spelman-blue-theme h1,
-.spelman-blue-theme h2,
-.spelman-blue-theme h3,
-.spelman-blue-theme h4,
-.spelman-blue-theme h5,
-.spelman-blue-theme h6,
-html[data-theme="spelman-blue"] h1,
-html[data-theme="spelman-blue"] h2,
-html[data-theme="spelman-blue"] h3,
-html[data-theme="spelman-blue"] h4,
-html[data-theme="spelman-blue"] h5,
-html[data-theme="spelman-blue"] h6 {
+/* Brand Blue Theme Typography - Clean sans-serif */
+.brand-blue-theme h1,
+.brand-blue-theme h2,
+.brand-blue-theme h3,
+.brand-blue-theme h4,
+.brand-blue-theme h5,
+.brand-blue-theme h6,
+html[data-theme="brand-blue"] h1,
+html[data-theme="brand-blue"] h2,
+html[data-theme="brand-blue"] h3,
+html[data-theme="brand-blue"] h4,
+html[data-theme="brand-blue"] h5,
+html[data-theme="brand-blue"] h6 {
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
   font-weight: 600 !important;
   letter-spacing: -0.01em !important;
   text-transform: none !important;
 }
 
-/* Spelman Blue Theme Card Styling */
-.spelman-blue-theme [class*="Card"],
-.spelman-blue-theme .card,
-html[data-theme="spelman-blue"] [class*="Card"],
-html[data-theme="spelman-blue"] .card {
+/* Brand Blue Theme Card Styling */
+.brand-blue-theme [class*="Card"],
+.brand-blue-theme .card,
+html[data-theme="brand-blue"] [class*="Card"],
+html[data-theme="brand-blue"] .card {
   background: hsl(0 0% 100%);
   border-color: hsl(214 32% 91%);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
-/* Spelman Blue Theme Button Styling */
-.spelman-blue-theme .bg-primary,
-html[data-theme="spelman-blue"] .bg-primary {
+/* Brand Blue Theme Button Styling */
+.brand-blue-theme .bg-primary,
+html[data-theme="brand-blue"] .bg-primary {
   background: hsl(208 100% 33%) !important;
 }
 
@@ -2398,12 +2329,12 @@ button:hover:not(:disabled),
   color: hsl(45 40% 65%);
 }
 
-/* Spelman Blue theme - ensure text on gradients is readable */
-.spelman-blue-theme .bg-primary {
+/* Brand Blue theme - ensure text on gradients is readable */
+.brand-blue-theme .bg-primary {
   background: hsl(208 100% 33%);
 }
 
-.spelman-blue-theme .text-primary-foreground {
+.brand-blue-theme .text-primary-foreground {
   color: hsl(0 0% 100%);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
@@ -2478,4 +2409,154 @@ textarea:disabled {
   .no-print {
     display: none !important;
   }
+}
+
+/* (Removed an earlier GLOBAL CONTRAST FLOOR block that hardcoded dark slate
+   values on .text-slate-*, .text-gray-*, etc. — it broke the dark-theme cards
+   that depend on those utilities for their own contrast model. The right fix
+   is to use shadcn semantic classes (text-foreground, text-muted-foreground,
+   bg-card, etc.) in individual components instead of forcing colors globally.) */
+
+/* =========================================
+   POPOVER / DROPDOWN / SELECT CONTRAST
+   These Radix surfaces were rendering white-on-white in some theme
+   variable states. Pin both background and text to readable values.
+   ========================================= */
+[data-radix-popover-content],
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-menu-content],
+[data-radix-context-menu-content] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+[data-radix-popover-content] [role="menuitem"],
+[data-radix-select-content] [role="option"],
+[data-radix-dropdown-menu-content] [role="menuitem"],
+[data-radix-menu-content] [role="menuitem"],
+[data-radix-context-menu-content] [role="menuitem"] {
+  color: #0f172a !important;
+}
+
+[data-radix-popover-content] [role="menuitem"]:hover,
+[data-radix-select-content] [role="option"]:hover,
+[data-radix-dropdown-menu-content] [role="menuitem"]:hover,
+[data-radix-menu-content] [role="menuitem"]:hover,
+[data-radix-context-menu-content] [role="menuitem"]:hover,
+[data-radix-popover-content] [role="menuitem"][data-highlighted],
+[data-radix-select-content] [role="option"][data-highlighted],
+[data-radix-dropdown-menu-content] [role="menuitem"][data-highlighted],
+[data-radix-menu-content] [role="menuitem"][data-highlighted] {
+  background-color: #f1f5f9 !important; /* slate-100 */
+  color: #0f172a !important;
+}
+
+/* Catch-all for any button or interactive element inside a popover/menu —
+   some menus use plain Buttons (variant=ghost) rather than menu items.
+   Don't override buttons that explicitly set their own color via Tailwind
+   classes (text-white, text-primary-foreground, etc.) — only those that
+   inherit. We do this by targeting the ghost-styled buttons (no bg-) inside
+   popovers. The most reliable selector: any descendant button without
+   bg-primary / bg-destructive / bg-secondary. Use :not() chain. */
+[data-radix-popover-content] button:not([class*="bg-"]),
+[data-radix-dropdown-menu-content] button:not([class*="bg-"]),
+[data-radix-menu-content] button:not([class*="bg-"]) {
+  color: #0f172a !important;
+}
+
+/* Selected ("default" variant) buttons keep their brand styling — they
+   have bg-primary which already has text-primary-foreground (white). */
+
+/* Replace the prior :not([class*="bg-"]) rule — it failed because ghost
+   buttons still have hover:bg-accent which matches "bg-". New approach:
+   force dark text on ALL buttons in popovers, then explicitly re-allow
+   white text for buttons that actually have a solid background applied. */
+[data-radix-popover-content] button,
+[data-radix-dropdown-menu-content] button,
+[data-radix-menu-content] button {
+  color: #0f172a !important;
+}
+
+/* Brand-styled buttons (default variant) get their white text back. */
+[data-radix-popover-content] button.bg-primary,
+[data-radix-dropdown-menu-content] button.bg-primary,
+[data-radix-menu-content] button.bg-primary,
+[data-radix-popover-content] button[class*="bg-primary"],
+[data-radix-dropdown-menu-content] button[class*="bg-primary"],
+[data-radix-menu-content] button[class*="bg-primary"] {
+  color: #ffffff !important;
+}
+
+/* The Radix popover/dropdown content does NOT emit [data-radix-popover-content]
+   as an attribute. The shadcn wrappers add the `.bg-popover` class instead. Target
+   THAT (which is reliably on every PopoverContent / DropdownMenuContent / SelectContent
+   in shadcn). */
+.bg-popover {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.bg-popover button {
+  color: #0f172a !important;
+}
+
+/* Brand-styled buttons (default variant with bg-primary) keep white text. */
+.bg-popover button[class*="bg-primary"] {
+  color: #ffffff !important;
+}
+
+/* Same for the Radix popper wrapper which IS a real attribute. */
+[data-radix-popper-content-wrapper] {
+  color: #0f172a;
+}
+
+/* =========================================
+   SELECT TRIGGER CONTRAST
+   shadcn SelectTrigger uses `bg-background` (cream) + `text-foreground`
+   (dark slate), but the global rule `.bg-card *` overrides span colors to
+   white. Inside a dark navy card the trigger renders cream-on-white text.
+   Force triggers (button[role="combobox"]) back to dark text.
+   ========================================= */
+button[role="combobox"] {
+  color: hsl(var(--foreground)) !important;
+}
+button[role="combobox"] > span {
+  color: hsl(var(--foreground)) !important;
+}
+button[role="combobox"] > svg {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* =========================================
+   TABS-ON-DARK CONTRAST
+   When a TabsList is rendered with bg-card (dark navy in the GleeWorld
+   theme), the default TabsTrigger text (slate-600 dark gray) is invisible.
+   Promote inactive triggers to bright text on those surfaces.
+   ========================================= */
+.bg-card[role="tablist"] [role="tab"]:not([data-state="active"]),
+.bg-card [role="tab"]:not([data-state="active"]) {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+.bg-card[role="tablist"] [role="tab"]:hover:not([data-state="active"]),
+.bg-card [role="tab"]:hover:not([data-state="active"]) {
+  color: rgba(255, 255, 255, 1) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Give TabsLists rendered on a dark bg-card surface a bit of breathing room
+   so the active pill doesn't sit flush against the bar edges.
+   IMPORTANT: bg-card is typically applied DIRECTLY to the [role="tablist"]
+   element, so we target it with `.bg-card[role="tablist"]` (no space). */
+.bg-card[role="tablist"] {
+  padding: 1.25rem 1rem !important;
+  gap: 0.5rem !important;
+  height: auto !important;
+  min-height: 0 !important;
+  align-items: center !important;
+}
+.bg-card[role="tablist"] [role="tab"] {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-height: 0 !important;
 }

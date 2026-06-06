@@ -43,7 +43,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
   courseCode,
   courseTitle,
   instructorName = 'Dr. Kevin Johnson',
-  instructorEmail = 'kjohns10@spelman.edu',
+  instructorEmail = 'kjohns10@riversidechoir.example',
   instructorOffice = 'Fine Arts 105',
   instructorOfficeHours = 'MWF 3-5 PM',
   instructorImageUrl,

@@ -133,7 +133,7 @@ export const MemberCommunications = () => {
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
-                    <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
+                    <h1 style="color: white; margin: 0;">Your favorite band or choir</h1>
                   </div>
                   <div style="padding: 30px; background: white;">
                     <p style="color: #333; line-height: 1.6; font-size: 16px;">
@@ -143,7 +143,7 @@ export const MemberCommunications = () => {
                       <strong>Type:</strong> ${COMMUNICATION_TYPES.find(t => t.value === formData.communication_type)?.label}<br><br>
                       Please log in to your dashboard to view the full details.<br><br>
                       Best regards,<br>
-                      Spelman Glee Club Administration
+                      Riverside Concert Choir Administration
                     </p>
                   </div>
                 </div>

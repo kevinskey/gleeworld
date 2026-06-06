@@ -177,12 +177,14 @@ export const useOnboardingProfile = () => {
     debouncedUpdate(updates);
   }, [profile, debouncedUpdate]);
 
-  // Get completion status for each step
+  // Step completion. Only the basic Profile (name + email) is required — uniform
+  // measurements and media agreements are now optional so non-Brand tenants
+  // can finish onboarding without being blocked by ensemble-specific fields.
   const getStepCompletion = useCallback(() => {
     return {
-      profile: !!(profile.first_name && profile.last_name && profile.email && profile.headshot_url),
-      uniform: !!(profile.measurements?.height_feet && profile.measurements?.height_inches && profile.measurements?.chest && profile.measurements?.waist && profile.measurements?.hips && profile.measurements?.shoe_size),
-      agreements: !!(profile.photo_consent && profile.media_release_signed_at),
+      profile: !!(profile.first_name && profile.last_name && profile.email),
+      uniform: true,
+      agreements: true,
     };
   }, [profile]);
 

@@ -33,8 +33,8 @@ export const publishTourToCalendar = async () => {
 
   const events: TourCalendarEvent[] = [
     // Day 1 - March 7: Atlanta Departure
-    { title: '🍳 Breakfast before Departure', description: 'Spring Tour 2026 - Breakfast at Spelman before boarding the bus.', event_type: 'tour', start_date: '2026-03-07T07:00:00-05:00', end_date: '2026-03-07T08:30:00-05:00', location: 'Spelman College, Atlanta GA' },
-    { title: '🚌 Depart Atlanta', description: 'Spring Tour 2026 begins! Bagged lunches provided.', event_type: 'tour', start_date: '2026-03-07T09:00:00-05:00', end_date: '2026-03-07T09:30:00-05:00', location: 'Spelman College, Atlanta GA' },
+    { title: '🍳 Breakfast before Departure', description: 'Spring Tour 2026 - Breakfast at Brand before boarding the bus.', event_type: 'tour', start_date: '2026-03-07T07:00:00-05:00', end_date: '2026-03-07T08:30:00-05:00', location: 'Riverside Music Institute, Atlanta GA' },
+    { title: '🚌 Depart Atlanta', description: 'Spring Tour 2026 begins! Bagged lunches provided.', event_type: 'tour', start_date: '2026-03-07T09:00:00-05:00', end_date: '2026-03-07T09:30:00-05:00', location: 'Riverside Music Institute, Atlanta GA' },
 
     // Day 2 - March 8: Huntsville
     { title: '📍 Arrive Huntsville', description: 'Spring Tour 2026 - Arrival in Huntsville, Alabama', event_type: 'tour', start_date: '2026-03-08T12:30:00-06:00', end_date: '2026-03-08T13:00:00-06:00', location: 'Huntsville, AL' },
@@ -80,7 +80,7 @@ export const publishTourToCalendar = async () => {
 
     // Day 12 - March 18: Return Home
     { title: '🚌 Depart NYC → Atlanta', description: 'Spring Tour 2026 - Heading home!', event_type: 'tour', start_date: '2026-03-18T08:00:00-05:00', end_date: '2026-03-18T08:30:00-05:00', location: 'New York, NY' },
-    { title: '🏠 Arrive Atlanta – Tour Complete!', description: 'Spring Tour 2026 - Welcome home Glee Club! Tour complete.', event_type: 'tour', start_date: '2026-03-18T20:00:00-05:00', end_date: '2026-03-18T21:00:00-05:00', location: 'Spelman College, Atlanta GA' },
+    { title: '🏠 Arrive Atlanta – Tour Complete!', description: 'Spring Tour 2026 - Welcome home Glee Club! Tour complete.', event_type: 'tour', start_date: '2026-03-18T20:00:00-05:00', end_date: '2026-03-18T21:00:00-05:00', location: 'Riverside Music Institute, Atlanta GA' },
   ];
 
   const eventsToInsert = events.map(e => ({

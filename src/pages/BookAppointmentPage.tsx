@@ -170,7 +170,7 @@ export default function BookAppointmentPage() {
     try {
       const { error } = await supabase.functions.invoke('gw-send-email', {
         body: {
-          to: 'docjohnson@spelman.edu',
+          to: 'docjohnson@riversidechoir.example',
           subject: `[Student Message] ${emailSubject}`,
           html: `
             <div style="font-family: Arial, sans-serif;">
@@ -222,7 +222,7 @@ export default function BookAppointmentPage() {
   return (
     <UniversalLayout>
       {/* Header Banner */}
-      <div className="w-full py-3 sm:py-8" style={{ backgroundColor: '#003666' }}>
+      <div className="w-full py-3 sm:py-8" style={{ backgroundColor: '#150d26' }}>
         <div className="px-3 sm:px-8 flex flex-col items-center">
           <h1 className="text-center tracking-wide text-white text-xl sm:text-4xl md:text-5xl font-bold font-['Bebas_Neue']">
             OFFICE HOURS
@@ -266,7 +266,7 @@ export default function BookAppointmentPage() {
             {/* Quick Contact — visible on mobile, hidden on desktop (shown in contact tab) */}
             <div className="grid grid-cols-4 gap-1.5 mt-3 lg:hidden">
               {[
-                { href: 'mailto:docjohnson@spelman.edu', icon: Mail, label: 'Email', bg: 'bg-blue-100', fg: 'text-blue-600' },
+                { href: 'mailto:docjohnson@riversidechoir.example', icon: Mail, label: 'Email', bg: 'bg-blue-100', fg: 'text-blue-600' },
                 { href: 'tel:+14706221392', icon: Phone, label: 'Call', bg: 'bg-green-100', fg: 'text-green-600' },
                 { href: 'https://zoom.us/j/drjohnson', icon: Video, label: 'Zoom', bg: 'bg-blue-100', fg: 'text-blue-600' },
                 { href: undefined, icon: MapPin, label: 'Rm 105', bg: 'bg-amber-100', fg: 'text-amber-600' },
@@ -291,7 +291,7 @@ export default function BookAppointmentPage() {
           {/* Main Content Tabs */}
           <div className="flex-1 min-w-0">
             <Tabs defaultValue="book" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-11 sm:h-16 bg-gradient-to-b from-[#004080] to-[#003666] p-0 rounded-t-xl rounded-b-none shadow-lg">
+              <TabsList className="grid w-full grid-cols-3 h-11 sm:h-16 bg-gradient-to-b from-[#004080] to-[#150d26] p-0 rounded-t-xl rounded-b-none shadow-lg">
                 {[
                   { value: 'book', icon: CalendarDays, label: 'Book' },
                   { value: 'history', icon: History, label: 'History' },
@@ -301,7 +301,7 @@ export default function BookAppointmentPage() {
                     key={tab.value}
                     value={tab.value}
                     className={cn(
-                      "gap-1 sm:gap-2 font-['Bebas_Neue'] tracking-wide py-2 h-full hover:bg-white/20 transition-all duration-200 rounded-none text-white data-[state=active]:bg-white data-[state=active]:text-[#003666] data-[state=active]:shadow-md",
+                      "gap-1 sm:gap-2 font-['Bebas_Neue'] tracking-wide py-2 h-full hover:bg-white/20 transition-all duration-200 rounded-none text-white data-[state=active]:bg-white data-[state=active]:text-[#150d26] data-[state=active]:shadow-md",
                       i === 0 && "rounded-tl-xl",
                       i === 2 && "rounded-tr-xl",
                       i < 2 && "border-r border-white/20"
@@ -540,7 +540,7 @@ export default function BookAppointmentPage() {
                   {/* Quick Contact Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
-                      { href: 'mailto:docjohnson@spelman.edu', icon: Mail, label: 'Email', bg: 'bg-blue-100', fg: 'text-blue-600' },
+                      { href: 'mailto:docjohnson@riversidechoir.example', icon: Mail, label: 'Email', bg: 'bg-blue-100', fg: 'text-blue-600' },
                       { href: 'tel:+14706221392', icon: Phone, label: 'Call', bg: 'bg-green-100', fg: 'text-green-600' },
                       { href: 'https://zoom.us/j/drjohnson', icon: Video, label: 'Zoom', bg: 'bg-blue-100', fg: 'text-blue-600', external: true },
                       { href: undefined, icon: MapPin, label: 'Room 105', bg: 'bg-amber-100', fg: 'text-amber-600' },

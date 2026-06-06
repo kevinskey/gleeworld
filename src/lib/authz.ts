@@ -7,7 +7,7 @@ export type ModuleGrant = {
   can_manage: boolean;
 };
 
-export type ModuleKey = 
+export type ModuleKey =
   | 'budgets'
   | 'music-library'
   | 'auditions'
@@ -16,26 +16,18 @@ export type ModuleKey =
   | 'communications'
   | 'pr-coordinator'
   | 'sight-reading'
-  | 'executive-board'
   | 'media-library'
   | 'glee-ledger'
-  | 'receipts-records'
-  | 'wellness'
   | 'ai-tools'
   | 'press-kits'
-  | 'radio-management'
   | 'service-management'
-  | 'monthly-statements'
-  | 'check-requests'
   | 'tour-management'
   | 'merch-store'
   | 'hero-manager'
-  | 'student-conductor'
-  
+
   | 'email'
   | 'public-relations'
-  | 'glee-writing'
-  | 'first-year-console';
+  | 'glee-writing';
 
 // Module permission checking utilities
 export function hasModuleView(grants: ModuleGrant[], moduleKey: string): boolean {

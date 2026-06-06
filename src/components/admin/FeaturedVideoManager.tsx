@@ -99,7 +99,7 @@ export const FeaturedVideoManager: React.FC = () => {
       toast({ title: 'Syncing videos from YouTube channel...' });
       
       await supabase.functions.invoke('sync-youtube-videos', {
-        body: { channelInput: '@SpelmanCollegeGleeClub', maxResults: 50 }
+        body: { channelInput: '@your-program', maxResults: 50 }
       });
       
       await fetchAvailableVideos();

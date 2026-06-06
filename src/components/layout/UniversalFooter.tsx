@@ -13,7 +13,7 @@ export const UniversalFooter = () => {
           <div className="text-center sm:text-left">
             <h3 className="text-sm sm:text-lg font-semibold text-white mb-0.5 sm:mb-1">Glee World</h3>
             <p className="text-white/70 text-xs sm:text-sm">
-              The home of the Spelman College Glee Club
+              The home of your favorite band or choir
             </p>
           </div>
 

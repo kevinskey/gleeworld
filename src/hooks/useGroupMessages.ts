@@ -137,7 +137,7 @@ export const useGroupMessages = () => {
 
     const { data, error } = await supabase
       .from('gw_profiles')
-      .select('role, voice_part, is_exec_board, is_admin, is_super_admin')
+      .select('role, voice_part, is_admin, is_super_admin')
       .eq('user_id', user.id)
       .single();
 
@@ -159,14 +159,14 @@ export const useGroupMessages = () => {
     const groupName = conversation.name.toLowerCase();
 
     if (groupName.includes('executive') || groupName.includes('exec')) {
-      return userProfile.is_exec_board;
+      return userProfile.is_admin || userProfile.is_super_admin;
     }
 
     if (groupName.includes('section leader')) {
-      return userProfile.is_exec_board;
+      return userProfile.is_admin || userProfile.is_super_admin;
     }
 
-    if (groupName.includes('soprano 1') || groupName.includes('s1')) {
+if (groupName.includes('soprano 1') || groupName.includes('s1')) {
       return userProfile.voice_part === 'S1';
     }
 

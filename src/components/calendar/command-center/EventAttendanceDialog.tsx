@@ -45,7 +45,7 @@ const resolveDisplayName = (profile: any): string => {
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
   if (fullName) return fullName;
   if (profile?.email) {
-    // Parse "firstnamelastname@spelman.edu" → "Firstname Lastname" (best-effort)
+    // Parse "firstnamelastname@riversidechoir.example" → "Firstname Lastname" (best-effort)
     const local = profile.email.split("@")[0];
     // Try splitting camelCase or just capitalize
     return local

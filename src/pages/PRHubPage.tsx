@@ -63,7 +63,7 @@ const PRHubPage = () => {
                       <Sparkles className="w-6 h-6 text-secondary" />
                     </div>
                     <p className="text-white/90 text-lg max-w-2xl">
-                      Professional media management and publicity coordination for the Spelman College Glee Club
+                      Professional media management and publicity coordination for the Your favorite band or choir
                     </p>
                     <div className="flex items-center gap-2 mt-3">
                       <Shield className="w-4 h-4 text-secondary" />

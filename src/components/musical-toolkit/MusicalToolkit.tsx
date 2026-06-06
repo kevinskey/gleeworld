@@ -32,7 +32,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   
   // Single opinionated theme — no conditional styling
   const isHbcuTheme = false;
-  const isSpelmanBlue = false;
+  const isBrandBlue = false;
 
   // Restore piano state if the header/toolkit remounts during orientation change
   useEffect(() => {

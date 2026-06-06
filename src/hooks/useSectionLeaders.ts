@@ -7,7 +7,6 @@ export interface SectionLeader {
   full_name: string;
   email: string;
   voice_part: string;
-  exec_board_role: string;
   is_section_leader: boolean;
   avatar_url?: string;
   phone_number?: string;
@@ -48,12 +47,11 @@ export const useSectionLeaders = () => {
           full_name,
           email,
           voice_part,
-          exec_board_role,
           is_section_leader,
           avatar_url,
           phone_number
         `)
-        .or('is_section_leader.eq.true,exec_board_role.like.%section_leader%')
+        .eq('is_section_leader', true)
         .eq('status', 'active')
         .order('voice_part', { ascending: true });
 

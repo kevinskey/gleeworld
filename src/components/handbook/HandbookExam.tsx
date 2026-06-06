@@ -88,7 +88,7 @@ const SAMPLE_QUESTIONS: Question[] = [
   {
     id: 10,
     question: "What is sung to thank the host after a tour concert?",
-    options: ["Spelman Hymn", "Thank You Song", "Amazing Grace", "We Are Christmas"],
+    options: ["Brand Hymn", "Thank You Song", "Amazing Grace", "We Are Christmas"],
     correctAnswer: 1,
     section: "Traditions"
   },

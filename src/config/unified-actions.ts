@@ -271,18 +271,6 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
         route: '/sight-reading-submissions',
         isActive: true,
         dbFunctionName: 'sight_reading_tools'
-      },
-      {
-        id: 'student-conductor',
-        title: 'Student Conductor',
-        description: 'Student conductor tools and resources',
-        icon: School,
-        iconColor: 'text-amber-600',
-        category: 'members',
-        type: 'navigation',
-        route: '/student-conductor',
-        isActive: true,
-        dbFunctionName: 'student_conductor_management'
       }
     ]
   },
@@ -384,19 +372,6 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
     dbFunctionName: 'media_hub'
   },
 
-  // Community Actions
-  {
-    id: 'fans',
-    title: 'Fan Engagement',
-    description: 'Engage with fans and manage fan community interactions',
-    icon: Heart,
-    iconColor: 'text-pink-500',
-    category: 'community',
-    type: 'navigation',
-    route: '/fans',
-    isActive: true,
-    dbFunctionName: 'fan_management'
-  },
   {
     id: 'alumnae',
     title: 'Alumnae Portal',

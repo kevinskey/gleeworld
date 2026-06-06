@@ -95,7 +95,7 @@ export const NewsletterManager = () => {
       content += `## Upcoming Events\n\n- Performance dates and venues\n- Rehearsal schedules\n- Special events and celebrations\n\n`;
     }
 
-    content += `Thank you for being part of our musical family!\n\nBest regards,\nSpelman College Glee Club`;
+    content += `Thank you for being part of our musical family!\n\nBest regards,\nYour favorite band or choir`;
 
     return content;
   };

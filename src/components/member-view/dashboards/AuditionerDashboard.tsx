@@ -185,7 +185,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
             </div>
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
-                Auditions: Join the Spelman College Glee Club
+                Auditions: Join the Your favorite band or choir
               </h1>
               <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-2xl">
                 {`Hi ${firstName !== "" ? firstName : "there"}!`} Explore the required music and start or continue your application. One page. Clear steps. "To Amaze and Inspire."

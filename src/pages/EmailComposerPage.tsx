@@ -213,7 +213,7 @@ const EmailComposerPage = () => {
                 ✨ GleeWorld
               </h1>
               <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
-                Spelman College Glee Club
+                Your favorite band or choir
               </p>
             </td>
           </tr>
@@ -240,7 +240,7 @@ const EmailComposerPage = () => {
                       Sent from GleeWorld by ${userProfile?.full_name || user?.email}
                     </p>
                     <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 12px;">
-                      © ${new Date().getFullYear()} Spelman College Glee Club. All rights reserved.
+                      © ${new Date().getFullYear()} Your favorite band or choir. All rights reserved.
                     </p>
                   </td>
                   <td align="right">
@@ -854,7 +854,7 @@ const EmailComposerPage = () => {
                 <div className="rounded-lg border overflow-hidden">
                   <div className="bg-gradient-to-r from-primary to-primary/70 p-4 text-center">
                     <h3 className="text-white font-bold text-lg">✨ GleeWorld</h3>
-                    <p className="text-white/80 text-xs">Spelman College Glee Club</p>
+                    <p className="text-white/80 text-xs">Your favorite band or choir</p>
                   </div>
                   <div className="p-4 bg-card">
                     <h4 className="font-semibold text-sm mb-2 truncate">

@@ -128,7 +128,7 @@ export const ConcertTicketRequestForm = () => {
           <CardTitle>Concert Ticket Request</CardTitle>
         </div>
         <CardDescription>
-          Request tickets to attend an upcoming Spelman College Glee Club concert
+          Request tickets to attend an upcoming Your favorite band or choir concert
         </CardDescription>
       </CardHeader>
       <CardContent>

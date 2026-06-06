@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { EVENT_TYPES } from "@/constants/eventTypes";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Repeat, DollarSign, Users, Upload, X, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,92 +116,20 @@ export const CreateEventDialog = ({ onEventCreated, open: controlledOpen, onOpen
                                profile?.role === 'admin' || 
                                profile?.exec_board_role?.toLowerCase().includes('tour');
 
-  const eventTypes = [
-    { 
-      value: 'performance', 
-      label: 'Performance',
-      requiresBudget: false,
-      requiresContract: true,
-      description: 'Managed by tour manager/admin with contracts'
-    },
-    { 
-      value: 'rehearsal', 
-      label: 'Rehearsal',
-      requiresBudget: false,
-      requiresContract: true,
-      description: 'Managed by tour manager/admin with contracts'
-    },
-    { 
-      value: 'sectional', 
-      label: 'Sectional',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'member-meeting', 
-      label: 'Member Meeting',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'exec-meeting', 
-      label: 'Exec Board Meeting',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'voice-lesson', 
-      label: 'Voice Lesson',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'tutorial', 
-      label: 'Tutorial',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'social', 
-      label: 'Social Event',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'meeting', 
-      label: 'Meeting',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'workshop', 
-      label: 'Workshop',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'audition', 
-      label: 'Audition',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    },
-    { 
-      value: 'other', 
-      label: 'Other',
-      requiresBudget: true,
-      requiresContract: false,
-      description: 'Executive board creates budget'
-    }
-  ];
+  // Categories with budget/contract metadata layered on top of the shared list.
+  // Performance / concert / tour / recording: contract-driven, no budget.
+  // Everything else: admin-tracked budget, no contract.
+  const eventTypes = EVENT_TYPES.map((t) => {
+    const contractTypes = ['performance', 'concert', 'tour-event', 'recording', 'festival'];
+    const requiresContract = contractTypes.includes(t.value);
+    return {
+      value: t.value,
+      label: t.label,
+      requiresBudget: !requiresContract,
+      requiresContract,
+      description: t.description || '',
+    };
+  });
 
   const selectedEventType = eventTypes.find(type => type.value === formData.event_type);
   const requiresBudget = selectedEventType?.requiresBudget || false;

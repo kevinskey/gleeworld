@@ -1,0 +1,12 @@
+{
+  "name": "gleeworld-smtp-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local SMTP server that re-sends via Resend's HTTPS API",
+  "type": "module",
+  "main": "server.js",
+  "dependencies": {
+    "smtp-server": "^3.13.4",
+    "mailparser": "^3.7.1"
+  }
+}

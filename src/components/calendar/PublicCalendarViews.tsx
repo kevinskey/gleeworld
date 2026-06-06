@@ -29,7 +29,7 @@ export const PublicCalendarViews = () => {
       <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <div className="flex items-center justify-center py-12">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-[#003666] border-t-transparent rounded-full animate-spin" />
+            <div className="w-12 h-12 border-4 border-[#150d26] border-t-transparent rounded-full animate-spin" />
             <p className="text-muted-foreground text-sm">Loading events...</p>
           </div>
         </div>
@@ -41,16 +41,16 @@ export const PublicCalendarViews = () => {
     return (
       <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-16 h-16 bg-[#003666]/10 rounded-full flex items-center justify-center mb-4">
-            <CalendarIcon className="h-8 w-8 text-[#003666]" />
+          <div className="w-16 h-16 bg-[#150d26]/10 rounded-full flex items-center justify-center mb-4">
+            <CalendarIcon className="h-8 w-8 text-[#150d26]" />
           </div>
-          <h3 className="text-xl font-semibold text-[#003666] mb-2">No Public Events Found</h3>
+          <h3 className="text-xl font-semibold text-[#150d26] mb-2">No Public Events Found</h3>
           <p className="text-muted-foreground max-w-md mb-6">
             There are currently no upcoming public events to display. Check back soon for updates!
           </p>
           <Button 
             onClick={() => fetchEvents()} 
-            className="bg-[#003666] hover:bg-[#002244] text-white"
+            className="bg-[#150d26] hover:bg-[#002244] text-white"
           >
             Refresh Events
           </Button>
@@ -76,7 +76,7 @@ export const PublicCalendarViews = () => {
             </Button>
             
             <div className="min-w-[200px] text-center">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#003666]">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#150d26]">
                 {format(currentDate, 'MMMM yyyy')}
               </h2>
             </div>
@@ -94,7 +94,7 @@ export const PublicCalendarViews = () => {
               variant="ghost"
               size="sm"
               onClick={goToToday}
-              className="ml-2 text-[#003666] hover:bg-[#003666]/10"
+              className="ml-2 text-[#150d26] hover:bg-[#150d26]/10"
             >
               Today
             </Button>

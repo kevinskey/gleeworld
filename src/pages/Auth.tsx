@@ -7,10 +7,13 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthTabs } from "@/components/auth/AuthTabs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
+import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 
 const Auth = () => {
   const { user, loading, isPasswordRecovery } = useAuth();
   const { profile, loading: profileLoading, isAdmin } = useUserRole();
+  const { settings: branding } = useBrandingSettings();
+  const siteName = branding.short_name || branding.org_name || 'GleeWorld';
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isRecovery, setIsRecovery] = useState(() => {
@@ -104,9 +107,9 @@ const Auth = () => {
 
   const getTitle = () => {
     if (isReset) return "Reset Password";
-    return theme === 'mus240' 
-      ? "MUS 240: Survey of African American Music" 
-      : "Welcome Back to Glee World!";
+    return theme === 'mus240'
+      ? "MUS 240: Survey of African American Music"
+      : `Welcome Back to ${siteName}`;
   };
 
   const getSubtitle = () => {

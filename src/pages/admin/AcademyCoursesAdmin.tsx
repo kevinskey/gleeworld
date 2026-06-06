@@ -100,7 +100,7 @@ export default function AcademyCoursesAdmin() {
       icon_name: 'BookOpen',
       route: '',
       instructor_name: 'Dr. Kevin Johnson',
-      instructor_email: 'kjohns10@spelman.edu',
+      instructor_email: 'kjohns10@riversidechoir.example',
       instructor_office: 'Fine Arts 105',
       instructor_office_hours: 'MWF 3-5 PM',
       is_active: true,

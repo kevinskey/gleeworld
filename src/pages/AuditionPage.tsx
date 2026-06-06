@@ -330,7 +330,7 @@ function AuditionFormContent() {
         <div className="text-center mb-2 md:mb-8 pt-4 md:pt-8">
           <Mic className="w-8 h-8 md:w-16 md:h-16 mx-auto text-purple-600 mb-2 md:mb-4" />
           <h1 className="text-xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 md:mb-3">Audition Application</h1>
-          <p className="text-sm md:text-xl lg:text-2xl text-gray-600">Join the Spelman College Glee Club Family</p>
+          <p className="text-sm md:text-xl lg:text-2xl text-gray-600">Join the Your favorite band or choir Family</p>
         </div>
 
         <AuditionFormProgress />

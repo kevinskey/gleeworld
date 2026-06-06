@@ -42,8 +42,8 @@ const Contact = () => {
     {
       icon: Mail,
       title: 'Email',
-      details: 'gleeclub@spelman.edu',
-      link: 'mailto:gleeclub@spelman.edu'
+      details: 'press@riversidechoir.example',
+      link: 'mailto:press@riversidechoir.example'
     },
     {
       icon: Phone,
@@ -54,8 +54,8 @@ const Contact = () => {
     {
       icon: MapPin,
       title: 'Address',
-      details: '350 Spelman Lane SW, Atlanta, GA 30314',
-      link: 'https://maps.google.com/?q=Spelman+College+Atlanta+GA'
+      details: '100 Concert Hall Drive, Riverside, USA',
+      link: 'https://maps.google.com/?q=Riverside+Music+Institute'
     },
     {
       icon: Clock,
@@ -71,14 +71,14 @@ const Contact = () => {
         {/* Header Banner */}
         <div 
           className="w-full py-8 sm:py-12 flex items-center justify-center" 
-          style={{ backgroundColor: '#003666' }}
+          style={{ backgroundColor: '#150d26' }}
         >
           <div className="container mx-auto px-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide">
               Contact Us
             </h1>
             <p className="text-white/70 text-center mt-2 text-sm sm:text-base max-w-xl mx-auto">
-              We'd love to hear from you. Get in touch with the Spelman College Glee Club.
+              We'd love to hear from you. Get in touch with the Your favorite band or choir.
             </p>
           </div>
         </div>
@@ -146,7 +146,7 @@ const Contact = () => {
                   <Button 
                     type="submit" 
                     className="w-full text-white"
-                    style={{ backgroundColor: '#003666' }}
+                    style={{ backgroundColor: '#150d26' }}
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
@@ -179,7 +179,7 @@ const Contact = () => {
                     >
                       <div 
                         className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                        style={{ backgroundColor: '#003666' }}
+                        style={{ backgroundColor: '#150d26' }}
                       >
                         <info.icon className="w-5 h-5 text-white" />
                       </div>
@@ -190,7 +190,7 @@ const Contact = () => {
                           target={info.link.startsWith('http') ? '_blank' : undefined}
                           rel={info.link.startsWith('http') ? 'noopener noreferrer' : undefined}
                           className="text-sm hover:underline"
-                          style={{ color: '#003666' }}
+                          style={{ color: '#150d26' }}
                         >
                           {info.details}
                         </a>
@@ -204,14 +204,14 @@ const Contact = () => {
                 {/* Map placeholder */}
                 <div className="rounded-xl overflow-hidden border shadow-sm">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3317.9447093660597!2d-84.4148!3d33.7447!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88f503f7ee7a5e37%3A0x74d6ce8a89c8b9ab!2sSpelman%20College!5e0!3m2!1sen!2sus!4v1629834567890!5m2!1sen!2sus"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3317.9447093660597!2d-84.4148!3d33.7447!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x88f503f7ee7a5e37%3A0x74d6ce8a89c8b9ab!2sConcert+Hall+Drive!5e0!3m2!1sen!2sus!4v1629834567890!5m2!1sen!2sus"
                     width="100%"
                     height="250"
                     style={{ border: 0 }}
                     allowFullScreen
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    title="Spelman College Location"
+                    title="Riverside Music Institute Location"
                   />
                 </div>
               </div>

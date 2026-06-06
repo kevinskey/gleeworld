@@ -21,12 +21,12 @@ export default function EventPlanner() {
     <UniversalLayout>
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Hero Header Section */}
-        <div className="relative mb-8 rounded-2xl bg-gradient-to-br from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
+        <div className="relative mb-8 rounded-2xl bg-gradient-to-br from-brand-blue-dark via-brand-blue-light to-brand-blue-dark p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-spelman-blue-light/20 backdrop-blur-sm">
-                  <Calendar className="h-6 w-6 text-spelman-blue-light" />
+                <div className="p-2 rounded-lg bg-brand-blue-light/20 backdrop-blur-sm">
+                  <Calendar className="h-6 w-6 text-brand-blue-light" />
                 </div>
                 <h1 className="text-3xl lg:text-4xl font-bold text-white">
                   Event Budget Planner

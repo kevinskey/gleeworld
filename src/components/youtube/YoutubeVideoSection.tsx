@@ -3,7 +3,7 @@ import { Play, Youtube, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 
-const CHANNEL_URL = 'https://www.youtube.com/@SpelmanCollegeGleeClub';
+const CHANNEL_URL = 'https://www.youtube.com/@your-program';
 const CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw';
 const UPLOADS_PLAYLIST_ID = `UU${CHANNEL_ID.slice(2)}`;
 
@@ -99,7 +99,7 @@ export const YoutubeVideoSection: React.FC = () => {
                 Watch Our Performances
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Experience the Spelman College Glee Club
+                Experience the Your favorite band or choir
               </p>
             </div>
           </div>
@@ -188,7 +188,7 @@ export const YoutubeVideoSection: React.FC = () => {
             <div className="aspect-video max-h-[450px]">
               <iframe
                 src={`https://www.youtube.com/embed/videoseries?list=${UPLOADS_PLAYLIST_ID}&rel=0`}
-                title="Spelman College Glee Club Videos"
+                title="Your favorite band or choir Videos"
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

@@ -19,7 +19,7 @@ interface Track {
 
 export default function SoundCloudSearch() {
   const { user } = useAuth();
-  const [query, setQuery] = useState("Spelman choir");
+  const [query, setQuery] = useState("concert choir");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);

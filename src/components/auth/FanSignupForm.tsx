@@ -63,7 +63,7 @@ export function FanSignupForm() {
           <HeartIcon className="h-6 w-6 text-pink-600" />
           Join as a Fan
         </CardTitle>
-        <p className="text-sm text-gray-600">Support the Spelman College Glee Club</p>
+        <p className="text-sm text-gray-600">Support the Your favorite band or choir</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

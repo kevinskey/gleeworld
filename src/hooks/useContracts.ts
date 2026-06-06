@@ -38,20 +38,18 @@ export const useContracts = () => {
       // Check if user is admin/super admin to see all contracts
       const { data: profile } = await supabase
         .from('gw_profiles')
-        .select('is_admin, is_super_admin, is_exec_board, role')
+        .select('is_admin, is_super_admin, role')
         .eq('user_id', user.id)
         .single();
 
       const isSuperAdmin = profile?.is_super_admin || profile?.role === 'super-admin';
       const isAdmin = profile?.is_admin || profile?.role === 'admin';
-      const isExecBoard = profile?.is_exec_board === true;
 
-      // Get contracts - all contracts for super admins/exec board, filtered for admins, own for others
       let query = supabase
         .from('contracts_v2')
         .select('*');
 
-      if (isSuperAdmin || isExecBoard || isAdmin) {
+      if (isSuperAdmin || isAdmin) {
         // All admin-level roles see all contracts (no filter)
       } else {
         // Regular users only see their own contracts

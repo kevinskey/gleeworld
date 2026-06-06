@@ -18,7 +18,7 @@ const Mus210Page = () => {
       courseOverview="This course develops the complete modern conductor. Students gain baton technique, expressive gesture, score analysis methods, rehearsal pedagogy, and stylistic fluency across classical, spirituals, gospel, and contemporary choral traditions."
       instructor={{
         name: 'Dr. Kevin Johnson',
-        email: 'kjohns10@spelman.edu',
+        email: 'kjohns10@riversidechoir.example',
         office: 'Fine Arts 105',
         hours: 'MWF 3–5 PM or appointment',
       }}

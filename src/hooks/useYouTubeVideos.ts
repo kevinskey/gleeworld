@@ -35,7 +35,7 @@ export const useYouTubeVideos = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch channel info (official Spelman College Glee Club)
+      // Fetch channel info (official Your favorite band or choir)
       const { data: channelData, error: channelError } = await supabase
         .from('youtube_channels')
         .select('*')

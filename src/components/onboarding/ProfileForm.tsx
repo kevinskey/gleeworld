@@ -206,7 +206,7 @@ export const ProfileForm = ({ profile, onUpdate, saving }: ProfileFormProps) => 
               type="email"
               value={profile.email || ''}
               onChange={(e) => onUpdate('email', e.target.value)}
-              placeholder="your.email@spelman.edu"
+              placeholder="your.email@riversidechoir.example"
             />
           </div>
 

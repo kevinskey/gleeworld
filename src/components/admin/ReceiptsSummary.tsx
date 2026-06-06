@@ -56,7 +56,7 @@ export const ReceiptsSummary = ({ receipts, loading }: ReceiptsSummaryProps) => 
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-white/80">Total Amount</h3>
-          <DollarSign className="h-4 w-4 text-spelman-400" />
+          <DollarSign className="h-4 w-4 text-brand-400" />
         </div>
         <div className="text-2xl font-bold text-white">{formatCurrency(totalAmount)}</div>
         <p className="text-xs text-white/60">
@@ -67,7 +67,7 @@ export const ReceiptsSummary = ({ receipts, loading }: ReceiptsSummaryProps) => 
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-white/80">Total Receipts</h3>
-          <FileText className="h-4 w-4 text-spelman-400" />
+          <FileText className="h-4 w-4 text-brand-400" />
         </div>
         <div className="text-2xl font-bold text-white">{totalCount}</div>
         <p className="text-xs text-white/60">
@@ -78,7 +78,7 @@ export const ReceiptsSummary = ({ receipts, loading }: ReceiptsSummaryProps) => 
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-white/80">This Month</h3>
-          <Calendar className="h-4 w-4 text-spelman-400" />
+          <Calendar className="h-4 w-4 text-brand-400" />
         </div>
         <div className="text-2xl font-bold text-white">{formatCurrency(thisMonthAmount)}</div>
         <p className="text-xs text-white/60">
@@ -89,7 +89,7 @@ export const ReceiptsSummary = ({ receipts, loading }: ReceiptsSummaryProps) => 
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-white/80">Average Amount</h3>
-          <TrendingUp className="h-4 w-4 text-spelman-400" />
+          <TrendingUp className="h-4 w-4 text-brand-400" />
         </div>
         <div className="text-2xl font-bold text-white">
           {totalCount > 0 ? formatCurrency(totalAmount / totalCount) : '$0.00'}

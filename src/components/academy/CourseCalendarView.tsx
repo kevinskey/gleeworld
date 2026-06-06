@@ -84,7 +84,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
 
       if (courseCalendarError) throw courseCalendarError;
 
-      // Fetch Spelman academic dates (semester events)
+      // Fetch Brand academic dates (semester events)
       const { data: semesterData, error: semesterError } = await supabase
         .from('gw_semesters')
         .select('academic_events')

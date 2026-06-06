@@ -170,7 +170,7 @@ export default function AuditionApplicationPage() {
               Audition Application
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Complete your application for the Spelman College Glee Club
+              Complete your application for the Your favorite band or choir
             </p>
           </div>
 

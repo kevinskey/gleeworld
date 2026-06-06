@@ -18,7 +18,6 @@ import { getModulesByCategory } from "@/config/unified-modules";
 import { MemberSightReadingModule } from "@/components/modules/MemberSightReadingModule";
 import { MemberModules } from "@/components/member-view/MemberModules";
 import { QuickActions } from "@/components/community/QuickActions";
-import { ExecBoardModularHub } from "@/components/executive/ExecBoardModularHub";
 import { MetalHeaderDashboard } from "@/components/shared/MetalHeaderDashboard";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
@@ -30,8 +29,6 @@ interface MemberDashboardV2Props {
     email: string;
     full_name: string;
     role: string;
-    exec_board_role?: string;
-    is_exec_board?: boolean;
     created_at: string;
   };
 }
@@ -129,7 +126,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
     { label: "Announcements", icon: Megaphone, href: "/announcements" },
     { label: "Notifications", icon: Bell, href: "/notifications" },
     { label: "Directory", icon: Users2, href: "/directory" },
-    { label: "Email", icon: Mail, href: "mailto:gleeclub@spelman.edu?subject=Glee%20Club%20Inquiry" },
+    { label: "Email", icon: Mail, href: "mailto:press@riversidechoir.example?subject=Glee%20Club%20Inquiry" },
   ];
 
   const firstName = user.full_name?.split(" ")[0] || "Member";
@@ -159,7 +156,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
             <div className="absolute inset-0">
               <img
                 src="/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png"
-                alt="Historic Spelman campus background"
+                alt="Historic campus background"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background/70" />
@@ -195,14 +192,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
           <MemberSightReadingModule user={user} isFullPage={false} />
         </section>
 
-        {/* Executive Board Module Hub - only for exec board members */}
-        {user.is_exec_board && (
-          <section className="mb-6">
-            <ExecBoardModularHub className="w-full" />
-          </section>
-        )}
-
-        {/* Top grid with key modules */}
+{/* Top grid with key modules */}
         <section className="responsive-grid-3">
           {/* Buckets of Love */}
           <Card className="hover:shadow-md transition-shadow">
@@ -375,7 +365,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
                     <p className="text-sm text-muted-foreground">Compose an email with your default mail app.</p>
                     <div className="flex flex-wrap gap-2">
                       <Button asChild>
-                        <a href={`mailto:gleeclub@spelman.edu?subject=Glee%20Club%20Inquiry&body=Hello%20Team,`}>Email Glee Club</a>
+                        <a href={`mailto:press@riversidechoir.example?subject=Glee%20Club%20Inquiry&body=Hello%20Team,`}>Email Glee Club</a>
                       </Button>
                       <Button variant="outline" asChild>
                         <a href={`mailto:${user.email}?subject=Note%20to%20Self`}>Email Myself</a>

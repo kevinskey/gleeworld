@@ -160,9 +160,6 @@ export const useCommunicationSystem = () => {
           if (criteria.academic_year) {
             query = query.eq('academic_year', criteria.academic_year);
           }
-          if (criteria.is_exec_board) {
-            query = query.eq('is_exec_board', criteria.is_exec_board);
-          }
           if (criteria.status) {
             query = query.eq('status', criteria.status);
           }
@@ -321,12 +318,12 @@ export const useCommunicationSystem = () => {
     // Check if user is admin or exec board
     const { data: userProfile } = await supabase
       .from('gw_profiles')
-      .select('is_admin, is_super_admin, is_exec_board')
+      .select('is_admin, is_super_admin')
       .eq('user_id', user.id)
       .single();
 
-    if (!userProfile?.is_admin && !userProfile?.is_super_admin && !userProfile?.is_exec_board) {
-      toast.error('Only administrators and executive board members can create message groups');
+    if (!userProfile?.is_admin && !userProfile?.is_super_admin) {
+      toast.error('Only administrators can create message groups');
       return null;
     }
 
@@ -365,12 +362,12 @@ export const useCommunicationSystem = () => {
     // Check if user is admin or exec board
     const { data: userProfile } = await supabase
       .from('gw_profiles')
-      .select('is_admin, is_super_admin, is_exec_board')
+      .select('is_admin, is_super_admin')
       .eq('user_id', user.id)
       .single();
 
-    if (!userProfile?.is_admin && !userProfile?.is_super_admin && !userProfile?.is_exec_board) {
-      toast.error('Only administrators and executive board members can manage group members');
+    if (!userProfile?.is_admin && !userProfile?.is_super_admin) {
+      toast.error('Only administrators can manage group members');
       return false;
     }
 

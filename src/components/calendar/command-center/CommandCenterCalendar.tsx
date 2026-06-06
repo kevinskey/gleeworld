@@ -258,7 +258,7 @@ export const CommandCenterCalendar = () => {
                   <div className="mb-3">
                     <Button
                       onClick={() => navigate('/book-appointment')}
-                      className="w-full h-12 text-base font-bold bg-[#003666] hover:bg-[#002a52] text-white rounded-xl shadow-md gap-2"
+                      className="w-full h-12 text-base font-bold bg-[#150d26] hover:bg-[#002a52] text-white rounded-xl shadow-md gap-2"
                     >
                       <CalendarDays className="h-5 w-5" />
                       Book Office Hours
@@ -313,7 +313,7 @@ export const CommandCenterCalendar = () => {
               <div className="p-4 border-b border-slate-200">
                 <Button
                   onClick={() => navigate('/book-appointment')}
-                  className="w-full h-14 text-lg font-bold bg-[#003666] hover:bg-[#002a52] text-white rounded-xl shadow-md gap-2"
+                  className="w-full h-14 text-lg font-bold bg-[#150d26] hover:bg-[#002a52] text-white rounded-xl shadow-md gap-2"
                 >
                   <CalendarDays className="h-5 w-5" />
                   Book Office Hours

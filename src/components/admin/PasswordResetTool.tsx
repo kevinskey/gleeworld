@@ -30,7 +30,7 @@ interface ResetResponse {
 
 export const PasswordResetTool = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [newPassword, setNewPassword] = useState('Spelman');
+  const [newPassword, setNewPassword] = useState('Welcome2025');
   const [targetRole, setTargetRole] = useState('member');
   const [batchLimit, setBatchLimit] = useState<number | undefined>(undefined);
   const [lastResults, setLastResults] = useState<ResetResponse | null>(null);

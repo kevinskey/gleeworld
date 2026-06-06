@@ -75,7 +75,7 @@ export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStep
           </CardHeader>
           <CardContent className="pt-0">
             <CardDescription className="text-white/70 text-sm mb-3">
-              Support the Spelman College Glee Club and stay connected with our community.
+              Support the Your favorite band or choir and stay connected with our community.
             </CardDescription>
             <ul className="space-y-2 text-sm text-white/80">
               <li className="flex items-center gap-2">

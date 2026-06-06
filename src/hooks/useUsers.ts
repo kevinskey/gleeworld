@@ -9,8 +9,6 @@ export interface User {
   full_name: string | null;
   role: string;
   created_at: string;
-  exec_board_role?: string | null;
-  is_exec_board?: boolean;
   avatar_url?: string | null;
   verified?: boolean;
   // Additional profile fields
@@ -46,8 +44,8 @@ export const useUsers = () => {
         .from('gw_profiles')
         .select(`
           id, user_id, email, full_name, first_name, last_name, role,
-          exec_board_role, is_exec_board, avatar_url, phone, voice_part, 
-          class_year, join_date, status, dues_paid, notes, is_admin, 
+          avatar_url, phone, voice_part,
+          class_year, join_date, status, dues_paid, notes, is_admin,
           is_super_admin, title, bio, graduation_year, verified, created_at
         `)
         .order('created_at', { ascending: false });
@@ -129,8 +127,6 @@ export const useUsers = () => {
             full_name: profile.full_name || (profile.first_name && profile.last_name ? `${profile.first_name} ${profile.last_name}` : null),
             role: effectiveRole,
             created_at: profile.created_at,
-            exec_board_role: profile.exec_board_role || null,
-            is_exec_board: profile.is_exec_board || false,
             avatar_url: profile.avatar_url || null,
             verified: profile.verified || false,
             phone: profile.phone || null,

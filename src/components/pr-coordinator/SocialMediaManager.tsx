@@ -49,7 +49,7 @@ const mockPosts: SocialPost[] = [
   {
     id: '1',
     platform: 'instagram',
-    content: '🎼 Amazing rehearsal tonight! The harmonies are coming together beautifully for our upcoming spring concert. #SpelmanGlee #MusicMagic',
+    content: '🎼 Amazing rehearsal tonight! The harmonies are coming together beautifully for our upcoming spring concert. #RiversideChoir #MusicMagic',
     scheduledFor: '2024-03-20T19:00:00',
     status: 'scheduled'
   },
@@ -72,17 +72,17 @@ export const SocialMediaManager = () => {
   const { toast } = useToast();
 
   const templates = {
-    concert_announcement: '🎵 Mark your calendars! The Spelman College Glee Club presents [EVENT_NAME] on [DATE] at [VENUE]. Experience the magic of our voices coming together in perfect harmony. Tickets: [TICKET_LINK] #SpelmanGlee #Concert',
-    rehearsal_behind_scenes: '✨ Behind the scenes at rehearsal! Watch our talented singers perfect their craft. The dedication and passion in this room is truly inspiring. #BehindTheScenes #SpelmanGlee #MusicLife',
-    achievement_celebration: '🏆 Celebrating our incredible achievement! [ACHIEVEMENT_DETAILS]. We are so proud of our talented singers and the hard work that made this possible. #SpelmanGlee #Achievement #Proud',
-    recruitment: '🎤 Do you love to sing? Join the Spelman College Glee Club family! Auditions are open for the [SEMESTER] semester. Info: [CONTACT_INFO] #JoinUs #SpelmanGlee #Auditions'
+    concert_announcement: '🎵 Mark your calendars! The Your favorite band or choir presents [EVENT_NAME] on [DATE] at [VENUE]. Experience the magic of our voices coming together in perfect harmony. Tickets: [TICKET_LINK] #RiversideChoir #Concert',
+    rehearsal_behind_scenes: '✨ Behind the scenes at rehearsal! Watch our talented singers perfect their craft. The dedication and passion in this room is truly inspiring. #BehindTheScenes #RiversideChoir #MusicLife',
+    achievement_celebration: '🏆 Celebrating our incredible achievement! [ACHIEVEMENT_DETAILS]. We are so proud of our talented singers and the hard work that made this possible. #RiversideChoir #Achievement #Proud',
+    recruitment: '🎤 Do you love to sing? Join the Your favorite band or choir family! Auditions are open for the [SEMESTER] semester. Info: [CONTACT_INFO] #JoinUs #RiversideChoir #Auditions'
   };
 
   const platformHashtags = {
-    instagram: ['#SpelmanGlee', '#SpelmanCollege', '#Music', '#Choir', '#Atlanta', '#HBCU'],
-    facebook: ['#SpelmanGlee', '#SpelmanCollege', '#CommunityMusic'],
-    twitter: ['#SpelmanGlee', '#Music', '#ATL', '#HBCU'],
-    youtube: ['#SpelmanGlee', '#ChoirMusic', '#ClassicalMusic']
+    instagram: ['#RiversideChoir', '#YourProgram', '#Music', '#Choir', '#Atlanta', '#HBCU'],
+    facebook: ['#RiversideChoir', '#YourProgram', '#CommunityMusic'],
+    twitter: ['#RiversideChoir', '#Music', '#ATL', '#HBCU'],
+    youtube: ['#RiversideChoir', '#ChoirMusic', '#ClassicalMusic']
   };
 
   const handlePlatformToggle = (platform: string) => {

@@ -28,8 +28,8 @@ import { CourseHandbook } from './handbook/CourseHandbook';
 import { StudentDossierHome } from './StudentDossierHome';
 import { TeachingFirstHome } from './TeachingFirstHome';
 import { CoursePracticeBar } from './CoursePracticeBar';
-import { ElectionsModule } from './elections/ElectionsModule';
 import { CourseModules } from './CourseModules';
+import { CourseGroups } from './groups/CourseGroups';
 import { ClassSessionJournals } from './journals/ClassSessionJournals';
 import { JournalArchives } from './journals/JournalArchives';
 import { Mus240ResourcesTab } from './Mus240ResourcesTab';
@@ -196,7 +196,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       }
       const adminLikeAccess = !!(profile?.is_admin || profile?.is_super_admin || hasCourseStaffAccess);
       setIsAdmin(adminLikeAccess);
-      setIsExecutiveBoard(profile?.role === 'executive-board' || profile?.is_admin || profile?.is_super_admin || false);
+      setIsExecutiveBoard(profile?.is_admin || profile?.is_super_admin || false);
 
       // For MUS 070 (Glee Club), members and admins are auto-enrolled
       if (course.id === 'a0000000-0000-0000-0000-000000000070') {
@@ -443,6 +443,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                     {course.courseCode === 'LH 100' ? <>
                         <TabsTrigger value="home" className="text-xs px-3 py-2"><Home className="h-3 w-3 mr-1" />Home</TabsTrigger>
                         <TabsTrigger value="modules" className="text-xs px-3 py-2"><FileText className="h-3 w-3 mr-1" />Modules</TabsTrigger>
+                        <TabsTrigger value="groups" className="text-xs px-3 py-2"><Users className="h-3 w-3 mr-1" />Groups</TabsTrigger>
                         <TabsTrigger value="planner" className="text-xs px-3 py-2"><BookMarked className="h-3 w-3 mr-1" />Planner</TabsTrigger>
                         <TabsTrigger value="photo-gallery" className="text-xs px-3 py-2"><Images className="h-3 w-3 mr-1" />Photos</TabsTrigger>
                         <TabsTrigger value="calendar" className="text-xs px-3 py-2"><Calendar className="h-3 w-3 mr-1" />Calendar</TabsTrigger>
@@ -553,6 +554,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {activeTab === 'journals' && <ClassSessionJournals courseId={course.id} isAdmin={isAdmin} />}
 
             {activeTab === 'modules' && <CourseModules courseId={course.id} isEnrolled={isEnrolled || isAdmin} isAdmin={isAdmin} />}
+
+            {activeTab === 'groups' && <CourseGroups courseId={course.id} courseName={course.title} />}
 
             {activeTab === 'planner' && course.courseCode === 'LH 100' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}>
                 <LiturgicalPlanner isAdmin={isAdmin} />
@@ -684,8 +687,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               </React.Suspense>
             )}
 
-            {/* Elections Tab - Only for MUS 070 */}
-            {activeTab === 'elections' && course.courseCode === 'MUS 070' && <ElectionsModule courseId={course.id} />}
 
             {/* Textbook Tab - MUS 210 Conducting Reference */}
             {activeTab === 'textbook' && course.courseCode === 'MUS 210' && (

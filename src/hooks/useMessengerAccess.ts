@@ -44,7 +44,7 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
     if (!userProfile) return 'none';
 
     if (userProfile.is_super_admin) return 'super-admin';
-    if (userProfile.is_admin || userProfile.is_exec_board) return 'admin';
+    if (userProfile.is_admin) return 'admin';
 
     const role = userProfile.role?.toLowerCase();
     if (role === 'alumna' || role === 'alumnae') return 'alumna';
@@ -82,12 +82,14 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
       const groups: MessengerCourseGroup[] = [];
       const seenUserIds = new Set<string>();
 
+      // Include the logged-in user themselves in the recipient list — useful
+      // for admins running test broadcasts. The UI will still skip self-sends
+      // at the actual send step if needed.
       const { data: allUsers } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, first_name, last_name, email, phone, phone_number, role, status')
         .eq('status', 'active')
-        .not('user_id', 'is', null)
-        .neq('user_id', user.id);
+        .not('user_id', 'is', null);
 
       if (allUsers) {
         const normalizedUsers = allUsers

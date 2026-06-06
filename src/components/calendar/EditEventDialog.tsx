@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EVENT_TYPES } from "@/constants/eventTypes";
 import { Separator } from "@/components/ui/separator";
 import { AddressInput } from "@/components/shared/AddressInput";
 import { 
@@ -95,20 +96,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     return deadline.toISOString().slice(0, 16);
   };
 
-  const eventTypes = [
-    { value: 'performance', label: 'Performance', color: 'bg-event-performance text-event-performance-fg' },
-    { value: 'rehearsal', label: 'Rehearsal', color: 'bg-event-rehearsal text-event-rehearsal-fg' },
-    { value: 'sectional', label: 'Sectional', color: 'bg-event-sectional text-event-sectional-fg' },
-    { value: 'member-meeting', label: 'Member Meeting', color: 'bg-event-member-meeting text-event-member-meeting-fg' },
-    { value: 'exec-meeting', label: 'Exec Board Meeting', color: 'bg-event-exec-meeting text-event-exec-meeting-fg' },
-    { value: 'voice-lesson', label: 'Voice Lesson', color: 'bg-event-voice-lesson text-event-voice-lesson-fg' },
-    { value: 'tutorial', label: 'Tutorial', color: 'bg-event-tutorial text-event-tutorial-fg' },
-    { value: 'social', label: 'Social Event', color: 'bg-event-social text-event-social-fg' },
-    { value: 'meeting', label: 'Meeting', color: 'bg-event-meeting text-event-meeting-fg' },
-    { value: 'workshop', label: 'Workshop', color: 'bg-event-workshop text-event-workshop-fg' },
-    { value: 'audition', label: 'Audition', color: 'bg-event-audition text-event-audition-fg' },
-    { value: 'other', label: 'Other', color: 'bg-event-general text-event-general-fg' }
-  ];
+  const eventTypes = EVENT_TYPES;
 
   const statusOptions = [
     { value: 'scheduled', label: 'Scheduled', color: 'bg-blue-100 text-blue-800' },

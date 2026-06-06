@@ -17,8 +17,12 @@ import { PRDataManager } from './PRDataManager';
 import { PRMetadataExporter } from './PRMetadataExporter';
 import PressKitTemplateGenerator from './PressKitTemplateGenerator';
 import { TaskNotifications } from '@/components/shared/TaskNotifications';
-import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
-import { HeroManagement } from '@/components/admin/HeroManagement';
+// (MediaLibraryDialog lived in the radio dir which was deleted with the
+// Radio.co purge on 2026-05-31. Replaced inline with a no-op below — if you
+// need a real media library modal here, point it at the existing
+// MediaLibrary admin page or a fresh dialog.)
+const MediaLibraryDialog = ({ open: _open, onOpenChange: _onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) => null;
+import SliderManager from '@/components/admin/sliders/SliderManager';
 import { PRAnalytics } from './PRAnalytics';
 import { SocialMediaManager } from './SocialMediaManager';
 import { PressReleaseManager } from './PressReleaseManager';
@@ -557,7 +561,7 @@ export const PRCoordinatorHub = () => {
         {hasPermission('hero_manager') && (
           <TabsContent value="hero-manager">
             <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6">
-              <HeroManagement />
+              <SliderManager />
             </div>
           </TabsContent>
         )}

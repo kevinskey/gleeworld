@@ -81,7 +81,7 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
                 Photo & Media Consent
               </Label>
               <p className="text-sm text-muted-foreground">
-                I consent to the use of my photograph, image, voice, and/or likeness by the Spelman College Glee Club 
+                I consent to the use of my photograph, image, voice, and/or likeness by the Your favorite band or choir 
                 for promotional, educational, and documentary purposes including but not limited to:
               </p>
               <ul className="text-sm text-muted-foreground ml-4 space-y-1">

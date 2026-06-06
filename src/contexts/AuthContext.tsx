@@ -108,7 +108,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               setUser(null);
               return;
             }
-            
+
+            // Subdomain guard: if the JWT's tenant_slug doesn't match the
+            // current subdomain's bootstrap tenant, the user signed into
+            // the wrong tenant. Sign them out immediately to prevent
+            // cross-tenant data display.
+            const expectedTenant = (window as any).__TENANT_CONFIG__?.tenant;
+            if (session && expectedTenant) {
+              try {
+                const p = session.access_token.split('.')[1];
+                const padded = p + '='.repeat((-p.length) % 4);
+                const claims = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')));
+                if (claims.tenant_slug && claims.tenant_slug !== expectedTenant) {
+                  console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Signing out.`);
+                  await supabase.auth.signOut();
+                  cleanupAuthState();
+                  setSession(null);
+                  setUser(null);
+                  alert(`This account belongs to a different organization (${claims.tenant_slug}). Please sign in on the correct site.`);
+                  const correctHost = claims.tenant_slug === 'main' ? 'gleeworld.org' : `${claims.tenant_slug}.gleeworld.org`;
+                  window.location.href = `https://${correctHost}/auth`;
+                  return;
+                }
+              } catch (e) {
+                console.warn('[auth] could not decode JWT for tenant check', e);
+              }
+            }
+
             setSession(session);
             setUser(session?.user ?? null);
             

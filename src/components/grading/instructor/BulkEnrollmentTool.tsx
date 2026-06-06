@@ -124,7 +124,7 @@ export const BulkEnrollmentTool: React.FC<BulkEnrollmentToolProps> = ({ courseId
       </CardHeader>
       <CardContent className="space-y-4">
         <Textarea
-          placeholder="student1@spelman.edu&#10;student2@spelman.edu&#10;student3@spelman.edu"
+          placeholder="student1@riversidechoir.example&#10;student2@riversidechoir.example&#10;student3@riversidechoir.example"
           value={emailsText}
           onChange={(e) => setEmailsText(e.target.value)}
           className="min-h-[200px] font-mono text-sm"

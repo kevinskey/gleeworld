@@ -85,7 +85,7 @@ const CourseSelection: React.FC = () => {
           {enrolledCourses.length === 0 ? (
             <div className="rounded-2xl p-12 text-center bg-white/5 backdrop-blur-[20px] border border-white/10">
               <p className="text-slate-400 mb-4 text-base">You are not enrolled in any courses yet.</p>
-              <Button onClick={() => navigate('/academy')} variant="outline" className="rounded-xl border-white/20 text-white hover:bg-white/10">
+              <Button onClick={() => navigate('/glee-academy')} variant="outline" className="rounded-xl border-white/20 text-white hover:bg-white/10">
                 Browse Academy
               </Button>
             </div>

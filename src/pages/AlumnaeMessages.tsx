@@ -144,7 +144,7 @@ export default function AlumnaeMessages() {
               <MessageCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
               <p className="text-muted-foreground mb-6">
-                Messaging features are exclusively for verified Spelman College Glee Club alumnae.
+                Messaging features are exclusively for verified Your favorite band or choir alumnae.
                 Please contact an administrator to verify your alumni status.
               </p>
               <Button onClick={() => navigate('/alumnae')}>

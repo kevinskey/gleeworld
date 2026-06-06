@@ -38,7 +38,7 @@ const Tour2026Page = () => {
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Tour Information Center</h1>
             <p className="text-xl text-white/90 max-w-2xl">
-              Everything you need for the 2026 Spelman College Glee Club tour. Access schedules, assignments, documents, and live performances all in one place.
+              Everything you need for the 2026 Your favorite band or choir tour. Access schedules, assignments, documents, and live performances all in one place.
             </p>
           </div>
         </div>

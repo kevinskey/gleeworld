@@ -66,7 +66,7 @@ export function RegistrationPage() {
     <div className="space-y-4 md:space-y-6">
       <div className="text-center mb-4 md:mb-6">
         <h2 className="text-xl md:text-2xl font-bold text-gray-900">Create Your Account</h2>
-        <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">Join the Spelman College Glee Club community</p>
+        <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">Join the Your favorite band or choir community</p>
       </div>
 
       <div className="space-y-3 md:space-y-4">

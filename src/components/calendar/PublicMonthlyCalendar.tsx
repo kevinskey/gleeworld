@@ -83,7 +83,7 @@ export const PublicMonthlyCalendar = ({
       <div className="grid grid-cols-7 gap-1 md:gap-2">
         {/* Day Headers */}
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} className="p-2 md:p-3 text-center text-xs md:text-sm font-semibold text-[#003666] bg-[#003666]/5 rounded-t-lg">
+          <div key={day} className="p-2 md:p-3 text-center text-xs md:text-sm font-semibold text-[#150d26] bg-[#150d26]/5 rounded-t-lg">
             {isMobile ? day.charAt(0) : day}
           </div>
         ))}
@@ -100,14 +100,14 @@ export const PublicMonthlyCalendar = ({
               className={`
                 min-h-[70px] md:min-h-[100px] p-1 md:p-2 border border-neutral-200 cursor-pointer transition-colors
                 ${isCurrentMonth ? 'bg-white' : 'bg-neutral-50'}
-                ${isToday ? 'ring-2 ring-[#003666] ring-inset' : ''}
+                ${isToday ? 'ring-2 ring-[#150d26] ring-inset' : ''}
                 ${dayEvents.length > 0 ? 'hover:bg-blue-50' : 'hover:bg-neutral-100'}
               `}
               onClick={() => handleDateClick(day)}
             >
               <div className={`text-sm md:text-base font-semibold mb-1 ${
-                isCurrentMonth ? 'text-[#003666]' : 'text-[#003666]/40'
-              } ${isToday ? 'bg-[#003666] text-white w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
+                isCurrentMonth ? 'text-[#150d26]' : 'text-[#150d26]/40'
+              } ${isToday ? 'bg-[#150d26] text-white w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
                 {format(day, 'd')}
               </div>
               
@@ -116,7 +116,7 @@ export const PublicMonthlyCalendar = ({
                 {dayEvents.slice(0, isMobile ? 2 : 3).map((event) => (
                   <EventHoverCard key={event.id} event={event}>
                     <div
-                      className="text-xs p-1 rounded cursor-pointer truncate bg-[#003666] text-white hover:bg-[#002244] transition-colors"
+                      className="text-xs p-1 rounded cursor-pointer truncate bg-[#150d26] text-white hover:bg-[#002244] transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEventClick(event);
@@ -127,7 +127,7 @@ export const PublicMonthlyCalendar = ({
                   </EventHoverCard>
                 ))}
                 {dayEvents.length > (isMobile ? 2 : 3) && (
-                  <div className="text-xs text-[#003666] font-medium text-center">
+                  <div className="text-xs text-[#150d26] font-medium text-center">
                     +{dayEvents.length - (isMobile ? 2 : 3)} more
                   </div>
                 )}

@@ -117,11 +117,11 @@ export const useSpecificModulePermissions = (moduleName: string) => {
       // Config-based system - check if user is executive board member
       const { data: profile } = await supabase
         .from('gw_profiles')
-        .select('is_exec_board, is_admin, is_super_admin')
+        .select('is_admin, is_super_admin')
         .eq('user_id', user.id)
         .single();
 
-      const canAccess = profile?.is_exec_board || profile?.is_admin || profile?.is_super_admin || false;
+      const canAccess = profile?.is_admin || profile?.is_super_admin || false;
       const canManage = profile?.is_admin || profile?.is_super_admin || false;
 
       setCanAccess(canAccess);

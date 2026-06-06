@@ -111,15 +111,15 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     toast
   } = useToast();
   const {
-    events: spelmanEvents,
-    loading: spelmanLoading
+    events: campusEvents,
+    loading: campusLoading
   } = useGleeWorldEvents();
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedSession, setSelectedSession] = useState<ClassSession | null>(null);
-  const [activeTab, setActiveTab] = useState<'class' | 'spelman'>('class');
+  const [activeTab, setActiveTab] = useState<'class' | 'campus'>('class');
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('week');
 
   // Semester state
@@ -459,12 +459,12 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   // Also get course-linked GleeWorld events for the selected date
   const selectedDateCourseEvents = useMemo(() => {
     if (!selectedDate) return [];
-    return spelmanEvents.filter(e => {
+    return campusEvents.filter(e => {
       if (e.course_id !== courseId) return false;
       const eventDate = parseISO(e.start_date);
       return isSameDay(eventDate, selectedDate);
     });
-  }, [selectedDate, spelmanEvents, courseId]);
+  }, [selectedDate, campusEvents, courseId]);
 
   // Create session (with optional recurrence)
   const handleCreateSession = async () => {
@@ -1043,7 +1043,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               }}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateSession} disabled={creating} className="bg-[#003666]">
+                  <Button onClick={handleCreateSession} disabled={creating} className="bg-[#150d26]">
                     {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
                     {newSession.is_recurring ? 'Create Sessions' : 'Create Session'}
                   </Button>
@@ -1056,13 +1056,13 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       </div>
 
       {/* Tabs for Class Calendar vs Full Calendar */}
-      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'class' | 'spelman')}>
+      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'class' | 'campus')}>
         <TabsList className="mb-4">
           <TabsTrigger value="class" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Class Calendar
           </TabsTrigger>
-          <TabsTrigger value="spelman" className="flex items-center gap-2">
+          <TabsTrigger value="campus" className="flex items-center gap-2">
             <CalendarIcon className="h-4 w-4" />
             Full Calendar
           </TabsTrigger>
@@ -1108,7 +1108,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     <div className="grid grid-cols-7">
                       {viewDays.map((day, i) => {
                     const daySessions = getSessionsForDate(day);
-                    const daySpelmanEvents = spelmanEvents.filter(e => {
+                    const dayCampusEvents = campusEvents.filter(e => {
                       const eventDate = parseISO(e.start_date);
                       return isSameDay(eventDate, day);
                     });
@@ -1140,7 +1140,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                           {isHoliday && <AlertCircle className="h-3 w-3" />}
                         </div>
                         <div className="space-y-0.5 overflow-hidden">
-                          {daySpelmanEvents.slice(0, 1).map(event => (
+                          {dayCampusEvents.slice(0, 1).map(event => (
                             <div 
                               key={event.id} 
                               className="text-[9px] sm:text-[10px] font-medium bg-amber-200 dark:bg-amber-800 rounded px-1 py-0.5 truncate text-amber-900 dark:text-amber-100"
@@ -1160,9 +1160,9 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                               </div>
                             );
                           })}
-                          {daySessions.length + daySpelmanEvents.length > 2 && (
+                          {daySessions.length + dayCampusEvents.length > 2 && (
                             <div className="text-[9px] text-muted-foreground font-medium px-1">
-                              +{daySessions.length + daySpelmanEvents.length - 2} more
+                              +{daySessions.length + dayCampusEvents.length - 2} more
                             </div>
                           )}
                         </div>
@@ -1187,7 +1187,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                     <div className="grid grid-cols-7">
                       {viewDays.map((day, i) => {
                     const daySessions = getSessionsForDate(day);
-                    const daySpelmanEvents = spelmanEvents.filter(e => {
+                    const dayCampusEvents = campusEvents.filter(e => {
                       const eventDate = parseISO(e.start_date);
                       return isSameDay(eventDate, day);
                     });
@@ -1215,7 +1215,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                           </div>
                         )}
                         <div className="space-y-1 overflow-hidden">
-                          {daySpelmanEvents.slice(0, 2).map(event => (
+                          {dayCampusEvents.slice(0, 2).map(event => (
                             <div 
                               key={event.id} 
                               className="text-[10px] sm:text-xs font-medium bg-amber-200 dark:bg-amber-800 rounded px-1.5 py-1 truncate text-amber-900 dark:text-amber-100"
@@ -1240,12 +1240,12 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                               </div>
                             );
                           })}
-                          {daySessions.length === 0 && daySpelmanEvents.length === 0 && !isHoliday && (
+                          {daySessions.length === 0 && dayCampusEvents.length === 0 && !isHoliday && (
                             <div className="text-[10px] text-center py-2" style={{ color: '#64748b' }}>No sessions</div>
                           )}
-                          {daySessions.length + daySpelmanEvents.length > 3 && (
+                          {daySessions.length + dayCampusEvents.length > 3 && (
                             <div className="text-[9px] text-muted-foreground font-medium px-1">
-                              +{daySessions.length + daySpelmanEvents.length - 3} more
+                              +{daySessions.length + dayCampusEvents.length - 3} more
                             </div>
                           )}
                         </div>
@@ -1259,7 +1259,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                 {calendarView === 'day' && <div className="space-y-4">
                     {(() => {
                   const daySessions = getSessionsForDate(currentDate);
-                  const daySpelmanEvents = spelmanEvents.filter(e => {
+                  const dayCampusEvents = campusEvents.filter(e => {
                     const eventDate = parseISO(e.start_date);
                     return isSameDay(eventDate, currentDate);
                   });
@@ -1270,9 +1270,9 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                               <span>This is an exception date (holiday/break)</span>
                             </div>}
                           
-                          {daySpelmanEvents.length > 0 && <div className="space-y-2">
-                              <h4 className="font-medium text-sm" style={{ color: '#334155' }}>Spelman Events</h4>
-                              {daySpelmanEvents.map(event => <div key={event.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          {dayCampusEvents.length > 0 && <div className="space-y-2">
+                              <h4 className="font-medium text-sm" style={{ color: '#334155' }}>Campus Events</h4>
+                              {dayCampusEvents.map(event => <div key={event.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                                   <div className="font-medium" style={{ color: '#0f172a' }}>{event.title}</div>
                                   {event.location && <div className="text-sm flex items-center gap-1 mt-1" style={{ color: '#475569' }}><MapPin className="h-3 w-3" />{event.location}</div>}
                                 </div>)}
@@ -1444,7 +1444,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       </div>
         </TabsContent>
 
-        <TabsContent value="spelman">
+        <TabsContent value="campus">
           <Card>
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
               <CardTitle className="flex items-center gap-2 py-[20px] text-lg">
@@ -1472,18 +1472,18 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               </div>
             </CardHeader>
             <CardContent>
-              {spelmanLoading ? <div className="flex items-center justify-center py-12">
+              {campusLoading ? <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div> : <>
                   {/* Legend */}
                   <div className="flex flex-wrap gap-4 mb-4 text-xs">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded bg-[#003666]/10 border border-[#003666]/30" />
+                      <div className="w-3 h-3 rounded bg-[#150d26]/10 border border-[#150d26]/30" />
                       <span className="text-foreground">Class Sessions</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded bg-amber-100 border border-amber-300" />
-                      <span className="text-foreground">Spelman Events</span>
+                      <span className="text-foreground">Campus Events</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
@@ -1501,7 +1501,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                       <div className="grid grid-cols-7 gap-1">
                         {viewDays.map((day, i) => {
                     const daySessions = getSessionsForDate(day);
-                    const daySpelmanEvents = spelmanEvents.filter(e => {
+                    const dayCampusEvents = campusEvents.filter(e => {
                       const eventDate = parseISO(e.start_date);
                       return isSameDay(eventDate, day);
                     });
@@ -1546,7 +1546,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                               {academicEvent.title}
                             </div>
                           )}
-                          {daySpelmanEvents.slice(0, 1).map(event => (
+                          {dayCampusEvents.slice(0, 1).map(event => (
                             <div key={event.id} className="text-[9px] bg-amber-100 rounded px-1 py-0.5 truncate text-amber-900">
                               {event.title}
                             </div>
@@ -1560,9 +1560,9 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                               </div>
                             );
                           })}
-                          {daySessions.length + daySpelmanEvents.length + (academicEvent ? 1 : 0) > 2 && (
+                          {daySessions.length + dayCampusEvents.length + (academicEvent ? 1 : 0) > 2 && (
                             <div className="text-[9px] text-muted-foreground px-1">
-                              +{daySessions.length + daySpelmanEvents.length + (academicEvent ? 1 : 0) - 2} more
+                              +{daySessions.length + dayCampusEvents.length + (academicEvent ? 1 : 0) - 2} more
                             </div>
                           )}
                         </div>
@@ -1587,7 +1587,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                       <div className="grid grid-cols-7 gap-1">
                         {viewDays.map((day, i) => {
                     const daySessions = getSessionsForDate(day);
-                    const daySpelmanEvents = spelmanEvents.filter(e => isSameDay(parseISO(e.start_date), day));
+                    const dayCampusEvents = campusEvents.filter(e => isSameDay(parseISO(e.start_date), day));
                     const academicEvent = activeSemester?.academic_events.find(e => {
                       if (e.date) return isSameDay(parseISO(e.date), day);
                       if (e.start_date && e.end_date) {
@@ -1623,7 +1623,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                               {academicEvent.title}
                             </div>
                           )}
-                          {daySpelmanEvents.slice(0, 2).map(event => (
+                          {dayCampusEvents.slice(0, 2).map(event => (
                             <div key={event.id} className="text-[10px] bg-amber-100 rounded px-1 py-0.5 truncate text-amber-900">
                               {event.title}
                             </div>
@@ -1642,12 +1642,12 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                               </div>
                             );
                           })}
-                          {daySessions.length === 0 && daySpelmanEvents.length === 0 && !academicEvent && !isHoliday && (
+                          {daySessions.length === 0 && dayCampusEvents.length === 0 && !academicEvent && !isHoliday && (
                             <div className="text-[10px] text-center py-2 text-muted-foreground">No events</div>
                           )}
-                          {daySessions.length + daySpelmanEvents.length > 3 && (
+                          {daySessions.length + dayCampusEvents.length > 3 && (
                             <div className="text-[9px] text-muted-foreground px-1">
-                              +{daySessions.length + daySpelmanEvents.length - 3} more
+                              +{daySessions.length + dayCampusEvents.length - 3} more
                             </div>
                           )}
                         </div>
@@ -1661,7 +1661,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                   {calendarView === 'day' && <div className="space-y-4">
                       {(() => {
                   const daySessions = getSessionsForDate(currentDate);
-                  const daySpelmanEvents = spelmanEvents.filter(e => isSameDay(parseISO(e.start_date), currentDate));
+                  const dayCampusEvents = campusEvents.filter(e => isSameDay(parseISO(e.start_date), currentDate));
                   const academicEvent = activeSemester?.academic_events.find(e => {
                     if (e.date) return isSameDay(parseISO(e.date), currentDate);
                     if (e.start_date && e.end_date) {
@@ -1683,9 +1683,9 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                 </div>
                               </div>}
 
-                            {daySpelmanEvents.length > 0 && <div className="space-y-2">
-                                <h4 className="font-medium text-sm text-muted-foreground">Spelman Events</h4>
-                                {daySpelmanEvents.map(event => <div key={event.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                            {dayCampusEvents.length > 0 && <div className="space-y-2">
+                                <h4 className="font-medium text-sm text-muted-foreground">Campus Events</h4>
+                                {dayCampusEvents.map(event => <div key={event.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                                     <div className="font-medium">{event.title}</div>
                                     {event.location && <div className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                                         <MapPin className="h-3 w-3" />{event.location}
@@ -1701,8 +1701,8 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                 </div> : <div className="space-y-2">
                                   {daySessions.map(session => {
                           const typeConfig = getSessionTypeConfig(session.session_type);
-                          return <div key={session.id} className="p-3 bg-[#003666]/5 border border-[#003666]/20 rounded-lg">
-                                        <div className="flex items-center gap-2 font-medium text-[#003666]">
+                          return <div key={session.id} className="p-3 bg-[#150d26]/5 border border-[#150d26]/20 rounded-lg">
+                                        <div className="flex items-center gap-2 font-medium text-[#150d26]">
                                           <typeConfig.icon className="h-4 w-4" />
                                           {session.title}
                                         </div>

@@ -28,6 +28,7 @@ import { useMusicLibraryIntegration, MusicPieceIntegration } from '@/hooks/useMu
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { InAppPDFViewerDialog } from './InAppPDFViewerDialog';
+import { PDFThumbnail } from './PDFThumbnail';
 
 interface MusicLibraryCardProps {
   piece: any; // Original sheet music data
@@ -132,6 +133,16 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
     >
       <CardContent className="card-compact w-full min-w-0 overflow-hidden">
         <div className="flex flex-col gap-3">
+          {/* Page-1 PDF preview */}
+          {piece.pdf_url && (
+            <div className="w-full max-w-[260px] mx-auto">
+              <PDFThumbnail
+                pdfUrl={piece.pdf_url}
+                alt={`${integratedPiece.title} — page 1 preview`}
+                className="w-full"
+              />
+            </div>
+          )}
           <div className="flex-1 min-w-0 w-full">
             <div className="flex items-center gap-1 mb-0.5">
               <Music className="h-4 w-4 text-muted-foreground flex-shrink-0" />

@@ -11,13 +11,13 @@ import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const SPELMAN = {
-  name: "Spelman College Glee Club",
-  address: "350 Spelman Lane, SW",
+const BRAND = {
+  name: "Your favorite band or choir",
+  address: "350 Concert Hall Drive, SW",
   cityStateZip: "Atlanta, GA 30314",
   taxId: "58-0566243",
   taxNotice:
-    "Spelman College is a 501(c)(3) nonprofit organization. EIN: 58-0566243. No goods or services were provided in exchange for this contribution unless otherwise noted. This invoice serves as your receipt for tax purposes.",
+    "Riverside Music Institute is a 501(c)(3) nonprofit organization. EIN: 58-0566243. No goods or services were provided in exchange for this contribution unless otherwise noted. This invoice serves as your receipt for tax purposes.",
 };
 
 interface InvoicePreviewProps {
@@ -41,11 +41,11 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
         body { font-family: 'Georgia', serif; margin: 0; padding: 40px; color: #1a1a1a; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 8px 12px; text-align: left; }
-        th { border-bottom: 2px solid #003666; font-size: 12px; text-transform: uppercase; }
+        th { border-bottom: 2px solid #150d26; font-size: 12px; text-transform: uppercase; }
         td { border-bottom: 1px solid #e5e5e5; }
         .text-right { text-align: right; }
         .header { display: flex; justify-content: space-between; margin-bottom: 40px; }
-        .tax-notice { margin-top: 40px; padding: 16px; background: #f8f8f8; border-left: 4px solid #003666; font-size: 11px; }
+        .tax-notice { margin-top: 40px; padding: 16px; background: #f8f8f8; border-left: 4px solid #150d26; font-size: 11px; }
         @media print { body { padding: 20px; } }
       </style></head><body>${content.innerHTML}</body></html>
     `);
@@ -61,15 +61,15 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
     // Header
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text(SPELMAN.name, margin, y);
+    doc.text(BRAND.name, margin, y);
     y += 7;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(SPELMAN.address, margin, y);
+    doc.text(BRAND.address, margin, y);
     y += 5;
-    doc.text(SPELMAN.cityStateZip, margin, y);
+    doc.text(BRAND.cityStateZip, margin, y);
     y += 5;
-    doc.text(`EIN: ${SPELMAN.taxId}`, margin, y);
+    doc.text(`EIN: ${BRAND.taxId}`, margin, y);
 
     // Invoice number + date (right side)
     doc.setFontSize(22);
@@ -92,7 +92,7 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
     y += 5;
     doc.text(invoice.director_name || "Dr. Kevin Phillip Johnson", margin, y);
     y += 5;
-    doc.text(invoice.director_title || "Director, Spelman College Glee Club", margin, y);
+    doc.text(invoice.director_title || "Director, Your favorite band or choir", margin, y);
     y += 12;
 
     // Bill To
@@ -111,7 +111,7 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
 
     // Line items table
     doc.setFont("helvetica", "bold");
-    doc.setFillColor(0, 54, 102); // Spelman navy
+    doc.setFillColor(0, 54, 102); // Brand navy
     doc.rect(margin, y, 170, 8, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
@@ -162,7 +162,7 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
     doc.line(margin, y, margin, y + 25);
     doc.setFontSize(8);
     doc.setFont("helvetica", "italic");
-    const taxLines = doc.splitTextToSize(SPELMAN.taxNotice, 165);
+    const taxLines = doc.splitTextToSize(BRAND.taxNotice, 165);
     doc.text(taxLines, margin + 3, y + 5);
 
     // Save + optionally store in media library
@@ -244,13 +244,13 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="text-xl font-bold text-[#003666]">{SPELMAN.name}</h1>
-              <p className="text-sm text-gray-600">{SPELMAN.address}</p>
-              <p className="text-sm text-gray-600">{SPELMAN.cityStateZip}</p>
-              <p className="text-sm text-gray-600 mt-1">EIN: {SPELMAN.taxId}</p>
+              <h1 className="text-xl font-bold text-[#150d26]">{BRAND.name}</h1>
+              <p className="text-sm text-gray-600">{BRAND.address}</p>
+              <p className="text-sm text-gray-600">{BRAND.cityStateZip}</p>
+              <p className="text-sm text-gray-600 mt-1">EIN: {BRAND.taxId}</p>
             </div>
             <div className="text-right">
-              <h2 className="text-3xl font-bold text-[#003666]">INVOICE</h2>
+              <h2 className="text-3xl font-bold text-[#150d26]">INVOICE</h2>
               <p className="text-sm font-mono">#{invoice.invoice_number}</p>
               <p className="text-sm text-gray-600">
                 Date: {new Date(invoice.invoice_date).toLocaleDateString()}
@@ -287,7 +287,7 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
           {/* Line Items */}
           <table className="w-full mb-6">
             <thead>
-              <tr className="bg-[#003666] text-white">
+              <tr className="bg-[#150d26] text-white">
                 <th className="text-left py-2 px-3 text-xs uppercase">Description</th>
                 <th className="text-center py-2 px-3 text-xs uppercase w-16">Qty</th>
                 <th className="text-right py-2 px-3 text-xs uppercase w-24">Unit Price</th>
@@ -308,7 +308,7 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
 
           {/* Total */}
           <div className="flex justify-end mb-8">
-            <div className="w-48 border-t-2 border-[#003666] pt-2">
+            <div className="w-48 border-t-2 border-[#150d26] pt-2">
               <div className="flex justify-between">
                 <span className="font-bold text-lg">TOTAL</span>
                 <span className="font-bold text-lg">${Number(invoice.total_amount || 0).toFixed(2)}</span>
@@ -325,8 +325,8 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
           )}
 
           {/* Tax Notice */}
-          <div className="border-l-4 border-[#003666] bg-gray-50 p-4 mt-8">
-            <p className="text-xs text-gray-600 italic">{SPELMAN.taxNotice}</p>
+          <div className="border-l-4 border-[#150d26] bg-gray-50 p-4 mt-8">
+            <p className="text-xs text-gray-600 italic">{BRAND.taxNotice}</p>
           </div>
         </div>
       </DialogContent>

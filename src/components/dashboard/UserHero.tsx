@@ -2,7 +2,7 @@ import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import historicImage from '@/assets/spelman-glee-historic.jpg';
+import historicImage from '@/assets/program-historic.jpg';
 
 export const UserHero = () => {
   const { user } = useAuth();
@@ -104,12 +104,12 @@ export const UserHero = () => {
             <div className="hidden md:block relative w-32 h-40 md:w-40 md:h-48 rounded-lg overflow-hidden shadow-lg border-2 border-primary/20 flex-shrink-0">
               <img 
                 src={historicImage} 
-                alt="Historic Spelman College Glee Club" 
+                alt="Historic Your favorite band or choir" 
                 className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-300"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
                 <p className="text-white text-xs font-medium text-center">
-                  Historic Spelman Glee Club
+                  Historic Riverside Concert Choir
                 </p>
               </div>
             </div>

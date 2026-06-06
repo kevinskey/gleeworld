@@ -111,7 +111,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
                   Community Hub
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Connect with the Spelman Glee Club community
+                  Connect with the Riverside Concert Choir community
                 </CardDescription>
               </CardHeader>
               <CardContent>

@@ -2,17 +2,13 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Video, Image, Star, Calendar, Layout, FormInput, Users, Eye, ExternalLink, Mail } from "lucide-react";
+import { Video, Image, Star, Layout, FormInput, Eye, ExternalLink, Users, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NewsletterManager } from "@/components/alumnae/NewsletterManager";
 import { InterviewManager } from "@/components/alumnae/InterviewManager";
 import { HeroManager } from "@/components/alumnae/HeroManager";
 import { SpotlightManager } from "@/components/alumnae/SpotlightManager";
-import { AnnouncementManager } from "@/components/alumnae/AnnouncementManager";
 import { AlumnaePageBuilder } from "@/components/alumnae/AlumnaePageBuilder";
 import { AlumnaeFormBuilder } from "@/components/alumnae/AlumnaeFormBuilder";
-import { AlumnaeUserManagement } from "@/components/alumnae/AlumnaeUserManagement";
-import { MailchimpStyleCampaigns } from "@/components/alumnae/MailchimpStyleCampaigns";
 import { ModuleProps } from "@/types/unified-modules";
 export const AlumnaeManagementModule = ({
   user,
@@ -28,16 +24,13 @@ export const AlumnaeManagementModule = ({
   }, []);
   const fetchStats = async () => {
     try {
-      // Fetch alumnae count
-      const [{
-        data: roleData
-      }, {
-        data: profileRoleData
-      }] = await Promise.all([supabase.from('user_roles').select('user_id').eq('role', 'alumna'), supabase.from('gw_profiles').select('user_id').eq('role', 'alumna')]);
-      const idsFromRoles = (roleData || []).map(r => r.user_id);
-      const idsFromProfiles = (profileRoleData || []).map(r => r.user_id);
-      const uniqueIds = new Set([...idsFromRoles, ...idsFromProfiles]);
-      setAlumnaeCount(uniqueIds.size);
+      // Alumni count — gw_profiles is tenant-scoped via RLS; user_roles is a
+      // global legacy table without tenant_id and would leak counts across tenants.
+      const { data: profileRoleData } = await supabase
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('role', 'alumna');
+      setAlumnaeCount((profileRoleData ?? []).length);
 
       // Fetch newsletter count
       const {
@@ -160,14 +153,7 @@ export const AlumnaeManagementModule = ({
                   <Layout className="h-4 w-4" />
                   <span className="hidden lg:inline">Page Builder</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="newsletters" 
-                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  <span className="hidden lg:inline">Newsletters</span>
-                </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="interviews" 
                   className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
                 >
@@ -188,40 +174,15 @@ export const AlumnaeManagementModule = ({
                   <Star className="h-4 w-4" />
                   <span className="hidden lg:inline">Spotlights</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="announcements" 
-                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span className="hidden lg:inline">Announce</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="forms" 
+                <TabsTrigger
+                  value="forms"
                   className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
                 >
                   <FormInput className="h-4 w-4" />
                   <span className="hidden lg:inline">Forms</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="users" 
-                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-                >
-                  <Users className="h-4 w-4" />
-                  <span className="hidden lg:inline">Users</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="email" 
-                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-                >
-                  <Mail className="h-4 w-4" />
-                  <span className="hidden lg:inline">Email</span>
-                </TabsTrigger>
               </TabsList>
             </div>
-
-            <TabsContent value="newsletters" className="mt-6">
-              <NewsletterManager />
-            </TabsContent>
 
             <TabsContent value="interviews" className="mt-6">
               <InterviewManager />
@@ -235,24 +196,12 @@ export const AlumnaeManagementModule = ({
               <SpotlightManager />
             </TabsContent>
 
-            <TabsContent value="announcements" className="mt-6">
-              <AnnouncementManager />
-            </TabsContent>
-
             <TabsContent value="page-builder" className="mt-6">
               <AlumnaePageBuilder />
             </TabsContent>
 
             <TabsContent value="forms" className="mt-6">
               <AlumnaeFormBuilder />
-            </TabsContent>
-
-            <TabsContent value="users" className="mt-6">
-              <AlumnaeUserManagement />
-            </TabsContent>
-
-            <TabsContent value="email" className="mt-6">
-              <MailchimpStyleCampaigns />
             </TabsContent>
           </Tabs>
         </CardContent>

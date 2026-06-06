@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EVENT_TYPES } from "@/constants/eventTypes";
 import { 
   CalendarIcon, 
   MapPinIcon, 
@@ -65,20 +66,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     approval_needed: false
   });
 
-  const eventTypes = [
-    { value: 'performance', label: 'Performance' },
-    { value: 'rehearsal', label: 'Rehearsal' },
-    { value: 'sectional', label: 'Sectional' },
-    { value: 'member-meeting', label: 'Member Meeting' },
-    { value: 'exec-meeting', label: 'Exec Board Meeting' },
-    { value: 'voice-lesson', label: 'Voice Lesson' },
-    { value: 'tutorial', label: 'Tutorial' },
-    { value: 'social', label: 'Social Event' },
-    { value: 'meeting', label: 'Meeting' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'audition', label: 'Audition' },
-    { value: 'other', label: 'Other' }
-  ];
+  const eventTypes = EVENT_TYPES;
 
   // Populate form data when event changes
   useEffect(() => {

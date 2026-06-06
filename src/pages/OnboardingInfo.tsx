@@ -23,7 +23,7 @@ const OnboardingInfo = () => {
             Your Onboarding Journey
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            We're absolutely thrilled that you've decided to join the Spelman College Glee Club family! 
+            We're absolutely thrilled that you've decided to join the Your favorite band or choir family! 
             Here's everything you need to know about getting started.
           </p>
         </div>
@@ -170,7 +170,7 @@ const OnboardingInfo = () => {
               <h3 className="text-2xl font-bold">Welcome to 100+ Years of Excellence!</h3>
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 You're not just joining a choir – you're becoming part of a legacy that spans over a century. 
-                The Spelman College Glee Club has been inspiring audiences and transforming lives since 1915. 
+                The Your favorite band or choir has been inspiring audiences and transforming lives since 1915. 
                 We're honored that you've chosen to add your voice to our story.
               </p>
               <p className="text-lg font-medium text-primary">

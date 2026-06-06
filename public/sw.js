@@ -1,7 +1,8 @@
 // Service Worker for GleeWorld PWA
-// Version: 10.0 - February 2026 - Opinionated dark theme, calendar cleanup
-// NOTE: v10.0 - Cache reset for theme overhaul
-const CACHE_VERSION = 'v10.0';
+// Version: 12.0 - May 2026 - Radio.co purge + role redirect refactor.
+// Bump forces any browser holding the v11 bundle (which still imported the
+// deleted radio hooks) to flush and load the new index-*.js.
+const CACHE_VERSION = 'v33.6';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;

@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
-import { GleeCamCard } from "@/components/dashboard/GleeCamCard";
 import { DashboardYouTubeSection } from "@/components/dashboard/DashboardYouTubeSection";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
@@ -163,8 +162,6 @@ interface MetalHeaderDashboardProps {
     email: string;
     full_name: string;
     role: string;
-    exec_board_role?: string;
-    is_exec_board?: boolean;
     created_at: string;
   };
   simulatedRole?: string; // Optional role to simulate for viewing purposes
@@ -224,7 +221,6 @@ export const MetalHeaderDashboard = ({
     if (simulatedRole) return simulatedRole;
     if (user.role === 'super-admin') return 'super-admin';
     if (user.role === 'admin') return 'admin';
-    if (user.is_exec_board) return 'executive';
     return user.role || 'user';
   };
   const isAdmin = simulatedRole ? false : user.role === 'super-admin' || user.role === 'admin';
@@ -651,10 +647,7 @@ export const MetalHeaderDashboard = ({
         return <FavoritesCard favorites={favoritesArray as any} orderedFavoriteIds={orderedFavorites} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} onReorder={reorderFavorites} />;
       })()}
 
-      {/* Glee Cam Categories */}
-      <GleeCamCard />
-
-      {/* Super Admin Layout Controls */}
+{/* Super Admin Layout Controls */}
       {isSuperAdmin() && isEditingLayout && <div className="flex items-center gap-2 justify-end mb-2">
           <Button variant="ghost" size="sm" onClick={() => resetCardOrder()} disabled={isSaving}>
             <RotateCcw className="h-4 w-4 mr-2" />
@@ -683,7 +676,7 @@ export const MetalHeaderDashboard = ({
             }
             if (cardId === 'communications') {
               return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    <CommunicationsCard isExecBoard={user?.is_exec_board || isAdmin || isSuperAdmin()} />
+                    <CommunicationsCard isExecBoard={isAdmin || isSuperAdmin()} />
                   </SortableDashboardCard>;
             }
             if (cardId === 'modules') {
@@ -697,40 +690,6 @@ export const MetalHeaderDashboard = ({
         </SortableContext>
       </DndContext>
 
-      {/* Feature Cards - 2 Column Section */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6">
-        {/* 2026 Tour Information Center */}
-        <a href="/2026-tour" className="group feature-card feature-card-primary">
-          <div className="feature-card-overlay" />
-          <div className="feature-card-content">
-            <div className="feature-card-icon feature-card-icon-primary group-hover:scale-110 transition-transform">
-              <Globe className="h-10 w-10 text-primary" />
-            </div>
-            <h3 className="feature-card-title">2026 Tour Information Center</h3>
-            <p className="feature-card-description">Access tour dates, destinations, and travel information</p>
-            <span className="feature-card-link feature-card-link-primary">
-              Learn More 
-              <ChevronRight className="h-4 w-4" />
-            </span>
-          </div>
-        </a>
-
-        {/* Executive Board Workshop */}
-        <a href="/executive-board-workshop" className="group feature-card feature-card-amber">
-          <div className="feature-card-overlay" />
-          <div className="feature-card-content">
-            <div className="feature-card-icon feature-card-icon-amber group-hover:scale-110 transition-transform">
-              <Users className="h-10 w-10 text-amber-600" />
-            </div>
-            <h3 className="feature-card-title">Executive Board Workshop</h3>
-            <p className="feature-card-description">Training resources and leadership development tools</p>
-            <span className="feature-card-link feature-card-link-amber">
-              Learn More 
-              <ChevronRight className="h-4 w-4" />
-            </span>
-          </div>
-        </a>
-      </div>
 
       {/* Favorites Section - Hidden, now handled by draggable FavoritesCard */}
       {false && moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>

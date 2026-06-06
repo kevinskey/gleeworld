@@ -60,7 +60,7 @@ import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
 
 import { WardrobeManagementHub } from "@/components/wardrobe/WardrobeManagementHub";
 import { StudentIntakeProcessor } from "@/components/admin/StudentIntakeProcessor";
-import { HeroManagement } from "@/components/admin/HeroManagement";
+import SliderManager from "@/components/admin/sliders/SliderManager";
 
 interface AdminDashboardProps {
   user: {
@@ -350,7 +350,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       case "settings":
         return <SystemSettings />;
       case "hero-management":
-        return <HeroManagement />;
+        return <SliderManager />;
       case "user-management":
         return <EnhancedUserManagement users={users} loading={usersLoading} error={usersError} onRefetch={refetchUsers} />;
       case "permissions":
@@ -522,7 +522,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             Admin Dashboard
           </h1>
           <p className="text-xs text-muted-foreground px-4">
-            Manage the Spelman College Glee Club platform
+            Manage the Your favorite band or choir platform
           </p>
         </div>
 

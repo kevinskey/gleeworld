@@ -25,7 +25,7 @@ export const FeaturedEventsSection = ({ events }: FeaturedEventsSectionProps) =>
   return (
     <>
       <div className="mb-8">
-        <h3 className="text-xl font-bold text-[#003666] mb-4 flex items-center gap-2">
+        <h3 className="text-xl font-bold text-[#150d26] mb-4 flex items-center gap-2">
           <CalendarDays className="h-5 w-5" />
           Upcoming Events
         </h3>
@@ -53,10 +53,10 @@ export const FeaturedEventsSection = ({ events }: FeaturedEventsSectionProps) =>
                   />
                   {/* Date Badge */}
                   <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm rounded-lg px-2 py-1 shadow-md">
-                    <div className="text-xs font-bold text-[#003666] uppercase">
+                    <div className="text-xs font-bold text-[#150d26] uppercase">
                       {format(eventDate, 'MMM')}
                     </div>
-                    <div className="text-lg font-bold text-[#003666] leading-tight">
+                    <div className="text-lg font-bold text-[#150d26] leading-tight">
                       {format(eventDate, 'd')}
                     </div>
                   </div>
@@ -64,7 +64,7 @@ export const FeaturedEventsSection = ({ events }: FeaturedEventsSectionProps) =>
                 
                 {/* Event Info */}
                 <div className="p-3">
-                  <h4 className="font-semibold text-[#003666] text-sm line-clamp-2 mb-2 group-hover:text-[#002244]">
+                  <h4 className="font-semibold text-[#150d26] text-sm line-clamp-2 mb-2 group-hover:text-[#002244]">
                     {event.title}
                   </h4>
                   

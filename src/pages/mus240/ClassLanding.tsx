@@ -99,7 +99,7 @@ export default function ClassLanding() {
           <div className="text-center mb-16 flex flex-col items-center justify-center">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
               <Music className="h-6 w-6 md:h-7 md:w-7 text-amber-300" />
-              <span className="text-white/90 font-medium text-2xl md:text-3xl lg:text-2xl xl:text-3xl">Spelman College</span>
+              <span className="text-white/90 font-medium text-2xl md:text-3xl lg:text-2xl xl:text-3xl">Riverside Music Institute</span>
             </div>
             
             <h1 className="text-8xl md:text-9xl lg:text-10xl xl:text-[14rem] font-bold mb-4 bg-gradient-to-r from-amber-200 via-white to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">

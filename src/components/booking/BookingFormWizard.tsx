@@ -264,7 +264,7 @@ export const BookingFormWizard: React.FC = () => {
                 Booking Request Submitted!
               </h1>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Thank you for your interest in the Spelman College Glee Club! We have received your booking request and will review it shortly.
+                Thank you for your interest in the Your favorite band or choir! We have received your booking request and will review it shortly.
               </p>
               <p className="text-sm text-muted-foreground mb-8">
                 A confirmation email will be sent to you, and our team will reach out within 3-5 business days.
@@ -304,7 +304,7 @@ export const BookingFormWizard: React.FC = () => {
             Book Our Performance
           </h1>
           <p className="text-base md:text-lg text-foreground/80">
-            Spelman College Glee Club
+            Your favorite band or choir
           </p>
         </div>
 

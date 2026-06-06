@@ -265,7 +265,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     <work-title>Sight Reading Exercise</work-title>
   </work>
   <identification>
-    <creator type="composer">Spelman Glee Club Sight Reading Generator</creator>
+    <creator type="composer">Riverside Concert Choir Sight Reading Generator</creator>
     <encoding>
       <software>GleeWorld.org</software>
       <encoding-date>${new Date().toISOString().split('T')[0]}</encoding-date>

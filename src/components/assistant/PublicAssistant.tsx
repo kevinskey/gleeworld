@@ -261,7 +261,7 @@ export const PublicAssistant = () => {
     } catch (error: any) {
       console.error("Error calling public assistant:", error);
       
-      let errorMessage = "I'm having trouble responding right now. Please try again or contact gleeclub@spelman.edu.";
+      let errorMessage = "I'm having trouble responding right now. Please try again or contact press@riversidechoir.example.";
       
       if (error.message?.includes("429") || error.message?.includes("rate")) {
         errorMessage = "I'm receiving too many requests. Please wait a moment and try again.";
@@ -323,7 +323,7 @@ export const PublicAssistant = () => {
       {isOpen && (
         <div className="fixed bottom-6 right-6 z-50 w-[360px] sm:w-[400px] max-h-[600px] flex flex-col bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
-          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#003666] to-[#004d99] text-white">
+          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#150d26] to-[#004d99] text-white">
             <img 
               src={gleeAssistantAvatar} 
               alt="Glee Assistant" 
@@ -363,7 +363,7 @@ export const PublicAssistant = () => {
                   className={cn(
                     "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
                     message.role === "user"
-                      ? "bg-[#003666] text-white rounded-br-md"
+                      ? "bg-[#150d26] text-white rounded-br-md"
                       : "bg-white text-neutral-800 border border-neutral-200 rounded-bl-md shadow-sm"
                   )}
                 >
@@ -380,7 +380,7 @@ export const PublicAssistant = () => {
                         }}
                       />
                       {index === messages.length - 1 && isTyping && (
-                        <span className="inline-block w-0.5 h-4 bg-[#003666] animate-pulse ml-0.5" />
+                        <span className="inline-block w-0.5 h-4 bg-[#150d26] animate-pulse ml-0.5" />
                       )}
                       {message.navigationAction && !isTyping && (
                         <Button
@@ -477,7 +477,7 @@ export const PublicAssistant = () => {
                 placeholder={isListening ? "Listening..." : "Type or speak your question..."}
                 disabled={isLoading}
                 className={cn(
-                  "flex-1 px-4 py-2.5 text-sm bg-neutral-100 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#003666]/30 disabled:opacity-50",
+                  "flex-1 px-4 py-2.5 text-sm bg-neutral-100 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#150d26]/30 disabled:opacity-50",
                   isListening && "ring-2 ring-red-300"
                 )}
               />
@@ -485,7 +485,7 @@ export const PublicAssistant = () => {
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
                 size="icon"
-                className="rounded-full bg-[#003666] hover:bg-[#002244] disabled:opacity-50"
+                className="rounded-full bg-[#150d26] hover:bg-[#002244] disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

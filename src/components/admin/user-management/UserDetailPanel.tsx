@@ -135,11 +135,7 @@ export const UserDetailPanel = ({
   const [mentorOptIn, setMentorOptIn] = useState(false);
   const [reunionRsvp, setReunionRsvp] = useState(false);
   
-  // Executive Board fields
-  const [execBoardPosition, setExecBoardPosition] = useState("");
-  const [isExecBoard, setIsExecBoard] = useState(false);
-  
-  // Social media
+// Social media
   const [instagram, setInstagram] = useState("");
   const [twitter, setTwitter] = useState("");
   const [facebook, setFacebook] = useState("");
@@ -203,11 +199,7 @@ export const UserDetailPanel = ({
         setMentorOptIn(false); // Will be set if field exists
         setReunionRsvp(false); // Will be set if field exists
         
-        // Executive Board
-        setExecBoardPosition(profileData.exec_board_role || "");
-        setIsExecBoard(profileData.is_exec_board || false);
-        
-        // Social media - handle as JSON object
+// Social media - handle as JSON object
         const socialLinks = (profileData.social_media_links as any) || {};
         setInstagram(socialLinks.instagram || "");
         setTwitter(socialLinks.twitter || "");
@@ -330,10 +322,6 @@ export const UserDetailPanel = ({
           mentor_opt_in: mentorOptIn,
           reunion_rsvp: reunionRsvp,
           
-          // Executive Board assignment
-          exec_board_role: execBoardPosition === "" || execBoardPosition === "none" ? null : execBoardPosition,
-          is_exec_board: execBoardPosition !== "" && execBoardPosition !== "none",
-          
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
@@ -388,38 +376,7 @@ export const UserDetailPanel = ({
         // Don't throw error since main profiles update succeeded
       }
 
-      // Handle executive board assignment changes
-      if (execBoardPosition !== (user.exec_board_role || "")) {
-        try {
-          // First, remove any existing exec board assignment for this user
-          await supabase
-            .from('gw_executive_board_members')
-            .update({ is_active: false })
-            .eq('user_id', user.id)
-            .eq('is_active', true);
-
-          // If assigning a new position, add it
-          if (execBoardPosition && execBoardPosition !== "none") {
-            const { error: execError } = await supabase
-              .from('gw_executive_board_members')
-              .insert({
-                user_id: user.id,
-                position: execBoardPosition as any,
-                academic_year: new Date().getFullYear().toString(),
-                appointed_date: new Date().toISOString().split('T')[0],
-                is_active: true
-              });
-
-            if (execError) {
-              console.warn("Error adding executive board assignment:", execError);
-            }
-          }
-        } catch (execError) {
-          console.warn("Error updating executive board assignment:", execError);
-        }
-      }
-
-      // Update local user object immediately for instant UI feedback
+// Update local user object immediately for instant UI feedback
       const updatedUser = {
         ...user,
         full_name: fullName.trim(),
@@ -1000,50 +957,7 @@ export const UserDetailPanel = ({
                       </div>
                     </div>
 
-                    <Separator />
-
-                     {/* Executive Board Assignment */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-sm text-gray-900 flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        Executive Board Assignment
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="editExecBoardPosition">Executive Position</Label>
-                          <Select value={execBoardPosition || "none"} onValueChange={(value) => setExecBoardPosition(value === "none" ? "" : value)} disabled={loading}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select position" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">None</SelectItem>
-                              <SelectItem value="president">President</SelectItem>
-                              <SelectItem value="secretary">Secretary</SelectItem>
-                              <SelectItem value="treasurer">Treasurer</SelectItem>
-                              <SelectItem value="chaplain">Chaplain</SelectItem>
-                              <SelectItem value="assistant_chaplain">Assistant Chaplain</SelectItem>
-                              <SelectItem value="tour_manager">Tour Manager</SelectItem>
-                              <SelectItem value="pr_coordinator">PR Coordinator</SelectItem>
-                              <SelectItem value="pr_manager">PR Manager</SelectItem>
-                              <SelectItem value="alumnae_liaison">Alumnae Liaison</SelectItem>
-                              <SelectItem value="historian">Historian</SelectItem>
-                              <SelectItem value="student_conductor">Student Conductor</SelectItem>
-                              <SelectItem value="librarian">Librarian</SelectItem>
-                              <SelectItem value="section_leader_s1">Section Leader S1</SelectItem>
-                              <SelectItem value="section_leader_s2">Section Leader S2</SelectItem>
-                              <SelectItem value="section_leader_a1">Section Leader A1</SelectItem>
-                              <SelectItem value="section_leader_a2">Section Leader A2</SelectItem>
-                              <SelectItem value="wardrobe_manager">Wardrobe Manager</SelectItem>
-                              <SelectItem value="set_up_crew_manager">Set Up Crew Manager</SelectItem>
-                              <SelectItem value="chief_of_staff">Chief of Staff</SelectItem>
-                              <SelectItem value="data_analyst">Data Analyst</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Separator />
+<Separator />
 
                     {/* Glee Club Preferences */}
                     <div className="space-y-4">
@@ -1187,14 +1101,7 @@ export const UserDetailPanel = ({
                       {user.dues_paid ? "Yes" : "No"}
                     </Badge>
                   </div>
-                  {user.exec_board_role && (
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-600">Executive Role:</span>
-                      <span className="capitalize">{user.exec_board_role.replace('_', ' ')}</span>
-                    </div>
-                  )}
-                  {user.notes && (
+{user.notes && (
                     <div className="space-y-1">
                       <span className="text-gray-600">Notes:</span>
                       <p className="text-sm bg-gray-50 p-2 rounded">{user.notes}</p>

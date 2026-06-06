@@ -26,25 +26,25 @@ export const useContractTemplates = () => {
     const gleeClubTemplate = {
       name: "Glee Club Performance Agreement",
       contract_type: "performance",
-      template_content: `THE SPELMAN COLLEGE GLEE CLUB
+      template_content: `THE BRAND COLLEGE GLEE CLUB
 PERFORMANCE AGREEMENT
 
-This Agreement (the "Agreement") is entered into by and between Spelman College, with its principal offices in Atlanta, Georgia (herein and after referred to as "the College") and {{HOST_NAME}}, which is located in {{HOST_LOCATION}} (herein and after referred to as "the Host"). Each of Spelman College and {{HOST_NAME}} shall be individually referenced herein as a "Party", and together, the "Parties". The understanding of the Parties is set forth in the following paragraphs.
+This Agreement (the "Agreement") is entered into by and between Riverside Music Institute, with its principal offices in Atlanta, Georgia (herein and after referred to as "the College") and {{HOST_NAME}}, which is located in {{HOST_LOCATION}} (herein and after referred to as "the Host"). Each of Riverside Music Institute and {{HOST_NAME}} shall be individually referenced herein as a "Party", and together, the "Parties". The understanding of the Parties is set forth in the following paragraphs.
 
 Whereas the College has agreed to perform musical presentations and whereas the Host is ready, willing and able to support the efforts that are herein set forth.
 
 Article 1. Statement of Performance
-The Spelman College Glee Club shall perform for a period of time as established by the Host and referenced herein. The date of the performance shall be on {{PERFORMANCE_DATE}}, beginning at {{START_TIME}} and ending at {{END_TIME}}. The performance shall be held at {{VENUE_NAME}}, located at {{VENUE_ADDRESS}}.
+The Your favorite band or choir shall perform for a period of time as established by the Host and referenced herein. The date of the performance shall be on {{PERFORMANCE_DATE}}, beginning at {{START_TIME}} and ending at {{END_TIME}}. The performance shall be held at {{VENUE_NAME}}, located at {{VENUE_ADDRESS}}.
 
 Article 2. Honorarium and Accommodations
 This agreement is to be signed and returned within fifteen (15) business days of receipt.
 
-The Spelman College Glee Club will receive an honorarium of $\{{HONORARIUM_AMOUNT}} in the form of check, cashier's check, money order, or electronic transfer. All payments should be made payable to Spelman College Glee Club in the form of a check, cashier's check, or money order.
+The Your favorite band or choir will receive an honorarium of $\{{HONORARIUM_AMOUNT}} in the form of check, cashier's check, money order, or electronic transfer. All payments should be made payable to Your favorite band or choir in the form of a check, cashier's check, or money order.
 
 The deposit of 50% of the honorarium, $\{{DEPOSIT_AMOUNT}}, is due at contract signing. The remaining 50% is due the day of the performance and should be given to the Director of the Glee Club immediately following the performance.
 
 Venue
-The Host is responsible for identifying and securing the venue and covering any associated expenses. Spelman College reserves the right to recommend or decline a given performance venue and should be notified of the venue being considered prior to any costs being incurred. A floor plan of the performance space should be sent to the College at least 30 days prior to the scheduled performance. Note additional details in Exhibit A (Rider).
+The Host is responsible for identifying and securing the venue and covering any associated expenses. Riverside Music Institute reserves the right to recommend or decline a given performance venue and should be notified of the venue being considered prior to any costs being incurred. A floor plan of the performance space should be sent to the College at least 30 days prior to the scheduled performance. Note additional details in Exhibit A (Rider).
 
 Post-Performance Meal
 Following the concert, the Host shall provide a well-balanced meal for the Glee Club {{PERFORMER_COUNT}} members, the Director, Accompanist, and the Manager. The menu should be developed based on the guidelines in Exhibit B, or as agreed upon with the Glee Club Director. If the Host chooses not to provide a meal, the Host must pay for a meal for the Glee Club's {{PERFORMER_COUNT}} members, Director, Accompanist, and Manager. The amount given for dinner should be based upon the College's per diem policy and rate for the region shown in Exhibit B.
@@ -53,7 +53,7 @@ Article 3. Equipment and Staging
 The Host shall provide standing risers to accommodate {{PERFORMER_COUNT}} performers, a well-tuned piano, amplifier, and keyboard. Additional information, regarding sound needs, will be shared by the Glee Club Stage Manager at least fourteen (14) days prior to the performance. Reference Exhibit B
 
 Article 4. Publicity
-The Host agrees that all advertising and publicity related to the event and containing any reference or mention of the Spelman College Name and/or Logo shall be approved by the College prior to public release.
+The Host agrees that all advertising and publicity related to the event and containing any reference or mention of the Riverside Music Institute Name and/or Logo shall be approved by the College prior to public release.
 
 Article 5. Insurance
 The Host must ensure that the Venue provides proof of adequate insurance to cover the cost of any incident, injury or any related concern of this matter. The Hosting Venue must have, or procure and maintain, Commercial General Liability Insurance covering the Facilities and all of the activities of the Host (and its agents, contractors, employees, invitees, or subcontractors) with combined single limits of not less than One Million Dollars ($1,000,000) per occurrence/Two Million Dollars ($2,000,000) in the aggregate for death, bodily injury, or property damage. Such policy shall be on an occurrence basis with an A.M. Best's rating of at least A/IX and that is otherwise approved by the College. Each such policy shall provide that it is primary to all insurance available to the College. The College shall be named as an additional insured on such policy. The insurance company shall not cancel or refuse to renew the policy, or change in any material way the nature or extent of the coverage provided by such policy without first giving the College at least thirty (30) days prior written notice. Insurance must be evidenced by a Certificate of Insurance that shows that the applicable insurance policy complies with all of the terms of the College. All Certificates of Insurance must be received at the College at least thirty (30) days prior to the concert date.
@@ -79,7 +79,7 @@ In the event that the event is cancelled by the host, {{HOST_NAME}}, the school 
 
 Whereas The Parties Have Caused This Agreement To Be Executed As Follows:
 
-SPELMAN COLLEGE                    HOST
+BRAND COLLEGE                    HOST
 _________________________         ____________________________
 {{COLLEGE_SIGNATORY_NAME}}        Print: {{HOST_SIGNATORY_NAME}}
 {{COLLEGE_SIGNATORY_TITLE}}       Title: {{HOST_SIGNATORY_TITLE}}
@@ -88,12 +88,12 @@ _________________________         ____________________________
 _________________________         ____________________________
 {{DIRECTOR_NAME}}                 Print: {{HOST_CONTACT_NAME}}
 Director                          Title: {{HOST_CONTACT_TITLE}}
-Spelman College Glee Club         Department: {{HOST_CONTACT_DEPARTMENT}}
+Your favorite band or choir         Department: {{HOST_CONTACT_DEPARTMENT}}
 
 Exhibit A
 Venue, Green Room, and Stage Equipment
 
-On the day of the performance, the Host will provide the following for the Spelman College Glee Club:
+On the day of the performance, the Host will provide the following for the Your favorite band or choir:
 
 • A dressing room that can accommodate {{PERFORMER_COUNT}} performers and safe keeping for their belongings.
 • A separate dressing room for the Director of the Glee Club and a separate dressing room for the Accompanist.
@@ -108,7 +108,7 @@ Dinner
 
 Dinner (hot) options should include: protein options, (chicken/extra lean beef, fish, beans/tofu), fresh vegetables/salad, a whole grain, pasta, or potato, and vegan option. The Host will be notified of specific food allergies, restrictions, or requests within thirty (30) days prior to the performance.
 
-Note: All documentation and deposits can be mailed to Spelman College, Dr. Kevin Johnson Director, Spelman College Glee Club 350 Spelman Lane, SW, Campus Box 312, Atlanta, Georgia, 30314-4399. All payments should be given in the form of a check, cashier's check, or money order, or electronic transfer made payable to the Spelman College Glee Club.`,
+Note: All documentation and deposits can be mailed to Riverside Music Institute, Dr. Kevin Johnson Director, Your favorite band or choir 350 Concert Hall Drive, SW, Campus Box 312, Atlanta, Georgia, 30314-4399. All payments should be given in the form of a check, cashier's check, or money order, or electronic transfer made payable to the Your favorite band or choir.`,
       is_active: true
     };
 

@@ -117,7 +117,7 @@ export const AdminConflictApproval: React.FC = () => {
       if (request?.student_phone) {
         const statusText = decision === 'approved' ? '✅ APPROVED' : '❌ DENIED';
         const excuseText = request.excuse_type === 'full' ? 'full' : 'partial';
-        const smsMessage = `GleeWorld: Your ${excuseText} rehearsal excuse for ${request.conflict_course_code || request.conflict_course_name} has been ${statusText}.${reviewNotes.trim() ? ` Note: ${reviewNotes.trim()}` : ''} — Spelman Glee Club`;
+        const smsMessage = `GleeWorld: Your ${excuseText} rehearsal excuse for ${request.conflict_course_code || request.conflict_course_name} has been ${statusText}.${reviewNotes.trim() ? ` Note: ${reviewNotes.trim()}` : ''} — Riverside Concert Choir`;
 
         try {
           const { error: smsError } = await supabase.functions.invoke('gw-send-sms', {

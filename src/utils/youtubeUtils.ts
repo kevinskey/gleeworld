@@ -1,8 +1,8 @@
 // YouTube utility functions for Glee Lounge
 
-// Spelman College Glee Club YouTube channel
+// Your favorite band or choir YouTube channel
 export const GLEE_CLUB_CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw';
-export const GLEE_CLUB_CHANNEL_URL = 'https://www.youtube.com/@SpelmanCollegeGleeClub';
+export const GLEE_CLUB_CHANNEL_URL = 'https://www.youtube.com/@your-program';
 export const GLEE_CLUB_UPLOADS_PLAYLIST_ID = `UU${GLEE_CLUB_CHANNEL_ID.slice(2)}`;
 
 // GleeWorld Radio YouTube channel - Default for courses
@@ -12,7 +12,7 @@ export const GLEE_WORLD_RADIO_CHANNEL_URL = 'https://www.youtube.com/@GleeWorldR
 // Default channels for course video library
 export const DEFAULT_COURSE_CHANNELS = [
   { handle: '@GleeWorldRadio', name: 'GleeWorld Radio', isDefault: true },
-  { handle: '@SpelmanCollegeGleeClub', name: 'Spelman College Glee Club', isDefault: false },
+  { handle: '@your-program', name: 'Your favorite band or choir', isDefault: false },
 ];
 
 
@@ -143,8 +143,8 @@ export function formatYouTubeDuration(isoDuration: string): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Sample videos from Spelman Glee Club channel for demo/picker
+// Sample videos from Riverside Concert Choir channel for demo/picker
 // These would ideally come from YouTube API but we include some known videos
 export const SAMPLE_GLEE_CLUB_VIDEOS = [
-  { id: 'dQw4w9WgXcQ', title: 'Spelman College Glee Club Performance' }, // placeholder
+  { id: 'dQw4w9WgXcQ', title: 'Your favorite band or choir Performance' }, // placeholder
 ];

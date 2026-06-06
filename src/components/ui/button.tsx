@@ -28,11 +28,11 @@ const buttonVariants = cva(
         branded: 
           "bg-brand-600 text-white shadow-button hover:bg-brand-700 hover:shadow-button-hover font-semibold",
         /**
-         * Spelman Navy (landing/header primary CTA)
+         * Brand Navy (landing/header primary CTA)
          * Uses semantic CSS vars (defined in index.css) so we don't hardcode colors in components.
          */
         navy:
-          "bg-[hsl(var(--spelman-navy))] text-[hsl(var(--spelman-navy-foreground))] shadow-button hover:bg-[hsl(var(--spelman-navy-hover))] hover:shadow-button-hover font-semibold focus-visible:ring-[hsl(var(--spelman-navy))]",
+          "bg-[hsl(var(--brand-navy))] text-[hsl(var(--brand-navy-foreground))] shadow-button hover:bg-[hsl(var(--brand-navy-hover))] hover:shadow-button-hover font-semibold focus-visible:ring-[hsl(var(--brand-navy))]",
         success:
           "bg-success text-success-foreground shadow-button hover:bg-success/90",
         warning:

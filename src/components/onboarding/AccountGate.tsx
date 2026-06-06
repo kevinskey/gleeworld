@@ -127,7 +127,7 @@ export const AccountGate = ({ onAuthenticated }: AccountGateProps) => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background/95 to-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome to GleeWorld</CardTitle>
+          <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
           <CardDescription>
             Sign in to continue your onboarding or create a new account
           </CardDescription>
@@ -148,7 +148,7 @@ export const AccountGate = ({ onAuthenticated }: AccountGateProps) => {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="your.email@spelman.edu"
+                      placeholder="your.email@riversidechoir.example"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-9"
@@ -207,7 +207,7 @@ export const AccountGate = ({ onAuthenticated }: AccountGateProps) => {
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="your.email@spelman.edu"
+                      placeholder="your.email@riversidechoir.example"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-9"

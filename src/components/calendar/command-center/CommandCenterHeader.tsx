@@ -33,7 +33,7 @@ export const CommandCenterHeader = ({
   isMobile,
 }: CommandCenterHeaderProps) => {
   return (
-    <div className="bg-[#003666] text-white px-3 md:px-6 py-3 flex-shrink-0">
+    <div className="bg-[#150d26] text-white px-3 md:px-6 py-3 flex-shrink-0">
       {/* Mobile / Tablet layout */}
       {isMobile ? (
         <div className="flex flex-col gap-2.5">

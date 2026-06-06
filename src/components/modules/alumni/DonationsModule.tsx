@@ -71,42 +71,32 @@ export function DonationsModule({ user, isFullPage }: ModuleProps) {
             <CardDescription className="leading-relaxed">Your donation supports current members and preserves our legacy</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <RadioGroup value={selectedAmount} onValueChange={setSelectedAmount} className="grid grid-cols-4 gap-2">
-              {['50', '100', '250', '500'].map((amount) => (
+            <RadioGroup value={selectedAmount} onValueChange={setSelectedAmount} className="grid grid-cols-5 gap-2">
+              {['50', '100', '250', '500', 'custom'].map((amount) => (
                 <div key={amount}>
                   <RadioGroupItem value={amount} id={`amount-${amount}`} className="peer sr-only" />
                   <Label
                     htmlFor={`amount-${amount}`}
                     className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                   >
-                    ${amount}
+                    {amount === 'custom' ? 'Other' : `$${amount}`}
                   </Label>
                 </div>
               ))}
             </RadioGroup>
-            
-            <div className="flex items-center gap-2">
-              <RadioGroupItem 
-                value="custom" 
-                id="amount-custom" 
-                checked={selectedAmount === 'custom'}
-                onClick={() => setSelectedAmount('custom')}
-              />
-              <Label htmlFor="amount-custom">Other:</Label>
-              <div className="relative flex-1">
+
+            {selectedAmount === 'custom' && (
+              <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="number"
                   placeholder="Enter amount"
                   value={customAmount}
-                  onChange={(e) => {
-                    setCustomAmount(e.target.value);
-                    setSelectedAmount('custom');
-                  }}
+                  onChange={(e) => setCustomAmount(e.target.value)}
                   className="pl-8"
                 />
               </div>
-            </div>
+            )}
 
             <Button onClick={handleDonate} size="lg" className="w-full">
               <Heart className="h-4 w-4 mr-2" />

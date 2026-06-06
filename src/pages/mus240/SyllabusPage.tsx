@@ -50,7 +50,7 @@ export default function Syllabus() {
                     </div>
                     <div className="space-y-2">
                       <p><strong>Phone:</strong> 470-622-1392</p>
-                      <p><strong>Email:</strong> kjohns10@spelman.edu</p>
+                      <p><strong>Email:</strong> kjohns10@riversidechoir.example</p>
                     </div>
                   </div>
                 </CardContent>

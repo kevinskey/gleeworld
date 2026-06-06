@@ -7,8 +7,6 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useRadioPlayer } from '@/hooks/useRadioPlayer';
-import { useRadioChannels } from '@/hooks/useRadioChannels';
 import { AttendanceFullScreenModal } from '@/components/course/AttendanceFullScreenModal';
 import QRCode from 'qrcode';
 import { 
@@ -103,8 +101,15 @@ export const GleeAssistant = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume } = useRadioPlayer();
-  const { channels } = useRadioChannels();
+  // Radio feature was removed 2026-05-31. Stub values so the assistant
+  // still compiles; any radio-action branches below short-circuit.
+  const isRadioPlaying = false;
+  const playRadio = (_id?: string) => {};
+  const pauseRadio = () => {};
+  const toggleRadio = () => {};
+  const setVolume = (_v: number) => {};
+  const volume = 0;
+  const channels: any[] = [];
 
   // Attendance QR modal state
   const [attendanceModalOpen, setAttendanceModalOpen] = useState(false);

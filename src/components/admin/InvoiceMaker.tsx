@@ -32,12 +32,12 @@ import {
 import { useInvoices, type InvoiceLineItem, type CreateInvoiceData } from "@/hooks/useInvoices";
 import { InvoicePreview } from "./InvoicePreview";
 
-const SPELMAN_INFO = {
-  name: "Spelman College Glee Club",
-  address: "350 Spelman Lane, SW",
+const BRAND_INFO = {
+  name: "Your favorite band or choir",
+  address: "350 Concert Hall Drive, SW",
   cityStateZip: "Atlanta, GA 30314",
   taxId: "58-0566243",
-  taxStatus: "501(c)(3) Nonprofit Organization — Spelman College",
+  taxStatus: "501(c)(3) Nonprofit Organization — Riverside Music Institute",
 };
 
 const emptyLineItem: InvoiceLineItem = {
@@ -63,7 +63,7 @@ export const InvoiceMaker = () => {
   const [donorEmail, setDonorEmail] = useState("");
   const [donorPhone, setDonorPhone] = useState("");
   const [directorName, setDirectorName] = useState("Dr. Kevin Phillip Johnson");
-  const [directorTitle, setDirectorTitle] = useState("Director, Spelman College Glee Club");
+  const [directorTitle, setDirectorTitle] = useState("Director, Your favorite band or choir");
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([{ ...emptyLineItem }]);
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -78,7 +78,7 @@ export const InvoiceMaker = () => {
     setDonorEmail("");
     setDonorPhone("");
     setDirectorName("Dr. Kevin Phillip Johnson");
-    setDirectorTitle("Director, Spelman College Glee Club");
+    setDirectorTitle("Director, Your favorite band or choir");
     setLineItems([{ ...emptyLineItem }]);
     setNotes("");
     setDueDate("");
@@ -163,7 +163,7 @@ export const InvoiceMaker = () => {
                 Invoice Maker
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Generate nonprofit donation invoices for the Spelman College Glee Club
+                Generate nonprofit donation invoices for the Your favorite band or choir
               </p>
             </div>
             <Button onClick={() => setShowForm(true)}>
@@ -264,15 +264,15 @@ export const InvoiceMaker = () => {
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* From - Spelman Info (read-only) */}
+            {/* From - Brand Info (read-only) */}
             <Card className="bg-muted/50">
               <CardContent className="pt-4 pb-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">From</p>
-                <p className="font-semibold">{SPELMAN_INFO.name}</p>
-                <p className="text-sm text-muted-foreground">{SPELMAN_INFO.address}</p>
-                <p className="text-sm text-muted-foreground">{SPELMAN_INFO.cityStateZip}</p>
-                <p className="text-sm text-muted-foreground mt-1">EIN: {SPELMAN_INFO.taxId}</p>
-                <p className="text-xs text-muted-foreground">{SPELMAN_INFO.taxStatus}</p>
+                <p className="font-semibold">{BRAND_INFO.name}</p>
+                <p className="text-sm text-muted-foreground">{BRAND_INFO.address}</p>
+                <p className="text-sm text-muted-foreground">{BRAND_INFO.cityStateZip}</p>
+                <p className="text-sm text-muted-foreground mt-1">EIN: {BRAND_INFO.taxId}</p>
+                <p className="text-xs text-muted-foreground">{BRAND_INFO.taxStatus}</p>
               </CardContent>
             </Card>
 
@@ -418,8 +418,8 @@ export const InvoiceMaker = () => {
             <Card className="bg-muted/30 border-dashed">
               <CardContent className="py-3">
                 <p className="text-xs text-muted-foreground">
-                  <strong>Tax-Deductible Donation Notice:</strong> Spelman College is a 501(c)(3) nonprofit
-                  organization. EIN: {SPELMAN_INFO.taxId}. No goods or services were provided in exchange for
+                  <strong>Tax-Deductible Donation Notice:</strong> Riverside Music Institute is a 501(c)(3) nonprofit
+                  organization. EIN: {BRAND_INFO.taxId}. No goods or services were provided in exchange for
                   this contribution unless otherwise noted above. This invoice may serve as your receipt for
                   tax purposes.
                 </p>

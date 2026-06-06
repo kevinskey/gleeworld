@@ -109,7 +109,7 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
       const isAdmin = profile?.is_admin || profile?.is_super_admin;
       
       const allowedUsers = [
-        'drew', 'soleil', 'drewroberts@spelman.edu', 'soleilvailes@spelman.edu'
+        'drew', 'soleil', 'drewroberts@riversidechoir.example', 'soleilvailes@riversidechoir.example'
       ];
 
       const userEmail = profile?.email?.toLowerCase() || '';

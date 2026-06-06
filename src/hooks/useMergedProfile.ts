@@ -34,9 +34,6 @@ interface MergedProfile {
   title?: string;
   special_roles?: string[];
   
-  // Executive board
-  is_exec_board?: boolean;
-  exec_board_role?: string;
   music_role?: string;
   
   // Organization
@@ -83,7 +80,7 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
     try {
       const { data: gwProfile, error: gwError } = await supabase
         .from('gw_profiles')
-        .select('user_id, email, full_name, role, is_admin, is_super_admin, class_year, voice_part, exec_board_role, avatar_url, first_name, last_name')
+        .select('user_id, email, full_name, role, is_admin, is_super_admin, class_year, voice_part, avatar_url, first_name, last_name')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -102,7 +99,6 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
           is_super_admin: gwProfile.is_super_admin || false,
           class_year: gwProfile.class_year,
           voice_part: gwProfile.voice_part,
-          exec_board_role: gwProfile.exec_board_role,
           avatar_url: gwProfile.avatar_url,
           first_name: gwProfile.first_name,
           last_name: gwProfile.last_name,

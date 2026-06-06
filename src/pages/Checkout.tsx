@@ -91,8 +91,8 @@ const US_STATES = [
 
 // Glee Club shipping origin (Atlanta, GA)
 const FROM_ADDRESS = {
-  name: "Spelman College Glee Club",
-  street1: "350 Spelman Lane SW",
+  name: "Your favorite band or choir",
+  street1: "350 Concert Hall Drive",
   city: "Atlanta",
   state: "GA",
   zip: "30314",

@@ -117,7 +117,7 @@ export const ReceiptsTable = ({ receipts, loading, onDelete }: ReceiptsTableProp
                     {formatCurrency(receipt.amount)}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="bg-spelman-700/50 text-spelman-200 border-spelman-500/30">
+                    <Badge variant="secondary" className="bg-brand-700/50 text-brand-200 border-brand-500/30">
                       {formatCategory(receipt.category)}
                     </Badge>
                   </TableCell>

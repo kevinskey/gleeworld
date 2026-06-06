@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CommunicationCenterModule } from "@/components/admin/CommunicationCenterModule";
-import { RadioManagement } from "@/components/admin/RadioManagement";
 import { DuesManagement } from "@/pages/DuesManagement";
 import { StudentConductorDashboard } from "@/pages/StudentConductorDashboard";
 import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
@@ -58,8 +57,6 @@ interface AdminDashboardProps {
     email: string;
     full_name: string;
     role: string;
-    exec_board_role?: string;
-    is_exec_board?: boolean;
     created_at: string;
   };
 }
@@ -638,7 +635,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             </TabsContent>
 
             <TabsContent value="radio" className="mt-6">
-              <RadioManagement />
             </TabsContent>
 
             <TabsContent value="permissions" className="mt-6">

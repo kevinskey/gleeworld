@@ -59,7 +59,6 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
   // Musical Information
   const [voicePart, setVoicePart] = useState("");
   const [canDance, setCanDance] = useState(false);
-  const [execBoardRole, setExecBoardRole] = useState("");
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
   
   // Wardrobe & Identity
@@ -189,7 +188,6 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
         student_number: studentNumber.trim(),
         voice_part: voicePart === 'none' ? null : voicePart,
         can_dance: canDance,
-        exec_board_role: execBoardRole === 'none' ? null : execBoardRole || null,
         instruments: selectedInstruments,
         dress_size: dressSize.trim(),
         shoe_size: shoeSize.trim(),
@@ -489,28 +487,6 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
                       <SelectItem value="T2">Tenor 2</SelectItem>
                       <SelectItem value="B1">Bass 1</SelectItem>
                       <SelectItem value="B2">Bass 2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="execBoardRole">Executive Board Position</Label>
-                  <Select value={execBoardRole} onValueChange={setExecBoardRole} disabled={isLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select position (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="President">President</SelectItem>
-                      <SelectItem value="Vice President">Vice President</SelectItem>
-                      <SelectItem value="Secretary">Secretary</SelectItem>
-                      <SelectItem value="Treasurer">Treasurer</SelectItem>
-                      <SelectItem value="Historian">Historian</SelectItem>
-                      <SelectItem value="Librarian">Librarian</SelectItem>
-                      <SelectItem value="Chaplain">Chaplain</SelectItem>
-                      <SelectItem value="Public Relations">Public Relations</SelectItem>
-                      <SelectItem value="Social Chair">Social Chair</SelectItem>
-                      <SelectItem value="Tour Manager">Tour Manager</SelectItem>
-                      <SelectItem value="Section Leader">Section Leader</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

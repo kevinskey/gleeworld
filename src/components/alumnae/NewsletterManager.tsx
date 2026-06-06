@@ -262,7 +262,7 @@ export const NewsletterManager = () => {
       const { data, error } = await supabase.functions.invoke('send-newsletter-broadcast', {
         body: { 
           newsletter_id: currentNewsletterId,
-          from_name: "Spelman College Glee Club",
+          from_name: "Your favorite band or choir",
           from_email: "onboarding@resend.dev"
         }
       });

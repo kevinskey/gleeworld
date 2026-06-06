@@ -1,8 +1,8 @@
  import { useState, useEffect } from "react";
- import { supabase } from "@/integrations/supabase/client";
  import { ChevronLeft, ChevronRight } from "lucide-react";
  import { Button } from "@/components/ui/button";
- 
+ import { useUniversalHeroSlides } from "@/hooks/useUniversalSlider";
+
  interface HeroSlide {
    id: string;
    image_url: string;
@@ -11,15 +11,18 @@
    link_target?: string;
    display_order: number;
  }
- 
+
  export const AlumnaePageHero = () => {
-   const [slides, setSlides] = useState<HeroSlide[]>([]);
+   // Pull from the universal slider system; shim shape for the existing JSX.
+   const { data: universalSlides = [], isLoading: loading } = useUniversalHeroSlides('alumnae_page_hero');
+   const slides: HeroSlide[] = universalSlides.map((s) => ({
+     id: s.id,
+     image_url: s.imageUrl || '',
+     mobile_image_url: s.mobileImageUrl ?? undefined,
+     link_url: s.buttonUrl ?? undefined,
+     display_order: 0,
+   }));
    const [currentSlide, setCurrentSlide] = useState(0);
-   const [loading, setLoading] = useState(true);
- 
-   useEffect(() => {
-     fetchHeroSlides();
-   }, []);
  
    useEffect(() => {
      if (slides.length > 1) {
@@ -30,22 +33,7 @@
      }
    }, [slides.length]);
  
-   const fetchHeroSlides = async () => {
-     try {
-       const { data, error } = await supabase
-        .from('alumnae_page_hero')
-         .select('id, image_url, mobile_image_url, link_url, link_target, display_order')
-         .eq('is_active', true)
-         .order('display_order', { ascending: true });
- 
-       if (error) throw error;
-       setSlides(data || []);
-     } catch (error) {
-       console.error('Error fetching alumnae hero slides:', error);
-     } finally {
-       setLoading(false);
-     }
-   };
+   // (Fetching handled by useUniversalHeroSlides above.)
  
    const nextSlide = () => {
      setCurrentSlide((prev) => (prev + 1) % slides.length);

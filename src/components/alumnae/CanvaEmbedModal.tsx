@@ -96,7 +96,7 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
               <li>Use PNG for images with transparency</li>
               <li>Use JPG for photos and solid backgrounds</li>
               <li>Keep file size under 5MB for faster loading</li>
-              <li>Include Spelman Glee Club branding/colors</li>
+              <li>Include Riverside Concert Choir branding/colors</li>
             </ul>
           </div>
 

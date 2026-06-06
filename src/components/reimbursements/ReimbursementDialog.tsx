@@ -205,7 +205,7 @@ export const ReimbursementDialog = ({ open, onOpenChange, onSuccess }: Reimburse
                     type="email"
                     value={formData.requester_email}
                     onChange={(e) => setFormData({...formData, requester_email: e.target.value})}
-                    placeholder="your.email@spelman.edu"
+                    placeholder="your.email@riversidechoir.example"
                     required
                   />
                 </div>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUniversalHeroSlides } from '@/hooks/useUniversalSlider';
+
 interface AdvertisingHeroData {
   id: string;
   title: string | null;
@@ -20,41 +21,22 @@ interface AdvertisingHeroProps {
 export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({
   className
 }) => {
-  const [heroes, setHeroes] = useState<AdvertisingHeroData[]>([]);
+  // Pull from the universal slider system. The hook returns camelCase
+  // HeroSlide objects; we shim back to the local AdvertisingHeroData shape
+  // so the rendering JSX below doesn't need to change.
+  const { data: slides = [], isLoading: loading } = useUniversalHeroSlides('advertising_hero');
+  const heroes: AdvertisingHeroData[] = slides.map((s) => ({
+    id: s.id,
+    title: s.title ?? null,
+    description: s.description ?? null,
+    image_url: s.imageUrl || '',
+    mobile_image_url: s.mobileImageUrl ?? null,
+    ipad_image_url: s.ipadImageUrl ?? null,
+    link_url: s.buttonUrl ?? null,
+    link_target: null,
+  }));
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  const fetchHeroes = useCallback(async () => {
-    try {
-      const {
-        data,
-        error
-      } = await supabase.from('advertising_hero').select('*').eq('is_active', true).order('display_order', {
-        ascending: true
-      });
-      if (error) throw error;
-      setHeroes(data || []);
-    } catch (e) {
-      console.error('Failed to load advertising heroes:', e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-  useEffect(() => {
-    fetchHeroes();
-
-    // Subscribe to changes
-    const channel = supabase.channel('advertising-hero-changes').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'advertising_hero'
-    }, () => {
-      fetchHeroes();
-    }).subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchHeroes]);
 
   // Auto-rotate
   useEffect(() => {
@@ -74,37 +56,39 @@ export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({
     setCurrentIndex(index);
   }, []);
   if (loading) {
-    return <div className="w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[2/1] bg-muted animate-pulse" />;
+    return <div className="w-full aspect-[3/2] bg-muted animate-pulse" />;
   }
   if (heroes.length === 0) {
     return null;
   }
   const hero = heroes[currentIndex];
   const fallbackImage = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
-  const content = <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[2/1] overflow-hidden group shadow-lg" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
-      {/* Background blur from current image with Spelman blue tint */}
+  const content = <div className="relative w-full aspect-[3/2] overflow-hidden group shadow-lg" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
+      {/* Background blur from current image with Brand blue tint */}
       <div className="absolute inset-0 z-0 bg-[hsl(208_100%_33%)]">
         <img src={hero.image_url || fallbackImage} alt="" className="w-full h-full object-cover scale-110 blur-xl opacity-40" />
       </div>
 
       {/* Hero Images with fade transition */}
       {heroes.map((h, index) => <div key={h.id} className={cn("absolute inset-0 transition-opacity duration-700", index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0")}>
-          {/* Desktop Image */}
+          {/* Desktop Image — object-cover object-center so the full image shows without
+              cropping; the blurred brand-blue background behind fills any
+              letterboxed edges so the box still looks intentional. */}
           <img src={h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} onError={e => {
         if (!e.currentTarget.src.includes('unsplash.com')) {
           e.currentTarget.src = fallbackImage;
         }
-      }} className="hidden md:block w-full h-full rounded-none object-cover" />
-          
+      }} className="hidden md:block w-full h-full rounded-none object-cover object-center" />
+
           {/* iPad/Tablet Image */}
-          <img src={h.ipad_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="hidden sm:block md:hidden w-full h-full object-cover" onError={e => {
+          <img src={h.ipad_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="hidden sm:block md:hidden w-full h-full object-cover object-center" onError={e => {
         if (!e.currentTarget.src.includes('unsplash.com')) {
           e.currentTarget.src = fallbackImage;
         }
       }} />
-          
+
           {/* Mobile Image */}
-          <img src={h.mobile_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="block sm:hidden w-full h-full object-cover" onError={e => {
+          <img src={h.mobile_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="block sm:hidden w-full h-full object-cover object-center" onError={e => {
         if (!e.currentTarget.src.includes('unsplash.com')) {
           e.currentTarget.src = fallbackImage;
         }

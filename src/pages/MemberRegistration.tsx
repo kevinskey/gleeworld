@@ -155,7 +155,7 @@ const MemberRegistration = () => {
             <Input
               id="email"
               type="email"
-              placeholder="your.email@spelman.edu"
+              placeholder="your.email@riversidechoir.example"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-10"
@@ -381,7 +381,7 @@ const MemberRegistration = () => {
               Join the Legacy
             </div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              Spelman Glee Club
+              Riverside Concert Choir
             </h1>
             <p className="text-muted-foreground">
               100+ years of musical excellence starts with you

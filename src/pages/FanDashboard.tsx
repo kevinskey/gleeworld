@@ -11,6 +11,8 @@ import { UniversalHeader } from "@/components/layout/UniversalHeader";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { toast } from "sonner";
 import { GleeAcademyDashboardCard } from "@/components/user-dashboard/GleeAcademyDashboardCard";
+import { HeroSlider } from "@/components/hero/HeroSlider";
+import { useUniversalHeroSlides } from "@/hooks/useUniversalSlider";
 
 
 interface FanStats {
@@ -139,12 +141,25 @@ export default function FanDashboard() {
     );
   }
 
+  return <FanDashboardBody fanStats={fanStats} upcomingEvents={upcomingEvents} />;
+}
+
+function FanDashboardBody({ fanStats, upcomingEvents }: { fanStats: FanStats | null; upcomingEvents: UpcomingEvent[] }) {
+  const { data: fanHeroSlides = [] } = useUniversalHeroSlides('fan_landing_hero');
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       <UniversalHeader />
-      
+
       <div className="container mx-auto px-4 py-6 space-y-6">
-        
+
+        {/* Fan-specific hero — admin sets slides at /admin/sliders for slot
+            "fan_landing_hero". Falls back to nothing if no active slides. */}
+        {fanHeroSlides.length > 0 && (
+          <div className="rounded-lg overflow-hidden border border-border shadow-md aspect-[16/8]">
+            <HeroSlider slides={fanHeroSlides} autoplay={true} showControls={false} showProgress={false} showPausePlay={false} />
+          </div>
+        )}
+
         {/* Glee Academy Card - Course shortcuts */}
         <GleeAcademyDashboardCard />
 

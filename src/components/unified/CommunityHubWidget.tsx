@@ -18,7 +18,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import SendBucketOfLove from '@/components/buckets-of-love/SendBucketOfLove';
 import { SheetMusicViewDialog } from '@/components/music-library/SheetMusicViewDialog';
-import { ExecBoardModularHub } from '@/components/executive/ExecBoardModularHub';
 import { useUserRole } from '@/hooks/useUserRole';
 import { 
   Book, 
@@ -524,10 +523,9 @@ export const CommunityHubWidget = () => {
   const canDownloadPDF = () => {
     if (!profile) return false;
     return (
-      profile.is_admin || 
-      profile.is_super_admin || 
+      profile.is_admin ||
+      profile.is_super_admin ||
       profile.role === 'librarian' ||
-      profile.exec_board_role === 'student_conductor' ||
       profile.role === 'section_leader'
     );
   };

@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useMergedProfile } from '@/hooks/useMergedProfile';
 import officeHoursBadge from '@/assets/office-hours-badge.png';
-import { TypewriterGreeting } from '@/components/shared/TypewriterGreeting';
 interface CourseBadge {
   id: string;
   course_code: string;
@@ -28,18 +27,6 @@ const GleeAcademy = () => {
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const [badges, setBadges] = useState<CourseBadge[]>([]);
   const [loadingBadges, setLoadingBadges] = useState(true);
-  const [showGreeting, setShowGreeting] = useState(false);
-
-  // Show greeting for logged-in users who just arrived (once per session)
-  useEffect(() => {
-    if (user && firstName) {
-      const greetingShown = sessionStorage.getItem('glee_greeting_shown');
-      if (!greetingShown) {
-        setShowGreeting(true);
-        sessionStorage.setItem('glee_greeting_shown', 'true');
-      }
-    }
-  }, [user, firstName]);
 
   // Fetch badges from database
   useEffect(() => {
@@ -87,13 +74,10 @@ const GleeAcademy = () => {
     }
   };
   return <PublicLayout>
-      {/* Typewriter greeting for logged-in users */}
-      {showGreeting && user && <TypewriterGreeting firstName={firstName} onClose={() => setShowGreeting(false)} autoHideAfter={5000} />}
-      
       <div className="min-h-screen bg-[#1a3a5c]">
         {/* Header Banner */}
         <div className="w-full py-6 sm:py-8 flex items-center justify-center" style={{
-        backgroundColor: '#003666'
+        backgroundColor: '#150d26'
       }}>
           <div className="container mx-auto px-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide" style={{
@@ -125,27 +109,6 @@ const GleeAcademy = () => {
             </div> : <div className="text-white/60 text-center py-8 w-full">
               No course badges available.
             </div>}
-        </div>
-
-        {/* Sight Singing Studio Ad */}
-        <div className="px-6 sm:px-16 pb-8">
-          <a href="https://www.sightsingingstudio.com" target="_blank" rel="noopener noreferrer" className="block bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 rounded-xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-shadow duration-200 text-center">
-            <div className="flex items-center gap-3 mb-4 justify-center">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-                <Music className="h-6 w-6 text-purple-600" />
-              </div>
-              <span className="text-xl font-bold text-white">Sight Singing Studio</span>
-            </div>
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
-              Master sight singing, <span className="italic">one phrase at a time</span>
-            </h3>
-            <p className="text-white/90 text-base sm:text-lg mb-4 max-w-xl mx-auto">
-              Practice sight reading with real notation, adjustable tempo, and progress tracking.
-            </p>
-            <Button className="bg-purple-600 text-white hover:bg-purple-700 rounded-full px-6 border-2 border-white">
-              Get Started →
-            </Button>
-          </a>
         </div>
 
         {/* CTA Section */}

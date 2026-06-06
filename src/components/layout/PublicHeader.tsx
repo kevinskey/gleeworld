@@ -10,8 +10,8 @@
  * - Background: Solid white (#FFFFFF)
  * - Site Title Font: Cinzel (matches PersistentHeader)
  * - Site Title Size: 90% of logo height
- * - All text/icons color: #003666 (Spelman blue)
- * - Sign In button: #003666 background with white text
+ * - All text/icons color: #150d26 (Brand blue)
+ * - Sign In button: #150d26 background with white text
  * 
  * ============================================================================
  */
@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 import gleeWorldLogoCircle from "@/assets/glee-world-logo-circle.png";
 
 // ============================================================================
@@ -32,7 +33,7 @@ const HEADER_STYLES = {
   brandColor: "#FFFFFF",
   
   // Background color
-  backgroundColor: "#003666",
+  backgroundColor: "#150d26",
   
   // Title font family (must match PersistentHeader)
   titleFontFamily: "'Cinzel', serif",
@@ -63,6 +64,29 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const [hideForAnnotation, setHideForAnnotation] = useState(false);
+
+  // Branding settings — read from DB (tenant admin sets these at /admin/site-setup).
+  // Falls back to window.__TENANT_CONFIG__ defaults from /tenant-bootstrap.js
+  // while the query is in flight, so there's no flash on first paint.
+  const { settings: branding } = useBrandingSettings();
+  const tenantOrg = branding.org_name || undefined;
+  const tenantLogo = branding.logo_url || undefined;
+  const tenantShortName = branding.short_name || undefined;
+  const siteName = tenantShortName || tenantOrg || 'GleeWorld';
+
+  // Scale the header font down as the name gets longer so it always fits.
+  // Tested against names up to ~35 chars on a 320px-wide phone.
+  const nameLen = siteName.length;
+  const scale =
+    nameLen <= 10 ? 1
+    : nameLen <= 16 ? 0.78
+    : nameLen <= 24 ? 0.6
+    : 0.48;
+  const titleFontSize = {
+    mobile: `${parseFloat(HEADER_STYLES.titleSizes.mobile) * scale}rem`,
+    tablet: `${parseFloat(HEADER_STYLES.titleSizes.tablet) * scale}rem`,
+    desktop: `${parseFloat(HEADER_STYLES.titleSizes.desktop) * scale}rem`,
+  };
   
   useEffect(() => {
     const handler = (e: any) => setHideForAnnotation(!!e.detail?.active);
@@ -114,27 +138,42 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                   LOGO + SITE TITLE
                   ============================================================ */}
               <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
-                {/* Logo Image */}
-                <img
-                  src="/favicon.png?v=3"
-                  alt="GleeWorld"
-                  className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0 object-cover rounded-full`}
-                />
-                
-                {/* Site Title - Cinzel font, 90% of logo size */}
+                {/* Logo Image — tenant logoUrl wins; otherwise show a neutral monogram */}
+                {tenantLogo ? (
+                  <img
+                    src={tenantLogo}
+                    alt={siteName}
+                    className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0 object-cover rounded-full`}
+                  />
+                ) : tenantOrg ? (
+                  <div
+                    className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0 rounded-full bg-white/15 border border-white/30 flex items-center justify-center text-white font-bold`}
+                    style={{ fontFamily: "'Cinzel', serif" }}
+                  >
+                    {tenantOrg.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()}
+                  </div>
+                ) : (
+                  <img
+                    src="/lovable-uploads/gleeworld-logo.png?v=6"
+                    alt="GleeWorld"
+                    className={`${HEADER_STYLES.logoSizes.mobile} ${HEADER_STYLES.logoSizes.tablet} ${HEADER_STYLES.logoSizes.desktop} flex-shrink-0 object-cover rounded-full`}
+                  />
+                )}
+
+                {/* Site Title — uses tenant org if set. Auto-shrinks for long names. */}
                 <span
                   style={{
                     fontFamily: "'Cinzel', serif",
                     color: HEADER_STYLES.brandColor,
-                    fontSize: HEADER_STYLES.titleSizes.mobile,
+                    fontSize: `clamp(0.9rem, ${1 + scale * 1.5}vw, ${parseFloat(HEADER_STYLES.titleSizes.desktop) * scale}rem)`,
                     fontWeight: 500,
                     letterSpacing: '0.02em',
-                    lineHeight: 0,
-                    verticalAlign: 'middle',
+                    lineHeight: 1.1,
                   }}
-                  className="whitespace-nowrap drop-shadow-sm md:!text-[2.025rem] lg:!text-[2.43rem] leading-[0] flex items-center"
+                  className="drop-shadow-sm min-w-0 truncate"
+                  title={tenantOrg || 'GleeWorld'}
                 >
-                  GleeWorld
+                  {siteName}
                 </span>
               </Link>
               
@@ -227,7 +266,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                         ) : (
                           <Button 
                             asChild
-                            className="w-full bg-[#003666] hover:bg-[#002244] text-white"
+                            className="w-full bg-[#150d26] hover:bg-[#002244] text-white"
                             onClick={() => setIsOpen(false)}
                           >
                             <Link to="/auth">Sign In / Join</Link>

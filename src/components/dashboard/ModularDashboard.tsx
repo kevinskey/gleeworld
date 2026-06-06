@@ -28,7 +28,7 @@ interface UserPermissions {
   isExecBoard: boolean;
 }
 
-const BASELINE_MODULE_IDS = ['community-hub','music-library','calendar-management','attendance-management'];
+const BASELINE_MODULE_IDS = ['community-hub','music-library','calendar','attendance'];
 
 interface ModularDashboardProps {
   hideHeader?: boolean;

@@ -18,7 +18,6 @@ export interface UserWithPermissions {
   full_name: string;
   email: string;
   role: string;
-  is_exec_board: boolean;
   modules: string[];
 }
 
@@ -156,8 +155,8 @@ export const useUserModulePermissions = () => {
         .from('gw_profiles')
         .select(`
           id, user_id, email, full_name, first_name, last_name, role,
-          exec_board_role, is_exec_board, avatar_url, phone, voice_part, 
-          class_year, join_date, status, dues_paid, notes, is_admin, 
+          avatar_url, phone, voice_part,
+          class_year, join_date, status, dues_paid, notes, is_admin,
           is_super_admin, title, bio, graduation_year, verified, created_at
         `)
         .order('created_at', { ascending: false });
@@ -166,7 +165,7 @@ export const useUserModulePermissions = () => {
         count: users?.length || 0,
         error: usersError,
         sampleUsers: users?.slice(0, 5).map(u => ({ name: u.full_name, email: u.email })),
-        arianaInResults: users?.find(u => u.email === 'arianaswindell@spelman.edu')
+        arianaInResults: users?.find(u => u.email === 'arianaswindell@riversidechoir.example')
       });
       
       if (usersError) {
@@ -186,7 +185,7 @@ export const useUserModulePermissions = () => {
         error: permsError,
         arianaPerms: perms?.filter(p => {
           const user = users?.find(u => u.user_id === p.user_id);
-          return user?.email === 'arianaswindell@spelman.edu';
+          return user?.email === 'arianaswindell@riversidechoir.example';
         })
       });
       
@@ -214,14 +213,13 @@ export const useUserModulePermissions = () => {
             full_name: fullName,
             email: profile.email || '',
             role: profile.role || 'member',
-            is_exec_board: profile.is_exec_board || false,
             modules: userPermissions
           };
         });
       
       console.log('🔍 getAllUsersWithPermissions: Final users with permissions:', {
         count: usersWithPermissions.length,
-        arianaFound: usersWithPermissions.find(u => u.email === 'arianaswindell@spelman.edu'),
+        arianaFound: usersWithPermissions.find(u => u.email === 'arianaswindell@riversidechoir.example'),
         sampleUsersWithModules: usersWithPermissions.slice(0, 3).map(u => ({
           name: u.full_name,
           email: u.email,

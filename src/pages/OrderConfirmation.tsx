@@ -86,7 +86,7 @@ export const OrderConfirmation = () => {
     return (
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white">
-          <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{ backgroundColor: '#003666' }}>
+          <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{ backgroundColor: '#150d26' }}>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">Order Status</h1>
           </div>
           <div className="container mx-auto px-4 py-12">
@@ -117,7 +117,7 @@ export const OrderConfirmation = () => {
     <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
       <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white">
         {/* Header */}
-        <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{ backgroundColor: '#003666' }}>
+        <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{ backgroundColor: '#150d26' }}>
           <div className="container mx-auto px-4 text-center">
             <div className="flex items-center justify-center gap-3">
               {isPaid ? (

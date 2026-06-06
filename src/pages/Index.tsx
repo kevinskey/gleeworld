@@ -267,7 +267,7 @@ const Index = () => {
                     GleeWorld Dashboard
                   </h1>
                   <p className="text-muted-foreground">
-                    Spelman College Glee Club Management Platform
+                    Your favorite band or choir Management Platform
                   </p>
                 </div>
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">

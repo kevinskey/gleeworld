@@ -102,7 +102,7 @@ export const UsernamePermissionsManager = () => {
               <Input
                 id="userEmail"
                 type="email"
-                placeholder="user@spelman.edu"
+                placeholder="user@riversidechoir.example"
                 value={formData.userEmail}
                 onChange={(e) => setFormData(prev => ({ ...prev, userEmail: e.target.value }))}
                 className="h-9 text-sm"

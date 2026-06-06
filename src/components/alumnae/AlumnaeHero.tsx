@@ -121,7 +121,7 @@ export const AlumnaeHero = () => {
               ? "drop-shadow-2xl"
               : "text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent drop-shadow-2xl"}
           >
-            Spelman College Glee Club
+            Your favorite band or choir
           </h1>
           
           {/* Subtitle with metallic effect */}

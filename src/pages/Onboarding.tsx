@@ -20,6 +20,9 @@ export const Onboarding = () => {
   const { profile, loading, saving, updateField, updateFields, getStepCompletion } = useOnboardingProfile();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const nextDest = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('next') || '/dashboard'
+    : '/dashboard';
   
   const [currentStep, setCurrentStep] = useState(0); // Start at 0 for hero slide
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -82,12 +85,12 @@ export const Onboarding = () => {
     
     toast({
       title: "Onboarding Complete!",
-      description: "Welcome to the Spelman College Glee Club family!",
+      description: "Welcome to the Your favorite band or choir family!",
     });
 
-    // Redirect after a short delay
+    // Redirect after a short delay — honor ?next= if the user came from an invite link.
     setTimeout(() => {
-      navigate('/dashboard');
+      navigate(nextDest);
     }, 2000);
   };
 
@@ -126,7 +129,7 @@ export const Onboarding = () => {
         <div className="text-center space-y-6">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
           <div>
-            <h1 className="text-3xl font-bold">Welcome to GleeWorld!</h1>
+            <h1 className="text-3xl font-bold text-foreground">Welcome!</h1>
             <p className="text-muted-foreground mt-2">
               Your onboarding is complete. Redirecting to your dashboard...
             </p>
@@ -163,7 +166,7 @@ export const Onboarding = () => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold">GleeWorld Onboarding</h1>
           <p className="text-muted-foreground mt-2">
-            Complete your profile to join the Spelman College Glee Club
+            Complete your profile to join the Your favorite band or choir
           </p>
         </div>
 

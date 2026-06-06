@@ -83,7 +83,7 @@ function WatermarkDecoration() {
         userSelect: 'none',
       }}
     >
-      SPELMAN
+      BRAND
     </div>
   );
 }

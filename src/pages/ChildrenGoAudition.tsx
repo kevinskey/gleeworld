@@ -132,7 +132,7 @@ export default function ChildrenGoAudition() {
                 Children, Go Where I Send Thee
               </h1>
               <p className="text-xl text-white/90 mb-2">
-                Spelman College Glee Club Rap Audition
+                Your favorite band or choir Rap Audition
               </p>
               <p className="text-white/80">
                 Upload your audition video below
@@ -248,10 +248,10 @@ export default function ChildrenGoAudition() {
               <p className="text-white text-sm">
                 Questions? Contact us at{" "}
                 <a 
-                  href="mailto:gleeclub@spelman.edu" 
+                  href="mailto:press@riversidechoir.example" 
                   className="underline hover:text-white/80"
                 >
-                  gleeclub@spelman.edu
+                  press@riversidechoir.example
                 </a>
               </p>
             </div>

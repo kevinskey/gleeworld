@@ -348,7 +348,7 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
               {/* Custom Flyout for Album Tracks */}
               {hoveredAlbum?.id === album.id && (
                 <div 
-                  className="absolute left-full top-0 ml-1 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl z-[200] rounded-lg"
+                  className="absolute left-full top-0 ml-1 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-brand-blue-light/30 shadow-xl z-[200] rounded-lg"
                   onMouseEnter={() => setHoveredAlbum(album)}
                   onMouseLeave={() => setHoveredAlbum(null)}
                 >
@@ -396,7 +396,7 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
                 {/* Custom Flyout for All Tracks */}
                 {hoveredAlbum?.id === 'all' && (
                   <div 
-                    className="absolute left-full top-0 ml-1 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-spelman-blue-light/30 shadow-xl z-[200] rounded-lg"
+                    className="absolute left-full top-0 ml-1 w-56 max-h-60 overflow-y-auto bg-white/95 backdrop-blur-md border border-brand-blue-light/30 shadow-xl z-[200] rounded-lg"
                     onMouseEnter={() => setHoveredAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
                     onMouseLeave={() => setHoveredAlbum(null)}
                   >

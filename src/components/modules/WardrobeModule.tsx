@@ -29,8 +29,8 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
   const currentProvider = providers.find(p => p.user_id === authUser?.id);
   const isWardrobeProvider = currentProvider && (
     currentProvider.title?.toLowerCase().includes('wardrobe') ||
-    currentProvider.email === 'drewroberts@spelman.edu' ||
-    currentProvider.email === 'soleilvailes@spelman.edu'
+    currentProvider.email === 'drewroberts@riversidechoir.example' ||
+    currentProvider.email === 'soleilvailes@riversidechoir.example'
   );
   
   // Check if user is wardrobe staff (admin, super admin, executive board, or wardrobe service provider)

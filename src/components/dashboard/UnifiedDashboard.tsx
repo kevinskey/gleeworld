@@ -6,13 +6,17 @@ import { ArrowLeft, GraduationCap, Youtube, Newspaper, ChevronDown } from 'lucid
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
-import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonitor';
+import { ControlCenter } from '@/components/dashboard/ControlCenter';
+// (PublicDashboardMonitor was deleted in the 2026-05-31 hero consolidation —
+// it only existed to read from the legacy gw_hero_slides table. The monitor
+// view now falls back to the live GleeWorldLanding.)
 import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
 import { AlumnaeDashboardMonitor } from '@/components/admin/AlumnaeDashboardMonitor';
 import FanDashboard from '@/pages/FanDashboard';
 import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 import { ModuleDisplay } from './ModuleDisplay';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
 import { ConcertTicketBanner } from '@/components/shared/ConcertTicketBanner';
 import { PollReminderPopup } from '@/components/polls/PollReminderPopup';
@@ -72,6 +76,8 @@ export const UnifiedDashboard = () => {
     profile,
     loading: profileLoading
   } = useUserRole();
+  const { settings: branding, isLoading: brandingLoading } = useBrandingSettings();
+
   const [showMessages, setShowMessages] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [fanViewMode, setFanViewMode] = useState<'monitor' | 'experience'>('monitor');
@@ -85,12 +91,25 @@ export const UnifiedDashboard = () => {
   // Redirect students away from dashboard to their course(s)
   useEffect(() => {
     if (profileLoading || !profile) return;
-    const isLeadership = profile.is_super_admin || profile.is_admin || profile.is_exec_board ||
+    const isLeadership = profile.is_super_admin || profile.is_admin ||
     profile.role === 'super-admin' || profile.role === 'admin';
     if (profile.role === 'student' && !isLeadership) {
       navigate('/course-selection', { replace: true });
     }
   }, [profile, profileLoading, navigate]);
+
+  // First-time onboarding: if this tenant admin hasn't completed site setup,
+  // send them to /admin/site-setup before they land on the dashboard.
+  useEffect(() => {
+    if (profileLoading || brandingLoading || !profile) return;
+    const isAdmin = profile.is_super_admin || profile.is_admin || profile.role === 'super-admin' || profile.role === 'admin';
+    if (!isAdmin) return;
+    if (branding.setup_completed) return;
+    if (location.pathname === '/admin/site-setup') return;
+    if (location.pathname === '/control-center' || location.pathname === '/dashboard') {
+      navigate('/admin/site-setup', { replace: true });
+    }
+  }, [profile, profileLoading, branding, brandingLoading, location.pathname, navigate]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -107,11 +126,14 @@ export const UnifiedDashboard = () => {
 
   // Determine view mode based on current route
   const viewMode = useMemo(() => {
-    if (location.pathname === '/dashboard/member') return 'member';
-    if (location.pathname === '/dashboard/student') return 'student';
-    if (location.pathname === '/dashboard/fan') return 'fan';
-    if (location.pathname === '/dashboard/mus240') return 'mus240';
-    if (location.pathname === '/dashboard/public') return 'public';
+    const path = location.pathname.replace(/\/+$/, ''); // strip trailing slashes
+    if (path === '/dashboard/member') return 'member';
+    if (path === '/dashboard/student') return 'student';
+    if (path === '/dashboard/fan') return 'fan';
+    if (path === '/dashboard/mus240') return 'mus240';
+    if (path === '/dashboard/public') return 'public';
+    // /control-center is the super-admin landing — show the dedicated dashboard
+    if (path === '/control-center') return 'control';
     return 'default';
   }, [location.pathname]);
 
@@ -209,14 +231,48 @@ export const UnifiedDashboard = () => {
             email: profile.email,
             full_name: profile.full_name,
             role: profile.role,
-            exec_board_role: profile.exec_board_role,
-            is_exec_board: profile.is_exec_board,
             is_admin: profile.is_admin,
             is_super_admin: profile.is_super_admin
           }} />
             </Suspense>
           </div>}
       </div>;
+  }
+
+  // Super-admin / Admin control center (route: /control-center).
+  // Renders the SuperAdminDashboard for full-permission users; everyone else
+  // gets sent to their own role's landing via the redirect hook.
+  if (viewMode === 'control') {
+    if (profile?.is_super_admin || profile?.is_admin || profile?.role === 'super-admin' || profile?.role === 'admin') {
+      // If a module is selected via ?module=X, render it inside the
+      // control-center frame with a "Back to Control Center" button.
+      if (activeModuleId && activeModuleId !== 'collapsed-toggle') {
+        return <div className="min-h-screen">
+            <div className="py-3 px-3 sm:py-4 sm:px-4 md:py-6 md:px-6 max-w-7xl mx-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/control-center')}
+                className="mb-3"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1.5" />
+                Back to Control Center
+              </Button>
+              <ModuleDisplay selectedModule={activeModuleId} />
+            </div>
+          </div>;
+      }
+      // No module selected — show the ControlCenter index
+      return <div className="min-h-screen">
+          <div className="py-3 px-3 sm:py-4 sm:px-4 md:py-6 md:px-6 max-w-7xl mx-auto">
+            <ControlCenter onModuleSelect={(moduleId) => {
+              navigate(`/control-center?module=${moduleId}`);
+            }} />
+          </div>
+        </div>;
+    }
+    // Non-admin somehow landed here — bounce to their own dashboard.
+    return <div className="p-8 text-center text-muted-foreground">Control Center is super-admin only.</div>;
   }
 
   // MUS240 view for super admins
@@ -230,8 +286,6 @@ export const UnifiedDashboard = () => {
             email: profile.email || '',
             full_name: profile.full_name || '',
             role: profile.role || 'super-admin',
-            exec_board_role: profile.exec_board_role,
-            is_exec_board: profile.is_exec_board || false,
             created_at: new Date().toISOString()
           }} />
             <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded" />}>
@@ -240,8 +294,6 @@ export const UnifiedDashboard = () => {
               email: profile.email,
               full_name: profile.full_name,
               role: profile.role,
-              exec_board_role: profile.exec_board_role,
-              is_exec_board: profile.is_exec_board,
               is_admin: profile.is_admin,
               is_super_admin: profile.is_super_admin
             }} />
@@ -264,8 +316,6 @@ export const UnifiedDashboard = () => {
           email: profile.email || '',
           full_name: profile.full_name || '',
           role: 'member',
-          exec_board_role: undefined,
-          is_exec_board: false,
           created_at: new Date().toISOString()
         }} simulatedRole="member" simulatedUserId={simulatedMemberId} />}
         </div>
@@ -337,7 +387,8 @@ export const UnifiedDashboard = () => {
                 </div>
               </div>
             </div>
-            {publicViewMode === 'monitor' ? <PublicDashboardMonitor /> : <GleeWorldLanding />}
+            {/* Both modes show the live landing now — monitor was a legacy admin */}
+            <GleeWorldLanding />
           </div>
         </div>;
     }
@@ -390,8 +441,6 @@ export const UnifiedDashboard = () => {
           <MyModules userProfile={{
         user_id: user.id,
         role: profile?.role,
-        exec_board_role: profile?.exec_board_role,
-        is_exec_board: profile?.is_exec_board,
         is_admin: profile?.is_admin,
         is_super_admin: profile?.is_super_admin
       }} />

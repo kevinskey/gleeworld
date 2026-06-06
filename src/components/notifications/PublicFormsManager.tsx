@@ -108,18 +108,18 @@ export const PublicFormsManager = () => {
 
       switch (submission.form_type) {
         case 'fan_interest':
-          subject = 'Thank you for your interest in Spelman Glee Club!';
-          responseMessage = `Dear ${submission.full_name},\n\nThank you for expressing interest in the Spelman College Glee Club! We're thrilled to have supporters like you.\n\nWe'll keep you updated on our upcoming performances and events. Follow us on our social media channels for the latest news and announcements.\n\nMusically yours,\nSpelman College Glee Club`;
+          subject = 'Thank you for your interest in Riverside Concert Choir!';
+          responseMessage = `Dear ${submission.full_name},\n\nThank you for expressing interest in the Your favorite band or choir! We're thrilled to have supporters like you.\n\nWe'll keep you updated on our upcoming performances and events. Follow us on our social media channels for the latest news and announcements.\n\nMusically yours,\nYour favorite band or choir`;
           break;
         
         case 'booking_request':
-          subject = 'Your Concert Booking Request - Spelman Glee Club';
-          responseMessage = `Dear ${submission.full_name},\n\nThank you for your interest in booking the Spelman College Glee Club for your event.\n\nWe have received your request for ${submission.event_date ? `an event on ${new Date(submission.event_date).toLocaleDateString()}` : 'your upcoming event'}${submission.event_location ? ` at ${submission.event_location}` : ''}.\n\nOur booking coordinator will review your request and contact you within 2-3 business days to discuss availability, requirements, and next steps.\n\nBest regards,\nSpelman College Glee Club Booking Department`;
+          subject = 'Your Concert Booking Request - Riverside Concert Choir';
+          responseMessage = `Dear ${submission.full_name},\n\nThank you for your interest in booking the Your favorite band or choir for your event.\n\nWe have received your request for ${submission.event_date ? `an event on ${new Date(submission.event_date).toLocaleDateString()}` : 'your upcoming event'}${submission.event_location ? ` at ${submission.event_location}` : ''}.\n\nOur booking coordinator will review your request and contact you within 2-3 business days to discuss availability, requirements, and next steps.\n\nBest regards,\nYour favorite band or choir Booking Department`;
           break;
         
         default:
-          subject = 'Thank you for contacting Spelman Glee Club';
-          responseMessage = `Dear ${submission.full_name},\n\nThank you for reaching out to the Spelman College Glee Club. We have received your message and will respond as soon as possible.\n\nBest regards,\nSpelman College Glee Club`;
+          subject = 'Thank you for contacting Riverside Concert Choir';
+          responseMessage = `Dear ${submission.full_name},\n\nThank you for reaching out to the Your favorite band or choir. We have received your message and will respond as soon as possible.\n\nBest regards,\nYour favorite band or choir`;
       }
 
       const { error } = await supabase.functions.invoke('gw-send-email', {
@@ -129,7 +129,7 @@ export const PublicFormsManager = () => {
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
-                <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
+                <h1 style="color: white; margin: 0;">Your favorite band or choir</h1>
               </div>
               <div style="padding: 30px; background: white;">
                 <p style="color: #333; line-height: 1.6; font-size: 16px;">${responseMessage.replace(/\n/g, '<br>')}</p>

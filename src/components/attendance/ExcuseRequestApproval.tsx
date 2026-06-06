@@ -248,11 +248,11 @@ export const ExcuseRequestApproval = () => {
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5" />
             Excuse Request Approval
-            <Badge variant="outline" className="ml-2">
+            <Badge variant="outline" className="ml-2 border-white/30 bg-white/10 text-white">
               Director Review
             </Badge>
           </CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-white/70">
             Review and approve excuse requests forwarded by the secretary
           </p>
         </CardHeader>

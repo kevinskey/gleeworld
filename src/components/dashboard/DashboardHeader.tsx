@@ -43,7 +43,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
               Portal
             </h1>
             <p className="text-[10px] lg:text-xs font-['Dancing_Script'] lg:text-base italic text-white/80">
-              Spelman College Glee Club
+              Your favorite band or choir
             </p>
           </div>
         </div>

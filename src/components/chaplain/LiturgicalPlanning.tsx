@@ -18,7 +18,7 @@ export const LiturgicalPlanning = () => {
       title: "Sunday Service Opening",
       date: "2024-08-04",
       time: "11:00 AM",
-      location: "Spelman Chapel",
+      location: "the Chapel",
       songs: ["Amazing Grace", "Lift Every Voice and Sing"]
     },
     {

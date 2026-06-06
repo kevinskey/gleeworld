@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, X, Camera } from "lucide-react";
+import { useUniversalHeroSlides } from "@/hooks/useUniversalSlider";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,8 +26,19 @@ interface DashboardHeroCarouselProps {
 
 export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps) => {
   const navigate = useNavigate();
-  const [slides, setSlides] = useState<HeroSlide[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Pull from the universal slider system; shim back to the local
+  // HeroSlide shape so the carousel JSX below doesn't change.
+  const { data: universalSlides = [], isLoading: loading } = useUniversalHeroSlides('dashboard_hero');
+  const slides: HeroSlide[] = universalSlides.map((s) => ({
+    id: s.id,
+    title: s.title ?? undefined,
+    description: s.description ?? undefined,
+    image_url: s.imageUrl || '',
+    mobile_image_url: s.mobileImageUrl ?? undefined,
+    ipad_image_url: s.ipadImageUrl ?? undefined,
+    display_order: 0,
+    link_url: s.buttonUrl ?? undefined,
+  }));
   const [expandedSlide, setExpandedSlide] = useState<HeroSlide | null>(null);
   const isMobile = useIsMobile();
   
@@ -56,26 +67,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
     }
   }, [emblaApi, slides]);
   
-  useEffect(() => {
-    fetchHeroSlides();
-  }, []);
-
-  const fetchHeroSlides = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('dashboard_hero_slides')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-      
-      if (error) throw error;
-      setSlides(data || []);
-    } catch (error) {
-      console.error('Error fetching dashboard hero slides:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // (Data fetching now handled by useUniversalHeroSlides above.)
 
   // Determine which image to use based on screen size
   const getImageUrl = (slide: HeroSlide) => {
@@ -124,13 +116,13 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
   if (slides.length === 0) {
     const fallbackSlides: HeroSlide[] = [{
       id: 'fallback-1',
-      title: 'Spelman Glee Club — Live in Concert',
+      title: 'Riverside Concert Choir — Live in Concert',
       description: 'To Amaze and Inspire.',
       image_url: '/images/hero-glee-1.jpg',
       display_order: 1
     }, {
       id: 'fallback-2',
-      title: 'Christmas at Spelman',
+      title: 'Holiday Concert',
       description: 'A season of joy and tradition.',
       image_url: '/images/hero-glee-2.jpg',
       display_order: 2

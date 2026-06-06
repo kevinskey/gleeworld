@@ -53,7 +53,7 @@ export const EventDocumentationTracker = () => {
       id: "2",
       title: "Fall Concert",
       date: "2024-11-20",
-      location: "Spelman College",
+      location: "Riverside Music Institute",
       type: "Concert",
       mediaUploaded: true,
       journalEntry: false,

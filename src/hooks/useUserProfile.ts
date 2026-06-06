@@ -32,9 +32,6 @@ interface GleeWorldProfile {
   title: string | null;
   special_roles: string[] | null;
   
-  // Executive Board Fields
-  is_exec_board: boolean;
-  exec_board_role: string | null;
   music_role: string | null;
   org: string | null;
   

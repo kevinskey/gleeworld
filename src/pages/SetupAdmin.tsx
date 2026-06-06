@@ -69,9 +69,9 @@ const SetupAdmin = () => {
         description: "You are now an admin. Redirecting to admin dashboard...",
       });
 
-      // Redirect to admin dashboard
+      // Redirect to control center
       setTimeout(() => {
-        navigate('/admin');
+        navigate('/control-center');
       }, 1500);
 
     } catch (error) {

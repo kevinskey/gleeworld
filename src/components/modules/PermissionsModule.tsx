@@ -6,12 +6,7 @@ import { ModuleProps } from '@/types/unified-modules';
 
 export const PermissionsModule = ({ user, isFullPage = false }: ModuleProps) => {
   return (
-    <div style={{ 
-      color: '#0f172a', 
-      background: 'hsl(40 10% 96%)',
-      borderRadius: '0.5rem',
-      padding: '1rem'
-    }}>
+    <div className="p-4 rounded-lg">
       <ModuleWrapper
         id="user-permissions-management"
         title="User & Permission Management"

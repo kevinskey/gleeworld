@@ -14,32 +14,23 @@ export const STANDARD_MODULE_NAMES = {
   // Core modules
   'auditions': 'Auditions',
   'music-library': 'Music Library',
-  'student-conductor': 'Student Conductor',
-  'section-leader': 'Section Leader',
   'tour-management': 'Tour Management',
   'calendar-management': 'Calendar Management',
-  'executive-board-management': 'Executive Board',
   'user-management': 'User Management',
   'permissions': 'Permissions',
-  
+
   // Administrative modules
-  'approval-system': 'Approval System',
   'budgets': 'Budgets',
   'contracts': 'Contracts',
-  'receipts-records': 'Receipts & Records',
-  'monthly-statements': 'Monthly Statements',
-  'glee-ledger': 'Glee Ledger',
-  'first-year-console': 'First-Year Console',
-  
+  'glee-ledger': 'Ledger',
   // Communications
   'notifications': 'Notifications',
   'email-management': 'Email Management',
   
   
   // Other modules
-  'alumnae-portal': 'Alumnae Portal',
+  'alumnae-portal': 'Alumni Portal',
   'merch-store': 'Merch Store',
-  'wellness': 'Wellness',
   'wardrobe': 'Wardrobe',
   'service-management': 'Service Management',
   'scheduling-module': 'Scheduling',
@@ -48,13 +39,10 @@ export const STANDARD_MODULE_NAMES = {
   'sight-singing-management': 'Sight Singing',
   'buckets-of-love': 'Buckets of Love',
   'booking-forms': 'Booking Forms',
-  'check-requests': 'Check Requests',
   'dues-collection': 'Dues Collection',
   'glee-writing': 'Glee Writing',
   'pr-coordinator': 'PR Coordinator',
-  'ai-financial': 'AI Financial',
-  'attendance-management': 'Attendance Management',
-  'executive-functions': 'Executive Functions'
+  'ai-financial': 'AI Financial'
 } as const;
 
 export type StandardModuleName = keyof typeof STANDARD_MODULE_NAMES;
@@ -73,8 +61,7 @@ export function standardizeModuleName(name: string): StandardModuleName | string
     'ai_tools': 'ai-tools',
     'press_kits': 'press-kits',
     'auditions-management': 'auditions',
-    'music-library': 'music-library',
-    'student-conductor': 'student-conductor'
+    'music-library': 'music-library'
   };
   
   return nameMap[name] || name;

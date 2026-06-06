@@ -162,7 +162,7 @@ export const AddStoryDialog = ({ open, onOpenChange, onStoryAdded }: AddStoryDia
             Share Your Story
           </DialogTitle>
           <DialogDescription>
-            Share your Spelman Glee Club experience with future generations. Stories are reviewed before being published.
+            Share your Riverside Concert Choir experience with future generations. Stories are reviewed before being published.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

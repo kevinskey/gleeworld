@@ -31,6 +31,7 @@ import {
   ChevronDown,
   Ticket,
   Wifi,
+  ArrowLeft,
 } from 'lucide-react';
 import { CouponManagerDialog } from '@/components/pos/CouponManagerDialog';
 import {
@@ -532,12 +533,21 @@ export const PointOfSale = () => {
     <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* Top bar */}
       <header
-        className="bg-[#003666] text-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shrink-0"
+        className="bg-[#150d26] text-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shrink-0"
         style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
       >
         <div className="flex items-center gap-2 sm:gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="text-white/80 hover:text-white hover:bg-white/10 h-8 w-8"
+            aria-label="Back to home"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
           <Package className="w-5 h-5 sm:w-6 sm:h-6" />
-          <h1 className="text-lg sm:text-xl font-bold">GleeWorld POS</h1>
+          <h1 className="text-lg sm:text-xl font-bold">POS</h1>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
             <ReaderStatus

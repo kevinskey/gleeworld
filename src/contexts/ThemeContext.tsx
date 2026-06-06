@@ -17,6 +17,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
  * Hardcoded GleeWorld design tokens (HSL triplets).
  * Applied once on mount — no switching, no DB calls, no local storage.
  */
+// Foreground tokens are now aligned with the surface they sit on:
+//   - `--background` is cream (the actual page bg via UniversalLayout)
+//     so `--foreground` and `--muted-foreground` are DARK text.
+//   - `--card` is dark navy (modules / control center cards),
+//     so `--card-foreground` stays WHITE for use inside cards.
+// This pairing means `text-foreground` reads correctly on the page
+// AND `text-card-foreground` reads correctly inside dark cards.
 const GW_TOKENS = {
   '--primary':                '203 85% 63%',
   '--primary-foreground':     '219 78% 15%',
@@ -24,13 +31,13 @@ const GW_TOKENS = {
   '--secondary-foreground':   '0 0% 100%',
   '--accent':                 '203 85% 63%',
   '--accent-foreground':      '219 78% 15%',
-  '--background':             '220 40% 8%',
-  '--foreground':             '0 0% 96%',
-  '--card':                   '220 35% 12%',
-  '--card-foreground':        '0 0% 96%',
-  '--muted':                  '220 30% 16%',
-  '--muted-foreground':       '0 0% 82%',
-  '--border':                 '220 20% 22%',
+  '--background':             '40 10% 96%',     // cream page bg (matches UniversalLayout)
+  '--foreground':             '222 47% 11%',    // slate-900 — dark text for cream
+  '--card':                   '220 35% 12%',    // dark navy module card
+  '--card-foreground':        '0 0% 96%',       // near-white for dark cards
+  '--muted':                  '40 8% 92%',      // very light warm gray
+  '--muted-foreground':       '215 25% 27%',    // slate-700 — readable on cream
+  '--border':                 '220 13% 85%',    // light cool gray border
   '--destructive':            '0 84% 60%',
   '--destructive-foreground': '0 0% 100%',
 } as const;
@@ -39,7 +46,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Apply tokens once on mount
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.add('dark');
+    // GleeWorld brand is "dark cards on cream page", NOT a true dark theme.
+    // Previously we forced `.dark` on root, which activated Tailwind's
+    // `dark:` variants across ~543 components — many of those use
+    // `dark:text-slate-100` (white) and rendered invisibly on the cream page.
+    // The semantic tokens below still drive the design; `dark:` variants
+    // stay dormant.
+    root.classList.remove('dark');
     root.classList.remove('light');
     root.setAttribute('data-theme', 'glee-world');
 

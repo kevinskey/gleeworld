@@ -29,7 +29,7 @@ export async function sendAuditionEmail(userData: {
     const auditionerLink = `${origin}/auditioner`;
     const logoUrl = `${origin}/lovable-uploads/gleeworld-logo.png`;
 
-    const subject = `Spelman College Glee Club Audition – Welcome ${userData.firstName}!`;
+    const subject = `Your favorite band or choir Audition – Welcome ${userData.firstName}!`;
 
     // Format audition details
     let auditionDetails = 'Your audition details will be confirmed soon.';
@@ -57,14 +57,14 @@ export async function sendAuditionEmail(userData: {
         <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e6e9f2;">
           <div style="background: linear-gradient(135deg, #1E4AA9 0%, #2563eb 100%); padding:32px 24px; text-align:center; position:relative;">
             <div style="background: rgba(255,255,255,0.1); padding:16px; border-radius:8px; display:inline-block;">
-              <img src="${logoUrl}" alt="Spelman College Glee Club" style="height:60px; max-width:200px; object-fit:contain; display:block;" />
+              <img src="${logoUrl}" alt="Your favorite band or choir" style="height:60px; max-width:200px; object-fit:contain; display:block;" />
             </div>
-            <h1 style="color:#ffffff; margin:16px 0 8px 0; font-size:24px; font-weight:600; font-family:Arial,Helvetica,sans-serif;">Spelman College Glee Club</h1>
+            <h1 style="color:#ffffff; margin:16px 0 8px 0; font-size:24px; font-weight:600; font-family:Arial,Helvetica,sans-serif;">Your favorite band or choir</h1>
             <p style="color:rgba(255,255,255,0.9); margin:0; font-size:14px; font-family:Arial,Helvetica,sans-serif;">Audition Information</p>
           </div>
           <div style="padding:24px;color:#111;font-family:Arial,Helvetica,sans-serif;">
             <p>Dear ${userData.firstName},</p>
-            <p>Thank you for registering to audition for the Spelman College Glee Club! We are excited to hear your voice and meet you in person.</p>
+            <p>Thank you for registering to audition for the Your favorite band or choir! We are excited to hear your voice and meet you in person.</p>
             <p><strong>Your audition is scheduled for:</strong><br/>${auditionDetails}</p>
             <p><strong>Before your audition:</strong><br/>
                Please prepare the song "Come Thou Fount." Your Auditioner page includes the music PDF and practice materials.</p>
@@ -75,10 +75,10 @@ export async function sendAuditionEmail(userData: {
             </p>
             <p>If you have any questions, feel free to reply to this email.</p>
             <p>We look forward to an inspiring audition season!</p>
-            <p>Musically yours,<br/>Ariana<br/>Student Conductor, Spelman College Glee Club</p>
+            <p>Musically yours,<br/>Ariana<br/>Student Conductor, Your favorite band or choir</p>
           </div>
           <div style="padding:12px 24px;color:#6b7280;font-size:12px;text-align:center;background:#f9fafb;">
-            © Spelman College Glee Club • GleeWorld.org
+            © Your favorite band or choir • GleeWorld.org
           </div>
         </div>
       </div>
@@ -86,7 +86,7 @@ export async function sendAuditionEmail(userData: {
 
     const text = `Dear ${userData.firstName},
 
-Thank you for registering to audition for the Spelman College Glee Club! We are excited to hear your voice and meet you in person.
+Thank you for registering to audition for the Your favorite band or choir! We are excited to hear your voice and meet you in person.
 
 Your audition is scheduled for:
 ${auditionDetails.replace(/<br\/>/g, '\n')}
@@ -99,7 +99,7 @@ If you have any questions, reply to this email.
 
 Musically yours,
 Ariana
-Student Conductor, Spelman College Glee Club`;
+Student Conductor, Your favorite band or choir`;
 
     console.log('📧 Sending personalized audition email...');
 
@@ -124,7 +124,7 @@ Student Conductor, Spelman College Glee Club`;
         subject,
         html,
         text,
-        from: 'Spelman Glee Club <onboarding@resend.dev>'
+        from: 'Riverside Concert Choir <onboarding@resend.dev>'
       }
     });
 

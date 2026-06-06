@@ -469,7 +469,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         <div className="flex items-center gap-1 sm:gap-3 min-w-0 flex-1 overflow-x-auto">
           <h2 className="text-sm sm:text-lg font-semibold hidden sm:block flex-shrink-0">Piano</h2>
           <Select value={startOctave.toString()} onValueChange={value => setStartOctave(parseInt(value, 10))}>
-            <SelectTrigger className="w-16 sm:w-32 h-7 sm:h-9 text-xs sm:text-sm flex-shrink-0">
+            <SelectTrigger className="w-16 sm:w-32 h-7 sm:h-9 text-xs sm:text-sm flex-shrink-0 bg-white !text-slate-900 [&_span]:!text-slate-900 [&_svg]:!text-slate-700">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="z-[100] bg-popover">
@@ -484,7 +484,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             </SelectContent>
           </Select>
           <Select value={selectedInstrument.toString()} onValueChange={value => setSelectedInstrument(parseInt(value, 10))}>
-            <SelectTrigger className="w-20 sm:w-48 h-7 sm:h-9 text-xs sm:text-sm flex-shrink-0">
+            <SelectTrigger className="w-20 sm:w-48 h-7 sm:h-9 text-xs sm:text-sm flex-shrink-0 bg-white !text-slate-900 [&_span]:!text-slate-900 [&_svg]:!text-slate-700">
               <SelectValue placeholder="Instrument" />
             </SelectTrigger>
             <SelectContent className="z-[100] max-h-[300px] bg-popover">
@@ -532,7 +532,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             }} 
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
-            className="h-6 w-6 sm:h-9 sm:w-9 p-0 ml-0.5 no-drag" 
+            className="h-6 w-6 sm:h-9 sm:w-9 p-0 ml-0.5 no-drag text-foreground hover:bg-foreground/10 border border-foreground/20"
             aria-label="Close piano"
           >
               <X className="h-3.5 w-3.5 sm:h-5 sm:w-5" />

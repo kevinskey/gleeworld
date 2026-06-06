@@ -1,17 +1,14 @@
-// Executive board module definitions
+// Admin module list — exec-board layer was removed; this list now drives
+// admin-level module discovery instead.
 export const EXECUTIVE_MODULE_IDS = [
-// Core executive modules
-  'executive',
-  'executive-board-workshop',
   'user-management',
-  'attendance-management',
+  'attendance',
   'tour-management',
   'booking-forms',
   'auditions',
   'permissions',
   'wardrobe',
-  'wellness',
-  
+
   // Communications
   'email-management',
   'notifications',
@@ -21,36 +18,26 @@ export const EXECUTIVE_MODULE_IDS = [
   'calendar-management',
   'service-management',
   'buckets-of-love',
-  
-  'fan-engagement',
+
   'concert-ticket-requests',
-  
+
   // Finances
   'budgets',
   'contracts',
-  'approval-system',
   'glee-ledger',
-  'receipts-records',
   'dues-collection',
-  'monthly-statements',
-  'check-requests',
+  'invoice-maker',
   'merch-store',
-  
-  
+
   // Musical Leadership
-  'student-conductor',
-  'section-leader',
   'sight-singing-management',
   'sight-reading-generator',
   'member-sight-reading-studio',
   'librarian',
-  'radio-management',
-  'karaoke',
-  
+
   // Member Management
   'alumnae-portal',
-  'first-year-console',
-  
+
   // Tools & Administration
   'ai-tools',
   'hero-manager',
@@ -60,8 +47,7 @@ export const EXECUTIVE_MODULE_IDS = [
 
 // Standard modules that ALL members get automatically
 export const STANDARD_MEMBER_MODULE_IDS = [
-  'community-hub',
-  'music-library', 
+  'music-library',
   'calendar',
   'attendance'
 ];

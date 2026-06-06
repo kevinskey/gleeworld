@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserPlus, LogIn, ArrowLeft, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import gleeWorldLogoCircle from '@/assets/glee-world-logo-circle.png';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 const authBackground = '/lovable-uploads/1e93a440-6349-4948-a145-7b55dedea9fc.png';
 export default function AuthPage() {
   const {
@@ -18,6 +19,8 @@ export default function AuthPage() {
   const {
     toast
   } = useToast();
+  const { settings: branding } = useBrandingSettings();
+  const siteName = branding.short_name || branding.org_name || 'GleeWorld';
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
@@ -186,7 +189,7 @@ export default function AuthPage() {
             <img src={gleeWorldLogoCircle} alt="GleeWorld.org logo" className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain drop-shadow-2xl" />
           </div>
           <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-white mb-1 sm:mb-2 drop-shadow-2xl lg:text-5xl">
-            Glee World! 
+            {siteName}
           </h1>
           <h2 className="text-sm sm:text-base md:text-xl mb-1 sm:mb-2 md:mb-3 drop-shadow-lg font-serif text-white font-semibold">
             {isForgotPassword ? 'Reset Your Password' : 'Sign in or Create an account'}
@@ -219,7 +222,7 @@ export default function AuthPage() {
             </CardTitle>
           </CardHeader>
           
-          <CardContent className="relative bg-[#003666]">
+          <CardContent className="relative bg-brand-gradient-deep">
             {isForgotPassword ? (
               // Forgot Password Form
               resetEmailSent ? (
@@ -348,7 +351,7 @@ export default function AuthPage() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-white/60 text-sm">
-            © 2024 Spelman College Glee Club. All rights reserved.
+            © 2024 Your favorite band or choir. All rights reserved.
           </p>
         </div>
       </div>

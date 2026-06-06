@@ -58,7 +58,7 @@ export default function Mus210() {
     location: 'Fine Arts 109',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       officeHours: 'MWF 3–5 PM or appointment'
     },

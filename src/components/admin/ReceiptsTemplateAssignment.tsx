@@ -71,7 +71,7 @@ export const ReceiptsTemplateAssignment = ({
       <DialogContent className="glass-card border-white/20 max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-white flex items-center gap-2">
-            <DollarSign className="h-6 w-6 text-spelman-400" />
+            <DollarSign className="h-6 w-6 text-brand-400" />
             Template Stipend Management
           </DialogTitle>
         </DialogHeader>
@@ -139,7 +139,7 @@ export const ReceiptsTemplateAssignment = ({
                           <h4 className="font-medium text-white">{receipt.vendor_name}</h4>
                           <p className="text-sm text-white/70">{receipt.description}</p>
                         </div>
-                        <Badge variant="outline" className="bg-spelman-700/50 text-spelman-200 border-spelman-400/30">
+                        <Badge variant="outline" className="bg-brand-700/50 text-brand-200 border-brand-400/30">
                           {formatCurrency(receipt.amount)}
                         </Badge>
                       </div>

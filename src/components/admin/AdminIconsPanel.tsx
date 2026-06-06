@@ -88,15 +88,7 @@ const adminFunctions: AdminFunction[] = [
     tab: 'invoices',
     color: 'bg-emerald-500 hover:bg-emerald-600'
   },
-  {
-    id: 'executive',
-    title: 'Executive Board',
-    description: 'Board member management',
-    icon: Shield,
-    tab: 'executive-board',
-    color: 'bg-red-500 hover:bg-red-600'
-  },
-  {
+{
     id: 'w9',
     title: 'W9 Forms',
     description: 'Tax form management',

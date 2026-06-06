@@ -197,7 +197,7 @@ export const BookingForm: React.FC = () => {
         <div className="text-center mb-6">
           <div className="bg-primary rounded-xl p-6 shadow-md">
             <h1 className="text-2xl font-bold text-primary-foreground mb-1">
-              Spelman College Glee Club
+              Your favorite band or choir
             </h1>
             <h2 className="text-lg font-medium text-primary-foreground/90 mb-2 py-[20px] font-sans">Book Our Performance</h2>
             <p className="text-primary-foreground/70 text-sm max-w-xl mx-auto">

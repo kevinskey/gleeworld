@@ -36,12 +36,12 @@ export const ModuleWrapper = ({
   showBack = false,
   onBack,
   stickyHeader = false,
-  collapsible = true,
-  defaultOpen = false
+  collapsible = false,
+  defaultOpen = true
 }: ModuleWrapperProps) => {
   const containerClass = fullPage ? "min-h-screen space-y-4" : "space-y-4";
   const headerClass = stickyHeader ? "sticky z-10 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/80" : "";
-  const [collapsed, setCollapsed] = useState(collapsible ? !(defaultOpen ?? true) : false);
+  const [collapsed, setCollapsed] = useState(collapsible ? !defaultOpen : false);
   const content = <div className={`${containerClass} ${className}`}>
       {/* Standardized Header */}
       <div className={`${headerClass} border-l-4 border-primary pl-2 md:pl-4`} style={stickyHeader ? {
@@ -54,11 +54,11 @@ export const ModuleWrapper = ({
               </Button>}
             {Icon && <Icon className={`h-4 w-4 md:h-5 md:w-5 text-${iconColor}-600 flex-shrink-0`} />}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1 md:gap-2 text-black">
-                <h2 className="page-header truncate text-black">{title}</h2>
+              <div className="flex items-center gap-1 md:gap-2">
+                <h2 className="page-header truncate text-foreground">{title}</h2>
                 {isNew && <Badge variant="secondary" className="text-xs">New</Badge>}
               </div>
-              {description && <p className="text-xs mt-0.5 line-clamp-2 text-black">{description}</p>}
+              {description && <p className="text-xs mt-0.5 line-clamp-2 text-muted-foreground">{description}</p>}
             </div>
           </div>
           <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">

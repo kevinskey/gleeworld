@@ -128,15 +128,15 @@ export const TourContractTemplate = ({ initialData }: TourContractTemplateProps)
   const generatePlainTextContract = () => {
     const v = variables;
     return `
-THE SPELMAN COLLEGE GLEE CLUB PERFORMANCE AGREEMENT
+THE BRAND COLLEGE GLEE CLUB PERFORMANCE AGREEMENT
 
-This Agreement (the "Agreement") is entered into by and between Spelman College, with its principal offices in Atlanta, Georgia (herein and after referred to as "the College") and ${v.HOST_NAME || '[HOST NAME]'}, which is located in ${v.HOST_LOCATION || '[HOST LOCATION]'} (herein and after referred to as "the Host").
+This Agreement (the "Agreement") is entered into by and between Riverside Music Institute, with its principal offices in Atlanta, Georgia (herein and after referred to as "the College") and ${v.HOST_NAME || '[HOST NAME]'}, which is located in ${v.HOST_LOCATION || '[HOST LOCATION]'} (herein and after referred to as "the Host").
 
 Whereas the College has agreed to perform musical presentations and whereas the Host is ready, willing and able to support the efforts that are herein set forth.
 
 ARTICLE 1. STATEMENT OF PERFORMANCE
 
-The Spelman College Glee Club shall perform for a period of time as established by the Host and referenced herein. The date of the performance shall be on ${v.PERFORMANCE_DATE || '[DATE]'}, beginning at ${v.START_TIME || '[START TIME]'} and ending at ${v.END_TIME || '[END TIME]'}. The performance shall be held at ${v.VENUE_NAME || '[VENUE NAME]'}, located at ${v.VENUE_ADDRESS || '[VENUE ADDRESS]'}.
+The Your favorite band or choir shall perform for a period of time as established by the Host and referenced herein. The date of the performance shall be on ${v.PERFORMANCE_DATE || '[DATE]'}, beginning at ${v.START_TIME || '[START TIME]'} and ending at ${v.END_TIME || '[END TIME]'}. The performance shall be held at ${v.VENUE_NAME || '[VENUE NAME]'}, located at ${v.VENUE_ADDRESS || '[VENUE ADDRESS]'}.
 
 ARTICLE 2. HONORARIUM AND ACCOMMODATIONS
 
@@ -147,7 +147,7 @@ A deposit of one half (1/2) of the honorarium, ${v.DEPOSIT_AMOUNT || '[DEPOSIT]'
 The final payment of $${formatCurrency(v.DEPOSIT_AMOUNT)} USD is due the day of the performance and should be given to the Director of the Glee Club immediately following the performance.
 
 VENUE
-The Host is responsible for identifying and securing the venue and covering any associated expenses. Spelman College reserves the right to recommend or decline a given performance venue and should be notified of the venue being considered prior to any costs being incurred.
+The Host is responsible for identifying and securing the venue and covering any associated expenses. Riverside Music Institute reserves the right to recommend or decline a given performance venue and should be notified of the venue being considered prior to any costs being incurred.
 
 POST-PERFORMANCE MEAL
 Following the concert, the Host shall provide a well-balanced meal for the Glee Club's ${v.PERFORMER_COUNT || '44'} members, the Director, and the accompanist.
@@ -163,7 +163,7 @@ The Host shall provide standing risers to accommodate ${v.PERFORMER_COUNT || '44
 
 ARTICLE 4. PUBLICITY
 
-The Host agrees that all advertising and publicity related to the event, and containing any reference or mention of the Spelman College Name and/or Logo, shall be approved by the College prior to public release.
+The Host agrees that all advertising and publicity related to the event, and containing any reference or mention of the Riverside Music Institute Name and/or Logo, shall be approved by the College prior to public release.
 
 ARTICLE 5. INSURANCE
 
@@ -184,10 +184,10 @@ This contract shall adhere to the benefit of and shall be binding upon the respe
 ${v.SPECIAL_NOTES ? `SPECIAL NOTES:\n${v.SPECIAL_NOTES}\n\n` : ''}
 SIGNATURES
 
-SPELMAN COLLEGE
+BRAND COLLEGE
 _________________________
 Kevin Johnson, D.M.A.
-Director, Spelman College Glee Club
+Director, Your favorite band or choir
 
 THE HOST: ${v.HOST_NAME || '[HOST NAME]'}
 _________________________
@@ -201,7 +201,7 @@ Date: _______________
 
 EXHIBIT A - VENUE REQUIREMENTS
 
-On the day of the performance, the Host will provide the following for the Spelman College Glee Club:
+On the day of the performance, the Host will provide the following for the Your favorite band or choir:
 • A dressing room that can accommodate ${v.PERFORMER_COUNT || '44'} performers and safe keeping for their belongings.
 • A separate dressing room for the Director of the Glee Club and a separate dressing room for the Accompanist.
 • Bottled water at room-temperature and in the warm-up area.
@@ -216,7 +216,7 @@ EXHIBIT C - OVERNIGHT ACCOMMODATIONS
 
 The College must approve all lodging prior to the Host incurring any cost. Lodging provided through the following organizations is preferred by the College: Hilton, Marriott, and Embassy Suites.
 
-Note: All documentation and deposits can be mailed to Spelman College, Department of Music, 350 Spelman Lane, SW, Campus Box 979, Atlanta, Georgia, 30314-4399. All payments should be given in the form of a check, cashier's check, or money order made payable to the Spelman College Glee Club.
+Note: All documentation and deposits can be mailed to Riverside Music Institute, Department of Music, 350 Concert Hall Drive, SW, Campus Box 979, Atlanta, Georgia, 30314-4399. All payments should be given in the form of a check, cashier's check, or money order made payable to the Your favorite band or choir.
     `.trim();
   };
 
@@ -305,7 +305,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Spelman-Glee-Club-Contract-${variables.HOST_NAME || 'draft'}.txt`;
+    a.download = `Program-Contract-${variables.HOST_NAME || 'draft'}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -323,7 +323,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
             Tour Performance Agreement
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Official Spelman College Glee Club contract format
+            Official Your favorite band or choir contract format
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -555,23 +555,22 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
                   {/* Header */}
                   <div className="text-center mb-8 border-b-2 pb-6" style={{ borderColor: '#1e3a5f' }}>
                     <div className="flex items-center justify-center gap-4 mb-2">
-                      <div className="text-3xl font-bold tracking-wide" style={{ color: '#1e3a5f' }}>Spelman</div>
                       <div className="text-xl" style={{ color: '#1e3a5f' }}>College</div>
                     </div>
                     <p className="text-sm italic" style={{ color: '#2c5282' }}>A Choice to Change the World</p>
                   </div>
 
                   <h1 className="text-xl font-bold text-center mb-6 uppercase tracking-wide" style={{ color: '#1a1a1a' }}>
-                    The Spelman College Glee Club Performance Agreement
+                    The Your favorite band or choir Performance Agreement
                   </h1>
 
                   {/* Introduction */}
                   <p className="mb-6 text-justify leading-relaxed">
-                    This Agreement (the "Agreement") is entered into by and between Spelman College, with its principal 
+                    This Agreement (the "Agreement") is entered into by and between Riverside Music Institute, with its principal 
                     offices in Atlanta, Georgia (herein and after referred to as "the College") and{' '}
                     <span className="font-semibold">{v.HOST_NAME || '[HOST NAME]'}</span>, which is located in{' '}
                     <span className="font-semibold">{v.HOST_LOCATION || '[HOST LOCATION]'}</span> (herein and after 
-                    referred to as "the Host"). Each of Spelman College and [Host] shall be individually referenced 
+                    referred to as "the Host"). Each of Riverside Music Institute and [Host] shall be individually referenced 
                     herein as a "Party", and together, the "Parties". The understanding of the Parties is set forth 
                     in the following paragraphs.
                   </p>
@@ -584,7 +583,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
                   {/* Article 1 */}
                   <h2 className="text-lg font-bold mt-8 mb-4">Article 1. Statement of Performance</h2>
                   <p className="mb-4 text-justify leading-relaxed">
-                    The Spelman College Glee Club shall perform for a period of time as established by the Host and 
+                    The Your favorite band or choir shall perform for a period of time as established by the Host and 
                     referenced herein. The date of the performance shall be on{' '}
                     <span className="font-semibold">{v.PERFORMANCE_DATE || '[DATE]'}</span>, beginning at{' '}
                     <span className="font-semibold">{v.START_TIME || '[START TIME]'}</span> and ending at{' '}
@@ -606,7 +605,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
                     <span className="font-semibold">{formatCurrency(v.DEPOSIT_AMOUNT)} dollars 
                     (${formatCurrency(v.DEPOSIT_AMOUNT)} USD)</span>, is required to execute this Agreement, 
                     and is due within fifteen (15) business days of the date that the College stamps this document 
-                    as received. Each payment should be made payable to Spelman College in the form of a check, 
+                    as received. Each payment should be made payable to Riverside Music Institute in the form of a check, 
                     cashier's check or money order.
                   </p>
                   <p className="mb-4 text-justify leading-relaxed">
@@ -618,7 +617,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
                   <h3 className="font-bold mt-6 mb-2">Venue</h3>
                   <p className="mb-4 text-justify leading-relaxed">
                     The Host is responsible for identifying and securing the venue and covering any associated expenses. 
-                    Spelman College reserves the right to recommend or decline a given performance venue and should be 
+                    Riverside Music Institute reserves the right to recommend or decline a given performance venue and should be 
                     notified of the venue being considered prior to any costs being incurred. A floor plan of the 
                     performance space should be sent to the College at least 30 days prior to the scheduled performance. 
                     Note additional details in Exhibit A.
@@ -660,7 +659,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
                   <h2 className="text-lg font-bold mt-8 mb-4">Article 4. Publicity</h2>
                   <p className="mb-4 text-justify leading-relaxed">
                     The Host agrees that all advertising and publicity related to the event, and containing any 
-                    reference or mention of the Spelman College Name and/or Logo, shall be approved by the College 
+                    reference or mention of the Riverside Music Institute Name and/or Logo, shall be approved by the College 
                     prior to public release.
                   </p>
 
@@ -673,7 +672,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
                     of the activities of the Host (and its agents, contractors, employees, invitees, or subcontractors) 
                     with combined single limits of not less than One Million Dollars ($1,000,000) per occurrence/Two 
                     Million Dollars ($2,000,000) in the aggregate for death, bodily injury, or property damage. 
-                    Spelman College shall be named as an additional insured on such policy.
+                    Riverside Music Institute shall be named as an additional insured on such policy.
                   </p>
 
                   {/* Article 6 */}
@@ -722,11 +721,11 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
 
                   <div className="grid grid-cols-2 gap-8 mt-8">
                     <div>
-                      <p className="font-bold mb-4">SPELMAN COLLEGE</p>
+                      <p className="font-bold mb-4">BRAND COLLEGE</p>
                       <div className="border-b border-black w-64 mb-1"></div>
                       <p>Kevin Johnson, D.M.A.</p>
                       <p className="text-sm">Director</p>
-                      <p className="text-sm">Spelman College Glee Club</p>
+                      <p className="text-sm">Your favorite band or choir</p>
                     </div>
                     <div>
                       <p className="font-bold mb-4">THE HOST</p>
@@ -740,7 +739,7 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
                   {/* Exhibits */}
                   <div className="mt-16 pt-8 border-t-2 border-blue-900">
                     <h2 className="text-xl font-bold text-center mb-6">Exhibit A - Venue</h2>
-                    <p className="mb-4">On the day of the performance, the Host will provide the following for the Spelman College Glee Club:</p>
+                    <p className="mb-4">On the day of the performance, the Host will provide the following for the Your favorite band or choir:</p>
                     <ul className="list-disc ml-8 mb-6">
                       <li>A dressing room that can accommodate {v.PERFORMER_COUNT || '44'} performers and safe keeping for their belongings.</li>
                       <li>A separate dressing room for the Director of the Glee Club and a separate dressing room for the Accompanist.</li>
@@ -764,9 +763,9 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
                     </p>
 
                     <p className="mt-8 text-sm italic">
-                      Note: All documentation and deposits can be mailed to Spelman College, Department of Music, 
-                      350 Spelman Lane, SW, Campus Box 979, Atlanta, Georgia, 30314-4399. All payments should be 
-                      given in the form of a check, cashier's check, or money order made payable to the Spelman 
+                      Note: All documentation and deposits can be mailed to Riverside Music Institute, Department of Music, 
+                      350 Concert Hall Drive, SW, Campus Box 979, Atlanta, Georgia, 30314-4399. All payments should be 
+                      given in the form of a check, cashier's check, or money order made payable to the Brand 
                       College Glee Club.
                     </p>
 

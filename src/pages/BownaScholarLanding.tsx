@@ -57,7 +57,7 @@ const BownaScholarLanding = () => {
           <CardContent>
             <p className="text-muted-foreground mb-4">
               The Bowman Scholar Program recognizes exceptional students who demonstrate outstanding 
-              academic achievement, musical excellence, and leadership within the Spelman College 
+              academic achievement, musical excellence, and leadership within the Riverside Music Institute 
               Glee Club community.
             </p>
             <div className="grid md:grid-cols-3 gap-4">

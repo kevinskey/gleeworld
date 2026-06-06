@@ -1,0 +1,296 @@
+table	js_from_refs	sql_refs	total	sample_file
+academy_course_badges	6	0	6	src/components/user-dashboard/GleeAcademyDashboardCard.tsx
+activity_logs	5	0	5	src/components/member-view/dashboards/SuperAdminDashboard.tsx
+admin_contract_notifications	1	0	1	src/hooks/useContracts.ts
+admin_notifications	0	0	0	
+advertising_hero	1	0	1	src/components/shared/AmazonProductSlider.tsx
+alumnae_audio_stories	2	0	2	src/components/member-view/dashboards/AlumnaeDashboard.tsx
+alumnae_content	5	0	5	src/components/modules/AlumnaePortalModule.tsx
+alumnae_form_submissions	0	0	0	
+alumnae_forms	3	0	3	src/components/alumnae/AlumnaeFormBuilder.tsx
+alumnae_global_settings	8	0	8	src/components/alumnae/HeroSlideshow.tsx
+alumnae_interviews	2	0	2	src/components/alumnae/InterviewSegments.tsx
+alumnae_messages	5	0	5	src/pages/admin/AlumnaeAdmin.tsx
+alumnae_newsletter_announcements	11	0	11	src/components/alumnae/AnnouncementSection.tsx
+alumnae_newsletter_hero_slides	11	0	11	src/components/alumnae/HeroSlideshow.tsx
+alumnae_newsletter_spotlights	8	0	8	src/components/alumnae/SpotlightSection.tsx
+alumnae_newsletters	9	0	9	src/components/alumnae/NewsletterManager.tsx
+alumnae_page_hero	0	0	0	
+alumnae_page_sections	6	0	6	src/components/alumnae/AlumnaePageBuilder.tsx
+alumnae_section_items	4	0	4	src/components/alumnae/page-builder/ItemEditor.tsx
+alumnae_stories	5	0	5	src/components/alumnae/AddStoryDialog.tsx
+alumnae_users	0	0	0	
+amazon_affiliate_products	6	0	6	src/components/amazon/AmazonAffiliateBanner.tsx
+app_roles	7	0	7	src/components/tour-manager/TourRollCallSection.tsx
+approval_requests	3	0	3	src/hooks/useApprovalRequests.ts
+approval_workflow_history	2	0	2	src/hooks/useApprovalRequests.ts
+assignment_submissions	18	0	18	src/components/grading/student/StudentGradeSpreadsheet.tsx
+attendance	11	0	11	src/components/attendance/AttendanceDashboard.tsx
+audio_archive	4	0	4	src/components/modules/PlaylistMediaManager.tsx
+audition_applications	18	0	18	src/components/admin/AuditionsManagement.tsx
+audition_evaluations	2	0	2	src/components/admin/AuditionsManagement.tsx
+audition_sessions	4	0	4	src/components/admin/AuditionsManagement.tsx
+audition_time_blocks	3	0	3	src/hooks/useAvailableAuditionSlots.ts
+booking_requests	1	0	1	src/components/tour-manager/TourManagerDashboard.tsx
+bowman_scholars	2	0	2	src/hooks/useBowmanScholars.ts
+budget_attachments	8	0	8	src/components/budget/BudgetFileUpload.tsx
+budget_categories	3	0	3	src/components/tour-manager/TourManagerLanding.tsx
+budget_permissions	0	0	0	
+budget_transactions	1	0	1	src/hooks/useBudgets.ts
+budget_user_associations	1	0	1	src/hooks/useBudgets.ts
+budgets	12	0	12	src/components/tour-manager/TourManagerLanding.tsx
+bulletin_posts	8	0	8	src/components/fan-engagement/BulletinPostManager.tsx
+children_go_auditions	4	0	4	src/pages/ChildrenGoAudition.tsx
+class_journal_sessions	5	0	5	src/components/academy/journals/ClassSessionJournals.tsx
+class_notes	5	0	5	src/components/course/ClassNotesManager.tsx
+class_session_journals	6	0	6	src/components/academy/journals/ClassSessionJournals.tsx
+cohort_members	1	0	1	src/components/modules/member-dossiers/DirectorDossierView.tsx
+cohorts	1	0	1	src/pages/StudentRegistration.tsx
+concert_ticket_requests	7	0	7	src/components/concert/ConcertTicketRequestForm.tsx
+contract_documents	0	0	0	
+contract_members	2	0	2	src/hooks/useContractManagement.ts
+contract_recipients	0	0	0	
+contract_recipients_v2	5	0	5	src/components/admin/ContractManagement.tsx
+contract_signatures	6	0	6	src/components/modules/member-dossiers/DirectorDossierView.tsx
+contract_signatures_v2	16	0	16	src/utils/contractSignatureFixer.ts
+contract_templates	14	0	14	src/components/contracts/EditContractTitleDialog.tsx
+contract_user_assignments	2	0	2	src/hooks/useAdminStipends.ts
+contracts	11	0	11	src/hooks/useContractManagement.ts
+contracts_v2	33	0	33	src/utils/contractSignatureFixer.ts
+coordinator_cohorts	0	0	0	
+course_announcements	8	0	8	src/components/course/AnnouncementsSection.tsx
+course_audio_resources	4	0	4	src/components/course/AudioExamplesSection.tsx
+course_discussions	12	0	12	src/components/course/DiscussionSummaryDashboard.tsx
+course_documents	4	0	4	src/components/course/CourseDocumentsSection.tsx
+course_messages	3	0	3	src/components/course/MailCenterSection.tsx
+course_modules	2	0	2	src/components/course/ModuleCreator.tsx
+course_notes	2	0	2	src/components/course/NotebookSection.tsx
+course_teaching_assistants	8	0	8	src/components/admin/TAManagement.tsx
+course_video_resources	5	0	5	src/components/course/VideoResourcesSection.tsx
+dashboard_hero_settings	0	0	0	
+dashboard_hero_slides	0	0	0	
+dashboard_settings	2	0	2	src/hooks/useDashboardSettings.ts
+dashboard_youtube_videos	1	0	1	src/components/dashboard/DashboardYouTubeSection.tsx
+direct_messages	0	0	0	
+discussion_analytics	0	0	0	
+discussion_grades	9	0	9	src/components/grading/student/StudentGradeSpreadsheet.tsx
+discussion_group_members	6	0	6	src/components/discussion-groups/InstructorControls.tsx
+discussion_groups	3	0	3	src/components/discussion-groups/InstructorControls.tsx
+discussion_post_analysis	2	0	2	src/hooks/useDiscussionAnalytics.ts
+discussion_posts	4	0	4	src/hooks/useDiscussionGroups.ts
+discussion_prompts	14	0	14	src/components/course/CreateDiscussionDialog.tsx
+discussion_replies	6	0	6	src/components/course/DiscussionSummaryDashboard.tsx
+discussion_rubric	1	0	1	src/hooks/useDiscussionGroups.ts
+discussion_student_metrics	2	0	2	src/hooks/useDiscussionAnalytics.ts
+discussion_student_notes	3	0	3	src/hooks/useDiscussionAnalytics.ts
+dm_conversations	3	0	3	src/hooks/useDirectMessages.ts
+dm_messages	5	0	5	src/hooks/useDirectMessages.ts
+dress_checkouts	4	0	4	src/components/surveys/DressCheckoutForm.tsx
+email_campaigns	3	0	3	src/components/alumnae/MailchimpStyleCampaigns.tsx
+email_templates	3	0	3	src/components/alumnae/EmailTemplateBuilder.tsx
+event_class_list_members	5	0	5	src/components/calendar/EventClassListManager.tsx
+event_class_lists	3	0	3	src/components/calendar/EventClassListManager.tsx
+event_contracts	0	0	0	
+event_images	1	0	1	src/components/events/CreateEventDialog.tsx
+event_line_items	1	0	1	src/components/events/BudgetsList.tsx
+event_participants	0	0	0	
+event_team_members	6	0	6	src/components/calendar/CallMeetingDialog.tsx
+events	14	0	14	src/components/attendance/UpcomingEventsWidget.tsx
+excuse_request_history	0	0	0	
+excuse_requests	11	0	11	src/components/attendance/ExcuseGenerator.tsx
+exec_board_interviews	0	0	0	
+exercises	0	0	0	
+external_grades	1	0	1	src/components/sight-singing/SightReadingSubmissionsDialog.tsx
+finance_records	29	0	29	src/components/admin/financial/UserFinancialRecords.tsx
+food_budget	2	0	2	src/hooks/useEventBudgetWorksheet.ts
+fy_checkins	4	0	4	src/hooks/useFirstYearStudents.ts
+fy_cohorts	3	0	3	src/components/sight-singing/AssignmentCreator.tsx
+fy_practice_logs	2	0	2	src/hooks/useFirstYearData.ts
+fy_students	5	0	5	src/components/console/first-year/widgets/RiskFlagsList.tsx
+fy_task_submissions	4	0	4	src/hooks/useFirstYearTasks.ts
+generated_contracts	5	0	5	src/components/admin/AddBatchStipendDialog.tsx
+glee_academy_courses	5	0	5	src/pages/admin/AcademyCoursesAdmin.tsx
+glee_academy_enrollments	0	0	0	
+glee_academy_tests	12	0	12	src/components/grading/student/StudentTestsSection.tsx
+glee_cam_categories	8	0	8	src/components/quick-capture/CategorizedQuickCapture.tsx
+glee_club_contacts	4	0	4	src/components/contacts/ContactsImportWizard.tsx
+glee_history	0	0	0	
+glee_ledger_sheets	0	0	0	
+glee_ledger_sync_logs	0	0	0	
+google_auth_tokens	0	0	0	
+group_update_member_contributions	0	0	0	
+group_updates_mus240	5	0	5	src/pages/mus240/GroupPresentationView.tsx
+handbook_appendices	7	0	7	src/components/academy/handbook/HandbookAppendixNav.tsx
+handbook_edit_logs	2	0	2	src/hooks/useHandbookEdit.ts
+handbook_sections	0	0	0	
+host_interactions	0	0	0	
+host_performances	0	0	0	
+hosts	4	0	4	src/components/tour-manager/TourManagerLanding.tsx
+id_document_submissions	0	0	0	
+karaoke_recordings	3	0	3	src/hooks/useKaraokeRecordings.ts
+lh100_mass_songs	3	0	3	src/components/academy/OrderOfMass.tsx
+lh100_module_resources	5	0	5	src/components/academy/EditableModuleResources.tsx
+lh100_modules	6	0	6	src/components/academy/lh100/LH100ModulesPage.tsx
+lh100_music_selections	3	0	3	src/components/academy/lh100/OrderOfMassMusicEditor.tsx
+library_inventory_entries	0	0	0	
+library_inventory_sessions	0	0	0	
+liturgical_media	3	0	3	src/hooks/useLiturgicalWeeks.ts
+liturgical_music_plan	7	0	7	src/components/academy/planner/PlannerMusicTab.tsx
+liturgical_psalms	0	0	0	
+liturgical_weeks	2	0	2	src/hooks/useLiturgicalWeeks.ts
+liturgical_worksheets	4	0	4	src/hooks/useLiturgicalWorksheets.ts
+liturgy_assets	0	0	0	
+lyke_house_hero	5	0	5	src/hooks/useLykeHouseHero.ts
+materials_budget	2	0	2	src/hooks/useEventBudgetWorksheet.ts
+media_budget	2	0	2	src/hooks/useEventBudgetWorksheet.ts
+meeting_notes	5	0	5	src/components/video/MeetingNotesHistory.tsx
+member_check_ins	4	0	4	src/components/modules/CheckInCheckOutModule.tsx
+member_exit_interviews	8	0	8	src/components/surveys/CollapsibleMemberExitInterview.tsx
+messenger_group_members	14	0	14	src/components/messenger/MessengerModal.tsx
+messenger_groups	15	0	15	src/components/messenger/MessengerModal.tsx
+module_items	2	0	2	src/components/course/ModuleCreator.tsx
+mus240_ai_detection_patterns	0	0	0	
+mus240_assignment_codes	0	0	0	
+mus240_assignment_types	0	0	0	
+mus240_assignments	1	0	1	src/components/grading/student/UnifiedGradeView.tsx
+mus240_audio_resources	4	0	4	src/components/mus240/AudioBulkUpload.tsx
+mus240_course_analytics	1	0	1	src/components/mus240/admin/StudentAnalyticsDashboard.tsx
+mus240_enrollments	9	0	9	src/components/academy/UnifiedCoursePage.tsx
+mus240_grade_summaries	2	0	2	src/hooks/useMus240Progress.ts
+mus240_grading_rubrics	0	0	0	
+mus240_group_applications	2	0	2	src/utils/groupMigration.ts
+mus240_group_links	4	0	4	src/components/mus240/admin/GroupParticipationAnalyzer.tsx
+mus240_group_memberships	10	0	10	src/utils/groupMigration.ts
+mus240_group_notes	4	0	4	src/components/mus240/admin/GroupParticipationAnalyzer.tsx
+mus240_group_sandboxes	4	0	4	src/components/mus240/admin/GroupParticipationAnalyzer.tsx
+mus240_journal_comments	2	0	2	src/hooks/useMus240Journals.ts
+mus240_journal_entries	10	0	10	src/components/grading/student/UnifiedGradeView.tsx
+mus240_journal_grades	14	0	14	src/components/grading/instructor/AssignmentSubmissionsView.tsx
+mus240_journal_reads	0	0	0	
+mus240_midterm_config	3	0	3	src/components/mus240/admin/MidtermConfigManager.tsx
+mus240_midterm_submissions	15	0	15	src/components/mus240/grades/Mus240GradeGrid.tsx
+mus240_module_resources	3	0	3	src/components/academy/TeachingFirstHome.tsx
+mus240_module_settings	4	0	4	src/components/academy/TeachingFirstHome.tsx
+mus240_participation_grades	4	0	4	src/components/mus240/admin/GroupParticipationAnalyzer.tsx
+mus240_peer_reviews	6	0	6	src/components/mus240/peer-review/JournalBrowserForReview.tsx
+mus240_performance_levels	0	0	0	
+mus240_poll_responses	11	0	11	src/components/grading/student/StudentGradeSpreadsheet.tsx
+mus240_polls	14	0	14	src/components/grading/student/StudentGradeSpreadsheet.tsx
+mus240_project_groups	17	0	17	src/utils/groupMigration.ts
+mus240_reading_requirements	0	0	0	
+mus240_resources	5	0	5	src/integrations/supabase/hooks/useMus240Resources.tsx
+mus240_rubric_criteria	1	0	1	src/components/mus240/grading/RubricGradingPanel.tsx
+mus240_rubric_scores	0	0	0	
+mus240_session_analytics	2	0	2	src/components/mus240/admin/StudentAnalyticsDashboard.tsx
+mus240_student_resource_progress	0	0	0	
+mus240_submission_grades	6	0	6	src/components/mus240/instructor/StudentRecordView.tsx
+mus240_test_analytics	2	0	2	src/components/mus240/admin/StudentAnalyticsDashboard.tsx
+mus240_video_edits	2	0	2	src/hooks/useMus240VideoEdits.ts
+music_albums	4	0	4	src/components/admin/MusicManagement.tsx
+music_fundamentals_assignments	4	0	4	src/components/music-fundamentals/AssignmentsList.tsx
+music_fundamentals_submissions	5	0	5	src/components/music-fundamentals/AssignmentsList.tsx
+music_tracks	11	0	11	src/components/music/FeaturedMusic.tsx
+notification_sounds	5	0	5	src/components/admin/NotificationSoundManager.tsx
+onboarding_signatures	1	0	1	src/hooks/useOnboardingSignature.ts
+performers	0	0	0	
+permission_group_permissions	3	0	3	src/hooks/usePermissionGroups.ts
+permission_groups	4	0	4	src/hooks/usePermissionGroups.ts
+pitch_results	0	0	0	
+playlist_items	0	0	0	
+playlist_tracks	0	0	0	
+playlists	0	0	0	
+pr_image_tag_associations	4	0	4	src/hooks/usePRImages.ts
+pr_image_tags	5	0	5	src/components/pr-coordinator/PRTagManager.tsx
+pr_images	3	0	3	src/hooks/usePRImages.ts
+press_kit_items	3	0	3	src/hooks/usePressKits.ts
+press_kit_shares	1	0	1	src/hooks/usePressKits.ts
+press_kits	4	0	4	src/hooks/usePressKits.ts
+product_categories	6	0	6	src/components/products/ProductManager.tsx
+product_images	2	0	2	src/components/products/ProductManager.tsx
+product_variants	3	0	3	src/components/products/ProductManager.tsx
+products	6	0	6	src/components/products/ProductManager.tsx
+promo_budget	2	0	2	src/hooks/useEventBudgetWorksheet.ts
+push_subscriptions	2	0	2	src/hooks/usePushNotifications.ts
+qr_attendance_tokens	3	0	3	src/components/modules/QRCodeManagementModule.tsx
+qr_scan_logs	3	0	3	src/components/qr/QRScanHistory.tsx
+quick_capture_media	7	0	7	src/components/quick-capture/CategorizedQuickCapture.tsx
+radio_playlist_tracks	0	0	0	
+radio_playlists	0	0	0	
+radio_schedule	0	0	0	
+radio_state	0	0	0	
+rate_limits	0	0	0	
+receipts	12	0	12	src/components/receipts/ReceiptsModule.tsx
+registration_requests	3	0	3	src/components/admin/RegistrationRequestsPanel.tsx
+rhythm_transcriptions	0	0	0	
+role_change_audit	0	0	0	
+scheduled_meetings	4	0	4	src/components/video/MeetingWaitingRoom.tsx
+scholarship_sources	4	0	4	src/hooks/useScholarshipSources.ts
+scholarships	6	0	6	src/components/admin/ScholarshipManager.tsx
+security_rate_limits	0	0	0	
+setlist_items	8	0	8	src/components/music-library/SetlistBuilder.tsx
+setlists	10	0	10	src/components/music-library/SetlistBuilder.tsx
+sheet_music_checkouts	4	0	4	src/components/surveys/SheetMusicCheckoutForm.tsx
+sight_singing_assessments	1	0	1	src/hooks/usePracticeStats.ts
+sight_singing_evaluations	0	0	0	
+sight_singing_exercises	0	0	0	
+sight_singing_recordings	2	0	2	src/components/music-fundamentals/SightSingingGenerator.tsx
+sight_singing_shares	0	0	0	
+singer_contract_assignments	0	0	0	
+slide_approvals	3	0	3	src/components/mus240/peer-review/SlideApprovalPanel.tsx
+smaam_comments	0	0	0	
+soundcloud_tokens	1	0	1	src/pages/SoundCloudSearch.tsx
+square_integrations	0	0	0	
+square_product_mappings	0	0	0	
+square_sync_logs	0	0	0	
+stipend_payments	5	0	5	src/components/modules/StipendPaymentModule.tsx
+story_images	1	0	1	src/components/alumnae/AddStoryDialog.tsx
+student_class_schedules	5	0	5	src/hooks/useStudentClassSchedule.ts
+student_registrations	1	0	1	src/pages/StudentRegistration.tsx
+submissions	1	0	1	src/components/sight-singing/SightSingingStudio.tsx
+task_notifications	3	0	3	src/hooks/useTasks.ts
+tasks	4	0	4	src/hooks/useTasks.ts
+test_answer_options	10	0	10	src/components/test-builder/TestScoresView.tsx
+test_answers	6	0	6	src/components/test-builder/TestScoresView.tsx
+test_questions	14	0	14	src/components/test-builder/TestScoresView.tsx
+test_submissions	10	0	10	src/components/grading/student/StudentTestsSection.tsx
+theme_templates	1	0	1	src/hooks/useThemeTemplates.ts
+theory_poll_questions	0	0	0	
+theory_poll_responses	0	0	0	
+theory_poll_sessions	0	0	0	
+ticket_recipients	0	0	0	
+tour_budget_items	4	0	4	src/components/tour-manager/TourBudgetManager.tsx
+tour_budget_revenues	3	0	3	src/components/tour-manager/TourBudgetManager.tsx
+tour_contract_signatures	5	0	5	src/components/course/MobileCourseLanding.tsx
+tour_documents	0	0	0	
+tour_milestones	7	0	7	src/components/tour-manager/TourMilestones.tsx
+track_likes	5	0	5	src/components/music/MusicPlayer.tsx
+transport_budget	2	0	2	src/hooks/useEventBudgetWorksheet.ts
+tree_lighting_survey_responses	4	0	4	src/components/surveys/TreeLightingSurvey.tsx
+upload_jobs	0	0	0	
+usccb_readings	1	0	1	src/components/academy/planner/USCCBReadingsScroll.tsx
+user_dashboard_categories	0	0	0	
+user_dashboard_modules	0	0	0	
+user_dashboard_preferences	0	0	0	
+user_engagement_daily	4	0	4	src/components/modules/UsageAnalyticsModule.tsx
+user_module_permissions	0	0	0	
+user_notifications	0	0	0	
+user_page_views	2	0	2	src/components/modules/UsageAnalyticsModule.tsx
+user_payments	10	0	10	src/components/admin/financial/StipendManagement.tsx
+user_permission_groups	4	0	4	src/components/admin/UserGroupAssignment.tsx
+user_preferences	8	0	8	src/components/calendar/CalendarFilterStrip.tsx
+user_radio_presets	0	0	0	
+user_role_transitions	1	0	1	src/hooks/useRoleTransitions.ts
+user_roles	5	0	5	src/components/alumnae/AlumnaeEmailManager.tsx
+user_roles_multi	4	0	4	src/lib/roles.ts
+user_sessions	4	0	4	src/components/modules/UsageAnalyticsModule.tsx
+user_signatures	3	0	3	src/components/messenger/SignatureSettings.tsx
+username_module_permissions	2	0	2	src/hooks/useModulePermissionManager.ts
+username_permissions	10	0	10	src/components/admin/GranularPermissionsManager.tsx
+users	0	0	0	
+w9_forms	16	0	16	src/components/SmartW9Form.tsx
+wardrobe_checkouts	5	0	5	src/components/wardrobe/WardrobeMemberManagement.tsx
+wardrobe_items	2	0	2	src/components/tour-manager/wardrobe/AddWardrobeItemDialog.tsx
+youtube_channel_videos	1	0	1	src/components/dashboard/YouTubeChannelSlider.tsx
+youtube_channels	6	0	6	src/components/course/CourseVideoLibrary.tsx
+youtube_playlists	1	0	1	src/components/course/CourseVideoLibrary.tsx
+youtube_videos	23	0	23	src/components/course/CourseVideoLibrary.tsx

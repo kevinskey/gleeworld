@@ -61,8 +61,27 @@ export const GlobalDesignFixes = () => {
         font-weight: var(--heading-weight, 400);
         letter-spacing: var(--heading-letter-spacing, 0.02em);
         line-height: 1.2;
-        color: hsl(var(--foreground));
+        color: #0f172a; /* slate-900 — guaranteed dark on light backgrounds */
       }
+
+      /* Lift muted/light text utilities across the app — many modules use
+         these for labels, counts, and subtitles and they were rendering
+         too faint on the cream brand background. Pin them to readable
+         slate values. */
+      .text-muted-foreground { color: #475569 !important; }   /* slate-600 */
+      .text-slate-400        { color: #475569 !important; }   /* → slate-600 */
+      .text-slate-500        { color: #334155 !important; }   /* → slate-700 */
+      .text-gray-400         { color: #475569 !important; }
+      .text-gray-500         { color: #334155 !important; }
+      .text-zinc-400         { color: #475569 !important; }
+      .text-zinc-500         { color: #334155 !important; }
+      .text-neutral-400      { color: #475569 !important; }
+      .text-neutral-500      { color: #334155 !important; }
+
+      /* Brand-primary icons rendered against the light cream background
+         were nearly invisible at small sizes. Darken text-primary used
+         on icons inside small headers. */
+      svg.text-primary       { color: #0f3a76 !important; }   /* deep brand blue */
       
       /* =========================================
          Z-INDEX & LAYERING FIXES

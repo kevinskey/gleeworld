@@ -62,7 +62,7 @@ export const CSVUserImport = () => {
     
     const sampleData = [
       [
-        'jane.smith@spelman.edu',
+        'jane.smith@riversidechoir.example',
         'Jane Smith',
         '36',
         '28',
@@ -75,7 +75,7 @@ export const CSVUserImport = () => {
         'Has pearls'
       ],
       [
-        'maria.garcia@spelman.edu',
+        'maria.garcia@riversidechoir.example',
         'Maria Garcia',
         '34',
         '26',

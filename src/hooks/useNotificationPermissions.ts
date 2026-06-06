@@ -20,7 +20,7 @@ export function useNotificationPermissions() {
         // Check if user is super admin or executive board member
         const { data: profile } = await supabase
           .from('gw_profiles')
-          .select('is_super_admin, is_admin, is_exec_board, exec_board_role')
+          .select('is_super_admin, is_admin')
           .eq('user_id', user.id)
           .single();
 
@@ -29,14 +29,6 @@ export function useNotificationPermissions() {
         if (profile?.is_super_admin || profile?.is_admin) {
           console.log('User is super admin/admin - granting all permissions');
           setIsSuperAdmin(true);
-          setPermissions(['mass-email', 'sms', 'communications', 'newsletter', 'public-forms', 'integrations']);
-          setIsLoading(false);
-          return;
-        }
-
-        // Check if user is executive board member
-        if (profile?.is_exec_board) {
-          console.log('User is executive board member - granting full email/SMS/notification permissions');
           setPermissions(['mass-email', 'sms', 'communications', 'newsletter', 'public-forms', 'integrations']);
           setIsLoading(false);
           return;

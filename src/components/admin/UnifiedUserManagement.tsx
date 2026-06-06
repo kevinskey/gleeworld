@@ -23,7 +23,6 @@ import { UsernamePermissionsManager } from './UsernamePermissionsManager';
 import { PermissionErrorBoundary } from './PermissionErrorBoundary';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
-import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
 import type { User as AdminUser } from '@/hooks/useUsers';
 
 interface UserProfile {
@@ -51,7 +50,7 @@ const getRoleBadgeColor = (role?: string) => {
     case 'alumna': return 'bg-amber-100 text-amber-800 border-amber-300';
     case 'vip': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
     case 'auditioner': return 'bg-orange-100 text-orange-800 border-orange-300';
-    default: return 'bg-slate-100 text-slate-700 border-slate-300';
+    default: return 'bg-muted text-foreground border-border';
   }
 };
 
@@ -67,12 +66,13 @@ const getRoleIcon = (role?: string) => {
   }
 };
 
-// Compact stat pill
+// Compact stat pill — uses shadcn semantic tokens so it adapts to whatever
+// theme is active (dark cards on dark theme, light cards on light theme).
 const StatPill = ({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) => (
-  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-50 border border-slate-200">
-    <Icon className="h-3 w-3 text-slate-500" />
-    <span className="text-[11px] text-slate-600">{label}</span>
-    <span className="text-xs font-bold text-slate-900">{value}</span>
+  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-card border border-border">
+    <Icon className="h-3 w-3 text-muted-foreground" />
+    <span className="text-[11px] text-muted-foreground">{label}</span>
+    <span className="text-xs font-bold text-foreground">{value}</span>
   </div>
 );
 
@@ -253,10 +253,10 @@ export const UnifiedUserManagement = () => {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Shield className="h-4 w-4 text-primary shrink-0" />
-          <h1 className="text-base font-bold text-slate-900 truncate">Users</h1>
-          <span className="text-[11px] text-slate-500 whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
+          <h1 className="text-base font-bold text-foreground truncate">Users</h1>
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1 shrink-0 h-7 text-xs border-slate-300">
+        <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1 shrink-0 h-7 text-xs">
           <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
@@ -272,13 +272,12 @@ export const UnifiedUserManagement = () => {
         <StatPill label="Exec" value={userStats.executives} icon={Settings} />
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — defer to shadcn defaults (bg-muted, foreground-aware states) */}
       <Tabs defaultValue="users" className="space-y-2">
-        <TabsList className="h-8 bg-slate-100">
-          <TabsTrigger value="users" className="text-xs px-3 h-6 data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Users</TabsTrigger>
-          <TabsTrigger value="dossiers" className="text-xs px-3 h-6 data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Dossiers</TabsTrigger>
-          <TabsTrigger value="enroll" className="text-xs px-3 h-6 data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Add User</TabsTrigger>
-          <TabsTrigger value="modules" className="text-xs px-3 h-6 data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-600">Modules</TabsTrigger>
+        <TabsList className="h-8">
+          <TabsTrigger value="users" className="text-xs px-3 h-6">Users</TabsTrigger>
+          <TabsTrigger value="enroll" className="text-xs px-3 h-6">Add User</TabsTrigger>
+          <TabsTrigger value="modules" className="text-xs px-3 h-6">Modules</TabsTrigger>
         </TabsList>
 
         {/* ── USERS TAB ── */}
@@ -286,16 +285,16 @@ export const UnifiedUserManagement = () => {
           {/* Search + Filter - single compact row */}
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 placeholder="Search name or email..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="pl-8 h-8 bg-white border-slate-300 text-slate-900 text-xs placeholder:text-slate-400"
+                className="pl-8 h-8 text-xs"
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-[130px] h-8 bg-white border-slate-300 text-slate-900 text-xs shrink-0">
+              <SelectTrigger className="w-[130px] h-8 text-xs shrink-0">
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent>
@@ -318,7 +317,7 @@ export const UnifiedUserManagement = () => {
                 const [f, d] = v.split('-') as [typeof sortField, 'asc' | 'desc'];
                 setSortField(f); setSortDir(d);
               }}>
-                <SelectTrigger className="h-8 text-xs bg-white border-slate-300 text-slate-700 w-[100px]">
+                <SelectTrigger className="h-8 text-xs border-input text-foreground w-[100px]">
                   <ArrowUpDown className="h-3 w-3 mr-1" />
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
@@ -332,18 +331,18 @@ export const UnifiedUserManagement = () => {
             </div>
           </div>
 
-          <p className="text-[11px]" style={{ color: '#64748b' }}>{filteredUsers.length} of {users.length}</p>
+          <p className="text-[11px] text-muted-foreground">{filteredUsers.length} of {users.length}</p>
 
           {/* Mobile card list */}
           <div className="sm:hidden space-y-2">
             {filteredUsers.map(user => (
-              <div key={user.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-white border border-slate-200">
+              <div key={user.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-card border border-border">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-xs font-medium text-primary">
                   {user.full_name?.charAt(0)?.toUpperCase() || '?'}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate text-slate-900">{user.full_name || 'No name'}</p>
-                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                  <p className="text-sm font-medium truncate text-foreground">{user.full_name || 'No name'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
                 <div className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${getRoleBadgeColor(user.role)}`}>
                   {getRoleIcon(user.role)}
@@ -384,10 +383,10 @@ export const UnifiedUserManagement = () => {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden sm:block rounded-md border border-slate-200 overflow-hidden bg-white">
+          <div className="hidden sm:block rounded-md border border-border overflow-hidden bg-card">
             <Table className="table-fixed w-full">
               <TableHeader>
-                <TableRow className="bg-slate-100 hover:bg-slate-100 border-slate-200">
+                <TableRow className="bg-muted hover:bg-muted border-border">
                   <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[40%] uppercase tracking-wide" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">User<SortIcon field="name" /></span>
                   </TableHead>
@@ -405,7 +404,7 @@ export const UnifiedUserManagement = () => {
               </TableHeader>
               <TableBody>
                 {filteredUsers.map(user => (
-                  <TableRow key={user.id} className="h-9 hover:bg-slate-50/80 border-slate-100">
+                  <TableRow key={user.id} className="h-9 hover:bg-muted/40 border-border">
                     <TableCell className="py-1.5">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium text-primary shrink-0">
@@ -416,8 +415,8 @@ export const UnifiedUserManagement = () => {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-medium truncate text-slate-900 leading-tight">{user.full_name || 'No name'}</p>
-                          <p className="text-[11px] text-slate-500 truncate leading-tight">{user.email}</p>
+                          <p className="text-xs font-medium truncate text-foreground leading-tight">{user.full_name || 'No name'}</p>
+                          <p className="text-[11px] text-muted-foreground truncate leading-tight">{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
@@ -444,7 +443,7 @@ export const UnifiedUserManagement = () => {
                       )}
                     </TableCell>
                     <TableCell className="py-1.5">
-                      <span className="text-[11px] text-slate-600">
+                      <span className="text-[11px] text-muted-foreground">
                         {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
                       </span>
                     </TableCell>
@@ -488,16 +487,11 @@ export const UnifiedUserManagement = () => {
           </div>
         </TabsContent>
 
-        {/* ── DOSSIERS TAB ── */}
-        <TabsContent value="dossiers" className="mt-0">
-          <MemberDossiersModule />
-        </TabsContent>
-
         {/* ── ADD USER TAB ── */}
         <TabsContent value="enroll" className="mt-0">
           <Card className="bg-card border-border max-w-lg">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2 text-slate-900">
+              <CardTitle className="text-base flex items-center gap-2 text-foreground">
                 <UserPlus className="h-4 w-4" />
                 Auto-Enroll User
               </CardTitle>
@@ -508,7 +502,7 @@ export const UnifiedUserManagement = () => {
             <CardContent className="space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs">Email *</Label>
-                <Input id="email" type="email" placeholder="user@spelman.edu" value={email} onChange={e => setEmail(e.target.value)} className="h-9 text-sm" />
+                <Input id="email" type="email" placeholder="user@riversidechoir.example" value={email} onChange={e => setEmail(e.target.value)} className="h-9 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="fullName" className="text-xs">Full Name</Label>

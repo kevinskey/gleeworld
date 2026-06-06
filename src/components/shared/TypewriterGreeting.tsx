@@ -49,7 +49,7 @@ export const TypewriterGreeting = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="relative max-w-2xl mx-4 p-8 sm:p-12 rounded-2xl bg-gradient-to-br from-[#003666] via-[#1a3a5c] to-[#003666] border border-white/20 shadow-2xl">
+      <div className="relative max-w-2xl mx-4 p-8 sm:p-12 rounded-2xl bg-gradient-to-br from-[#150d26] via-[#1a3a5c] to-[#150d26] border border-white/20 shadow-2xl">
         {/* Close button */}
         <Button
           variant="ghost"

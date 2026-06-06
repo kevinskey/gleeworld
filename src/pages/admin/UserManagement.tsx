@@ -9,11 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Users, UserPlus, Shield, Settings, Search, Filter, Mail, Calendar, Crown, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { EXECUTIVE_POSITIONS } from "@/hooks/useExecutivePermissions";
-import type { Database } from "@/integrations/supabase/types";
-
-type ExecutivePositionType = Database['public']['Enums']['executive_position'];
-
 interface UserProfile {
   id: string;
   user_id: string;
@@ -22,8 +17,6 @@ interface UserProfile {
   role: string;
   is_admin: boolean;
   is_super_admin: boolean;
-  is_exec_board: boolean;
-  exec_board_role: string | null;
   verified: boolean;
   created_at: string;
 }
@@ -36,7 +29,6 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [execBoardDialogOpen, setExecBoardDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,132 +56,7 @@ const UserManagement = () => {
     }
   };
 
-  const assignExecutivePosition = async (userId: string, position: ExecutivePositionType) => {
-    try {
-      const currentYear = new Date().getFullYear().toString();
-
-      // First, check if position is already taken for this year
-      const { data: existingMember } = await supabase
-        .from('gw_executive_board_members')
-        .select('*')
-        .eq('position', position)
-        .eq('academic_year', currentYear)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (existingMember) {
-        toast({
-          title: "Position Taken",
-          description: `The ${position.replace(/_/g, ' ')} position is already occupied for ${currentYear}`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Remove user from any existing executive board positions for this year
-      await supabase
-        .from('gw_executive_board_members')
-        .update({ is_active: false })
-        .eq('user_id', userId)
-        .eq('academic_year', currentYear);
-
-      // Check if user already has this exact position for this year (inactive)
-      const { data: existingRecord } = await supabase
-        .from('gw_executive_board_members')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('position', position)
-        .eq('academic_year', currentYear)
-        .maybeSingle();
-
-      if (existingRecord) {
-        // Reactivate existing record
-        const { error: updateError } = await supabase
-          .from('gw_executive_board_members')
-          .update({ is_active: true })
-          .eq('id', existingRecord.id);
-
-        if (updateError) throw updateError;
-      } else {
-        // Create new record
-        const { error: insertError } = await supabase
-          .from('gw_executive_board_members')
-          .insert({
-            user_id: userId,
-            position: position,
-            academic_year: currentYear,
-            is_active: true
-          });
-
-        if (insertError) throw insertError;
-      }
-
-      // Update profile
-      const { error: profileError } = await supabase
-        .from('gw_profiles')
-        .update({ 
-          is_exec_board: true,
-          exec_board_role: position
-        })
-        .eq('user_id', userId);
-
-      if (profileError) throw profileError;
-
-      toast({
-        title: "Success",
-        description: `Executive position assigned successfully`,
-      });
-      
-      fetchUsers();
-      setExecBoardDialogOpen(false);
-    } catch (error) {
-      console.error('Error assigning executive position:', error);
-      toast({
-        title: "Error",
-        description: "Failed to assign executive position",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const removeFromExecutiveBoard = async (userId: string) => {
-    try {
-      // Deactivate from executive board
-      const { error: boardError } = await supabase
-        .from('gw_executive_board_members')
-        .update({ is_active: false })
-        .eq('user_id', userId);
-
-      if (boardError) throw boardError;
-
-      // Update profile
-      const { error: profileError } = await supabase
-        .from('gw_profiles')
-        .update({ 
-          is_exec_board: false,
-          exec_board_role: null
-        })
-        .eq('user_id', userId);
-
-      if (profileError) throw profileError;
-
-      toast({
-        title: "Success",
-        description: "Removed from executive board successfully",
-      });
-      
-      fetchUsers();
-    } catch (error) {
-      console.error('Error removing from executive board:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove from executive board",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateUserRole = async (userId: string, newRole: string) => {
+const updateUserRole = async (userId: string, newRole: string) => {
     try {
       console.log('Updating user role:', { userId, newRole });
       
@@ -259,13 +126,7 @@ const UserManagement = () => {
   const getRoleBadge = (user: UserProfile) => {
     if (user.is_super_admin) return <Badge className="bg-red-500/20 text-red-600">Super Admin</Badge>;
     if (user.is_admin) return <Badge className="bg-orange-500/20 text-orange-600">Admin</Badge>;
-    if (user.is_exec_board && user.exec_board_role) {
-      return <Badge className="bg-purple-500/20 text-purple-600">
-        <Crown className="h-3 w-3 mr-1" />
-        {user.exec_board_role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-      </Badge>;
-    }
-    
+
     const roleColors: Record<string, string> = {
       'member': 'bg-blue-500/20 text-blue-600',
       'alumna': 'bg-green-500/20 text-green-600',
@@ -476,30 +337,7 @@ const UserManagement = () => {
                     {user.is_admin ? 'Remove Admin' : 'Make Admin'}
                   </Button>
 
-                  {user.is_exec_board ? (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeFromExecutiveBoard(user.user_id)}
-                    >
-                      <Crown className="h-4 w-4 mr-1" />
-                      Remove Board
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedUser(user);
-                        setExecBoardDialogOpen(true);
-                      }}
-                    >
-                      <Crown className="h-4 w-4 mr-1" />
-                      Assign Board
-                    </Button>
-                  )}
-                  
-                  <Button
+<Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
@@ -516,38 +354,6 @@ const UserManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Executive Board Assignment Dialog */}
-      <Dialog open={execBoardDialogOpen} onOpenChange={setExecBoardDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign Executive Board Position</DialogTitle>
-            <DialogDescription>
-              Assign {selectedUser?.full_name || selectedUser?.email} to an executive board position.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Executive Position</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {EXECUTIVE_POSITIONS.map((position) => (
-                  <Button
-                    key={position.value}
-                    variant="outline"
-                    className="justify-start"
-                    onClick={() => selectedUser && assignExecutivePosition(selectedUser.user_id, position.value)}
-                  >
-                    <Crown className="h-4 w-4 mr-2" />
-                    {position.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Note: Assigning a new position will remove any existing executive board position.
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

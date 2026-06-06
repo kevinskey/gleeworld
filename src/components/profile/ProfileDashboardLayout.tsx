@@ -55,7 +55,7 @@ export const ProfileDashboardLayout = ({
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
               Glee Club Member Dashboard
             </h1>
-            <p className="text-muted-foreground">Spelman College Glee Club</p>
+            <p className="text-muted-foreground">Your favorite band or choir</p>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-foreground hidden sm:inline">{displayName}</span>

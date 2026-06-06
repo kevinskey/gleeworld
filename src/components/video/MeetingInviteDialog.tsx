@@ -135,7 +135,7 @@ export const MeetingInviteDialog: React.FC<MeetingInviteDialogProps> = ({
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
-          <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
+          <h1 style="color: white; margin: 0;">Your favorite band or choir</h1>
         </div>
         
         <div style="padding: 30px; background: white;">

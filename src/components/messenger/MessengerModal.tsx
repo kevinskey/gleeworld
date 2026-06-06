@@ -435,7 +435,7 @@ export const MessengerModal: React.FC = () => {
           <tr>
             <td style="background: linear-gradient(135deg, #1e3a5f 0%, #0056a6 50%, #2563eb 100%); padding: 32px 40px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">✨ GleeWorld</h1>
-              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Spelman College Glee Club</p>
+              <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Your favorite band or choir</p>
             </td>
           </tr>
           <tr>
@@ -447,7 +447,7 @@ export const MessengerModal: React.FC = () => {
           <tr>
             <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0; color: #64748b; font-size: 13px;">Sent from GleeWorld by ${userProfile?.full_name || user?.email}</p>
-              <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 12px;">© ${new Date().getFullYear()} Spelman College Glee Club</p>
+              <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 12px;">© ${new Date().getFullYear()} Your favorite band or choir</p>
             </td>
           </tr>
         </table>
@@ -823,7 +823,7 @@ export const MessengerModal: React.FC = () => {
                     <h3 className="font-semibold mb-3">Preview</h3>
                     <div className="bg-gradient-to-br from-primary to-primary/70 rounded-t-lg p-4 text-center">
                       <h4 className="text-primary-foreground font-bold">✨ GleeWorld</h4>
-                      <p className="text-primary-foreground/80 text-xs">Spelman College Glee Club</p>
+                      <p className="text-primary-foreground/80 text-xs">Your favorite band or choir</p>
                     </div>
                     <div className="bg-background border border-t-0 rounded-b-lg p-4">
                       <h5 className="font-semibold text-sm mb-2">{subject || 'Your Subject'}</h5>
@@ -1055,7 +1055,7 @@ export const MessengerModal: React.FC = () => {
                       <h3 className="font-semibold mb-3">Preview</h3>
                       <div className="bg-gradient-to-br from-primary to-primary/70 rounded-t-lg p-4 text-center">
                         <h4 className="text-primary-foreground font-bold">✨ GleeWorld</h4>
-                        <p className="text-primary-foreground/80 text-xs">Spelman College Glee Club</p>
+                        <p className="text-primary-foreground/80 text-xs">Your favorite band or choir</p>
                       </div>
                       <div className="bg-background border border-t-0 rounded-b-lg p-4">
                         <h5 className="font-semibold text-sm mb-2">{subject || 'Your Subject'}</h5>

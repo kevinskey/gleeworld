@@ -58,7 +58,7 @@ export const CalendarExport = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `spelman-glee-calendar-${type}.ics`;
+      a.download = `program-calendar-${type}.ics`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

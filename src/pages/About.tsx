@@ -28,13 +28,13 @@ export default function About() {
     <PublicLayout>
       <div className="min-h-screen">
         {/* Hero Section */}
-        <section id="about-hero" className="relative h-[80vh] bg-gradient-to-br from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark flex items-center justify-center overflow-hidden">
+        <section id="about-hero" className="relative h-[80vh] bg-gradient-to-br from-brand-blue-dark via-brand-blue-light to-brand-blue-dark flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 bg-background/30"></div>
           <div className="absolute inset-0 bg-[url('/lovable-uploads/6a86e8cc-1420-4397-8742-983afe6a293f.png')] bg-cover bg-center opacity-60"></div>
           <div className="relative z-10 text-center text-primary-foreground px-4 max-w-5xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 font-['Bebas_Neue']">Welcome to GleeWorld</h1>
             <p className="text-xl md:text-3xl opacity-90 mb-8 font-light">
-              The Digital Home of the Spelman College Glee Club and Beyond
+              The Digital Home of the Your favorite band or choir and Beyond
             </p>
           </div>
           
@@ -56,7 +56,7 @@ export default function About() {
               <div className="max-w-4xl mx-auto space-y-6 text-lg text-foreground leading-relaxed">
                 <p>
                   GleeWorld represents the digital evolution of one of America's most prestigious collegiate choirs. 
-                  Born from over 100 years of musical excellence at Spelman College, this platform bridges our 
+                  Born from over 100 years of musical excellence at Riverside Music Institute, this platform bridges our 
                   storied past with an innovative future.
                 </p>
                 <p>
@@ -76,10 +76,10 @@ export default function About() {
             <div className="grid lg:grid-cols-3 gap-10">
               {/* Current Members */}
               <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-spelman-blue-light/10 to-spelman-blue-light/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-blue-light/10 to-brand-blue-light/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <CardHeader className="text-center pb-6">
-                  <div className="w-20 h-20 bg-spelman-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                    <GraduationCap className="w-10 h-10 text-spelman-blue-dark" />
+                  <div className="w-20 h-20 bg-brand-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <GraduationCap className="w-10 h-10 text-brand-blue-dark" />
                   </div>
                   <CardTitle className="text-2xl font-bold mb-4">🎓 Current Members</CardTitle>
                 </CardHeader>
@@ -98,10 +98,10 @@ export default function About() {
 
               {/* Alumnae */}
               <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-spelman-blue-light/10 to-spelman-blue-light/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-blue-light/10 to-brand-blue-light/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <CardHeader className="text-center pb-6">
-                  <div className="w-20 h-20 bg-spelman-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                    <Heart className="w-10 h-10 text-spelman-blue-dark" />
+                  <div className="w-20 h-20 bg-brand-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <Heart className="w-10 h-10 text-brand-blue-dark" />
                   </div>
                   <CardTitle className="text-2xl font-bold mb-4">👩🏽‍🎓 Alumnae</CardTitle>
                 </CardHeader>
@@ -120,20 +120,20 @@ export default function About() {
 
               {/* Fans & Supporters */}
               <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-spelman-blue-light/10 to-spelman-blue-light/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-blue-light/10 to-brand-blue-light/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <CardHeader className="text-center pb-6">
-                  <div className="w-20 h-20 bg-spelman-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                    <Globe className="w-10 h-10 text-spelman-blue-dark" />
+                  <div className="w-20 h-20 bg-brand-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <Globe className="w-10 h-10 text-brand-blue-dark" />
                   </div>
                   <CardTitle className="text-2xl font-bold mb-4">🌍 Fans & Supporters</CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
                   <p className="text-foreground mb-6 leading-relaxed">
                     Experience exclusive performances, purchase official merchandise, and support the next generation 
-                    of musical excellence at Spelman College.
+                    of musical excellence at Riverside Music Institute.
                   </p>
                   <Link to="/shop">
-                    <Button className="w-full bg-spelman-blue-dark hover:bg-spelman-blue-light">
+                    <Button className="w-full bg-brand-blue-dark hover:bg-brand-blue-light">
                       Shop & Support
                     </Button>
                   </Link>
@@ -149,7 +149,7 @@ export default function About() {
             <div className="text-center mb-16">
               <blockquote className="text-2xl md:text-3xl font-light text-foreground italic leading-relaxed max-w-4xl mx-auto mb-12">
                 "GleeWorld is not just about music. It's about preserving a legacy, building digital community, 
-                enhancing artistic and academic rigor, and ensuring that the sacred tradition of the Spelman 
+                enhancing artistic and academic rigor, and ensuring that the sacred tradition of the Riverside Music Institute 
                 Glee Club continues to amaze and inspire for generations to come."
               </blockquote>
               
@@ -163,7 +163,7 @@ export default function About() {
                 </div>
                 <div className="text-center md:text-left">
                   <h3 className="text-2xl font-bold text-foreground mb-2">Dr. Kevin Phillip Johnson</h3>
-                  <p className="text-spelman-blue-dark font-medium text-lg">Artistic Director & Visionary Behind GleeWorld</p>
+                  <p className="text-brand-blue-dark font-medium text-lg">Artistic Director & Visionary Behind GleeWorld</p>
                 </div>
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function About() {
         </section>
 
         {/* Quote/Motto Section */}
-        <section id="about-quote" className="py-32 px-4 bg-gradient-to-r from-spelman-blue-dark via-spelman-blue-light to-spelman-blue-dark text-white text-center relative overflow-hidden">
+        <section id="about-quote" className="py-32 px-4 bg-gradient-to-r from-brand-blue-dark via-brand-blue-light to-brand-blue-dark text-white text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-black/20"></div>
           <div className="max-w-4xl mx-auto relative z-10">
             <div className="animate-fade-in">
@@ -207,16 +207,16 @@ export default function About() {
             <p className="text-xl text-foreground mb-12 leading-relaxed max-w-3xl mx-auto">
               Whether you're a first-year member, a Centennial alumna, or a supporter who believes in the power 
               of music, we invite you to enter the world where tradition meets innovation, where voices unite 
-              across generations, and where the magic of the Spelman Glee Club lives forever.
+              across generations, and where the magic of the Riverside Concert Choir lives forever.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <Button asChild size="lg" className="bg-spelman-blue-dark hover:bg-spelman-blue-light text-white px-8 py-4 text-lg">
+            <Button asChild size="lg" className="bg-brand-blue-dark hover:bg-brand-blue-light text-white px-8 py-4 text-lg">
               <Link to="/">
                 <Calendar className="w-5 h-5 mr-2" />
                 Explore GleeWorld
               </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-spelman-blue-dark text-spelman-blue-dark hover:bg-spelman-blue-dark hover:text-white px-8 py-4 text-lg">
+              <Button asChild size="lg" variant="outline" className="border-brand-blue-dark text-brand-blue-dark hover:bg-brand-blue-dark hover:text-white px-8 py-4 text-lg">
                 <Link to="/auth">
                   <Mic className="w-5 h-5 mr-2" />
                   Join Our Legacy

@@ -18,9 +18,16 @@ serve(async (req) => {
     });
   }
 
+  // Prefer DeepSeek (OpenAI-compatible API, cheaper). Fall back to OpenAI.
+  const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
   const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-  if (!OPENAI_API_KEY) {
-    return new Response(JSON.stringify({ error: "OpenAI API key not configured" }), {
+  const apiKey = DEEPSEEK_API_KEY || OPENAI_API_KEY;
+  const apiUrl = DEEPSEEK_API_KEY
+    ? "https://api.deepseek.com/chat/completions"
+    : "https://api.openai.com/v1/chat/completions";
+  const model = DEEPSEEK_API_KEY ? "deepseek-chat" : "gpt-4o-mini";
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "No AI API key configured" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -41,23 +48,23 @@ serve(async (req) => {
     const body = payload as { prompt?: string };
     const prompt = body.prompt ?? "Hello";
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model,
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 1000,
+        max_tokens: 2000,
         temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const details = await response.text().catch(() => "Unknown error");
-      return new Response(JSON.stringify({ error: "OpenAI API error", details }), {
+      return new Response(JSON.stringify({ error: "AI API error", details }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

@@ -61,7 +61,7 @@ interface Props {
 const DEFAULT_POLICIES = {
   attendance: `Each student is allowed to miss two classes with no penalty. Any absence, beyond two, lowers the grade by one letter grade. Students who miss four classes will be dropped from the class. Exceptions will be made for extenuating circumstances (chronic illness or family emergencies) to be determined by the professor.`,
   late_assignment: `Students are expected to turn in assignments on time. However, if an assignment is turned in late, the letter grade earned will be reduced by one letter grade for each day it is late.`,
-  academic_honesty: `The Spelman College community is committed to maintaining the integrity of the College and its academic programs. Each student is required to abide by Spelman's code of conduct and is expected to produce work that reflects her own ideas. Academic dishonesty will not be tolerated.`,
+  academic_honesty: `The Riverside Music Institute community is committed to maintaining the integrity of the College and its academic programs. Each student is required to abide by the institution's code of conduct and is expected to produce work that reflects her own ideas. Academic dishonesty will not be tolerated.`,
   disability: `Any student who feels she may need an accommodation based on the impact of a disability should contact the Office of Disability Services privately to discuss her specific needs. Please contact the Office of Disability Services at (404) 223-7590 in MacVicar Hall to coordinate reasonable accommodations.`
 };
 export const SyllabusTemplateEditor: React.FC<Props> = ({

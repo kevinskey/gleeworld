@@ -39,10 +39,10 @@ export const UserW9FormsList = () => {
 
   if (loading) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card className="glass-card border-brand-400/20">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-spelman-400"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-400"></div>
             <span className="ml-2 text-white">Loading W9 forms...</span>
           </div>
         </CardContent>
@@ -52,7 +52,7 @@ export const UserW9FormsList = () => {
 
   if (error) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card className="glass-card border-brand-400/20">
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <p className="text-red-300 mb-4">{error}</p>
@@ -64,10 +64,10 @@ export const UserW9FormsList = () => {
 
   if (!w9Forms || w9Forms.length === 0) {
     return (
-      <Card className="glass-card border-spelman-400/20">
+      <Card className="glass-card border-brand-400/20">
         <CardContent className="pt-6">
           <div className="text-center py-8">
-            <FileText className="h-12 w-12 mx-auto text-spelman-400/50 mb-4" />
+            <FileText className="h-12 w-12 mx-auto text-brand-400/50 mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">No W9 Forms</h3>
             <p className="text-white/70 mb-4">You haven't submitted any W9 forms yet.</p>
             <Button 
@@ -97,7 +97,7 @@ export const UserW9FormsList = () => {
         </div>
 
         {w9Forms.map((form) => (
-          <Card key={form.id} className="glass-card border-spelman-400/20">
+          <Card key={form.id} className="glass-card border-brand-400/20">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -128,7 +128,7 @@ export const UserW9FormsList = () => {
                      variant="outline"
                      size="sm"
                      onClick={() => handlePreview(form)}
-                     className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
+                     className="glass border-brand-400/30 text-brand-300 hover:bg-brand-500/20"
                    >
                      <Eye className="h-4 w-4 mr-2" />
                      Preview
@@ -137,7 +137,7 @@ export const UserW9FormsList = () => {
                      variant="outline"
                      size="sm"
                      onClick={() => handleDownload(form)}
-                     className="glass border-spelman-400/30 text-spelman-300 hover:bg-spelman-500/20"
+                     className="glass border-brand-400/30 text-brand-300 hover:bg-brand-500/20"
                    >
                      <Download className="h-4 w-4 mr-2" />
                      Download

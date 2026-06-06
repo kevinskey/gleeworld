@@ -159,7 +159,7 @@ export const TAManagement = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="student@spelman.edu"
+                placeholder="student@riversidechoir.example"
                 value={userEmail}
                 onChange={(e) => setUserEmail(e.target.value)}
               />

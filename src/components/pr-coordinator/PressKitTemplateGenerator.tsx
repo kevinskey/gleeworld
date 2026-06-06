@@ -32,7 +32,7 @@ const PressKitTemplateGenerator = () => {
       venue: ''
     },
     bandInfo: {
-      name: 'Spelman College Glee Club',
+      name: 'Your favorite band or choir',
       genre: 'Classical, Gospel, Contemporary',
       members: '60+ talented vocalists'
     }

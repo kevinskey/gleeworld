@@ -81,7 +81,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
           {/* Glee Cam - Highlighted Center */}
           <button
             onClick={() => setShowCategorySelector(true)}
-            className="flex items-center justify-center w-11 h-11 -mt-4 rounded-full bg-[#003666] text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-background"
+            className="flex items-center justify-center w-11 h-11 -mt-4 rounded-full bg-[#150d26] text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all border-2 border-background"
           >
             <Camera className="h-5 w-5" />
           </button>

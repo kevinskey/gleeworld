@@ -56,7 +56,7 @@ export const YouTubeVideoPicker: React.FC<YouTubeVideoPickerProps> = ({
     try {
       setLoading(true);
 
-      // Get the channel row for the official Spelman Glee Club
+      // Get the channel row for the official Riverside Concert Choir
       const { data: channelRow } = await supabase
         .from('youtube_channels')
         .select('id')
@@ -88,7 +88,7 @@ export const YouTubeVideoPicker: React.FC<YouTubeVideoPickerProps> = ({
     try {
       setSyncing(true);
       await supabase.functions.invoke('sync-youtube-videos', {
-        body: { channelInput: '@SpelmanCollegeGleeClub', maxResults: 50 }
+        body: { channelInput: '@your-program', maxResults: 50 }
       });
       await fetchVideos();
     } catch (err) {

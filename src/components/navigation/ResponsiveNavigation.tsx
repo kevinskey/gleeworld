@@ -14,7 +14,7 @@ const publicNavItems = [
 interface ResponsiveNavigationProps {
   mobile?: boolean;
   onItemClick?: () => void;
-  variant?: 'default' | 'spelman-blue';
+  variant?: 'default' | 'brand-blue';
 }
 
 export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'default' }: ResponsiveNavigationProps) => {
@@ -22,7 +22,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   
-  const isSpelmanBlue = variant === 'spelman-blue';
+  const isBrandBlue = variant === 'brand-blue';
 
   const isActivePath = (path: string) => {
     if (path === "/") {
@@ -53,7 +53,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
               className={cn(
                 "flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full justify-start",
                 isActive 
-                  ? "bg-[#003666] hover:bg-[#002244]" 
+                  ? "bg-[#150d26] hover:bg-[#002244]" 
                   : "hover:bg-gray-100"
               )}
             >
@@ -75,13 +75,13 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
             to={item.href}
             className={cn(
               "px-4 py-2 rounded text-base font-medium transition-all duration-200",
-              isSpelmanBlue 
+              isBrandBlue 
                 ? cn(
                     "text-white/80 hover:text-white hover:bg-white/10",
                     isActivePath(item.href) && "text-white bg-[#0066CC] font-semibold"
                   )
                 : cn(
-                    "text-[#003666] hover:text-[#002244] hover:bg-accent/10",
+                    "text-[#150d26] hover:text-[#002244] hover:bg-accent/10",
                     isActivePath(item.href) && "text-[#002244] bg-accent/20 font-semibold"
                   )
             )}
@@ -99,13 +99,13 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
             to={item.href}
             className={cn(
               "px-3 py-2 rounded text-sm font-medium transition-all duration-200",
-              isSpelmanBlue
+              isBrandBlue
                 ? cn(
                     "text-white/80 hover:text-white hover:bg-white/10",
                     isActivePath(item.href) && "text-white bg-[#0066CC] font-semibold"
                   )
                 : cn(
-                    "text-[#003666] hover:text-[#002244] hover:bg-accent/10",
+                    "text-[#150d26] hover:text-[#002244] hover:bg-accent/10",
                     isActivePath(item.href) && "text-[#002244] bg-accent/20 font-semibold"
                   )
             )}

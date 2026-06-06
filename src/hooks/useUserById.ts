@@ -8,8 +8,6 @@ export interface User {
   full_name: string;
   role: string;
   created_at: string;
-  exec_board_role?: string;
-  is_exec_board?: boolean;
   avatar_url?: string;
 }
 
@@ -34,7 +32,7 @@ export const useUserById = (userId: string | undefined) => {
         // Fetch from gw_profiles table
         const { data: profileData, error: profileError } = await supabase
           .from('gw_profiles')
-          .select('user_id, email, full_name, role, created_at, avatar_url, exec_board_role, is_exec_board')
+          .select('user_id, email, full_name, role, created_at, avatar_url')
           .eq('user_id', userId)
           .maybeSingle();
 
@@ -59,8 +57,6 @@ export const useUserById = (userId: string | undefined) => {
           role: profileData.role,
           created_at: profileData.created_at,
           avatar_url: profileData.avatar_url,
-          exec_board_role: profileData.exec_board_role || undefined,
-          is_exec_board: profileData.is_exec_board || false,
         };
 
         setUser(combinedUser);

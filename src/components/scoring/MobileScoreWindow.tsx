@@ -101,7 +101,7 @@ export const MobileScoreWindow = ({
     personal_info: {
       hometown: "Atlanta, Georgia",
       phone: "(404) 555-0123",
-      email: "sarah.johnson@spelman.edu",
+      email: "sarah.johnson@riversidechoir.example",
       major: "Music Education",
       gpa: "3.8"
     },
@@ -111,7 +111,7 @@ export const MobileScoreWindow = ({
       instruments: "Piano (intermediate), Guitar (beginner)"
     },
     essays: {
-      why_glee: "Music has been my passion since childhood. Joining the Spelman Glee Club represents the perfect opportunity to combine my love for choral music with the sisterhood and excellence that Spelman represents. I want to be part of a legacy that has inspired audiences for over 100 years.",
+      why_glee: "Music has been my passion since childhood. Joining the Riverside Concert Choir represents the perfect opportunity to combine my love for choral music with the sisterhood and excellence that Brand represents. I want to be part of a legacy that has inspired audiences for over 100 years.",
       goals: "I hope to grow as both a musician and a leader. I want to learn from the talented women in this ensemble while contributing my own voice and energy to continue the tradition of amazing performances.",
       commitment: "I understand the time commitment required and am prepared to prioritize rehearsals, performances, and the high standards expected of Glee Club members."
     }

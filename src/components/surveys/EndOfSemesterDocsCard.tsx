@@ -4,7 +4,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { TreeLightingSurvey } from './TreeLightingSurvey';
 import { CollapsibleMemberExitInterview } from './CollapsibleMemberExitInterview';
-import { CollapsibleExecBoardExitInterview } from './CollapsibleExecBoardExitInterview';
 import { SheetMusicCheckoutForm } from './SheetMusicCheckoutForm';
 import { DressCheckoutForm } from './DressCheckoutForm';
 
@@ -39,7 +38,6 @@ export const EndOfSemesterDocsCard = () => {
           <CardContent className="space-y-4 pt-0">
             <TreeLightingSurvey />
             <CollapsibleMemberExitInterview />
-            <CollapsibleExecBoardExitInterview />
             <SheetMusicCheckoutForm />
             <DressCheckoutForm />
           </CardContent>

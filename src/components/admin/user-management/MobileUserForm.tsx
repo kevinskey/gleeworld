@@ -63,7 +63,6 @@ export const MobileUserForm = ({ user, mode, onSuccess, onCancel }: MobileUserFo
   // Musical Information
   const [voicePart, setVoicePart] = useState("");
   const [canDance, setCanDance] = useState(false);
-  const [execBoardRole, setExecBoardRole] = useState("");
   
   // Preferences
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
@@ -180,7 +179,6 @@ export const MobileUserForm = ({ user, mode, onSuccess, onCancel }: MobileUserFo
         student_number: studentNumber.trim(),
         voice_part: voicePart === 'none' ? null : voicePart,
         can_dance: canDance,
-        exec_board_role: execBoardRole === 'none' ? null : execBoardRole || null,
         dietary_restrictions: dietaryRestrictions,
         allergies: allergies.trim()
       };
@@ -366,22 +364,7 @@ export const MobileUserForm = ({ user, mode, onSuccess, onCancel }: MobileUserFo
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="execBoardRole">Executive Board Role</Label>
-              <Select value={execBoardRole} onValueChange={setExecBoardRole} disabled={isLoading}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="president">President</SelectItem>
-                  <SelectItem value="vice-president">Vice President</SelectItem>
-                  <SelectItem value="secretary">Secretary</SelectItem>
-                  <SelectItem value="treasurer">Treasurer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
+<div className="flex items-center space-x-2">
               <Checkbox
                 id="canDance"
                 checked={canDance}

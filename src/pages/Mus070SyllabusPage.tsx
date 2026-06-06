@@ -48,7 +48,7 @@ const Mus070SyllabusPage: React.FC = () => {
           classTime="Monday & Wednesday, 12:00–1:00 PM"
           classroom="Fine Arts Building"
           instructorName="Dr. Kevin Johnson"
-          instructorEmail="kjohns10@spelman.edu"
+          instructorEmail="kjohns10@riversidechoir.example"
           instructorPhone="470-622-1392"
           instructorOffice="Fine Arts 105"
           officeHours="Monday & Wednesday, 3:00–5:00 PM (or by appointment)"

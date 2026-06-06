@@ -1,15 +1,12 @@
 import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
 import { PublicLayout } from "@/components/layout/PublicLayout";
-import { AmazonAffiliateSidebar } from "@/components/amazon/AmazonAffiliateSidebar";
-import { ChristmasCarolRegistrationCard } from "@/components/calendar/ChristmasCarolRegistrationCard";
-import { SightReadingStudioCard } from "@/components/calendar/SightReadingStudioCard";
 import { Calendar as CalendarIcon } from "lucide-react";
 const PublicCalendar = () => {
   return <PublicLayout>
       <div className="min-h-screen bg-white">
         {/* Header Banner */}
         <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{
-        backgroundColor: '#003666'
+        backgroundColor: '#150d26'
       }}>
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center gap-3 mb-1">
@@ -19,7 +16,7 @@ const PublicCalendar = () => {
               </h1>
             </div>
             <p className="text-white/70 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
-              View all public events and performances from Spelman College Glee Club
+              View all public events and performances from Your favorite band or choir
             </p>
           </div>
         </div>
@@ -29,24 +26,8 @@ const PublicCalendar = () => {
           <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
               {/* Main Calendar */}
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-4">
                 <PublicCalendarViews />
-                
-                {/* Sight Reading Studio Ad - Below Calendar */}
-                <div className="mt-6">
-                  <SightReadingStudioCard />
-                </div>
-              </div>
-              
-              {/* Sidebar */}
-              <div className="lg:col-span-1">
-                <div className="sticky top-24 space-y-6">
-                  {/* Christmas Carol Registration */}
-                  <ChristmasCarolRegistrationCard />
-                  
-                  {/* Amazon Affiliate Products */}
-                  <AmazonAffiliateSidebar limit={6} />
-                </div>
               </div>
             </div>
           </div>

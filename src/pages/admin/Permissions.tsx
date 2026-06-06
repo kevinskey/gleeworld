@@ -14,7 +14,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { UserModuleMatrix } from '@/components/admin/UserModuleMatrix';
 import { USER_ROLES } from '@/constants/permissions';
-import { EXECUTIVE_POSITIONS } from '@/hooks/useExecutivePermissions';
 import { toast } from 'sonner';
 import { SelectedUserProfileCard } from '@/components/admin/SelectedUserProfileCard';
 
@@ -66,7 +65,6 @@ const PermissionsPage: React.FC = () => {
   const [effective, setEffective] = useState<CombinedPermRow[]>([]);
   const [fetching, setFetching] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<string>('');
-  const [selectedExec, setSelectedExec] = useState<string>('');
   const loadUsers = async () => {
     const { data, error } = await supabase.rpc('get_all_user_profiles');
     if (!error && data) setUsers(data as PreviewUser[]);
@@ -80,12 +78,11 @@ const PermissionsPage: React.FC = () => {
       if (!selectedUserId) return;
       const { data } = await supabase
         .from('gw_profiles')
-        .select('role, exec_board_role, is_exec_board')
+        .select('role')
         .eq('user_id', selectedUserId)
         .maybeSingle();
       if (data) {
         setSelectedRole(data.role || 'member');
-        setSelectedExec(data.exec_board_role || '');
       }
     };
     loadUserMeta();
@@ -113,48 +110,7 @@ const PermissionsPage: React.FC = () => {
     }
   };
 
-  const assignExecutive = async () => {
-    if (!selectedUserId || !selectedExec) return;
-    const currentYear = new Date().getFullYear().toString();
-
-    // Deactivate existing for year
-    await supabase
-      .from('gw_executive_board_members')
-      .update({ is_active: false })
-      .eq('user_id', selectedUserId)
-      .eq('academic_year', currentYear);
-
-    // Upsert position for this year
-    const { data: existing } = await supabase
-      .from('gw_executive_board_members')
-      .select('*')
-      .eq('user_id', selectedUserId)
-      .eq('position', selectedExec as any)
-      .eq('academic_year', currentYear)
-      .maybeSingle();
-
-    if (existing) {
-      await supabase
-        .from('gw_executive_board_members')
-        .update({ is_active: true })
-        .eq('id', existing.id);
-    } else {
-      await supabase
-        .from('gw_executive_board_members')
-        .insert({ user_id: selectedUserId, position: selectedExec as any, academic_year: currentYear, is_active: true });
-    }
-
-    // Update profile flags
-    await supabase
-      .from('gw_profiles')
-      .update({ is_exec_board: true, exec_board_role: selectedExec })
-      .eq('user_id', selectedUserId);
-
-    toast.success('Executive position assigned');
-    await doPreview();
-  };
-
-  if (loading) return <LoadingSpinner />;
+if (loading) return <LoadingSpinner />;
 
   const roleOptions = Object.values(USER_ROLES) as string[];
 
@@ -225,20 +181,6 @@ const PermissionsPage: React.FC = () => {
                       </Select>
                     </div>
                     <Button variant="outline" onClick={updateRole} disabled={!selectedUserId}>Update Role</Button>
-
-                    <div className="min-w-56">
-                      <Select value={selectedExec} onValueChange={setSelectedExec}>
-                        <SelectTrigger aria-label="Select executive position">
-                          <SelectValue placeholder="Executive position" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          {EXECUTIVE_POSITIONS.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button variant="outline" onClick={assignExecutive} disabled={!selectedUserId || !selectedExec}>Assign Exec</Button>
                   </div>
 
                   {selectedUserId && (

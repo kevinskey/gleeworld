@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,10 +19,8 @@ import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
-import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
 import { DynamicCountdownText } from "@/components/ui/DynamicCountdownText";
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
-import { ExecutiveBoardDropdown } from "@/components/navigation/ExecutiveBoardDropdown";
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
@@ -51,6 +50,9 @@ export const UniversalHeader = ({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const location = useLocation();
+  const { settings: branding } = useBrandingSettings();
+  const siteName = branding.short_name || branding.org_name || 'GleeWorld';
+  const siteLogo = branding.logo_url || '/lovable-uploads/gleeworld-logo.png?v=6';
   const {
     userProfile
   } = useUserProfile(user);
@@ -130,13 +132,13 @@ export const UniversalHeader = ({
 
   // Single opinionated theme — no conditional styling needed
   const isHbcuTheme = false;
-  const isSpelmanBlue = false;
+  const isBrandBlue = false;
 
   // Role-based accent colors for header branding
   const getRoleAccentColor = () => {
     const role = userProfile?.role;
-    if (userProfile?.is_super_admin) return 'border-b-4 border-b-spelman-blue-dark';
-    if (userProfile?.is_admin || userProfile?.is_exec_board) return 'border-b-4 border-b-purple-500';
+    if (userProfile?.is_super_admin) return 'border-b-4 border-b-brand-blue-dark';
+    if (userProfile?.is_admin) return 'border-b-4 border-b-purple-500';
     switch (role) {
       case 'student':
         return 'border-b-4 border-b-emerald-500';
@@ -153,7 +155,6 @@ export const UniversalHeader = ({
   const getRoleBadgeLabel = () => {
     if (userProfile?.is_super_admin) return 'Super Admin';
     if (userProfile?.is_admin) return 'Admin';
-    if (userProfile?.is_exec_board) return userProfile?.exec_board_role?.replace(/_/g, ' ') || 'Executive';
     switch (userProfile?.role) {
       case 'student':
         return 'Student';
@@ -169,19 +170,9 @@ export const UniversalHeader = ({
   };
 
   // Check if user has PR access (PR coordinator or admin)
-  const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true || userProfile?.is_exec_board === true;
-  const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
-  const canAccessPR = isAdmin || isPRCoordinator;
-  const isExecBoardMember = userProfile?.exec_board_role && userProfile.exec_board_role.trim() !== '';
-  const hasExecBoardPerms = isAdmin || isExecBoardMember;
-  console.log('UniversalHeader: PR Access Debug', {
-    userProfile: userProfile,
-    isAdmin: isAdmin,
-    isPRCoordinator: isPRCoordinator,
-    canAccessPR: canAccessPR,
-    userRole: userProfile?.role,
-    execBoardRole: userProfile?.exec_board_role
-  });
+  const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true;
+  const canAccessPR = isAdmin;
+  const hasExecBoardPerms = isAdmin;
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -248,17 +239,17 @@ export const UniversalHeader = ({
         style={{ top: 'var(--gw-safe-top)' }}
       >
         <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0">
-        <header ref={headerRef} className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative bg-[hsl(var(--spelman-navy))] backdrop-blur-md border-b border-white/[0.08] text-white ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300`}>
-          <div className="flex items-center justify-between w-full min-h-10 sm:min-h-12 md:min-h-10 py-1.5 md:py-1 px-2 sm:px-3 md:px-4 lg:px-6">
+        <header ref={headerRef} className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative bg-[hsl(var(--brand-navy))] backdrop-blur-md border-b border-white/[0.08] text-white ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300 [&_button>svg]:text-white/85 [&_button:hover>svg]:text-white`}>
+          <div className="flex items-center justify-between w-full h-14 sm:h-16 md:h-18 px-2 sm:px-3 md:px-4 lg:px-6">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 min-w-0">
-            <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
-              <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-white p-0.5 sm:p-1">
-                <div className="relative">
+            <EnhancedTooltip content={`Go to ${siteName} Home`} disabled={isMobile || location.pathname === '/admin'} className="z-10">
+              <Link to="/" className="flex items-center gap-0.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-white p-0">
+                <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0">
                   <img
-                    src="/favicon.png?v=3"
-                    alt="GleeWorld"
-                    className="w-8 h-8 sm:w-9 sm:h-9 md:w-6 md:h-6 lg:w-10 lg:h-10 object-contain flex-shrink-0"
+                    src={siteLogo}
+                    alt={siteName}
+                    className="w-full h-full object-contain"
                     style={{ filter: 'drop-shadow(0 0 4px rgba(56,146,227,0.3))' }}
                   />
                 </div>
@@ -266,8 +257,8 @@ export const UniversalHeader = ({
                     fontFamily: "'Cinzel', serif",
                     letterSpacing: '0.04em',
                     textShadow: '0 0 10px rgba(56,146,227,0.3)'
-                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-semibold text-white">
-                  GleeWorld
+                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-semibold text-white truncate max-w-[40vw] md:max-w-none">
+                  {siteName}
                 </span>
               </Link>
             </EnhancedTooltip>
@@ -281,7 +272,6 @@ export const UniversalHeader = ({
 
           {/* Right side actions - Mobile-optimized icon bar */}
           <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 xl:gap-4 text-white/80 pr-2 sm:pr-4 md:pr-6 lg:pr-8 xl:pr-12">
-            <HeaderRadioControls />
             
             {/* Email/SMS Messenger - Available to all authenticated users */}
             {user && <EnhancedTooltip content="Send Email/SMS">
@@ -371,9 +361,9 @@ export const UniversalHeader = ({
                       <GraduationCap className="mr-2 h-4 w-4" />
                       Alumnae
                     </DropdownMenuItem>
-                    {hasExecBoardPerms && <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+                    {hasExecBoardPerms && <DropdownMenuItem onClick={() => navigate('/control-center')} className="cursor-pointer">
                         <Crown className="mr-2 h-4 w-4" />
-                        Admin
+                        Control Center
                       </DropdownMenuItem>}
                     
                     <DropdownMenuSeparator />
@@ -395,11 +385,6 @@ export const UniversalHeader = ({
                       Public View
                     </DropdownMenuItem>
                     
-                    {/* Executive Board Dropdown */}
-                    {hasExecBoardPerms && <>
-                      <DropdownMenuSeparator />
-                      <ExecutiveBoardDropdown />
-                    </>}
                   </DropdownMenuContent>
                 </DropdownMenu>}
 
@@ -458,7 +443,7 @@ export const UniversalHeader = ({
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
-                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : userProfile?.is_exec_board ? 'bg-blue-100 text-blue-700' : userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'alumna' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
+                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'alumna' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
                             {getRoleBadgeLabel()}
                           </span>}
                       </div>
@@ -513,8 +498,6 @@ export const UniversalHeader = ({
       email: user.email || '',
       full_name: userProfile?.full_name || user.email || '',
       role: userProfile?.role || 'student',
-      exec_board_role: userProfile?.exec_board_role || undefined,
-      is_exec_board: userProfile?.is_exec_board || false
     }} onModuleSelect={moduleId => {
       navigate(`/dashboard?module=${moduleId}`);
       setIsQuickActionsOpen(false);

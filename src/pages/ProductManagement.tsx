@@ -77,7 +77,7 @@ export const ProductManagement = () => {
   };
   return <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <div className="bg-[#003666] text-white">
+      <div className="bg-[#150d26] text-white">
         <div className="container mx-auto px-6 py-6 max-w-7xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg">
@@ -102,7 +102,7 @@ export const ProductManagement = () => {
                 return <TabsTrigger key={tab.value} value={tab.value} className="
                         flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
                         text-muted-foreground hover:text-foreground hover:bg-muted/50
-                        data-[state=active]:bg-[#003666] data-[state=active]:text-white
+                        data-[state=active]:bg-[#150d26] data-[state=active]:text-white
                         data-[state=active]:shadow-sm transition-all whitespace-nowrap
                       ">
                       <Icon className="w-4 h-4" />
@@ -112,7 +112,7 @@ export const ProductManagement = () => {
                 {FEATURE_SUBSCRIPTIONS_ENABLED && <TabsTrigger value="subscriptions" className="
                       flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
                       text-muted-foreground hover:text-foreground hover:bg-muted/50
-                      data-[state=active]:bg-[#003666] data-[state=active]:text-white
+                      data-[state=active]:bg-[#150d26] data-[state=active]:text-white
                       data-[state=active]:shadow-sm transition-all whitespace-nowrap
                     ">
                     <RefreshCw className="w-4 h-4" />

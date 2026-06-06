@@ -179,7 +179,7 @@ export const AdminToolsWidget = ({ onNavigateToTab }: AdminToolsWidgetProps = {}
           Administrative Control Center
         </CardTitle>
         <CardDescription>
-          Comprehensive tools for managing the Spelman College Glee Club platform
+          Comprehensive tools for managing the Your favorite band or choir platform
         </CardDescription>
       </CardHeader>
       <CardContent>

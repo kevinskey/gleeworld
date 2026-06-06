@@ -13,7 +13,7 @@ interface ClassSession {
   attendance_required?: boolean;
 }
 
-interface SpelmanEvent {
+interface CampusEvent {
   id: string;
   title: string;
   start_date: string;
@@ -24,7 +24,7 @@ interface ClassCalendarGridProps {
   currentDate: Date;
   selectedDate: Date | null;
   sessions: ClassSession[];
-  spelmanEvents?: SpelmanEvent[];
+  campusEvents?: CampusEvent[];
   exceptionDates?: string[];
   onSelectDate: (date: Date) => void;
   view: 'month' | 'week';
@@ -43,14 +43,14 @@ export const ClassCalendarGrid: React.FC<ClassCalendarGridProps> = ({
   days,
   currentDate,
   selectedDate,
-  spelmanEvents = [],
+  campusEvents = [],
   exceptionDates = [],
   onSelectDate,
   view,
   getSessionsForDate,
 }) => {
-  const getSpelmanEventsForDate = (day: Date) => {
-    return spelmanEvents.filter(e => {
+  const getCampusEventsForDate = (day: Date) => {
+    return campusEvents.filter(e => {
       const eventDate = parseISO(e.start_date);
       return isSameDay(eventDate, day);
     });
@@ -93,7 +93,7 @@ export const ClassCalendarGrid: React.FC<ClassCalendarGridProps> = ({
         <div className="grid grid-cols-7 gap-2">
           {days.map((day, i) => {
             const daySessions = getSessionsForDate(day);
-            const daySpelmanEvents = getSpelmanEventsForDate(day);
+            const dayCampusEvents = getCampusEventsForDate(day);
             const isHoliday = exceptionDates.includes(format(day, 'yyyy-MM-dd'));
             const isCurrentDay = isToday(day);
             const isSelected = selectedDate && isSameDay(day, selectedDate);
@@ -118,8 +118,8 @@ export const ClassCalendarGrid: React.FC<ClassCalendarGridProps> = ({
                 )}
                 
                 <div className="space-y-2">
-                  {/* Spelman Events */}
-                  {daySpelmanEvents.map(event => (
+                  {/* Campus Events */}
+                  {dayCampusEvents.map(event => (
                     <div
                       key={event.id}
                       className="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 rounded-lg px-2.5 py-2 text-sm font-medium"
@@ -147,7 +147,7 @@ export const ClassCalendarGrid: React.FC<ClassCalendarGridProps> = ({
                     );
                   })}
                   
-                  {daySessions.length === 0 && daySpelmanEvents.length === 0 && !isHoliday && (
+                  {daySessions.length === 0 && dayCampusEvents.length === 0 && !isHoliday && (
                     <div className="text-sm text-muted-foreground text-center py-6 opacity-50">
                       No events
                     </div>
@@ -177,12 +177,12 @@ export const ClassCalendarGrid: React.FC<ClassCalendarGridProps> = ({
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, i) => {
           const daySessions = getSessionsForDate(day);
-          const daySpelmanEvents = getSpelmanEventsForDate(day);
+          const dayCampusEvents = getCampusEventsForDate(day);
           const isHoliday = exceptionDates.includes(format(day, 'yyyy-MM-dd'));
           const isCurrentDay = isToday(day);
           const isSelected = selectedDate && isSameDay(day, selectedDate);
           const isCurrentMonth = isSameMonth(day, currentDate);
-          const totalEvents = daySessions.length + daySpelmanEvents.length;
+          const totalEvents = daySessions.length + dayCampusEvents.length;
 
           return (
             <button
@@ -209,7 +209,7 @@ export const ClassCalendarGrid: React.FC<ClassCalendarGridProps> = ({
 
               {/* Event indicators */}
               <div className="space-y-1">
-                {daySpelmanEvents.slice(0, 1).map(event => (
+                {dayCampusEvents.slice(0, 1).map(event => (
                   <div
                     key={event.id}
                     className="text-xs bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 rounded-md px-1.5 py-1 truncate font-medium"
@@ -218,7 +218,7 @@ export const ClassCalendarGrid: React.FC<ClassCalendarGridProps> = ({
                   </div>
                 ))}
                 
-                {daySessions.slice(0, 2 - daySpelmanEvents.length).map(session => {
+                {daySessions.slice(0, 2 - dayCampusEvents.length).map(session => {
                   const IconComponent = SESSION_ICONS[session.session_type] || BookOpen;
                   return (
                     <div

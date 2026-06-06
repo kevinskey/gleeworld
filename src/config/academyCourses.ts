@@ -26,7 +26,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     id: 'a0000000-0000-0000-0000-000000000070',
     courseCode: 'MUS 070',
     title: 'Glee Club',
-    description: 'The premier choral ensemble of Spelman College with over 100 years of musical excellence.',
+    description: 'The premier choral ensemble of Riverside Music Institute with over 100 years of musical excellence.',
     icon: Users,
     level: 'Audition Required',
     duration: 'Semester',
@@ -34,7 +34,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     route: '/academy/mus-070',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       hours: 'MWF 3-5 PM',
       imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
@@ -53,7 +53,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     route: '/academy/mus-240',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       hours: 'MWF 3-5 PM',
       imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
@@ -72,7 +72,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     route: '/academy/mus-210',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       hours: 'MWF 3-5 PM',
       imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
@@ -91,7 +91,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     route: '/academy/mus-001',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       hours: 'By Appointment',
       imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
@@ -110,7 +110,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     route: '/academy/glee-101',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       hours: 'MWF 3-5 PM',
       imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
@@ -129,7 +129,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     route: '/academy/glee-000',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       hours: 'MWF 3-5 PM',
       imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
@@ -148,7 +148,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     route: '/academy/mus-101',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       hours: 'MWF 3-5 PM',
       imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
@@ -167,7 +167,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     route: '/academy/lh-100',
     instructor: {
       name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@spelman.edu',
+      email: 'kjohns10@riversidechoir.example',
       office: 'Fine Arts 105',
       hours: 'By Appointment',
       imageUrl: 'https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'

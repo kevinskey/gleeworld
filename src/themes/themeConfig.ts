@@ -12,7 +12,7 @@
  * 5. Add background images to src/assets/themes/ if needed
  */
 
-export type ThemeName = 'glee-world' | 'spelman-blue' | 'spelhouse' | 'music' | 'hbcu';
+export type ThemeName = 'glee-world' | 'brand-blue' | 'spelhouse' | 'music' | 'hbcu';
 
 export interface ThemeConfig {
   id: ThemeName;
@@ -74,9 +74,9 @@ const gleeWorldTheme: ThemeConfig = {
   description: 'Bold, musical, and vibrant - the signature Glee World experience',
   
   colors: {
-    primary: '203 85% 63%',           // Sky blue accent #55BBEE
+    primary: '203 85% 63%',           // Sky blue accent #22d3ee
     primaryForeground: '219 78% 15%', // Dark blue text on primary
-    secondary: '219 78% 31%',         // Spelman dark blue #11448B
+    secondary: '219 78% 31%',         // brand primary blue #9333ea
     secondaryForeground: '0 0% 100%', // White on blue
     accent: '203 85% 63%',            // Sky blue accent
     accentForeground: '219 78% 15%',
@@ -109,16 +109,16 @@ const gleeWorldTheme: ThemeConfig = {
 };
 
 /**
- * SPELMAN BLUE THEME
+ * BRAND BLUE THEME
  * Clean, LIGHT professional theme - blue accents on white background
  */
-const spelmanBlueTheme: ThemeConfig = {
-  id: 'spelman-blue',
-  name: 'Spelman Blue',
-  description: 'Clean, modern, and professional - inspired by Spelman College',
+const brandBlueTheme: ThemeConfig = {
+  id: 'brand-blue',
+  name: 'Brand Blue',
+  description: 'Clean, modern, and professional - inspired by Riverside Music Institute',
   
   colors: {
-    primary: '219 78% 31%',             // Spelman dark blue #11448B
+    primary: '219 78% 31%',             // brand primary blue #9333ea
     primaryForeground: '0 0% 100%',     // White on primary
     secondary: '203 85% 63%',           // Sky blue accent
     secondaryForeground: '0 0% 100%',   // White on secondary
@@ -154,19 +154,19 @@ const spelmanBlueTheme: ThemeConfig = {
 
 /**
  * SPELHOUSE THEME
- * Combined Spelman + Morehouse identity - Bold collegiate styling
+ * Bold collegiate styling
  */
 const spelhouseTheme: ThemeConfig = {
   id: 'spelhouse',
   name: 'SpelHouse',
-  description: 'United excellence - Spelman Blue meets Morehouse Maroon',
+  description: 'United collegiate identity',
   
   colors: {
-    primary: '210 65% 45%',              // Bold Spelman Blue (darker, more saturated)
+    primary: '210 65% 45%',              // Bold brand blue (darker, more saturated)
     primaryForeground: '0 0% 100%',
     secondary: '352 65% 28%',            // Bold Morehouse Maroon (richer)
     secondaryForeground: '0 0% 100%',
-    accent: '210 70% 55%',               // Lighter Spelman Blue accent
+    accent: '210 70% 55%',               // Lighter brand blue accent
     accentForeground: '0 0% 100%',
     background: '210 30% 95%',           // Light blue-tinted background
     foreground: '352 65% 20%',           // Dark maroon text
@@ -283,7 +283,7 @@ const hbcuTheme: ThemeConfig = {
  */
 export const THEMES: Record<ThemeName, ThemeConfig> = {
   'glee-world': gleeWorldTheme,
-  'spelman-blue': spelmanBlueTheme,
+  'brand-blue': brandBlueTheme,
   'spelhouse': spelhouseTheme,
   'music': musicTheme,
   'hbcu': hbcuTheme,

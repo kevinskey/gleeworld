@@ -13,6 +13,7 @@ import { Sparkles, Upload, X, Paperclip, Info, Maximize2, ArrowRight, ChevronDow
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { EVENT_TYPES } from "@/constants/eventTypes";
 import { useUsers } from "@/hooks/useUsers";
 import { AddressInput } from "@/components/shared/AddressInput";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -124,20 +125,7 @@ export const CreateEventDialog = ({
   const [startTimeOpen, setStartTimeOpen] = useState(false);
   const [endTimeOpen, setEndTimeOpen] = useState(false);
 
-  const eventTypes = [
-    { value: 'performance', label: 'Performance' },
-    { value: 'rehearsal', label: 'Rehearsal' },
-    { value: 'sectional', label: 'Sectional' },
-    { value: 'member-meeting', label: 'Member Meeting' },
-    { value: 'exec-meeting', label: 'Exec Board Meeting' },
-    { value: 'voice-lesson', label: 'Voice Lesson' },
-    { value: 'tutorial', label: 'Tutorial' },
-    { value: 'social', label: 'Social Event' },
-    { value: 'meeting', label: 'Meeting' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'audition', label: 'Audition' },
-    { value: 'other', label: 'Other' }
-  ];
+  const eventTypes = EVENT_TYPES;
 
   const timezones = [
     { value: 'America/New_York', label: '(GMT-05:00) Eastern Time (US a...' },

@@ -142,7 +142,7 @@ export const AcademyStudentRegistration = () => {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="student@spelman.edu"
+                placeholder="student@riversidechoir.example"
                 value={formData.email}
                 onChange={handleChange}
                 disabled={loading}

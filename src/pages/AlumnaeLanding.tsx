@@ -198,7 +198,7 @@ export default function AlumnaeLanding() {
   return (
     <div className="min-h-screen bg-background">
       {/* Concert Ticket Request Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-spelman-blue via-primary to-brand-maroon">
+      <div className="relative overflow-hidden bg-gradient-to-br from-brand-blue via-primary to-brand-maroon">
         <div className="absolute inset-0 bg-[url('/images/themes/gleeworld-bg.jpg')] bg-cover bg-center opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60" />
         <div className="relative container mx-auto px-4 py-12 md:py-20">
@@ -212,7 +212,7 @@ export default function AlumnaeLanding() {
                 Request Your Concert Tickets
               </h2>
               <p className="text-lg md:text-xl text-white/90 leading-relaxed">
-                Join us for an unforgettable evening of music and sisterhood. Reserve your seats for the upcoming Spelman College Glee Club performance.
+                Join us for an unforgettable evening of music and sisterhood. Reserve your seats for the upcoming Your favorite band or choir performance.
               </p>
             </div>
             <div className="flex flex-col items-center gap-4">

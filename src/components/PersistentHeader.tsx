@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -28,6 +29,10 @@ interface PersistentHeaderProps {
 export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessages }: PersistentHeaderProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
+  const { settings: branding } = useBrandingSettings();
+  const siteName = branding.short_name || branding.org_name || 'GleeWorld';
+  const siteLogo = branding.logo_url || '/lovable-uploads/gleeworld-logo.png?v=6';
+  const siteTagline = branding.tagline || 'Your favorite band or choir';
   const [currentTime, setCurrentTime] = useState(new Date());
   const [viewCount, setViewCount] = useState(1247);
   const navigate = useNavigate();
@@ -70,13 +75,13 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
         {/* Left Section - Logo & Branding */}
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
-            {/* GleeWorld Logo */}
-            <img src="/favicon.png?v=3" alt="GleeWorld" className="w-8 h-8 md:w-10 md:h-10 rounded-lg object-contain" />
-            
+            {/* Site Logo */}
+            <img src={siteLogo} alt={siteName} className="w-8 h-8 md:w-10 md:h-10 rounded-lg object-contain" />
+
             {/* Branding Text */}
             <div className="flex flex-col">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">GleeWorld</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Spelman College Glee Club</p>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground truncate max-w-[40vw] md:max-w-none">{siteName}</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">{siteTagline}</p>
             </div>
           </div>
         </div>

@@ -9,27 +9,25 @@ import {
   Mic, LibraryBig, Package, Volume2, AudioLines, Speech, ListChecks, NotebookPen,
   PenTool, TrendingUp, Inbox, ScrollText, BadgeCheck, Folder, SquareUser, Newspaper,
   ImagePlus, Clapperboard, BookMarked, PencilRuler, Award, MessageCircle, Layers,
-  Presentation, MicVocal, Wrench, Contact,
+  Presentation, MicVocal, Wrench, Contact, ClipboardList,
   Rss,
 } from 'lucide-react';
 
 // Import core module components
 import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
-import { CommunityHubModule } from '@/components/modules/CommunityHubModule';
 import { CheckInCheckOutModule } from '@/components/modules/CheckInCheckOutModule';
 import { CalendarModule } from '@/components/modules/CalendarModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { CourseAttendanceLedger } from '@/components/attendance/CourseAttendanceLedger';
-import { StudentConductorModule } from '@/components/modules/StudentConductorModule';
-import { SectionLeaderModule } from '@/components/modules/SectionLeaderModule';
-import { SightSingingModule } from '@/components/modules/SightSingingModule';
-import { NotificationsModule } from '@/components/modules/NotificationsModule';
-import { BudgetsModule } from '@/components/modules/BudgetsModule';
-import { SettingsModule } from '@/components/modules/SettingsModule';
+// Hubs are lazy-loaded so a runtime issue in one hub's sub-modules
+// doesn't crash the whole module config evaluation.
+import { lazy } from 'react';
+const SightReadingHub = lazy(() => import('@/components/modules/SightReadingHub').then(m => ({ default: m.SightReadingHub })));
+const CommunicationsHub = lazy(() => import('@/components/modules/CommunicationsHub').then(m => ({ default: m.CommunicationsHub })));
+const FinanceHub = lazy(() => import('@/components/modules/FinanceHub').then(m => ({ default: m.FinanceHub })));
 import { LazyPermissionsModule } from '@/components/modules/LazyPermissionsModule';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { WardrobeModule } from '@/components/modules/WardrobeModule';
-import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
 import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
 
 import { CalendarManagementModule } from '@/components/modules/CalendarManagementModule';
@@ -38,73 +36,33 @@ import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
 import { AlumnaeManagementModule } from '@/components/modules/AlumnaeManagementModule';
 import { ContractsModule } from '@/components/modules/ContractsModule';
-import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
-import { WellnessModule } from '@/components/modules/WellnessModule';
 
-import { ExecutiveModule } from '@/components/dashboard/modules/ExecutiveModule';
-import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
-import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
-import { DashboardHeroManagerModule } from '@/components/modules/DashboardHeroManagerModule';
-import { PressKitsModule } from '@/components/modules/PressKitsModule';
-import { FirstYearConsoleModule } from '@/components/modules/FirstYearConsoleModule';
-import { AIToolsModule } from '@/components/modules/AIToolsModule';
+// (DashboardHeroManagerModule was deleted during the 2026-05-31 hero
+// consolidation — its functionality now lives in the universal SliderManager.)
+const PRHub = lazy(() => import('@/components/modules/PRHub').then(m => ({ default: m.PRHub })));
+const AssessmentHub = lazy(() => import('@/components/modules/AssessmentHub').then(m => ({ default: m.AssessmentHub })));
+const AIHub = lazy(() => import('@/components/modules/AIHub').then(m => ({ default: m.AIHub })));
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
-import { AppointmentServiceManager } from '@/components/appointments/AppointmentServiceManager';
+const AppointmentsHub = lazy(() => import('@/components/modules/AppointmentsHub').then(m => ({ default: m.AppointmentsHub })));
 
 import MediaLibrary from '@/pages/admin/MediaLibrary';
-import { RadioManagement } from '@/components/admin/RadioManagement';
-import { TheoryPollModule } from '@/components/modules/TheoryPollModule';
 import { ProductManagement } from '@/pages/ProductManagement';
 import { BowmanScholarsModule } from '@/components/modules/BowmanScholarsModule';
-import { PRManagerModule } from '@/components/modules/PRManagerModule';
-import { SightReadingGeneratorModule } from '@/components/modules/SightReadingGeneratorModule';
-import { MemberSightReadingModule } from '@/components/modules/MemberSightReadingModule';
-import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import GleeAcademy from '@/pages/GleeAcademy';
 import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementModule';
 
 import { AssignableAppointmentModule } from '@/components/modules/AssignableAppointmentModule';
-import { ServiceProviderManagementModule } from '@/components/modules/ServiceProviderManagementModule';
-import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
-import { AnnouncementsModule } from '@/components/modules/AnnouncementsModule';
-import { TestBuilderModule } from '@/components/modules/TestBuilderModule';
-import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
-import { InvoiceMakerModule } from '@/components/modules/InvoiceMakerModule';
-import { GradingModule } from '@/components/modules/GradingModule';
 import { ConcertTicketRequestsModule } from '@/components/modules/ConcertTicketRequestsModule';
-import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
-import ExecBoardInterviewsModule from '@/components/modules/ExecBoardInterviewsModule';
-import TreeLightingSurveyModule from '@/components/modules/TreeLightingSurveyModule';
-import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
-import { GleeLoungeAnalyticsModule } from '@/components/modules/GleeLoungeAnalyticsModule';
 import { UsageAnalyticsModule } from '@/components/modules/UsageAnalyticsModule';
-import StipendPaymentModule from '@/components/modules/StipendPaymentModule';
-import { NotificationSoundsModule } from '@/components/admin/NotificationSoundsModule';
-import RehearsalTranscriptionModule from '@/components/modules/RehearsalTranscriptionModule';
-import VoiceConversationAgent from '@/components/assistant/VoiceConversationAgent';
-import { TheLabModule } from '@/components/modules/TheLabModule';
-import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
-import { MessengerAdminModule } from '@/components/modules/MessengerAdminModule';
-import { AmazonAffiliateModule } from '@/components/modules/AmazonAffiliateModule';
 import FeedControl from '@/pages/FeedControl';
 const FeedControlModule = FeedControl;
 
 // Import alumni-specific modules
 import {
-  AlumniTimelineModule,
-  MemoryLaneModule,
-  HomecomingModule,
-  ReunionModule,
-  ChristmasCarolCentennialModule,
-  SpringTourModule,
-  AfricaTripModule,
   DonationsModule,
-  GraduatesConnectionModule,
-  FamilyPhotosModule,
-  NetworkingMarketplaceModule,
-  AlumnaCalendarModule
+  NetworkingMarketplaceModule
 } from '@/components/modules/alumni';
 
 // Additional icons for alumni modules
@@ -119,19 +77,7 @@ import {
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
-  // Core Member modules
-  {
-    id: "community-hub",
-    name: "community-hub",
-    title: "Community Hub",
-    description: "Central space for community discussions and interactions",
-    icon: Users,
-    iconColor: "emerald",
-    category: "member-management",
-    isActive: true,
-    component: CommunityHubModule,
-    dbFunctionName: "community-hub"
-  },
+  // Core Member modules — Community Hub removed.
   {
     id: "music-library",
     name: "music-library", 
@@ -145,6 +91,8 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "music-library"
   },
   {
+    // Member-facing Calendar view. Admins get the full management UI via
+    // the calendar-management module entry below.
     id: "calendar",
     name: "calendar",
     title: "Calendar",
@@ -152,7 +100,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     icon: Calendar,
     iconColor: "purple",
     category: "member-management",
-    isActive: true,
+    isActive: false,
     component: CalendarModule,
     dbFunctionName: "calendar"
   },
@@ -160,7 +108,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     id: "attendance",
     name: "attendance",
     title: "Attendance",
-    description: "View your attendance records and status",
+    description: "Track attendance, manage QR codes, process excuses, view records by course",
     icon: ClipboardCheck,
     iconColor: "green",
     category: "member-management",
@@ -168,96 +116,35 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: AttendanceModule,
     dbFunctionName: "attendance"
   },
-  {
-    id: "course-attendance-ledger",
-    name: "course-attendance-ledger",
-    title: "Course Attendance Ledger",
-    description: "Track attendance records by course and semester",
-    icon: BookOpen,
-    iconColor: "teal",
-    category: "member-management",
-    isActive: true,
-    component: CourseAttendanceLedger,
-    dbFunctionName: "course-attendance-ledger",
-    requiredRoles: ['admin', 'super-admin', 'exec-board', 'secretary']
-  },
-  {
-    id: "section-assignment",
-    name: "section-assignment",
-    title: "Section Assignment",
-    description: "Assign voice parts (S1, S2, A1, A2) to choir members",
-    icon: Layers,
-    iconColor: "purple",
-    category: "member-management",
-    isActive: true,
-    component: SectionAssignmentModule,
-    dbFunctionName: "section-assignment",
-    requiredRoles: ['admin', 'super-admin', 'exec-board', 'chief_of_staff']
-  },
+  // Section Assignment removed.
 
-  // Communications modules
+  // Communications Hub — unified entry point (email + announcements + notifications + messenger + sounds)
   {
-    id: "notifications",
-    name: "notifications",
-    title: "Notifications",
-    description: "Manage system notifications and alerts",
-    icon: Bell,
-    iconColor: "yellow",
-    category: "communications",
-    isActive: true,
-    component: NotificationsModule,
-    dbFunctionName: "notifications"
-  },
-  {
-    id: "email-management",
-    name: "email-management",
-    title: "Email Management",
-    description: "Configure and send emails to members",
+    id: "communications-hub",
+    name: "communications-hub",
+    title: "Communications",
+    description: "Email, announcements, notifications, messenger, and notification sounds",
     icon: Mail,
     iconColor: "blue",
     category: "communications",
     isActive: true,
-    component: EmailManagementModule,
-    dbFunctionName: "email-management"
-  },
-  {
-    id: "messenger-admin",
-    name: "messenger-admin",
-    title: "Messenger Admin",
-    description: "Manage messenger groups, recipients, and communication settings",
-    icon: MessageSquare,
-    iconColor: "cyan",
-    category: "communications",
-    isActive: true,
-    isNew: true,
-    component: MessengerAdminModule,
-    dbFunctionName: "messenger-admin",
-    requiredRoles: ["admin", "super-admin", "exec-board"]
+    component: CommunicationsHub,
+    dbFunctionName: "communications-hub",
+    requiredRoles: ["admin", "super-admin"]
   },
   {
     id: "buckets-of-love",
     name: "buckets-of-love",
     title: "Buckets of Love",
-    description: "Manage community support and encouragement",
+    description: "Community support and encouragement (folded into Fan Engagement)",
     icon: HeartHandshake,
     iconColor: "pink",
     category: "communications",
-    isActive: true,
+    isActive: false,
     component: BucketsOfLoveModule,
     dbFunctionName: "buckets-of-love"
   },
-  {
-    id: "fan-engagement",
-    name: "fan-engagement",
-    title: "Fan Engagement",
-    description: "Manage fan community, bulletin posts, and exclusive content",
-    icon: Star,
-    iconColor: "pink",
-    category: "communications",
-    isActive: true,
-    component: FanEngagementModule,
-    dbFunctionName: "fan-engagement"
-  },
+  // Fan Engagement removed.
   {
     id: "concert-ticket-requests",
     name: "concert-ticket-requests",
@@ -271,22 +158,24 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "concert-ticket-requests"
   },
   {
-    id: "service-management",
-    name: "service-management",
-    title: "Service Management",
-    description: "Manage scheduler services, badges, and booking settings",
+    id: "appointments-hub",
+    name: "appointments-hub",
+    title: "Appointments",
+    description: "Configure appointment services and manage providers",
     icon: Wrench,
     iconColor: "blue",
     category: "communications",
     isActive: true,
-    component: AppointmentServiceManager,
-    dbFunctionName: "service-management"
+    component: AppointmentsHub,
+    dbFunctionName: "appointments-hub",
+    requiredRoles: ["admin", "super-admin"]
   },
   {
+    // Combined Calendar + Event Scheduler. Admins see create/edit; members see view.
     id: "calendar-management",
     name: "calendar-management",
-    title: "Event Scheduler",
-    description: "Create and manage rehearsals, concerts, events, and organizational schedules",
+    title: "Calendar & Events",
+    description: "View, create, and manage rehearsals, concerts, and events.",
     icon: CalendarDays,
     iconColor: "purple",
     category: "communications",
@@ -296,45 +185,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   },
   {
     id: "assignable-appointments",
-    name: "assignable-appointments", 
+    name: "assignable-appointments",
     title: "My Appointments",
-    description: "Personal appointment management for assigned service providers",
+    description: "Merged into Appointments — auto-shown to assigned providers there",
     icon: CalendarClock,
     iconColor: "green",
     category: "communications",
-    isActive: true,
+    isActive: false,
     component: AssignableAppointmentModule,
     dbFunctionName: "assignable-appointments",
     requiredRoles: ["service-provider"]
   },
-  {
-    id: "service-provider-management",
-    name: "service-provider-management",
-    title: "Service Provider Management", 
-    description: "Assign and manage users as appointment service providers",
-    icon: UserCog,
-    iconColor: "purple",
-    category: "communications",
-    isActive: true,
-    component: ServiceProviderManagementModule,
-    dbFunctionName: "service-provider-management",
-    requiredRoles: ["admin"]
-  },
 
-  // Attendance & Member Management modules
-  {
-    id: "attendance-management",
-    name: "attendance-management",
-    title: "Attendance Management",
-    description: "Track attendance, manage QR codes, process excuses, and generate reports",
-    icon: ListChecks,
-    iconColor: "green",
-    category: "member-management",
-    isActive: true,
-    component: AttendanceModule,
-    dbFunctionName: "attendance-management"
-  },
-  {
+{
     id: "user-management",
     name: "user-management",
     title: "User Management",
@@ -349,8 +212,8 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   {
     id: "alumnae-portal",
     name: "alumnae-portal",
-    title: "Alumnae Portal",
-    description: "Alumni engagement, mentorship, memories, and reunion management",
+    title: "Alumni Portal",
+    description: "Alumni engagement, mentorship, timeline, calendar, and connections",
     icon: Landmark,
     iconColor: "purple",
     category: "member-management",
@@ -382,30 +245,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: AuditionsModule,
     dbFunctionName: "auditions"
   },
-  {
-    id: "permissions",
-    name: "permissions",
-    title: "Permissions",
-    description: "Configure user roles, permissions, and access controls",
-    icon: Shield,
-    iconColor: "red",
-    category: "member-management",
-    isActive: true,
-    component: LazyPermissionsModule,
-    dbFunctionName: "permissions"
-  },
-  {
-    id: "wellness",
-    name: "wellness",
-    title: "Wellness",
-    description: "Wellness & mental health tools for members",
-    icon: Heart,
-    iconColor: "rose",
-    category: "member-management",
-    isActive: true,
-    component: WellnessModule,
-    dbFunctionName: "wellness"
-  },
+  // Wellness removed.
   {
     id: "wardrobe",
     name: "wardrobe",
@@ -433,55 +273,21 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "tour-management"
   },
 
-  // Musical Leadership modules
+  // Musical Leadership modules — Student Conductor removed.
+  // Section Leader removed.
   {
-    id: "student-conductor",
-    name: "student-conductor",
-    title: "Student Conductor",
-    description: "Manage section leaders, sight singing, sheet music annotations, and sectional coordination",
-    icon: Presentation,
-    iconColor: "purple",
-    category: "musical-leadership",
-    isActive: true,
-    component: StudentConductorModule,
-    dbFunctionName: "student-conductor"
-  },
-  {
-    id: "section-leader",
-    name: "section-leader",
-    title: "Section Leader",
-    description: "Manage section rosters, plan sectionals, communicate with members, and create setlists",
-    icon: SquareUser,
-    iconColor: "green",
-    category: "musical-leadership",
-    isActive: true,
-    component: SectionLeaderModule,
-    dbFunctionName: "section-leader"
-  },
-  {
-    id: "sight-singing-management",
-    name: "sight-singing-management",
-    title: "Sight Singing Management",
-    description: "Manage sight singing exercises and track progress",
+    id: "sight-reading",
+    name: "sight-reading",
+    title: "Sight Reading",
+    description: "Practice, generate exercises, track progress, and run theory polls",
     icon: Eye,
     iconColor: "blue",
     category: "musical-leadership",
     isActive: true,
-    component: SightSingingModule,
-    dbFunctionName: "sight-singing-management"
+    component: SightReadingHub,
+    dbFunctionName: "sight-reading"
   },
-  {
-    id: "radio-management",
-    name: "radio-management",
-    title: "Radio Management",
-    description: "Manage Glee World Radio station, commercials, and broadcasting",
-    icon: Radio,
-    iconColor: "blue",
-    category: "musical-leadership",
-    isActive: true,
-    component: RadioManagement,
-    dbFunctionName: "radio-management"
-  },
+  // (Radio Management module removed 2026-05-31 — Radio.co integration deleted.)
   {
     id: "media-library",
     name: "media-library",
@@ -494,18 +300,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: MediaLibrary,
     dbFunctionName: "media-library"
   },
-  {
-    id: "karaoke",
-    name: "karaoke",
-    title: "Karaoke Studio",
-    description: "Record over backing tracks and save mixes",
-    icon: MicVocal,
-    iconColor: "pink",
-    category: "musical-leadership",
-    isActive: true,
-    component: KaraokeModule,
-    dbFunctionName: "karaoke"
-  },
+  // Karaoke Studio removed.
   {
     id: "librarian",
     name: "librarian",
@@ -520,58 +315,25 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   },
 
   // Finance modules
+  // Contracts is now a tab inside Finance, not a standalone module.
+  // Finance Hub — unified entry point (ledger + budgets + dues + invoices + stipends + contracts)
   {
-    id: "contracts",
-    name: "contracts",
-    title: "Contracts Management",
-    description: "Create and manage contracts",
-    icon: ScrollText,
+    id: "finance-hub",
+    name: "finance-hub",
+    title: "Finance",
+    description: "Ledger, budgets, dues, invoices, and stipends — all in one place",
+    icon: Database,
     iconColor: "blue",
     category: "finances",
     isActive: true,
-    component: ContractsModule,
-    dbFunctionName: "contracts"
-  },
-  {
-    id: "budgets",
-    name: "budgets",
-    title: "Budgets & Planning",
-    description: "Financial planning and budget management",
-    icon: Calculator,
-    iconColor: "green",
-    category: "finances",
-    isActive: true,
-    component: BudgetsModule,
-    dbFunctionName: "budgets"
-  },
-  {
-    id: "dues-collection",
-    name: "dues-collection",
-    title: "Dues Collection",
-    description: "Collect and track member dues",
-    icon: CreditCard,
-    iconColor: "purple",
-    category: "finances",
-    isActive: true,
-    component: DuesCollectionModule,
-    dbFunctionName: "dues-collection"
-  },
-  {
-    id: "check-requests",
-    name: "check-requests",
-    title: "Check Requests",
-    description: "Process and track check requests",
-    icon: Printer,
-    iconColor: "red",
-    category: "finances",
-    isActive: true,
-    component: BudgetsModule, // Placeholder for check requests
-    dbFunctionName: "check-requests"
+    component: FinanceHub,
+    dbFunctionName: "finance-hub",
+    requiredRoles: ["admin", "super-admin"]
   },
   {
     id: "merch-store",
     name: "merch-store",
-    title: "Glee Merch Store",
+    title: "Merch Store",
     description: "Manage merchandise sales, inventory, and orders",
     icon: ShoppingCart,
     iconColor: "yellow",
@@ -580,141 +342,9 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: ProductManagement,
     dbFunctionName: "merch-store"
   },
-  {
-    id: "receipts-records",
-    name: "receipts-records",
-    title: "Receipts & Records",
-    description: "Manage receipts, financial records, and expense tracking",
-    icon: Receipt,
-    iconColor: "orange",
-    category: "finances",
-    isActive: true,
-    component: BudgetsModule, // Placeholder for receipts
-    dbFunctionName: "receipts-records"
-  },
-  {
-    id: "invoice-maker",
-    name: "invoice-maker",
-    title: "Invoice Maker",
-    description: "Create and manage nonprofit donation invoices for the Glee Club",
-    icon: FileText,
-    iconColor: "emerald",
-    category: "finances",
-    isActive: true,
-    component: InvoiceMakerModule,
-    dbFunctionName: "invoice-maker"
-  },
-  {
-    id: "approval-system",
-    name: "approval-system", 
-    title: "Approval System",
-    description: "Manage approval workflows and requests",
-    icon: CheckCircle,
-    iconColor: "green",
-    category: "finances",
-    isActive: true,
-    component: BudgetsModule, // Placeholder for approval system
-    dbFunctionName: "approval-system"
-  },
-  {
-    id: "glee-ledger",
-    name: "glee-ledger",
-    title: "Glee Ledger",
-    description: "Comprehensive financial ledger and accounting",
-    icon: Database,
-    iconColor: "blue",
-    category: "finances",
-    isActive: true,
-    component: GleeLedgerModule,
-    dbFunctionName: "glee-ledger"
-  },
-  {
-    id: "monthly-statements",
-    name: "monthly-statements",
-    title: "Monthly Statements",
-    description: "Generate and manage monthly financial statements",
-    icon: Newspaper,
-    iconColor: "purple",
-    category: "finances",
-    isActive: true,
-    component: BudgetsModule, // Placeholder for statements
-    dbFunctionName: "monthly-statements"
-  },
-  {
-    id: "pr-coordinator",
-    name: "pr-coordinator",
-    title: "PR Coordinator",
-    description: "Public relations and marketing coordination",
-    icon: Speech,
-    iconColor: "pink",
-    category: "communications",
-    isActive: true,
-    component: EmailManagementModule, // PR communications
-    dbFunctionName: "pr-coordinator"
-  },
-  {
-    id: "communications",
-    name: "communications",
-    title: "Communications Hub",
-    description: "Central communications management and coordination",
-    icon: Inbox,
-    iconColor: "blue",
-    category: "communications",
-    isActive: true,
-    component: EmailManagementModule, // Communications hub
-    dbFunctionName: "communications"
-  },
-  {
-    id: "admin-tools",
-    name: "admin-tools",
-    title: "Admin Tools",
-    description: "Administrative tools and system management",
-    icon: Settings,
-    iconColor: "red",
-    category: "system",
-    isActive: true,
-    component: LazyPermissionsModule, // Admin tools
-    dbFunctionName: "admin-tools"
-  },
-  {
-    id: "system-settings",
-    name: "system-settings",
-    title: "System Settings",
-    description: "Advanced system configuration and settings",
-    icon: PenTool,
-    iconColor: "gray",
-    category: "system",
-    isActive: true,
-    component: SettingsModule,
-    dbFunctionName: "system-settings"
-  },
-  {
-    id: "executive-board",
-    name: "executive-board",
-    title: "Executive Board",
-    description: "Executive board management and leadership tools",
-    icon: Crown,
-    iconColor: "gold",
-    category: "member-management",
-    isActive: true,
-    component: ExecutiveModule,
-    dbFunctionName: "executive-board"
-  },
 
 
   // Tools & Administration
-  {
-    id: "ai-tools",
-    name: "ai-tools",
-    title: "AI Tools",
-    description: "Artificial intelligence powered tools and assistance",
-    icon: Brain,
-    iconColor: "purple",
-    category: "system",
-    isActive: true,
-    component: AIToolsModule,
-    dbFunctionName: "ai-tools"
-  },
   {
     id: "hero-manager",
     name: "hero-manager",
@@ -722,24 +352,12 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Manage hero images and carousel content",
     icon: Camera,
     iconColor: "blue",
-    category: "communications",
+    category: "system",
     isActive: true,
     component: HeroManagerModule,
     dbFunctionName: "hero-manager"
   },
-  {
-    id: "amazon-affiliate",
-    name: "amazon-affiliate",
-    title: "Amazon Affiliate",
-    description: "Manage Amazon affiliate products displayed across the site",
-    icon: Package,
-    iconColor: "orange",
-    category: "finances",
-    isActive: true,
-    requiredRoles: ["admin", "super-admin"],
-    component: AmazonAffiliateModule,
-    dbFunctionName: "amazon-affiliate"
-  },
+  // Amazon Affiliate removed — not tenant-neutral, niche feature.
   {
     id: "youtube-management",
     name: "youtube-management",
@@ -747,175 +365,33 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Manage YouTube video content and playlists",
     icon: Youtube,
     iconColor: "red",
-    category: "communications",
+    category: "musical-leadership",
     isActive: true,
     requiredRoles: ["admin", "super-admin"],
     component: YouTubeManagement,
     dbFunctionName: "youtube-management"
   },
+  // First Year Console removed.
+  // System Settings deleted — its three tabs (module assignments, users, permissions)
+  // are already covered by Site Setup, the Users card, and the Permissions card.
   {
-    id: "press-kits",
-    name: "press-kits",
-    title: "Press Kits",
-    description: "Manage press kits and media materials",
-    icon: Folder,
-    iconColor: "green",
-    category: "communications",
-    isActive: true,
-    component: PressKitsModule,
-    dbFunctionName: "press-kits"
-  },
-  {
-    id: "first-year-console",
-    name: "first-year-console",
-    title: "First Year Console",
-    description: "Tools and resources for first-year management",
-    icon: BookMarked,
-    iconColor: "cyan",
-    category: "member-management",
-    isActive: true,
-    component: FirstYearConsoleModule,
-    dbFunctionName: "first-year-console"
-  },
-  {
-    id: "settings",
-    name: "settings",
-    title: "System Settings",
-    description: "Platform configuration and settings",
-    icon: Settings,
-    iconColor: "gray",
-    category: "system",
-    isActive: true,
-    component: SettingsModule,
-    dbFunctionName: "settings"
-  },
-  {
-    id: "executive",
-    name: "executive",
-    title: "Executive Board",
-    description: "Executive board functions and leadership tools",
-    icon: BadgeCheck,
-    iconColor: "gold",
-    category: "member-management",
-    isActive: true,
-    component: ExecutiveModule,
-    dbFunctionName: "executive-board-management"
-  },
-  {
-    id: "executive-functions",
-    name: "executive-functions",
-    title: "Executive Functions",
-    description: "Core executive board functions and operations",
-    icon: Briefcase,
-    iconColor: "blue",
-    category: "member-management",
-    isActive: true,
-    component: ExecutiveModule,
-    dbFunctionName: "executive-functions"
-  },
-  {
-    id: "theory-poll",
-    name: "theory-poll",
-    title: "Theory Poll System",
-    description: "Interactive music theory polling and education system",
-    icon: TrendingUp,
-    iconColor: "purple",
-    category: "musical-leadership",
-    isActive: true,
-    component: TheoryPollModule,
-    dbFunctionName: "theory-poll",
-    requiredRoles: ["super-admin", "admin"]
-  },
-  {
-    id: "internal-communications",
-    name: "internal-communications",
-    title: "Internal Communications",
-    description: "Internal messaging and communication tools",
-    icon: MessageCircle,
-    iconColor: "indigo",
-    category: "communications",
-    isActive: true,
-    component: EmailManagementModule,
-    dbFunctionName: "internal-communications"
-  },
-  {
-    id: "announcements",
-    name: "announcements",
-    title: "Announcements",
-    description: "Create and manage club announcements",
-    icon: Megaphone,
-    iconColor: "amber",
-    category: "communications",
-    isActive: true,
-    component: AnnouncementsModule,
-    dbFunctionName: "announcements",
-    requiredRoles: ["super-admin", "admin", "exec-board"]
-  },
-  {
-    id: "pr-manager",
-    name: "pr-manager",
-    title: "PR Manager",
-    description: "Public relations and marketing management",
+    id: "pr-hub",
+    name: "pr-hub",
+    title: "Public Relations",
+    description: "PR operations and downloadable press kits",
     icon: Newspaper,
     iconColor: "pink",
-    category: "communications",
+    category: "system",
     isActive: true,
-    component: PRManagerModule,
-    dbFunctionName: "pr-manager"
-  },
-  {
-    id: "executive-board-management",
-    name: "executive-board-management",
-    title: "Executive Board Management",
-    description: "Executive board functions and leadership tools",
-    icon: NotebookPen,
-    iconColor: "gold",
-    category: "member-management",
-    isActive: true,
-    component: ExecutiveModule,
-    dbFunctionName: "executive-board-management"
-  },
-  {
-    id: "sight-reading-generator",
-    name: "sight-reading-generator",
-    title: "Sight Reading Generator",
-    description: "Create AI-graded sight reading assignments for students",
-    icon: PencilRuler,
-    iconColor: "blue",
-    category: "musical-leadership",
-    isActive: true,
-    component: SightReadingGeneratorModule,
-    dbFunctionName: "sight-reading-generator"
-  },
-  {
-    id: "member-sight-reading-studio",
-    name: "member-sight-reading-studio",
-    title: "Member Sight Reading Studio",
-    description: "Complete assignments, practice sight reading, and track progress",
-    icon: AudioLines,
-    iconColor: "purple",
-    category: "musical-leadership",
-    isActive: true,
-    component: MemberSightReadingModule,
-    dbFunctionName: "member-sight-reading-studio"
-  },
-  {
-    id: "sight-reading-preview",
-    name: "sight-reading-preview",
-    title: "Sight Reading Preview",
-    description: "Preview and navigate to sight reading tools",
-    icon: Eye,
-    iconColor: "cyan",
-    category: "musical-leadership",
-    isActive: true,
-    component: SightSingingPreviewModule,
-    dbFunctionName: "sight-reading-preview"
+    component: PRHub,
+    dbFunctionName: "pr-hub",
+    requiredRoles: ["admin", "super-admin"]
   },
   {
     id: "glee-academy",
     name: "glee-academy",
     title: "Glee Academy",
-    description: "Music education platform with courses and private lessons",
+    description: "Classes, lessons, assignments, attendance — the LMS for your program.",
     icon: GraduationCap,
     iconColor: "blue",
     category: "education",
@@ -936,120 +412,33 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "qr-code-management"
   },
   {
-    id: "mus240-groups",
-    name: "mus240-groups",
-    title: "MUS240 Groups",
-    description: "Manage MUS240 course groups and assignments",
-    icon: Layers,
-    iconColor: "green",
-    category: "musical-leadership",
-    isActive: true,
-    component: Mus240GroupsModule,
-    dbFunctionName: "mus240-groups"
-  },
-  {
-    id: "test-builder",
-    name: "test-builder",
-    title: "Glee Academy Test Maker",
-    description: "Create and manage tests, quizzes, and assessments for Glee Academy courses",
-    icon: PencilRuler,
+    id: "assessment-hub",
+    name: "assessment-hub",
+    title: "Assessments",
+    description: "Reached via Academy → Tools; not shown as a standalone catalog card.",
+    icon: ClipboardList,
     iconColor: "indigo",
     category: "education",
-    isActive: true,
-    component: TestBuilderModule,
-    dbFunctionName: "test-builder"
-  },
-  {
-    id: "grading",
-    name: "grading",
-    title: "Classroom & Grading",
-    description: "Manage courses, assignments, and student grades. Students view assignments and progress.",
-    icon: NotebookPen,
-    iconColor: "blue",
-    category: "education",
-    isActive: true,
-    component: GradingModule,
-    dbFunctionName: "grading"
+    isActive: false,
+    component: AssessmentHub,
+    dbFunctionName: "assessment-hub",
+    requiredRoles: ["admin", "super-admin", "instructor"]
   },
   {
     id: "alumnae-management",
     name: "alumnae-management",
-    title: "Alumnae Page Management",
-    description: "Comprehensive CMS for managing /alumnae page: hero slides, page builder, newsletters, interviews, forms, and user management",
+    title: "Alumni Engagement",
+    description: "Graduate engagement add-on — landing page builder, newsletters, interviews, spotlights, and intake forms",
     icon: Layout,
     iconColor: "rose",
-    category: "communications",
+    category: "alumnae",
     isActive: true,
     component: AlumnaeManagementModule,
     fullPageComponent: AlumnaeManagementModule,
     dbFunctionName: "alumnae-management",
     requiredRoles: ["admin", "super-admin"]
   },
-  {
-    id: "exit-interviews",
-    name: "exit-interviews",
-    title: "Exit Interviews",
-    description: "View and manage member end-of-semester exit interview submissions",
-    icon: BadgeCheck,
-    iconColor: "emerald",
-    category: "member-management",
-    isActive: true,
-    component: ExitInterviewsModule,
-    dbFunctionName: "exit-interviews",
-    requiredRoles: ["admin", "super-admin", "tour_manager", "secretary"]
-  },
-  {
-    id: "exec-board-interviews",
-    name: "exec-board-interviews",
-    title: "Exec Board Interviews",
-    description: "View and manage executive board end-of-semester interview submissions",
-    icon: Crown,
-    iconColor: "amber",
-    category: "member-management",
-    isActive: true,
-    component: ExecBoardInterviewsModule,
-    dbFunctionName: "exec-board-interviews",
-    requiredRoles: ["admin", "super-admin"]
-  },
-  {
-    id: "member-dossiers",
-    name: "member-dossiers",
-    title: "Member Dossiers",
-    description: "View comprehensive member profiles with exit interviews, goals, and satisfaction data",
-    icon: Folder,
-    iconColor: "indigo",
-    category: "member-management",
-    isActive: true,
-    component: MemberDossiersModule,
-    dbFunctionName: "member-dossiers",
-    requiredRoles: ["admin", "super-admin"]
-  },
-  {
-    id: "survey-module",
-    name: "survey-module",
-    title: "Survey Module",
-    description: "View and manage survey responses",
-    icon: TreePine,
-    iconColor: "green",
-    category: "member-management",
-    isActive: true,
-    component: TreeLightingSurveyModule,
-    dbFunctionName: "survey-module",
-    requiredRoles: ["admin", "super-admin"]
-  },
-  {
-    id: "glee-lounge-analytics",
-    name: "glee-lounge-analytics",
-    title: "Glee Lounge Analytics",
-    description: "Usage data, engagement metrics, and management tools for Glee Lounge",
-    icon: Armchair,
-    iconColor: "purple",
-    category: "member-management",
-    isActive: true,
-    component: GleeLoungeAnalyticsModule,
-    dbFunctionName: "glee-lounge-analytics",
-    requiredRoles: ["admin", "super-admin", "exec"]
-  },
+  // Member Dossiers and Survey Module removed.
   {
     id: "usage-analytics",
     name: "usage-analytics",
@@ -1065,206 +454,36 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     requiredRoles: ["admin", "super-admin", "instructor"]
   },
   {
-    id: "stipend-payments",
-    name: "stipend-payments",
-    title: "Stipend Payments",
-    description: "Track and manage student stipends for performances",
-    icon: DollarSign,
-    iconColor: "green",
-    category: "financial",
-    isActive: true,
-    component: StipendPaymentModule,
-    dbFunctionName: "stipend-payments",
-    requiredRoles: ["admin", "super-admin", "exec"]
-  },
-  {
-    id: "notification-sounds",
-    name: "notification-sounds",
-    title: "Notification Sounds",
-    description: "Generate custom AI notification sounds using ElevenLabs",
-    icon: Volume2,
-    iconColor: "amber",
-    category: "system",
-    isActive: true,
-    isNew: true,
-    component: NotificationSoundsModule,
-    dbFunctionName: "notification-sounds",
-    requiredRoles: ["admin", "super-admin"]
-  },
-  {
-    id: "rehearsal-transcription",
-    name: "rehearsal-transcription",
-    title: "Rehearsal Transcription",
-    description: "AI-powered transcription of rehearsal recordings with speaker labels",
-    icon: Mic2,
-    iconColor: "purple",
-    category: "musical-leadership",
-    isActive: true,
-    isNew: true,
-    component: RehearsalTranscriptionModule,
-    dbFunctionName: "rehearsal-transcription",
-    requiredRoles: ["admin", "super-admin", "exec"]
-  },
-  {
-    id: "voice-conversation",
-    name: "voice-conversation",
-    title: "Voice Conversation",
-    description: "Have natural voice conversations with Glee Assistant",
-    icon: Speech,
-    iconColor: "green",
-    category: "system",
-    isActive: true,
-    isNew: true,
-    component: VoiceConversationAgent,
-    dbFunctionName: "voice-conversation",
-    requiredRoles: ["admin", "super-admin"]
-  },
-  {
-    id: "the-lab",
-    name: "the-lab",
-    title: "The Lab",
-    description: "ElevenLabs AI voice & audio tools - TTS, transcription, SFX, music generation",
+    id: "ai-hub",
+    name: "ai-hub",
+    title: "AI Tools",
+    description: "ElevenLabs voice tools, rehearsal transcription, and voice chat with the assistant",
     icon: Wand2,
     iconColor: "purple",
     category: "system",
     isActive: true,
     isNew: true,
-    component: TheLabModule,
-    dbFunctionName: "the-lab",
+    component: AIHub,
+    dbFunctionName: "ai-hub",
     requiredRoles: ["admin", "super-admin"]
   },
 
   // ==================== ALUMNI MODULES ====================
-  {
-    id: "alumni-timeline",
-    name: "alumni-timeline",
-    title: "Alumni Timeline",
-    description: "Track alumni by graduation year",
-    icon: Clock,
-    iconColor: "amber",
-    category: "alumnae",
-    isActive: true,
-    component: AlumniTimelineModule,
-    dbFunctionName: "alumni-timeline",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "memory-lane",
-    name: "memory-lane",
-    title: "Memory Lane",
-    description: "Share and explore cherished memories",
-    icon: Clapperboard,
-    iconColor: "pink",
-    category: "alumnae",
-    isActive: true,
-    component: MemoryLaneModule,
-    dbFunctionName: "memory-lane",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "homecoming",
-    name: "homecoming",
-    title: "Homecoming",
-    description: "Annual homecoming events and celebrations",
-    icon: Home,
-    iconColor: "orange",
-    category: "alumnae",
-    isActive: true,
-    component: HomecomingModule,
-    dbFunctionName: "homecoming",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "reunion",
-    name: "reunion",
-    title: "Reunion",
-    description: "Every-four-years gatherings and celebrations",
-    icon: PartyPopper,
-    iconColor: "violet",
-    category: "alumnae",
-    isActive: true,
-    component: ReunionModule,
-    dbFunctionName: "reunion",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "christmas-carol-centennial",
-    name: "christmas-carol-centennial",
-    title: "Christmas Carol Centennial",
-    description: "Celebrating 100 years of the Christmas Carol Concert (2026)",
-    icon: Sparkles,
-    iconColor: "gold",
-    category: "alumnae",
-    isActive: true,
-    isNew: true,
-    component: ChristmasCarolCentennialModule,
-    dbFunctionName: "christmas-carol-centennial",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "spring-tour",
-    name: "spring-tour",
-    title: "Spring Tour",
-    description: "March tour events and alumni participation",
-    icon: Plane,
-    iconColor: "cyan",
-    category: "alumnae",
-    isActive: true,
-    component: SpringTourModule,
-    dbFunctionName: "spring-tour",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "africa-trip",
-    name: "africa-trip",
-    title: "Africa Trip",
-    description: "Post-Christmas Carol tour to Africa",
-    icon: Globe,
-    iconColor: "emerald",
-    category: "alumnae",
-    isActive: true,
-    component: AfricaTripModule,
-    dbFunctionName: "africa-trip",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
+  // Consolidated: alumni-timeline + graduates-connection + alumna-calendar
+  // are now sub-sections inside the AlumnaePortalModule. Donations and
+  // networking-marketplace remain as standalone modules with distinct flows.
   {
     id: "donations",
     name: "donations",
     title: "Give Back",
-    description: "Support the Glee Club with your contribution",
+    description: "Support the program with your contribution",
     icon: Heart,
     iconColor: "rose",
     category: "alumnae",
     isActive: true,
     component: DonationsModule,
     dbFunctionName: "donations",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "graduates-connection",
-    name: "graduates-connection",
-    title: "Connect with Graduates",
-    description: "Mentor and support current seniors",
-    icon: GraduationCap,
-    iconColor: "indigo",
-    category: "alumnae",
-    isActive: true,
-    component: GraduatesConnectionModule,
-    dbFunctionName: "graduates-connection",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "family-photos",
-    name: "family-photos",
-    title: "Family & Kids",
-    description: "Share photos of your Glee Club families",
-    icon: Users,
-    iconColor: "pink",
-    category: "alumnae",
-    isActive: true,
-    component: FamilyPhotosModule,
-    dbFunctionName: "family-photos",
-    requiredRoles: ["alumna", "admin", "super-admin"]
+    requiredRoles: ["alumni", "admin", "super-admin"]
   },
   {
     id: "networking-marketplace",
@@ -1277,20 +496,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: NetworkingMarketplaceModule,
     dbFunctionName: "networking-marketplace",
-    requiredRoles: ["alumna", "admin", "super-admin"]
-  },
-  {
-    id: "alumna-calendar",
-    name: "alumna-calendar",
-    title: "Alumni Calendar",
-    description: "Upcoming events and important dates for alumni",
-    icon: Calendar,
-    iconColor: "blue",
-    category: "alumnae",
-    isActive: true,
-    component: AlumnaCalendarModule,
-    dbFunctionName: "alumna-calendar",
-    requiredRoles: ["alumna", "admin", "super-admin"]
+    requiredRoles: ["alumni", "admin", "super-admin"]
   },
   {
     id: "feed-control",
@@ -1360,7 +566,7 @@ export const UNIFIED_MODULE_CATEGORIES: UnifiedModuleCategory[] = [
   },
   {
     id: "alumnae",
-    title: "Alumnae Connection",
+    title: "Alumni Connection",
     description: "Alumni-specific features, events, networking, and community",
     icon: Heart,
     color: "rose",

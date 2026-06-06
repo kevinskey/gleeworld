@@ -46,8 +46,8 @@ export const WardrobeAppointmentSystem = () => {
         if (error) throw error;
 
         const allowedUsers = [
-          'drewroberts@spelman.edu', 
-          'soleilvailes@spelman.edu',
+          'drewroberts@riversidechoir.example', 
+          'soleilvailes@riversidechoir.example',
           'soleilvailes111@gmail.com'
         ];
 

@@ -54,10 +54,10 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: 'welcome',
     name: 'Welcome Message',
-    subject: 'Welcome to Spelman Glee Club Alumnae Network',
+    subject: 'Welcome to Riverside Concert Choir Alumnae Network',
     content: `Dear {name},
 
-Welcome to the Spelman College Glee Club Alumnae Network! We're thrilled to have you as part of our community.
+Welcome to the Your favorite band or choir Alumnae Network! We're thrilled to have you as part of our community.
 
 As a member, you'll have access to:
 • Exclusive alumnae events and reunions
@@ -68,7 +68,7 @@ As a member, you'll have access to:
 We look forward to staying connected with you!
 
 To Amaze and Inspire,
-Spelman College Glee Club`,
+Your favorite band or choir`,
     category: 'engagement'
   },
   {
@@ -77,7 +77,7 @@ Spelman College Glee Club`,
     subject: 'You\'re Invited: Glee Club Reunion {year}',
     content: `Dear {name},
 
-Mark your calendars! The Spelman College Glee Club Reunion is coming up.
+Mark your calendars! The Your favorite band or choir Reunion is coming up.
 
 📅 Date: {event_date}
 📍 Location: {event_location}
@@ -88,7 +88,7 @@ Join us for an unforgettable weekend of music, memories, and connection.
 RSVP by {rsvp_date} to secure your spot.
 
 To Amaze and Inspire,
-Spelman College Glee Club`,
+Your favorite band or choir`,
     category: 'events'
   },
   {
@@ -97,7 +97,7 @@ Spelman College Glee Club`,
     subject: 'Glee Club Monthly Update - {month} {year}',
     content: `Dear {name},
 
-Here's what's happening with the Spelman College Glee Club this month:
+Here's what's happening with the Your favorite band or choir this month:
 
 🎤 Upcoming Performances
 {performances}
@@ -111,7 +111,7 @@ Here's what's happening with the Spelman College Glee Club this month:
 Stay connected and keep singing!
 
 To Amaze and Inspire,
-Spelman College Glee Club`,
+Your favorite band or choir`,
     category: 'newsletter'
   },
   {
@@ -120,7 +120,7 @@ Spelman College Glee Club`,
     subject: 'Support the Legacy of Musical Excellence',
     content: `Dear {name},
 
-Your time in the Glee Club shaped who you are today. Now, you can help shape the future for the next generation of Spelman singers.
+Your time in the Glee Club shaped who you are today. Now, you can help shape the future for the next generation of Brand singers.
 
 Your donation helps:
 • Fund scholarships for deserving members
@@ -131,7 +131,7 @@ Your donation helps:
 Every contribution, no matter the size, makes a difference.
 
 To Amaze and Inspire,
-Spelman College Glee Club`,
+Your favorite band or choir`,
     category: 'fundraising'
   }
 ];

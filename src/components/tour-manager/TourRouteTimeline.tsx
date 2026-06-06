@@ -146,7 +146,7 @@ export const TourRouteTimeline = ({
       <CardHeader className="py-4 px-5">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
-            <Route className="h-5 w-5 text-[#003666]" />
+            <Route className="h-5 w-5 text-[#150d26]" />
             Tour Route
           </CardTitle>
           <Button variant="outline" size="sm" className="h-8 text-sm text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600" onClick={() => onNavigate('route-planning')}>
@@ -182,7 +182,7 @@ export const TourRouteTimeline = ({
                         </div>
                         <p className="text-base font-semibold text-slate-900 dark:text-white truncate">{event.title}</p>
                         {(event.venue || event.location) && <p className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-1.5 mt-1">
-                            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-[#003666]" />
+                            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-[#150d26]" />
                             <span className="truncate">
                               {event.venue ? `${event.venue}${event.location ? ` - ${event.location}` : ''}` : event.location}
                             </span>

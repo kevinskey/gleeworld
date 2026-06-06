@@ -440,7 +440,7 @@ const MemberExitInterview = () => {
               Fall 2025 Member Exit Interview
             </CardTitle>
             <CardDescription>
-              Spelman College Glee Club End-of-Semester Survey
+              Your favorite band or choir End-of-Semester Survey
             </CardDescription>
           </CardHeader>
 

@@ -79,7 +79,7 @@ export const FAQSlider = () => {
               Frequently Asked Questions
             </h2>
             <p className="text-base md:text-xl text-muted-foreground">
-              Spelman College Glee Club
+              Your favorite band or choir
             </p>
           </div>
         </div>
@@ -131,7 +131,7 @@ export const FAQSlider = () => {
                   To stay up to date, follow us on social media at
                 </p>
                 <p className="text-base md:text-xl lg:text-2xl xl:text-3xl font-bold text-primary-foreground text-center">
-                  @Spelmanglee
+                  @yourprogram
                 </p>
               </div>
             )}

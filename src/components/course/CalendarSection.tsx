@@ -8,7 +8,7 @@ import { useGleeWorldEvents } from '@/hooks/useGleeWorldEvents';
 interface CalendarSectionProps {
   courseId: string;
 }
-const SPELMAN_CALENDAR_NAME = 'Spelman';
+const BRAND_CALENDAR_NAME = 'Welcome2025';
 export const CalendarSection: React.FC<CalendarSectionProps> = ({
   courseId
 }) => {
@@ -19,9 +19,9 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
     loading: eventsLoading
   } = useGleeWorldEvents();
 
-  // Filter events to show only Spelman calendar events by default
-  const spelmanEvents = useMemo(() => {
-    return events.filter(event => event.gw_calendars?.name === SPELMAN_CALENDAR_NAME);
+  // Filter events to show only Brand calendar events by default
+  const campusEvents = useMemo(() => {
+    return events.filter(event => event.gw_calendars?.name === BRAND_CALENDAR_NAME);
   }, [events]);
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -32,7 +32,7 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
     end: calendarEnd
   });
   const getEventsForDate = (date: Date) => {
-    return spelmanEvents.filter(event => {
+    return campusEvents.filter(event => {
       const eventDate = parseISO(event.start_date);
       return isSameDay(eventDate, date);
     });
@@ -83,8 +83,8 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
   const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
   const upcomingEvents = useMemo(() => {
     const now = new Date();
-    return spelmanEvents.filter(event => parseISO(event.start_date) >= now).sort((a, b) => parseISO(a.start_date).getTime() - parseISO(b.start_date).getTime()).slice(0, 5);
-  }, [spelmanEvents]);
+    return campusEvents.filter(event => parseISO(event.start_date) >= now).sort((a, b) => parseISO(a.start_date).getTime() - parseISO(b.start_date).getTime()).slice(0, 5);
+  }, [campusEvents]);
   if (eventsLoading) {
     return <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -96,15 +96,15 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
         <h2 className="text-2xl font-bold">Academic Calendar</h2>
         <Badge variant="secondary" className="bg-[#8b5cf6]/10 text-[#8b5cf6]">
           <CalendarIcon className="h-3 w-3 mr-1" />
-          Spelman College Calendar
+          Riverside Music Institute Calendar
         </Badge>
       </div>
 
       <Card className="bg-primary text-primary-foreground">
-        <CardHeader className="bg-[#003666]">
+        <CardHeader className="bg-[#150d26]">
           <CardTitle className="text-lg text-primary-foreground">Course Schedule</CardTitle>
         </CardHeader>
-        <CardContent className="bg-[#003666]">
+        <CardContent className="bg-[#150d26]">
           
           
           <div className="flex items-center gap-2 flex-wrap">
@@ -215,7 +215,7 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
       {/* Upcoming Events List */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Upcoming Spelman Events</CardTitle>
+          <CardTitle className="text-lg">Upcoming Campus Events</CardTitle>
         </CardHeader>
         <CardContent>
           {upcomingEvents.length > 0 ? <div className="space-y-2">
@@ -236,7 +236,7 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
                     </Badge>}
                 </div>)}
             </div> : <p className="text-sm text-muted-foreground text-center py-8">
-              No upcoming events from the Spelman calendar
+              No upcoming events from the Brand calendar
             </p>}
         </CardContent>
       </Card>

@@ -7,7 +7,7 @@ export default function ApprovalSystemPage() {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto p-6 max-w-7xl bg-gradient-to-br from-spelman-blue-light/5 to-spelman-blue-dark/5 min-h-screen">
+      <div className="container mx-auto p-6 max-w-7xl bg-gradient-to-br from-brand-blue-light/5 to-brand-blue-dark/5 min-h-screen">
         <ApprovalSystemModule user={user} isFullPage={true} />
       </div>
     </UniversalLayout>

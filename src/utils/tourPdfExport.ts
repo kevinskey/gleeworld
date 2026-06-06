@@ -30,7 +30,7 @@ interface RosterMember {
 }
 
 const COLORS = {
-  primary: [0, 51, 102] as [number, number, number],       // Spelman blue
+  primary: [0, 51, 102] as [number, number, number],       // Brand blue
   primaryLight: [0, 71, 132] as [number, number, number],
   dark: [30, 30, 45] as [number, number, number],
   gray: [100, 100, 115] as [number, number, number],
@@ -81,7 +81,7 @@ function addPageFooter(doc: jsPDF) {
   
   doc.setFontSize(6);
   doc.setTextColor(...COLORS.gray);
-  doc.text('Spelman College Glee Club  |  Confidential', PAGE_MARGIN, pageHeight - 9);
+  doc.text('Your favorite band or choir  |  Confidential', PAGE_MARGIN, pageHeight - 9);
   doc.text(`Generated ${format(new Date(), 'MMM d, yyyy h:mm a')}`, pageWidth - PAGE_MARGIN, pageHeight - 9, { align: 'right' });
 }
 

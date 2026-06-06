@@ -7,7 +7,8 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart, Search, Heart, Plus, Minus, ShoppingBag, CreditCard, Music, Shirt, FileMusic, Sparkles, ArrowRight, Package } from "lucide-react";
+import { ShoppingCart, Search, Heart, Plus, Minus, ShoppingBag, CreditCard, Music, Shirt, FileMusic, Sparkles, ArrowRight, ArrowLeft, Package } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 interface Product {
   id: string;
@@ -25,6 +26,75 @@ interface CartItem {
   product: Product;
   quantity: number;
 }
+const MOCK_PRODUCTS: Product[] = [
+  {
+    id: 'mock-tee',
+    title: 'Concert T-Shirt',
+    description: 'Soft cotton tee with the season logo.',
+    price: 25,
+    product_type: 'apparel',
+    images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400'],
+    inventory_quantity: 50,
+    tags: ['shirt'],
+    requires_shipping: true,
+  },
+  {
+    id: 'mock-hoodie',
+    title: 'Tour Hoodie',
+    description: 'Heavyweight hoodie with embroidered crest.',
+    price: 55,
+    product_type: 'apparel',
+    images: ['https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400'],
+    inventory_quantity: 30,
+    tags: ['hoodie'],
+    requires_shipping: true,
+  },
+  {
+    id: 'mock-tote',
+    title: 'Canvas Tote',
+    description: 'Sturdy tote for rehearsals and concerts.',
+    price: 18,
+    product_type: 'accessories',
+    images: ['https://images.unsplash.com/photo-1544816155-12df9643f363?w=400'],
+    inventory_quantity: 80,
+    tags: ['bag'],
+    requires_shipping: true,
+  },
+  {
+    id: 'mock-pin',
+    title: 'Enamel Crest Pin',
+    description: 'Hard-enamel pin for backpacks and lapels.',
+    price: 8,
+    product_type: 'accessories',
+    images: ['https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=400'],
+    inventory_quantity: 120,
+    tags: ['pin'],
+    requires_shipping: true,
+  },
+  {
+    id: 'mock-anthem',
+    title: 'Sheet Music: Season Anthem',
+    description: 'PDF download of this season\'s featured anthem.',
+    price: 6,
+    product_type: 'digital',
+    images: ['https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400'],
+    inventory_quantity: 999,
+    tags: ['pdf'],
+    requires_shipping: false,
+  },
+  {
+    id: 'mock-mug',
+    title: 'Ensemble Mug',
+    description: 'Ceramic mug — perfect for warm-ups before rehearsal.',
+    price: 14,
+    product_type: 'accessories',
+    images: ['https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=400'],
+    inventory_quantity: 60,
+    tags: ['mug'],
+    requires_shipping: true,
+  },
+];
+
 const CATEGORIES = [{
   value: "all",
   label: "All",
@@ -70,15 +140,13 @@ export const Shop = () => {
         error
       } = await supabase.from('gw_products').select('*').eq('is_active', true).order('title');
       if (error) throw error;
-      setProducts(data || []);
-      setFilteredProducts(data || []);
+      const list = data && data.length > 0 ? (data as Product[]) : MOCK_PRODUCTS;
+      setProducts(list);
+      setFilteredProducts(list);
     } catch (error) {
       console.error('Error loading products:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load products",
-        variant: "destructive"
-      });
+      setProducts(MOCK_PRODUCTS);
+      setFilteredProducts(MOCK_PRODUCTS);
     } finally {
       setLoading(false);
     }
@@ -194,17 +262,26 @@ export const Shop = () => {
   return <PublicLayout>
       <div className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-stone-50">
         {/* Header Banner - Consistent with other pages */}
-        <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{ backgroundColor: '#003666' }}>
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-center gap-3">
-              <ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center tracking-wide">
-                GleeWorld Boutique
-              </h1>
+        <div className="w-full py-4 sm:py-5 relative" style={{ backgroundColor: '#150d26' }}>
+          <Link
+            to="/"
+            className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-white/80 hover:text-white text-sm transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Home</span>
+          </Link>
+          <div className="container mx-auto px-4 flex items-center justify-center">
+            <div>
+              <div className="flex items-center justify-center gap-3">
+                <ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center tracking-wide">
+                  Boutique
+                </h1>
+              </div>
+              <p className="text-white/80 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
+                Curated accessories, apparel & digital sheet music
+              </p>
             </div>
-            <p className="text-white/80 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
-              Curated accessories, apparel & digital sheet music
-            </p>
           </div>
         </div>
 

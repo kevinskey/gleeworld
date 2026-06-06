@@ -10,7 +10,7 @@ import { MessageSquare, Send, Loader2 } from 'lucide-react';
 
 const SMSTestComponent = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [message, setMessage] = useState('Test SMS from Spelman Glee Club notification system');
+  const [message, setMessage] = useState('Test SMS from Riverside Concert Choir notification system');
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
 

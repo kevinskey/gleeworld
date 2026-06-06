@@ -299,7 +299,7 @@ export const useAuditionLogs = () => {
       const sampleLogs = [
         {
           applicant_name: "Sarah Johnson",
-          applicant_email: "sarah.johnson@spelman.edu",
+          applicant_email: "sarah.johnson@riversidechoir.example",
           audition_date: "2025-02-15",
           audition_time: "10:00",
           voice_part: "Soprano 1",
@@ -319,7 +319,7 @@ export const useAuditionLogs = () => {
         },
         {
           applicant_name: "Maya Patel",
-          applicant_email: "maya.patel@spelman.edu",
+          applicant_email: "maya.patel@riversidechoir.example",
           audition_date: "2025-02-15",
           audition_time: "10:15",
           voice_part: "Alto 2",
@@ -339,7 +339,7 @@ export const useAuditionLogs = () => {
         },
         {
           applicant_name: "Zoe Williams",
-          applicant_email: "zoe.williams@spelman.edu",
+          applicant_email: "zoe.williams@riversidechoir.example",
           audition_date: "2025-02-15",
           audition_time: "10:30",
           voice_part: "Soprano 2",

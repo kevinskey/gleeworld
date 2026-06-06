@@ -148,7 +148,7 @@ const Profile = () => {
   const { user } = useAuth();
   const { profile: userRole } = useUserRole();
   const isAdmin = Boolean(userRole?.is_admin || userRole?.is_super_admin);
-  const isWardrobeManager = Boolean(userRole?.is_admin || userRole?.is_super_admin || userRole?.exec_board_role === 'wardrobe_manager');
+  const isWardrobeManager = Boolean(userRole?.is_admin || userRole?.is_super_admin);
   const { toast } = useToast();
   const { profile, loading: profileLoading, updateAvatarUrl } = useProfile();
   const [loading, setLoading] = useState(false);
@@ -162,13 +162,7 @@ const Profile = () => {
   const [requestField, setRequestField] = useState<{ label: string; currentValue?: string | number | null } | null>(null);
   const [phoneDisplay, setPhoneDisplay] = useState('');
   
-  // New dashboard-specific state
-  const [uniformIssued, setUniformIssued] = useState(false);
-  const [depositPaid, setDepositPaid] = useState(false);
-  const [photoVideoConsent, setPhotoVideoConsent] = useState(true);
-  const [adminNotes, setAdminNotes] = useState('');
-
-  const openRequestChange = (label: string, currentValue?: string | number | null) => {
+const openRequestChange = (label: string, currentValue?: string | number | null) => {
     setRequestField({ label, currentValue });
     setRequestDialogOpen(true);
   };
@@ -566,7 +560,7 @@ const Profile = () => {
 
   const getVoicePartLabel = (value?: string) => {
     const part = voiceParts.find(p => p.value === value);
-    return part ? `$${part.value.charAt(1)}` : 'Not set';
+    return part ? part.label : 'Not set';
   };
 
   if (!user) {
@@ -589,9 +583,9 @@ const Profile = () => {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                Glee Club Member Dashboard
+                My Profile
               </h1>
-              <p className="text-muted-foreground">Spelman College Glee Club</p>
+              <p className="text-muted-foreground">Manage your personal information and preferences</p>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm text-foreground hidden sm:inline">{displayName}</span>
@@ -605,7 +599,7 @@ const Profile = () => {
                 ) : (
                   <>
                     <Edit className="h-4 w-4 mr-2" />
-                    View Profile
+                    Edit Profile
                   </>
                 )}
               </Button>
@@ -741,29 +735,44 @@ const Profile = () => {
                   </CardContent>
                 </Card>
 
-                {/* Participation Compact */}
+                {/* Personal Info */}
                 <Card className="bg-card border-border">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-semibold">Participation</CardTitle>
+                    <CardTitle className="text-lg font-semibold">Personal Info</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Attendance Log</h4>
-                      <div className="flex items-center justify-between border border-border rounded-md px-3 py-2">
-                        <span className="text-sm text-muted-foreground">View Records</span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="first_name" className="text-xs">First name</Label>
+                        <Input id="first_name" disabled={!isEditing} {...register("first_name")} className="h-9" />
+                      </div>
+                      <div>
+                        <Label htmlFor="last_name" className="text-xs">Last name</Label>
+                        <Input id="last_name" disabled={!isEditing} {...register("last_name")} className="h-9" />
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Rehearsal Notes</h4>
-                      <div className="space-y-1">
-                        {["Lift Every Voice and Sing", "I'll Be On My Way", "Ad Astra"].map((piece) => (
-                          <div key={piece} className="flex items-center gap-2">
-                            <Checkbox checked disabled className="data-[state=checked]:bg-primary" />
-                            <span className="text-sm text-foreground">{piece}</span>
-                          </div>
-                        ))}
-                      </div>
+                      <Label htmlFor="middle_name" className="text-xs">Middle name</Label>
+                      <Input id="middle_name" disabled={!isEditing} {...register("middle_name")} className="h-9" />
+                    </div>
+                    <div>
+                      <Label htmlFor="pronouns" className="text-xs">Pronouns</Label>
+                      <Select value={watch("pronouns") || ""} onValueChange={(v) => setValue("pronouns", v)} disabled={!isEditing}>
+                        <SelectTrigger id="pronouns" className="h-9">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {pronounOptions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="bio" className="text-xs">Bio</Label>
+                      <Textarea id="bio" disabled={!isEditing} {...register("bio")} className="min-h-[80px] text-sm" placeholder="Tell us about yourself..." />
+                    </div>
+                    <div>
+                      <Label htmlFor="website_url" className="text-xs">Website</Label>
+                      <Input id="website_url" disabled={!isEditing} {...register("website_url")} className="h-9" placeholder="https://" />
                     </div>
                   </CardContent>
                 </Card>
@@ -771,47 +780,47 @@ const Profile = () => {
 
               {/* Middle Column */}
               <div className="space-y-4">
-                {/* Participation Full */}
+                {/* Academic & Member Info */}
                 <Card className="bg-card border-border">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-semibold">Participation</CardTitle>
+                    <CardTitle className="text-lg font-semibold">Academic & Member</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Attendance Log</h4>
-                      <div className="space-y-1">
-                        {[
-                          { date: "04/20/2024", status: "Present" },
-                          { date: "04/19/2024", status: "Late" },
-                          { date: "04/16/2024", status: "Absent" },
-                        ].map((record, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{record.date}</span>
-                            <span className="mx-2 text-muted-foreground">—</span>
-                            <span className={
-                              record.status === 'Present' ? 'text-green-600' :
-                              record.status === 'Late' ? 'text-yellow-600' : 'text-red-600'
-                            }>{record.status}</span>
-                          </div>
-                        ))}
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="class_year" className="text-xs">Class year</Label>
+                        <Input id="class_year" type="number" disabled={!isEditing} {...register("class_year")} className="h-9" placeholder="2026" />
+                      </div>
+                      <div>
+                        <Label htmlFor="student_number" className="text-xs">Student #</Label>
+                        <Input id="student_number" disabled={!isEditing} {...register("student_number")} className="h-9" />
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Rehearsal Notes</h4>
-                      <Textarea
+                      <Label htmlFor="academic_major" className="text-xs">Major</Label>
+                      <Input id="academic_major" disabled={!isEditing} {...register("academic_major")} className="h-9" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="can_dance" className="text-xs">Can dance</Label>
+                      <Switch
+                        id="can_dance"
+                        checked={canDance}
+                        onCheckedChange={(v) => setValue("can_dance", v)}
                         disabled={!isEditing}
-                        className="min-h-[60px] text-sm"
-                        placeholder="Add rehearsal notes..."
                       />
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Repertoire Check-Off</h4>
-                      <div className="space-y-2">
-                        {["Lift Every Voice and Sing", "I'll Be On My Way", "Ad Astra"].map((piece) => (
-                          <div key={piece} className="flex items-center gap-2">
-                            <Checkbox checked disabled={!isEditing} className="data-[state=checked]:bg-primary" />
-                            <span className="text-sm text-foreground">{piece}</span>
-                          </div>
+                      <Label className="text-xs">Instruments played</Label>
+                      <div className="grid grid-cols-2 gap-1 max-h-32 overflow-y-auto border rounded-md p-2 mt-1">
+                        {instruments.map((inst) => (
+                          <label key={inst} className="flex items-center gap-1 text-xs cursor-pointer">
+                            <Checkbox
+                              checked={selectedInstruments.includes(inst)}
+                              onCheckedChange={(c) => handleInstrumentChange(inst, !!c)}
+                              disabled={!isEditing}
+                            />
+                            {inst}
+                          </label>
                         ))}
                       </div>
                     </div>
@@ -864,63 +873,26 @@ const Profile = () => {
                         )}
                       </div>
                     </div>
-                    <div className="space-y-3 pt-2 border-t border-border">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Uniform Issued</span>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={uniformIssued}
-                            onCheckedChange={setUniformIssued}
-                            disabled={!isEditing}
-                          />
-                          <span className="text-xs text-green-600 font-medium">
-                            {uniformIssued ? 'YES' : 'NO'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Deposit Paid</span>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={depositPaid}
-                            onCheckedChange={setDepositPaid}
-                            disabled={!isEditing}
-                          />
-                          <span className={`text-xs font-medium ${depositPaid ? 'text-green-600' : 'text-muted-foreground'}`}>
-                            {depositPaid ? 'YES' : 'No'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
 
-                {/* Admin Consent */}
+                {/* Addresses */}
                 <Card className="bg-card border-border">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-semibold">Admin Consent</CardTitle>
+                    <CardTitle className="text-lg font-semibold">Addresses & Contact</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Photo/Video Consent</span>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={photoVideoConsent}
-                          onCheckedChange={setPhotoVideoConsent}
-                          disabled={!isEditing}
-                        />
-                        <span className={`text-xs font-medium ${photoVideoConsent ? 'text-green-600' : 'text-muted-foreground'}`}>
-                          {photoVideoConsent ? 'YES' : 'NO'}
-                        </span>
-                      </div>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <Label htmlFor="home_address" className="text-xs">Home address</Label>
+                      <Input id="home_address" disabled={!isEditing} {...register("home_address")} className="h-9" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Performance Media Tags</h4>
-                      <Input
-                        disabled={!isEditing}
-                        className="h-9"
-                        placeholder="Add media tags..."
-                      />
+                      <Label htmlFor="school_address" className="text-xs">School address</Label>
+                      <Input id="school_address" disabled={!isEditing} {...register("school_address")} className="h-9" />
+                    </div>
+                    <div>
+                      <Label htmlFor="workplace" className="text-xs">Workplace</Label>
+                      <Input id="workplace" disabled={!isEditing} {...register("workplace")} className="h-9" />
                     </div>
                   </CardContent>
                 </Card>
@@ -928,103 +900,86 @@ const Profile = () => {
 
               {/* Right Column */}
               <div className="space-y-4">
-                {/* Music Access */}
+                {/* Health & Emergency */}
                 <Card className="bg-card border-border">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-semibold">Music Access</CardTitle>
+                    <CardTitle className="text-lg font-semibold">Health & Emergency</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3">
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Folder Assignment</h4>
-                      <Input
-                        disabled={!isEditing || !isAdmin}
-                        className="h-9"
-                        placeholder="Folder number"
-                        defaultValue="25"
-                      />
+                      <Label htmlFor="emergency_contact" className="text-xs">Emergency contact</Label>
+                      <Input id="emergency_contact" disabled={!isEditing} {...register("emergency_contact")} className="h-9" placeholder="Name + phone" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Sheet Music PDF Access</h4>
-                      <div className="flex items-center justify-between border border-border rounded-md px-3 py-2 bg-background">
-                        <span className="text-sm text-foreground">{watch("voice_part") ? `${voiceParts.find(p => p.value === watch("voice_part"))?.label || 'Soprano'} | Folder` : 'Soprano | Folder'}</span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
+                      <Label htmlFor="parent_guardian_contact" className="text-xs">Parent/guardian contact</Label>
+                      <Input id="parent_guardian_contact" disabled={!isEditing} {...register("parent_guardian_contact")} className="h-9" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Voice Check Record</h4>
-                      <Input
-                        disabled={!isEditing}
-                        className="h-9"
-                        placeholder="Voice check details"
-                      />
+                      <Label htmlFor="allergies" className="text-xs">Allergies</Label>
+                      <Textarea id="allergies" disabled={!isEditing} {...register("allergies")} className="min-h-[60px] text-sm" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Solo Roles</h4>
-                      <Input
-                        disabled={!isEditing}
-                        className="h-9"
-                        placeholder="List solo roles"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Financial Info */}
-                <Card className="bg-card border-border">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-semibold">Financial Info</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Dues Balance</span>
-                      <span className="text-sm font-semibold text-foreground">$50.00</span>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Payment History</h4>
-                      <div className="space-y-1">
-                        {[
-                          { date: "02/01/2024", desc: "Dues Payment", amount: "$0.00" },
-                          { date: "05/13/2022", desc: "Dues Payment", amount: "100.00" },
-                        ].map((payment, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{payment.date}</span>
-                            <span className="text-foreground truncate max-w-[100px]">{payment.desc}</span>
-                            <span className="text-foreground">{payment.amount}</span>
-                          </div>
+                      <Label className="text-xs">Dietary restrictions</Label>
+                      <div className="grid grid-cols-2 gap-1 max-h-32 overflow-y-auto border rounded-md p-2 mt-1">
+                        {ALL_DIETARY_OPTIONS.map((opt) => (
+                          <label key={opt} className="flex items-center gap-1 text-xs cursor-pointer">
+                            <Checkbox
+                              checked={selectedDietaryRestrictions.includes(opt)}
+                              onCheckedChange={(c) => handleDietaryRestrictionChange(opt, !!c)}
+                              disabled={!isEditing}
+                            />
+                            {opt}
+                          </label>
                         ))}
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Social Media */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold">Social Media</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
                     <div>
-                      <h4 className="text-sm font-medium text-foreground mb-2">Fundraiser Participation</h4>
-                      <Input
-                        disabled={!isEditing}
-                        className="h-9"
-                        placeholder="Participation details"
-                      />
+                      <Label htmlFor="instagram" className="text-xs flex items-center gap-1"><Instagram className="h-3 w-3" />Instagram</Label>
+                      <Input id="instagram" disabled={!isEditing} {...register("instagram")} className="h-9" placeholder="@username" />
+                    </div>
+                    <div>
+                      <Label htmlFor="twitter" className="text-xs flex items-center gap-1"><Twitter className="h-3 w-3" />Twitter / X</Label>
+                      <Input id="twitter" disabled={!isEditing} {...register("twitter")} className="h-9" placeholder="@username" />
+                    </div>
+                    <div>
+                      <Label htmlFor="facebook" className="text-xs flex items-center gap-1"><Facebook className="h-3 w-3" />Facebook</Label>
+                      <Input id="facebook" disabled={!isEditing} {...register("facebook")} className="h-9" />
+                    </div>
+                    <div>
+                      <Label htmlFor="youtube" className="text-xs flex items-center gap-1"><Youtube className="h-3 w-3" />YouTube</Label>
+                      <Input id="youtube" disabled={!isEditing} {...register("youtube")} className="h-9" />
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Admin Notes - Only visible to admins */}
-                {isAdmin && (
-                  <Card className="bg-card border-border">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg font-semibold">Admin Notes</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div>
-                        <h4 className="text-sm font-medium text-foreground mb-2">Notes</h4>
-                        <Textarea
-                          value={adminNotes}
-                          onChange={(e) => setAdminNotes(e.target.value)}
-                          disabled={!isEditing}
-                          className="min-h-[100px] text-sm"
-                          placeholder="Add administrative notes..."
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                {/* Payment Preferences */}
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold">Payment Preferences</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div>
+                      <Label htmlFor="preferred_payment_method" className="text-xs">Preferred payment method</Label>
+                      <Select value={watch("preferred_payment_method") || ""} onValueChange={(v) => setValue("preferred_payment_method", v as any)} disabled={!isEditing}>
+                        <SelectTrigger id="preferred_payment_method" className="h-9">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentMethods.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 

@@ -49,7 +49,7 @@ export const GleeClubTemplateInitializer = () => {
             </Button>
           </CardTitle>
           <CardDescription className="text-primary-foreground">
-            The Spelman College Glee Club Performance Agreement template is available and ready to use.
+            The Your favorite band or choir Performance Agreement template is available and ready to use.
           </CardDescription>
         </CardHeader>
       </Card>;
@@ -58,7 +58,7 @@ export const GleeClubTemplateInitializer = () => {
       <CardHeader>
         <CardTitle className="text-blue-800">Initialize Glee Club Template</CardTitle>
         <CardDescription className="text-blue-600">
-          Create the official Spelman College Glee Club Performance Agreement template with all the required variables and standard terms.
+          Create the official Your favorite band or choir Performance Agreement template with all the required variables and standard terms.
         </CardDescription>
       </CardHeader>
       <CardContent>

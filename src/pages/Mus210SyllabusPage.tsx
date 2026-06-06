@@ -48,7 +48,7 @@ const Mus210SyllabusPage: React.FC = () => {
             <div className="flex justify-center mb-4">
               <img 
                 src="/lovable-uploads/0f4599dd-da86-457f-808a-819f3ec7ae66.png" 
-                alt="Spelman College Logo" 
+                alt="Riverside Music Institute Logo" 
                 className="h-16 md:h-20 object-contain"
               />
             </div>
@@ -119,7 +119,7 @@ const Mus210SyllabusPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <p><span className="font-medium text-foreground/70">Instructor:</span> Dr. Kevin Johnson</p>
-                <p><span className="font-medium text-foreground/70">Email:</span> kjohns10@spelman.edu</p>
+                <p><span className="font-medium text-foreground/70">Email:</span> kjohns10@riversidechoir.example</p>
               </div>
               <div className="space-y-2">
                 <p><span className="font-medium text-foreground/70">Office:</span> Fine Arts 105</p>
@@ -414,9 +414,9 @@ const Mus210SyllabusPage: React.FC = () => {
               Academic Integrity Policy
             </h2>
             <p className="text-foreground/80 leading-relaxed">
-              At the heart of Spelman College's mission is academic excellence, along with the development 
+              At the heart of Riverside Music Institute's mission is academic excellence, along with the development 
               of intellectual, ethical and leadership qualities. All members of the academic community are 
-              expected to follow the basic standards of honesty and integrity as outlined in the Spelman 
+              expected to follow the basic standards of honesty and integrity as outlined in the school 
               College Code of Conduct.
             </p>
           </section>
@@ -427,7 +427,7 @@ const Mus210SyllabusPage: React.FC = () => {
               Student Access Statement
             </h2>
             <p className="text-foreground/80 leading-relaxed">
-              Spelman College is committed to ensuring the full participation of all students in its programs. 
+              Riverside Music Institute is committed to ensuring the full participation of all students in its programs. 
               If you have a documented disability, contact the Student Access Center (SAC) at 404-270-5289. 
               Located in MacVicar Hall, Room 106.
             </p>
@@ -436,7 +436,7 @@ const Mus210SyllabusPage: React.FC = () => {
           {/* Footer */}
           <footer className="text-center text-sm text-foreground/60 mt-10 pt-6 border-t border-foreground/20">
             <p>This syllabus is subject to change at the discretion of the instructor.</p>
-            <p className="mt-2">Spelman College • Department of Music • GleeWorld Academy</p>
+            <p className="mt-2">Riverside Music Institute • Department of Music • GleeWorld Academy</p>
           </footer>
         </div>
       </div>

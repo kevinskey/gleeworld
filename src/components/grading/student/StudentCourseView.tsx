@@ -24,7 +24,7 @@ import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 import { format } from 'date-fns';
 import { RehearsalConflictForm, type AbsenceExcuseData } from './RehearsalConflictForm';
 import { AdminConflictApproval } from './AdminConflictApproval';
-import spelmanGleeClubBanner from '@/assets/spelman-glee-club-banner.png';
+import programBanner from '@/assets/program-banner.png';
 
 interface StudentCourseViewProps {
   courseId: string;
@@ -201,8 +201,8 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
       {/* Glee Club Banner */}
       <div className="flex justify-center overflow-hidden max-w-md mx-auto" style={{ maxHeight: '80px' }}>
         <img
-          src={spelmanGleeClubBanner}
-          alt="Spelman College Glee Club — Amaze and Inspire"
+          src={programBanner}
+          alt="Your favorite band or choir — Amaze and Inspire"
           className="w-full h-auto object-contain -my-4" />
       </div>
 

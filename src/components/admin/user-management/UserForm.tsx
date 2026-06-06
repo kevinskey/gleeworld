@@ -25,7 +25,6 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
   const [role, setRole] = useState("user");
   const [phone, setPhone] = useState("");
   const [voicePart, setVoicePart] = useState("");
-  const [execBoardRole, setExecBoardRole] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [tempPassword, setTempPassword] = useState("");
   const { toast } = useToast();
@@ -44,7 +43,6 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
       setRole(user.role || "user");
       setPhone((user as any)?.phone || "");
       setVoicePart((user as any)?.voice_part || "");
-      setExecBoardRole((user as any)?.exec_board_role || "");
     }
   }, [user, mode]);
 
@@ -56,7 +54,6 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
     setRole("user");
     setPhone("");
     setVoicePart("");
-    setExecBoardRole("");
     setTempPassword("");
   };
 
@@ -118,8 +115,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
             last_name: lastName.trim(),
             role: role,
             phone: phone.trim(),
-            voice_part: voicePart === 'none' ? null : voicePart,
-            exec_board_role: execBoardRole === 'none' ? null : execBoardRole || null
+            voice_part: voicePart === 'none' ? null : voicePart
           }],
           source: 'manual'
         }
@@ -182,72 +178,9 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
           full_name: fullName,
           phone: phone.trim() || null,
           voice_part: voicePart || null,
-          exec_board_role: execBoardRole || null,
-          is_exec_board: !!execBoardRole,
           role: role
         })
         .eq('user_id', user.id);
-
-      if (gwProfileError) {
-        throw new Error(`Failed to update profile: ${gwProfileError.message}`);
-      }
-
-      // Handle executive board membership
-      if (execBoardRole) {
-        // User is being assigned to executive board
-        // First check if they're already in the executive board table
-        const { data: existingExecMember } = await supabase
-          .from('gw_executive_board_members')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (existingExecMember) {
-          // Update existing entry
-          const { error: updateExecError } = await supabase
-            .from('gw_executive_board_members')
-            .update({
-              position: execBoardRole as any, // Type assertion to handle enum mismatch
-              is_active: true,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id);
-
-          if (updateExecError) {
-            throw new Error(`Failed to update executive board member: ${updateExecError.message}`);
-          }
-        } else {
-          // Create new executive board entry
-          const { error: insertExecError } = await supabase
-            .from('gw_executive_board_members')
-            .insert({
-              user_id: user.id,
-              position: execBoardRole as any, // Type assertion to handle enum mismatch
-              is_active: true,
-              academic_year: '2024-2025',
-              appointed_date: new Date().toISOString()
-            });
-
-          if (insertExecError) {
-            throw new Error(`Failed to create executive board member: ${insertExecError.message}`);
-          }
-        }
-      } else {
-        // User is being removed from executive board (no execBoardRole)
-        // Deactivate their executive board membership
-        const { error: deactivateExecError } = await supabase
-          .from('gw_executive_board_members')
-          .update({
-            is_active: false,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        // Don't throw error if deactivation fails - they might not have been in exec board
-        if (deactivateExecError) {
-          console.warn('Could not deactivate executive board membership:', deactivateExecError);
-        }
-      }
 
       if (gwProfileError) {
         throw new Error(`Failed to update user: ${gwProfileError.message}`);
@@ -385,12 +318,13 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="fan">Fan</SelectItem>
-                <SelectItem value="alumnae">Alumnae</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="super-admin">Super Admin</SelectItem>
+                <SelectItem value="fan">Fan — signed-up supporter</SelectItem>
+                <SelectItem value="vip">VIP — fan with extra privileges</SelectItem>
+                <SelectItem value="auditioner">Auditioner — in audition pipeline</SelectItem>
+                <SelectItem value="member">Member — current choir/class member</SelectItem>
+                <SelectItem value="alumni">Alumni — graduated member</SelectItem>
+                <SelectItem value="admin">Admin — delegated admin powers</SelectItem>
+                <SelectItem value="super-admin">Super Admin — site owner</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -429,31 +363,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
             </Select>
           </div>
 
-          {/* Executive Board Role Field */}
-          <div className="space-y-2">
-            <Label htmlFor="execBoardRole">Executive Board Position</Label>
-            <Select value={execBoardRole} onValueChange={setExecBoardRole} disabled={isLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select position (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="President">President</SelectItem>
-                <SelectItem value="Vice President">Vice President</SelectItem>
-                <SelectItem value="Secretary">Secretary</SelectItem>
-                <SelectItem value="Treasurer">Treasurer</SelectItem>
-                <SelectItem value="Historian">Historian</SelectItem>
-                <SelectItem value="Librarian">Librarian</SelectItem>
-                <SelectItem value="Chaplain">Chaplain</SelectItem>
-                <SelectItem value="Public Relations">Public Relations</SelectItem>
-                <SelectItem value="Social Chair">Social Chair</SelectItem>
-                <SelectItem value="Tour Manager">Tour Manager</SelectItem>
-                <SelectItem value="Section Leader">Section Leader</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Temporary Password Display (Create Mode Only) */}
+{/* Temporary Password Display (Create Mode Only) */}
           {mode === 'create' && tempPassword && (
             <Alert className="border-blue-200 bg-blue-50">
               <AlertCircle className="h-4 w-4 text-blue-600" />

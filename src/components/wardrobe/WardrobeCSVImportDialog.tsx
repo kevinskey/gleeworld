@@ -92,7 +92,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
         const isAdmin = profile?.is_admin || profile?.is_super_admin;
 
         const allowedUsers = [
-          'drew', 'soleil', 'drewroberts@spelman.edu', 'soleilvailes@spelman.edu', 'soleilvailes111@gmail.com'
+          'drew', 'soleil', 'drewroberts@riversidechoir.example', 'soleilvailes@riversidechoir.example', 'soleilvailes111@gmail.com'
         ];
 
         const userEmail = profile?.email?.toLowerCase() || '';

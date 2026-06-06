@@ -34,7 +34,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         // Get user profile  
         const { data: profile, error: profileError } = await supabase
           .from('gw_profiles')
-          .select('role, is_super_admin, is_exec_board, is_admin, email')
+          .select('role, is_super_admin, is_admin, email')
           .eq('user_id', targetUserId)
           .maybeSingle();
 
@@ -72,7 +72,6 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
         const moduleMapping: Record<string, string> = {
           // Communications
           'email-management': 'email-management',
-          'internal-communications': 'community-hub', 
           'notifications': 'notifications',
           'pr-coordinator': 'pr-coordinator',
           'pr-manager': 'pr-hub',
@@ -90,14 +89,11 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'alumnae-portal': 'alumnae-portal',
           'auditions': 'auditions',
           'permissions-module': 'permissions',
-          'wellness': 'wellness',
           'wardrobe': 'wardrobe',
           
           // Musical Leadership
           'music-library': 'music-library',
           'media-library': 'music-library',
-          'student-conductor': 'student-conductor',
-          'section-leader': 'section-leader',
           'sight-singing-management': 'sight-singing-management',
           'sight-reading-preview': 'sight-reading-preview',
           'sight-reading-generator': 'sight-reading-generator',
@@ -105,8 +101,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'sight-reading': 'sight-singing-management', // Map sight-reading permission to sight-singing-management module
           'librarian': 'librarian',
           'radio-management': 'radio-management',
-          'karaoke': 'karaoke',
-          
+
           // Finances
           'contracts': 'contracts',
           'budgets': 'budgets',
@@ -117,14 +112,12 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'monthly-statements': 'monthly-statements',
           'check-requests': 'check-requests',
           'merch-store': 'merch-store',
-          'amazon-affiliate': 'amazon-affiliate',
-          
+
           
           // Tools & Utilities
           'ai-tools': 'ai-tools',
           'hero-manager': 'hero-manager',
           'press-kits': 'press-kits',
-          'first-year-console': 'first-year-console',
           'settings': 'settings',
           
           // Executive Board - Map database modules to frontend modules
@@ -181,12 +174,12 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             return {
               moduleId: module.id,
               hasAccess: true,
-              source: profile?.is_exec_board ? 'executive_board' as const : 'explicit_permission' as const
+              source: 'explicit_permission' as const
             };
           }
 
           // Students get essential student modules (hardcoded access)
-          const essentialModules = ['community-hub', 'music-library', 'calendar', 'attendance', 'member-sight-reading-studio'];
+          const essentialModules = ['music-library', 'calendar', 'attendance', 'member-sight-reading-studio'];
           if (profile?.role === 'student' && essentialModules.includes(module.id)) {
             return {
               moduleId: module.id,

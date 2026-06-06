@@ -526,7 +526,7 @@ const MediaLibrary = () => {
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={() => categoryFilter ? navigate('/dashboard') : navigate('/admin')} 
+                onClick={() => categoryFilter ? navigate('/dashboard') : navigate('/control-center')}
                 className="flex-shrink-0 h-9 w-9"
               >
                 <ArrowLeft className="h-5 w-5" />

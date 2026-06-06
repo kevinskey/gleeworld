@@ -37,7 +37,7 @@ export const SoundCloudManagement = () => {
   const [currentTrack, setCurrentTrack] = useState<SoundCloudTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-  const [searchQuery, setSearchQuery] = useState("spelman glee club gospel");
+  const [searchQuery, setSearchQuery] = useState("campus glee club gospel");
 
   useEffect(() => {
     loadSoundCloudConfig();
