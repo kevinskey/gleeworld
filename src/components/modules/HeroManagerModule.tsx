@@ -1,6 +1,11 @@
 import React from 'react';
-import SliderManager from '@/components/admin/sliders/SliderManager';
+import { SimpleHeroManager } from '@/components/admin/SimpleHeroManager';
 
 export const HeroManagerModule = () => {
-  return <SliderManager />;
+  return (
+    <div className="space-y-6">
+      <SimpleHeroManager placementKey="homepage_hero" title="Homepage Hero" />
+      <SimpleHeroManager placementKey="dashboard_hero" title="Dashboard Hero" />
+    </div>
+  );
 };

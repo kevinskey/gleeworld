@@ -48,6 +48,8 @@ export interface HeroSlide {
   descriptionPositionHorizontal?: string | null;
   descriptionPositionVertical?: string | null;
   descriptionSize?: string | null;
+  imagePositionX?: string | null;
+  imagePositionY?: string | null;
 }
 
 export interface HeroSliderProps {
@@ -89,6 +91,8 @@ export function adaptDatabaseSlide(dbSlide: any): HeroSlide {
     descriptionPositionHorizontal: dbSlide.description_position_horizontal,
     descriptionPositionVertical: dbSlide.description_position_vertical,
     descriptionSize: dbSlide.description_size,
+    imagePositionX: dbSlide.image_position_x,
+    imagePositionY: dbSlide.image_position_y,
   };
 }
 
@@ -300,33 +304,43 @@ const SlideMedia: React.FC<SlideMediaProps> = ({ slide, fallbackSrc, isPlaying }
   // Otherwise render images
   return (
     <>
-      {/* Desktop Image */}
-      <img
-        src={slide.imageUrl || defaultImage}
-        alt={slide.title || 'Hero slide'}
-        className="hidden md:block absolute inset-0 w-full h-full object-cover brightness-95"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = defaultImage;
-        }}
-      />
-      {/* Tablet Image */}
-      <img
-        src={slide.ipadImageUrl || slide.imageUrl || defaultImage}
-        alt={slide.title || 'Hero slide'}
-        className="hidden sm:block md:hidden absolute inset-0 w-full h-full object-cover brightness-95"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = defaultImage;
-        }}
-      />
-      {/* Mobile Image */}
-      <img
-        src={slide.mobileImageUrl || slide.imageUrl || defaultImage}
-        alt={slide.title || 'Hero slide'}
-        className="block sm:hidden absolute inset-0 w-full h-full object-cover brightness-95"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = defaultImage;
-        }}
-      />
+      {(() => {
+        const objectPosition = `${slide.imagePositionX || 'center'} ${slide.imagePositionY || 'center'}`;
+        return (
+          <>
+            {/* Desktop Image */}
+            <img
+              src={slide.imageUrl || defaultImage}
+              alt={slide.title || 'Hero slide'}
+              className="hidden md:block absolute inset-0 w-full h-full object-cover brightness-95"
+              style={{ objectPosition }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = defaultImage;
+              }}
+            />
+            {/* Tablet Image */}
+            <img
+              src={slide.ipadImageUrl || slide.imageUrl || defaultImage}
+              alt={slide.title || 'Hero slide'}
+              className="hidden sm:block md:hidden absolute inset-0 w-full h-full object-cover brightness-95"
+              style={{ objectPosition }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = defaultImage;
+              }}
+            />
+            {/* Mobile Image */}
+            <img
+              src={slide.mobileImageUrl || slide.imageUrl || defaultImage}
+              alt={slide.title || 'Hero slide'}
+              className="block sm:hidden absolute inset-0 w-full h-full object-cover brightness-95"
+              style={{ objectPosition }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = defaultImage;
+              }}
+            />
+          </>
+        );
+      })()}
     </>
   );
 };
