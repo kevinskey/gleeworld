@@ -30,7 +30,7 @@ export const RoleBasedModuleAssignment = () => {
   const roles = [
     { value: 'student', label: 'Student' },
     { value: 'member', label: 'Member' },
-    { value: 'alumna', label: 'Alumna' },
+    { value: 'graduate', label: 'Graduate' },
     { value: 'executive', label: 'Executive Board' },
     { value: 'admin', label: 'Admin' },
     { value: 'super-admin', label: 'Super Admin' }

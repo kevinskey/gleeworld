@@ -1270,9 +1270,9 @@ export const SuperAdminDashboard = ({
                           <CardContent>
                             <p className="text-xs text-muted-foreground mb-3">Critical system administration actions</p>
                             <div className="space-y-2">
-                              <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => navigate('/admin/alumnae')}>
+                              <Button variant="outline" size="sm" className="w-full justify-start text-xs" onClick={() => navigate('/admin/graduates')}>
                                 <GraduationCap className="mr-2 h-3 w-3" />
-                                Alumnae Portal
+                                Graduates Portal
                               </Button>
                             </div>
                           </CardContent>

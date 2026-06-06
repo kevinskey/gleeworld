@@ -144,7 +144,7 @@ export const PasswordResetTool = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="alumna">Alumna</SelectItem>
+                  <SelectItem value="graduate">Graduate</SelectItem>
                   <SelectItem value="fan">Fan</SelectItem>
                   <SelectItem value="auditioner">Auditioner</SelectItem>
                 </SelectContent>

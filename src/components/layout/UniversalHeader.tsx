@@ -142,7 +142,7 @@ export const UniversalHeader = ({
     switch (role) {
       case 'student':
         return 'border-b-4 border-b-emerald-500';
-      case 'alumna':
+      case 'graduate':
         return 'border-b-4 border-b-amber-500';
       case 'fan':
         return 'border-b-4 border-b-sky-500';
@@ -158,8 +158,8 @@ export const UniversalHeader = ({
     switch (userProfile?.role) {
       case 'student':
         return 'Student';
-      case 'alumna':
-        return 'Alumna';
+      case 'graduate':
+        return 'Graduate';
       case 'fan':
         return 'Fan';
       case 'auditioner':
@@ -357,9 +357,9 @@ export const UniversalHeader = ({
                       <Heart className="mr-2 h-4 w-4" />
                       Fan
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/alumnae')} className="cursor-pointer">
+                    <DropdownMenuItem onClick={() => navigate('/graduates')} className="cursor-pointer">
                       <GraduationCap className="mr-2 h-4 w-4" />
-                      Alumnae
+                      Graduates
                     </DropdownMenuItem>
                     {hasExecBoardPerms && <DropdownMenuItem onClick={() => navigate('/control-center')} className="cursor-pointer">
                         <Crown className="mr-2 h-4 w-4" />
@@ -443,7 +443,7 @@ export const UniversalHeader = ({
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
-                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'alumna' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
+                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'graduate' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
                             {getRoleBadgeLabel()}
                           </span>}
                       </div>

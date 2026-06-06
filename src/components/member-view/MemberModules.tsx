@@ -26,8 +26,8 @@ import { EventPlannerModule } from '@/components/modules/EventPlannerModule';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { PRHubModule } from '@/components/modules/PRHubModule';
 
-import AlumnaeLanding from '@/pages/AlumnaeLanding';
-import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
+import GraduatesLanding from '@/pages/GraduatesLanding';
+import { GraduatesPortalModule } from '@/components/modules/GraduatesPortalModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 
 import { ReceiptsModule } from '@/components/receipts/ReceiptsModule';
@@ -67,7 +67,7 @@ const getModuleComponent = (moduleName: string) => {
     
     // Extended modules
     
-    'alumnae-portal': AlumnaePortalModule,
+    'graduates-portal': GraduatesPortalModule,
     'approval-system': BudgetsModule, // Use budgets as placeholder
     'buckets-of-love': BucketsOfLoveModule,
     'budgets': BudgetsModule,

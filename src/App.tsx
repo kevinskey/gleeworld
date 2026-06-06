@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense, ReactNode } from "react";
 import { AudioCompanionProvider } from "@/contexts/AudioCompanionContext";
 import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
-import { AlumnaeRoute } from "@/components/routes/AlumnaeRoute";
+import { GraduatesRoute } from "@/components/routes/GraduatesRoute";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
@@ -115,7 +115,7 @@ import EventPlanner from "./pages/EventPlanner";
 import BudgetApprovals from "./pages/BudgetApprovals";
 import { Shop } from "./pages/Shop";
 const PointOfSale = lazy(() => import("./pages/PointOfSale"));
-import { AlumnaeShop } from "./pages/AlumnaeShop";
+import { GraduatesShop } from "./pages/GraduatesShop";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { OrderConfirmation } from "./pages/OrderConfirmation";
 import Payments from "./pages/Payments";
@@ -156,10 +156,10 @@ import Treasurer from "./pages/Treasurer";
 import PerformanceSuite from "./pages/PerformanceSuite";
 import WellnessSuite from "./pages/WellnessSuite";
 import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/FeedbackDashboard";
-import AlumnaeLanding from "./pages/AlumnaeLanding";
-import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
-import AlumnaeManagement from "./pages/AlumnaeManagement";
-import AlumnaePageView from "./pages/AlumnaePageView";
+import GraduatesLanding from "./pages/GraduatesLanding";
+import GraduatesAdmin from "./pages/admin/GraduatesAdmin";
+import GraduatesManagement from "./pages/GraduatesManagement";
+import GraduatesPageView from "./pages/GraduatesPageView";
 import SendNotificationPage from "./pages/SendNotificationPage";
 import AuditionPage from "./pages/AuditionPage";
 import Handbook from "./pages/Handbook";
@@ -1216,11 +1216,11 @@ const App = () => {
                   } 
                 />
                 <Route 
-                  path="/alumnae-shop" 
+                  path="/graduates-shop" 
                   element={
-                    <AlumnaeRoute>
-                      <AlumnaeShop />
-                    </AlumnaeRoute>
+                    <GraduatesRoute>
+                      <GraduatesShop />
+                    </GraduatesRoute>
                   } 
                 />
                 <Route 
@@ -1459,32 +1459,32 @@ const App = () => {
                            path="/alumni"
                            element={
                              <PublicRoute>
-                               <AlumnaePageView />
+                               <GraduatesPageView />
                              </PublicRoute>
                            }
                          />
-                        {/* Legacy alias — old code/links to /alumnae still work. */}
+                        {/* Legacy alias — old code/links to /graduates still work. */}
                         <Route
-                           path="/alumnae"
+                           path="/graduates"
                            element={
                              <PublicRoute>
-                               <AlumnaePageView />
+                               <GraduatesPageView />
                              </PublicRoute>
                            }
                          />
                          <Route 
-                           path="/admin/alumnae" 
+                           path="/admin/graduates" 
                            element={
                              <ProtectedRoute>
-                               <AlumnaeAdmin />
+                               <GraduatesAdmin />
                              </ProtectedRoute>
                            } 
                          />
                          <Route 
-                           path="/alumnae-management" 
+                           path="/graduates-management" 
                            element={
                              <ProtectedRoute>
-                               <AlumnaeManagement />
+                               <GraduatesManagement />
                              </ProtectedRoute>
                            } 
                          />

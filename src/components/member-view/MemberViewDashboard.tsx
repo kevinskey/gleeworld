@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useUserById } from "@/hooks/useUserById";
 import { DashboardTemplate } from "./DashboardTemplate";
 import { MemberDashboardV2 } from "./dashboards/MemberDashboardV2";
-import { AlumnaeDashboard } from "./dashboards/AlumnaeDashboard";
+import { GraduatesDashboard } from "./dashboards/GraduatesDashboard";
 import { AdminDashboard } from "./dashboards/AdminDashboard";
 import { SuperAdminDashboard } from "./dashboards/SuperAdminDashboard";
 import { AuditionerDashboard } from "./dashboards/AuditionerDashboard";

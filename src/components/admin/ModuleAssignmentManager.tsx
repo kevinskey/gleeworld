@@ -40,7 +40,7 @@ export const ModuleAssignmentManager: React.FC = () => {
     { value: 'tenor', label: 'Tenor Section' },
     { value: 'bass', label: 'Bass Section' },
     { value: 'member', label: 'Members' },
-    { value: 'alumna', label: 'Alumnae' },
+    { value: 'graduate', label: 'Graduates' },
   ];
 
   useEffect(() => {

@@ -9,7 +9,7 @@ import { useBrandingSettings } from "@/hooks/useBrandingSettings";
  *
  * Roles (from least → most privileged), with destinations:
  *   fan      → /fan        — public fan portal (newsletter, ticket requests)
- *   alumna   → /alumnae    — alumnae dashboard
+ *   graduate   → /graduates    — graduates dashboard
  *   member   → /dashboard  — full member dashboard
  *   admin    → /dashboard  — admin uses the same dashboard with extra modules
  *   super-admin → /control-center  — site-owner / super-admin tooling
@@ -90,7 +90,7 @@ function pickDestination(profile: {
   //   vip / fan   → /fan              (signed-up supporters; vip = fan with extra privileges)
   if (profile.is_super_admin || profile.role === 'super-admin') return '/control-center';
   if (profile.is_admin || profile.role === 'admin') return '/dashboard';
-  if (profile.role === 'alumni' || profile.role === 'alumna' || profile.role === 'alumnae') return '/alumni';
+  if (profile.role === 'alumni' || profile.role === 'graduate' || profile.role === 'graduates') return '/alumni';
   if (profile.role === 'student') return '/academy';
   if (profile.role === 'member') return '/dashboard';
   if (profile.role === 'auditioner') return '/auditioner';

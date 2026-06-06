@@ -124,8 +124,8 @@ export const isEventVisibleToUser = (
   // Check calendar name for role-based access
   const calendarName = event.gw_calendars?.name?.toLowerCase() || '';
 
-  // Alumnae can see alumnae events
-  if (access.isAlumna && calendarName.includes('alumnae')) {
+  // Graduates can see graduates events
+  if (access.isAlumna && calendarName.includes('graduates')) {
     return true;
   }
 

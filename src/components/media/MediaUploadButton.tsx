@@ -56,7 +56,7 @@ export const MediaUploadButton = ({
 
   const predefinedTags = [
     "homepage", "hero", "event", "performance", "concert", "tour", 
-    "alumnae", "centennial", "mlk", "worship", "community", "awards",
+    "graduates", "centennial", "mlk", "worship", "community", "awards",
     "rehearsal", "social", "graduation", "historical", "promotional"
   ];
 

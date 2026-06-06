@@ -30,10 +30,10 @@ import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
 import { GleeAcademyModule } from '../modules/GleeAcademyModule';
 import { QRCodeManagementModule } from '../modules/QRCodeManagementModule';
 import { TestBuilder } from '../test-builder/TestBuilder';
-import { AlumnaePortalModule } from '../modules/AlumnaePortalModule';
+import { GraduatesPortalModule } from '../modules/GraduatesPortalModule';
 import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
 import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
-import { AlumnaeManagementModule } from '../modules/AlumnaeManagementModule';
+import { GraduatesManagementModule } from '../modules/GraduatesManagementModule';
 import { GradingModule } from '../modules/GradingModule';
 import { ConcertTicketRequestsModule } from '../modules/ConcertTicketRequestsModule';
 import { AnnouncementsModule } from '../modules/AnnouncementsModule';
@@ -133,10 +133,10 @@ case 'test-builder':
         return null;
       case 'grading':
         return <GradingModule />;
-      case 'alumnae-portal':
-        return <AlumnaePortalModule />;
-      case 'alumnae-management':
-        return <AlumnaeManagementModule />;
+      case 'graduates-portal':
+        return <GraduatesPortalModule />;
+      case 'graduates-management':
+        return <GraduatesManagementModule />;
       case 'hero-management':
       case 'hero-manager':
         return <HeroManagerModule />;

@@ -47,7 +47,7 @@ const getRoleBadgeColor = (role?: string) => {
     case 'admin': return 'bg-purple-100 text-purple-800 border-purple-300';
     case 'executive': return 'bg-blue-100 text-blue-800 border-blue-300';
     case 'student': return 'bg-green-100 text-green-800 border-green-300';
-    case 'alumna': return 'bg-amber-100 text-amber-800 border-amber-300';
+    case 'graduate': return 'bg-amber-100 text-amber-800 border-amber-300';
     case 'vip': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
     case 'auditioner': return 'bg-orange-100 text-orange-800 border-orange-300';
     default: return 'bg-muted text-foreground border-border';
@@ -59,7 +59,7 @@ const getRoleIcon = (role?: string) => {
     case 'super-admin': return <Crown className="h-3 w-3" />;
     case 'admin': return <Shield className="h-3 w-3" />;
     case 'executive': return <UserCog className="h-3 w-3" />;
-    case 'alumna': return <GraduationCap className="h-3 w-3" />;
+    case 'graduate': return <GraduationCap className="h-3 w-3" />;
     case 'vip': return <Star className="h-3 w-3" />;
     case 'auditioner': return <Calendar className="h-3 w-3" />;
     default: return <User className="h-3 w-3" />;
@@ -156,7 +156,7 @@ export const UnifiedUserManagement = () => {
     students: users.filter(u => u.role === 'student').length,
     executives: users.filter(u => u.role === 'executive' || u.is_exec_board).length,
     vips: users.filter(u => u.role === 'vip').length,
-    alumnae: users.filter(u => u.role === 'alumna').length,
+    graduates: users.filter(u => u.role === 'graduate').length,
     verified: users.filter(u => u.verified).length,
   }), [users]);
 
@@ -267,7 +267,7 @@ export const UnifiedUserManagement = () => {
         <StatPill label="Total" value={userStats.total} icon={Users} />
         <StatPill label="Admins" value={userStats.admins} icon={Shield} />
         <StatPill label="Students" value={userStats.students} icon={User} />
-        <StatPill label="Alumnae" value={userStats.alumnae} icon={GraduationCap} />
+        <StatPill label="Graduates" value={userStats.graduates} icon={GraduationCap} />
         <StatPill label="VIP" value={userStats.vips} icon={Star} />
         <StatPill label="Exec" value={userStats.executives} icon={Settings} />
       </div>
@@ -303,7 +303,7 @@ export const UnifiedUserManagement = () => {
                 <SelectItem value="fan">Fan</SelectItem>
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="student">Student</SelectItem>
-                <SelectItem value="alumna">Alumna</SelectItem>
+                <SelectItem value="graduate">Graduate</SelectItem>
                 <SelectItem value="vip">VIP</SelectItem>
                 <SelectItem value="executive">Executive</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
@@ -371,7 +371,7 @@ export const UnifiedUserManagement = () => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs">Change Role</DropdownMenuLabel>
-                    {['guest','fan','student','member','alumna','vip','executive','admin','super-admin'].map(r => (
+                    {['guest','fan','student','member','graduate','vip','executive','admin','super-admin'].map(r => (
                       <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r} className={`text-xs ${user.role === r ? 'opacity-50' : ''}`}>
                         {getRoleIcon(r)}<span className="ml-1.5 capitalize">{r.replace('-', ' ')}</span>
                       </DropdownMenuItem>
@@ -472,7 +472,7 @@ export const UnifiedUserManagement = () => {
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel className="text-xs">Change Role</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {['vip','guest','fan','student','member','alumna','executive','admin','super-admin','auditioner'].map(r => (
+                          {['vip','guest','fan','student','member','graduate','executive','admin','super-admin','auditioner'].map(r => (
                             <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r} className={`text-xs ${user.role === r ? 'opacity-50' : ''}`}>
                               {getRoleIcon(r)}<span className="ml-1.5 capitalize">{r.replace('-', ' ')}</span>
                             </DropdownMenuItem>
@@ -517,7 +517,7 @@ export const UnifiedUserManagement = () => {
                   <SelectContent>
                     <SelectItem value="member">Member</SelectItem>
                     <SelectItem value="auditioner">Auditioner</SelectItem>
-                    <SelectItem value="alumna">Alumna</SelectItem>
+                    <SelectItem value="graduate">Graduate</SelectItem>
                     <SelectItem value="fan">Fan</SelectItem>
                     <SelectItem value="executive">Executive</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>

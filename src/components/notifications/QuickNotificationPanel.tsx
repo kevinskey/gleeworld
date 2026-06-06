@@ -50,7 +50,7 @@ export const QuickNotificationPanel: React.FC = () => {
     { value: 'soprano_2', label: 'Soprano 2', description: 'S2 section' },
     { value: 'alto_1', label: 'Alto 1', description: 'A1 section' },
     { value: 'alto_2', label: 'Alto 2', description: 'A2 section' },
-    { value: 'all_alumnae', label: 'All Alumnae', description: 'Alumni members' },
+    { value: 'all_graduates', label: 'All Graduates', description: 'Alumni members' },
   ];
 
   useEffect(() => {

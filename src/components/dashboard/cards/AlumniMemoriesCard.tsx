@@ -8,9 +8,9 @@ export const AlumniMemoriesCard = () => {
   const navigate = useNavigate();
   
   const alumniLinks = [
-    { label: 'Memory Wall', icon: Image, path: '/alumnae?section=memories' },
-    { label: 'Stories', icon: MessageCircle, path: '/alumnae?section=stories' },
-    { label: 'Directory', icon: Users, path: '/alumnae?section=directory' },
+    { label: 'Memory Wall', icon: Image, path: '/graduates?section=memories' },
+    { label: 'Stories', icon: MessageCircle, path: '/graduates?section=stories' },
+    { label: 'Directory', icon: Users, path: '/graduates?section=directory' },
   ];
 
   return (

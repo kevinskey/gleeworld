@@ -308,7 +308,7 @@ export const ContactsImportWizard = () => {
         }
       }
 
-      // Create auth users with alumna role for all imported contacts
+      // Create auth users with graduate role for all imported contacts
       try {
         const contactsForAuth = validContacts.map(pc => ({
           Email: pc.data.Email,
@@ -320,7 +320,7 @@ export const ContactsImportWizard = () => {
         }));
 
         const { data: authResults, error: authError } = await supabase.functions.invoke(
-          'create-alumna-users',
+          'create-graduate-users',
           { body: { contacts: contactsForAuth } }
         );
 
@@ -329,10 +329,10 @@ export const ContactsImportWizard = () => {
           toast.error('Contacts imported but some auth users failed to create');
         } else {
           console.log('Auth user creation results:', authResults);
-          toast.success(`Created ${authResults.created.length} new alumna users, updated ${authResults.updated.length}`);
+          toast.success(`Created ${authResults.created.length} new graduate users, updated ${authResults.updated.length}`);
         }
       } catch (error: any) {
-        console.error('Error invoking create-alumna-users:', error);
+        console.error('Error invoking create-graduate-users:', error);
         toast.error('Contacts imported but auth user creation failed');
       }
 

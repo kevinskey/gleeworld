@@ -36,8 +36,8 @@ export const SignupForm = () => {
 
   useEffect(() => {
     const role = searchParams.get('role');
-    // If role is fan or alumna, we'll show role selection after signup
-    setIsFanOrAlumnaFlow(role === 'fan' || role === 'alumna');
+    // If role is fan or graduate, we'll show role selection after signup
+    setIsFanOrAlumnaFlow(role === 'fan' || role === 'graduate');
   }, [searchParams]);
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
@@ -67,7 +67,7 @@ export const SignupForm = () => {
 
       setSignedUpUserId(result.user.id);
 
-      // If this is a fan/alumna flow, show role selection
+      // If this is a fan/graduate flow, show role selection
       if (isFanOrAlumnaFlow) {
         setCurrentStep('role-selection');
       } else {
@@ -83,7 +83,7 @@ export const SignupForm = () => {
   };
 
   const handleRoleSelected = async (
-    role: 'fan' | 'alumna', 
+    role: 'fan' | 'graduate', 
     additionalData?: { graduationYear?: number; voicePart?: string }
   ) => {
     if (!signedUpUserId) {
@@ -196,14 +196,14 @@ export const SignupForm = () => {
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="h-5 w-5 text-white" />
             <Badge variant="secondary" className="text-sm bg-white/20 text-white border-white/30">
-              {searchParams.get('role') === 'fan' ? 'Fan Registration' : 'Alumna Registration'}
+              {searchParams.get('role') === 'fan' ? 'Fan Registration' : 'Graduate Registration'}
             </Badge>
             <Users className="h-5 w-5 text-white" />
           </div>
           <p className="text-sm text-white/80">
             {searchParams.get('role') === 'fan' 
               ? 'Join the GleeWorld fan community and get exclusive access to content and events!'
-              : 'Reconnect with your Glee Club sisters and access exclusive alumnae features!'}
+              : 'Reconnect with your Glee Club sisters and access exclusive graduates features!'}
           </p>
         </div>
       )}

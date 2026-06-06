@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CommunicationCenterModule } from "@/components/admin/CommunicationCenterModule";
 import { DuesManagement } from "@/pages/DuesManagement";
 import { StudentConductorDashboard } from "@/pages/StudentConductorDashboard";
-import AlumnaeAdmin from "@/pages/admin/AlumnaeAdmin";
+import GraduatesAdmin from "@/pages/admin/GraduatesAdmin";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
@@ -122,7 +122,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     userMetrics: {
       newRegistrations: 0,
       totalMembers: 0,
-      alumnaeMembersCount: 0,
+      graduatesMembersCount: 0,
       attendanceRate: 87
     },
     upcomingEvents: [],
@@ -149,10 +149,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           .select('*', { count: 'exact', head: true })
           .not('last_sign_in_at', 'is', null);
 
-        const { count: alumnaeCount } = await supabase
+        const { count: graduatesCount } = await supabase
           .from('gw_profiles')
           .select('*', { count: 'exact', head: true })
-          .eq('role', 'alumna');
+          .eq('role', 'graduate');
 
         // Note: gw_tasks table doesn't exist yet, using placeholder
         const pendingTasks = 0;
@@ -192,7 +192,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           userMetrics: {
             ...prev.userMetrics,
             totalMembers: totalUsers || 0,
-            alumnaeMembersCount: alumnaeCount || 0,
+            graduatesMembersCount: graduatesCount || 0,
           },
           upcomingEvents: events?.map(event => ({
             id: event.id,
@@ -246,7 +246,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="dues">Dues Management</TabsTrigger>
           <TabsTrigger value="conductor">Student Conductor</TabsTrigger>
-          <TabsTrigger value="alumnae">Alumnae Admin</TabsTrigger>
+          <TabsTrigger value="graduates">Graduates Admin</TabsTrigger>
           <TabsTrigger value="management">Management</TabsTrigger>
           <TabsTrigger value="executive">Executive Board</TabsTrigger>
         </TabsList>
@@ -408,10 +408,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
                     variant="outline" 
                     size="sm" 
                     className="w-full justify-start" 
-                    onClick={() => setActiveMainTab('alumnae')}
+                    onClick={() => setActiveMainTab('graduates')}
                   >
                     <GraduationCap className="mr-2 h-4 w-4" />
-                    Alumnae Portal Admin
+                    Graduates Portal Admin
                   </Button>
                 </div>
               </CardContent>
@@ -429,9 +429,9 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
           <StudentConductorDashboard />
         </TabsContent>
 
-        {/* Alumnae Admin Tab */}
-        <TabsContent value="alumnae" className="mt-6">
-          <AlumnaeAdmin />
+        {/* Graduates Admin Tab */}
+        <TabsContent value="graduates" className="mt-6">
+          <GraduatesAdmin />
         </TabsContent>
 
         {/* Management Tab - Original tabbed modules */}

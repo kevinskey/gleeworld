@@ -260,7 +260,7 @@ export const MobileUserForm = ({ user, mode, onSuccess, onCancel }: MobileUserFo
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="member">Member</SelectItem>
                   <SelectItem value="fan">Fan</SelectItem>
-                  <SelectItem value="alumnae">Alumnae</SelectItem>
+                  <SelectItem value="graduates">Graduates</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="super-admin">Super Admin</SelectItem>
                 </SelectContent>

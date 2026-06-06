@@ -49,7 +49,7 @@ export const UserCard = ({
     switch (role) {
       case 'super-admin': return 'destructive';
       case 'admin': return 'default';
-      case 'alumnae': return 'secondary';
+      case 'graduates': return 'secondary';
       default: return 'outline';
     }
   };

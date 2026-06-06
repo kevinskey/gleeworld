@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
 
-export type MessengerRole = 'super-admin' | 'admin' | 'student' | 'alumna' | 'fan' | 'none';
+export type MessengerRole = 'super-admin' | 'admin' | 'student' | 'graduate' | 'fan' | 'none';
 
 export interface MessengerContact {
   user_id: string;
@@ -12,7 +12,7 @@ export interface MessengerContact {
   email: string;
   phone_number?: string;
   role?: string;
-  source: 'course' | 'alumna' | 'mentee' | 'all';
+  source: 'course' | 'graduate' | 'mentee' | 'all';
 }
 
 export interface MessengerCourseGroup {
@@ -47,7 +47,7 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
     if (userProfile.is_admin) return 'admin';
 
     const role = userProfile.role?.toLowerCase();
-    if (role === 'alumna' || role === 'alumnae') return 'alumna';
+    if (role === 'graduate' || role === 'graduates') return 'graduate';
     if (role === 'student' || role === 'member') return 'student';
     if (role === 'fan') return 'fan';
 

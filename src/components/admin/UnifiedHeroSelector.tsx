@@ -49,9 +49,9 @@ const HERO_CONTEXTS: HeroContext[] = [
     icon: <Monitor className="h-4 w-4" />
   },
   {
-    id: 'alumnae-landing',
-    label: 'Alumnae Landing Hero',
-    description: 'Hero images for the alumnae portal landing page',
+    id: 'graduates-landing',
+    label: 'Graduates Landing Hero',
+    description: 'Hero images for the graduates portal landing page',
     table: 'alumnae_page_hero',
     icon: <Heart className="h-4 w-4" />
   },

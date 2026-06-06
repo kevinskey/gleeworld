@@ -160,7 +160,7 @@ export const DashboardModulesSection = () => {
         { name: "Mass Communications", description: "Send group messages", icon: Bell, route: "/notifications/send" },
         { name: "PR & Media Hub", description: "Manage publicity", icon: Camera, route: "/dashboard/pr-hub", requiresPRAccess: true },
         { name: "YouTube Management", description: "Manage video content", icon: Youtube, route: "/dashboard?module=youtube-management", requiresAdmin: true },
-        { name: "Alumnae Portal", description: "Alumni engagement & mentorship", icon: GraduationCap, route: "/alumnae", requiresAdmin: true },
+        { name: "Graduates Portal", description: "Alumni engagement & mentorship", icon: GraduationCap, route: "/graduates", requiresAdmin: true },
         { name: "Newsletter Management", description: "Create newsletters", icon: MessageSquare, route: "/newsletter" },
         { name: "Announcements", description: "Read updates", icon: MessageSquare, route: "/announcements" },
         { name: "Booking Forms", description: "Manage performance booking requests", icon: FileText, route: "/booking-forms" },

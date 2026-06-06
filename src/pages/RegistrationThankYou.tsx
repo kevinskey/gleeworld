@@ -6,7 +6,7 @@ import gleeWorldLogoCircle from "@/assets/glee-world-logo-circle.png";
 
 const RegistrationThankYou = () => {
   const [searchParams] = useSearchParams();
-  const role = searchParams.get('role') as 'fan' | 'alumna' | null;
+  const role = searchParams.get('role') as 'fan' | 'graduate' | null;
 
   const roleConfig = {
     fan: {
@@ -23,15 +23,15 @@ const RegistrationThankYou = () => {
         "Special fan events"
       ]
     },
-    alumna: {
-      title: "Welcome Home, Alumna!",
+    graduate: {
+      title: "Welcome Home, Graduate!",
       subtitle: "Thank you for registering with GleeWorld",
       icon: GraduationCap,
       iconColor: "text-purple-400",
       bgGradient: "from-purple-900/30 via-violet-900/20 to-blue-900/30",
-      description: "Your registration is being reviewed by our webmaster to verify your alumna status. Once approved, you'll have full access to the Alumnae Portal.",
+      description: "Your registration is being reviewed by our webmaster to verify your graduate status. Once approved, you'll have full access to the Graduates Portal.",
       features: [
-        "Alumnae-only events & reunions",
+        "Graduates-only events & reunions",
         "Mentorship program",
         "Memory wall & legacy stories",
         "Directory of Glee Club sisters"
@@ -131,14 +131,14 @@ const RegistrationThankYou = () => {
                 </Link>
               </Button>
               
-              {role === 'alumna' && (
+              {role === 'graduate' && (
                 <Button 
                   asChild
                   variant="ghost"
                   className="w-full text-white/70 hover:text-white hover:bg-white/10"
                 >
-                  <Link to="/alumnae">
-                    Explore Alumnae Portal (Preview)
+                  <Link to="/graduates">
+                    Explore Graduates Portal (Preview)
                   </Link>
                 </Button>
               )}

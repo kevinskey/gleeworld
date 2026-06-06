@@ -34,7 +34,7 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
   {
     id: 'send-email',
     title: 'Send Email',
-    description: 'Compose and send emails to members, fans, or alumnae',
+    description: 'Compose and send emails to members, fans, or graduates',
     icon: Mail,
     iconColor: 'text-blue-600',
     category: 'communication',
@@ -373,14 +373,14 @@ export const UNIFIED_ACTIONS: UnifiedAction[] = [
   },
 
   {
-    id: 'alumnae',
-    title: 'Alumnae Portal',
-    description: 'Connect with alumnae and manage alumni relationships',
+    id: 'graduates',
+    title: 'Graduates Portal',
+    description: 'Connect with graduates and manage alumni relationships',
     icon: GraduationCap,
     iconColor: 'text-indigo-500',
     category: 'community',
     type: 'navigation',
-    route: '/alumnae',
+    route: '/graduates',
     isActive: true,
     dbFunctionName: 'alumnae_management'
   },
@@ -455,7 +455,7 @@ export const UNIFIED_ACTION_CATEGORIES: UnifiedActionCategory[] = [
   {
     id: 'community',
     title: 'Community',
-    description: 'Fans, alumnae, and community engagement',
+    description: 'Fans, graduates, and community engagement',
     icon: Heart,
     color: 'red',
     actions: UNIFIED_ACTIONS.filter(action => action.category === 'community')

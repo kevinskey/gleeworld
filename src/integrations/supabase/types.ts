@@ -31500,7 +31500,7 @@ export type Database = {
         | "auditioner"
         | "student"
         | "librarian"
-        | "alumna"
+        | "graduate"
         | "vip"
       assignment_status:
         | "assigned"
@@ -31590,7 +31590,7 @@ export type Database = {
         | "visitor"
         | "fan"
         | "auditioner"
-        | "alumna"
+        | "graduate"
         | "member"
         | "admin"
         | "super-admin"
@@ -31730,7 +31730,7 @@ export const Constants = {
         "auditioner",
         "student",
         "librarian",
-        "alumna",
+        "graduate",
         "vip",
       ],
       assignment_status: [
@@ -31829,7 +31829,7 @@ export const Constants = {
         "visitor",
         "fan",
         "auditioner",
-        "alumna",
+        "graduate",
         "member",
         "admin",
         "super-admin",

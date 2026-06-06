@@ -39,12 +39,12 @@ export const PhoneNumberStatus: React.FC<{ groupType?: string }> = ({ groupType 
           case 'alto_2':
             query = query.eq('voice_part', 'A2');
             break;
-          case 'all_alumnae':
-            query = query.eq('role', 'alumna');
+          case 'all_graduates':
+            query = query.eq('role', 'graduate');
             break;
           case 'all_members':
           default:
-            query = query.in('role', ['member', 'executive', 'alumna', 'staff']);
+            query = query.in('role', ['member', 'executive', 'graduate', 'staff']);
             break;
         }
 

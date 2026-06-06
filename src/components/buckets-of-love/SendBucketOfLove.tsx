@@ -46,7 +46,7 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
 
   const groupOptions = [
     { value: 'all_members', label: 'All Members', description: 'Send to all current members' },
-    { value: 'all_alumnae', label: 'All Alumnae', description: 'Send to all alumnae' },
+    { value: 'all_graduates', label: 'All Graduates', description: 'Send to all graduates' },
     { value: 'all_fans', label: 'All Fans', description: 'Send to all fans' },
     { value: 'executive_board', label: 'Executive Board', description: 'Send to executive board members' },
     { value: 'soprano_1', label: 'Soprano 1', description: 'Send to all Soprano 1 members' },

@@ -76,7 +76,7 @@ export const UserForm = ({ user, mode, onSuccess, onCancel }: UserFormProps) => 
       return false;
     }
 
-    if (!["user", "admin", "super-admin", "alumnae"].includes(role)) {
+    if (!["user", "admin", "super-admin", "graduates"].includes(role)) {
       toast({
         title: "Validation Error",
         description: "Please select a valid role",

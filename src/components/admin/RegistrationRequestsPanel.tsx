@@ -32,7 +32,7 @@ interface RegistrationRequest {
   user_id: string;
   email: string;
   full_name: string;
-  requested_role: 'fan' | 'alumna';
+  requested_role: 'fan' | 'graduate';
   graduation_year: number | null;
   voice_part: string | null;
   status: 'pending' | 'approved' | 'denied';
@@ -46,7 +46,7 @@ export const RegistrationRequestsPanel = () => {
   const [requests, setRequests] = useState<RegistrationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'denied'>('pending');
-  const [roleFilter, setRoleFilter] = useState<'all' | 'fan' | 'alumna'>('all');
+  const [roleFilter, setRoleFilter] = useState<'all' | 'fan' | 'graduate'>('all');
   const [selectedRequest, setSelectedRequest] = useState<RegistrationRequest | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -135,7 +135,7 @@ export const RegistrationRequestsPanel = () => {
     if (role === 'fan') {
       return <Badge className="bg-pink-500/20 text-pink-700 border-pink-500/30"><Heart className="h-3 w-3 mr-1" />Fan</Badge>;
     }
-    return <Badge className="bg-purple-500/20 text-purple-700 border-purple-500/30"><GraduationCap className="h-3 w-3 mr-1" />Alumna</Badge>;
+    return <Badge className="bg-purple-500/20 text-purple-700 border-purple-500/30"><GraduationCap className="h-3 w-3 mr-1" />Graduate</Badge>;
   };
 
   const pendingCount = requests.filter(r => r.status === 'pending').length;
@@ -153,7 +153,7 @@ export const RegistrationRequestsPanel = () => {
             )}
           </h2>
           <p className="text-muted-foreground">
-            Review and manage fan and alumna registration requests
+            Review and manage fan and graduate registration requests
           </p>
         </div>
         <Button onClick={fetchRequests} variant="outline" disabled={loading}>
@@ -182,7 +182,7 @@ export const RegistrationRequestsPanel = () => {
             <TabsList className="h-8">
               <TabsTrigger value="all" className="text-xs h-7">All</TabsTrigger>
               <TabsTrigger value="fan" className="text-xs h-7">Fans</TabsTrigger>
-              <TabsTrigger value="alumna" className="text-xs h-7">Alumnae</TabsTrigger>
+              <TabsTrigger value="graduate" className="text-xs h-7">Graduates</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -225,7 +225,7 @@ export const RegistrationRequestsPanel = () => {
                     </TableCell>
                     <TableCell>{getRoleBadge(request.requested_role)}</TableCell>
                     <TableCell>
-                      {request.requested_role === 'alumna' && (
+                      {request.requested_role === 'graduate' && (
                         <div className="text-sm text-muted-foreground space-y-0.5">
                           {request.graduation_year && (
                             <div className="flex items-center gap-1">

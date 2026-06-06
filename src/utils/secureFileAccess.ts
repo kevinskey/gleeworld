@@ -71,10 +71,10 @@ export const convertToSecureUrl = async (storageUrl: string): Promise<string | n
   if (blob) return blob;
 
   // Fallback mapping for renamed bucket/paths
-  // alumnae-newsletters/newsletters/* -> alumnae-docs/publications/*
-  const needsFallback = parsed.bucket === 'alumnae-newsletters' || parsed.path.startsWith('newsletters/');
+  // graduates-newsletters/newsletters/* -> graduates-docs/publications/*
+  const needsFallback = parsed.bucket === 'graduates-newsletters' || parsed.path.startsWith('newsletters/');
   if (needsFallback) {
-    const fallbackBucket = 'alumnae-docs';
+    const fallbackBucket = 'graduates-docs';
     const fallbackPath = parsed.path.replace(/^newsletters\//, 'publications/');
     console.warn('Primary download failed. Trying fallback storage mapping:', { fallbackBucket, fallbackPath });
     blob = await getSecureFileUrl(fallbackBucket, fallbackPath);

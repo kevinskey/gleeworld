@@ -41,7 +41,7 @@ export const DashboardTemplate = ({
     switch (role) {
       case 'super-admin': return 'bg-purple-500/20 text-purple-600';
       case 'admin': return 'bg-red-500/20 text-red-600';
-      case 'alumnae': return 'bg-blue-500/20 text-blue-600';
+      case 'graduates': return 'bg-blue-500/20 text-blue-600';
       case 'user': return 'bg-green-500/20 text-green-600';
       default: return 'bg-gray-500/20 text-gray-600';
     }

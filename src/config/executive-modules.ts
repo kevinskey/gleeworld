@@ -36,7 +36,7 @@ export const EXECUTIVE_MODULE_IDS = [
   'librarian',
 
   // Member Management
-  'alumnae-portal',
+  'graduates-portal',
 
   // Tools & Administration
   'ai-tools',

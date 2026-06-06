@@ -230,7 +230,7 @@ export const UserDetailPanel = ({
     switch (userRole) {
       case 'super-admin': return 'destructive';
       case 'admin': return 'default';
-      case 'alumnae': return 'secondary';
+      case 'graduates': return 'secondary';
       default: return 'outline';
     }
   };
@@ -538,7 +538,7 @@ export const UserDetailPanel = ({
                             <SelectContent>
                               <SelectItem value="user">User</SelectItem>
                               <SelectItem value="member">Member</SelectItem>
-                              <SelectItem value="alumna">Alumna</SelectItem>
+                              <SelectItem value="graduate">Graduate</SelectItem>
                               <SelectItem value="fan">Fan</SelectItem>
                               <SelectItem value="executive">Executive</SelectItem>
                               <SelectItem value="admin">Admin</SelectItem>

@@ -35,8 +35,8 @@ export const AppShell = ({
 }: AppShellProps) => {
   const location = useLocation();
 
-  // Use PublicHeader for public, fan, and alumnae pages
-  const publicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
+  // Use PublicHeader for public, fan, and graduates pages
+  const publicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/graduates'];
   const shouldUsePublicHeader = publicHeaderPaths.includes(location.pathname);
 
   return (

@@ -38,7 +38,7 @@ const ROLE_OPTIONS = [
   { value: 'fan', label: 'Fan', icon: User, description: 'General public access' },
   { value: 'auditioner', label: 'Auditioner', icon: User, description: 'Auditioning for Glee Club' },
   { value: 'member', label: 'Member', icon: User, description: 'Active Glee Club member' },
-  { value: 'alumna', label: 'Alumna', icon: User, description: 'Former Glee Club member' },
+  { value: 'graduate', label: 'Graduate', icon: User, description: 'Former Glee Club member' },
   { value: 'executive', label: 'Executive', icon: UserCog, description: 'Executive board member' },
   { value: 'admin', label: 'Admin', icon: Shield, description: 'Platform administrator' },
   { value: 'super-admin', label: 'Super Admin', icon: Crown, description: 'Full system access' },

@@ -46,7 +46,7 @@ export const OnboardingHero = ({ onGetStarted }: OnboardingHeroProps) => {
                 </div>
                 <h3 className="font-semibold text-lg">Sisterhood</h3>
                 <p className="text-sm text-muted-foreground">
-                  Connect with current members, alumnae, and build lifelong friendships
+                  Connect with current members, graduates, and build lifelong friendships
                 </p>
               </div>
               

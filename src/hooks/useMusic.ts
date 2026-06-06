@@ -66,7 +66,7 @@ export const useMusic = () => {
           .order('created_at', { ascending: false })
           .limit(20),
           
-        // Alumnae audio stories - limit to 10 most recent
+        // Graduates audio stories - limit to 10 most recent
         supabase
           .from('alumnae_audio_stories')
           .select('*')
@@ -76,7 +76,7 @@ export const useMusic = () => {
           .limit(10)
       ]);
 
-      const [musicTracksResult, audioArchiveResult, alumnaeAudioResult] = await Promise.race([
+      const [musicTracksResult, audioArchiveResult, graduatesAudioResult] = await Promise.race([
         fetchPromise,
         timeoutPromise
       ]) as any;
@@ -117,13 +117,13 @@ export const useMusic = () => {
         });
       }
 
-      // Process alumnae audio stories
-      if (alumnaeAudioResult.data) {
-        alumnaeAudioResult.data.forEach((track: any) => {
+      // Process graduates audio stories
+      if (graduatesAudioResult.data) {
+        graduatesAudioResult.data.forEach((track: any) => {
           allTracks.push({
             id: `alumni_${track.id}`,
             title: track.title,
-            artist: 'Alumnae Story',
+            artist: 'Graduates Story',
             audio_url: track.audio_url,
             duration: track.duration_seconds ?? 0,
             play_count: 0,
@@ -136,7 +136,7 @@ export const useMusic = () => {
       console.log('useMusic: Total tracks from all sources:', allTracks.length);
 
       if (allTracks.length > 0) {
-        // Only fetch likes for music_tracks (not for archive or alumnae tracks)
+        // Only fetch likes for music_tracks (not for archive or graduates tracks)
         if (user) {
           try {
             const { data: likesData } = await supabase

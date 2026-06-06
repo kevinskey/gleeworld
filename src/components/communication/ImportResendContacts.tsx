@@ -21,7 +21,7 @@ export const ImportResendContacts = () => {
       const { data, error } = await supabase.functions.invoke("import-resend-contacts", {
         body: {
           send_invite_emails: sendInvites,
-          default_role: "alumna"
+          default_role: "graduate"
         }
       });
 
@@ -104,7 +104,7 @@ export const ImportResendContacts = () => {
             This will create Supabase user accounts for all contacts in your Resend audiences.
           </p>
           <p className="text-xs">
-            • Users will be assigned the "alumna" role<br />
+            • Users will be assigned the "graduate" role<br />
             • Existing users will be skipped<br />
             • {sendInvites ? "Users will receive invitation emails to set their password" : "Users will be auto-confirmed and can reset their password"}
           </p>

@@ -129,7 +129,7 @@ const updateUserRole = async (userId: string, newRole: string) => {
 
     const roleColors: Record<string, string> = {
       'member': 'bg-blue-500/20 text-blue-600',
-      'alumna': 'bg-green-500/20 text-green-600',
+      'graduate': 'bg-green-500/20 text-green-600',
       'fan': 'bg-gray-500/20 text-gray-600',
       'auditioner': 'bg-yellow-500/20 text-yellow-600',
     };
@@ -185,7 +185,7 @@ const updateUserRole = async (userId: string, newRole: string) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="alumna">Alumna</SelectItem>
+                    <SelectItem value="graduate">Graduate</SelectItem>
                     <SelectItem value="fan">Fan</SelectItem>
                     <SelectItem value="auditioner">Auditioner</SelectItem>
                   </SelectContent>
@@ -281,7 +281,7 @@ const updateUserRole = async (userId: string, newRole: string) => {
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="member">Members</SelectItem>
-                <SelectItem value="alumna">Alumni</SelectItem>
+                <SelectItem value="graduate">Alumni</SelectItem>
                 <SelectItem value="fan">Fans</SelectItem>
                 <SelectItem value="auditioner">Auditioners</SelectItem>
               </SelectContent>
@@ -322,7 +322,7 @@ const updateUserRole = async (userId: string, newRole: string) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="alumna">Alumna</SelectItem>
+                      <SelectItem value="graduate">Graduate</SelectItem>
                       <SelectItem value="fan">Fan</SelectItem>
                       <SelectItem value="auditioner">Auditioner</SelectItem>
                     </SelectContent>

@@ -144,7 +144,7 @@ const BownaScholarLanding = () => {
                       <li className="cursor-help">• Mentorship opportunities</li>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Paired with successful alumnae and faculty members for guidance</p>
+                      <p>Paired with successful graduates and faculty members for guidance</p>
                     </TooltipContent>
                   </Tooltip>
                   <Tooltip>

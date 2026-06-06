@@ -52,7 +52,7 @@ export const WardrobeMemberManagement = () => {
       const { data: profiles, error: profilesError } = await supabase
         .from('gw_profiles')
         .select('*')
-        .in('role', ['member', 'alumna', 'executive']);
+        .in('role', ['member', 'graduate', 'executive']);
 
       if (profilesError) throw profilesError;
 
@@ -79,7 +79,7 @@ export const WardrobeMemberManagement = () => {
           phone: profile.phone,
           avatar: profile.avatar_url,
           role: profile.role === 'executive' ? 'Executive Board' : 
-                profile.role === 'alumna' ? 'Alumna' : 'Member',
+                profile.role === 'graduate' ? 'Graduate' : 'Member',
           voicePart: profile.voice_part || 'Not Set',
           currentCheckouts,
           overdueItems,

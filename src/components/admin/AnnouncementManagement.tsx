@@ -278,7 +278,7 @@ export const AnnouncementManagement = () => {
                       <SelectContent>
                         <SelectItem value="all">All</SelectItem>
                         <SelectItem value="members">Current Members</SelectItem>
-                        <SelectItem value="alumnae">Alumnae</SelectItem>
+                        <SelectItem value="graduates">Graduates</SelectItem>
                         <SelectItem value="executives">Executive Board</SelectItem>
                         <SelectItem value="admins">Admins Only</SelectItem>
                       </SelectContent>

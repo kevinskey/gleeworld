@@ -871,19 +871,19 @@ export const COMPREHENSIVE_FUNCTIONS_LIST: PermissionFunction[] = [
   // ========== ALUMNAE MANAGEMENT ==========
   {
     id: 'alumnae_portal',
-    name: 'Alumnae Portal',
-    description: 'Access to alumnae portal',
-    location: 'AlumnaeLanding',
+    name: 'Graduates Portal',
+    description: 'Access to graduates portal',
+    location: 'GraduatesLanding',
     isActive: true,
-    category: 'Alumnae'
+    category: 'Graduates'
   },
   {
     id: 'alumnae_admin',
-    name: 'Alumnae Admin',
-    description: 'Administrative alumnae management',
-    location: 'AlumnaeAdmin',
+    name: 'Graduates Admin',
+    description: 'Administrative graduates management',
+    location: 'GraduatesAdmin',
     isActive: true,
-    category: 'Alumnae'
+    category: 'Graduates'
   },
 
   // ========== SYSTEM ADMINISTRATION ==========
@@ -1229,9 +1229,9 @@ export const FUNCTION_CATEGORIES: FunctionCategory[] = [
     functions: COMPREHENSIVE_FUNCTIONS_LIST.filter(f => f.category === 'Press & PR')
   },
   {
-    name: 'Alumnae',
+    name: 'Graduates',
     description: 'Alumni-specific features',
-    functions: COMPREHENSIVE_FUNCTIONS_LIST.filter(f => f.category === 'Alumnae')
+    functions: COMPREHENSIVE_FUNCTIONS_LIST.filter(f => f.category === 'Graduates')
   },
   {
     name: 'System Administration',

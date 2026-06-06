@@ -44,7 +44,7 @@ export const MemberDirectory = () => {
       const { data, error } = await supabase
         .from('gw_profiles')
         .select('id, user_id, full_name, email, role, voice_part, graduation_year, major, bio, avatar_url, verified')
-        .in('role', ['member', 'alumna'])
+        .in('role', ['member', 'graduate'])
         .eq('verified', true)
         .order('full_name');
 
@@ -92,7 +92,7 @@ export const MemberDirectory = () => {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'member': return 'bg-blue-100 text-blue-800';
-      case 'alumna': return 'bg-gold-100 text-gold-800';
+      case 'graduate': return 'bg-gold-100 text-gold-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };

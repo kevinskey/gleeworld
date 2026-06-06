@@ -86,7 +86,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           'attendance-management': 'attendance-management',
           'tour-management': 'tour-management',
           'booking-forms': 'booking-forms',
-          'alumnae-portal': 'alumnae-portal',
+          'graduates-portal': 'graduates-portal',
           'auditions': 'auditions',
           'permissions-module': 'permissions',
           'wardrobe': 'wardrobe',

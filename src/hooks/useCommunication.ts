@@ -151,8 +151,8 @@ export const useCommunication = () => {
             break;
 
           case 'special':
-            if (group.id === 'alumnae') {
-              query = query.eq('role', 'alumna');
+            if (group.id === 'graduates') {
+              query = query.eq('role', 'graduate');
             } else if (group.id === 'all_users') {
               query = query.neq('user_id', '00000000-0000-0000-0000-000000000000'); // All users
             } else if (group.id.startsWith('direct_email:')) {

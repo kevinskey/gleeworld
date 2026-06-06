@@ -8,21 +8,21 @@ import { Heart, GraduationCap, Music, Users, Star, Calendar, BookOpen, Mic } fro
 import { cn } from "@/lib/utils";
 
 interface RoleSelectionStepProps {
-  onRoleSelected: (role: 'fan' | 'alumna', additionalData?: { graduationYear?: number; voicePart?: string }) => void;
+  onRoleSelected: (role: 'fan' | 'graduate', additionalData?: { graduationYear?: number; voicePart?: string }) => void;
   loading?: boolean;
 }
 
 const voiceParts = ['Soprano 1', 'Soprano 2', 'Alto 1', 'Alto 2'];
 
 export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStepProps) => {
-  const [selectedRole, setSelectedRole] = useState<'fan' | 'alumna' | null>(null);
+  const [selectedRole, setSelectedRole] = useState<'fan' | 'graduate' | null>(null);
   const [graduationYear, setGraduationYear] = useState<string>("");
   const [voicePart, setVoicePart] = useState<string>("");
   const [showAlumnaForm, setShowAlumnaForm] = useState(false);
 
-  const handleRoleClick = (role: 'fan' | 'alumna') => {
+  const handleRoleClick = (role: 'fan' | 'graduate') => {
     setSelectedRole(role);
-    if (role === 'alumna') {
+    if (role === 'graduate') {
       setShowAlumnaForm(true);
     } else {
       setShowAlumnaForm(false);
@@ -32,15 +32,15 @@ export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStep
   const handleSubmit = () => {
     if (selectedRole === 'fan') {
       onRoleSelected('fan');
-    } else if (selectedRole === 'alumna') {
-      onRoleSelected('alumna', {
+    } else if (selectedRole === 'graduate') {
+      onRoleSelected('graduate', {
         graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
         voicePart: voicePart || undefined
       });
     }
   };
 
-  const canSubmit = selectedRole === 'fan' || (selectedRole === 'alumna' && graduationYear);
+  const canSubmit = selectedRole === 'fan' || (selectedRole === 'graduate' && graduationYear);
 
   return (
     <div className="space-y-6">
@@ -94,15 +94,15 @@ export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStep
           </CardContent>
         </Card>
 
-        {/* Alumna Card */}
+        {/* Graduate Card */}
         <Card 
           className={cn(
             "cursor-pointer transition-all duration-200 border-2 bg-white/10 backdrop-blur-sm",
-            selectedRole === 'alumna' 
+            selectedRole === 'graduate' 
               ? "border-purple-400 bg-purple-500/20 shadow-lg shadow-purple-500/20" 
               : "border-white/20 hover:border-purple-300/50 hover:bg-white/15"
           )}
-          onClick={() => handleRoleClick('alumna')}
+          onClick={() => handleRoleClick('graduate')}
         >
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStep
                 <GraduationCap className="h-5 w-5 text-purple-300" />
               </div>
               <div>
-                <CardTitle className="text-lg text-white">Alumna</CardTitle>
+                <CardTitle className="text-lg text-white">Graduate</CardTitle>
                 <Badge variant="secondary" className="bg-purple-500/30 text-purple-100 text-xs mt-1">
                   Former Glee Club Member
                 </Badge>
@@ -119,7 +119,7 @@ export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStep
           </CardHeader>
           <CardContent className="pt-0">
             <CardDescription className="text-white/70 text-sm mb-3">
-              Reconnect with your Glee Club sisters and access exclusive alumnae features.
+              Reconnect with your Glee Club sisters and access exclusive graduates features.
             </CardDescription>
             <ul className="space-y-2 text-sm text-white/80">
               <li className="flex items-center gap-2">
@@ -139,13 +139,13 @@ export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStep
         </Card>
       </div>
 
-      {/* Alumna Additional Info Form */}
-      {showAlumnaForm && selectedRole === 'alumna' && (
+      {/* Graduate Additional Info Form */}
+      {showAlumnaForm && selectedRole === 'graduate' && (
         <Card className="bg-white/10 backdrop-blur-sm border-purple-400/30">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-white">Tell us about yourself</CardTitle>
             <CardDescription className="text-white/70 text-sm">
-              This helps us verify your alumna status
+              This helps us verify your graduate status
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -196,7 +196,7 @@ export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStep
             "Submitting..."
           ) : (
             <>
-              Continue as {selectedRole === 'fan' ? 'Fan/Supporter' : 'Alumna'}
+              Continue as {selectedRole === 'fan' ? 'Fan/Supporter' : 'Graduate'}
             </>
           )}
         </Button>

@@ -151,7 +151,7 @@ export const PostItGrid: React.FC = () => {
     { value: 'alto_1', label: 'Alto 1', description: 'Show buckets for Alto 1' },
     { value: 'alto_2', label: 'Alto 2', description: 'Show buckets for Alto 2' },
     { value: 'directors', label: 'Directors', description: 'Show buckets for directors/staff' },
-    { value: 'alumnae', label: 'Alumnae', description: 'Show buckets for alumnae' },
+    { value: 'graduates', label: 'Graduates', description: 'Show buckets for graduates' },
   ];
 
   const filteredBuckets = useMemo(() => {

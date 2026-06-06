@@ -186,8 +186,8 @@ if (groupName.includes('soprano 1') || groupName.includes('s1')) {
       return ['member', 'executive', 'staff'].includes(userProfile.role);
     }
 
-    if (groupName.includes('alumnae')) {
-      return userProfile.role === 'alumna';
+    if (groupName.includes('graduates')) {
+      return userProfile.role === 'graduate';
     }
 
     return ['member', 'executive', 'staff'].includes(userProfile.role);

@@ -914,7 +914,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                 <h1 className="text-lg font-bold font-cinzel tracking-wide uppercase text-white">Messenger</h1>
                 <Badge variant="outline" className="text-xs capitalize px-2 py-0.5 flex-shrink-0 border-white/30 text-white/90">{messengerRole}</Badge>
                 <span className="text-xs text-white/60 hidden sm:inline">
-                  {canMessageAnyone ? '· Full access' : messengerRole === 'alumna' ? '· Alumnae & mentees' : `· ${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
+                  {canMessageAnyone ? '· Full access' : messengerRole === 'graduate' ? '· Graduates & mentees' : `· ${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
             </div>

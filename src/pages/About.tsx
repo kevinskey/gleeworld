@@ -60,7 +60,7 @@ export default function About() {
                   storied past with an innovative future.
                 </p>
                 <p>
-                  Here, current members access rehearsal materials and tour logistics, alumnae reconnect with 
+                  Here, current members access rehearsal materials and tour logistics, graduates reconnect with 
                   their musical sisterhood, and fans worldwide experience the magic that makes our choir extraordinary. 
                   GleeWorld is where tradition meets technology, where legacy lives digitally.
                 </p>
@@ -96,23 +96,23 @@ export default function About() {
                 </CardContent>
               </Card>
 
-              {/* Alumnae */}
+              {/* Graduates */}
               <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-blue-light/10 to-brand-blue-light/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <CardHeader className="text-center pb-6">
                   <div className="w-20 h-20 bg-brand-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                     <Heart className="w-10 h-10 text-brand-blue-dark" />
                   </div>
-                  <CardTitle className="text-2xl font-bold mb-4">👩🏽‍🎓 Alumnae</CardTitle>
+                  <CardTitle className="text-2xl font-bold mb-4">👩🏽‍🎓 Graduates</CardTitle>
                 </CardHeader>
                 <CardContent className="relative z-10">
                   <p className="text-foreground mb-6 leading-relaxed">
                     Reconnect with your musical legacy, share memories, mentor current members, and stay connected 
                     to the sisterhood that shaped your musical journey.
                   </p>
-                  <Link to="/alumnae">
+                  <Link to="/graduates">
                     <Button className="w-full">
-                      Alumnae Portal
+                      Graduates Portal
                     </Button>
                   </Link>
                 </CardContent>
@@ -205,7 +205,7 @@ export default function About() {
           <div className="max-w-5xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-8 font-['Bebas_Neue']">Enter Our World</h2>
             <p className="text-xl text-foreground mb-12 leading-relaxed max-w-3xl mx-auto">
-              Whether you're a first-year member, a Centennial alumna, or a supporter who believes in the power 
+              Whether you're a first-year member, a Centennial graduate, or a supporter who believes in the power 
               of music, we invite you to enter the world where tradition meets innovation, where voices unite 
               across generations, and where the magic of the Riverside Concert Choir lives forever.
             </p>

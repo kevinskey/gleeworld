@@ -11,9 +11,9 @@ import { ControlCenter } from '@/components/dashboard/ControlCenter';
 // it only existed to read from the legacy gw_hero_slides table. The monitor
 // view now falls back to the live GleeWorldLanding.)
 import { FanDashboardMonitor } from '@/components/admin/FanDashboardMonitor';
-import { AlumnaeDashboardMonitor } from '@/components/admin/AlumnaeDashboardMonitor';
+import { GraduatesDashboardMonitor } from '@/components/admin/GraduatesDashboardMonitor';
 import FanDashboard from '@/pages/FanDashboard';
-import AlumnaeLanding from '@/pages/AlumnaeLanding';
+import GraduatesLanding from '@/pages/GraduatesLanding';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 import { ModuleDisplay } from './ModuleDisplay';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -411,9 +411,9 @@ export const UnifiedDashboard = () => {
       return <FanDashboard />;
     }
 
-    // Alumna get Alumna content
-    if (role === 'alumna' || role === 'alumnae') {
-      return <AlumnaeLanding />;
+    // Graduate get Graduate content
+    if (role === 'graduate' || role === 'graduates') {
+      return <GraduatesLanding />;
     }
 
     // Admins get Glee Academy + admin tools

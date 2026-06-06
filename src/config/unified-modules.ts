@@ -33,8 +33,8 @@ import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
 import { CalendarManagementModule } from '@/components/modules/CalendarManagementModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
 
-import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
-import { AlumnaeManagementModule } from '@/components/modules/AlumnaeManagementModule';
+import { GraduatesPortalModule } from '@/components/modules/GraduatesPortalModule';
+import { GraduatesManagementModule } from '@/components/modules/GraduatesManagementModule';
 import { ContractsModule } from '@/components/modules/ContractsModule';
 
 import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
@@ -210,16 +210,16 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "user-management"
   },
   {
-    id: "alumnae-portal",
-    name: "alumnae-portal",
+    id: "graduates-portal",
+    name: "graduates-portal",
     title: "Alumni Portal",
     description: "Alumni engagement, mentorship, timeline, calendar, and connections",
     icon: Landmark,
     iconColor: "purple",
     category: "member-management",
     isActive: true,
-    component: AlumnaePortalModule,
-    dbFunctionName: "alumnae-portal"
+    component: GraduatesPortalModule,
+    dbFunctionName: "graduates-portal"
   },
   {
     id: "bowman-scholars",
@@ -425,17 +425,17 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     requiredRoles: ["admin", "super-admin", "instructor"]
   },
   {
-    id: "alumnae-management",
-    name: "alumnae-management",
+    id: "graduates-management",
+    name: "graduates-management",
     title: "Alumni Engagement",
     description: "Graduate engagement add-on — landing page builder, newsletters, interviews, spotlights, and intake forms",
     icon: Layout,
     iconColor: "rose",
-    category: "alumnae",
+    category: "graduates",
     isActive: true,
-    component: AlumnaeManagementModule,
-    fullPageComponent: AlumnaeManagementModule,
-    dbFunctionName: "alumnae-management",
+    component: GraduatesManagementModule,
+    fullPageComponent: GraduatesManagementModule,
+    dbFunctionName: "graduates-management",
     requiredRoles: ["admin", "super-admin"]
   },
   // Member Dossiers and Survey Module removed.
@@ -469,8 +469,8 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   },
 
   // ==================== ALUMNI MODULES ====================
-  // Consolidated: alumni-timeline + graduates-connection + alumna-calendar
-  // are now sub-sections inside the AlumnaePortalModule. Donations and
+  // Consolidated: alumni-timeline + graduates-connection + graduate-calendar
+  // are now sub-sections inside the GraduatesPortalModule. Donations and
   // networking-marketplace remain as standalone modules with distinct flows.
   {
     id: "donations",
@@ -479,7 +479,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Support the program with your contribution",
     icon: Heart,
     iconColor: "rose",
-    category: "alumnae",
+    category: "graduates",
     isActive: true,
     component: DonationsModule,
     dbFunctionName: "donations",
@@ -492,7 +492,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Job postings and professional connections",
     icon: Briefcase,
     iconColor: "blue",
-    category: "alumnae",
+    category: "graduates",
     isActive: true,
     component: NetworkingMarketplaceModule,
     dbFunctionName: "networking-marketplace",
@@ -565,12 +565,12 @@ export const UNIFIED_MODULE_CATEGORIES: UnifiedModuleCategory[] = [
     modules: UNIFIED_MODULES.filter(m => m.category === "education")
   },
   {
-    id: "alumnae",
+    id: "graduates",
     title: "Alumni Connection",
     description: "Alumni-specific features, events, networking, and community",
     icon: Heart,
     color: "rose",
-    modules: UNIFIED_MODULES.filter(m => m.category === "alumnae")
+    modules: UNIFIED_MODULES.filter(m => m.category === "graduates")
   }
 ];
 

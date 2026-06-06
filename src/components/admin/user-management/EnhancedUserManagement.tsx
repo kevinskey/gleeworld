@@ -303,10 +303,10 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                           Student
                         </div>
                       </SelectItem>
-                      <SelectItem value="alumna">
+                      <SelectItem value="graduate">
                         <div className="flex items-center gap-2">
                           <Crown className="h-4 w-4" />
-                          Alumna
+                          Graduate
                         </div>
                       </SelectItem>
                       <SelectItem value="vip">
@@ -519,7 +519,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                                 <SelectItem value="fan">Fan</SelectItem>
                                 <SelectItem value="auditioner">Auditioner</SelectItem>
                                 <SelectItem value="member">Member</SelectItem>
-                                <SelectItem value="alumna">Alumna</SelectItem>
+                                <SelectItem value="graduate">Graduate</SelectItem>
                                 <SelectItem value="vip">VIP</SelectItem>
                                 <SelectItem value="executive">Executive</SelectItem>
                                 <SelectItem value="admin">Admin</SelectItem>

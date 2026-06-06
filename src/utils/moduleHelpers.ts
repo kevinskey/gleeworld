@@ -29,7 +29,7 @@ export const STANDARD_MODULE_NAMES = {
   
   
   // Other modules
-  'alumnae-portal': 'Alumni Portal',
+  'graduates-portal': 'Alumni Portal',
   'merch-store': 'Merch Store',
   'wardrobe': 'Wardrobe',
   'service-management': 'Service Management',

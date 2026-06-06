@@ -115,7 +115,7 @@ export const useUsers = () => {
           } else {
             // Then prefer roles from user_roles in priority order
             if (assignedRoles.has('member')) effectiveRole = 'member';
-            else if (assignedRoles.has('alumna')) effectiveRole = 'alumna';
+            else if (assignedRoles.has('graduate')) effectiveRole = 'graduate';
             else if (assignedRoles.has('student')) effectiveRole = 'student';
             else if (assignedRoles.has('fan')) effectiveRole = 'fan';
             else if (assignedRoles.has('guest')) effectiveRole = 'guest';
@@ -147,7 +147,7 @@ export const useUsers = () => {
       console.log('useUsers: Transformed users:', { 
         count: transformedUsers.length,
         adminUsers: transformedUsers.filter(u => u.is_admin || u.is_super_admin).length,
-        alumnaeCount: transformedUsers.filter(u => u.role === 'alumna').length,
+        graduatesCount: transformedUsers.filter(u => u.role === 'graduate').length,
         sampleUsers: transformedUsers.slice(0, 3).map(u => ({ 
           id: u.id, 
           email: u.email, 

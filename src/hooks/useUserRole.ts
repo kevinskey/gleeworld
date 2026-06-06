@@ -113,7 +113,7 @@ export const useUserRole = () => {
 
   const isAlumna = (): boolean => {
     if (!profile) return false;
-    return profile.role === USER_ROLES.ALUMNA || profile.role === 'alumni' || profile.role === 'alumnae';
+    return profile.role === USER_ROLES.ALUMNA || profile.role === 'alumni' || profile.role === 'graduates';
   };
 
   const isAuditioner = (): boolean => {

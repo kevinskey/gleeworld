@@ -1,0 +1,296 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  Calendar, 
+  Bell, 
+  Music, 
+  BookOpen,
+  Clock,
+  Award,
+  Users,
+  Heart,
+  MapPin,
+  GraduationCap,
+  Star
+} from "lucide-react";
+import { MetalHeaderDashboard } from "@/components/shared/MetalHeaderDashboard";
+
+interface GraduatesDashboardProps {
+  user: {
+    id: string;
+    email: string;
+    full_name: string;
+    role: string;
+    exec_board_role?: string;
+    is_exec_board?: boolean;
+    created_at: string;
+  };
+}
+
+export const GraduatesDashboard = ({ user }: GraduatesDashboardProps) => {
+  // Use the MetalHeaderDashboard for consistent styling
+  return <MetalHeaderDashboard user={user} />;
+  const [graduatesData, setGraduatesData] = useState({
+    membershipYears: {
+      start: '2015',
+      end: '2019',
+      total: 4
+    },
+    performances: [],
+    achievements: [],
+    upcomingGraduatesEvents: [],
+    currentEvents: [],
+    networkingOpportunities: []
+  });
+
+  useEffect(() => {
+    const fetchGraduatesData = async () => {
+      try {
+        // Fetch upcoming events marked as graduates-related
+        const { data: graduatesEvents } = await supabase
+          .from('gw_events')
+          .select('id, title, start_date, location')
+          .gte('start_date', new Date().toISOString())
+          .or('title.ilike.%reunion%,title.ilike.%alumni%,title.ilike.%graduates%')
+          .order('start_date', { ascending: true })
+          .limit(5);
+
+        // Fetch current events (all upcoming events)
+        const { data: currentEvents } = await supabase
+          .from('gw_events')
+          .select('id, title, start_date, location')
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(3);
+
+        // Fetch audio stories for achievements/performances
+        const { data: stories } = await supabase
+          .from('alumnae_audio_stories')
+          .select('id, title, created_at, graduation_year')
+          .eq('user_id', user.id)
+          .eq('is_approved', true)
+          .order('created_at', { ascending: false });
+
+        setGraduatesData(prev => ({
+          ...prev,
+          upcomingGraduatesEvents: graduatesEvents?.map(event => ({
+            id: event.id,
+            title: event.title,
+            date: new Date(event.start_date).toISOString().split('T')[0],
+            time: new Date(event.start_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+            location: event.location || 'TBA',
+          })) || [],
+          currentEvents: currentEvents?.map(event => ({
+            id: event.id,
+            title: event.title,
+            date: new Date(event.start_date).toISOString().split('T')[0],
+            time: new Date(event.start_date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+            location: event.location || 'TBA',
+          })) || [],
+          performances: stories?.map(story => ({
+            id: story.id,
+            title: story.title,
+            date: new Date(story.created_at).toISOString().split('T')[0],
+            role: 'Graduates Member'
+          })) || [],
+          networkingOpportunities: [
+            {
+              id: '1',
+              title: 'Professional Networking Mixer',
+              date: '2024-02-10',
+              type: 'networking'
+            },
+            {
+              id: '2',
+              title: 'Career Mentorship Program',
+              date: 'Ongoing',
+              type: 'mentorship'
+            }
+          ]
+        }));
+      } catch (error) {
+        console.error('Error fetching graduates data:', error);
+      }
+    };
+
+    fetchGraduatesData();
+  }, [user.id]);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Membership Overview Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Membership History</CardTitle>
+          <GraduationCap className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{graduatesData.membershipYears.total} Years</div>
+          <p className="text-xs text-muted-foreground">
+            {graduatesData.membershipYears.start} - {graduatesData.membershipYears.end}
+          </p>
+          <div className="mt-2">
+            <Badge variant="outline" className="text-xs">
+              Graduates Member
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Achievements Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Achievements</CardTitle>
+          <Award className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{graduatesData.achievements.length}</div>
+          <p className="text-xs text-muted-foreground">Awards received</p>
+          <div className="mt-2 space-y-1">
+            {graduatesData.achievements.map((achievement) => (
+              <div key={achievement.id} className="text-xs">
+                <div className="font-medium">{achievement.title}</div>
+                <div className="text-muted-foreground">{achievement.year}</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Graduates Events Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Graduates Events</CardTitle>
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{graduatesData.upcomingGraduatesEvents.length}</div>
+          <p className="text-xs text-muted-foreground">Upcoming events</p>
+          <div className="mt-2 space-y-1">
+            {graduatesData.upcomingGraduatesEvents.map((event) => (
+              <div key={event.id} className="text-xs">
+                <div className="font-medium">{event.title}</div>
+                <div className="text-muted-foreground">{event.date}</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Current Glee Club Events Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Current Events</CardTitle>
+          <Music className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{graduatesData.currentEvents.length}</div>
+          <p className="text-xs text-muted-foreground">Available to attend</p>
+          <div className="mt-2 space-y-1">
+            {graduatesData.currentEvents.map((event) => (
+              <div key={event.id} className="text-xs">
+                <div className="font-medium">{event.title}</div>
+                <div className="text-muted-foreground">{event.date} at {event.time}</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Networking Opportunities Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Networking</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{graduatesData.networkingOpportunities.length}</div>
+          <p className="text-xs text-muted-foreground">Opportunities available</p>
+          <div className="mt-2 space-y-1">
+            {graduatesData.networkingOpportunities.map((opportunity) => (
+              <div key={opportunity.id} className="text-xs">
+                <div className="font-medium">{opportunity.title}</div>
+                <Badge variant="outline" className="text-xs mt-1">
+                  {opportunity.type}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Legacy Connection Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Legacy Connection</CardTitle>
+          <Heart className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span>Mentorship Status</span>
+              <Badge variant="outline">Active Mentor</Badge>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span>Alumni Network</span>
+              <Badge variant="outline">Connected</Badge>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span>Annual Giving</span>
+              <Badge variant="outline">Contributor</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Performance History Card */}
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle>Performance History</CardTitle>
+          <CardDescription>Notable performances during membership</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {graduatesData.performances.map((performance) => (
+              <div key={performance.id} className="flex items-center gap-3">
+                <Star className="h-5 w-5 text-yellow-500" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{performance.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {performance.role} • {performance.date}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Graduates Resources Card */}
+      <Card className="w-full overflow-hidden">
+        <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="mobile-text-xl font-medium">Graduates Resources</CardTitle>
+          <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        </CardHeader>
+        <CardContent className="card-compact">
+          <div className="section-spacing">
+            <div className="flex items-center justify-between mobile-text-lg">
+              <span>Directory Access</span>
+              <Badge variant="outline" className="text-xs">Available</Badge>
+            </div>
+            <div className="flex items-center justify-between mobile-text-lg">
+              <span>Event Archives</span>
+              <Badge variant="outline" className="text-xs">View Only</Badge>
+            </div>
+            <div className="flex items-center justify-between mobile-text-lg">
+              <span>Photo Library</span>
+              <Badge variant="outline" className="text-xs">Access</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

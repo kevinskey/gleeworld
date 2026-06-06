@@ -7,7 +7,7 @@
  * 3. Executive Board - Elected student officers with role-specific permissions
  * 4. Instructor - Course instructors, can manage their courses
  * 5. Student/Member - Active Glee Club members
- * 6. Alumna - Graduates with alumnae portal access
+ * 6. Graduate - Graduates with graduates portal access
  * 7. Auditioner - Applicants in audition process
  * 8. Fan - Supporters with limited access
  * 9. Visitor - Unauthenticated, public content only
@@ -18,7 +18,7 @@ export const USER_ROLES = {
   FAN: 'fan',
   AUDITIONER: 'auditioner',
   STUDENT: 'student',
-  ALUMNA: 'alumna',
+  ALUMNA: 'graduate',
   MEMBER: 'member', // Alias for student
   INSTRUCTOR: 'instructor',
   EXECUTIVE: 'executive',
@@ -63,8 +63,8 @@ export const ROLE_DESCRIPTIONS: Record<UserRole, { title: string; description: s
     level: 40,
   },
   [USER_ROLES.ALUMNA]: {
-    title: 'Alumna',
-    description: 'Graduates. Access to alumnae portal, mentoring, reunion RSVPs.',
+    title: 'Graduate',
+    description: 'Graduates. Access to graduates portal, mentoring, reunion RSVPs.',
     level: 30,
   },
   [USER_ROLES.AUDITIONER]: {

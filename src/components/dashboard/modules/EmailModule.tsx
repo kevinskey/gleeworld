@@ -468,7 +468,7 @@ export const EmailModule = () => {
                           </SelectTrigger>
                           <SelectContent className="z-50 bg-background border shadow-lg max-h-[300px] overflow-y-auto">
                             <div className="p-2 text-xs font-medium text-muted-foreground border-b">Individual Users</div>
-                            {users.filter(u => ['fan', 'member', 'alumna', 'admin', 'super-admin'].includes(u.role)).map((user) => (
+                            {users.filter(u => ['fan', 'member', 'graduate', 'admin', 'super-admin'].includes(u.role)).map((user) => (
                               <SelectItem 
                                 key={user.id} 
                                 value={user.id}

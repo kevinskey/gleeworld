@@ -46,7 +46,7 @@ export default function DocsArchitecture() {
                     </h4>
                     <ul className="mt-2 space-y-1 text-sm">
                       <li>• Boolean TA flags from profiles</li>
-                      <li>• <code>min_role_level</code> (broken for fan/alumna)</li>
+                      <li>• <code>min_role_level</code> (broken for fan/graduate)</li>
                       <li>• Global-only permissions</li>
                     </ul>
                   </div>
@@ -109,7 +109,7 @@ export default function DocsArchitecture() {
                         <tr className="border-t"><td className="p-2"><code>super_admin</code></td><td className="p-2">Full system access</td></tr>
                         <tr className="border-t"><td className="p-2"><code>admin</code></td><td className="p-2">Administrative access</td></tr>
                         <tr className="border-t"><td className="p-2"><code>student</code></td><td className="p-2">Active member/student</td></tr>
-                        <tr className="border-t"><td className="p-2"><code>alumna</code></td><td className="p-2">Graduated member</td></tr>
+                        <tr className="border-t"><td className="p-2"><code>graduate</code></td><td className="p-2">Graduated member</td></tr>
                         <tr className="border-t"><td className="p-2"><code>fan</code></td><td className="p-2">Subscriber (default)</td></tr>
                       </tbody>
                     </table>
@@ -238,7 +238,7 @@ CREATE TABLE course_enrollments (
                 <pre className="text-sm bg-muted p-4 rounded overflow-x-auto">
 {`CREATE TABLE role_permissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  role_name TEXT NOT NULL,        -- fan|student|alumna|admin|super_admin|teaching_assistant
+  role_name TEXT NOT NULL,        -- fan|student|graduate|admin|super_admin|teaching_assistant
   sub_role TEXT,                  -- grader|treasurer|tour_manager|etc
   module_id TEXT NOT NULL,
   scope_type TEXT DEFAULT 'global',  -- global|offering
@@ -281,8 +281,8 @@ CREATE TABLE course_enrollments (
                     {[
                       { role: 'super_admin', desc: 'Full system access', color: 'bg-red-500' },
                       { role: 'admin', desc: 'Administrative access', color: 'bg-orange-500' },
-                      { role: 'student', desc: 'Active member (cannot be alumna)', color: 'bg-blue-500' },
-                      { role: 'alumna', desc: 'Graduated (cannot be student)', color: 'bg-purple-500' },
+                      { role: 'student', desc: 'Active member (cannot be graduate)', color: 'bg-blue-500' },
+                      { role: 'graduate', desc: 'Graduated (cannot be student)', color: 'bg-purple-500' },
                       { role: 'fan', desc: 'Subscriber (default)', color: 'bg-green-500' },
                     ].map(({ role, desc, color }) => (
                       <div key={role} className="flex items-center gap-3 p-2 border rounded">

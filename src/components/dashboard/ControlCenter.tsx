@@ -137,11 +137,11 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
     'usage-analytics': 'analytics',
     'wardrobe': 'wardrobe',
     'sight-reading': 'sight_reading',
-    'alumnae-management': 'alumni',
+    'graduates-management': 'alumni',
     'ai-hub': 'ai_hub',
     'concert-ticket-requests': 'tickets',
     'appointments-hub': 'appointments',
-    'alumnae-portal': 'alumni_portal',
+    'graduates-portal': 'alumni_portal',
     'merch-store': 'merch',
     'feed-control': 'feeds',
   };

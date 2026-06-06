@@ -45,7 +45,7 @@ const getPageTitle = (pathname: string): string => {
     '/dashboard': 'Dashboard',
     '/login': 'Login',
     '/signup': 'Sign Up',
-    '/alumnae': 'Alumnae Portal',
+    '/graduates': 'Graduates Portal',
     '/academy': 'Glee Academy',
     '/mus-070': 'MUS 070',
     '/mus-240': 'MUS 240',
