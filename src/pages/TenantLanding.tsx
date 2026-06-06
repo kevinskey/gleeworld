@@ -61,17 +61,26 @@ export default function TenantLanding() {
 
   const tenantSlug = (window as any).__TENANT_CONFIG__?.tenant;
 
-  // Hero slides for this tenant
+  // Hero slides for this tenant — read from the universal-slider system, which is
+  // what the Hero Manager in /control-center edits. RLS keeps this scoped to the
+  // current tenant, so no extra tenant filter is needed.
   const { data: slides = [] } = useQuery<HeroSlide[]>({
     queryKey: ['public-hero-slides', tenantSlug],
     queryFn: async () => {
-      let q = supabase
-        .from('gw_hero_slides')
-        .select('id, image_url, title, description, display_order, gw_tenants!inner(slug)')
+      const { data: slider } = await supabase
+        .from('gw_universal_sliders')
+        .select('id')
+        .eq('placement_key', 'homepage_hero')
         .eq('is_active', true)
-        .order('display_order', { ascending: true });
-      if (tenantSlug) q = q.eq('gw_tenants.slug', tenantSlug);
-      const { data } = await q.limit(4);
+        .maybeSingle();
+      if (!slider) return [];
+      const { data } = await supabase
+        .from('gw_universal_slider_slides')
+        .select('id, image_url, title, description, display_order, image_position_x, image_position_y')
+        .eq('slider_id', slider.id)
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .limit(4);
       return (data as any[]) ?? [];
     },
     staleTime: 10_000,            // re-fetch after 10 sec, not the React Query default 5 min
