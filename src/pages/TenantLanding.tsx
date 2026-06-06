@@ -476,21 +476,23 @@ function HeroSlideRender({
       {!slide?.image_url && <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--brand-navy))]/80 via-[hsl(var(--brand-navy))]/60 to-transparent" />}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 md:py-36">
         <div className="max-w-2xl">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 leading-tight">
-            <span
-              className="bg-black/40 rounded-lg px-3 py-1"
-              style={{
-                WebkitBoxDecorationBreak: 'clone',
-                boxDecorationBreak: 'clone',
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
-                textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.9)',
-              } as any}
-            >
-              {slide?.title || fallbackTitle}
-            </span>
-          </h1>
-          {(slide?.description || fallbackBody) && (
+          {(slide?.title || (!slide?.image_url && fallbackTitle)) && (
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 leading-tight">
+              <span
+                className="bg-black/40 rounded-lg px-3 py-1"
+                style={{
+                  WebkitBoxDecorationBreak: 'clone',
+                  boxDecorationBreak: 'clone',
+                  backdropFilter: 'blur(4px)',
+                  WebkitBackdropFilter: 'blur(4px)',
+                  textShadow: '0 2px 12px rgba(0,0,0,0.6), 0 0 1px rgba(0,0,0,0.9)',
+                } as any}
+              >
+                {slide?.title || fallbackTitle}
+              </span>
+            </h1>
+          )}
+          {(slide?.description || (!slide?.image_url && fallbackBody)) && (
             <p className="text-lg sm:text-xl text-white max-w-xl leading-relaxed">
               <span
                 className="bg-black/40 rounded-md px-2 py-1"

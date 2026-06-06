@@ -89,7 +89,6 @@ export const SimpleHeroManager: React.FC<SimpleHeroManagerProps> = ({
       .insert({
         slider_id: sliderId,
         slide_type: 'image',
-        title: 'New slide',
         display_order: nextOrder,
         is_active: true,
       })
