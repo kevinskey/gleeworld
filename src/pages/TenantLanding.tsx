@@ -463,7 +463,7 @@ function HeroSlideRender({
   return (
     <section className={`relative overflow-hidden bg-[hsl(var(--brand-navy))] text-white ${className}`}>
       {slide?.image_url ? (
-        <img src={heroSrc(slide.image_url) ?? slide.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={heroSrc(slide.image_url) ?? slide.image_url} alt="" className="absolute inset-0 w-full h-full object-contain" />
       ) : (
         <div
           className="absolute inset-0 opacity-70"

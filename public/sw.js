@@ -2,7 +2,7 @@
 // Version: 12.0 - May 2026 - Radio.co purge + role redirect refactor.
 // Bump forces any browser holding the v11 bundle (which still imported the
 // deleted radio hooks) to flush and load the new index-*.js.
-const CACHE_VERSION = 'v33.9';
+const CACHE_VERSION = 'v33.10';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;

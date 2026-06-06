@@ -642,7 +642,7 @@ function AppleHero() {
           src={slide.imageUrl}
           alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
           className="w-full h-auto block"
-          style={{ objectFit: 'cover', objectPosition }}
+          style={{ objectFit: 'contain', objectPosition }}
         />
       ) : (
         // No hero configured — just the gradient backdrop with the CTA strip.
