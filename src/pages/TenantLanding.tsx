@@ -466,14 +466,14 @@ function HeroSlideRender({
           <img
             src={(slide.mobile_image_url || slide.image_url) ?? ''}
             alt={slide.title ?? ''}
-            className="absolute inset-0 w-full h-full object-contain block sm:hidden"
+            className="absolute inset-0 w-full h-full object-cover block sm:hidden"
             style={{ objectPosition: `${slide.image_position_x || 'center'} ${slide.image_position_y || 'center'}` }}
           />
           {/* Desktop ≥640px */}
           <img
             src={slide.image_url}
             alt={slide.title ?? ''}
-            className="absolute inset-0 w-full h-full object-contain hidden sm:block"
+            className="absolute inset-0 w-full h-full object-cover hidden sm:block"
             style={{ objectPosition: `${slide.image_position_x || 'center'} ${slide.image_position_y || 'center'}` }}
           />
         </>

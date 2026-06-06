@@ -312,7 +312,7 @@ const SlideMedia: React.FC<SlideMediaProps> = ({ slide, fallbackSrc, isPlaying }
             <img
               src={slide.imageUrl || defaultImage}
               alt={slide.title || 'Hero slide'}
-              className="hidden md:block absolute inset-0 w-full h-full object-contain brightness-95"
+              className="hidden md:block absolute inset-0 w-full h-full object-cover brightness-95"
               style={{ objectPosition }}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = defaultImage;
@@ -322,7 +322,7 @@ const SlideMedia: React.FC<SlideMediaProps> = ({ slide, fallbackSrc, isPlaying }
             <img
               src={slide.ipadImageUrl || slide.imageUrl || defaultImage}
               alt={slide.title || 'Hero slide'}
-              className="hidden sm:block md:hidden absolute inset-0 w-full h-full object-contain brightness-95"
+              className="hidden sm:block md:hidden absolute inset-0 w-full h-full object-cover brightness-95"
               style={{ objectPosition }}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = defaultImage;
@@ -332,7 +332,7 @@ const SlideMedia: React.FC<SlideMediaProps> = ({ slide, fallbackSrc, isPlaying }
             <img
               src={slide.mobileImageUrl || slide.imageUrl || defaultImage}
               alt={slide.title || 'Hero slide'}
-              className="block sm:hidden absolute inset-0 w-full h-full object-contain brightness-95"
+              className="block sm:hidden absolute inset-0 w-full h-full object-cover brightness-95"
               style={{ objectPosition }}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = defaultImage;
