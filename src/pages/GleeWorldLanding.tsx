@@ -629,15 +629,33 @@ function AppleNav() {
 }
 
 function AppleHero() {
+  // Pull the first active slide from the homepage_hero slider so this hero is
+  // controlled by the admin's Hero Manager — not a hardcoded image.
+  const { data: slides = [] } = useUniversalHeroSlides("homepage_hero");
+  const slide = slides[0];
+  const objectPosition = `${slide?.imagePositionX || 'center'} ${slide?.imagePositionY || 'center'}`;
+
   return (
-    <section className="relative bg-[#0a0518]">
-      {/* Full-bleed hero illustration (logo + headline + dashboard mock baked in) */}
-      <img
-        src="/lovable-uploads/hero-v3.jpg"
-        alt="GleeWorld — Run your music program. Beautifully."
-        className="w-full h-auto block"
-        style={{ objectFit: 'cover' }}
-      />
+    <section className="relative bg-[#0a0518] min-h-[40vh] sm:min-h-[60vh] flex items-center justify-center">
+      {slide?.imageUrl ? (
+        <img
+          src={slide.imageUrl}
+          alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
+          className="w-full h-auto block"
+          style={{ objectFit: 'cover', objectPosition }}
+        />
+      ) : (
+        // No hero configured — just the gradient backdrop with the CTA strip.
+        <div
+          className="w-full aspect-[16/8] sm:aspect-[16/7] flex items-center justify-center"
+          style={{ background: 'radial-gradient(circle at 50% 30%, #1a0f3a 0%, #0a0518 70%)' }}
+        >
+          <div className="text-center text-white/70 px-6">
+            <p className="text-sm sm:text-base uppercase tracking-widest opacity-60">No hero configured</p>
+            <p className="text-lg sm:text-2xl font-semibold mt-2">Run your music program. Beautifully.</p>
+          </div>
+        </div>
+      )}
 
       {/* CTA strip at bottom over a dark gradient */}
       <div
