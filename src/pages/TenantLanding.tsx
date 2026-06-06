@@ -14,9 +14,12 @@ import { useRef } from 'react';
 interface HeroSlide {
   id: string;
   image_url: string | null;
+  mobile_image_url: string | null;
   title: string | null;
   description: string | null;
   display_order: number;
+  image_position_x: string | null;
+  image_position_y: string | null;
 }
 
 interface LandingSection {
@@ -27,14 +30,9 @@ interface LandingSection {
   config: Record<string, any>;
 }
 
-/** Pipe a Supabase Storage URL through imgproxy at 16:9 cover. Non-storage URLs pass through unchanged. */
-function heroSrc(url: string | null | undefined, width = 1920, height = 1080): string | undefined {
-  if (!url) return undefined;
-  if (url.includes('/storage/v1/object/public/')) {
-    return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')
-      + `?width=${width}&height=${height}&resize=cover&quality=85`;
-  }
-  return url;
+/** Pass-through. Heroes use object-contain on the <img>, so let the browser scale; no server-side crop. */
+function heroSrc(url: string | null | undefined): string | undefined {
+  return url ?? undefined;
 }
 
 function youtubeEmbedSrc(url: string): string | null {
@@ -76,7 +74,7 @@ export default function TenantLanding() {
       if (!slider) return [];
       const { data } = await supabase
         .from('gw_universal_slider_slides')
-        .select('id, image_url, title, description, display_order, image_position_x, image_position_y')
+        .select('id, image_url, mobile_image_url, title, description, display_order, image_position_x, image_position_y')
         .eq('slider_id', slider.id)
         .eq('is_active', true)
         .order('display_order', { ascending: true })
@@ -169,7 +167,7 @@ export default function TenantLanding() {
           autoplaySec={heroSpeedSec}
         />
       ) : heroMode === 'slider-fade' && activeSlides.length > 0 ? (
-        <section className="relative bg-[hsl(var(--brand-navy))] text-white overflow-hidden" style={{ minHeight: '60vh' }}>
+        <section className="relative bg-[hsl(var(--brand-navy))] text-white overflow-hidden min-h-screen">
           {activeSlides.map((s, i) => (
             <div key={s.id} className={`absolute inset-0 transition-opacity duration-700 ${i === fadeIndex ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'}`}>
               <HeroSlideRender slide={s} fallbackTitle={`Welcome to ${orgName}`} fallbackBody={tagline || ''} accent={accent} className="h-full" />
@@ -463,7 +461,22 @@ function HeroSlideRender({
   return (
     <section className={`relative overflow-hidden bg-[hsl(var(--brand-navy))] text-white ${className}`}>
       {slide?.image_url ? (
-        <img src={heroSrc(slide.image_url) ?? slide.image_url} alt="" className="absolute inset-0 w-full h-full object-contain" />
+        <>
+          {/* Mobile <640px: prefer mobile_image_url, fall back to desktop */}
+          <img
+            src={(slide.mobile_image_url || slide.image_url) ?? ''}
+            alt={slide.title ?? ''}
+            className="absolute inset-0 w-full h-full object-contain block sm:hidden"
+            style={{ objectPosition: `${slide.image_position_x || 'center'} ${slide.image_position_y || 'center'}` }}
+          />
+          {/* Desktop ≥640px */}
+          <img
+            src={slide.image_url}
+            alt={slide.title ?? ''}
+            className="absolute inset-0 w-full h-full object-contain hidden sm:block"
+            style={{ objectPosition: `${slide.image_position_x || 'center'} ${slide.image_position_y || 'center'}` }}
+          />
+        </>
       ) : (
         <div
           className="absolute inset-0 opacity-70"

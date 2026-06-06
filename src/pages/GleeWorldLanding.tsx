@@ -164,7 +164,7 @@ export const GleeWorldLanding = () => {
           <div className="w-full">
             <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
               {adaptedSlides.length > 0 ? (
-                <div className="aspect-[16/9] md:aspect-[16/8] lg:aspect-[16/7] flex items-center justify-center">
+                <div className="min-h-screen flex items-center justify-center">
                   <HeroSlider
                     slides={adaptedSlides}
                     defaultDurationMs={6000}
@@ -175,7 +175,7 @@ export const GleeWorldLanding = () => {
                   />
                 </div>
               ) : (
-                <div className="aspect-[16/9] md:aspect-[16/8] lg:aspect-[16/7] w-full bg-muted flex items-center justify-center">
+                <div className="min-h-screen w-full bg-muted flex items-center justify-center">
                   <div className="text-center p-4">
                     <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mx-auto mb-3" />
                     <p className="text-muted-foreground text-sm sm:text-base">No hero slides configured</p>
@@ -636,7 +636,7 @@ function AppleHero() {
   const objectPosition = `${slide?.imagePositionX || 'center'} ${slide?.imagePositionY || 'center'}`;
 
   return (
-    <section className="relative bg-[#0a0518] min-h-[40vh] sm:min-h-[60vh] flex items-center justify-center">
+    <section className="relative bg-[#0a0518] min-h-screen flex items-center justify-center">
       {slide?.imageUrl ? (
         <img
           src={slide.imageUrl}
