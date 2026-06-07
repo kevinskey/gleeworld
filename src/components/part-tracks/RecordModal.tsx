@@ -1,12 +1,40 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Mic, Square, RotateCcw, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Metronome } from '@/components/part-tracks/Metronome';
 
 const MAX_SECONDS = 600; // 10 minutes
 
-type Phase = 'idle' | 'recording' | 'encoding' | 'preview';
+type Phase = 'idle' | 'countin' | 'recording' | 'encoding' | 'preview';
+
+// Persist click-track preferences so the singer doesn't re-enter them each take.
+const SETTINGS_KEY = 'gw_part_tracks_click_settings_v1';
+type ClickSettings = {
+  bpm: number;
+  beatsPerMeasure: number;
+  countInMeasures: number;
+  clickDuringRecord: boolean;
+};
+const DEFAULT_SETTINGS: ClickSettings = {
+  bpm: 100,
+  beatsPerMeasure: 4,
+  countInMeasures: 1,
+  clickDuringRecord: false,
+};
+const loadSettings = (): ClickSettings => {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+  } catch {}
+  return DEFAULT_SETTINGS;
+};
+const saveSettings = (s: ClickSettings) => {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch {}
+};
 
 interface RecordModalProps {
   open: boolean;
@@ -20,6 +48,8 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   const [elapsed, setElapsed] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState<ClickSettings>(() => loadSettings());
+  const [countInBeat, setCountInBeat] = useState(0);
 
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -31,10 +61,18 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   const mp3BlobRef = useRef<Blob | null>(null);
+  const metronomeRef = useRef<Metronome | null>(null);
+  const cancelCountInRef = useRef<boolean>(false);
+
+  // Persist settings whenever they change.
+  useEffect(() => { saveSettings(settings); }, [settings]);
 
   const stopAll = () => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
+    metronomeRef.current?.stop();
+    metronomeRef.current = null;
+    cancelCountInRef.current = true;
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -57,6 +95,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
       setPreviewUrl(null);
     }
     setElapsed(0);
+    setCountInBeat(0);
     setPhase('idle');
   };
 
@@ -108,6 +147,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   };
 
   const startRecording = async () => {
+    cancelCountInRef.current = false;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -120,6 +160,9 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
 
       const audioCtx = new AudioContext();
       audioCtxRef.current = audioCtx;
+      // Some browsers start AudioContext suspended; explicit resume avoids
+      // the metronome clicks getting clipped on the first user gesture.
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
       const source = audioCtx.createMediaStreamSource(stream);
       sourceRef.current = source;
       const analyser = audioCtx.createAnalyser();
@@ -127,6 +170,21 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
       source.connect(analyser);
       analyserRef.current = analyser;
 
+      // ───── Count-in ─────
+      if (settings.countInMeasures > 0) {
+        const metronome = new Metronome(audioCtx, settings.bpm, settings.beatsPerMeasure);
+        metronomeRef.current = metronome;
+        setPhase('countin');
+        setCountInBeat(0);
+        const totalBeats = settings.countInMeasures * settings.beatsPerMeasure;
+        await metronome.start(totalBeats, (ev) => {
+          setCountInBeat(ev.beatInMeasure + 1);
+        });
+        metronomeRef.current = null;
+        if (cancelCountInRef.current) return; // user closed the dialog mid-count
+      }
+
+      // ───── Recording starts ─────
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : MediaRecorder.isTypeSupported('audio/mp4')
@@ -145,8 +203,18 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
       startTimeRef.current = performance.now();
       setPhase('recording');
       drawWaveform();
+
+      // Optional continuous click during recording. Resumes seamlessly after
+      // the count-in finishes (Web Audio scheduler keeps the beat aligned).
+      if (settings.clickDuringRecord) {
+        const metronome = new Metronome(audioCtx, settings.bpm, settings.beatsPerMeasure);
+        metronome.setVolume(0.35); // softer during recording
+        metronomeRef.current = metronome;
+        metronome.start(); // runs until stop()
+      }
     } catch (err: any) {
       toast.error(`Mic access failed: ${err?.message ?? 'unknown'}`);
+      reset();
     }
   };
 
@@ -234,13 +302,87 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
 
         <div className="space-y-4">
           {phase === 'idle' && (
-            <div className="flex flex-col items-center gap-4 py-6">
+            <div className="space-y-5 py-2">
               <p className="text-sm text-muted-foreground text-center">
-                Click record to start. Max 10 minutes. Mic permission required.
+                Max 10 minutes. Mic permission required. Headphones recommended so the click doesn't bleed into the recording.
               </p>
-              <Button onClick={startRecording} size="lg" className="rounded-full h-16 w-16 p-0">
-                <Mic className="h-7 w-7" />
-              </Button>
+
+              {/* Click track settings */}
+              <div className="rounded-md border bg-muted/40 p-3 space-y-3">
+                <Label className="text-xs font-semibold uppercase tracking-wide">Click track</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Tempo (BPM)</Label>
+                    <Input
+                      type="number"
+                      min={40}
+                      max={240}
+                      value={settings.bpm}
+                      onChange={e => setSettings(s => ({ ...s, bpm: Math.max(40, Math.min(240, Number(e.target.value) || 0)) }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Time signature</Label>
+                    <select
+                      value={settings.beatsPerMeasure}
+                      onChange={e => setSettings(s => ({ ...s, beatsPerMeasure: Number(e.target.value) }))}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value={2}>2/4</option>
+                      <option value={3}>3/4</option>
+                      <option value={4}>4/4</option>
+                      <option value={6}>6/8</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Count-in measures</Label>
+                    <select
+                      value={settings.countInMeasures}
+                      onChange={e => setSettings(s => ({ ...s, countInMeasures: Number(e.target.value) }))}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <option value={0}>None</option>
+                      <option value={1}>1 measure</option>
+                      <option value={2}>2 measures</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1 flex flex-col">
+                    <Label className="text-xs">Click during recording</Label>
+                    <label className="inline-flex items-center gap-2 mt-1.5 h-10 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.clickDuringRecord}
+                        onChange={e => setSettings(s => ({ ...s, clickDuringRecord: e.target.checked }))}
+                        className="h-4 w-4 accent-violet-600"
+                      />
+                      <span>Keep clicking while I sing</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <Button onClick={startRecording} size="lg" className="rounded-full h-16 w-16 p-0">
+                  <Mic className="h-7 w-7" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {phase === 'countin' && (
+            <div className="flex flex-col items-center gap-4 py-10">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Count-in · {settings.bpm} BPM · {settings.beatsPerMeasure}/4
+              </p>
+              <div
+                key={countInBeat}
+                className="font-bold text-7xl sm:text-8xl tabular-nums text-violet-600 dark:text-violet-300 animate-pulse"
+              >
+                {countInBeat || '—'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Recording starts at the next downbeat.
+              </p>
             </div>
           )}
 
