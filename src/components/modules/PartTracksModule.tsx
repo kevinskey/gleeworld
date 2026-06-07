@@ -2,12 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Upload, Mic, Music } from 'lucide-react';
 import { toast } from 'sonner';
+import { RecordModal } from '@/components/part-tracks/RecordModal';
+import { PartMixer } from '@/components/part-tracks/PartMixer';
 
 interface PartTrack {
   id: string;
@@ -30,6 +31,11 @@ export const PartTracksModule: React.FC = () => {
   const [newPiece, setNewPiece] = useState('');
   const [newPart, setNewPart] = useState('');
   const [newFile, setNewFile] = useState<File | null>(null);
+
+  // Recording dialog state. Either targets an existing track (replaceFor) or a
+  // new track currently being composed in the "Add a part track" form (null).
+  const [recordOpen, setRecordOpen] = useState(false);
+  const [replaceFor, setReplaceFor] = useState<PartTrack | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -57,10 +63,9 @@ export const PartTracksModule: React.FC = () => {
     return Array.from(map.entries());
   }, [tracks]);
 
-  const uploadAudio = async (file: File): Promise<string | null> => {
-    const ext = file.name.split('.').pop() ?? 'mp3';
+  const uploadBlob = async (blob: Blob, ext: string): Promise<string | null> => {
     const path = `part-tracks/${crypto.randomUUID()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('user-files').upload(path, file, { upsert: false });
+    const { error: upErr } = await supabase.storage.from('user-files').upload(path, blob, { upsert: false, contentType: blob.type });
     if (upErr) {
       toast.error(`Upload failed: ${upErr.message}`);
       return null;
@@ -69,24 +74,26 @@ export const PartTracksModule: React.FC = () => {
     return pub.publicUrl;
   };
 
-  const addTrack = async () => {
+  const uploadFile = (file: File) => uploadBlob(file, file.name.split('.').pop() ?? 'mp3');
+
+  const addTrack = async (audioUrl: string | null = null) => {
     if (!newPiece.trim() || !newPart.trim()) {
       toast.error('Piece title and voice part are required');
       return;
     }
     setAdding(true);
     try {
-      let audioUrl: string | null = null;
-      if (newFile) {
-        audioUrl = await uploadAudio(newFile);
-        if (newFile && !audioUrl) return;
+      let finalUrl = audioUrl;
+      if (!finalUrl && newFile) {
+        finalUrl = await uploadFile(newFile);
+        if (newFile && !finalUrl) return;
       }
       const { data, error } = await supabase
         .from('gw_part_tracks')
         .insert({
           piece_title: newPiece.trim(),
           voice_part: newPart.trim(),
-          audio_url: audioUrl,
+          audio_url: finalUrl,
           is_active: true,
         })
         .select('id, piece_title, voice_part, audio_url, notes, is_active, display_order, created_at')
@@ -117,7 +124,7 @@ export const PartTracksModule: React.FC = () => {
   const replaceAudio = async (track: PartTrack, file: File) => {
     setUploadingId(track.id);
     try {
-      const url = await uploadAudio(file);
+      const url = await uploadFile(file);
       if (url) await updateTrack(track.id, { audio_url: url });
     } finally {
       setUploadingId(null);
@@ -135,6 +142,24 @@ export const PartTracksModule: React.FC = () => {
     toast.success('Deleted');
   };
 
+  const onRecordSave = async (mp3: Blob) => {
+    if (replaceFor) {
+      setUploadingId(replaceFor.id);
+      try {
+        const url = await uploadBlob(mp3, 'mp3');
+        if (url) await updateTrack(replaceFor.id, { audio_url: url });
+        toast.success('Recording saved');
+      } finally {
+        setUploadingId(null);
+        setReplaceFor(null);
+      }
+    } else {
+      // Save into the "Add a part track" form's new row.
+      const url = await uploadBlob(mp3, 'mp3');
+      if (url) await addTrack(url);
+    }
+  };
+
   if (loading) return <div className="p-6 text-muted-foreground">Loading part tracks…</div>;
 
   return (
@@ -146,6 +171,7 @@ export const PartTracksModule: React.FC = () => {
         </h2>
         <p className="text-sm text-muted-foreground">
           MP3 practice tracks for singers, organized by piece and voice part.
+          Listeners can mute or solo any part; the full mix plays in sync.
         </p>
       </div>
 
@@ -173,7 +199,7 @@ export const PartTracksModule: React.FC = () => {
             </datalist>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">MP3 file</Label>
+            <Label className="text-xs">MP3 file (or use Record →)</Label>
             <Input
               type="file"
               accept="audio/*"
@@ -181,8 +207,23 @@ export const PartTracksModule: React.FC = () => {
             />
           </div>
         </div>
-        <div className="flex justify-end">
-          <Button onClick={addTrack} disabled={adding} size="sm">
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!newPiece.trim() || !newPart.trim()) {
+                toast.error('Enter piece title and voice part first');
+                return;
+              }
+              setReplaceFor(null);
+              setRecordOpen(true);
+            }}
+          >
+            <Mic className="h-4 w-4 mr-2" />
+            Record
+          </Button>
+          <Button onClick={() => addTrack()} disabled={adding} size="sm">
             <Plus className="h-4 w-4 mr-2" />
             {adding ? 'Adding…' : 'Add part track'}
           </Button>
@@ -196,55 +237,72 @@ export const PartTracksModule: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {grouped.map(([piece, list]) => (
-            <Card key={piece} className="p-4">
-              <div className="flex items-center gap-2 mb-3">
+            <Card key={piece} className="p-4 space-y-4">
+              <div className="flex items-center gap-2">
                 <Music className="h-4 w-4 text-muted-foreground" />
                 <h3 className="font-semibold">{piece}</h3>
-                <span className="text-xs text-muted-foreground">· {list.length} part{list.length === 1 ? '' : 's'}</span>
+                <span className="text-xs text-muted-foreground">
+                  · {list.length} part{list.length === 1 ? '' : 's'}
+                </span>
               </div>
-              <div className="space-y-3">
+
+              {/* Listener: multi-track mixer for this piece */}
+              <PartMixer pieceTitle={piece} tracks={list} />
+
+              {/* Director: per-track admin row */}
+              <div className="space-y-2">
                 {list.map(track => (
-                  <div key={track.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded border bg-muted/30">
-                    <div className="flex items-center gap-2 sm:w-24">
-                      <Badge variant="secondary">{track.voice_part}</Badge>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {track.audio_url ? (
-                        <audio
-                          controls
-                          src={track.audio_url}
-                          className="w-full max-w-xl h-10"
-                          preload="none"
-                        />
-                      ) : (
-                        <p className="text-sm text-muted-foreground italic">No audio uploaded</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <label>
-                        <input
-                          type="file"
-                          accept="audio/*"
-                          className="sr-only"
-                          onChange={e => {
-                            const f = e.target.files?.[0];
-                            if (f) replaceAudio(track, f);
-                            e.target.value = '';
-                          }}
-                        />
-                        <Button asChild size="icon" variant="ghost" disabled={uploadingId === track.id} aria-label="Replace audio">
-                          <span><Upload className="h-4 w-4" /></span>
-                        </Button>
-                      </label>
+                  <div key={track.id} className="flex items-center gap-2 p-2 rounded border bg-muted/30">
+                    <Badge variant="secondary" className="w-16 justify-center">
+                      {track.voice_part}
+                    </Badge>
+                    <span className="flex-1 text-xs text-muted-foreground truncate">
+                      {track.audio_url ? track.audio_url.split('/').pop() : 'No audio'}
+                    </span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => {
+                        setReplaceFor(track);
+                        setRecordOpen(true);
+                      }}
+                      disabled={uploadingId === track.id}
+                      aria-label="Record replacement"
+                      title="Record"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </Button>
+                    <label>
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        className="sr-only"
+                        onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (f) replaceAudio(track, f);
+                          e.target.value = '';
+                        }}
+                      />
                       <Button
+                        asChild
                         size="icon"
                         variant="ghost"
-                        onClick={() => deleteTrack(track.id)}
-                        aria-label="Delete"
+                        disabled={uploadingId === track.id}
+                        aria-label="Upload replacement"
+                        title="Upload"
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span><Upload className="h-4 w-4" /></span>
                       </Button>
-                    </div>
+                    </label>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteTrack(track.id)}
+                      aria-label="Delete"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -252,6 +310,15 @@ export const PartTracksModule: React.FC = () => {
           ))}
         </div>
       )}
+
+      <RecordModal
+        open={recordOpen}
+        onClose={() => { setRecordOpen(false); setReplaceFor(null); }}
+        onSave={onRecordSave}
+        title={replaceFor
+          ? `Record ${replaceFor.voice_part} — ${replaceFor.piece_title}`
+          : `Record ${newPart || 'voice part'} — ${newPiece || 'new piece'}`}
+      />
     </div>
   );
 };
