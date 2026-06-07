@@ -44,11 +44,24 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
   const refs = useRef<Map<string, HTMLAudioElement>>(new Map());
   const rafRef = useRef<number | null>(null);
 
-  // Keep enabled set in sync if tracks change.
+  // Track which IDs we've ever seen, so newly arriving tracks (e.g. a fresh
+  // upload while the mixer is mounted) start enabled by default — but a
+  // track the user explicitly muted stays muted across re-renders.
+  const seenIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     setEnabled(prev => {
-      const next = new Set<string>();
-      for (const t of playable) if (prev.has(t.id) || prev.size === 0) next.add(t.id);
+      const next = new Set<string>(prev);
+      for (const t of playable) {
+        if (!seenIdsRef.current.has(t.id)) {
+          next.add(t.id);
+          seenIdsRef.current.add(t.id);
+        }
+      }
+      // Drop IDs no longer present so an old solo doesn't keep the set frozen.
+      const playableIds = new Set(playable.map(t => t.id));
+      for (const id of Array.from(next)) {
+        if (!playableIds.has(id)) next.delete(id);
+      }
       return next;
     });
   }, [playable]);
@@ -257,7 +270,11 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
                 variant={on ? 'default' : 'outline'}
                 className={on
                   ? 'bg-violet-600 hover:bg-violet-700 text-white border-0 cursor-pointer'
-                  : 'cursor-pointer opacity-60 hover:opacity-100'}
+                  // Disabled state must stay readable against the light
+                  // violet/fuchsia gradient background — explicit colors,
+                  // not the default outline foreground variable which can
+                  // render white-on-white.
+                  : 'cursor-pointer bg-white text-slate-700 border-slate-400 hover:bg-slate-100'}
               >
                 {on ? <Volume2 className="h-3 w-3 mr-1" /> : <VolumeX className="h-3 w-3 mr-1" />}
                 {t.voice_part}
@@ -266,8 +283,13 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
           );
         })}
         {enabled.size < playable.length && (
-          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={enableAll}>
-            All
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 px-2 text-xs bg-white text-slate-700 border-slate-400 hover:bg-slate-100"
+            onClick={enableAll}
+          >
+            Play all
           </Button>
         )}
       </div>
@@ -299,7 +321,7 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
       </div>
 
       <p className="text-[10px] text-muted-foreground">
-        Tap a part to mute / unmute. Double-tap to solo. "All" re-enables every part.
+        Pressing play plays every enabled part in sync. Tap a chip to mute / unmute it. Double-tap to solo. "Play all" re-enables every part.
       </p>
     </div>
   );
