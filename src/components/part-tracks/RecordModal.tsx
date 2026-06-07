@@ -18,12 +18,18 @@ type ClickSettings = {
   beatsPerMeasure: number;
   countInMeasures: number;
   clickDuringRecord: boolean;
+  /** MediaDeviceInfo.deviceId for mic input, or 'default'. */
+  inputDeviceId: string;
+  /** MediaDeviceInfo.deviceId for audio output (metronome + preview). */
+  outputDeviceId: string;
 };
 const DEFAULT_SETTINGS: ClickSettings = {
   bpm: 100,
   beatsPerMeasure: 4,
   countInMeasures: 1,
   clickDuringRecord: false,
+  inputDeviceId: 'default',
+  outputDeviceId: 'default',
 };
 const loadSettings = (): ClickSettings => {
   try {
@@ -35,6 +41,16 @@ const loadSettings = (): ClickSettings => {
 const saveSettings = (s: ClickSettings) => {
   try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch {}
 };
+
+/** AudioContext + setSinkId support varies by browser — feature-detect. */
+const audioCtxSupportsSinkId = (() => {
+  try {
+    return typeof (window as any).AudioContext !== 'undefined'
+      && 'setSinkId' in (window as any).AudioContext.prototype;
+  } catch { return false; }
+})();
+const audioElSupportsSinkId = typeof HTMLAudioElement !== 'undefined'
+  && 'setSinkId' in HTMLAudioElement.prototype;
 
 interface RecordModalProps {
   open: boolean;
@@ -50,6 +66,10 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<ClickSettings>(() => loadSettings());
   const [countInBeat, setCountInBeat] = useState(0);
+  const [inputDevices, setInputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [outputDevices, setOutputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [labelsRevealed, setLabelsRevealed] = useState(false);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -66,6 +86,41 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
 
   // Persist settings whenever they change.
   useEffect(() => { saveSettings(settings); }, [settings]);
+
+  // Enumerate audio devices when the modal opens and whenever the device list
+  // changes (e.g. plugging in USB-C headphones).
+  const refreshDevices = async () => {
+    try {
+      const all = await navigator.mediaDevices.enumerateDevices();
+      const ins = all.filter(d => d.kind === 'audioinput');
+      const outs = all.filter(d => d.kind === 'audiooutput');
+      setInputDevices(ins);
+      setOutputDevices(outs);
+      // Browsers hide device labels until the page has been granted mic perm
+      // at least once. If we see any non-empty label, we've crossed that line.
+      setLabelsRevealed(ins.some(d => !!d.label) || outs.some(d => !!d.label));
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    refreshDevices();
+    const onChange = () => refreshDevices();
+    navigator.mediaDevices?.addEventListener?.('devicechange', onChange);
+    return () => navigator.mediaDevices?.removeEventListener?.('devicechange', onChange);
+  }, [open]);
+
+  // Reveal device labels by requesting (and immediately stopping) a mic
+  // stream. Useful when the user just opened the modal for the first time.
+  const revealDeviceLabels = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      s.getTracks().forEach(t => t.stop());
+      await refreshDevices();
+    } catch (err: any) {
+      toast.error(`Mic permission needed: ${err?.message ?? 'denied'}`);
+    }
+  };
 
   const stopAll = () => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
@@ -149,16 +204,32 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   const startRecording = async () => {
     cancelCountInRef.current = false;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
+      const audioConstraints: MediaTrackConstraints = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      };
+      if (settings.inputDeviceId && settings.inputDeviceId !== 'default') {
+        audioConstraints.deviceId = { exact: settings.inputDeviceId };
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
       streamRef.current = stream;
+      // Once we have permission, device labels become visible — refresh.
+      refreshDevices();
 
-      const audioCtx = new AudioContext();
+      // Try to route AudioContext output to the chosen output device. Falls
+      // back to system default on browsers that don't support sinkId
+      // (notably Safari today).
+      let audioCtx: AudioContext;
+      if (
+        audioCtxSupportsSinkId
+        && settings.outputDeviceId
+        && settings.outputDeviceId !== 'default'
+      ) {
+        audioCtx = new (AudioContext as any)({ sinkId: settings.outputDeviceId });
+      } else {
+        audioCtx = new AudioContext();
+      }
       audioCtxRef.current = audioCtx;
       // Some browsers start AudioContext suspended; explicit resume avoids
       // the metronome clicks getting clipped on the first user gesture.
@@ -310,6 +381,59 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
                 Max 10 minutes. Mic permission required. Headphones recommended so the click doesn't bleed into the recording.
               </p>
 
+              {/* Audio devices */}
+              <div className="rounded-md border bg-muted/40 p-3 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wide">Audio devices</Label>
+                  {!labelsRevealed && (
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={revealDeviceLabels}>
+                      Show device names
+                    </Button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Microphone (input)</Label>
+                    <select
+                      value={settings.inputDeviceId}
+                      onChange={e => setSettings(s => ({ ...s, inputDeviceId: e.target.value }))}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm"
+                    >
+                      <option value="default">System default</option>
+                      {inputDevices.map(d => (
+                        <option key={d.deviceId} value={d.deviceId}>
+                          {d.label || `Microphone (${d.deviceId.slice(0, 6)}…)`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      Output (click + preview)
+                      {!audioCtxSupportsSinkId && !audioElSupportsSinkId && (
+                        <span className="ml-1 text-[10px] text-amber-700">(Safari uses system default)</span>
+                      )}
+                    </Label>
+                    <select
+                      value={settings.outputDeviceId}
+                      onChange={e => setSettings(s => ({ ...s, outputDeviceId: e.target.value }))}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-2 py-2 text-sm"
+                      disabled={!audioCtxSupportsSinkId && !audioElSupportsSinkId}
+                    >
+                      <option value="default">System default</option>
+                      {outputDevices.map(d => (
+                        <option key={d.deviceId} value={d.deviceId}>
+                          {d.label || `Speakers (${d.deviceId.slice(0, 6)}…)`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Plug in USB-C headphones, then pick them from both menus — the click goes to your ears and your voice (not the click) gets recorded.
+                </p>
+              </div>
+
               {/* Click track settings */}
               <div className="rounded-md border bg-muted/40 p-3 space-y-3">
                 <Label className="text-xs font-semibold uppercase tracking-wide">Click track</Label>
@@ -415,7 +539,23 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
           {phase === 'preview' && previewUrl && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">Preview your recording before saving.</p>
-              <audio controls src={previewUrl} className="w-full" />
+              <audio
+                ref={el => {
+                  previewAudioRef.current = el;
+                  // Route preview through the chosen output (Chrome/Edge/FF).
+                  if (
+                    el
+                    && audioElSupportsSinkId
+                    && settings.outputDeviceId
+                    && settings.outputDeviceId !== 'default'
+                  ) {
+                    (el as any).setSinkId?.(settings.outputDeviceId).catch(() => {});
+                  }
+                }}
+                controls
+                src={previewUrl}
+                className="w-full"
+              />
               <div className="flex flex-wrap justify-end gap-2">
                 <Button variant="ghost" onClick={reset} disabled={saving}>
                   <RotateCcw className="h-4 w-4 mr-2" /> Re-record
