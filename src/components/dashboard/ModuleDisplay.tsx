@@ -32,6 +32,8 @@ import { QRCodeManagementModule } from '../modules/QRCodeManagementModule';
 import { TestBuilder } from '../test-builder/TestBuilder';
 import { GraduatesPortalModule } from '../modules/GraduatesPortalModule';
 import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
+import { PartTracksModule } from '@/components/modules/PartTracksModule';
+import { ModuleGate } from '@/components/auth/ModuleGate';
 import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
 import { GraduatesManagementModule } from '../modules/GraduatesManagementModule';
 import { GradingModule } from '../modules/GradingModule';
@@ -140,6 +142,12 @@ case 'test-builder':
       case 'hero-management':
       case 'hero-manager':
         return <HeroManagerModule />;
+      case 'part-tracks':
+        return (
+          <ModuleGate moduleId="part_tracks">
+            <PartTracksModule />
+          </ModuleGate>
+        );
       case 'youtube-management':
         return <YouTubeManagement />;
       case 'glee-ledger':
