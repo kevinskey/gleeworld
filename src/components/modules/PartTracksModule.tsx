@@ -10,6 +10,7 @@ import { Plus, Trash2, Upload, Mic, Music, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RecordModal } from '@/components/part-tracks/RecordModal';
 import { PartMixer } from '@/components/part-tracks/PartMixer';
+import { scoreFileToAudioBlob, detectScoreKind } from '@/lib/score-to-mp3';
 
 interface PartTrack {
   id: string;
@@ -87,7 +88,34 @@ export const PartTracksModule: React.FC = () => {
     return pub.publicUrl;
   };
 
-  const uploadFile = (file: File) => uploadBlob(file, file.name.split('.').pop() ?? 'mp3');
+  /**
+   * Convert MIDI / MusicXML to MP3 in the browser when needed, then upload.
+   * Returns the public URL or null on failure.
+   */
+  const uploadFile = async (file: File): Promise<string | null> => {
+    const kind = detectScoreKind(file);
+    let blob: Blob;
+    let ext: string;
+    if (kind === 'midi' || kind === 'musicxml') {
+      const tid = toast.loading(`Rendering ${kind === 'midi' ? 'MIDI' : 'MusicXML'} to MP3…`);
+      try {
+        const result = await scoreFileToAudioBlob(file);
+        blob = result.blob;
+        ext = result.ext;
+        toast.success('Rendered to MP3', { id: tid });
+      } catch (err: any) {
+        toast.error(`Conversion failed: ${err?.message ?? 'unknown'}`, { id: tid });
+        return null;
+      }
+    } else if (kind === 'audio') {
+      blob = file;
+      ext = file.name.split('.').pop() ?? 'mp3';
+    } else {
+      toast.error(`Unsupported file: ${file.name}. Use MP3, MIDI, or MusicXML.`);
+      return null;
+    }
+    return uploadBlob(blob, ext);
+  };
 
   const addTrack = async (audioUrl: string | null = null) => {
     if (!newPiece.trim() || !newPart.trim()) {
@@ -201,8 +229,10 @@ export const PartTracksModule: React.FC = () => {
         <p className="text-sm text-muted-foreground">
           MP3 practice tracks organized by piece. Each piece can hold any
           number of voice parts (SI, SII, AI, AII, T, B…) <em>and</em>
-          accompaniment parts (Piano, Organ, Guitar…). Listeners can mute or
-          solo any part; the full arrangement plays in sync.
+          accompaniment parts (Piano, Organ, Guitar…). Upload MP3 directly,
+          or drop in a MIDI / MusicXML file and it'll be rendered to MP3 in
+          the browser. Listeners can mute or solo any part; the full
+          arrangement plays in sync.
         </p>
       </div>
 
@@ -231,10 +261,10 @@ export const PartTracksModule: React.FC = () => {
             </datalist>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">MP3 file (or use Record →)</Label>
+            <Label className="text-xs">MP3 / MIDI / MusicXML (or Record →)</Label>
             <Input
               type="file"
-              accept="audio/*"
+              accept="audio/*,.mid,.midi,.musicxml,.xml"
               onChange={e => setNewFile(e.target.files?.[0] ?? null)}
             />
           </div>
@@ -307,7 +337,7 @@ export const PartTracksModule: React.FC = () => {
                     <label>
                       <input
                         type="file"
-                        accept="audio/*"
+                        accept="audio/*,.mid,.midi,.musicxml,.xml"
                         className="sr-only"
                         onChange={e => {
                           const f = e.target.files?.[0];
@@ -321,7 +351,7 @@ export const PartTracksModule: React.FC = () => {
                         variant="ghost"
                         disabled={uploadingId === track.id}
                         aria-label="Upload replacement"
-                        title="Upload"
+                        title="Upload (MP3, MIDI, or MusicXML)"
                       >
                         <span><Upload className="h-4 w-4" /></span>
                       </Button>
