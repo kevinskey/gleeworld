@@ -221,6 +221,9 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   const handleStop = () => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
+    metronomeRef.current?.stop();
+    metronomeRef.current = null;
+    cancelCountInRef.current = true;
     streamRef.current?.getTracks().forEach(t => t.stop());
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try { mediaRecorderRef.current.stop(); } catch {}
