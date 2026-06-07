@@ -50,6 +50,11 @@ export const PartTracksModule: React.FC = () => {
   // After a new-track save we offer to keep the piece title for the next part.
   const [continuePrompt, setContinuePrompt] = useState<{ piece: string; voicePart: string } | null>(null);
   const voicePartInputRef = useRef<HTMLInputElement>(null);
+  // Ref-based lock that catches double-fires before React has re-rendered the
+  // disabled button — the `adding` state flips synchronously but the disabled
+  // prop only applies on the next paint, so a fast double-tap (or a stray
+  // re-render) could otherwise enqueue two uploads.
+  const addingLockRef = useRef(false);
 
   const load = async () => {
     setLoading(true);
@@ -122,6 +127,8 @@ export const PartTracksModule: React.FC = () => {
       toast.error('Piece title and voice part are required');
       return;
     }
+    if (addingLockRef.current) return; // double-tap / race guard
+    addingLockRef.current = true;
     setAdding(true);
     try {
       let finalUrl = audioUrl;
@@ -153,6 +160,7 @@ export const PartTracksModule: React.FC = () => {
       setContinuePrompt({ piece: savedPiece, voicePart: savedPart });
     } finally {
       setAdding(false);
+      addingLockRef.current = false;
     }
   };
 
