@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Upload, Mic, Music } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Plus, Trash2, Upload, Mic, Music, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RecordModal } from '@/components/part-tracks/RecordModal';
 import { PartMixer } from '@/components/part-tracks/PartMixer';
@@ -36,6 +37,9 @@ export const PartTracksModule: React.FC = () => {
   // new track currently being composed in the "Add a part track" form (null).
   const [recordOpen, setRecordOpen] = useState(false);
   const [replaceFor, setReplaceFor] = useState<PartTrack | null>(null);
+  // After a new-track save we offer to keep the piece title for the next part.
+  const [continuePrompt, setContinuePrompt] = useState<{ piece: string; voicePart: string } | null>(null);
+  const voicePartInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -103,13 +107,29 @@ export const PartTracksModule: React.FC = () => {
         return;
       }
       setTracks(prev => [...prev, data as PartTrack]);
-      setNewPiece('');
+      // Remember the just-saved piece + part so the continue prompt can
+      // reference them. Clear voice part + file but keep piece sticky.
+      const savedPiece = newPiece.trim();
+      const savedPart = newPart.trim();
       setNewPart('');
       setNewFile(null);
-      toast.success('Part track added');
+      setContinuePrompt({ piece: savedPiece, voicePart: savedPart });
     } finally {
       setAdding(false);
     }
+  };
+
+  const continueWithSamePiece = () => {
+    setContinuePrompt(null);
+    // newPiece is already sticky; jump focus to the voice part field.
+    setTimeout(() => voicePartInputRef.current?.focus(), 50);
+  };
+
+  const finishPiece = () => {
+    setContinuePrompt(null);
+    setNewPiece('');
+    setNewPart('');
+    setNewFile(null);
   };
 
   const updateTrack = async (id: string, patch: Partial<PartTrack>) => {
@@ -189,6 +209,7 @@ export const PartTracksModule: React.FC = () => {
           <div className="space-y-1">
             <Label className="text-xs">Voice part</Label>
             <Input
+              ref={voicePartInputRef}
               value={newPart}
               onChange={e => setNewPart(e.target.value)}
               placeholder="SI / SII / AI / AII / T / B"
@@ -310,6 +331,41 @@ export const PartTracksModule: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Continue prompt: after saving a recording for a NEW track, ask
+          whether to keep the piece title sticky for the next voice part. */}
+      <Dialog
+        open={!!continuePrompt}
+        onOpenChange={(o) => { if (!o) finishPiece(); }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              Part saved
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>
+              <span className="font-semibold">{continuePrompt?.voicePart}</span>
+              {' saved for '}
+              <span className="font-semibold">"{continuePrompt?.piece}"</span>.
+            </p>
+            <p className="text-muted-foreground">
+              Record another voice part for the same piece, or finish and start fresh.
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={finishPiece}>
+              Done with this piece
+            </Button>
+            <Button onClick={continueWithSamePiece}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add another part
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <RecordModal
         open={recordOpen}
