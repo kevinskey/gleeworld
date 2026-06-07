@@ -159,7 +159,10 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
 
   return (
     <div className="space-y-3 rounded-md border bg-gradient-to-br from-violet-50 to-fuchsia-50 dark:from-violet-950/30 dark:to-fuchsia-950/30 p-3">
-      {/* Hidden audio elements — one per playable track */}
+      {/* Hidden audio elements — one per playable track. New uploads can 403
+          for a few seconds while the storage flatten daemon catches up; on
+          error we retry the load with an increasing delay so the user
+          doesn't have to refresh the page. */}
       {playable.map(t => (
         <audio
           key={t.id}
@@ -170,6 +173,18 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
           src={t.audio_url ?? undefined}
           preload="metadata"
           onLoadedMetadata={() => onLoadedMetadata(t.id)}
+          onError={(e) => {
+            const el = e.currentTarget;
+            const attempt = Number(el.dataset.retry ?? '0') + 1;
+            if (attempt > 6 || !t.audio_url) return;
+            el.dataset.retry = String(attempt);
+            const delay = Math.min(8000, 1000 * attempt);
+            setTimeout(() => {
+              // Bust any HTTP cache for the retry.
+              el.src = `${t.audio_url}${t.audio_url!.includes('?') ? '&' : '?'}r=${attempt}`;
+              el.load();
+            }, delay);
+          }}
         />
       ))}
 
