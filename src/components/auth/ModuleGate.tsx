@@ -2,6 +2,8 @@ import React from 'react';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useNavigate } from 'react-router-dom';
 
 interface ModuleGateProps {
@@ -19,8 +21,13 @@ interface ModuleGateProps {
  */
 export function ModuleGate({ moduleId, children, fallback, silent }: ModuleGateProps) {
   const { isLoading, hasAccess } = useModuleAccess(moduleId);
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
   const navigate = useNavigate();
 
+  // Super admins bypass module gating — they can open any addon without
+  // going through Stripe (for inspection or tenant support).
+  if (userProfile?.is_super_admin) return <>{children}</>;
   if (isLoading) return null;
   if (hasAccess) return <>{children}</>;
   if (silent) return null;
