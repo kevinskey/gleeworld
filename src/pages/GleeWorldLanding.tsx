@@ -638,12 +638,22 @@ function AppleHero() {
   return (
     <section className="relative bg-[#0a0518] w-full flex items-center justify-center">
       {slide?.imageUrl ? (
-        <img
-          src={slide.imageUrl}
-          alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
-          className="w-full h-auto block"
-          style={{ objectPosition }}
-        />
+        <>
+          {/* Mobile <640px: prefer mobile image, fall back to desktop */}
+          <img
+            src={slide.mobileImageUrl || slide.imageUrl}
+            alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
+            className="w-full h-auto block sm:hidden"
+            style={{ objectPosition }}
+          />
+          {/* Desktop ≥640px */}
+          <img
+            src={slide.imageUrl}
+            alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
+            className="w-full h-auto hidden sm:block"
+            style={{ objectPosition }}
+          />
+        </>
       ) : (
         // No hero configured — just the gradient backdrop with the CTA strip.
         <div
