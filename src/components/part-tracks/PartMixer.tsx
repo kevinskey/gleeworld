@@ -25,7 +25,18 @@ interface PartMixerProps {
  * the same downbeat / metronome to stay aligned.
  */
 export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
-  const playable = useMemo(() => tracks.filter(t => !!t.audio_url), [tracks]);
+  // Append a one-time cache-buster so any stale 4xx response sitting in the
+  // browser HTTP cache from before the storage flatten daemon caught up is
+  // bypassed. The query string doesn't affect storage routing — the proxy
+  // matches on path only.
+  const sessionId = useMemo(() => Math.random().toString(36).slice(2, 8), []);
+  const playable = useMemo(
+    () => tracks.filter(t => !!t.audio_url).map(t => ({
+      ...t,
+      audio_url: t.audio_url ? `${t.audio_url}${t.audio_url.includes('?') ? '&' : '?'}cb=${sessionId}` : null,
+    })),
+    [tracks, sessionId],
+  );
   const [enabled, setEnabled] = useState<Set<string>>(() => new Set(playable.map(t => t.id)));
   const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
@@ -127,9 +138,13 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
         }).catch((err: any) => {
           if (!firstError) {
             firstError = err?.message ?? err?.name ?? 'play failed';
-            toast.error(`Couldn't start playback: ${firstError}`);
+            const code = el.error?.code;
+            const codeText = code === 4
+              ? ' (no supported sources — browser likely has a stale 403 cached; try a hard refresh)'
+              : '';
+            toast.error(`Couldn't start playback: ${firstError}${codeText}`);
             // eslint-disable-next-line no-console
-            console.warn('[PartMixer] play() rejected', { url: el.src, error: err });
+            console.warn('[PartMixer] play() rejected', { url: el.src, error: err, mediaError: el.error });
           }
         });
       } else {
