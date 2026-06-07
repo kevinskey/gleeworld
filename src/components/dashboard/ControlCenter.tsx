@@ -144,6 +144,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
     'graduates-portal': 'alumni_portal',
     'merch-store': 'merch',
     'feed-control': 'feeds',
+    'part-tracks': 'part_tracks',
   };
   const ADDON_MODULE_IDS = new Set(Object.keys(UI_TO_BILLING));
 
