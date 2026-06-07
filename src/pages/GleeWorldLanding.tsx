@@ -633,10 +633,9 @@ function AppleHero() {
   // controlled by the admin's Hero Manager — not a hardcoded image.
   const { data: slides = [] } = useUniversalHeroSlides("homepage_hero");
   const slide = slides[0];
-  const objectPosition = `${slide?.imagePositionX || 'center'} ${slide?.imagePositionY || 'center'}`;
 
   return (
-    <section className="relative bg-[#0a0518] w-full flex items-center justify-center">
+    <section className="relative bg-[#0a0518] w-full">
       {slide?.imageUrl ? (
         <>
           {/* Mobile <640px: prefer mobile image, fall back to desktop */}
@@ -644,18 +643,16 @@ function AppleHero() {
             src={slide.mobileImageUrl || slide.imageUrl}
             alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
             className="w-full h-auto block sm:hidden"
-            style={{ objectPosition }}
           />
           {/* Desktop ≥640px */}
           <img
             src={slide.imageUrl}
             alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
             className="w-full h-auto hidden sm:block"
-            style={{ objectPosition }}
           />
         </>
       ) : (
-        // No hero configured — just the gradient backdrop with the CTA strip.
+        // No hero configured — gradient backdrop in place of the image.
         <div
           className="w-full aspect-[16/8] sm:aspect-[16/7] flex items-center justify-center"
           style={{ background: 'radial-gradient(circle at 50% 30%, #1a0f3a 0%, #0a0518 70%)' }}
@@ -667,15 +664,12 @@ function AppleHero() {
         </div>
       )}
 
-      {/* CTA strip at bottom over a dark gradient */}
-      <div
-        className="absolute inset-x-0 bottom-0 px-6 pt-16 pb-8 sm:pb-12"
-        style={{ background: 'linear-gradient(180deg, rgba(10,5,24,0) 0%, rgba(10,5,24,0.92) 70%)' }}
-      >
+      {/* CTA strip — sits BELOW the hero image, not overlaying it */}
+      <div className="px-6 py-8 sm:py-12 bg-[#0a0518]">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3 justify-center items-center">
           <a
             href={MAILTO_BUY}
-            className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold text-white transition-transform hover:scale-[1.03] shadow-2xl"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold text-white transition-transform hover:scale-[1.03] shadow-2xl"
             style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
           >
             Get started
@@ -683,7 +677,7 @@ function AppleHero() {
           </a>
           <a
             href={MAILTO_DEMO}
-            className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold transition-colors backdrop-blur-sm"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold transition-colors backdrop-blur-sm"
             style={{ color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.10)' }}
           >
             Watch a demo <ArrowRight className="h-4 w-4" />
