@@ -374,26 +374,43 @@ export const PartTracksModule: React.FC = () => {
       )}
 
       {/* Continue prompt: after saving a recording for a NEW track, ask
-          whether to keep the piece title sticky for the next voice part. */}
+          whether to keep the piece title sticky for the next voice part.
+          The mixer inside lets the singer practice along with everything
+          that's been recorded so far before they hit Record again. */}
       <Dialog
         open={!!continuePrompt}
         onOpenChange={(o) => { if (!o) finishPiece(); }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-emerald-500" />
               Part saved
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 text-sm">
+          <div className="space-y-4 text-sm">
             <p>
               <span className="font-semibold">{continuePrompt?.voicePart}</span>
               {' saved for '}
               <span className="font-semibold">"{continuePrompt?.piece}"</span>.
             </p>
+            {continuePrompt && (
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Practice with what you've recorded so far
+                </p>
+                <PartMixer
+                  pieceTitle={continuePrompt.piece}
+                  tracks={tracks.filter(t => t.piece_title === continuePrompt.piece && !!t.audio_url)}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Press play to sing along with the accompaniment or any part you've already taken.
+                  Mute or solo individual parts to focus your practice.
+                </p>
+              </div>
+            )}
             <p className="text-muted-foreground">
-              Record another voice part for the same piece, or finish and start fresh.
+              When you're ready, record another voice part for the same piece — or finish and start fresh.
             </p>
           </div>
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
