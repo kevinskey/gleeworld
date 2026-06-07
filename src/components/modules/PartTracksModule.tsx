@@ -22,7 +22,16 @@ interface PartTrack {
   created_at: string;
 }
 
-const VOICE_PART_PRESETS = ['SI', 'SII', 'AI', 'AII', 'T', 'B', 'S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2'];
+// "Part" covers voice parts and accompaniment alike — pick the closest preset
+// or type your own (the column is free-text). The PartMixer treats them all
+// the same: each shows as a Badge and can be soloed or muted.
+const VOICE_PART_PRESETS = [
+  // Voice parts
+  'SI', 'SII', 'AI', 'AII', 'T', 'B',
+  'S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2',
+  // Accompaniment
+  'Piano', 'Accompaniment', 'Organ', 'Guitar', 'Bass guitar', 'Drums', 'Full mix',
+];
 
 export const PartTracksModule: React.FC = () => {
   const [tracks, setTracks] = useState<PartTrack[]>([]);
@@ -190,8 +199,10 @@ export const PartTracksModule: React.FC = () => {
           Part Tracks
         </h2>
         <p className="text-sm text-muted-foreground">
-          MP3 practice tracks for singers, organized by piece and voice part.
-          Listeners can mute or solo any part; the full mix plays in sync.
+          MP3 practice tracks organized by piece. Each piece can hold any
+          number of voice parts (SI, SII, AI, AII, T, B…) <em>and</em>
+          accompaniment parts (Piano, Organ, Guitar…). Listeners can mute or
+          solo any part; the full arrangement plays in sync.
         </p>
       </div>
 
@@ -207,12 +218,12 @@ export const PartTracksModule: React.FC = () => {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Voice part</Label>
+            <Label className="text-xs">Part (voice or accompaniment)</Label>
             <Input
               ref={voicePartInputRef}
               value={newPart}
               onChange={e => setNewPart(e.target.value)}
-              placeholder="SI / SII / AI / AII / T / B"
+              placeholder="SI / AI / T / B / Piano / Accompaniment…"
               list="voice-part-presets"
             />
             <datalist id="voice-part-presets">
