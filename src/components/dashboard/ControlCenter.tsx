@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +68,9 @@ interface ControlCenterProps {
 export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
+  const isSuperAdmin = !!userProfile?.is_super_admin;
   const [query, setQuery] = useState('');
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const { data: tenantModules = [] } = useTenantModules();
@@ -270,7 +275,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
             {addonModules.map((m) => {
               const Icon = m.icon;
               const billingId = UI_TO_BILLING[m.id];
-              const isSubscribed = billingId && activeBillingSlugs.has(billingId);
+              const isSubscribed = isSuperAdmin || (billingId && activeBillingSlugs.has(billingId));
               const priceCents = priceByBillingId[billingId] || 0;
               const priceLabel = priceCents > 0 ? `$${(priceCents / 100).toFixed(0)}/mo` : '';
               const isActivating = activatingId === billingId;
