@@ -201,12 +201,11 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
             else refs.current.delete(t.id);
           }}
           src={t.audio_url ?? undefined}
-          // Cross-origin: supabase.gleeworld.org → gleeworld.org. Anonymous
-          // mode is enough for plain playback (avoids opaque-response edge
-          // cases in some Safari builds).
-          crossOrigin="anonymous"
-          // "auto" so the browser starts pulling enough of the file that
-          // play() returns quickly when the user taps the transport.
+          // No crossOrigin: the storage origin returns a Set-Cookie header
+          // alongside Access-Control-Allow-Origin:*, and Chrome rejects that
+          // combination under crossOrigin="anonymous" with
+          // MEDIA_ERR_SRC_NOT_SUPPORTED. Plain playback (no canvas/AudioContext
+          // access) doesn't need CORS opt-in.
           preload="auto"
           onLoadedMetadata={() => onLoadedMetadata(t.id)}
           onError={(e) => {
