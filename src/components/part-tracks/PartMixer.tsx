@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { toast } from 'sonner';
 
 export interface MixerTrack {
   id: string;
@@ -90,23 +91,52 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
     };
   }, []);
 
-  const togglePlay = async () => {
+  const togglePlay = () => {
     if (playing) {
       for (const el of refs.current.values()) el.pause();
       setPlaying(false);
       stopPositionLoop();
       return;
     }
-    // Reset to a common time before playing — drift safety net.
+    // Reset every track to the same scrub time before kicking off — drift
+    // safety net so multi-part mixes stay aligned.
     const target = position;
-    for (const el of refs.current.values()) el.currentTime = target;
-    try {
-      await Promise.all(Array.from(refs.current.values()).map(el => el.play()));
-      setPlaying(true);
-      startPositionLoop();
-    } catch {
-      // user-gesture failed or src not ready
+    const elements = Array.from(refs.current.values());
+    if (elements.length === 0) {
+      toast.error('No audio loaded yet — try again in a moment.');
+      return;
     }
+    for (const el of elements) {
+      try { el.currentTime = target; } catch {}
+    }
+    // Fire each play() WITHOUT awaiting — keeping the user-gesture context on
+    // every call. Track errors per-element so we can surface them instead of
+    // silently swallowing them.
+    let started = 0;
+    let firstError: string | null = null;
+    elements.forEach((el) => {
+      const p = el.play();
+      // Some browsers return undefined from play(); guard before .catch.
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          started += 1;
+          if (started === 1) {
+            setPlaying(true);
+            startPositionLoop();
+          }
+        }).catch((err: any) => {
+          if (!firstError) {
+            firstError = err?.message ?? err?.name ?? 'play failed';
+            toast.error(`Couldn't start playback: ${firstError}`);
+            // eslint-disable-next-line no-console
+            console.warn('[PartMixer] play() rejected', { url: el.src, error: err });
+          }
+        });
+      } else {
+        setPlaying(true);
+        startPositionLoop();
+      }
+    });
   };
 
   const restart = () => {
@@ -171,7 +201,13 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
             else refs.current.delete(t.id);
           }}
           src={t.audio_url ?? undefined}
-          preload="metadata"
+          // Cross-origin: supabase.gleeworld.org → gleeworld.org. Anonymous
+          // mode is enough for plain playback (avoids opaque-response edge
+          // cases in some Safari builds).
+          crossOrigin="anonymous"
+          // "auto" so the browser starts pulling enough of the file that
+          // play() returns quickly when the user taps the transport.
+          preload="auto"
           onLoadedMetadata={() => onLoadedMetadata(t.id)}
           onError={(e) => {
             const el = e.currentTarget;
