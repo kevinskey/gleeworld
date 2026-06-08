@@ -116,53 +116,55 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
   }, []);
 
   const togglePlay = () => {
-    if (playing) {
-      for (const el of refs.current.values()) el.pause();
-      setPlaying(false);
-      stopPositionLoop();
-      return;
-    }
-    // Reset every track to the same scrub time before kicking off — drift
-    // safety net so multi-part mixes stay aligned.
-    const target = position;
     const elements = Array.from(refs.current.values());
     if (elements.length === 0) {
       toast.error('No audio loaded yet — try again in a moment.');
       return;
     }
-    for (const el of elements) {
-      try { el.currentTime = target; } catch {}
+    if (playing) {
+      for (const el of elements) el.pause();
+      // setPlaying happens via the audio element's onPause; we don't trust
+      // our own state to mirror reality.
+      stopPositionLoop();
+      return;
     }
-    // Fire each play() WITHOUT awaiting — keeping the user-gesture context on
-    // every call. Track errors per-element so we can surface them instead of
-    // silently swallowing them.
-    let started = 0;
+    // Fire play() on each element synchronously inside the user-gesture
+    // event. The audio element's onPlay handler will flip `playing` to true
+    // when the browser actually starts; that way the icon reflects reality.
     let firstError: string | null = null;
     elements.forEach((el) => {
+      // If readyState is too low, force a fresh load before play(). Some
+      // browsers (notably Safari) return a rejected play() promise when
+      // the element is still in HAVE_NOTHING.
+      if (el.readyState < 2) {
+        try { el.load(); } catch {}
+      }
       const p = el.play();
-      // Some browsers return undefined from play(); guard before .catch.
       if (p && typeof p.then === 'function') {
-        p.then(() => {
-          started += 1;
-          if (started === 1) {
-            setPlaying(true);
-            startPositionLoop();
-          }
-        }).catch((err: any) => {
-          if (!firstError) {
-            firstError = err?.message ?? err?.name ?? 'play failed';
-            const code = el.error?.code;
-            const codeText = code === 4
-              ? ' (no supported sources — browser likely has a stale 403 cached; try a hard refresh)'
-              : '';
-            toast.error(`Couldn't start playback: ${firstError}${codeText}`);
-            // eslint-disable-next-line no-console
-            console.warn('[PartMixer] play() rejected', { url: el.src, error: err, mediaError: el.error });
-          }
+        p.catch((err: any) => {
+          if (firstError) return;
+          firstError = err?.message ?? err?.name ?? 'play failed';
+          const code = el.error?.code;
+          const codeMap: Record<number, string> = {
+            1: 'aborted',
+            2: 'network error',
+            3: 'decode error',
+            4: 'no supported sources (often a stale cached 403 — hard refresh)',
+          };
+          const codeText = code ? ` [media error ${code}: ${codeMap[code] ?? 'unknown'}]` : '';
+          toast.error(`Couldn't start playback: ${firstError}${codeText}`);
+          // eslint-disable-next-line no-console
+          console.warn('[PartMixer] play() rejected', {
+            url: el.src,
+            error: err,
+            mediaError: el.error,
+            readyState: el.readyState,
+            networkState: el.networkState,
+            paused: el.paused,
+            currentTime: el.currentTime,
+            duration: el.duration,
+          });
         });
-      } else {
-        setPlaying(true);
-        startPositionLoop();
       }
     });
   };
@@ -229,13 +231,29 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
             else refs.current.delete(t.id);
           }}
           src={t.audio_url ?? undefined}
-          // No crossOrigin: the storage origin returns a Set-Cookie header
-          // alongside Access-Control-Allow-Origin:*, and Chrome rejects that
-          // combination under crossOrigin="anonymous" with
-          // MEDIA_ERR_SRC_NOT_SUPPORTED. Plain playback (no canvas/AudioContext
-          // access) doesn't need CORS opt-in.
           preload="auto"
           onLoadedMetadata={() => onLoadedMetadata(t.id)}
+          // Drive playing state from the audio element itself — the only
+          // source of truth. If any track starts, the icon shows pause; if
+          // the last one pauses/ends, the icon goes back to play.
+          onPlay={() => {
+            setPlaying(true);
+            startPositionLoop();
+          }}
+          onPause={() => {
+            const anyPlaying = Array.from(refs.current.values()).some(a => !a.paused && !a.ended);
+            if (!anyPlaying) {
+              setPlaying(false);
+              stopPositionLoop();
+            }
+          }}
+          onEnded={() => {
+            const anyPlaying = Array.from(refs.current.values()).some(a => !a.paused && !a.ended);
+            if (!anyPlaying) {
+              setPlaying(false);
+              stopPositionLoop();
+            }
+          }}
           onError={(e) => {
             const el = e.currentTarget;
             const attempt = Number(el.dataset.retry ?? '0') + 1;
@@ -243,8 +261,9 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
             el.dataset.retry = String(attempt);
             const delay = Math.min(8000, 1000 * attempt);
             setTimeout(() => {
-              // Bust any HTTP cache for the retry.
-              el.src = `${t.audio_url}${t.audio_url!.includes('?') ? '&' : '?'}r=${attempt}`;
+              // Strip our session cb so the retry hits the original URL.
+              const baseUrl = t.audio_url!.replace(/[?&]cb=[^&]+/, '').replace(/\?$/, '');
+              el.src = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}r=${attempt}`;
               el.load();
             }, delay);
           }}
