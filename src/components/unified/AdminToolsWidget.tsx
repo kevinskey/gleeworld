@@ -14,9 +14,11 @@ import {
   BarChart3,
   Database,
   UserCheck,
-  Radio
+  Radio,
+  Users2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 
 interface AdminModule {
   title: string;
@@ -26,6 +28,7 @@ interface AdminModule {
   action?: () => void;
   status?: 'active' | 'pending' | 'disabled';
   badge?: string;
+  featureFlag?: string;
 }
 
 interface AdminToolsWidgetProps {
@@ -34,8 +37,9 @@ interface AdminToolsWidgetProps {
 
 export const AdminToolsWidget = ({ onNavigateToTab }: AdminToolsWidgetProps = {}) => {
   const navigate = useNavigate();
+  const { enabled: programHealthEnabled } = useFeatureFlag('program_health');
 
-  const adminModules: AdminModule[] = [
+  const allAdminModules: AdminModule[] = [
     {
       title: "User Management",
       description: "Manage member accounts, roles, and permissions",
@@ -139,8 +143,25 @@ export const AdminToolsWidget = ({ onNavigateToTab }: AdminToolsWidgetProps = {}
       route: "/admin/documents",
       status: 'pending',
       badge: "Legal"
+    },
+    {
+      title: "Ensembles",
+      description: "Choirs and groups: rosters, directors, section targets",
+      icon: Users2,
+      route: "/admin/ensembles",
+      status: 'active',
+      badge: "Core",
+      featureFlag: "program_health"
     }
   ];
+
+  const flagStates: Record<string, boolean> = {
+    program_health: programHealthEnabled,
+  };
+
+  const adminModules = allAdminModules.filter(
+    (m) => !m.featureFlag || flagStates[m.featureFlag]
+  );
 
   const handleModuleClick = (module: AdminModule) => {
     if (module.route) {
