@@ -56,14 +56,20 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
   // track the user explicitly muted stays muted across re-renders.
   const seenIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
+    // Detect new arrivals *first* so we can force their audio elements to
+    // load — otherwise the most recent recording sits at readyState 0 and
+    // play() rejects until the user hard-refreshes or toggles chips.
+    const newIds: string[] = [];
+    for (const t of playable) {
+      if (!seenIdsRef.current.has(t.id)) {
+        seenIdsRef.current.add(t.id);
+        newIds.push(t.id);
+      }
+    }
+
     setEnabled(prev => {
       const next = new Set<string>(prev);
-      for (const t of playable) {
-        if (!seenIdsRef.current.has(t.id)) {
-          next.add(t.id);
-          seenIdsRef.current.add(t.id);
-        }
-      }
+      for (const id of newIds) next.add(id);
       // Drop IDs no longer present so an old solo doesn't keep the set frozen.
       const playableIds = new Set(playable.map(t => t.id));
       for (const id of Array.from(next)) {
@@ -71,6 +77,21 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
       }
       return next;
     });
+
+    // After React commits the new audio element to the DOM, kick a load()
+    // on each fresh track so the buffer is primed by the time the user
+    // clicks Play all. requestAnimationFrame waits one paint, which is
+    // long enough for the ref callback to have populated refs.current.
+    if (newIds.length > 0) {
+      requestAnimationFrame(() => {
+        for (const id of newIds) {
+          const el = refs.current.get(id);
+          if (el) {
+            try { el.load(); } catch {}
+          }
+        }
+      });
+    }
   }, [playable]);
 
   // Apply volume based on enabled set (mute toggles via volume, not pause —
@@ -144,12 +165,27 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
         } catch {}
       }
       elements.forEach((el) => {
-        const p = el.play();
-        if (p && typeof p.then === 'function') {
-          p.catch((err: any) => {
-            // eslint-disable-next-line no-console
-            console.warn('[PartMixer.playAll] play() rejected', { url: el.src, error: err });
-          });
+        const tryPlay = () => {
+          const p = el.play();
+          if (p && typeof p.then === 'function') {
+            p.catch((err: any) => {
+              // eslint-disable-next-line no-console
+              console.warn('[PartMixer.playAll] play() rejected', { url: el.src, error: err });
+            });
+          }
+        };
+        if (el.readyState >= 2) {
+          tryPlay();
+        } else {
+          // Brand-new upload that hasn't finished buffering yet — queue
+          // play on canplay so we don't drop it. Browsers honour the
+          // gesture for a short window after the click that opened this
+          // call, which is enough for the file to stream in.
+          const onCanPlay = () => {
+            el.removeEventListener('canplay', onCanPlay);
+            tryPlay();
+          };
+          el.addEventListener('canplay', onCanPlay, { once: true });
         }
       });
       // Then update the chip UI to reflect that everything is on.
