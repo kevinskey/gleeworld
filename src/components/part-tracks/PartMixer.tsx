@@ -126,22 +126,34 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
   // trigger playback without owning the mixer's audio refs directly.
   useImperativeHandle(ref, () => ({
     playAll: () => {
-      // Re-enable every track so a previous mute doesn't silence the play-all.
-      setEnabled(new Set(playable.map(t => t.id)));
-      // Defer one tick so the volume effect can apply to the just-enabled
-      // tracks before we kick off play().
-      setTimeout(() => {
-        const elements = Array.from(refs.current.values());
-        if (elements.length === 0) {
-          toast.error('No audio loaded yet — try again in a moment.');
-          return;
+      const elements = Array.from(refs.current.values());
+      if (elements.length === 0) {
+        toast.error('No audio loaded yet — try again in a moment.');
+        return;
+      }
+      // Critical: do everything synchronously inside the user-gesture event.
+      // setTimeout (or even an async/await) drops the gesture and Safari /
+      // Chrome will silently reject the play() promise for any element that
+      // wasn't already playing — which was the "only one part plays" bug.
+      for (const el of elements) {
+        try {
+          // Override any previous mute directly on the DOM so we don't have
+          // to wait for the volume useEffect to run on next render.
+          el.volume = 1;
+          if (el.readyState < 2) el.load();
+        } catch {}
+      }
+      elements.forEach((el) => {
+        const p = el.play();
+        if (p && typeof p.then === 'function') {
+          p.catch((err: any) => {
+            // eslint-disable-next-line no-console
+            console.warn('[PartMixer.playAll] play() rejected', { url: el.src, error: err });
+          });
         }
-        elements.forEach((el) => {
-          if (el.readyState < 2) { try { el.load(); } catch {} }
-          const p = el.play();
-          if (p && typeof p.then === 'function') p.catch(() => {});
-        });
-      }, 30);
+      });
+      // Then update the chip UI to reflect that everything is on.
+      setEnabled(new Set(playable.map(t => t.id)));
     },
     pause: () => {
       for (const el of refs.current.values()) el.pause();
