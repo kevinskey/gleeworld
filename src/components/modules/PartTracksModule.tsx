@@ -50,6 +50,21 @@ export const PartTracksModule: React.FC = () => {
   // After a new-track save we offer to keep the piece title for the next part.
   const [continuePrompt, setContinuePrompt] = useState<{ piece: string; voicePart: string } | null>(null);
   const voicePartInputRef = useRef<HTMLInputElement>(null);
+  const addFormRef = useRef<HTMLDivElement>(null);
+
+  /** Jump to the Add form with the piece title pre-filled so a director can
+   *  add another voice or accompaniment part to an existing piece without
+   *  retyping the title. */
+  const startAddingTo = (piece: string) => {
+    setNewPiece(piece);
+    setNewPart('');
+    setNewFile(null);
+    setReplaceFor(null);
+    setTimeout(() => {
+      addFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      voicePartInputRef.current?.focus();
+    }, 60);
+  };
   // Ref-based lock that catches double-fires before React has re-rendered the
   // disabled button — the `adding` state flips synchronously but the disabled
   // prop only applies on the next paint, so a fast double-tap (or a stray
@@ -244,7 +259,7 @@ export const PartTracksModule: React.FC = () => {
         </p>
       </div>
 
-      <Card className="p-4 space-y-3">
+      <Card ref={addFormRef} className="p-4 space-y-3">
         <Label className="text-sm font-semibold">Add a part track</Label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="space-y-1">
@@ -308,12 +323,22 @@ export const PartTracksModule: React.FC = () => {
         <div className="space-y-4">
           {grouped.map(([piece, list]) => (
             <Card key={piece} className="p-4 space-y-4">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Music className="h-4 w-4 text-muted-foreground" />
                 <h3 className="font-semibold">{piece}</h3>
                 <span className="text-xs text-muted-foreground">
                   · {list.length} part{list.length === 1 ? '' : 's'}
                 </span>
+                <div className="ml-auto">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => startAddingTo(piece)}
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Add part to this piece
+                  </Button>
+                </div>
               </div>
 
               {/* Listener: multi-track mixer for this piece */}
