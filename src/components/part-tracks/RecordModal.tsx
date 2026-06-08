@@ -204,10 +204,17 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   const startRecording = async () => {
     cancelCountInRef.current = false;
     try {
+      // These three browser flags are designed for voice-call clarity, NOT
+      // music. autoGainControl in particular causes audible "pumping" on
+      // sustained vocal notes — it ducks loud passages and boosts quiet ones,
+      // so a held pitch breathes in and out. echoCancellation introduces
+      // comb-filter artifacts when the singer's own voice is loud, and
+      // noiseSuppression chops transients off the start of phrases. Music
+      // recordings want a flat, unprocessed signal.
       const audioConstraints: MediaTrackConstraints = {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
       };
       if (settings.inputDeviceId && settings.inputDeviceId !== 'default') {
         audioConstraints.deviceId = { exact: settings.inputDeviceId };
