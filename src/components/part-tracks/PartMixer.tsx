@@ -45,6 +45,9 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
     [tracks, sessionId],
   );
   const [enabled, setEnabled] = useState<Set<string>>(() => new Set(playable.map(t => t.id)));
+  // Per-track gain (0-1). Independent of mute toggles — when a track is
+  // enabled its element volume is set to this gain; when muted, 0.
+  const [trackVolume, setTrackVolume] = useState<Record<string, number>>({});
   const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -94,15 +97,16 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
     }
   }, [playable]);
 
-  // Apply volume based on enabled set (mute toggles via volume, not pause —
-  // pause drifts on resume).
+  // Apply volume based on enabled set + per-track gain (mute toggles via
+  // volume, not pause — pause drifts on resume).
   useEffect(() => {
     for (const t of playable) {
       const el = refs.current.get(t.id);
       if (!el) continue;
-      el.volume = enabled.has(t.id) ? 1 : 0;
+      const gain = trackVolume[t.id] ?? 1;
+      el.volume = enabled.has(t.id) ? gain : 0;
     }
-  }, [enabled, playable]);
+  }, [enabled, playable, trackVolume]);
 
   // Track duration = longest of any loaded track.
   const onLoadedMetadata = (id: string) => {
@@ -159,8 +163,12 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
       for (const el of elements) {
         try {
           // Override any previous mute directly on the DOM so we don't have
-          // to wait for the volume useEffect to run on next render.
-          el.volume = 1;
+          // to wait for the volume useEffect to run on next render. Honor
+          // the per-track gain so the user's level mix carries through.
+          // (Map el → track id via refs.)
+          const id = Array.from(refs.current.entries())
+            .find(([, ref]) => ref === el)?.[0];
+          el.volume = id ? (trackVolume[id] ?? 1) : 1;
           if (el.readyState < 2) el.load();
         } catch {}
       }
@@ -194,7 +202,7 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
     pause: () => {
       for (const el of refs.current.values()) el.pause();
     },
-  }), [playable]);
+  }), [playable, trackVolume]);
 
   const togglePlay = () => {
     const elements = Array.from(refs.current.values());
@@ -418,6 +426,38 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
         <span className="font-mono text-xs tabular-nums text-muted-foreground min-w-[3rem] text-right">
           {mmss(duration)}
         </span>
+      </div>
+
+      {/* Per-track volume sliders. Lets a singer dial in a balance — soft
+          accompaniment, louder soprano they're learning, etc. */}
+      <div className="space-y-1.5 rounded-md border bg-white/70 p-2.5">
+        <div className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+          Track levels
+        </div>
+        {playable.map(t => {
+          const gain = trackVolume[t.id] ?? 1;
+          const on = enabled.has(t.id);
+          return (
+            <div key={t.id} className="flex items-center gap-2 text-xs">
+              <span className={`w-16 truncate font-medium ${on ? 'text-slate-900' : 'text-slate-400 line-through'}`}>
+                {t.voice_part}
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={gain}
+                onChange={(e) => setTrackVolume(prev => ({ ...prev, [t.id]: Number(e.target.value) }))}
+                className="flex-1 accent-violet-600"
+                aria-label={`Volume for ${t.voice_part}`}
+              />
+              <span className="w-10 text-right tabular-nums text-muted-foreground">
+                {Math.round(gain * 100)}%
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <p className="text-[10px] text-muted-foreground">
