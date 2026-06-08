@@ -32,11 +32,13 @@ export interface PartMixerHandle {
  * the same downbeat / metronome to stay aligned.
  */
 export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTitle, tracks }, ref) => {
-  // Append a one-time cache-buster so any stale 4xx response sitting in the
-  // browser HTTP cache from before the storage flatten daemon caught up is
-  // bypassed. The query string doesn't affect storage routing — the proxy
-  // matches on path only.
-  const sessionId = useMemo(() => Math.random().toString(36).slice(2, 8), []);
+  // Append a cache-buster so a stale 4xx HTTP-cached response (from before
+  // the storage flatten daemon caught up) is bypassed. We bump the session
+  // ID every time a new track is detected, which also forces every audio
+  // element to remount with a fresh src — the in-code equivalent of the
+  // hard-refresh the user otherwise had to do after a new recording.
+  const [sessionIdSeed, bumpSession] = useState(() => Math.random().toString(36).slice(2, 8));
+  const sessionId = sessionIdSeed;
   const playable = useMemo(
     () => tracks.filter(t => !!t.audio_url).map(t => ({
       ...t,
@@ -81,19 +83,15 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
       return next;
     });
 
-    // After React commits the new audio element to the DOM, kick a load()
-    // on each fresh track so the buffer is primed by the time the user
-    // clicks Play all. requestAnimationFrame waits one paint, which is
-    // long enough for the ref callback to have populated refs.current.
+    // When a new track shows up, bump the session ID. That changes the
+    // ?cb=<id> appended to every audio_url, which changes the audio
+    // elements' src props, which causes React to remount every <audio>
+    // with a fresh source. The browser then loads each from scratch —
+    // exactly the behaviour of a hard refresh. Interrupts ongoing
+    // playback, but that's the price of "Play all just works after a
+    // new take".
     if (newIds.length > 0) {
-      requestAnimationFrame(() => {
-        for (const id of newIds) {
-          const el = refs.current.get(id);
-          if (el) {
-            try { el.load(); } catch {}
-          }
-        }
-      });
+      bumpSession(Math.random().toString(36).slice(2, 8));
     }
   }, [playable]);
 
