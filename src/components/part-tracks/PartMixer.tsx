@@ -367,36 +367,48 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
           return (
             <button
               key={t.id}
-              onClick={() => toggle(t.id)}
-              onDoubleClick={() => soloOnly(t.id)}
-              title={on ? 'Mute (double-click to solo)' : 'Unmute'}
-              className="focus:outline-none"
+              type="button"
+              onClick={(e) => { e.stopPropagation(); toggle(t.id); }}
+              title={on ? 'Mute this part' : 'Unmute this part'}
+              className={
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold border-2 transition-colors select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ' +
+                (on
+                  ? 'bg-violet-600 text-white border-violet-700 hover:bg-violet-700'
+                  : 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200 line-through')
+              }
             >
-              <Badge
-                variant={on ? 'default' : 'outline'}
-                className={on
-                  ? 'bg-violet-600 hover:bg-violet-700 text-white border-0 cursor-pointer'
-                  // Disabled state must stay readable against the light
-                  // violet/fuchsia gradient background — explicit colors,
-                  // not the default outline foreground variable which can
-                  // render white-on-white.
-                  : 'cursor-pointer bg-white text-slate-700 border-slate-400 hover:bg-slate-100'}
-              >
-                {on ? <Volume2 className="h-3 w-3 mr-1" /> : <VolumeX className="h-3 w-3 mr-1" />}
-                {t.voice_part}
-              </Badge>
+              {on ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+              {t.voice_part}
             </button>
           );
         })}
-        {enabled.size < playable.length && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-6 px-2 text-xs bg-white text-slate-700 border-slate-400 hover:bg-slate-100"
-            onClick={enableAll}
-          >
-            Play all
-          </Button>
+        {playable.length > 1 && (
+          <>
+            {playable.some(t => enabled.has(t.id) && enabled.size > 1) && (
+              <button
+                type="button"
+                onClick={() => {
+                  // "Solo" the only currently-enabled track, if exactly one is on.
+                  // If more than one is on, solo the first on track.
+                  const firstOn = playable.find(t => enabled.has(t.id));
+                  if (firstOn) soloOnly(firstOn.id);
+                }}
+                className="h-7 px-2 text-xs rounded-md border border-slate-400 bg-white text-slate-700 hover:bg-slate-100"
+                title="Solo the first enabled part"
+              >
+                Solo
+              </button>
+            )}
+            {enabled.size < playable.length && (
+              <button
+                type="button"
+                onClick={enableAll}
+                className="h-7 px-2 text-xs rounded-md border border-violet-500 bg-violet-100 text-violet-800 hover:bg-violet-200"
+              >
+                Unmute all
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -459,7 +471,7 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
       </div>
 
       <p className="text-[10px] text-muted-foreground">
-        Pressing play plays every enabled part in sync. Tap a chip to mute / unmute it. Double-tap to solo. "Play all" re-enables every part.
+        Tap a chip to mute / unmute that part. Pressing play plays every enabled part in sync. The "Unmute all" button brings every part back at once.
       </p>
     </div>
   );
