@@ -484,6 +484,16 @@ export const PartTracksModule: React.FC = () => {
         title={replaceFor
           ? `Record ${replaceFor.voice_part} — ${replaceFor.piece_title}`
           : `Record ${newPart || 'voice part'} — ${newPiece || 'new piece'}`}
+        // Existing parts of the piece being recorded — played through the
+        // singer's headphones while the new take captures, so they can
+        // sing in tune with the accompaniment + the voices already taken.
+        monitorTracks={(() => {
+          const targetPiece = replaceFor?.piece_title || newPiece.trim();
+          if (!targetPiece) return [];
+          return tracks
+            .filter(t => t.piece_title === targetPiece && !!t.audio_url && t.id !== replaceFor?.id)
+            .map(t => ({ id: t.id, voice_part: t.voice_part, audio_url: t.audio_url! }));
+        })()}
       />
     </div>
   );

@@ -22,6 +22,10 @@ type ClickSettings = {
   inputDeviceId: string;
   /** MediaDeviceInfo.deviceId for audio output (metronome + preview). */
   outputDeviceId: string;
+  /** Hear existing parts of the piece through the output while recording. */
+  monitorOtherParts: boolean;
+  /** 0..1 mix level for the monitor playback (independent of the click). */
+  monitorVolume: number;
 };
 const DEFAULT_SETTINGS: ClickSettings = {
   bpm: 100,
@@ -30,6 +34,8 @@ const DEFAULT_SETTINGS: ClickSettings = {
   clickDuringRecord: false,
   inputDeviceId: 'default',
   outputDeviceId: 'default',
+  monitorOtherParts: true,
+  monitorVolume: 0.7,
 };
 const loadSettings = (): ClickSettings => {
   try {
@@ -52,14 +58,24 @@ const audioCtxSupportsSinkId = (() => {
 const audioElSupportsSinkId = typeof HTMLAudioElement !== 'undefined'
   && 'setSinkId' in HTMLAudioElement.prototype;
 
+export interface MonitorTrack {
+  id: string;
+  voice_part: string;
+  audio_url: string;
+}
+
 interface RecordModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (mp3Blob: Blob) => Promise<void> | void;
   title?: string;
+  /** Existing parts of the piece — played through the output while the new
+   *  take is being recorded, so a singer can sing in tune with the
+   *  accompaniment and the other voice parts already taken. */
+  monitorTracks?: MonitorTrack[];
 }
 
-export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave, title }) => {
+export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave, title, monitorTracks = [] }) => {
   const [phase, setPhase] = useState<Phase>('idle');
   const [elapsed, setElapsed] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -83,6 +99,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   const mp3BlobRef = useRef<Blob | null>(null);
   const metronomeRef = useRef<Metronome | null>(null);
   const cancelCountInRef = useRef<boolean>(false);
+  const monitorRefs = useRef<HTMLAudioElement[]>([]);
 
   // Persist settings whenever they change.
   useEffect(() => { saveSettings(settings); }, [settings]);
@@ -122,12 +139,19 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
     }
   };
 
+  const stopMonitorPlayback = () => {
+    for (const el of monitorRefs.current) {
+      try { el.pause(); el.currentTime = 0; } catch {}
+    }
+  };
+
   const stopAll = () => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     metronomeRef.current?.stop();
     metronomeRef.current = null;
     cancelCountInRef.current = true;
+    stopMonitorPlayback();
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -282,6 +306,23 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
       setPhase('recording');
       drawWaveform();
 
+      // Kick off the monitor mix — existing parts of the piece play through
+      // the output device the moment the recording begins, so the singer can
+      // sing in tune with the accompaniment and previously taken voices.
+      if (settings.monitorOtherParts && monitorRefs.current.length > 0) {
+        for (const el of monitorRefs.current) {
+          try {
+            el.volume = settings.monitorVolume;
+            el.currentTime = 0;
+            if (audioElSupportsSinkId && settings.outputDeviceId !== 'default') {
+              (el as any).setSinkId?.(settings.outputDeviceId).catch(() => {});
+            }
+            const p = el.play();
+            if (p && typeof p.then === 'function') p.catch(() => {});
+          } catch {}
+        }
+      }
+
       // Optional continuous click during recording. Resumes seamlessly after
       // the count-in finishes (Web Audio scheduler keeps the beat aligned).
       if (settings.clickDuringRecord) {
@@ -302,6 +343,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
     metronomeRef.current?.stop();
     metronomeRef.current = null;
     cancelCountInRef.current = true;
+    stopMonitorPlayback();
     streamRef.current?.getTracks().forEach(t => t.stop());
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try { mediaRecorderRef.current.stop(); } catch {}
@@ -377,6 +419,22 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="sm:max-w-lg">
+        {/* Hidden monitor-mix audio elements. Mounted whenever the modal is
+            open so the browser can pre-buffer; played when recording begins. */}
+        {monitorTracks.length > 0 && (
+          <div aria-hidden="true" className="sr-only">
+            {monitorTracks.map((t, i) => (
+              <audio
+                key={t.id}
+                ref={el => {
+                  if (el) monitorRefs.current[i] = el;
+                }}
+                src={t.audio_url}
+                preload="auto"
+              />
+            ))}
+          </div>
+        )}
         <DialogHeader>
           <DialogTitle>{title ?? 'Record part track'}</DialogTitle>
         </DialogHeader>
@@ -440,6 +498,55 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
                   Plug in USB-C headphones, then pick them from both menus — the click goes to your ears and your voice (not the click) gets recorded.
                 </p>
               </div>
+
+              {/* Monitor mix — play existing parts in headphones while recording */}
+              {monitorTracks.length > 0 && (
+                <div className="rounded-md border bg-muted/40 p-3 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wide">
+                      Hear other parts while recording
+                    </Label>
+                    <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.monitorOtherParts}
+                        onChange={e => setSettings(s => ({ ...s, monitorOtherParts: e.target.checked }))}
+                        className="h-4 w-4 accent-violet-600"
+                      />
+                      <span>On</span>
+                    </label>
+                  </div>
+                  {settings.monitorOtherParts && (
+                    <>
+                      <div className="text-xs text-muted-foreground">
+                        Plays through the output you picked above the moment recording starts. Wear headphones so the mix doesn't bleed into the mic.
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {monitorTracks.map(t => (
+                          <span key={t.id} className="text-[11px] px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">
+                            {t.voice_part}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs flex items-center justify-between">
+                          Monitor volume
+                          <span className="text-muted-foreground tabular-nums">{Math.round(settings.monitorVolume * 100)}%</span>
+                        </Label>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={settings.monitorVolume}
+                          onChange={e => setSettings(s => ({ ...s, monitorVolume: Number(e.target.value) }))}
+                          className="w-full accent-violet-600"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Click track settings */}
               <div className="rounded-md border bg-muted/40 p-3 space-y-3">
