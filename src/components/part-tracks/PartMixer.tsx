@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
@@ -15,6 +15,13 @@ interface PartMixerProps {
   tracks: MixerTrack[];
 }
 
+/** Imperative API exposed via ref so parent cards can drive playback from
+ *  outside the mixer (e.g. a "Play all" button in the piece header). */
+export interface PartMixerHandle {
+  playAll: () => void;
+  pause: () => void;
+}
+
 /**
  * Multi-track listener: plays all enabled parts in sync. Singers can toggle
  * individual voice parts on/off to hear the full mix or solo their part.
@@ -24,7 +31,7 @@ interface PartMixerProps {
  * For practice tracks this is tight enough; tracks should be recorded against
  * the same downbeat / metronome to stay aligned.
  */
-export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
+export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTitle, tracks }, ref) => {
   // Append a one-time cache-buster so any stale 4xx response sitting in the
   // browser HTTP cache from before the storage flatten daemon caught up is
   // bypassed. The query string doesn't affect storage routing — the proxy
@@ -114,6 +121,32 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
       for (const el of refs.current.values()) el.pause();
     };
   }, []);
+
+  // Expose a play-all imperative handle so the piece card header can
+  // trigger playback without owning the mixer's audio refs directly.
+  useImperativeHandle(ref, () => ({
+    playAll: () => {
+      // Re-enable every track so a previous mute doesn't silence the play-all.
+      setEnabled(new Set(playable.map(t => t.id)));
+      // Defer one tick so the volume effect can apply to the just-enabled
+      // tracks before we kick off play().
+      setTimeout(() => {
+        const elements = Array.from(refs.current.values());
+        if (elements.length === 0) {
+          toast.error('No audio loaded yet — try again in a moment.');
+          return;
+        }
+        elements.forEach((el) => {
+          if (el.readyState < 2) { try { el.load(); } catch {} }
+          const p = el.play();
+          if (p && typeof p.then === 'function') p.catch(() => {});
+        });
+      }, 30);
+    },
+    pause: () => {
+      for (const el of refs.current.values()) el.pause();
+    },
+  }), [playable]);
 
   const togglePlay = () => {
     const elements = Array.from(refs.current.values());
@@ -344,6 +377,7 @@ export const PartMixer: React.FC<PartMixerProps> = ({ pieceTitle, tracks }) => {
       </p>
     </div>
   );
-};
+});
+PartMixer.displayName = 'PartMixer';
 
 export default PartMixer;

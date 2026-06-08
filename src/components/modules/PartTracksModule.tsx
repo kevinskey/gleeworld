@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Plus, Trash2, Upload, Mic, Music, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { RecordModal } from '@/components/part-tracks/RecordModal';
-import { PartMixer } from '@/components/part-tracks/PartMixer';
+import { PartMixer, type PartMixerHandle } from '@/components/part-tracks/PartMixer';
+import { Play } from 'lucide-react';
 import { scoreFileToAudioBlob, detectScoreKind } from '@/lib/score-to-mp3';
 
 interface PartTrack {
@@ -51,6 +52,9 @@ export const PartTracksModule: React.FC = () => {
   const [continuePrompt, setContinuePrompt] = useState<{ piece: string; voicePart: string } | null>(null);
   const voicePartInputRef = useRef<HTMLInputElement>(null);
   const addFormRef = useRef<HTMLDivElement>(null);
+  // One mixer handle per piece so the piece-card header's "Play all" button
+  // can trigger playback without owning the audio refs itself.
+  const mixerHandlesRef = useRef<Map<string, PartMixerHandle | null>>(new Map());
 
   /** Jump to the Add form with the piece title pre-filled so a director can
    *  add another voice or accompaniment part to an existing piece without
@@ -329,7 +333,15 @@ export const PartTracksModule: React.FC = () => {
                 <span className="text-xs text-muted-foreground">
                   · {list.length} part{list.length === 1 ? '' : 's'}
                 </span>
-                <div className="ml-auto">
+                <div className="ml-auto flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => mixerHandlesRef.current.get(piece)?.playAll()}
+                    className="bg-violet-600 hover:bg-violet-700 text-white"
+                  >
+                    <Play className="h-4 w-4 mr-1.5 fill-current" />
+                    Play all parts
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -342,7 +354,14 @@ export const PartTracksModule: React.FC = () => {
               </div>
 
               {/* Listener: multi-track mixer for this piece */}
-              <PartMixer pieceTitle={piece} tracks={list} />
+              <PartMixer
+                ref={(handle) => {
+                  if (handle) mixerHandlesRef.current.set(piece, handle);
+                  else mixerHandlesRef.current.delete(piece);
+                }}
+                pieceTitle={piece}
+                tracks={list}
+              />
 
               {/* Director: per-track admin row */}
               <div className="space-y-2">
