@@ -28,12 +28,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2, Star, StarOff, Plus } from 'lucide-react';
+import { Trash2, Star, StarOff, Plus, MessageSquarePlus, Download } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useUsers, type User } from '@/hooks/useUsers';
 import {
+  CONTACT_CHANNELS,
+  CONTACT_CHANNEL_LABEL,
   VOICE_PARTS,
   VOICE_PART_LABEL,
+  type ContactChannel,
+  type ContactLogEntry,
   type Ensemble,
   type EnsembleDirector,
   type EnsembleMember,
@@ -109,6 +122,8 @@ function MembersTab({ ensembleId }: { ensembleId: string }) {
   const queryClient = useQueryClient();
   const { users } = useUsers();
   const [pickProfileId, setPickProfileId] = useState<string>('');
+  const [importOpen, setImportOpen] = useState(false);
+  const [contactProfileId, setContactProfileId] = useState<string | null>(null);
 
   const { data: members = [] } = useQuery({
     queryKey: ['ensemble_members', ensembleId],
@@ -208,8 +223,17 @@ function MembersTab({ ensembleId }: { ensembleId: string }) {
         <Button
           disabled={!pickProfileId || add.isPending}
           onClick={() => add.mutate(pickProfileId)}
+          title="Add selected member"
         >
           <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => setImportOpen(true)}
+          title="Import every enrolled student from a course"
+        >
+          <Download className="h-4 w-4 mr-1" />
+          Import from course
         </Button>
       </div>
 
@@ -222,7 +246,7 @@ function MembersTab({ ensembleId }: { ensembleId: string }) {
               <TableHead>Name</TableHead>
               <TableHead>Voice</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-12" />
+              <TableHead className="w-20" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -254,7 +278,15 @@ function MembersTab({ ensembleId }: { ensembleId: string }) {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="flex gap-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setContactProfileId(m.profile_id)}
+                      title="Log contact"
+                    >
+                      <MessageSquarePlus className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -270,7 +302,325 @@ function MembersTab({ ensembleId }: { ensembleId: string }) {
           </TableBody>
         </Table>
       )}
+
+      <ImportFromCourseDialog
+        ensembleId={ensembleId}
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+      />
+      <LogContactDialog
+        ensembleId={ensembleId}
+        profileId={contactProfileId}
+        memberName={
+          contactProfileId
+            ? usersById.get(contactProfileId)?.full_name ??
+              usersById.get(contactProfileId)?.email ??
+              null
+            : null
+        }
+        onClose={() => setContactProfileId(null)}
+      />
     </div>
+  );
+}
+
+/* ─────────────────────── Log contact dialog ─────────────────────── */
+
+function LogContactDialog({
+  ensembleId,
+  profileId,
+  memberName,
+  onClose,
+}: {
+  ensembleId: string;
+  profileId: string | null;
+  memberName: string | null;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const open = profileId !== null;
+  const [channel, setChannel] = useState<ContactChannel>('call');
+  const [note, setNote] = useState('');
+
+  const { data: history = [] } = useQuery({
+    queryKey: ['contact_log', profileId],
+    enabled: open,
+    queryFn: async (): Promise<ContactLogEntry[]> => {
+      if (!profileId) return [];
+      const { data, error } = await supabase
+        .from('gw_contact_log')
+        .select('*')
+        .eq('profile_id', profileId)
+        .order('contacted_at', { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return (data ?? []) as ContactLogEntry[];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!profileId) throw new Error('No member selected.');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      // Look up the caller's profile id so recorded_by gets a profile, not auth uid.
+      let recordedBy: string | null = null;
+      if (user) {
+        const { data: p } = await supabase
+          .from('gw_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        recordedBy = p?.id ?? null;
+      }
+      const { error } = await supabase.from('gw_contact_log').insert({
+        profile_id: profileId,
+        ensemble_id: ensembleId,
+        recorded_by: recordedBy,
+        channel,
+        note: note.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contact_log', profileId] });
+      // last_contacted_at change can move staleness flags; refresh dashboard too.
+      queryClient.invalidateQueries({ queryKey: ['health_snapshots', ensembleId] });
+      setNote('');
+      setChannel('call');
+      toast.success('Contact logged');
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Log contact{memberName ? ` — ${memberName}` : ''}</DialogTitle>
+          <DialogDescription>
+            Updates last-contacted-at and feeds the staleness flag on the dashboard.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Channel</Label>
+            <Select value={channel} onValueChange={(v) => setChannel(v as ContactChannel)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CONTACT_CHANNELS.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {CONTACT_CHANNEL_LABEL[c]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Note (optional)</Label>
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="What did you talk about?"
+              rows={3}
+            />
+          </div>
+
+          {history.length > 0 && (
+            <div className="space-y-1">
+              <Label className="text-xs">Recent contacts</Label>
+              <ul className="text-xs text-muted-foreground space-y-1 max-h-40 overflow-y-auto">
+                {history.map((h) => (
+                  <li key={h.id}>
+                    <span className="font-medium">
+                      {new Date(h.contacted_at).toLocaleDateString()}
+                    </span>{' '}
+                    · {CONTACT_CHANNEL_LABEL[h.channel] ?? h.channel}
+                    {h.note ? ` — ${h.note}` : ''}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose} disabled={save.isPending}>
+            Cancel
+          </Button>
+          <Button onClick={() => save.mutate()} disabled={save.isPending}>
+            Log
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ─────────────────────── Bulk import dialog ─────────────────────── */
+
+interface CourseRow {
+  id: string;
+  title: string | null;
+  course_code: string | null;
+  is_active: boolean | null;
+}
+
+function ImportFromCourseDialog({
+  ensembleId,
+  open,
+  onClose,
+}: {
+  ensembleId: string;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [courseId, setCourseId] = useState<string>('');
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ['gw_courses_for_import'],
+    enabled: open,
+    queryFn: async (): Promise<CourseRow[]> => {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('id, title, course_code, is_active')
+        .eq('is_active', true)
+        .order('title');
+      if (error) throw error;
+      return (data ?? []) as CourseRow[];
+    },
+  });
+
+  const importStudents = useMutation({
+    mutationFn: async () => {
+      if (!courseId) throw new Error('Pick a course.');
+      // 1. Pull enrolled students from the course.
+      const { data: enrollments, error: eErr } = await supabase
+        .from('gw_course_enrollments')
+        .select('user_id')
+        .eq('course_id', courseId)
+        .eq('role', 'student')
+        .eq('enrollment_status', 'enrolled');
+      if (eErr) throw eErr;
+      const userIds = (enrollments ?? [])
+        .map((r) => (r as { user_id: string | null }).user_id)
+        .filter((u): u is string => !!u);
+      if (userIds.length === 0) {
+        return { inserted: 0, skipped: 0, totalEnrolled: 0 };
+      }
+      // 2. Map auth user ids → gw_profiles.id.
+      const { data: profiles, error: pErr } = await supabase
+        .from('gw_profiles')
+        .select('id, user_id')
+        .in('user_id', userIds);
+      if (pErr) throw pErr;
+      const profileIds = (profiles ?? []).map(
+        (p) => (p as { id: string }).id
+      );
+      if (profileIds.length === 0) {
+        return { inserted: 0, skipped: 0, totalEnrolled: userIds.length };
+      }
+      // 3. Diff against existing ensemble members so we can report inserted vs skipped.
+      const { data: existing, error: mErr } = await supabase
+        .from('gw_ensemble_members')
+        .select('profile_id')
+        .eq('ensemble_id', ensembleId)
+        .in('profile_id', profileIds);
+      if (mErr) throw mErr;
+      const existingSet = new Set(
+        (existing ?? []).map((m) => (m as { profile_id: string }).profile_id)
+      );
+      const toInsert = profileIds.filter((p) => !existingSet.has(p));
+      if (toInsert.length === 0) {
+        return {
+          inserted: 0,
+          skipped: profileIds.length,
+          totalEnrolled: userIds.length,
+        };
+      }
+      // 4. Bulk insert. Upsert with ignoreDuplicates handles any race.
+      const { error: iErr } = await supabase.from('gw_ensemble_members').upsert(
+        toInsert.map((profile_id) => ({
+          ensemble_id: ensembleId,
+          profile_id,
+          status: 'active' as const,
+        })),
+        { onConflict: 'ensemble_id,profile_id', ignoreDuplicates: true }
+      );
+      if (iErr) throw iErr;
+      return {
+        inserted: toInsert.length,
+        skipped: existingSet.size,
+        totalEnrolled: userIds.length,
+      };
+    },
+    onSuccess: (r) => {
+      queryClient.invalidateQueries({ queryKey: ['ensemble_members', ensembleId] });
+      queryClient.invalidateQueries({ queryKey: ['ensembles'] });
+      const lostToProfileLookup =
+        r.totalEnrolled - (r.inserted + r.skipped);
+      const parts: string[] = [`Imported ${r.inserted}`];
+      if (r.skipped) parts.push(`${r.skipped} already in ensemble`);
+      if (lostToProfileLookup > 0)
+        parts.push(`${lostToProfileLookup} had no profile`);
+      toast.success(parts.join(' · '));
+      setCourseId('');
+      onClose();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Import members from course</DialogTitle>
+          <DialogDescription>
+            Adds every enrolled student from the chosen course as an active ensemble
+            member. Students already in the ensemble are skipped.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-1">
+          <Label className="text-xs">Course</Label>
+          <Select value={courseId} onValueChange={setCourseId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pick a course…" />
+            </SelectTrigger>
+            <SelectContent>
+              {courses.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.course_code ? `${c.course_code} — ` : ''}
+                  {c.title ?? c.id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            disabled={importStudents.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => importStudents.mutate()}
+            disabled={!courseId || importStudents.isPending}
+          >
+            {importStudents.isPending ? 'Importing…' : 'Import'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

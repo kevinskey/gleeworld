@@ -54,6 +54,28 @@ export interface SectionTarget {
   updated_at: string;
 }
 
+export const CONTACT_CHANNELS = ['email', 'call', 'text', 'in_person', 'other'] as const;
+export type ContactChannel = (typeof CONTACT_CHANNELS)[number];
+
+export const CONTACT_CHANNEL_LABEL: Record<ContactChannel, string> = {
+  email: 'Email',
+  call: 'Call',
+  text: 'Text',
+  in_person: 'In person',
+  other: 'Other',
+};
+
+export interface ContactLogEntry {
+  id: string;
+  profile_id: string;
+  ensemble_id: string | null;
+  recorded_by: string | null;
+  channel: ContactChannel;
+  note: string | null;
+  contacted_at: string;
+  created_at: string;
+}
+
 export type HealthFlagSeverity = 'high' | 'medium' | 'low';
 export type HealthFlagKey =
   | 'readiness_gap'
