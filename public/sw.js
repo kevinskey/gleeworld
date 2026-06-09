@@ -1,8 +1,10 @@
 // Service Worker for GleeWorld PWA
-// Version: 12.0 - May 2026 - Radio.co purge + role redirect refactor.
-// Bump forces any browser holding the v11 bundle (which still imported the
-// deleted radio hooks) to flush and load the new index-*.js.
-const CACHE_VERSION = 'v33.47';
+//
+// CACHE_VERSION is replaced at build time by the bump-sw-version plugin in
+// vite.config.ts (substitutes the __GW_BUILD_VERSION__ placeholder with the
+// short git SHA). If you see the literal placeholder in production, the
+// build plugin didn't run — fix the build pipeline, don't edit this by hand.
+const CACHE_VERSION = '__GW_BUILD_VERSION__';
 const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
 const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
@@ -16,34 +18,28 @@ const STATIC_ASSETS = [
   '/offline.html'
 ];
 
-// Routes that should work offline
-const OFFLINE_ROUTES = [
-  '/dashboard',
-  '/messenger',
-  '/events',
-  '/handbook'
-];
-
-// Install event - cache static assets
+// Install event — cache static assets.
+// Intentionally NOT calling skipWaiting() here: we want the new SW to stay
+// in the "waiting" state until the user explicitly accepts the update via
+// the in-app toast (which posts {type:'SKIP_WAITING'} below). Auto-activating
+// would yank a fresh bundle into a tab mid-form and lose user input.
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v7.0...');
+  console.log(`[SW] Installing ${CACHE_VERSION}…`);
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
         console.log('[SW] Caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
-      .then(() => self.skipWaiting())
       .catch((error) => {
         console.error('[SW] Failed to cache static assets:', error);
-        return self.skipWaiting();
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker v7.0...');
+  console.log(`[SW] Activating ${CACHE_VERSION}…`);
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -273,20 +269,6 @@ self.addEventListener('notificationclick', (event) => {
       })
   );
 });
-
-// Background sync for offline actions
-self.addEventListener('sync', (event) => {
-  console.log('[SW] Background sync:', event.tag);
-  
-  if (event.tag === 'sync-messages') {
-    event.waitUntil(syncPendingMessages());
-  }
-});
-
-async function syncPendingMessages() {
-  // Placeholder for syncing offline messages when back online
-  console.log('[SW] Syncing pending messages...');
-}
 
 // Message handling from client
 self.addEventListener('message', (event) => {

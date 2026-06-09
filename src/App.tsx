@@ -19,6 +19,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
+import { ServiceWorkerUpdateNotifier } from "@/components/pwa/ServiceWorkerUpdateNotifier";
 
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
@@ -367,7 +368,8 @@ const App = () => {
                   <div>
                   <Toaster />
                   <Sonner />
-                  
+                  <ServiceWorkerUpdateNotifier />
+
                   <PersistentMeetingOverlay />
                   <MessengerModal />
                   <DesignSystemEnforcer />

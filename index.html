@@ -101,42 +101,40 @@
             navigator.serviceWorker.register('/sw.js')
               .then(registration => {
                 console.log('SW registered');
-                
-                // Check for updates every 60 seconds
+
+                // Poll for a new SW every 10 minutes. The previous 60s cadence
+                // was 1,440 round-trips per day per session for no good reason.
                 setInterval(() => {
-                  registration.update().catch(() => {
-                    // Silently handle update failures
-                  });
-                }, 60000);
-                
-                // Listen for updates
+                  registration.update().catch(() => {});
+                }, 600000);
+
+                // When a fresh worker installs and is waiting, hand off to the
+                // React layer via a custom event. The hook over there shows a
+                // sonner toast with a Reload button; clicking it posts
+                // SKIP_WAITING to the waiting worker (handled in sw.js) and
+                // then reloads. No auto-reload — users mid-form lose work.
+                function notifyUpdateReady() {
+                  if (registration.waiting && navigator.serviceWorker.controller) {
+                    window.dispatchEvent(new CustomEvent('gw-sw-update-ready'));
+                  }
+                }
+                if (registration.waiting && navigator.serviceWorker.controller) {
+                  notifyUpdateReady();
+                }
                 registration.addEventListener('updatefound', () => {
                   const newWorker = registration.installing;
-                  if (newWorker) {
-                    newWorker.addEventListener('statechange', () => {
-                      if (newWorker.state === 'activated') {
-                        // Notify user of update
-                        if (confirm('New version available! Reload to update?')) {
-                          window.location.reload();
-                        }
-                      }
-                    });
-                  }
+                  if (!newWorker) return;
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed') {
+                      notifyUpdateReady();
+                    }
+                  });
                 });
               })
               .catch(err => {
                 // Gracefully handle registration failures (404, 412, etc.)
                 console.log('SW registration skipped:', err.message || err);
               });
-          });
-          
-          // Handle controller change (new SW activated)
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-              refreshing = true;
-              window.location.reload();
-            }
           });
         } else if (isLovablePreview) {
           console.log('SW registration skipped in preview environment');
