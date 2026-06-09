@@ -10,7 +10,7 @@ import {
   PenTool, TrendingUp, Inbox, ScrollText, BadgeCheck, Folder, SquareUser, Newspaper,
   ImagePlus, Clapperboard, BookMarked, PencilRuler, Award, MessageCircle, Layers,
   Presentation, MicVocal, Wrench, Contact, ClipboardList,
-  Rss,
+  Rss, Activity,
 } from 'lucide-react';
 
 // Import core module components
@@ -24,6 +24,8 @@ import { CourseAttendanceLedger } from '@/components/attendance/CourseAttendance
 // doesn't crash the whole module config evaluation.
 import { lazy } from 'react';
 const SightReadingHub = lazy(() => import('@/components/modules/SightReadingHub').then(m => ({ default: m.SightReadingHub })));
+// EnsemblesPage default-exports as a route component; wrap to match the inline-module signature.
+const ProgramHealthModule = lazy(() => import('@/pages/admin/Ensembles'));
 const CommunicationsHub = lazy(() => import('@/components/modules/CommunicationsHub').then(m => ({ default: m.CommunicationsHub })));
 const FinanceHub = lazy(() => import('@/components/modules/FinanceHub').then(m => ({ default: m.FinanceHub })));
 import { LazyPermissionsModule } from '@/components/modules/LazyPermissionsModule';
@@ -102,6 +104,21 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: PartTracksModule,
     dbFunctionName: "part-tracks"
+  },
+  {
+    // Ensembles + nightly stability scores + AI action plans. The page
+    // itself self-gates on the program_health feature flag (redirects to
+    // /admin if off), so no extra gating is needed here.
+    id: "program-health",
+    name: "program-health",
+    title: "Program Health",
+    description: "Ensembles, stability scores, action plans",
+    icon: Activity,
+    iconColor: "green",
+    category: "musical-leadership",
+    isActive: true,
+    component: ProgramHealthModule,
+    dbFunctionName: "program-health"
   },
   {
     // Member-facing Calendar view. Admins get the full management UI via

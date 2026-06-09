@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import { Shield, Database, Search, Eye } from 'lucide-react';
@@ -28,25 +27,6 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const { data: tenantModules = [] } = useTenantModules();
   const activeBillingSlugs = useMemo(() => new Set(tenantModules.map(m => m.module_id)), [tenantModules]);
-
-  // Add-on catalog from gw_billing_modules — used for pricing in the cards.
-  const { data: addonCatalog = [] } = useQuery({
-    queryKey: ['addon-catalog'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_billing_modules')
-        .select('id, name, monthly_price_cents')
-        .eq('tier', 'addon');
-      if (error) throw error;
-      return data ?? [];
-    },
-    staleTime: 5 * 60_000,
-  });
-  const priceByBillingId = useMemo(() => {
-    const m: Record<string, number> = {};
-    addonCatalog.forEach((a: any) => { m[a.id] = a.monthly_price_cents || 0; });
-    return m;
-  }, [addonCatalog]);
 
   async function activateAddon(billingId: string) {
     setActivatingId(billingId);
@@ -87,6 +67,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
     'merch-store': 'merch',
     'feed-control': 'feeds',
     'part-tracks': 'part_tracks',
+    'program-health': 'program_health',
   };
   const ADDON_MODULE_IDS = new Set(Object.keys(UI_TO_BILLING));
 
@@ -209,8 +190,6 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
               const Icon = m.icon;
               const billingId = UI_TO_BILLING[m.id];
               const isSubscribed = isSuperAdmin || (billingId && activeBillingSlugs.has(billingId));
-              const priceCents = priceByBillingId[billingId] || 0;
-              const priceLabel = priceCents > 0 ? `$${(priceCents / 100).toFixed(0)}/mo` : '';
               const isActivating = activatingId === billingId;
 
               return (
@@ -229,8 +208,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
                       <p className="text-[11px] text-slate-700 line-clamp-2 mt-0.5">{m.description}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-slate-900">{priceLabel}</span>
+                  <div className="flex items-center justify-end gap-2">
                     {isSubscribed ? (
                       <Button size="sm" variant="default" onClick={() => onModuleSelect(m.id)}>Open</Button>
                     ) : (
