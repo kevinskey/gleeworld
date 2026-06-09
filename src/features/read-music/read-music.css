@@ -1,0 +1,36 @@
+/* Read Music feature CSS — scoped to .read-music-root */
+
+.read-music-root {
+  --brand-purple: var(--brand-blue-dark);
+  --brand-cyan: var(--brand-blue-light);
+}
+
+.read-music-root .bg-brand-gradient {
+  background: linear-gradient(135deg, hsl(var(--brand-blue-light)) 0%, hsl(var(--brand-blue-dark)) 100%);
+}
+.read-music-root .bg-brand-gradient-deep {
+  background: linear-gradient(135deg, hsl(187 70% 22%) 0%, hsl(271 60% 22%) 100%);
+}
+.read-music-root .text-brand-gradient {
+  background: linear-gradient(135deg, hsl(var(--brand-blue-light)) 0%, hsl(var(--brand-blue-dark)) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.read-music-root .border-brand {
+  border-color: hsl(var(--brand-blue-dark) / 0.35);
+}
+
+@keyframes rmw-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.read-music-root .animate-shake { animation: rmw-shake 0.3s ease-in-out; }
+
+@keyframes rmw-pop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.read-music-root .animate-pop { animation: rmw-pop 0.25s ease-out; }
