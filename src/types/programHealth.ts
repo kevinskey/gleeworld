@@ -91,3 +91,30 @@ export interface HealthSnapshot {
   flags: HealthFlag[] | null;
   weights_version: string | null;
 }
+
+export type ActionPlanStatus = 'active' | 'archived';
+
+// One ranked recommendation, locked to a single flag from the snapshot.
+export interface ActionPlanRecommendation {
+  rank: number;
+  flag_key: HealthFlagKey | string;
+  title: string;
+  rationale: string;
+  steps: string[];
+  owner_hint?: string;
+}
+
+export interface ActionPlanPayload {
+  recommendations: ActionPlanRecommendation[];
+  snapshot_id: string;
+}
+
+export interface ActionPlan {
+  id: string;
+  ensemble_id: string;
+  generated_at: string;
+  model: string | null;
+  input_context: string | null;
+  plan: ActionPlanPayload;
+  status: ActionPlanStatus;
+}

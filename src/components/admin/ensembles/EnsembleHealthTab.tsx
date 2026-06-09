@@ -20,6 +20,7 @@ import {
   type HealthFlag,
   type VoicePart,
 } from '@/types/programHealth';
+import { EnsembleActionPlans } from './EnsembleActionPlans';
 
 interface Props {
   ensembleId: string;
@@ -153,6 +154,8 @@ export function EnsembleHealthTab({ ensembleId }: Props) {
       <MetricsGrid snapshot={latest} />
 
       <FlagsList flags={latest.flags ?? []} />
+
+      <EnsembleActionPlans ensembleId={ensembleId} latestSnapshot={latest} />
     </div>
   );
 }
