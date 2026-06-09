@@ -16,8 +16,9 @@ import {
   Shield, Users, GraduationCap, Music, Image, Mail, Database,
   Calendar, FileText, Search, ExternalLink, BarChart3,
   Wrench, Bell, ClipboardList, Wand2, Headphones, UserCog, Eye, Sparkles,
-  UserPlus, Timer, MessageSquare
+  UserPlus, Timer, MessageSquare, Activity
 } from 'lucide-react';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 interface QuickActionTile {
   id: string;
@@ -32,6 +33,8 @@ interface QuickActionTile {
   href?: string;
   /** Billing module slug — if set, card hides for tenants without this add-on. */
   billingModule?: string;
+  /** Feature-flag key — if set, card hides unless that flag is enabled in gw_feature_flags. */
+  featureFlag?: string;
 }
 
 const QUICK_ACTIONS: QuickActionTile[] = [
@@ -58,6 +61,7 @@ const QUICK_ACTIONS: QuickActionTile[] = [
   { id: 'sight-reading', label: 'Sight Reading',  description: 'Practice + theory tools',       icon: Headphones,     iconBg: 'bg-cyan-100',   iconFg: 'text-cyan-700',   module: 'sight-reading', billingModule: 'sight_reading' },
   // Assessments / Gradebook is reached via Academy → Tools, not as its own card.
   { id: 'analytics',     label: 'Analytics',      description: 'Usage + engagement',            icon: BarChart3,      iconBg: 'bg-blue-100',   iconFg: 'text-blue-700',   module: 'usage-analytics', billingModule: 'analytics' },
+  { id: 'program-health', label: 'Program Health', description: 'Ensembles, stability scores, action plans', icon: Activity, iconBg: 'bg-emerald-100', iconFg: 'text-emerald-700', href: '/admin/ensembles', featureFlag: 'program_health' },
   // Settings card removed — use Site Setup, Users, and Permissions instead.
 ];
 
@@ -75,6 +79,10 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const { data: tenantModules = [] } = useTenantModules();
   const activeBillingSlugs = useMemo(() => new Set(tenantModules.map(m => m.module_id)), [tenantModules]);
+  const { enabled: programHealthEnabled } = useFeatureFlag('program_health');
+  const featureFlagState: Record<string, boolean> = {
+    program_health: programHealthEnabled,
+  };
 
   // Add-on catalog from gw_billing_modules — used for pricing in the cards.
   const { data: addonCatalog = [] } = useQuery({
@@ -112,10 +120,11 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
   const visibleQuickActions = useMemo(
     () => QUICK_ACTIONS
       .filter(t => !t.billingModule || activeBillingSlugs.has(t.billingModule))
+      .filter(t => !t.featureFlag || featureFlagState[t.featureFlag])
       // Sort so default (non-billing-gated) cards appear first, add-ons last.
       .slice()
       .sort((a, b) => Number(!!a.billingModule) - Number(!!b.billingModule)),
-    [activeBillingSlugs]
+    [activeBillingSlugs, programHealthEnabled]
   );
 
   // Stats loader removed along with the stats strip.
