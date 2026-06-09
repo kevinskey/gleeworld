@@ -33,6 +33,7 @@ import { TestBuilder } from '../test-builder/TestBuilder';
 import { GraduatesPortalModule } from '../modules/GraduatesPortalModule';
 import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
 import { PartTracksModule } from '@/components/modules/PartTracksModule';
+import { ReadMusicInlineModule } from '@/components/modules/ReadMusicInlineModule';
 import { ModuleGate } from '@/components/auth/ModuleGate';
 import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
 import { GraduatesManagementModule } from '../modules/GraduatesManagementModule';
@@ -147,6 +148,12 @@ case 'test-builder':
         return (
           <ModuleGate moduleId="part_tracks">
             <PartTracksModule />
+          </ModuleGate>
+        );
+      case 'read-music':
+        return (
+          <ModuleGate moduleId="read_music">
+            <ReadMusicInlineModule />
           </ModuleGate>
         );
       case 'youtube-management':
