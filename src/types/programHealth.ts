@@ -1,25 +1,18 @@
-export const VOICE_PARTS = [
-  'soprano_1',
-  'soprano_2',
-  'alto_1',
-  'alto_2',
-  'tenor_1',
-  'tenor_2',
-  'bass_1',
-  'bass_2',
-] as const;
+// Codes must match the live gw_profiles.voice_part CHECK constraint:
+// S1, S2, A1, A2, T1, T2, B1, B2 (or NULL). The labels are display-only.
+export const VOICE_PARTS = ['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2'] as const;
 
 export type VoicePart = (typeof VOICE_PARTS)[number];
 
 export const VOICE_PART_LABEL: Record<VoicePart, string> = {
-  soprano_1: 'Soprano 1',
-  soprano_2: 'Soprano 2',
-  alto_1: 'Alto 1',
-  alto_2: 'Alto 2',
-  tenor_1: 'Tenor 1',
-  tenor_2: 'Tenor 2',
-  bass_1: 'Bass 1',
-  bass_2: 'Bass 2',
+  S1: 'Soprano 1',
+  S2: 'Soprano 2',
+  A1: 'Alto 1',
+  A2: 'Alto 2',
+  T1: 'Tenor 1',
+  T2: 'Tenor 2',
+  B1: 'Bass 1',
+  B2: 'Bass 2',
 };
 
 export type EnsembleMemberStatus = 'active' | 'prospect' | 'inactive' | 'dropped';
