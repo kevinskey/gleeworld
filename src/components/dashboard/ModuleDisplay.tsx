@@ -50,6 +50,7 @@ import { UsageAnalyticsModule } from '../modules/UsageAnalyticsModule';
 import FeedControl from '@/pages/FeedControl';
 import { ProductManagement } from '@/pages/ProductManagement';
 import { CourseAttendanceLedger } from '../attendance/CourseAttendanceLedger';
+import EnsemblesPage from '@/pages/admin/Ensembles';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -175,6 +176,8 @@ case 'test-builder':
         return <NetworkingMarketplaceModule />;
       case 'usage-analytics':
         return <UsageAnalyticsModule />;
+      case 'program-health':
+        return <EnsemblesPage />;
       default:
         return (
           <div className="p-6">

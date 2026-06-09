@@ -19,6 +19,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
+import { ServiceWorkerUpdateNotifier } from "@/components/pwa/ServiceWorkerUpdateNotifier";
 
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
@@ -174,6 +175,7 @@ import GleeClubContactsManagement from "./pages/GleeClubContactsManagement";
 // Admin module pages
 import FinancialManagement from "./pages/admin/FinancialManagement";
 import EventManagement from "./pages/admin/EventManagement";
+import EnsemblesPage from "./pages/admin/Ensembles";
 import MediaLibrary from "./pages/admin/MediaLibrary";
 import InventoryShop from "./pages/admin/InventoryShop";
 import Analytics from "./pages/admin/Analytics";
@@ -367,7 +369,8 @@ const App = () => {
                   <div>
                   <Toaster />
                   <Sonner />
-                  
+                  <ServiceWorkerUpdateNotifier />
+
                   <PersistentMeetingOverlay />
                   <MessengerModal />
                   <DesignSystemEnforcer />
@@ -1571,16 +1574,24 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                               />
-                              <Route 
-                                path="/admin/events" 
+                              <Route
+                                path="/admin/events"
                                 element={
                                   <ProtectedRoute>
                                     <EventManagement />
                                   </ProtectedRoute>
-                                } 
+                                }
                               />
-                              <Route 
-                                path="/admin/media" 
+                              <Route
+                                path="/admin/ensembles"
+                                element={
+                                  <ProtectedRoute>
+                                    <EnsemblesPage />
+                                  </ProtectedRoute>
+                                }
+                              />
+                              <Route
+                                path="/admin/media"
                                 element={
                                   <ProtectedRoute>
                                     <MediaLibrary />

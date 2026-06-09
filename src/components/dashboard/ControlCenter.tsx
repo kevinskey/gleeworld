@@ -9,57 +9,9 @@ import { Button } from '@/components/ui/button';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-import {
-  Shield, Users, GraduationCap, Music, Image, Mail, Database,
-  Calendar, FileText, Search, ExternalLink, BarChart3,
-  Wrench, Bell, ClipboardList, Wand2, Headphones, UserCog, Eye, Sparkles,
-  UserPlus, Timer, MessageSquare
-} from 'lucide-react';
-
-interface QuickActionTile {
-  id: string;
-  label: string;
-  description: string;
-  icon: typeof Shield;
-  /** Tailwind classes for the icon's tinted background + foreground. Hard-coded so the JIT picks them up. */
-  iconBg: string;
-  iconFg: string;
-  /** Either a module ID (opens it inside the dashboard via setSelectedModule) or a direct route to navigate to. */
-  module?: string;
-  href?: string;
-  /** Billing module slug — if set, card hides for tenants without this add-on. */
-  billingModule?: string;
-}
-
-const QUICK_ACTIONS: QuickActionTile[] = [
-  { id: 'site-setup',    label: 'Site Setup',     description: 'Branding, URL, modules',        icon: Wrench,         iconBg: 'bg-cyan-100',   iconFg: 'text-cyan-700',   href: '/admin/site-setup' },
-  { id: 'landing',       label: 'Landing Page',   description: 'Edit your public homepage',     icon: Wand2,          iconBg: 'bg-fuchsia-100',iconFg: 'text-fuchsia-700', href: '/admin/site-setup#landing' },
-  // Glee Academy is rendered above Control Center as the role-based dashboard card; no duplicate quick-action card needed.
-  { id: 'ai-rehearsal',  label: 'AI Assistant',   description: 'Plans, warm-ups, parent letters', icon: Sparkles,     iconBg: 'bg-amber-100',  iconFg: 'text-amber-700',  href: '/admin/ai-rehearsal' },
-  { id: 'students',      label: 'Students',       description: 'Roster, notes, uniforms, slips',  icon: Users,          iconBg: 'bg-teal-100',   iconFg: 'text-teal-700',   href: '/admin/students' },
-  { id: 'rehearsal-plans', label: 'Rehearsal Plans', description: 'Save and reuse plans',         icon: ClipboardList,  iconBg: 'bg-lime-100',   iconFg: 'text-lime-700',   href: '/admin/rehearsal-plans' },
-  { id: 'prospects',     label: 'Recruitment',    description: 'Prospective students pipeline',   icon: UserPlus,       iconBg: 'bg-fuchsia-100',iconFg: 'text-fuchsia-700', href: '/admin/prospects' },
-  { id: 'practice',      label: 'Practice Log',   description: 'Student practice tracker',        icon: Timer,          iconBg: 'bg-orange-100', iconFg: 'text-orange-700', href: '/practice/log' },
-  { id: 'users',         label: 'Users',          description: 'Roster, roles, profiles',      icon: Users,          iconBg: 'bg-blue-100',   iconFg: 'text-blue-700',   module: 'user-management' },
-  { id: 'permissions',   label: 'Permissions',    description: 'Module access control',         icon: Shield,         iconBg: 'bg-orange-100', iconFg: 'text-orange-700', href: '/admin/permissions' },
-  { id: 'courses',       label: 'Courses',        description: 'Create + manage classes',       icon: GraduationCap,  iconBg: 'bg-indigo-100', iconFg: 'text-indigo-700', href: '/course-selection' },
-  { id: 'music',         label: 'Music Library',  description: 'Scores, recordings, folders',   icon: Music,          iconBg: 'bg-rose-100',   iconFg: 'text-rose-700',   module: 'music-library' },
-  { id: 'media',         label: 'Media Library',  description: 'Photos, audio, video',          icon: Image,          iconBg: 'bg-pink-100',   iconFg: 'text-pink-700',   module: 'media-library' },
-  { id: 'hero',          label: 'Heroes & Sliders', description: 'Universal slider CMS',        icon: Wand2,          iconBg: 'bg-purple-100', iconFg: 'text-purple-700', module: 'hero-manager' },
-  { id: 'comms',         label: 'Communications', description: 'Group chats, polls, RSVPs, email blast', icon: MessageSquare, iconBg: 'bg-sky-100',    iconFg: 'text-sky-700',    href: '/communications' },
-  { id: 'finance',       label: 'Finance',        description: 'Ledger, budgets, dues',         icon: Database,       iconBg: 'bg-green-100',  iconFg: 'text-green-700',  module: 'finance-hub', billingModule: 'finance' },
-  { id: 'calendar',      label: 'Calendar',       description: 'Events + scheduling',           icon: Calendar,       iconBg: 'bg-violet-100', iconFg: 'text-violet-700', module: 'calendar-management' },
-  { id: 'attendance',    label: 'Attendance',     description: 'QR codes, records, excuses',    icon: ClipboardList,  iconBg: 'bg-emerald-100',iconFg: 'text-emerald-700',module: 'attendance' },
-  { id: 'auditions',     label: 'Auditions',      description: 'Pipeline + scheduling',         icon: UserCog,        iconBg: 'bg-amber-100',  iconFg: 'text-amber-700',  module: 'auditions' },
-  { id: 'announcements', label: 'Announcements',  description: 'Site-wide announcements',       icon: Bell,           iconBg: 'bg-yellow-100', iconFg: 'text-yellow-700', module: 'communications-hub' },
-  { id: 'sight-reading', label: 'Sight Reading',  description: 'Practice + theory tools',       icon: Headphones,     iconBg: 'bg-cyan-100',   iconFg: 'text-cyan-700',   module: 'sight-reading', billingModule: 'sight_reading' },
-  // Assessments / Gradebook is reached via Academy → Tools, not as its own card.
-  { id: 'analytics',     label: 'Analytics',      description: 'Usage + engagement',            icon: BarChart3,      iconBg: 'bg-blue-100',   iconFg: 'text-blue-700',   module: 'usage-analytics', billingModule: 'analytics' },
-  // Settings card removed — use Site Setup, Users, and Permissions instead.
-];
+import { Shield, Database, Search, Eye } from 'lucide-react';
 
 interface ControlCenterProps {
   onModuleSelect: (moduleId: string) => void;
@@ -76,25 +28,6 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
   const { data: tenantModules = [] } = useTenantModules();
   const activeBillingSlugs = useMemo(() => new Set(tenantModules.map(m => m.module_id)), [tenantModules]);
 
-  // Add-on catalog from gw_billing_modules — used for pricing in the cards.
-  const { data: addonCatalog = [] } = useQuery({
-    queryKey: ['addon-catalog'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_billing_modules')
-        .select('id, name, monthly_price_cents')
-        .eq('tier', 'addon');
-      if (error) throw error;
-      return data ?? [];
-    },
-    staleTime: 5 * 60_000,
-  });
-  const priceByBillingId = useMemo(() => {
-    const m: Record<string, number> = {};
-    addonCatalog.forEach((a: any) => { m[a.id] = a.monthly_price_cents || 0; });
-    return m;
-  }, [addonCatalog]);
-
   async function activateAddon(billingId: string) {
     setActivatingId(billingId);
     try {
@@ -109,22 +42,6 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
       setActivatingId(null);
     }
   }
-  const visibleQuickActions = useMemo(
-    () => QUICK_ACTIONS
-      .filter(t => !t.billingModule || activeBillingSlugs.has(t.billingModule))
-      // Sort so default (non-billing-gated) cards appear first, add-ons last.
-      .slice()
-      .sort((a, b) => Number(!!a.billingModule) - Number(!!b.billingModule)),
-    [activeBillingSlugs]
-  );
-
-  // Stats loader removed along with the stats strip.
-
-  const handleTileClick = (tile: QuickActionTile) => {
-    if (tile.href) navigate(tile.href);
-    else if (tile.module) onModuleSelect(tile.module);
-  };
-
   const filteredModules = useMemo(() => {
     const active = UNIFIED_MODULES.filter((m) => m.isActive !== false);
     const q = query.trim().toLowerCase();
@@ -151,6 +68,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
     'merch-store': 'merch',
     'feed-control': 'feeds',
     'part-tracks': 'part_tracks',
+    'program-health': 'program_health',
   };
   const ADDON_MODULE_IDS = new Set(Object.keys(UI_TO_BILLING));
 
@@ -219,10 +137,6 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
         </div>
       </div>
 
-      {/* Stats strip removed. */}
-
-      {/* Quick Actions row removed — all modules surface in the searchable grid below. */}
-
       {/* Search bar — applies to both sections */}
       <div className="flex items-center justify-end mb-3">
         <div className="relative w-64">
@@ -277,8 +191,6 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
               const Icon = m.icon;
               const billingId = UI_TO_BILLING[m.id];
               const isSubscribed = isSuperAdmin || (billingId && activeBillingSlugs.has(billingId));
-              const priceCents = priceByBillingId[billingId] || 0;
-              const priceLabel = priceCents > 0 ? `$${(priceCents / 100).toFixed(0)}/mo` : '';
               const isActivating = activatingId === billingId;
 
               return (
@@ -297,8 +209,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
                       <p className="text-[11px] text-slate-700 line-clamp-2 mt-0.5">{m.description}</p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-slate-900">{priceLabel}</span>
+                  <div className="flex items-center justify-end gap-2">
                     {isSubscribed ? (
                       <Button size="sm" variant="default" onClick={() => onModuleSelect(m.id)}>Open</Button>
                     ) : (
