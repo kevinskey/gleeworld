@@ -192,6 +192,7 @@ import { ProductManagement } from "./pages/ProductManagement";
 import PRHubPage from "./pages/PRHubPage";
 import ModulesDirectory from "./pages/ModulesDirectory";
 const SharedAnnotation = lazy(() => import("./pages/SharedAnnotation").then(m => ({ default: m.SharedAnnotation })));
+const ReadMusic = lazy(() => import("./features/read-music/ReadMusic"));
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
 import UserManagement from "./pages/UserManagement";
@@ -668,6 +669,17 @@ const App = () => {
                   <ProtectedRoute>
                     <UniversalLayout>
                       <UnifiedDashboard />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* Read Music — practice studio (add-on module) */}
+              <Route
+                path="/read-music/*"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <ReadMusic />
                     </UniversalLayout>
                   </ProtectedRoute>
                 }

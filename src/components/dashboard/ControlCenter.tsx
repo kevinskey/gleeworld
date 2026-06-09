@@ -142,6 +142,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
     'usage-analytics': 'analytics',
     'wardrobe': 'wardrobe',
     'sight-reading': 'sight_reading',
+    'read-music': 'read_music',
     'graduates-management': 'alumni',
     'ai-hub': 'ai_hub',
     'concert-ticket-requests': 'tickets',

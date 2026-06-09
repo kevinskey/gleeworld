@@ -15,6 +15,7 @@ import {
 
 // Import core module components
 import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
+import { ReadMusicInlineModule } from '@/components/modules/ReadMusicInlineModule';
 import { PartTracksModule } from '@/components/modules/PartTracksModule';
 import { CheckInCheckOutModule } from '@/components/modules/CheckInCheckOutModule';
 import { CalendarModule } from '@/components/modules/CalendarModule';
@@ -524,6 +525,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: FeedControlModule,
     dbFunctionName: "feed-control",
     requiredRoles: ["admin", "super-admin"]
+  },
+  {
+    id: "read-music",
+    name: "read-music",
+    title: "Read Music",
+    description: "Note ID, intervals, key signatures, chords, modes, and harmonic analysis — drills for K-12 and college",
+    icon: Music,
+    iconColor: "purple",
+    category: "education",
+    isNew: true,
+    isActive: true,
+    component: ReadMusicInlineModule,
+    dbFunctionName: "read-music"
   }
 ];
 
