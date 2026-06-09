@@ -5,6 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Trash2, Upload, Mic, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { RecordModal } from '@/components/part-tracks/RecordModal';
@@ -21,6 +28,13 @@ interface PartTrack {
   is_active: boolean;
   display_order: number;
   created_at: string;
+  sheet_music_id: string | null;
+}
+
+interface SheetMusicPiece {
+  id: string;
+  title: string;
+  composer: string | null;
 }
 
 // "Part" covers voice parts and accompaniment alike — pick the closest preset
@@ -36,12 +50,20 @@ const VOICE_PART_PRESETS = [
 
 export const PartTracksModule: React.FC = () => {
   const [tracks, setTracks] = useState<PartTrack[]>([]);
+  const [pieces, setPieces] = useState<SheetMusicPiece[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
-  const [newPiece, setNewPiece] = useState('');
+  // Piece is now picked from gw_sheet_music by id; the title is denormalized
+  // at insert time so the list-grouping logic below doesn't have to join.
+  const [newSheetMusicId, setNewSheetMusicId] = useState<string>('');
   const [newPart, setNewPart] = useState('');
   const [newFile, setNewFile] = useState<File | null>(null);
+
+  const pickedPieceTitle = useMemo(
+    () => pieces.find((p) => p.id === newSheetMusicId)?.title ?? '',
+    [pieces, newSheetMusicId]
+  );
 
   // Recording dialog state. Either targets an existing track (replaceFor) or a
   // new track currently being composed in the "Add a part track" form (null).
@@ -54,11 +76,13 @@ export const PartTracksModule: React.FC = () => {
   // can trigger playback without owning the audio refs itself.
   const mixerHandlesRef = useRef<Map<string, PartMixerHandle | null>>(new Map());
 
-  /** Jump to the Add form with the piece title pre-filled so a director can
-   *  add another voice or accompaniment part to an existing piece without
-   *  retyping the title. */
+  /** Jump to the Add form with the piece pre-selected so a director can add
+   *  another voice or accompaniment part to an existing piece without
+   *  re-picking. Resolves the piece by its sheet_music_id off any track
+   *  belonging to that piece group. */
   const startAddingTo = (piece: string) => {
-    setNewPiece(piece);
+    const sample = tracks.find((t) => (t.piece_title || '(untitled)') === piece);
+    if (sample?.sheet_music_id) setNewSheetMusicId(sample.sheet_music_id);
     setNewPart('');
     setNewFile(null);
     setReplaceFor(null);
@@ -75,13 +99,21 @@ export const PartTracksModule: React.FC = () => {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('gw_part_tracks')
-      .select('id, piece_title, voice_part, audio_url, notes, is_active, display_order, created_at')
-      .order('piece_title', { ascending: true })
-      .order('display_order', { ascending: true });
-    if (error) toast.error(`Failed to load: ${error.message}`);
-    setTracks((data as PartTrack[]) ?? []);
+    const [tracksRes, piecesRes] = await Promise.all([
+      supabase
+        .from('gw_part_tracks')
+        .select('id, piece_title, voice_part, audio_url, notes, is_active, display_order, created_at, sheet_music_id')
+        .order('piece_title', { ascending: true })
+        .order('display_order', { ascending: true }),
+      supabase
+        .from('gw_sheet_music')
+        .select('id, title, composer')
+        .order('title', { ascending: true }),
+    ]);
+    if (tracksRes.error) toast.error(`Failed to load tracks: ${tracksRes.error.message}`);
+    if (piecesRes.error) toast.error(`Failed to load pieces: ${piecesRes.error.message}`);
+    setTracks((tracksRes.data as PartTrack[]) ?? []);
+    setPieces((piecesRes.data as SheetMusicPiece[]) ?? []);
     setLoading(false);
   };
 
@@ -140,8 +172,12 @@ export const PartTracksModule: React.FC = () => {
   };
 
   const addTrack = async (audioUrl: string | null = null) => {
-    if (!newPiece.trim() || !newPart.trim()) {
-      toast.error('Piece title and voice part are required');
+    if (!newSheetMusicId || !newPart.trim()) {
+      toast.error('Pick a piece and enter a voice part');
+      return;
+    }
+    if (!pickedPieceTitle) {
+      toast.error('Selected piece is no longer available — pick again');
       return;
     }
     if (addingLockRef.current) return; // double-tap / race guard
@@ -156,26 +192,25 @@ export const PartTracksModule: React.FC = () => {
       const { data, error } = await supabase
         .from('gw_part_tracks')
         .insert({
-          piece_title: newPiece.trim(),
+          sheet_music_id: newSheetMusicId,
+          piece_title: pickedPieceTitle,
           voice_part: newPart.trim(),
           audio_url: finalUrl,
           is_active: true,
         })
-        .select('id, piece_title, voice_part, audio_url, notes, is_active, display_order, created_at')
+        .select('id, piece_title, voice_part, audio_url, notes, is_active, display_order, created_at, sheet_music_id')
         .single();
       if (error) {
         toast.error(`Add failed: ${error.message}`);
         return;
       }
       setTracks(prev => [...prev, data as PartTrack]);
-      // Keep the piece title sticky, clear voice part + file so the next
-      // record is one tab + click away. No interstitial dialog — the
-      // toast is enough confirmation.
-      const savedPiece = newPiece.trim();
+      // Keep the picked piece sticky, clear voice part + file so the next
+      // record is one tab + click away.
       const savedPart = newPart.trim();
       setNewPart('');
       setNewFile(null);
-      toast.success(`${savedPart} saved for "${savedPiece}"`);
+      toast.success(`${savedPart} saved for "${pickedPieceTitle}"`);
       setTimeout(() => voicePartInputRef.current?.focus(), 50);
     } finally {
       setAdding(false);
@@ -254,12 +289,27 @@ export const PartTracksModule: React.FC = () => {
         <Label className="text-sm font-semibold">Add a part track</Label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="space-y-1">
-            <Label className="text-xs">Piece title</Label>
-            <Input
-              value={newPiece}
-              onChange={e => setNewPiece(e.target.value)}
-              placeholder="Lift Every Voice and Sing"
-            />
+            <Label className="text-xs">Piece</Label>
+            <Select value={newSheetMusicId} onValueChange={setNewSheetMusicId}>
+              <SelectTrigger>
+                <SelectValue placeholder={pieces.length ? 'Pick a piece…' : 'No pieces in Music Library'} />
+              </SelectTrigger>
+              <SelectContent>
+                {pieces.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.title}
+                    {p.composer ? (
+                      <span className="ml-2 text-xs text-muted-foreground">{p.composer}</span>
+                    ) : null}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {pieces.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                Add a piece in Music Library first.
+              </p>
+            )}
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Part (voice or accompaniment)</Label>
@@ -288,8 +338,8 @@ export const PartTracksModule: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => {
-              if (!newPiece.trim() || !newPart.trim()) {
-                toast.error('Enter piece title and voice part first');
+              if (!newSheetMusicId || !newPart.trim()) {
+                toast.error('Pick a piece and enter a voice part first');
                 return;
               }
               setReplaceFor(null);
@@ -418,15 +468,23 @@ export const PartTracksModule: React.FC = () => {
         onSave={onRecordSave}
         title={replaceFor
           ? `Record ${replaceFor.voice_part} — ${replaceFor.piece_title}`
-          : `Record ${newPart || 'voice part'} — ${newPiece || 'new piece'}`}
+          : `Record ${newPart || 'voice part'} — ${pickedPieceTitle || 'new piece'}`}
         // Existing parts of the piece being recorded — played through the
         // singer's headphones while the new take captures, so they can
         // sing in tune with the accompaniment + the voices already taken.
+        // Match by sheet_music_id (truth) with title fallback for legacy
+        // rows that pre-date the FK.
         monitorTracks={(() => {
-          const targetPiece = replaceFor?.piece_title || newPiece.trim();
-          if (!targetPiece) return [];
+          const targetId = replaceFor?.sheet_music_id || newSheetMusicId;
+          const targetTitle = replaceFor?.piece_title || pickedPieceTitle;
+          if (!targetId && !targetTitle) return [];
           return tracks
-            .filter(t => t.piece_title === targetPiece && !!t.audio_url && t.id !== replaceFor?.id)
+            .filter(t => {
+              if (t.id === replaceFor?.id) return false;
+              if (!t.audio_url) return false;
+              if (targetId && t.sheet_music_id) return t.sheet_music_id === targetId;
+              return t.piece_title === targetTitle;
+            })
             .map(t => ({ id: t.id, voice_part: t.voice_part, audio_url: t.audio_url! }));
         })()}
       />
