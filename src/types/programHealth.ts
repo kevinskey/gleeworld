@@ -53,3 +53,41 @@ export interface SectionTarget {
   created_at: string;
   updated_at: string;
 }
+
+export type HealthFlagSeverity = 'high' | 'medium' | 'low';
+export type HealthFlagKey =
+  | 'readiness_gap'
+  | 'low_attendance'
+  | 'attendance_falling'
+  | 'retention_loss'
+  | 'thin_section';
+
+export interface HealthFlag {
+  key: HealthFlagKey | string;
+  severity: HealthFlagSeverity;
+  title: string;
+  detail: string;
+  metric_value?: number;
+  voice_part?: string;
+}
+
+export interface ThinSection {
+  voice_part: string;
+  current: number;
+  target: number;
+  severity: number;
+}
+
+export interface HealthSnapshot {
+  id: string;
+  ensemble_id: string;
+  computed_at: string;
+  attendance_rate_30d: number | null;
+  attendance_delta: number | null;
+  retention_rate: number | null;
+  thin_sections: ThinSection[] | null;
+  readiness_gap_days: number | null;
+  stability_score: number | null;
+  flags: HealthFlag[] | null;
+  weights_version: string | null;
+}

@@ -41,6 +41,7 @@ import {
   type SectionTarget,
   type VoicePart,
 } from '@/types/programHealth';
+import { EnsembleHealthTab } from './EnsembleHealthTab';
 
 interface Props {
   ensembleId: string | null;
@@ -76,12 +77,16 @@ export function EnsembleDrawer({ ensembleId, onClose }: Props) {
         </SheetHeader>
 
         {ensembleId && (
-          <Tabs defaultValue="members" className="mt-4">
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs defaultValue="health" className="mt-4">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="health">Health</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="directors">Directors</TabsTrigger>
               <TabsTrigger value="targets">Targets</TabsTrigger>
             </TabsList>
+            <TabsContent value="health" className="pt-4">
+              <EnsembleHealthTab ensembleId={ensembleId} />
+            </TabsContent>
             <TabsContent value="members" className="pt-4">
               <MembersTab ensembleId={ensembleId} />
             </TabsContent>
