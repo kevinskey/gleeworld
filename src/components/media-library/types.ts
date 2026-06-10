@@ -18,6 +18,7 @@ export interface MediaFile {
   is_favorite?: boolean;
   is_deleted?: boolean;
   folder_id?: string | null;
+  source?: 'media_library' | 'quick_capture';
 }
 
 export interface Folder {

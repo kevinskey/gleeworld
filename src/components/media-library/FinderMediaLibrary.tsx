@@ -493,22 +493,61 @@ export const FinderMediaLibrary = () => {
     disabled: !isAdmin || uploading,
     noClick: true
   });
-  // Soft-delete: move files to trash
+  // Derive {bucket, path} from a Supabase storage public/signed URL
+  const parseStorageUrl = (fileUrl?: string): { bucket: string; path: string } | null => {
+    if (!fileUrl) return null;
+    const match = fileUrl.match(/\/storage\/v1\/object\/(?:public\/|sign\/)?([^/]+)\/([^?]+)/);
+    if (!match) return null;
+    return { bucket: match[1], path: decodeURIComponent(match[2]) };
+  };
+
+  const removeStorageObject = async (file: MediaFile) => {
+    if (file.file_path && file.bucket_id) {
+      await supabase.storage.from(file.bucket_id).remove([file.file_path]);
+      return;
+    }
+    const parsed = parseStorageUrl(file.file_url);
+    if (parsed) {
+      await supabase.storage.from(parsed.bucket).remove([parsed.path]);
+    }
+  };
+
+  // Soft-delete: move files to trash. quick_capture_media has no trash
+  // column, so those rows are permanently deleted (with confirm).
   const handleDeleteFiles = useCallback(async (fileIds: string[]) => {
     if (fileIds.length === 0) return;
-    
+
+    const selected = allFiles.filter(f => fileIds.includes(f.id));
+    const libraryIds = selected.filter(f => f.source !== 'quick_capture').map(f => f.id);
+    const captureFiles = selected.filter(f => f.source === 'quick_capture');
+
     const label = fileIds.length === 1 ? 'this file' : `${fileIds.length} files`;
-    if (!confirm(`Move ${label} to trash?`)) return;
+    const warning = captureFiles.length > 0
+      ? ` (${captureFiles.length} quick-capture file(s) will be permanently deleted — they cannot go to trash)`
+      : '';
+    if (!confirm(`Move ${label} to trash?${warning}`)) return;
 
     try {
-      const { error } = await supabase
-        .from('gw_media_library')
-        .update({ is_deleted: true })
-        .in('id', fileIds);
+      if (libraryIds.length > 0) {
+        const { error } = await supabase
+          .from('gw_media_library')
+          .update({ is_deleted: true })
+          .in('id', libraryIds);
+        if (error) throw error;
+      }
 
-      if (error) throw error;
+      if (captureFiles.length > 0) {
+        for (const file of captureFiles) {
+          await removeStorageObject(file);
+        }
+        const { error } = await supabase
+          .from('quick_capture_media')
+          .delete()
+          .in('id', captureFiles.map(f => f.id));
+        if (error) throw error;
+      }
 
-      toast({ title: fileIds.length === 1 ? 'File moved to trash' : `${fileIds.length} files moved to trash` });
+      toast({ title: fileIds.length === 1 ? 'File deleted' : `${fileIds.length} files deleted` });
       setSelectedFiles([]);
       setShowInspector(false);
       refreshMedia();
@@ -516,7 +555,7 @@ export const FinderMediaLibrary = () => {
       console.error('Delete error:', error);
       toast({ title: 'Error deleting files', variant: 'destructive' });
     }
-  }, [toast, refreshMedia]);
+  }, [toast, refreshMedia, allFiles]);
 
   // Restore files from trash
   const handleRestoreFiles = useCallback(async (fileIds: string[]) => {
@@ -544,17 +583,27 @@ export const FinderMediaLibrary = () => {
       // Also remove from storage
       const filesToDelete = allFiles.filter(f => fileIds.includes(f.id));
       for (const file of filesToDelete) {
-        if (file.file_path && file.bucket_id) {
-          await supabase.storage.from(file.bucket_id).remove([file.file_path]);
-        }
+        await removeStorageObject(file);
       }
 
-      const { error } = await supabase
-        .from('gw_media_library')
-        .delete()
-        .in('id', fileIds);
+      const libraryIds = filesToDelete.filter(f => f.source !== 'quick_capture').map(f => f.id);
+      const captureIds = filesToDelete.filter(f => f.source === 'quick_capture').map(f => f.id);
 
-      if (error) throw error;
+      if (libraryIds.length > 0) {
+        const { error } = await supabase
+          .from('gw_media_library')
+          .delete()
+          .in('id', libraryIds);
+        if (error) throw error;
+      }
+
+      if (captureIds.length > 0) {
+        const { error } = await supabase
+          .from('quick_capture_media')
+          .delete()
+          .in('id', captureIds);
+        if (error) throw error;
+      }
 
       toast({ title: 'Permanently deleted' });
       setSelectedFiles([]);
