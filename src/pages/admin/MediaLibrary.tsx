@@ -331,6 +331,7 @@ const MediaLibrary = () => {
             description: null,
             file_url: publicUrl,
             file_path: filePath,
+            bucket_id: 'media-library',
             file_type: file.type, // Store the actual MIME type
             file_size: file.size,
             category: 'general',
