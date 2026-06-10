@@ -79,10 +79,9 @@ export const useCurrentProvider = () => {
         .from('gw_service_providers')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') return null; // No rows found
         console.error('Error fetching current provider:', error);
         throw error;
       }

@@ -772,7 +772,7 @@ const AvailabilityManager: React.FC = () => {
       if (existingId) {
         await supabase.from('gw_provider_availability').update({ is_available: !isActive }).eq('id', existingId);
       } else {
-        const { data: providers } = await supabase.from('gw_service_providers').select('id').limit(1).single();
+        const { data: providers } = await supabase.from('gw_service_providers').select('id').limit(1).maybeSingle();
         if (!providers) { toast.error('No provider found'); return; }
         await supabase.from('gw_provider_availability').insert({
           provider_id: providers.id,
@@ -866,7 +866,7 @@ const DateOverrideManager: React.FC = () => {
   const addOverride = async () => {
     if (!overrideDate) { toast.error('Select a date'); return; }
     try {
-      const { data: providers } = await supabase.from('gw_service_providers').select('id').limit(1).single();
+      const { data: providers } = await supabase.from('gw_service_providers').select('id').limit(1).maybeSingle();
       if (!providers) { toast.error('No provider found'); return; }
       await supabase.from('gw_provider_availability').insert({
         provider_id: providers.id,

@@ -92,7 +92,7 @@ const convertAppointmentToDb = async (appt: Omit<Appointment, 'id'>): Promise<Db
       .from('gw_service_providers')
       .select('id')
       .eq('user_id', currentUser.user.id)
-      .single();
+      .maybeSingle();
     
     if (provider) {
       providerId = provider.id;

@@ -39,46 +39,29 @@ export const useUserCalendarAccess = () => {
       const enrolledCalendarIds: string[] = [];
 
       try {
-        // Fetch enrollments
-        const enrollmentResponse = await fetch(
-          `https://supabase.gleeworld.org/rest/v1/gw_course_enrollments?user_id=eq.${user.id}&enrollment_status=eq.enrolled&select=course_id`,
-          {
-            headers: {
-              'apikey': 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODAxNzEwNzcsICJleHAiOiAyMDk1NTMxMDc3fQ.orWLkajK-mQywKVcWS48HVXU8uKWtsL6iY5BAaVn0xc',
-              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
-            }
-          }
-        );
+        const { data: enrollments } = await supabase
+          .from('gw_course_enrollments')
+          .select('course_id')
+          .eq('user_id', user.id)
+          .eq('enrollment_status', 'enrolled');
 
-        if (enrollmentResponse.ok) {
-          const enrollments = await enrollmentResponse.json();
-          enrollments.forEach((row: { course_id: string | null }) => {
-            if (row.course_id) {
-              enrolledCourseIds.push(row.course_id);
+        (enrollments || []).forEach((row: { course_id: string | null }) => {
+          if (row.course_id) {
+            enrolledCourseIds.push(row.course_id);
+          }
+        });
+
+        if (enrolledCourseIds.length > 0) {
+          const { data: courses } = await supabase
+            .from('gw_courses')
+            .select('calendar_id')
+            .in('id', enrolledCourseIds);
+
+          (courses || []).forEach((row: { calendar_id: string | null }) => {
+            if (row.calendar_id) {
+              enrolledCalendarIds.push(row.calendar_id);
             }
           });
-        }
-
-        // Fetch calendar IDs for enrolled courses
-        if (enrolledCourseIds.length > 0) {
-          const courseResponse = await fetch(
-            `https://supabase.gleeworld.org/rest/v1/gw_courses?id=in.(${enrolledCourseIds.join(',')})&select=calendar_id`,
-            {
-              headers: {
-                'apikey': 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODAxNzEwNzcsICJleHAiOiAyMDk1NTMxMDc3fQ.orWLkajK-mQywKVcWS48HVXU8uKWtsL6iY5BAaVn0xc',
-                'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`,
-              }
-            }
-          );
-
-          if (courseResponse.ok) {
-            const courses = await courseResponse.json();
-            courses.forEach((row: { calendar_id: string | null }) => {
-              if (row.calendar_id) {
-                enrolledCalendarIds.push(row.calendar_id);
-              }
-            });
-          }
         }
       } catch (err) {
         console.error('Error fetching calendar access:', err);
@@ -96,7 +79,10 @@ export const useUserCalendarAccess = () => {
     };
 
     fetchAccess();
-  }, [user, roleLoading, isAdmin, isExecutiveBoard, checkMember, checkFan, checkAlumna]);
+    // The role-checker functions from useUserRole are recreated every render;
+    // including them in deps caused a request storm (~60 fetches per page load).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, roleLoading]);
 
   return access;
 };
