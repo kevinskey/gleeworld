@@ -222,7 +222,7 @@ function CreateEnsembleDialog({ onClose }: { onClose: () => void }) {
             id="ens-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Spelman College Glee Club"
+            placeholder="e.g. Concert Choir"
             autoFocus
           />
         </div>

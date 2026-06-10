@@ -21,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { format, getDay, addMonths } from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
 
 interface CreateEventDialogProps {
   onEventCreated: () => void;
@@ -346,8 +347,10 @@ export const CreateEventDialog = ({
       const startDateStr = format(startDate, 'yyyy-MM-dd');
       const endDateStr = endDate ? format(endDate, 'yyyy-MM-dd') : startDateStr;
       
-      const startDateTime = new Date(`${startDateStr}T${startTime24}:00`);
-      const endDateTime = new Date(`${endDateStr}T${endTime24}:00`);
+      // Interpret the entered wall-clock time in the event's selected
+      // timezone, not the browser's local zone.
+      const startDateTime = fromZonedTime(`${startDateStr}T${startTime24}:00`, formData.timezone);
+      const endDateTime = fromZonedTime(`${endDateStr}T${endTime24}:00`, formData.timezone);
 
       // Determine actual recurrence type
       let recurrenceType = formData.recurrence_type;
