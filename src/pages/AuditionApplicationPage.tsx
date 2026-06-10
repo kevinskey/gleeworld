@@ -14,7 +14,9 @@ export default function AuditionApplicationPage() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -57,8 +59,38 @@ export default function AuditionApplicationPage() {
     }
   }, [user, loading]);
 
+  useEffect(() => {
+    const fetchActiveSession = async () => {
+      const { data, error } = await supabase
+        .from('audition_sessions')
+        .select('id')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching active audition session:', error);
+      }
+      setSessionId(data?.id ?? null);
+      setSessionLoading(false);
+    };
+
+    fetchActiveSession();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!sessionId) {
+      toast({
+        title: "No Open Audition Session",
+        description: "Applications are not being accepted right now. Please check back later.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -76,7 +108,7 @@ export default function AuditionApplicationPage() {
       const applicationData = {
         ...formData,
         user_id: user?.id,
-        session_id: 'f3d4bbf8-b85c-444c-8234-526b8d497ffc', // Active audition session
+        session_id: sessionId,
         status: 'submitted',
         application_date: new Date().toISOString(),
         gpa: formData.gpa ? parseFloat(formData.gpa) : null,
@@ -367,10 +399,10 @@ export default function AuditionApplicationPage() {
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || sessionLoading || !sessionId}
                 className="min-w-32"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                {isSubmitting ? 'Submitting...' : sessionLoading ? 'Loading...' : !sessionId ? 'Applications Closed' : 'Submit Application'}
               </Button>
             </div>
           </form>
