@@ -46,8 +46,9 @@ export default function AuthPage() {
     if (returnTo) return returnTo;
     if (hasTimeSlot) return '/audition-application';
 
-    // Regular auth, redirect to dashboard for members
-    return '/dashboard';
+    // Regular auth: go to root and let useRoleBasedRedirect pick the
+    // role-appropriate destination (super-admin → /control-center, etc.)
+    return '/';
   };
   useEffect(() => {
     // If user is already authenticated, redirect them
