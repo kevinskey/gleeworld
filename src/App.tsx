@@ -321,7 +321,10 @@ const ProtectedRoute = ({ children, skipProfileCheck = false }: { children: Reac
   
     if (!user) {
       const currentPath = window.location.pathname + window.location.search;
-      if (currentPath !== '/auth' && currentPath !== '/' && !currentPath.startsWith('/auth')) {
+      if (sessionStorage.getItem('explicit-signout') === '1') {
+        // User just signed out on this page — don't replay it on next login.
+        sessionStorage.removeItem('explicit-signout');
+      } else if (currentPath !== '/auth' && currentPath !== '/' && !currentPath.startsWith('/auth')) {
         sessionStorage.setItem('redirectAfterAuth', currentPath);
       }
       return <Navigate to="/auth" replace />;

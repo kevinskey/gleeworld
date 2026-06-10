@@ -175,6 +175,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setSession(null);
       setLoading(false); // Ensure loading is false to prevent white screen
+
+      // Explicit sign-out must not replay the page we signed out from on
+      // next login. ProtectedRoute stores redirectAfterAuth AFTER user goes
+      // null, so clear any stale value now and flag it to skip storing.
+      sessionStorage.removeItem('redirectAfterAuth');
+      sessionStorage.setItem('explicit-signout', '1');
       
       // Clear any stored auth tokens
       try {
