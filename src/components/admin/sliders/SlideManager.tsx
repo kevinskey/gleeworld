@@ -211,7 +211,7 @@ const SlideRow: React.FC<{
         <CollapsibleContent>
           <div className="px-3 pb-3 pt-1 border-t space-y-3">
             {/* Row 1: Type & Basic */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <div>
                 <Label className="text-xs">Type</Label>
                 <Select value={slide.slide_type} onValueChange={(v) => onUpdate({ slide_type: v as SlideType })}>
@@ -261,7 +261,7 @@ const SlideRow: React.FC<{
                 <Label className="text-xs flex items-center gap-1">
                   <Image className="h-3 w-3" /> Images
                 </Label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   {['image_url', 'mobile_image_url', 'tablet_image_url'].map((field) => (
                     <div key={field} className="space-y-1">
                       <span className="text-xs text-muted-foreground capitalize">
@@ -299,7 +299,7 @@ const SlideRow: React.FC<{
                 <Label className="text-xs flex items-center gap-1">
                   <Youtube className="h-3 w-3" /> YouTube
                 </Label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   <div className="col-span-2">
                     <Input 
                       value={slide.youtube_video_id || ''}
@@ -347,7 +347,7 @@ const SlideRow: React.FC<{
                 <Label className="text-xs flex items-center gap-1">
                   <Palette className="h-3 w-3" /> Title Style
                 </Label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   <Select value={slide.title_font_size} onValueChange={(v) => onUpdate({ title_font_size: v })}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue placeholder="Size" />
@@ -395,7 +395,7 @@ const SlideRow: React.FC<{
               <Label className="text-xs flex items-center gap-1">
                 <Link className="h-3 w-3" /> Link & CTA
               </Label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <Input 
                   value={slide.link_url || ''}
                   onChange={(e) => onUpdate({ link_url: e.target.value })}

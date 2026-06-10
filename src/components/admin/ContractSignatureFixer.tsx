@@ -206,7 +206,7 @@ export const ContractSignatureFixer = () => {
                     <div className="space-y-3">
                       <h4 className="font-medium">Fix Results</h4>
                       
-                      <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-blue-600">
                             {fixResult.totalProcessed}

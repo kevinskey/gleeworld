@@ -91,7 +91,7 @@ export function EnsembleDrawer({ ensembleId, onClose }: Props) {
 
         {ensembleId && (
           <Tabs defaultValue="health" className="mt-4">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
               <TabsTrigger value="health">Health</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="directors">Directors</TabsTrigger>

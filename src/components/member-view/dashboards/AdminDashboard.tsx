@@ -242,7 +242,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
       {/* Main Admin Dashboard Tabs */}
       <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="dues">Dues Management</TabsTrigger>
           <TabsTrigger value="conductor">Student Conductor</TabsTrigger>
@@ -438,7 +438,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
         <TabsContent value="management" className="mt-6">
           {/* Tabbed Management Modules */}
           <Tabs defaultValue="auditions" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-5">
               <TabsTrigger value="auditions">Auditions</TabsTrigger>
               <TabsTrigger value="solos">Solos</TabsTrigger>
               <TabsTrigger value="srf">SRF Management</TabsTrigger>

@@ -253,7 +253,7 @@ export const GroupParticipationAnalyzer: React.FC<Props> = ({ onCreditAwarded })
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-slate-900">{groups.length}</div>
                 <div className="text-sm text-slate-600">Groups Analyzed</div>
@@ -294,7 +294,7 @@ export const GroupParticipationAnalyzer: React.FC<Props> = ({ onCreditAwarded })
             <CardContent>
               <div className="space-y-4">
                 {/* Activity Metrics */}
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="flex items-center gap-2">
                     <StickyNote className="h-4 w-4 text-blue-600" />
                     <span className="text-sm font-medium">{group.metrics.notes_count} Notes</span>

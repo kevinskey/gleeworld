@@ -260,7 +260,7 @@ export const FanDashboardMonitor = () => {
 
       {/* Detailed Content Tabs */}
       <Tabs defaultValue="events" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="events">Fan Events</TabsTrigger>
           <TabsTrigger value="products">Merchandise</TabsTrigger>
           <TabsTrigger value="content">Media Content</TabsTrigger>

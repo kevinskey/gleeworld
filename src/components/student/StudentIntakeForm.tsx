@@ -149,7 +149,7 @@ export const StudentIntakeForm = () => {
         {/* Size Measurements */}
         <div className="border rounded p-6">
           <h2 className="text-xl font-semibold mb-4">Size & Measurements</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="dress_size">Dress Size</Label>
               <Select onValueChange={(value) => setValue("dress_size", value)}>

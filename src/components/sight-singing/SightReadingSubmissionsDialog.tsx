@@ -107,7 +107,7 @@ export const SightReadingSubmissionsDialog: React.FC<SightReadingSubmissionsDial
         </DialogHeader>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <div className="bg-muted rounded-lg p-4 text-center">
             <div className="text-2xl font-bold">{submissions.length}</div>
             <div className="text-sm text-muted-foreground">Total Submissions</div>

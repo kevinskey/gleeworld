@@ -439,7 +439,7 @@ export const MusicXMLLibrary: React.FC<MusicXMLLibraryProps> = ({ user }) => {
                   {/* Musical Parameters */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Musical Parameters</h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label>Difficulty</Label>
                         <Select value={generationParams.difficulty} onValueChange={(value) => setGenerationParams({...generationParams, difficulty: value})}>
@@ -487,7 +487,7 @@ export const MusicXMLLibrary: React.FC<MusicXMLLibraryProps> = ({ user }) => {
                   {/* Structure Parameters */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Structure Parameters</h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label>Tempo (BPM)</Label>
                         <Input
@@ -527,7 +527,7 @@ export const MusicXMLLibrary: React.FC<MusicXMLLibraryProps> = ({ user }) => {
                   {/* Voice Parts */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Voice Parts</h3>
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {voiceParts.map(part => (
                         <div key={part} className="flex items-center space-x-2">
                           <Checkbox
@@ -596,7 +596,7 @@ export const MusicXMLLibrary: React.FC<MusicXMLLibraryProps> = ({ user }) => {
                     <div className="space-y-3">
                       <div>
                         <Label className="text-sm font-medium">Scale Patterns</Label>
-                        <div className="grid grid-cols-3 gap-2 mt-2">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
                           {scalePatterns.map(pattern => (
                             <div key={pattern} className="flex items-center space-x-2">
                               <Checkbox
@@ -624,7 +624,7 @@ export const MusicXMLLibrary: React.FC<MusicXMLLibraryProps> = ({ user }) => {
 
                       <div>
                         <Label className="text-sm font-medium">Interval Patterns</Label>
-                        <div className="grid grid-cols-3 gap-2 mt-2">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
                           {intervalPatterns.map(pattern => (
                             <div key={pattern} className="flex items-center space-x-2">
                               <Checkbox
@@ -652,7 +652,7 @@ export const MusicXMLLibrary: React.FC<MusicXMLLibraryProps> = ({ user }) => {
 
                       <div>
                         <Label className="text-sm font-medium">Rhythm Patterns</Label>
-                        <div className="grid grid-cols-3 gap-2 mt-2">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
                           {rhythmPatterns.map(pattern => (
                             <div key={pattern} className="flex items-center space-x-2">
                               <Checkbox

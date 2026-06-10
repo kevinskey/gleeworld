@@ -204,7 +204,7 @@ const AddDateForm = ({ onSuccess, onClose, editingEvent, onGenerateContract }: A
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="basic" className="text-xs sm:text-sm">
             <Calendar className="h-4 w-4 mr-1 hidden sm:inline" />
             Basic

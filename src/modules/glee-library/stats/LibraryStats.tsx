@@ -30,7 +30,7 @@ export const LibraryStats = ({ stats, loading = false }: LibraryStatsProps) => {
             <div className="h-4 bg-gray-200 rounded w-3/4"></div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="h-6 bg-gray-200 rounded w-full mb-1"></div>
                 <div className="h-3 bg-gray-200 rounded w-full"></div>
@@ -62,7 +62,7 @@ export const LibraryStats = ({ stats, loading = false }: LibraryStatsProps) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-lg font-bold text-blue-600">
                 {stats.totalDigital}

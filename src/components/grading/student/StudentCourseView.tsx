@@ -483,7 +483,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
               </Card>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 <Card>
                   <CardContent className="pt-4 pb-4 text-center">
                     <div className="text-2xl font-bold">{stats.assignmentCount}</div>

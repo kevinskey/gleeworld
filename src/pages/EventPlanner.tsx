@@ -65,7 +65,7 @@ export default function EventPlanner() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
             <TabsTrigger value="all-events" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               All Events

@@ -196,7 +196,7 @@ export const StudentIntakeProcessor = () => {
   return (
     <div className="space-y-6">
       {/* Stats Row */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="p-4 border rounded">
           <div className="text-2xl font-bold">{counts.total}</div>
           <div className="text-sm text-muted-foreground">Total Intakes</div>

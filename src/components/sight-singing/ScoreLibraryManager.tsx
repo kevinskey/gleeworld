@@ -173,7 +173,7 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="browse" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
             <TabsTrigger value="browse">Browse</TabsTrigger>
             <TabsTrigger value="upload">Upload Single</TabsTrigger>
             <TabsTrigger value="bulk-upload">Bulk Upload</TabsTrigger>
@@ -401,7 +401,7 @@ export const ScoreLibraryManager: React.FC<ScoreLibraryManagerProps> = ({
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="new-difficulty">Difficulty</Label>
                   <Select

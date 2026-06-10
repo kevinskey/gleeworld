@@ -233,7 +233,7 @@ const RiserGrid = ({ config }: { config: RiserConfig }) => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <Card className="p-3 text-center">
           <p className="text-2xl font-bold text-primary">{roster.length}</p>
           <p className="text-xs text-muted-foreground">Tour Roster</p>

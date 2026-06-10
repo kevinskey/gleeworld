@@ -81,7 +81,7 @@ const PerformanceSuite = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="setlists">Setlist Builder</TabsTrigger>
           <TabsTrigger value="tours">Tour Manager</TabsTrigger>

@@ -163,7 +163,7 @@ export const InterviewToolkit = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
               <TabsTrigger value="schedule">
                 <Plus className="h-4 w-4 mr-2" />
                 Schedule

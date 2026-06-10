@@ -137,7 +137,7 @@ export const FirstYearConsole = () => {
         {/* Tab Navigation */}
         <Card>
           <CardContent className="p-6">
-            <TabsList className="grid w-full grid-cols-7 gap-2 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 gap-2 h-auto p-1">
               {tabs.map((tab) => {
                 const IconComponent = tab.icon;
                 return (

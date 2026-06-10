@@ -182,7 +182,7 @@ export const BudgetCard = ({ budget, onEdit, onDelete, onViewDetails, onUpdate }
         
         <CardContent className="space-y-4">
           {/* Financial Summary */}
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
               <DollarSign className="h-4 w-4 mx-auto text-blue-600 mb-1" />
               <p className="font-medium text-blue-900">{formatCurrency(budget.total_amount)}</p>

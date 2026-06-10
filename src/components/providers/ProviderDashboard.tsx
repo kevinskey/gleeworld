@@ -142,7 +142,7 @@ export const ProviderDashboard = () => {
       {/* Stats Row */}
       <div className="bg-[#2c4a6e] text-white px-4 py-4 md:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-4 gap-2 md:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
             <div className="bg-[#1e3a5f] rounded-lg p-3 md:p-4 text-center">
               <div className="text-2xl md:text-3xl font-bold">{stats.total}</div>
               <div className="text-xs md:text-sm text-blue-200">Total Appointments</div>

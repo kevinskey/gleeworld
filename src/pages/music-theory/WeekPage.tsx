@@ -185,7 +185,7 @@ const WeekPage = () => {
         <section className="py-8 px-6">
           <div className="max-w-4xl mx-auto">
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="materials">Materials</TabsTrigger>
                 <TabsTrigger value="assignments">Assignments</TabsTrigger>

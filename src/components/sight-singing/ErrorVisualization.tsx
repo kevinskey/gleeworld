@@ -127,7 +127,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({ results 
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Performance Summary */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="text-center p-3 bg-accent/10 rounded-lg border border-accent/20">
             <div className="flex items-center justify-center gap-1 mb-1">
               <CheckCircle className="h-4 w-4 text-accent" />

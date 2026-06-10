@@ -366,7 +366,7 @@ export const Mus240InstructorGradeGrid: React.FC = () => {
       <CardContent className="px-3 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="overflow-x-auto -mx-1 px-1 mb-4">
-            <TabsList className="w-full sm:w-auto sm:max-w-lg grid grid-cols-4">
+            <TabsList className="h-auto w-full sm:w-auto sm:max-w-lg grid grid-cols-2 md:grid-cols-4">
               <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3">Overview</TabsTrigger>
               <TabsTrigger value="attendance" className="text-xs sm:text-sm px-2 sm:px-3">Attendance</TabsTrigger>
               <TabsTrigger value="essays" className="text-xs sm:text-sm px-2 sm:px-3">Essays</TabsTrigger>

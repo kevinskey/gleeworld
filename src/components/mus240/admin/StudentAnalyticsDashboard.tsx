@@ -187,7 +187,7 @@ export const StudentAnalyticsDashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Overview

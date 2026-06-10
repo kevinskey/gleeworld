@@ -274,7 +274,7 @@ export const UploadDialog = ({ open, onOpenChange, activeTab }: UploadDialogProp
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="sm-key">Key Signature</Label>
                 <Input

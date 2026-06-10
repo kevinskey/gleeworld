@@ -290,7 +290,7 @@ export const BulkXMLUpload: React.FC<BulkXMLUploadProps> = ({ onUploadComplete }
             {/* Summary */}
             {uploadQueue.length > 0 && (
               <div className="mt-4 pt-4 border-t">
-                <div className="grid grid-cols-4 gap-4 text-center">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
                   <div>
                     <div className="text-sm font-medium">{pendingCount}</div>
                     <div className="text-xs text-muted-foreground">Pending</div>

@@ -870,7 +870,7 @@ export const PointOfSale = () => {
                   value={shippingAddress.line2}
                   onChange={e => setShippingAddress(prev => ({ ...prev, line2: e.target.value }))}
                 />
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   <Input
                     placeholder="City *"
                     value={shippingAddress.city}

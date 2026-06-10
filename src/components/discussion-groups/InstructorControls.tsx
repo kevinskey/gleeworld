@@ -432,7 +432,7 @@ export const InstructorControls: React.FC<InstructorControlsProps> = ({
                 <Calendar className="h-4 w-4" />
                 Extend Deadline for Student
               </h4>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <Label className="text-xs">Student</Label>
                   <Select 

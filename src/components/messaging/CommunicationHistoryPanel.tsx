@@ -120,7 +120,7 @@ export const CommunicationHistoryPanel: React.FC<CommunicationHistoryPanelProps>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-4 gap-2 text-center">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center">
           <div className="p-2 rounded-lg bg-muted border border-border">
             <div className="text-xl font-bold text-foreground">{stats.total}</div>
             <div className="text-sm font-medium text-foreground">Total</div>

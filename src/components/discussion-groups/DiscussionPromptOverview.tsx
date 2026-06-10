@@ -130,7 +130,7 @@ export const DiscussionPromptOverview: React.FC<DiscussionPromptOverviewProps> =
       {/* Deadlines */}
       <Card>
         <CardContent className="py-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {phases.map((phase, i) => {
               const isActive = phase.id === activePhase;
               const isPast = new Date() > phase.deadline;

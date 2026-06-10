@@ -206,7 +206,7 @@ export function InstructorControlCenter({ courseId }: InstructorControlCenterPro
         </DialogHeader>
 
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mt-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="assessment">Assessment</TabsTrigger>
             <TabsTrigger value="communication">Communication</TabsTrigger>

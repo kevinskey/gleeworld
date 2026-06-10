@@ -65,11 +65,11 @@ export const AttendanceFullScreenModal: React.FC<AttendanceFullScreenModalProps>
               <img
                 src={qrDataUrl}
                 alt="Attendance QR Code"
-                className="w-[400px] h-[400px] md:w-[500px] md:h-[500px]"
+                className="w-full max-w-[400px] md:max-w-[500px] aspect-square"
               />
             </div>
           ) : (
-            <div className="w-[400px] h-[400px] md:w-[500px] md:h-[500px] flex items-center justify-center bg-muted rounded-2xl">
+            <div className="w-full max-w-[400px] md:max-w-[500px] aspect-square flex items-center justify-center bg-muted rounded-2xl">
               <p className="text-muted-foreground text-xl">No QR code available</p>
             </div>
           )}

@@ -278,7 +278,7 @@ export const ReportingPanel = () => {
         <CardContent>
           <div className="space-y-4">
             {monthlyProgress.map((month, index) => (
-              <div key={index} className="grid grid-cols-4 gap-4 items-center">
+              <div key={index} className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
                 <div className="font-medium">{month.month}</div>
                 <div className="col-span-2">
                   <div className="flex gap-2">

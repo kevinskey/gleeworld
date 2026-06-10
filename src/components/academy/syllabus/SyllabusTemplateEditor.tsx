@@ -269,7 +269,7 @@ export const SyllabusTemplateEditor: React.FC<Props> = ({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full h-8">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full h-auto md:h-8">
           <TabsTrigger value="info" className="flex items-center gap-1 text-xs py-1">
             <User className="h-3 w-3" />
             <span className="hidden sm:inline">Course Info</span>

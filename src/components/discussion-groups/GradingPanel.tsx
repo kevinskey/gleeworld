@@ -283,7 +283,7 @@ export const GradingPanel: React.FC<GradingPanelProps> = ({
                   <CollapsibleContent className="px-3 pb-3">
                     <div className="mt-3 p-4 bg-muted/30 rounded-lg space-y-4">
                       {/* Score inputs */}
-                      <div className="grid grid-cols-4 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
                           <Label className="text-xs">Individual (40%)</Label>
                           <Input

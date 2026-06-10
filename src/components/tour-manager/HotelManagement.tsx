@@ -611,7 +611,7 @@ export const HotelManagement = () => {
                   <Input value={formData.address} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-slate-100 text-slate-700' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, address: e.target.value }))} />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>City</Label>
                     <Input value={formData.city} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-slate-100 text-slate-700' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, city: e.target.value }))} />

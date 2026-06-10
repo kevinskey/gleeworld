@@ -267,7 +267,7 @@ export const GraduatesDashboardMonitor = () => {
 
       {/* Detailed Content Tabs */}
       <Tabs defaultValue="reunions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
           <TabsTrigger value="reunions">Reunions</TabsTrigger>
           <TabsTrigger value="directory">Directory</TabsTrigger>
           <TabsTrigger value="mentorship">Mentorship</TabsTrigger>

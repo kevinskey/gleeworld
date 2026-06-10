@@ -352,7 +352,7 @@ export const SocialPushDashboard = () => {
               <div className="space-y-6">
                 {/* Platform Previews */}
                 <Tabs defaultValue={selectedPlatforms[0]} className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
                     {selectedPlatforms.map(platform => (
                       <TabsTrigger 
                         key={platform}

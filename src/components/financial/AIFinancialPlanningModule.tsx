@@ -78,7 +78,7 @@ export const AIFinancialPlanningModule = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="shopping" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="shopping">Shopping Planner</TabsTrigger>
           <TabsTrigger value="insights">Budget Insights</TabsTrigger>
           <TabsTrigger value="optimization">Cost Optimization</TabsTrigger>

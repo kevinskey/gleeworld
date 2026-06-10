@@ -791,7 +791,7 @@ export const AuditionsManagement = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Responsive tab navigation */}
         <div className="border-b border-border">
-          <TabsList className="grid w-full grid-cols-7 h-auto bg-transparent p-0 gap-0">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto bg-transparent p-0 gap-0">
             <TabsTrigger 
               value="overview" 
               className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"

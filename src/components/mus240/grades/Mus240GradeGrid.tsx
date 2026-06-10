@@ -340,7 +340,7 @@ export const Mus240GradeGrid: React.FC<Mus240GradeGridProps> = ({ studentId, isI
                   Grade Details
                 </CardTitle>
               </div>
-              <TabsList className="grid grid-cols-4 w-full max-w-lg">
+              <TabsList className="h-auto grid grid-cols-2 md:grid-cols-4 w-full max-w-lg">
                 <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
                 <TabsTrigger value="assignments" className="text-xs sm:text-sm">Essays</TabsTrigger>
                 <TabsTrigger value="discussions" className="text-xs sm:text-sm">Discussions</TabsTrigger>
@@ -530,7 +530,7 @@ export const Mus240GradeGrid: React.FC<Mus240GradeGridProps> = ({ studentId, isI
               <TabsContent value="participation" className="m-0">
                 <div className="p-4 space-y-4">
                   {/* Summary Cards */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     <div className="p-3 rounded-lg bg-muted/50 text-center">
                       <div className="text-2xl font-bold">{gradeCalculations.pollsCompleted}/{gradeCalculations.pollsTotal}</div>
                       <div className="text-xs text-muted-foreground">Polls (25%)</div>

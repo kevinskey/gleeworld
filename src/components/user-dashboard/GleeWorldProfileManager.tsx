@@ -209,7 +209,7 @@ export const GleeWorldProfileManager = () => {
       </Card>
 
       <Tabs defaultValue="personal" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="personal">Personal</TabsTrigger>
           <TabsTrigger value="glee">Glee Club</TabsTrigger>
           <TabsTrigger value="roles">Roles</TabsTrigger>

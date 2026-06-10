@@ -188,7 +188,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
               />
             </div>
             
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <Select value={filterRole} onValueChange={setFilterRole}>
                 <SelectTrigger className="h-8">
                   <SelectValue placeholder="Role" />

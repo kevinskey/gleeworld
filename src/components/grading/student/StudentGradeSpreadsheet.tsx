@@ -452,7 +452,7 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-center">
               <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30">
                 <div className="text-2xl font-bold text-green-600">{presentCount}</div>
                 <div className="text-sm text-muted-foreground">Present</div>

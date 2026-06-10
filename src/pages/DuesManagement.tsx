@@ -211,7 +211,7 @@ export const DuesManagement = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl bg-brand-subtle/20 border border-brand-accent/20">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 h-auto w-full max-w-2xl bg-brand-subtle/20 border border-brand-accent/20">
           <TabsTrigger 
             value="overview" 
             className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-brand-primary data-[state=active]:to-brand-secondary data-[state=active]:text-white"

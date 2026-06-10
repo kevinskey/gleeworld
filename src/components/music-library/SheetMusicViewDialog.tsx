@@ -198,7 +198,7 @@ export const SheetMusicViewDialog = ({
           {/* Right: Tab content panel */}
           <div className="hidden">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <TabsList className="grid w-full grid-cols-5 h-10 md:h-12 border-b">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto md:h-10 md:h-12 border-b">
                 <TabsTrigger value="overview" className="text-xs md:text-sm py-2 px-1">Overview</TabsTrigger>
                 <TabsTrigger value="notes" className="text-xs md:text-sm py-2 px-1">Notes</TabsTrigger>
                 <TabsTrigger value="marked" className="text-xs md:text-sm py-2 px-1">Marked</TabsTrigger>

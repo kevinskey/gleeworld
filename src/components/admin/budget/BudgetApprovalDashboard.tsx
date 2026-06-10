@@ -327,7 +327,7 @@ export const BudgetApprovalDashboard = () => {
 
       {/* Budget Tabs */}
       <Tabs defaultValue="my-drafts" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
           <TabsTrigger value="my-drafts">My Drafts ({draftBudgets.filter(b => b.created_by === user?.id).length})</TabsTrigger>
           <TabsTrigger value="pending-treasurer">Pending Treasurer ({pendingTreasurerBudgets.length})</TabsTrigger>
           <TabsTrigger value="pending-superadmin">Pending Super Admin ({pendingSuperAdminBudgets.length})</TabsTrigger>

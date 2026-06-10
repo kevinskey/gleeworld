@@ -157,7 +157,7 @@ export const BulkW9EmailDialog = ({ open, onOpenChange, totalUsers }: BulkW9Emai
 
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Filter by Role (optional)</Label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   {availableRoles.map((role) => (
                     <div key={role} className="flex items-center space-x-2">
                       <Checkbox

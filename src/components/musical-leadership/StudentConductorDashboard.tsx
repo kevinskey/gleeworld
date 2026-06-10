@@ -83,7 +83,7 @@ export const StudentConductorDashboard = ({ user }: StudentConductorDashboardPro
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="section-leaders">Section Leaders</TabsTrigger>
           <TabsTrigger value="sight-singing">Sight Singing</TabsTrigger>

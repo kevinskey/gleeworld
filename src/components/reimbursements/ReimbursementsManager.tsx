@@ -292,7 +292,7 @@ export const ReimbursementsManager = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-5">
               <TabsTrigger value="all">All ({requests.length})</TabsTrigger>
               <TabsTrigger value="pending">Pending ({counts.pending})</TabsTrigger>
               <TabsTrigger value="approved">Approved ({counts.approved})</TabsTrigger>

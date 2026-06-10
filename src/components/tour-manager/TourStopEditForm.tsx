@@ -134,7 +134,7 @@ export const TourStopEditForm = ({ stop, open, onOpenChange, onSaved, busCompani
                 <Field label="Venue Name" field="venue_name" />
                 <Field label="Venue Address" field="venue_address" />
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <Field label="Contact Person" field="venue_contact" />
                 <Field label="Phone" field="venue_phone" />
                 <Field label="Email" field="venue_email" />

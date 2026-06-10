@@ -569,7 +569,7 @@ export const CommunityHubWidget = () => {
             {/* Voice Part Filter Tabs */}
             <div className="mb-4">
               <Tabs value={activeVoiceFilter} onValueChange={setActiveVoiceFilter} className="w-full">
-                <TabsList className="grid w-full grid-cols-5 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg shadow-sm h-8">
+                <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg shadow-sm h-auto md:h-8">
                   <TabsTrigger value="all" className="text-xs py-1 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-800">
                     All
                   </TabsTrigger>

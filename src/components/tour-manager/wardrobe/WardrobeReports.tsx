@@ -240,7 +240,7 @@ export const WardrobeReports = () => {
 
       {/* Reports Tabs */}
       <Tabs defaultValue="members" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="members">Members Status</TabsTrigger>
           <TabsTrigger value="inventory">Inventory Report</TabsTrigger>
           <TabsTrigger value="missing">Missing Items</TabsTrigger>

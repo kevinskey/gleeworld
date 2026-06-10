@@ -138,7 +138,7 @@ export const SMSHistoryPanel = () => {
         </div>
         
         {/* Quick Stats */}
-        <div className="grid grid-cols-4 gap-2 text-center">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center">
           <div className="p-2 rounded-lg bg-green-500/10">
             <div className="text-lg font-bold text-green-600">{stats.delivered}</div>
             <div className="text-xs text-muted-foreground">Delivered</div>

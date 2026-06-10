@@ -894,7 +894,7 @@ export const SightSingingStudio: React.FC = () => {
       <div className="h-full flex flex-col gap-3 sm:gap-6">
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'practice' | 'library' | 'assignments' | 'history' | 'report')} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-8 sm:h-10">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto md:h-8 sm:h-10">
             <TabsTrigger value="practice" className="text-xs sm:text-sm">Practice Studio</TabsTrigger>
             <TabsTrigger value="library" className="text-xs sm:text-sm">Score Library</TabsTrigger>
             <TabsTrigger value="assignments" className="text-xs sm:text-sm">Create Assignment</TabsTrigger>

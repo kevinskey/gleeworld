@@ -246,7 +246,7 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
 
         {/* Detailed Tabs */}
         <Tabs defaultValue="assignments" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
             <TabsTrigger value="assignments" className="text-xs py-2">
               <BookOpen className="h-3 w-3 mr-1" />
               <span className="hidden sm:inline">Assignments</span> ({assignments.length})

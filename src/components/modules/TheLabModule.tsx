@@ -58,7 +58,7 @@ export const TheLabModule: React.FC = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="tts" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-5 mb-6">
             <TabsTrigger value="tts" className="flex items-center gap-2">
               <Volume2 className="h-4 w-4" />
               <span className="hidden sm:inline">Text to Speech</span>

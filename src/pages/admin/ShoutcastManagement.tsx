@@ -307,7 +307,7 @@ export const ShoutcastManagement = () => {
                 <DialogDescription>Configure a new Shoutcast streaming server</DialogDescription>
               </DialogHeader>
               
-              <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Stream Name</Label>
                   <Input
@@ -607,7 +607,7 @@ export const ShoutcastManagement = () => {
               <DialogDescription>Update stream configuration</DialogDescription>
             </DialogHeader>
             
-            <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="edit_name">Stream Name</Label>
                 <Input

@@ -221,7 +221,7 @@ export const NotificationCenter = ({ trigger, isOpen, onOpenChange }: Notificati
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-3">
             <div className="text-center">
               <div className="text-2xl font-bold">{stats.total}</div>

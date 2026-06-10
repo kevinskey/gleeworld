@@ -117,7 +117,7 @@ export const DirectoryModule = () => {
       {/* Content */}
       <div className="flex-1 p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
             <TabsTrigger value="all">All Members</TabsTrigger>
             <TabsTrigger value="soprano">Soprano</TabsTrigger>
             <TabsTrigger value="alto">Alto</TabsTrigger>

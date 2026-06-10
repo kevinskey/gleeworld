@@ -177,7 +177,7 @@ export const CalendarManagement = () => {
 
       {/* Main Content */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="calendar">Calendar View</TabsTrigger>
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>

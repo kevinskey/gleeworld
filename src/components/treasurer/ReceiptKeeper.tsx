@@ -331,7 +331,7 @@ export const ReceiptKeeper = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Category</label>
                   <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>

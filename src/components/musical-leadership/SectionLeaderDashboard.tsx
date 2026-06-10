@@ -84,7 +84,7 @@ export const SectionLeaderDashboard = ({ user }: SectionLeaderDashboardProps) =>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 h-12 md:h-10">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto md:h-12 md:h-10">
           <TabsTrigger value="overview" className="text-xs md:text-sm touch-target">Overview</TabsTrigger>
           <TabsTrigger value="roster" className="text-xs md:text-sm touch-target">Section Roster</TabsTrigger>
           <TabsTrigger value="sectionals" className="text-xs md:text-sm touch-target">Sectional Planning</TabsTrigger>

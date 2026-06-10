@@ -328,7 +328,7 @@ export default function AcademyCoursesAdmin() {
           <ScrollArea className="max-h-[60vh] pr-4">
             {selectedCourse && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Course Code *</Label>
                     <Input
@@ -379,7 +379,7 @@ export default function AcademyCoursesAdmin() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Level</Label>
                     <Select
@@ -431,7 +431,7 @@ export default function AcademyCoursesAdmin() {
 
                 <div className="border-t pt-4">
                   <h4 className="font-medium mb-3">Instructor Information</h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Name</Label>
                       <Input

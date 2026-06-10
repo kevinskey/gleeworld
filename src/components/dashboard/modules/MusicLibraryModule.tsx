@@ -350,7 +350,7 @@ export const MusicLibraryModule = () => {
       {/* Tabs */}
       <Tabs defaultValue="all" className="flex-1 flex flex-col">
         <div className="pt-3 md:pt-4">
-          <TabsList className="w-full md:w-auto grid grid-cols-4 md:inline-flex">
+          <TabsList className="w-full md:w-auto grid grid-cols-2 h-auto md:inline-flex">
             <TabsTrigger value="all" className="text-xs md:text-sm">All ({filteredMusic.length})</TabsTrigger>
             <TabsTrigger value="recent" className="text-xs md:text-sm">Recent</TabsTrigger>
             <TabsTrigger value="favorites" className="text-xs md:text-sm">Favorites</TabsTrigger>

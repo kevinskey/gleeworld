@@ -73,7 +73,7 @@ export const ContractsModule = ({
         
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="upload">Upload Document</TabsTrigger>

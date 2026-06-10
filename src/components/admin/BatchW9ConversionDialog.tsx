@@ -125,7 +125,7 @@ export const BatchW9ConversionDialog = () => {
 
           {results && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-center">
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">{results.total}</div>
                   <div className="text-xs text-blue-600">Total Forms</div>

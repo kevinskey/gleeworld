@@ -143,7 +143,7 @@ export default function Settings() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Tabs defaultValue="personal" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
               <TabsTrigger value="personal" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 Personal

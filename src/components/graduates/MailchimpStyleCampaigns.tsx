@@ -843,7 +843,7 @@ export const MailchimpStyleCampaigns = () => {
                     return (
                       <div key={campaign.id} className="border-b pb-4 last:border-0">
                         <h4 className="font-medium mb-2">{campaign.name}</h4>
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                           <div>
                             <p className="text-sm text-muted-foreground">Sent</p>
                             <p className="text-lg font-semibold">{campaign.stats?.sent}</p>

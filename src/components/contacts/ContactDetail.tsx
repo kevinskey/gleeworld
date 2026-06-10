@@ -164,7 +164,7 @@ export const ContactDetail = ({ contactId, onBack }: ContactDetailProps) => {
               <Activity className="h-4 w-4" />
               Email Metrics
             </h3>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-muted-foreground">Sent</p>
                 <p className="text-2xl font-bold">{contact.TotalSent}</p>

@@ -239,7 +239,7 @@ export const EmbeddedStudentGradeView: React.FC<EmbeddedStudentGradeViewProps> =
                   </div>
                   <Progress value={percentage} className="h-3" />
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 text-center">
                   <div className="p-2 rounded-lg bg-muted/50">
                     <div className="text-lg font-bold">{stats.assignmentCount}</div>
                     <div className="text-xs text-muted-foreground">Assignments</div>
@@ -261,7 +261,7 @@ export const EmbeddedStudentGradeView: React.FC<EmbeddedStudentGradeViewProps> =
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 bg-slate-200 dark:bg-slate-800">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto bg-slate-200 dark:bg-slate-800">
           <TabsTrigger value="spreadsheet" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900 dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-white">
             <Table2 className="h-4 w-4" />
             <span className="hidden sm:inline">Grades</span>
@@ -375,7 +375,7 @@ export const EmbeddedStudentGradeView: React.FC<EmbeddedStudentGradeViewProps> =
               <CardTitle className="text-lg">Grade Scale</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-5 gap-2 text-center text-sm">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 text-center text-sm">
                 {[
                   { grade: 'A', range: '95-100', color: 'text-green-600' },
                   { grade: 'B', range: '80-94', color: 'text-blue-600' },

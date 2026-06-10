@@ -64,7 +64,7 @@ export const TourEditor: React.FC<TourEditorProps> = ({ tourId, onBack, isCreati
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="cities">Cities & Route</TabsTrigger>
           <TabsTrigger value="logistics" disabled={isCreating}>Logistics</TabsTrigger>

@@ -270,7 +270,7 @@ export const BudgetManager = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Budget Type</label>
                   <Select value={formData.budget_type} onValueChange={(value) => setFormData(prev => ({ ...prev, budget_type: value }))}>
@@ -372,7 +372,7 @@ export const BudgetManager = () => {
                   <p className="text-sm text-muted-foreground">{budget.description}</p>
                 )}
                 
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                   <div>
                     <span className="font-medium">Allocated:</span>
                     <p className="text-lg font-semibold text-blue-600">

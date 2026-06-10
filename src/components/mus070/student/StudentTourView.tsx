@@ -327,7 +327,7 @@ export const StudentTourView: React.FC = () => {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-4 mt-5">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
           <div className="bg-primary-foreground/10 rounded-lg p-3 text-center">
             <p className="text-2xl font-bold">{daysUntilTour > 0 ? daysUntilTour : 0}</p>
             <p className="text-xs text-primary-foreground/70">{daysUntilTour > 0 ? 'Days Until Tour' : 'Tour Started'}</p>

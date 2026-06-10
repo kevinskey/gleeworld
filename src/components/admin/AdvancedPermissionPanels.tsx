@@ -17,7 +17,7 @@ export const AdvancedPermissionPanels = () => {
   
   return (
     <Tabs defaultValue="overview" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
         <TabsTrigger value="overview">User Overview</TabsTrigger>
         <TabsTrigger value="username">Username Permissions</TabsTrigger>
         <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>

@@ -300,7 +300,7 @@ export const EnhancedContractManager = ({ user }: EnhancedContractManagerProps) 
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Dashboard

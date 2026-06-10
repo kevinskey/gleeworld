@@ -239,7 +239,7 @@ export const RecipientSelector = ({
 
         {/* Group Selection Tabs */}
         <Tabs defaultValue="role" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
             {Object.keys(filteredGroups).map((type) => (
               <TabsTrigger key={type} value={type} className="text-xs">
                 <span className="mr-1">{getTabIcon(type)}</span>

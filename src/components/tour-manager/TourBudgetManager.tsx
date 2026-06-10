@@ -409,7 +409,7 @@ export const TourBudgetManager = () => {
       </div>
 
       {/* Summary Strip */}
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
         <div className="rounded-lg bg-muted/40 p-2.5 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Revenue</p>
           <p className="text-sm font-bold text-green-500 mt-0.5">{formatCurrency(summary.total_revenue)}</p>

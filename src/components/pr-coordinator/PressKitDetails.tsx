@@ -85,7 +85,7 @@ export const PressKitDetails = ({ pressKit, onClose }: PressKitDetailsProps) => 
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="items">Items ({pressKit.items?.length || 0})</TabsTrigger>
             <TabsTrigger value="share">Share & Distribution</TabsTrigger>

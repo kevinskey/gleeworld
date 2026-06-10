@@ -82,7 +82,7 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-5">
               <TabsTrigger value="assignments">Assignments</TabsTrigger>
               <TabsTrigger value="progress">Progress</TabsTrigger>
               <TabsTrigger value="generate">Generate</TabsTrigger>

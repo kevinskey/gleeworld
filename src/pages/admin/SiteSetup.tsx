@@ -544,7 +544,7 @@ export default function SiteSetup() {
             {/* Hero mode picker */}
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-2">Style</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {([
                   { id: 'single',         label: 'Single image',    hint: 'One static hero' },
                   { id: 'slider-fade',    label: 'Fade slider',     hint: 'Cross-fades between images' },

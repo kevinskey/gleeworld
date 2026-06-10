@@ -183,7 +183,7 @@ export const TourContracts = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="contracts">My Contracts</TabsTrigger>
           <TabsTrigger value="create">Create Contract</TabsTrigger>

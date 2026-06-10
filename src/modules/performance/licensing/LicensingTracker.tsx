@@ -471,7 +471,7 @@ export const LicensingTracker = () => {
       )}
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="h-auto grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="all">All Licenses</TabsTrigger>
           <TabsTrigger value="expiring">Expiring Soon</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>

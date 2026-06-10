@@ -111,7 +111,7 @@ export const TaskHeatmap = ({ data }: TaskHeatmapProps) => {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t">
         <div className="text-center">
           <div className="text-lg font-semibold">
             {data.reduce((sum, day) => sum + day.submissions, 0)}
