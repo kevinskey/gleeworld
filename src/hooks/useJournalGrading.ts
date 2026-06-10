@@ -96,7 +96,7 @@ export async function getPeerCommentPoints(
 
 // Raw fetch utility with timeout and cache-buster
 async function callEdgeRaw(path: string, body: unknown, token?: string, ms = 15000) {
-  const url = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/${path}?v=${Date.now()}`;
+  const url = `https://supabase.gleeworld.org/functions/v1/${path}?v=${Date.now()}`;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort("timeout"), ms);
   const res = await fetch(url, {
@@ -119,7 +119,7 @@ async function callEdgeRaw(path: string, body: unknown, token?: string, ms = 150
 
 // Probe functions for diagnostics
 export async function probeGrade() {
-  const health = await fetch(`https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/grade-journal?health=1&v=${Date.now()}`)
+  const health = await fetch(`https://supabase.gleeworld.org/functions/v1/grade-journal?health=1&v=${Date.now()}`)
     .then(r=>r.status+" "+r.statusText).catch(e=>"health_failed:"+e);
   const { data: s } = await supabase.auth.getSession();
   const token = s?.session?.access_token;

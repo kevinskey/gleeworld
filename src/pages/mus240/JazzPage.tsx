@@ -264,7 +264,7 @@ export default function JazzPage() {
       const { data: { session } } = await supabase.auth.getSession();
       
       const response = await fetch(
-        'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/upload-jazz-tracks',
+        'https://supabase.gleeworld.org/functions/v1/upload-jazz-tracks',
         {
           method: 'POST',
           headers: {

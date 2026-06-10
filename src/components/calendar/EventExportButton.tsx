@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
+import { SUPABASE_URL } from "@/integrations/supabase/client";
 
 interface EventExportButtonProps {
   event: GleeWorldEvent;
@@ -15,8 +16,7 @@ export const EventExportButton = ({ event, variant = "outline", size = "sm" }: E
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
-  const projectId = "oopmlreysjzuxzylyheb";
-  const baseUrl = `https://${projectId}.supabase.co/functions/v1`;
+  const baseUrl = `${SUPABASE_URL}/functions/v1`;
 
   const exportEvent = async () => {
     setIsExporting(true);

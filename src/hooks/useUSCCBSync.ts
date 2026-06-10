@@ -57,11 +57,11 @@ export const useUSCCBSync = () => {
         try {
           const { data: sessionData } = await supabase.auth.getSession();
           const token = sessionData.session?.access_token;
-          const resp = await fetch('https://oopmlreysjzuxzylyheb.functions.supabase.co/sync-usccb-liturgical', {
+          const resp = await fetch('https://supabase.gleeworld.org/functions/v1/sync-usccb-liturgical', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'apikey': (supabase as any).headers?.['x-client-info'] ? '' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg',
+              'apikey': (supabase as any).headers?.['x-client-info'] ? '' : 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODAxNzEwNzcsICJleHAiOiAyMDk1NTMxMDc3fQ.orWLkajK-mQywKVcWS48HVXU8uKWtsL6iY5BAaVn0xc',
               ...(token ? { Authorization: `Bearer ${token}` } : {})
             },
             body: JSON.stringify({ date })

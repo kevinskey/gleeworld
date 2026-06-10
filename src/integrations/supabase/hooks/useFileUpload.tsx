@@ -55,7 +55,7 @@ export function useFileUpload() {
         formData.append('bucket', bucket);
         formData.append('fileName', filePath);
 
-        const edgeBaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1';
+        const edgeBaseUrl = 'https://supabase.gleeworld.org/functions/v1';
 
         // Helper function to make fetch with timeout
         const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs: number = 60000) => {

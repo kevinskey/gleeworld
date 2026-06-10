@@ -262,7 +262,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
                   className="w-full"
                   controls
                   preload="none"
-                  src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/service-images/4e6c2ec0-1f83-449a-a984-8920f6056ab5/20250811-899174f9-2d52-4ef7-96b3-87a77127e18e-come-thou-font-of-every-blessing---audition.mp3"
+                  src="https://supabase.gleeworld.org/storage/v1/object/public/service-images/4e6c2ec0-1f83-449a-a984-8920f6056ab5/20250811-899174f9-2d52-4ef7-96b3-87a77127e18e-come-thou-font-of-every-blessing---audition.mp3"
                   aria-label="Play Come Thou Fount audition track"
                 >
                   Your browser does not support the audio element.
@@ -294,7 +294,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
               controls
               preload="none"
               className="w-full max-w-[400px] sm:max-w-[520px]"
-              src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/service-images/4e6c2ec0-1f83-449a-a984-8920f6056ab5/20250811-899174f9-2d52-4ef7-96b3-87a77127e18e-come-thou-font-of-every-blessing---audition.mp3"
+              src="https://supabase.gleeworld.org/storage/v1/object/public/service-images/4e6c2ec0-1f83-449a-a984-8920f6056ab5/20250811-899174f9-2d52-4ef7-96b3-87a77127e18e-come-thou-font-of-every-blessing---audition.mp3"
               aria-label="Play Come Thou Fount audition track"
             >
               Your browser does not support the audio element.

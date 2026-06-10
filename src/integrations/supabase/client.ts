@@ -20,15 +20,15 @@ declare global {
 
 const TENANT = typeof window !== 'undefined' ? window.__TENANT_CONFIG__ : undefined;
 
-const SUPABASE_URL =
+export const SUPABASE_URL =
   TENANT?.supabaseUrl ||
   (import.meta.env.VITE_SUPABASE_URL as string) ||
-  "https://oopmlreysjzuxzylyheb.supabase.co";
+  "https://supabase.gleeworld.org";
 
-const SUPABASE_PUBLISHABLE_KEY =
+export const SUPABASE_PUBLISHABLE_KEY =
   TENANT?.supabaseAnonKey ||
   (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg";
+  "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24iLCAiaXNzIjogInN1cGFiYXNlIiwgImlhdCI6IDE3ODAxNzEwNzcsICJleHAiOiAyMDk1NTMxMDc3fQ.orWLkajK-mQywKVcWS48HVXU8uKWtsL6iY5BAaVn0xc";
 
 // Per-tenant DB header — Supabase Postgres routes to the right DB via the
 // configured Kong/PostgREST instance; we send the tenant DB name in a header

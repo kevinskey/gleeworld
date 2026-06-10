@@ -53,7 +53,7 @@ export const useAutoEnrollUser = () => {
         const msg = invokeErr?.message || '';
         if (msg.includes('Failed to send a request to the Edge Function') || msg.includes('Load failed')) {
           console.warn('Falling back to direct Edge Function call...');
-          const resp = await fetch('https://oopmlreysjzuxzylyheb.functions.supabase.co/auto-enroll-user', {
+          const resp = await fetch('https://supabase.gleeworld.org/functions/v1/auto-enroll-user', {
             method: 'POST',
             headers: {
               ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),

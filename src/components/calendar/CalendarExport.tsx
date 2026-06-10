@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Download, Calendar, ExternalLink, Copy, Check, Info, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 
 export const CalendarExport = () => {
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
@@ -15,8 +15,7 @@ export const CalendarExport = () => {
   const [isLoadingToken, setIsLoadingToken] = useState(true);
   const { toast } = useToast();
 
-  const projectId = "oopmlreysjzuxzylyheb";
-  const baseUrl = `https://${projectId}.supabase.co/functions/v1`;
+  const baseUrl = `${SUPABASE_URL}/functions/v1`;
 
   useEffect(() => {
     fetchUserToken();

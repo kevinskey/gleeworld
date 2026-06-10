@@ -183,7 +183,7 @@ export const SMSIntegrationPanel: React.FC<SMSIntegrationPanelProps> = ({
                 <strong>Incoming SMS:</strong>
               </p>
               <p className="mb-3">
-                https://oopmlreysjzuxzylyheb.functions.supabase.co/functions/v1/receive-sms
+                https://supabase.gleeworld.org/functions/v1/receive-sms
               </p>
               <p className="text-xs text-muted-foreground">
                 Configure this URL in your Twilio phone number settings as the webhook for incoming messages.

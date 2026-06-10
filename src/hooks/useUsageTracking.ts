@@ -242,7 +242,7 @@ export const useUsageTracking = () => {
           });
           
           navigator.sendBeacon?.(
-            `https://oopmlreysjzuxzylyheb.supabase.co/rest/v1/user_sessions?id=eq.${sessionDbIdRef.current}`,
+            `https://supabase.gleeworld.org/rest/v1/user_sessions?id=eq.${sessionDbIdRef.current}`,
             payload
           );
         } catch (err) {
