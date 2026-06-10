@@ -81,24 +81,22 @@ const EventCheckinPage = () => {
 
     setCheckingIn(true);
     try {
-      const { error: insertError } = await supabase.from("gw_event_attendance").insert({
-        event_id: event.id,
-        user_id: user.id,
-        attendance_status: "present",
-        check_in_time: new Date().toISOString(),
+      const { data, error: rpcError } = await supabase.rpc("process_event_token_checkin", {
+        p_token: token,
       });
 
-      if (insertError) {
-        if (insertError.code === "23505") {
-          // Unique constraint violation - already checked in
-          setCheckedIn(true);
-          toast.info("You're already checked in!");
+      if (rpcError) throw rpcError;
+
+      const result = data as { success: boolean; already_recorded?: boolean; message: string };
+      if (result.success) {
+        setCheckedIn(true);
+        if (result.already_recorded) {
+          toast.info(result.message);
         } else {
-          throw insertError;
+          toast.success(result.message);
         }
       } else {
-        setCheckedIn(true);
-        toast.success("Successfully checked in!");
+        toast.error(result.message);
       }
     } catch (err) {
       console.error("Check-in error:", err);
