@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getTenantSlug } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Music, Users, BookOpen } from "lucide-react";
@@ -57,7 +57,8 @@ export default function StudentRegistration() {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: `${data.firstName} ${data.lastName}`,
-            role: 'student'
+            role: 'student',
+            tenant_slug: getTenantSlug()
           }
         }
       });

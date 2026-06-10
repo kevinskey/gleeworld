@@ -3,7 +3,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuditionForm } from "../AuditionFormProvider";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getTenantSlug } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -42,7 +42,8 @@ export function RegistrationPage() {
         options: {
           emailRedirectTo: `${window.location.origin}/auditions`,
           data: {
-            signup_context: 'audition'
+            signup_context: 'audition',
+            tenant_slug: getTenantSlug()
           }
         }
       });

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, GraduationCap, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -65,7 +65,8 @@ export const AcademyStudentRegistration = () => {
           data: {
             full_name: formData.fullName,
             student_id: formData.studentId,
-            registration_type: 'academy' // Triggers auto-assignment of student role
+            registration_type: 'academy', // Triggers auto-assignment of student role
+            tenant_slug: getTenantSlug()
           }
         }
       });

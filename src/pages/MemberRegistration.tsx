@@ -8,7 +8,7 @@ import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { UniversalFooter } from '@/components/layout/UniversalFooter';
 import { Heart, Mail, Lock, AlertCircle, CheckCircle, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const MemberRegistration = () => {
@@ -89,7 +89,10 @@ const MemberRegistration = () => {
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          data: {
+            tenant_slug: getTenantSlug()
+          }
         }
       });
 

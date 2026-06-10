@@ -20,6 +20,10 @@ declare global {
 
 const TENANT = typeof window !== 'undefined' ? window.__TENANT_CONFIG__ : undefined;
 
+// Tenant slug for signup metadata: the handle_new_user_profile trigger uses
+// raw_user_meta_data.tenant_slug to enroll the new user in the right tenant.
+export const getTenantSlug = () => TENANT?.tenant || 'main';
+
 export const SUPABASE_URL =
   TENANT?.supabaseUrl ||
   (import.meta.env.VITE_SUPABASE_URL as string) ||

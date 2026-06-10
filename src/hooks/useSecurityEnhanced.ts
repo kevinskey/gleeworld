@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 
 // Security utility functions
 const sanitizeInput = (input: string): string => {
@@ -206,6 +206,7 @@ export const useSecurityEnhanced = () => {
           data: {
             full_name: sanitizedFullName,
             role: role,
+            tenant_slug: getTenantSlug(),
           }
         }
       });

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getTenantSlug } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { HeartIcon, MusicIcon, UsersIcon } from "lucide-react";
 
@@ -38,7 +38,8 @@ export function FanSignupForm() {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             signup_context: 'fan',
-            full_name: formData.fullName
+            full_name: formData.fullName,
+            tenant_slug: getTenantSlug()
           }
         }
       });

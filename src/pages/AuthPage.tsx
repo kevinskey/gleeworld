@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,7 +94,8 @@ export default function AuthPage() {
           options: {
             emailRedirectTo: redirectUrl,
             data: {
-              full_name: name
+              full_name: name,
+              tenant_slug: getTenantSlug()
             }
           }
         });

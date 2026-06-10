@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getTenantSlug } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GraduationCapIcon, StarIcon, UsersIcon } from "lucide-react";
 
@@ -46,7 +46,8 @@ export function AlumnaSignupForm() {
             signup_context: 'graduate',
             full_name: formData.fullName,
             graduation_year: formData.graduationYear,
-            voice_part: formData.voicePart
+            voice_part: formData.voicePart,
+            tenant_slug: getTenantSlug()
           }
         }
       });
