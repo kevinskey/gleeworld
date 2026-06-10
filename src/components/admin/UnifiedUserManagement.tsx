@@ -162,13 +162,13 @@ export const UnifiedUserManagement = () => {
 
   const handleQuickRoleChange = async (userId: string, newRole: string) => {
     try {
-      const { data, error } = await supabase
-        .from('gw_profiles')
-        .update({ role: newRole })
-        .eq('user_id', userId)
-        .select();
+      const { error } = await supabase.rpc('transition_user_role', {
+        target_user_id: userId,
+        new_role: newRole,
+        reason: 'Quick role change (user management)',
+        admin_notes: null,
+      });
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error('Update failed - insufficient permissions');
       setUsers(users.map(u => u.user_id === userId ? { ...u, role: newRole } : u));
       toast({ title: "Role Updated", description: `User role changed to ${newRole}` });
     } catch (error: any) {

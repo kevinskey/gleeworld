@@ -98,12 +98,14 @@ const PermissionsPage: React.FC = () => {
 
   const updateRole = async () => {
     if (!selectedUserId || !selectedRole) return;
-    const { error } = await supabase
-      .from('gw_profiles')
-      .update({ role: selectedRole })
-      .eq('user_id', selectedUserId);
+    const { error } = await supabase.rpc('transition_user_role', {
+      target_user_id: selectedUserId,
+      new_role: selectedRole,
+      reason: 'Role change (permissions page)',
+      admin_notes: null,
+    });
     if (error) {
-      toast.error('Failed to update role');
+      toast.error(error.message || 'Failed to update role');
     } else {
       toast.success('Role updated');
       await doPreview();

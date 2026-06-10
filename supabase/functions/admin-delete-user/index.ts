@@ -92,88 +92,27 @@ serve(async (req) => {
         }
       })
 
-    // Step 1: Delete/cleanup related data first (in order of dependencies)
     console.log('Starting user deletion process for:', userEmail)
 
-    // Delete user module permissions
-    await supabaseClient
-      .from('gw_user_module_permissions')
-      .delete()
-      .eq('user_id', userId)
-
-    // Delete username permissions
-    await supabaseClient
-      .from('username_permissions')
-      .delete()
-      .eq('user_email', userEmail)
-
-    // Delete executive board memberships
-    await supabaseClient
-      .from('gw_executive_board_members')
-      .delete()
-      .eq('user_id', userId)
-
-    // Delete user preferences
-    await supabaseClient
-      .from('user_preferences')
-      .delete()
-      .eq('user_id', userId)
-
-    // Delete notification preferences
-    await supabaseClient
-      .from('gw_notification_preferences')
-      .delete()
-      .eq('user_id', userId)
-
-    // Delete user module orders
-    await supabaseClient
-      .from('gw_user_module_orders')
-      .delete()
-      .eq('user_id', userId)
-
-    // Delete payment records (mark as deleted rather than hard delete)
-    await supabaseClient
-      .from('payments')
-      .update({ notes: 'User account deleted', updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
-
-    // Delete contract assignments
-    await supabaseClient
-      .from('contract_user_assignments')
-      .delete()
-      .eq('user_id', userId)
-
-    await supabaseClient
-      .from('singer_contract_assignments')
-      .delete()
-      .eq('singer_id', userId)
-
-    // Delete attendance records (keep for historical purposes but anonymize)
-    await supabaseClient
-      .from('gw_attendance')
-      .update({ 
-        notes: 'User deleted',
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', userId)
-
-    // Step 2: Delete the profile record
-    const { error: profileError } = await supabaseClient
-      .from('gw_profiles')
-      .delete()
-      .eq('user_id', userId)
-
-    if (profileError) {
-      console.error('Error deleting profile:', profileError)
-      throw new Error(`Failed to delete user profile: ${profileError.message}`)
-    }
-
-    // Step 3: Delete the auth user (this must be last)
+    // Step 1: Delete the auth user first. If this fails nothing has changed;
+    // if the cleanup below fails, the account can no longer log in and the
+    // leftover rows can be cleaned up by re-running.
     const { error: authDeleteError } = await supabaseClient.auth.admin.deleteUser(userId)
 
     if (authDeleteError) {
       console.error('Error deleting auth user:', authDeleteError)
       throw new Error(`Failed to delete auth user: ${authDeleteError.message}`)
+    }
+
+    // Step 2: Atomic cleanup of all app data (single transaction in the DB).
+    const { error: cleanupError } = await supabaseClient.rpc('admin_delete_user_data', {
+      p_user_id: userId,
+      p_user_email: userEmail,
+    })
+
+    if (cleanupError) {
+      console.error('Error cleaning up user data:', cleanupError)
+      throw new Error(`Auth account deleted, but data cleanup failed: ${cleanupError.message}. Re-run the deletion to finish cleanup.`)
     }
 
     // Log successful deletion
