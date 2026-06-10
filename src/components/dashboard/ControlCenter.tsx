@@ -107,11 +107,11 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Compact header — literal dark slate colors so it reads on the cream page bg */}
+      {/* Compact header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Control Center</h1>
-          <p className="text-sm text-slate-700">Admin command center — manage every part of the app.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Control Center</h1>
+          <p className="text-sm text-muted-foreground">Admin command center — manage every part of the app.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -140,10 +140,10 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
       {/* Search bar — applies to both sections */}
       <div className="flex items-center justify-end mb-3">
         <div className="relative w-64">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search modules..."
-            className="pl-8 h-9 text-white placeholder:text-slate-400 bg-slate-800 border-slate-700"
+            className="pl-8 h-9 bg-card"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -153,8 +153,8 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
       {/* Installed modules */}
       {installedModules.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-900 mb-3">
-            Installed modules <span className="text-slate-500">({installedModules.length})</span>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground mb-3">
+            Installed modules <span className="text-muted-foreground">({installedModules.length})</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {installedModules.map((m) => {
@@ -163,15 +163,15 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
                 <button
                   key={m.id}
                   onClick={() => onModuleSelect(m.id)}
-                  className="text-left flex items-start gap-2 p-2.5 rounded-md border border-slate-700 bg-slate-800 hover:bg-slate-700 hover:border-slate-500 transition-colors"
+                  className="text-left flex items-start gap-2 p-2.5 rounded-md border border-border bg-card shadow-sm hover:border-[hsl(var(--brand-blue-dark)/0.45)] hover:shadow transition-all"
                 >
-                  <Icon className="h-4 w-4 mt-0.5 text-slate-300 shrink-0" />
+                  <Icon className="h-4 w-4 mt-0.5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-semibold text-white truncate">{m.title}</span>
+                      <span className="text-sm font-semibold text-foreground truncate">{m.title}</span>
                       {m.isNew && <Badge variant="secondary" className="text-[10px] px-1 py-0">NEW</Badge>}
                     </div>
-                    <p className="text-[11px] text-slate-300 line-clamp-1">{m.description}</p>
+                    <p className="text-[11px] text-muted-foreground line-clamp-1">{m.description}</p>
                   </div>
                 </button>
               );
@@ -194,19 +194,19 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
               const isActivating = activatingId === billingId;
 
               return (
-                <div key={m.id} className="rounded-md border-2 border-amber-500/40 bg-white p-3 flex flex-col gap-2 shadow-sm">
+                <div key={m.id} className="rounded-md border-2 border-amber-500/40 bg-card p-3 flex flex-col gap-2 shadow-sm">
                   <div className="flex items-start gap-2">
                     <Icon className="h-4 w-4 mt-0.5 text-amber-700 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-sm font-semibold text-slate-900 truncate">{m.title}</span>
+                        <span className="text-sm font-semibold text-foreground truncate">{m.title}</span>
                         {isSubscribed && (
                           <Badge variant="outline" className="text-[10px] px-1 py-0 border-emerald-500 text-emerald-700">
                             <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" /> Active
                           </Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-700 line-clamp-2 mt-0.5">{m.description}</p>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{m.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2">

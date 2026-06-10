@@ -17,13 +17,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
  * Hardcoded GleeWorld design tokens (HSL triplets).
  * Applied once on mount — no switching, no DB calls, no local storage.
  */
-// Foreground tokens are now aligned with the surface they sit on:
+// Unified light surface system (2026-06-09):
 //   - `--background` is cream (the actual page bg via UniversalLayout)
-//     so `--foreground` and `--muted-foreground` are DARK text.
-//   - `--card` is dark navy (modules / control center cards),
-//     so `--card-foreground` stays WHITE for use inside cards.
-// This pairing means `text-foreground` reads correctly on the page
-// AND `text-card-foreground` reads correctly inside dark cards.
+//   - `--card` is WHITE with dark text — the old dark-navy card token
+//     made every component that paired `bg-card` with page-level dark
+//     text (text-muted-foreground etc.) unreadable. One light surface
+//     family means any text token reads on any surface.
 const GW_TOKENS = {
   '--primary':                '203 85% 63%',
   '--primary-foreground':     '219 78% 15%',
@@ -33,10 +32,10 @@ const GW_TOKENS = {
   '--accent-foreground':      '219 78% 15%',
   '--background':             '40 10% 96%',     // cream page bg (matches UniversalLayout)
   '--foreground':             '222 47% 11%',    // slate-900 — dark text for cream
-  '--card':                   '220 35% 12%',    // dark navy module card
-  '--card-foreground':        '0 0% 96%',       // near-white for dark cards
+  '--card':                   '0 0% 100%',      // white card
+  '--card-foreground':        '222 47% 11%',    // dark text on white cards
   '--muted':                  '40 8% 92%',      // very light warm gray
-  '--muted-foreground':       '215 25% 27%',    // slate-700 — readable on cream
+  '--muted-foreground':       '215 25% 27%',    // slate-700 — readable on cream/white
   '--border':                 '220 13% 85%',    // light cool gray border
   '--destructive':            '0 84% 60%',
   '--destructive-foreground': '0 0% 100%',

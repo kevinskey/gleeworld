@@ -3,23 +3,6 @@
 .read-music-root {
   --brand-purple: var(--brand-blue-dark);
   --brand-cyan: var(--brand-blue-light);
-
-  /* Force a light palette inside the feature regardless of the host theme.
-     GleeWorld's dashboard theme sets dark card/foreground tokens on a light
-     page bg, which made these pages render near-black with unreadable text. */
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 42%;
-  --border: 214 32% 88%;
-  --input: 214 32% 88%;
-  --accent: 210 40% 94%;
-  --accent-foreground: 222 47% 11%;
-  color: hsl(var(--foreground));
 }
 
 .read-music-root .bg-brand-gradient {
