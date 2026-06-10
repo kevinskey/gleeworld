@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,15 +27,29 @@ import { cleanDisplayTitle } from '@/lib/music-library/file-naming';
 export const FinderMediaLibrary = () => {
   const queryClient = useQueryClient();
   
-  // React Query for media files
-  const { data: allFiles = [], isLoading: loading, refetch: refetchMedia } = useQuery({
+  const PAGE_SIZE = 100;
+
+  // React Query for media files (paginated)
+  const {
+    data: filePages,
+    isLoading: loading,
+    refetch: refetchMedia,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['media-library'],
-    queryFn: async () => {
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
       // Fetch from gw_media_library
       const { data: mediaData, error: mediaError } = await supabase
         .from('gw_media_library')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (mediaError) throw mediaError;
 
@@ -43,7 +57,8 @@ export const FinderMediaLibrary = () => {
       const { data: captureData, error: captureError } = await supabase
         .from('quick_capture_media')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (captureError) throw captureError;
 
@@ -59,9 +74,18 @@ export const FinderMediaLibrary = () => {
         title: file.title || 'Untitled'
       }));
 
-      return [...normalizedMedia, ...normalizedCapture] as MediaFile[];
+      return {
+        files: [...normalizedMedia, ...normalizedCapture] as MediaFile[],
+        pageFull: (mediaData?.length || 0) === PAGE_SIZE || (captureData?.length || 0) === PAGE_SIZE,
+      };
     },
+    getNextPageParam: (lastPage, pages) => (lastPage.pageFull ? pages.length : undefined),
   });
+
+  const allFiles = useMemo(
+    () => filePages?.pages.flatMap(p => p.files) ?? [],
+    [filePages]
+  );
 
   // State
   const isMobile = useIsMobile();
@@ -916,6 +940,19 @@ export const FinderMediaLibrary = () => {
                     onRestore={handleRestoreFiles}
                     isTrashView={activeSection === 'trash'}
                   />
+                )}
+
+                {hasNextPage && (
+                  <div className="flex justify-center py-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isFetchingNextPage}
+                      onClick={() => fetchNextPage()}
+                    >
+                      {isFetchingNextPage ? "Loading..." : "Load more"}
+                    </Button>
+                  </div>
                 )}
               </div>
             </ContextMenuTrigger>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,35 +68,49 @@ export const PhotoGallery: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [photoToDelete, setPhotoToDelete] = useState<GalleryPhoto | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageRef = useRef(0);
 
-  // Fetch all photos
-  useEffect(() => {
-    const fetchPhotos = async () => {
+  const PAGE_SIZE = 100;
+
+  const fetchPhotos = useCallback(async (reset: boolean) => {
+    if (reset) {
       setLoading(true);
-      try {
-        // Fetch GleeCam categories
+    } else {
+      setLoadingMore(true);
+    }
+    try {
+      const page = reset ? 0 : pageRef.current + 1;
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      if (reset) {
         const { data: categories } = await supabase
           .from('glee_cam_categories')
           .select('id, name, slug');
-        
+
         if (categories) {
           setGleeCamCategories(categories);
         }
+      }
 
-        // Fetch from gw_media_library (images and videos)
-        const { data: mediaLibrary } = await supabase
-          .from('gw_media_library')
-          .select('*')
-          .or('file_type.ilike.%image%,file_type.ilike.%video%')
-          .order('created_at', { ascending: false });
+      // Fetch from gw_media_library (images and videos)
+      const { data: mediaLibrary } = await supabase
+        .from('gw_media_library')
+        .select('*')
+        .or('file_type.ilike.%image%,file_type.ilike.%video%')
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
-        // Fetch from quick_capture_media
-        const { data: quickCapture } = await supabase
-          .from('quick_capture_media')
-          .select('*')
-          .order('created_at', { ascending: false });
+      // Fetch from quick_capture_media
+      const { data: quickCapture } = await supabase
+        .from('quick_capture_media')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
-        const allPhotos: GalleryPhoto[] = [];
+      const allPhotos: GalleryPhoto[] = [];
 
         if (mediaLibrary) {
           allPhotos.push(...mediaLibrary.map(item => ({
@@ -130,26 +144,36 @@ export const PhotoGallery: React.FC = () => {
           })));
         }
 
-        // Dedupe by file_url
-        const uniquePhotos = allPhotos.reduce((acc, photo) => {
-          if (!acc.find(p => p.file_url === photo.file_url)) {
-            acc.push(photo);
-          }
-          return acc;
-        }, [] as GalleryPhoto[]);
+      pageRef.current = page;
+      setHasMore(
+        (mediaLibrary?.length || 0) === PAGE_SIZE || (quickCapture?.length || 0) === PAGE_SIZE
+      );
 
-        setPhotos(uniquePhotos.sort((a, b) => 
+      setPhotos(prev => {
+        // Dedupe by file_url across already-loaded and new photos
+        const combined = reset ? allPhotos : [...prev, ...allPhotos];
+        const seen = new Set<string>();
+        const unique = combined.filter(photo => {
+          const key = photo.file_url || photo.id;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        return unique.sort((a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        ));
-      } catch (error) {
-        console.error('Error fetching photos:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPhotos();
+        );
+      });
+    } catch (error) {
+      console.error('Error fetching photos:', error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchPhotos(true);
+  }, [fetchPhotos]);
 
   // Filtered and organized photos
   const organizedPhotos = useMemo(() => {
@@ -297,7 +321,7 @@ export const PhotoGallery: React.FC = () => {
       );
     }
 
-    return <img src={imageSrc} alt={alt} className={className} />;
+    return <img src={imageSrc} alt={alt} className={className} loading="lazy" />;
   };
 
   const handleDelete = async (photo: GalleryPhoto) => {
@@ -513,7 +537,7 @@ export const PhotoGallery: React.FC = () => {
               placeholder="Search photos..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-64"
+              className="pl-9 w-full sm:w-64"
             />
           </div>
           <Button 
@@ -645,6 +669,19 @@ export const PhotoGallery: React.FC = () => {
               <ImageIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
               <p className="text-lg">No photos found</p>
               <p className="text-sm mt-1">Try adjusting your search or filters</p>
+            </div>
+          )}
+
+          {hasMore && (
+            <div className="flex justify-center py-4">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={loadingMore}
+                onClick={() => fetchPhotos(false)}
+              >
+                {loadingMore ? "Loading..." : "Load more"}
+              </Button>
             </div>
           )}
         </div>

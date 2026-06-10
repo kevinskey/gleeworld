@@ -208,6 +208,7 @@ export const FinderFileGrid = ({
                             src={file.thumbnail_url}
                             alt={file.title}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                         ) : (
                           <div className={cn("w-full h-full flex items-center justify-center", getIconColor(extendedType))}>

@@ -62,6 +62,9 @@ const MediaLibrary = () => {
   
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageRef = useRef(0);
   const [activeKind, setActiveKind] = useState<'all'|'image'|'audio'|'video'|'pdf'|'documents'|'other'>('all');
   const [query, setQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -69,7 +72,7 @@ const MediaLibrary = () => {
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [currentFolder, setCurrentFolder] = useState('');
-  const [folderStructure, setFolderStructure] = useState<Record<string, MediaItem[]>>({});
+  // Derived from loaded items (see useMemo below fetchItems)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set([''])); // Root expanded by default
   const [navigationPath, setNavigationPath] = useState<string[]>(['']); // Breadcrumb path
 
@@ -99,11 +102,21 @@ const MediaLibrary = () => {
     'christmas-carol-selfies': 'christmas_selfie',
   };
 
-  const fetchItems = async () => {
-    setLoading(true);
+  const PAGE_SIZE = 100;
+
+  const fetchItems = async (reset = true) => {
+    if (reset) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     try {
       let allItems: any[] = [];
-      
+      const page = reset ? 0 : pageRef.current + 1;
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      let pageFull = false;
+
       // If filtering by Glee Cam category, search both tables
       if (categoryFilter) {
         // First, search gw_media_library by category slug or glee_cam_category_id
@@ -111,27 +124,29 @@ const MediaLibrary = () => {
           .from('gw_media_library')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(200);
-        
+          .range(from, to);
+
         if (gleeCamCategory?.id) {
           mediaLibraryQuery = mediaLibraryQuery.eq('glee_cam_category_id', gleeCamCategory.id);
         } else {
           mediaLibraryQuery = mediaLibraryQuery.eq('category', categoryFilter);
         }
-        
+
         const { data: mediaLibraryData } = await mediaLibraryQuery;
-        
+
         // Map slug to quick_capture_media category value
         const quickCaptureCategory = SLUG_TO_QUICK_CAPTURE_CATEGORY[categoryFilter] || categoryFilter;
-        
+
         // Also search quick_capture_media by mapped category
         const { data: quickCaptureData } = await supabase
           .from('quick_capture_media')
           .select('*')
           .eq('category', quickCaptureCategory)
           .order('created_at', { ascending: false })
-          .limit(200);
-        
+          .range(from, to);
+
+        pageFull = (mediaLibraryData?.length || 0) === PAGE_SIZE || (quickCaptureData?.length || 0) === PAGE_SIZE;
+
         // Combine results
         allItems = [
           ...(mediaLibraryData || []).map((r: any) => ({
@@ -171,8 +186,9 @@ const MediaLibrary = () => {
           .from('gw_media_library')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(200);
-        
+          .range(from, to);
+
+        pageFull = (data?.length || 0) === PAGE_SIZE;
         allItems = (data || []).map((r: any) => ({
           id: r.id,
           file_url: r.file_url ?? null,
@@ -187,28 +203,32 @@ const MediaLibrary = () => {
         }));
       }
       
-      // Build folder structure
-      const folders: Record<string, MediaItem[]> = {};
-      allItems.forEach(item => {
-        const folderPath = item.folder_path || '';
-        if (!folders[folderPath]) folders[folderPath] = [];
-        folders[folderPath].push(item);
-      });
-      setFolderStructure(folders);
-      setItems(allItems);
+      pageRef.current = page;
+      setHasMore(pageFull);
+      setItems(prev => reset ? allItems : [...prev, ...allItems]);
     } catch (e) {
       console.error('Failed to load media:', e);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchItems();
+    fetchItems(true);
   }, [categoryFilter, gleeCamCategory]);
 
+  const folderStructure = useMemo(() => {
+    const folders: Record<string, MediaItem[]> = {};
+    items.forEach(item => {
+      const folderPath = item.folder_path || '';
+      if (!folders[folderPath]) folders[folderPath] = [];
+      folders[folderPath].push(item);
+    });
+    return folders;
+  }, [items]);
 
-  const currentFolderItems = currentFolder 
+  const currentFolderItems = currentFolder
     ? folderStructure[currentFolder] || []
     : folderStructure[''] || [];
 
@@ -701,6 +721,19 @@ const MediaLibrary = () => {
                   <Folder className="h-12 w-12 text-muted-foreground/50 mb-3" />
                   <p className="text-muted-foreground">No media found</p>
                   <p className="text-sm text-muted-foreground/70">Try adjusting your filters</p>
+                </div>
+              )}
+
+              {hasMore && (
+                <div className="flex justify-center py-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={loadingMore}
+                    onClick={() => fetchItems(false)}
+                  >
+                    {loadingMore ? "Loading..." : "Load more"}
+                  </Button>
                 </div>
               )}
             </>

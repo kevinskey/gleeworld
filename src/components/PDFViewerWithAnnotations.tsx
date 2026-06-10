@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import { Viewer, Worker, ScrollMode } from '@react-pdf-viewer/core';
 
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -158,7 +158,9 @@ const scrollModePluginInstance = scrollModePlugin();
   const [pdf, setPdf] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [scale, setScale] = useState(1.2);
+  // Fit-to-width by default on touch/small screens (canvas CSS width = scale * 100%)
+  const fitWidthScale = isInMobileViewer || (typeof window !== 'undefined' && window.innerWidth < 768) ? 1 : 1.2;
+  const [scale, setScale] = useState(fitWidthScale);
   const [zoomLevel, setZoomLevel] = useState(1); // Zoom level for annotation mode
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
   const [useGoogle, setUseGoogle] = useState(false);
@@ -187,6 +189,19 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   // Pinch-to-zoom state for annotation mode
   const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState(1);
+  // Focal point (container coords) to keep anchored while zooming
+  const zoomFocalRef = useRef<{ x: number; y: number; prevZoom: number } | null>(null);
+
+  // After the zoom transform commits, shift scroll so the focal point stays put
+  useLayoutEffect(() => {
+    const focal = zoomFocalRef.current;
+    const container = containerRef.current;
+    zoomFocalRef.current = null;
+    if (!focal || !container || focal.prevZoom === zoomLevel) return;
+    const ratio = zoomLevel / focal.prevZoom;
+    container.scrollLeft = (container.scrollLeft + focal.x) * ratio - focal.x;
+    container.scrollTop = (container.scrollTop + focal.y) * ratio - focal.y;
+  }, [zoomLevel]);
 
   const goToPage = useCallback((page: number) => {
     const total = totalPages || (pdf?.numPages ?? 0) || 1;
@@ -210,14 +225,27 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     }
   }, [currentPage, isLoading, goToPage]);
 
-  // Zoom controls for annotation mode
+  // Zoom controls for annotation mode (anchored at viewport center)
+  const setFocalToCenter = useCallback(() => {
+    const container = containerRef.current;
+    if (container) {
+      zoomFocalRef.current = {
+        x: container.clientWidth / 2,
+        y: container.clientHeight / 2,
+        prevZoom: zoomLevel,
+      };
+    }
+  }, [zoomLevel]);
+
   const handleZoomIn = useCallback(() => {
+    setFocalToCenter();
     setZoomLevel(prev => Math.min(prev + 0.25, 3));
-  }, []);
+  }, [setFocalToCenter]);
 
   const handleZoomOut = useCallback(() => {
+    setFocalToCenter();
     setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
-  }, []);
+  }, [setFocalToCenter]);
 
   const handleResetZoom = useCallback(() => {
     setZoomLevel(1);
@@ -233,8 +261,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   }, []);
 
   const handleScaleReset = useCallback(() => {
-    setScale(1.2);
-  }, []);
+    setScale(fitWidthScale);
+  }, [fitWidthScale]);
 
   // Pinch-to-zoom handler for annotation mode
   const handleAnnotationPinchStart = useCallback((e: React.TouchEvent) => {
@@ -254,9 +282,18 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       const distance = Math.sqrt(dx * dx + dy * dy);
       const scaleChange = distance / initialPinchDistance;
       const newZoom = Math.max(0.5, Math.min(3, initialZoom * scaleChange));
+      const container = containerRef.current;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        zoomFocalRef.current = {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top,
+          prevZoom: zoomLevel,
+        };
+      }
       setZoomLevel(newZoom);
     }
-  }, [initialPinchDistance, initialZoom]);
+  }, [initialPinchDistance, initialZoom, zoomLevel]);
 
   const handleAnnotationPinchEnd = useCallback(() => {
     setInitialPinchDistance(null);
@@ -370,8 +407,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const handleMouseClick = useCallback((e: React.MouseEvent) => {
     if (annotationMode && activeTool !== "select") return;
 
-    // Ignore the synthetic click following a touch interaction
+    // Ignore the synthetic click following a touch interaction (one-shot)
     if (Date.now() < suppressClickUntilRef.current) {
+      suppressClickUntilRef.current = 0;
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -1177,9 +1215,16 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 >
                   <ZoomOut className="h-3.5 w-3.5" />
                 </Button>
-                <span className="text-[10px] font-medium tabular-nums min-w-[32px] text-center">
+                <button
+                  type="button"
+                  onClick={handleScaleReset}
+                  onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleReset(); }}
+                  className="text-[10px] font-medium tabular-nums min-w-[32px] text-center touch-manipulation"
+                  aria-label="Fit to width"
+                  title="Fit to width"
+                >
                   {Math.round(scale * 100)}%
-                </span>
+                </button>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -1312,7 +1357,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               onTouchEnd={handleAnnotationPinchEnd}
             >
               <div 
-                className="relative origin-top-left transition-transform duration-100"
+                className="relative origin-top-left"
                 style={{ 
                   transform: `scale(${zoomLevel})`,
                   width: `${100 / zoomLevel}%`,
@@ -1459,9 +1504,16 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               >
                 <ZoomOut className="h-4 w-4" />
               </Button>
-              <span className="text-xs font-medium tabular-nums min-w-[32px] text-center">
+              <button
+                type="button"
+                onClick={handleScaleReset}
+                onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleReset(); }}
+                className="text-xs font-medium tabular-nums min-w-[32px] text-center touch-manipulation"
+                aria-label="Fit to width"
+                title="Fit to width"
+              >
                 {Math.round(scale * 100)}%
-              </span>
+              </button>
               <Button
                 size="sm"
                 variant="ghost"

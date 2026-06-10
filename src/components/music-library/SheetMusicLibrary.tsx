@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +70,11 @@ export const SheetMusicLibrary = ({
   const { toast } = useToast();
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageRef = useRef(0);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [editDialog, setEditDialog] = useState<{ open: boolean; item: SheetMusic | null }>({
     open: false,
@@ -83,30 +88,61 @@ export const SheetMusicLibrary = ({
   // Check if user can edit music (admins and librarians only)
   const canEditMusic = profile?.role && ['admin', 'super-admin', 'librarian'].includes(profile.role);
 
-  useEffect(() => {
-    fetchSheetMusic();
-  }, []);
+  const PAGE_SIZE = 50;
 
-  const fetchSheetMusic = async () => {
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const fetchPage = useCallback(async (reset: boolean) => {
     try {
-      console.log('SheetMusicLibrary: Starting to fetch sheet music...');
-      setLoading(true);
-      
-      const { data, error } = await supabase
+      if (reset) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const page = reset ? 0 : pageRef.current + 1;
+      const from = page * PAGE_SIZE;
+
+      let query = supabase
         .from('gw_sheet_music')
         .select('*')
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false });
+        .eq('is_archived', false);
 
-      console.log('SheetMusicLibrary: Query result:', { data: data?.length || 0, error });
-
-      if (error) {
-        console.error('SheetMusicLibrary: Database error:', error);
-        throw error;
+      // Strip PostgREST or() delimiters from user input
+      const q = debouncedSearch.trim().replace(/[,()]/g, ' ').trim();
+      if (q) {
+        query = query.or(`title.ilike.%${q}%,composer.ilike.%${q}%,arranger.ilike.%${q}%`);
       }
-      
-      setSheetMusic(data || []);
-      console.log('SheetMusicLibrary: Successfully loaded', data?.length || 0, 'items');
+      if (selectedCategory !== 'all') {
+        query = query.contains('tags', [selectedCategory]);
+      }
+
+      const ascending = sortOrder === 'asc';
+      switch (sortBy) {
+        case 'composer':
+          query = query.order('composer', { ascending, nullsFirst: false });
+          break;
+        case 'created_at':
+          query = query.order('created_at', { ascending });
+          break;
+        case 'difficulty_level':
+          query = query.order('difficulty_level', { ascending, nullsFirst: false });
+          break;
+        default:
+          query = query.order('title', { ascending });
+      }
+      query = query.order('id', { ascending: true });
+
+      const { data, error } = await query.range(from, from + PAGE_SIZE - 1);
+
+      if (error) throw error;
+
+      pageRef.current = page;
+      setHasMore((data?.length || 0) === PAGE_SIZE);
+      setSheetMusic(prev => reset ? (data || []) : [...prev, ...(data || [])]);
     } catch (error) {
       console.error('SheetMusicLibrary: Error fetching sheet music:', error);
       toast({
@@ -116,58 +152,33 @@ export const SheetMusicLibrary = ({
       });
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [debouncedSearch, selectedCategory, sortBy, sortOrder, toast]);
 
-  const filteredAndSortedMusic = useMemo(() => {
-    let filtered = sheetMusic.filter((item) => {
-      const matchesSearch = searchQuery === "" || 
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.composer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.arranger?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+  useEffect(() => {
+    fetchPage(true);
+  }, [fetchPage]);
 
-      const matchesCategory = selectedCategory === "all" || 
-        item.tags?.some(tag => tag.toLowerCase() === selectedCategory.toLowerCase());
+  // Infinite scroll sentinel
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || !hasMore || loading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore) {
+          fetchPage(false);
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, fetchPage]);
 
-      return matchesSearch && matchesCategory;
-    });
+  const fetchSheetMusic = () => fetchPage(true);
 
-    filtered.sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (sortBy) {
-        case "title":
-          aValue = a.title;
-          bValue = b.title;
-          break;
-        case "composer":
-          aValue = a.composer || "";
-          bValue = b.composer || "";
-          break;
-        case "created_at":
-          aValue = a.created_at;
-          bValue = b.created_at;
-          break;
-        case "difficulty_level":
-          const difficultyOrder = { "beginner": 1, "intermediate": 2, "advanced": 3, "expert": 4 };
-          aValue = difficultyOrder[a.difficulty_level as keyof typeof difficultyOrder] || 0;
-          bValue = difficultyOrder[b.difficulty_level as keyof typeof difficultyOrder] || 0;
-          break;
-        default:
-          aValue = a.title;
-          bValue = b.title;
-      }
-
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    return filtered;
-  }, [sheetMusic, searchQuery, selectedCategory, sortBy, sortOrder]);
+  const filteredAndSortedMusic = sheetMusic;
 
   const handleEdit = (item: SheetMusic) => {
     setEditDialog({ open: true, item });
@@ -535,6 +546,19 @@ export const SheetMusicLibrary = ({
   return (
     <>
       {viewMode === "grid" ? renderGridView() : renderListView()}
+
+      {hasMore && (
+        <div ref={loadMoreRef} className="flex justify-center py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={loadingMore}
+            onClick={() => fetchPage(false)}
+          >
+            {loadingMore ? "Loading..." : "Load more"}
+          </Button>
+        </div>
+      )}
 
       {/* Dialogs */}
       <SheetMusicEditDialog

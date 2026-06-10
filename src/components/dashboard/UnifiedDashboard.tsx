@@ -3,7 +3,7 @@ import { MessagesPanel } from './MessagesPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, GraduationCap, Youtube, Newspaper, ChevronDown } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
 import { ControlCenter } from '@/components/dashboard/ControlCenter';
@@ -246,6 +246,10 @@ export const UnifiedDashboard = () => {
     if (profile?.is_super_admin || profile?.is_admin || profile?.role === 'super-admin' || profile?.role === 'admin') {
       // If a module is selected via ?module=X, render it inside the
       // control-center frame with a "Back to Control Center" button.
+      // Deep links to ?module=librarian also skip the stub
+      if (activeModuleId === 'librarian') {
+        return <Navigate to="/librarian-dashboard" replace />;
+      }
       if (activeModuleId && activeModuleId !== 'collapsed-toggle') {
         return <div className="min-h-screen">
             <div className="py-3 px-3 sm:py-4 sm:px-4 md:py-6 md:px-6 max-w-7xl mx-auto">
@@ -266,6 +270,11 @@ export const UnifiedDashboard = () => {
       return <div className="min-h-screen">
           <div className="py-3 px-3 sm:py-4 sm:px-4 md:py-6 md:px-6 max-w-7xl mx-auto">
             <ControlCenter onModuleSelect={(moduleId) => {
+              // Librarian module view is just an "Open Dashboard" stub — go straight there
+              if (moduleId === 'librarian') {
+                navigate('/librarian-dashboard');
+                return;
+              }
               navigate(`/control-center?module=${moduleId}`);
             }} />
           </div>
