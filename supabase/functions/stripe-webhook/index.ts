@@ -99,6 +99,19 @@ serve(async (req) => {
         break;
       }
 
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await handleCheckoutCompleted(supabase, session);
+        break;
+      }
+
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        await handleSubscriptionChanged(supabase, subscription);
+        break;
+      }
+
       default:
         logStep("Unhandled event type", { type: event.type });
     }
@@ -125,6 +138,88 @@ serve(async (req) => {
     });
   }
 });
+
+// Module add-on checkout (create-module-checkout) — activates the tenant's
+// subscription row. Shop/order checkouts have no module_id metadata and are skipped.
+async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.Session) {
+  const tenantId = session.metadata?.tenant_id || session.client_reference_id;
+  const moduleId = session.metadata?.module_id;
+  logStep("Processing checkout.session.completed", { id: session.id, tenantId, moduleId });
+
+  if (!tenantId || !moduleId || session.mode !== 'subscription') {
+    logStep("Not a module subscription checkout — skipping");
+    return;
+  }
+
+  const { error } = await supabase
+    .from('gw_tenant_subscriptions')
+    .upsert({
+      tenant_id: tenantId,
+      module_id: moduleId,
+      status: 'active',
+      enabled_at: new Date().toISOString(),
+      stripe_subscription_id: (session.subscription as string) || null,
+      cancelled_at: null,
+    }, { onConflict: 'tenant_id,module_id' });
+
+  if (error) {
+    logStep("Module activation failed", { error: error.message });
+    throw new Error(`Module activation failed: ${error.message}`);
+  }
+  logStep("Module activated", { tenantId, moduleId });
+
+  // First checkout may have used customer_email — persist the customer id for next time.
+  if (session.customer) {
+    await supabase
+      .from('gw_tenants')
+      .update({ stripe_customer_id: session.customer as string })
+      .eq('id', tenantId)
+      .is('stripe_customer_id', null);
+  }
+}
+
+async function handleSubscriptionChanged(supabase: any, subscription: Stripe.Subscription) {
+  logStep("Processing subscription change", { id: subscription.id, status: subscription.status });
+
+  const statusMap: Record<string, string> = {
+    active: 'active',
+    trialing: 'trial',
+    past_due: 'past_due',
+    unpaid: 'past_due',
+    canceled: 'cancelled',
+    incomplete_expired: 'cancelled',
+  };
+  const status = statusMap[subscription.status];
+  if (!status) {
+    logStep("Ignoring transient subscription status", { status: subscription.status });
+    return;
+  }
+
+  const update: Record<string, unknown> = {
+    status,
+    current_period_end: subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null,
+    trial_ends_at: subscription.trial_end
+      ? new Date(subscription.trial_end * 1000).toISOString()
+      : null,
+    cancelled_at: status === 'cancelled' ? new Date().toISOString() : null,
+  };
+
+  const tenantId = subscription.metadata?.tenant_id;
+  const moduleId = subscription.metadata?.module_id;
+
+  const query = supabase.from('gw_tenant_subscriptions').update(update);
+  const { error } = tenantId && moduleId
+    ? await query.eq('tenant_id', tenantId).eq('module_id', moduleId)
+    : await query.eq('stripe_subscription_id', subscription.id);
+
+  if (error) {
+    logStep("Subscription update failed", { error: error.message });
+    throw new Error(`Subscription update failed: ${error.message}`);
+  }
+  logStep("Subscription row updated", { id: subscription.id, status });
+}
 
 async function handlePaymentSucceeded(
   supabase: any, 
