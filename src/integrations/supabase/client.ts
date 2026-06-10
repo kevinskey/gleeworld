@@ -37,7 +37,12 @@ export const SUPABASE_PUBLISHABLE_KEY =
 // Per-tenant DB header — Supabase Postgres routes to the right DB via the
 // configured Kong/PostgREST instance; we send the tenant DB name in a header
 // so a future API gateway can route correctly. Today this is informational.
-const TENANT_HEADERS = TENANT?.database ? { 'x-tenant-db': TENANT.database } : {};
+const TENANT_HEADERS = {
+  // anon requests carry no JWT tenant claim; the anon_tenant_isolation RLS
+  // policies scope them by this header (resolved via anon_tenant_id()).
+  'x-tenant-slug': TENANT?.tenant || 'main',
+  ...(TENANT?.database ? { 'x-tenant-db': TENANT.database } : {}),
+};
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
