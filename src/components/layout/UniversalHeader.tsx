@@ -293,8 +293,8 @@ export const UniversalHeader = ({
                   </Button>
                 </EnhancedTooltip>}
 
-            {/* Musical Toolkit - positioned left of Academy */}
-            <MusicalToolkit />
+            {/* Musical Toolkit - desktop only; mobile has it in the bottom nav */}
+            <MusicalToolkit className="hidden sm:block" />
 
             {/* Institute Dropdown with Courses */}
             {user && <div className="hidden sm:block">
