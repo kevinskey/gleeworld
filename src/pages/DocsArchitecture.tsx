@@ -12,7 +12,7 @@ export default function DocsArchitecture() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur" style={{ paddingTop: 'var(--gw-safe-top)' }}>
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <FileText className="h-6 w-6 text-primary" />

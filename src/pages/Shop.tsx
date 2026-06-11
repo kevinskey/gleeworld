@@ -317,7 +317,7 @@ export const Shop = () => {
         </div>
 
         {/* Cart Summary Bar */}
-        {getTotalItems() > 0 && <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
+        {getTotalItems() > 0 && <div className="sticky z-40 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm" style={{ top: 'var(--gw-safe-top)' }}>
             <div className="container mx-auto px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">

@@ -232,7 +232,7 @@ export const CourseInstructorConsole = () => {
   return <UniversalLayout containerized={false}>
       <div className="min-h-screen academy-neutral" style={{ backgroundColor: '#F7F9FC' }}>
         {/* Top Bar */}
-        <div className="border-b bg-white sticky top-0 z-30">
+        <div className="border-b bg-white sticky z-30" style={{ top: 'var(--gw-header-h, 0px)' }}>
           <div className="max-w-[1800px] mx-auto px-3 sm:px-5 md:px-8 py-2.5 sm:py-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">

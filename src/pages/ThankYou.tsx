@@ -7,7 +7,7 @@ const SANS = "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif
 export default function ThankYou() {
   return (
     <div className="min-h-screen bg-white text-slate-900" style={{ fontFamily: SANS }}>
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200">
+      <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200" style={{ paddingTop: 'var(--gw-safe-top)' }}>
         <div className="max-w-7xl mx-auto px-6 h-14 sm:h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <div

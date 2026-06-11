@@ -539,7 +539,7 @@ const MediaLibrary = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/50 flex flex-col">
       {/* Fixed Mobile Header */}
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b shadow-sm flex-shrink-0">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b shadow-sm flex-shrink-0" style={{ paddingTop: 'var(--gw-safe-top)' }}>
         <div className="px-3 sm:px-6 py-3 sm:py-4">
           {/* Mobile Header - Compact */}
           <div className="flex items-center justify-between gap-2">

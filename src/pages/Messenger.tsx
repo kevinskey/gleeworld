@@ -902,7 +902,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
     >
       {/* Persistent Header - hide in embedded mode */}
       {!embedded && (
-        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border/30 px-4 sm:px-6 lg:px-10 py-2 bg-[hsl(208,60%,28%)] text-white shadow-sm">
+        <header className="sticky top-0 z-20 flex-shrink-0 border-b border-border/30 px-4 sm:px-6 lg:px-10 py-2 bg-[hsl(208,60%,28%)] text-white shadow-sm" style={{ paddingTop: 'calc(var(--gw-safe-top) + 0.5rem)' }}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="hidden sm:block text-white/80 [&_a]:text-white/80 [&_a:hover]:text-white">
