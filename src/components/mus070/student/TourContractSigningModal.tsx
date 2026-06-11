@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { FileSignature, CheckCircle2, Loader2, ScrollText } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { getOrgName } from '@/lib/orgName';
 
 const TOUR_CONTRACT_ID = '99ad60d3-0e94-41b2-b4f9-1b03146c62c9';
 
@@ -80,7 +81,7 @@ export const TourContractSigningModal: React.FC<TourContractSigningModalProps> =
     // Title
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    const titleLines = doc.splitTextToSize('Your favorite band or choir Tour Participation Contract & Code of Conduct', contentWidth);
+    const titleLines = doc.splitTextToSize(`${getOrgName()} Tour Participation Contract & Code of Conduct`, contentWidth);
     doc.text(titleLines, margin, y);
     y += titleLines.length * 7 + 5;
 

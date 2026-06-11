@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CheckCircle, Download, FileText } from 'lucide-react';
+import { getOrgName } from '@/lib/orgName';
 
 interface HandbookContractSigningProps {
   examPassed: boolean;
@@ -76,7 +77,7 @@ export const HandbookContractSigning: React.FC<HandbookContractSigningProps> = (
           subject: 'SCGC 2025–2026 Handbook Agreement – Confirmed',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #1a365d;">Your favorite band or choir</h2>
+              <h2 style="color: #1a365d;">${getOrgName()}</h2>
               <h3 style="color: #2d3748;">Handbook Agreement Confirmation</h3>
               
               <p>Dear ${fullName},</p>
@@ -93,9 +94,9 @@ export const HandbookContractSigning: React.FC<HandbookContractSigningProps> = (
                 </ul>
               </div>
               
-              <p>This signature confirms that you have read, understood, and agreed to the expectations, policies, and responsibilities outlined in the Your favorite band or choir Handbook 2025–2026.</p>
+              <p>This signature confirms that you have read, understood, and agreed to the expectations, policies, and responsibilities outlined in the ${getOrgName()} Handbook 2025–2026.</p>
               
-              <p>Welcome to another amazing year with the Your favorite band or choir!</p>
+              <p>Welcome to another amazing year with the ${getOrgName()}!</p>
               
               <p style="margin-top: 30px;">
                 Best regards,<br>
@@ -203,14 +204,14 @@ export const HandbookContractSigning: React.FC<HandbookContractSigningProps> = (
         <div className="prose max-w-none">
           <p className="text-lg">
             Please sign below to confirm that you have read, understood, and agreed to the expectations, 
-            policies, and responsibilities outlined in the <strong>Your favorite band or choir Handbook 2025–2026</strong>.
+            policies, and responsibilities outlined in the <strong>{getOrgName()} Handbook 2025–2026</strong>.
           </p>
           
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 my-6">
             <h4 className="font-semibold text-gray-800 mb-3">By signing this document, I affirm the following:</h4>
             <ul className="space-y-2 text-gray-700">
               <li>• I understand and accept all rules regarding attendance, attire, behavior, and participation.</li>
-              <li>• I commit to honoring the history and legacy of the Your favorite band or choir.</li>
+              <li>• I commit to honoring the history and legacy of the {getOrgName()}.</li>
               <li>• I accept that failure to follow these policies may result in disciplinary action or removal from the ensemble.</li>
             </ul>
           </div>

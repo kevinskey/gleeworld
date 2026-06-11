@@ -11,6 +11,7 @@ import { FileText, Users, Send, Download, Eye, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getOrgName } from '@/lib/orgName';
 
 interface Communication {
   id: string;
@@ -133,7 +134,7 @@ export const MemberCommunications = () => {
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
-                    <h1 style="color: white; margin: 0;">Your favorite band or choir</h1>
+                    <h1 style="color: white; margin: 0;">${getOrgName()}</h1>
                   </div>
                   <div style="padding: 30px; background: white;">
                     <p style="color: #333; line-height: 1.6; font-size: 16px;">

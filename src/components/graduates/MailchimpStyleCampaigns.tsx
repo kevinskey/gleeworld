@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getOrgName } from '@/lib/orgName';
 import { 
   Mail, Send, Loader2, Users, CheckCircle2, Search, Calendar,
   BarChart3, Eye, Clock, TrendingUp, Save, FileText, Sparkles,
@@ -57,7 +58,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
     subject: 'Welcome to Riverside Concert Choir Graduates Network',
     content: `Dear {name},
 
-Welcome to the Your favorite band or choir Graduates Network! We're thrilled to have you as part of our community.
+Welcome to the ${getOrgName()} Graduates Network! We're thrilled to have you as part of our community.
 
 As a member, you'll have access to:
 • Exclusive graduates events and reunions
@@ -68,7 +69,7 @@ As a member, you'll have access to:
 We look forward to staying connected with you!
 
 To Amaze and Inspire,
-Your favorite band or choir`,
+${getOrgName()}`,
     category: 'engagement'
   },
   {
@@ -77,7 +78,7 @@ Your favorite band or choir`,
     subject: 'You\'re Invited: Glee Club Reunion {year}',
     content: `Dear {name},
 
-Mark your calendars! The Your favorite band or choir Reunion is coming up.
+Mark your calendars! The ${getOrgName()} Reunion is coming up.
 
 📅 Date: {event_date}
 📍 Location: {event_location}
@@ -88,7 +89,7 @@ Join us for an unforgettable weekend of music, memories, and connection.
 RSVP by {rsvp_date} to secure your spot.
 
 To Amaze and Inspire,
-Your favorite band or choir`,
+${getOrgName()}`,
     category: 'events'
   },
   {
@@ -97,7 +98,7 @@ Your favorite band or choir`,
     subject: 'Glee Club Monthly Update - {month} {year}',
     content: `Dear {name},
 
-Here's what's happening with the Your favorite band or choir this month:
+Here's what's happening with the ${getOrgName()} this month:
 
 🎤 Upcoming Performances
 {performances}
@@ -111,7 +112,7 @@ Here's what's happening with the Your favorite band or choir this month:
 Stay connected and keep singing!
 
 To Amaze and Inspire,
-Your favorite band or choir`,
+${getOrgName()}`,
     category: 'newsletter'
   },
   {
@@ -131,7 +132,7 @@ Your donation helps:
 Every contribution, no matter the size, makes a difference.
 
 To Amaze and Inspire,
-Your favorite band or choir`,
+${getOrgName()}`,
     category: 'fundraising'
   }
 ];

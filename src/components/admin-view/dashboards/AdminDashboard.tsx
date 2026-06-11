@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getOrgName } from '@/lib/orgName';
 import { 
   Users, 
   FileText, 
@@ -522,7 +523,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
             Admin Dashboard
           </h1>
           <p className="text-xs text-muted-foreground px-4">
-            Manage the Your favorite band or choir platform
+            Manage the {getOrgName()} platform
           </p>
         </div>
 

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Upload, Video, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getOrgName } from "@/lib/orgName";
 
 export default function ChildrenGoAudition() {
   const [studentName, setStudentName] = useState("");
@@ -132,7 +133,7 @@ export default function ChildrenGoAudition() {
                 Children, Go Where I Send Thee
               </h1>
               <p className="text-xl text-white/90 mb-2">
-                Your favorite band or choir Rap Audition
+                {getOrgName()} Rap Audition
               </p>
               <p className="text-white/80">
                 Upload your audition video below

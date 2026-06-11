@@ -3,6 +3,7 @@ import { useContractTemplates } from '@/hooks/useContractTemplates';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Plus, Loader2, X } from 'lucide-react';
+import { getOrgName } from '@/lib/orgName';
 export const GleeClubTemplateInitializer = () => {
   const {
     templates,
@@ -49,7 +50,7 @@ export const GleeClubTemplateInitializer = () => {
             </Button>
           </CardTitle>
           <CardDescription className="text-primary-foreground">
-            The Your favorite band or choir Performance Agreement template is available and ready to use.
+            The {getOrgName()} Performance Agreement template is available and ready to use.
           </CardDescription>
         </CardHeader>
       </Card>;
@@ -58,7 +59,7 @@ export const GleeClubTemplateInitializer = () => {
       <CardHeader>
         <CardTitle className="text-blue-800">Initialize Glee Club Template</CardTitle>
         <CardDescription className="text-blue-600">
-          Create the official Your favorite band or choir Performance Agreement template with all the required variables and standard terms.
+          Create the official {getOrgName()} Performance Agreement template with all the required variables and standard terms.
         </CardDescription>
       </CardHeader>
       <CardContent>

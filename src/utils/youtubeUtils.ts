@@ -1,6 +1,8 @@
 // YouTube utility functions for Glee Lounge
 
-// Your favorite band or choir YouTube channel
+import { getOrgName } from '@/lib/orgName';
+
+// Tenant organization YouTube channel
 export const GLEE_CLUB_CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw';
 export const GLEE_CLUB_CHANNEL_URL = 'https://www.youtube.com/@your-program';
 export const GLEE_CLUB_UPLOADS_PLAYLIST_ID = `UU${GLEE_CLUB_CHANNEL_ID.slice(2)}`;
@@ -12,7 +14,7 @@ export const GLEE_WORLD_RADIO_CHANNEL_URL = 'https://www.youtube.com/@GleeWorldR
 // Default channels for course video library
 export const DEFAULT_COURSE_CHANNELS = [
   { handle: '@GleeWorldRadio', name: 'GleeWorld Radio', isDefault: true },
-  { handle: '@your-program', name: 'Your favorite band or choir', isDefault: false },
+  { handle: '@your-program', name: `${getOrgName()}`, isDefault: false },
 ];
 
 
@@ -146,5 +148,5 @@ export function formatYouTubeDuration(isoDuration: string): string {
 // Sample videos from Riverside Concert Choir channel for demo/picker
 // These would ideally come from YouTube API but we include some known videos
 export const SAMPLE_GLEE_CLUB_VIDEOS = [
-  { id: 'dQw4w9WgXcQ', title: 'Your favorite band or choir Performance' }, // placeholder
+  { id: 'dQw4w9WgXcQ', title: `${getOrgName()} Performance` }, // placeholder
 ];

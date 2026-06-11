@@ -12,6 +12,7 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { MessageCircle, Send, Users, Clock, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { getOrgName } from "@/lib/orgName";
 
 interface GraduatesMessage {
   id: string;
@@ -144,7 +145,7 @@ export default function GraduatesMessages() {
               <MessageCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
               <p className="text-muted-foreground mb-6">
-                Messaging features are exclusively for verified Your favorite band or choir graduates.
+                Messaging features are exclusively for verified {getOrgName()} graduates.
                 Please contact an administrator to verify your alumni status.
               </p>
               <Button onClick={() => navigate('/graduates')}>

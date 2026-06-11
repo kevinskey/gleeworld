@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Loader2, CheckCircle, Music, ArrowLeft, Star, Award, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { getOrgName } from '@/lib/orgName';
 
 interface PerformanceEvent {
   id: string;
@@ -440,7 +441,7 @@ const MemberExitInterview = () => {
               Fall 2025 Member Exit Interview
             </CardTitle>
             <CardDescription>
-              Your favorite band or choir End-of-Semester Survey
+              {getOrgName()} End-of-Semester Survey
             </CardDescription>
           </CardHeader>
 

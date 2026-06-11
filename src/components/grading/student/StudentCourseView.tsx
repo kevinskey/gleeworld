@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 import { format } from 'date-fns';
 import { RehearsalConflictForm, type AbsenceExcuseData } from './RehearsalConflictForm';
+import { getOrgName } from '@/lib/orgName';
 import { AdminConflictApproval } from './AdminConflictApproval';
 import programBanner from '@/assets/program-banner.png';
 
@@ -202,7 +203,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
       <div className="flex justify-center overflow-hidden max-w-md mx-auto" style={{ maxHeight: '80px' }}>
         <img
           src={programBanner}
-          alt="Your favorite band or choir — Amaze and Inspire"
+          alt={`${getOrgName()} — Amaze and Inspire`}
           className="w-full h-auto object-contain -my-4" />
       </div>
 

@@ -10,9 +10,10 @@ import { Download, Printer } from "lucide-react";
 import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getOrgName } from '@/lib/orgName';
 
 const BRAND = {
-  name: "Your favorite band or choir",
+  name: getOrgName(),
   address: "350 Concert Hall Drive, SW",
   cityStateZip: "Atlanta, GA 30314",
   taxId: "58-0566243",
@@ -92,7 +93,7 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
     y += 5;
     doc.text(invoice.director_name || "Dr. Kevin Phillip Johnson", margin, y);
     y += 5;
-    doc.text(invoice.director_title || "Director, Your favorite band or choir", margin, y);
+    doc.text(invoice.director_title || `Director, ${getOrgName()}`, margin, y);
     y += 12;
 
     // Bill To

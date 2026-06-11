@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Heart, GraduationCap, Music, Users, Star, Calendar, BookOpen, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getOrgName } from '@/lib/orgName';
 
 interface RoleSelectionStepProps {
   onRoleSelected: (role: 'fan' | 'graduate', additionalData?: { graduationYear?: number; voicePart?: string }) => void;
@@ -75,7 +76,7 @@ export const RoleSelectionStep = ({ onRoleSelected, loading }: RoleSelectionStep
           </CardHeader>
           <CardContent className="pt-0">
             <CardDescription className="text-white/70 text-sm mb-3">
-              Support the Your favorite band or choir and stay connected with our community.
+              Support the {getOrgName()} and stay connected with our community.
             </CardDescription>
             <ul className="space-y-2 text-sm text-white/80">
               <li className="flex items-center gap-2">

@@ -9,6 +9,7 @@ import { AddStoryDialog } from "@/components/graduates/AddStoryDialog";
 import { BookOpenIcon, PlusIcon, CheckCircleIcon, ClockIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { getOrgName } from "@/lib/orgName";
 
 interface UserStory {
   id: string;
@@ -92,7 +93,7 @@ export default function GraduatesStorySubmission() {
               <BookOpenIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
               <p className="text-muted-foreground mb-6">
-                Story submission is exclusively for verified Your favorite band or choir graduates.
+                Story submission is exclusively for verified {getOrgName()} graduates.
                 Please contact an administrator to verify your alumni status.
               </p>
               <Button onClick={() => navigate('/graduates')}>
@@ -114,7 +115,7 @@ export default function GraduatesStorySubmission() {
             Share Your Glee Club Story
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Your experiences and memories help preserve the rich history of the Your favorite band or choir 
+            Your experiences and memories help preserve the rich history of the {getOrgName()}
             for future generations. Every story matters and contributes to our collective legacy.
           </p>
         </div>
@@ -131,7 +132,7 @@ export default function GraduatesStorySubmission() {
             <div className="space-y-4">
               <p className="text-muted-foreground">
                 Share your memories, experiences, and moments that made your time in the 
-                Your favorite band or choir special. Your story will be reviewed by our team 
+                {getOrgName()} special. Your story will be reviewed by our team
                 before being shared with the community.
               </p>
               

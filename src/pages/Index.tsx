@@ -25,6 +25,7 @@ import type { Contract } from "@/hooks/useContracts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Music, BookOpen, Users, ArrowRight, GraduationCap } from "lucide-react";
+import { getOrgName } from "@/lib/orgName";
 
 const Index = () => {
   console.log('Index: Component is rendering');
@@ -267,7 +268,7 @@ const Index = () => {
                     GleeWorld Dashboard
                   </h1>
                   <p className="text-muted-foreground">
-                    Your favorite band or choir Management Platform
+                    {getOrgName()} Management Platform
                   </p>
                 </div>
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">

@@ -24,6 +24,7 @@ import {
   Hash
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getOrgName } from '@/lib/orgName';
 
 interface SocialPost {
   id: string;
@@ -72,10 +73,10 @@ export const SocialMediaManager = () => {
   const { toast } = useToast();
 
   const templates = {
-    concert_announcement: '🎵 Mark your calendars! The Your favorite band or choir presents [EVENT_NAME] on [DATE] at [VENUE]. Experience the magic of our voices coming together in perfect harmony. Tickets: [TICKET_LINK] #RiversideChoir #Concert',
+    concert_announcement: `🎵 Mark your calendars! The ${getOrgName()} presents [EVENT_NAME] on [DATE] at [VENUE]. Experience the magic of our voices coming together in perfect harmony. Tickets: [TICKET_LINK] #RiversideChoir #Concert`,
     rehearsal_behind_scenes: '✨ Behind the scenes at rehearsal! Watch our talented singers perfect their craft. The dedication and passion in this room is truly inspiring. #BehindTheScenes #RiversideChoir #MusicLife',
     achievement_celebration: '🏆 Celebrating our incredible achievement! [ACHIEVEMENT_DETAILS]. We are so proud of our talented singers and the hard work that made this possible. #RiversideChoir #Achievement #Proud',
-    recruitment: '🎤 Do you love to sing? Join the Your favorite band or choir family! Auditions are open for the [SEMESTER] semester. Info: [CONTACT_INFO] #JoinUs #RiversideChoir #Auditions'
+    recruitment: `🎤 Do you love to sing? Join the ${getOrgName()} family! Auditions are open for the [SEMESTER] semester. Info: [CONTACT_INFO] #JoinUs #RiversideChoir #Auditions`
   };
 
   const platformHashtags = {

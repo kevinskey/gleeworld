@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NewsletterContentManager } from "./NewsletterContentManager";
 import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
 import { CanvaEmbedModal } from "./CanvaEmbedModal";
+import { getOrgName } from '@/lib/orgName';
 
 export const NewsletterManager = () => {
   const { user } = useAuth();
@@ -262,7 +263,7 @@ export const NewsletterManager = () => {
       const { data, error } = await supabase.functions.invoke('send-newsletter-broadcast', {
         body: { 
           newsletter_id: currentNewsletterId,
-          from_name: "Your favorite band or choir",
+          from_name: getOrgName(),
           from_email: "onboarding@resend.dev"
         }
       });

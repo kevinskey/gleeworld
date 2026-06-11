@@ -6,6 +6,7 @@ import { Mic, FileText, ArrowRight } from "lucide-react";
 import { PDFViewer } from "@/components/PDFViewer";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { getOrgName } from '@/lib/orgName';
 
 interface AuditionerDashboardProps {
   user: {
@@ -184,7 +185,7 @@ export const AuditionerDashboard = ({ user }: AuditionerDashboardProps) => {
             </div>
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
-                Auditions: Join the Your favorite band or choir
+                Auditions: Join the {getOrgName()}
               </h1>
               <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-2xl">
                 {`Hi ${firstName !== "" ? firstName : "there"}!`} Explore the required music and start or continue your application. One page. Clear steps. "To Amaze and Inspire."

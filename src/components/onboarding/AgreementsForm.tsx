@@ -7,6 +7,7 @@ import { OnboardingProfile } from '@/hooks/useOnboardingProfile';
 import { useOnboardingSignature } from '@/hooks/useOnboardingSignature';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { getOrgName } from '@/lib/orgName';
 
 interface AgreementsFormProps {
   profile: OnboardingProfile;
@@ -81,7 +82,7 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
                 Photo & Media Consent
               </Label>
               <p className="text-sm text-muted-foreground">
-                I consent to the use of my photograph, image, voice, and/or likeness by the Your favorite band or choir 
+                I consent to the use of my photograph, image, voice, and/or likeness by the {getOrgName()}{' '}
                 for promotional, educational, and documentary purposes including but not limited to:
               </p>
               <ul className="text-sm text-muted-foreground ml-4 space-y-1">

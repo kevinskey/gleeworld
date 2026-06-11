@@ -14,6 +14,7 @@ import {
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrandingSettings } from "@/hooks/useBrandingSettings";
+import { getOrgName } from '@/lib/orgName';
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +33,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
   const { settings: branding } = useBrandingSettings();
   const siteName = branding.short_name || branding.org_name || 'GleeWorld';
   const siteLogo = branding.logo_url || '/lovable-uploads/gleeworld-logo.png?v=6';
-  const siteTagline = branding.tagline || 'Your favorite band or choir';
+  const siteTagline = branding.tagline || getOrgName();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [viewCount, setViewCount] = useState(1247);
   const navigate = useNavigate();

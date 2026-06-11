@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { YouTubeVideoModal } from '@/components/youtube/YouTubeVideoModal';
+import { getOrgName } from '@/lib/orgName';
 
 interface YouTubeVideo {
   id: string;
@@ -132,7 +133,7 @@ export const YouTubeChannel: React.FC = () => {
                   <Youtube className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">Your favorite band or choir</h1>
+                  <h1 className="text-xl font-bold text-foreground">{getOrgName()}</h1>
                   <p className="text-sm text-muted-foreground">
                     {totalCount > 0 ? `${totalCount} videos` : `${videos.length} videos`}
                   </p>

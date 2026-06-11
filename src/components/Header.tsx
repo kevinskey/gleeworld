@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Menu, X, CheckCircle, Clock, MessageSquare, Info, AlertCircle, Eye, Bell } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { format } from "date-fns";
+import { getOrgName } from '@/lib/orgName';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -95,7 +96,7 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
             {/* Branding Text */}
             <div className="flex flex-col">
               <h1 className="text-2xl font-bold text-primary">GleeWorld</h1>
-              <p className="text-xs text-muted-foreground">Your favorite band or choir</p>
+              <p className="text-xs text-muted-foreground">{getOrgName()}</p>
             </div>
           </div>
         </div>

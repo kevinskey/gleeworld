@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getOrgName } from '@/lib/orgName';
 
 interface CongratulationsDialogProps {
   open: boolean;
@@ -35,7 +36,7 @@ export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({
               Your audition is scheduled with the
             </p>
             <p className="text-xl font-bold text-primary bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              World Renowned Your favorite band or choir
+              World Renowned {getOrgName()}
             </p>
             <p className="text-muted-foreground">
               We look forward to hearing your beautiful voice and welcoming you to our musical family.

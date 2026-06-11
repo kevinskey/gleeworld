@@ -1,6 +1,7 @@
 import { PublicCalendarViews } from "@/components/calendar/PublicCalendarViews";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Calendar as CalendarIcon } from "lucide-react";
+import { getOrgName } from "@/lib/orgName";
 const PublicCalendar = () => {
   return <PublicLayout>
       <div className="min-h-screen bg-white">
@@ -16,7 +17,7 @@ const PublicCalendar = () => {
               </h1>
             </div>
             <p className="text-white/70 text-center mt-1 text-xs sm:text-sm max-w-xl mx-auto">
-              View all public events and performances from Your favorite band or choir
+              View all public events and performances from {getOrgName()}
             </p>
           </div>
         </div>

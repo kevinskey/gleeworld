@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getOrgName } from '@/lib/orgName';
 
 export interface InvoiceLineItem {
   description: string;
@@ -113,7 +114,7 @@ export const useInvoices = () => {
           donor_email: invoiceData.donor_email || null,
           donor_phone: invoiceData.donor_phone || null,
           director_name: invoiceData.director_name || 'Dr. Kevin Phillip Johnson',
-          director_title: invoiceData.director_title || 'Director, Your favorite band or choir',
+          director_title: invoiceData.director_title || `Director, ${getOrgName()}`,
           line_items: invoiceData.line_items as any,
           subtotal: invoiceData.subtotal,
           total_amount: invoiceData.total_amount,

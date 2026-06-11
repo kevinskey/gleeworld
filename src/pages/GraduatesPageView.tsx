@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GraduatesPageHero } from '@/components/graduates/GraduatesPageHero';
 import { Card, CardContent } from '@/components/ui/card';
 import { GraduationCap } from 'lucide-react';
+import { getOrgName } from '@/lib/orgName';
 export default function GraduatesPageView() {
   const navigate = useNavigate();
   const [sections, setSections] = useState<any[]>([]);
@@ -84,7 +85,7 @@ export default function GraduatesPageView() {
       <div className="w-full py-6 md:py-8 bg-primary mt-16">
         <div className="container mx-auto px-4">
           <h1 className="text-2xl md:text-4xl font-display text-white text-center tracking-wide">
-            Welcome Your favorite band or choir Graduate
+            Welcome {getOrgName()} Graduate
           </h1>
         </div>
       </div>

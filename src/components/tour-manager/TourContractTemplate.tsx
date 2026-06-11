@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getOrgName } from '@/lib/orgName';
 
 interface TourContractVariables {
   HOST_NAME: string;
@@ -136,7 +137,7 @@ Whereas the College has agreed to perform musical presentations and whereas the 
 
 ARTICLE 1. STATEMENT OF PERFORMANCE
 
-The Your favorite band or choir shall perform for a period of time as established by the Host and referenced herein. The date of the performance shall be on ${v.PERFORMANCE_DATE || '[DATE]'}, beginning at ${v.START_TIME || '[START TIME]'} and ending at ${v.END_TIME || '[END TIME]'}. The performance shall be held at ${v.VENUE_NAME || '[VENUE NAME]'}, located at ${v.VENUE_ADDRESS || '[VENUE ADDRESS]'}.
+The ${getOrgName()} shall perform for a period of time as established by the Host and referenced herein. The date of the performance shall be on ${v.PERFORMANCE_DATE || '[DATE]'}, beginning at ${v.START_TIME || '[START TIME]'} and ending at ${v.END_TIME || '[END TIME]'}. The performance shall be held at ${v.VENUE_NAME || '[VENUE NAME]'}, located at ${v.VENUE_ADDRESS || '[VENUE ADDRESS]'}.
 
 ARTICLE 2. HONORARIUM AND ACCOMMODATIONS
 
@@ -187,7 +188,7 @@ SIGNATURES
 BRAND COLLEGE
 _________________________
 Kevin Johnson, D.M.A.
-Director, Your favorite band or choir
+Director, ${getOrgName()}
 
 THE HOST: ${v.HOST_NAME || '[HOST NAME]'}
 _________________________
@@ -201,7 +202,7 @@ Date: _______________
 
 EXHIBIT A - VENUE REQUIREMENTS
 
-On the day of the performance, the Host will provide the following for the Your favorite band or choir:
+On the day of the performance, the Host will provide the following for the ${getOrgName()}:
 • A dressing room that can accommodate ${v.PERFORMER_COUNT || '44'} performers and safe keeping for their belongings.
 • A separate dressing room for the Director of the Glee Club and a separate dressing room for the Accompanist.
 • Bottled water at room-temperature and in the warm-up area.
@@ -216,7 +217,7 @@ EXHIBIT C - OVERNIGHT ACCOMMODATIONS
 
 The College must approve all lodging prior to the Host incurring any cost. Lodging provided through the following organizations is preferred by the College: Hilton, Marriott, and Embassy Suites.
 
-Note: All documentation and deposits can be mailed to Riverside Music Institute, Department of Music, 350 Concert Hall Drive, SW, Campus Box 979, Atlanta, Georgia, 30314-4399. All payments should be given in the form of a check, cashier's check, or money order made payable to the Your favorite band or choir.
+Note: All documentation and deposits can be mailed to Riverside Music Institute, Department of Music, 350 Concert Hall Drive, SW, Campus Box 979, Atlanta, Georgia, 30314-4399. All payments should be given in the form of a check, cashier's check, or money order made payable to the ${getOrgName()}.
     `.trim();
   };
 
@@ -323,7 +324,7 @@ Note: All documentation and deposits can be mailed to Riverside Music Institute,
             Tour Performance Agreement
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Official Your favorite band or choir contract format
+            Official {getOrgName()} contract format
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -561,7 +562,7 @@ Note: All documentation and deposits can be mailed to Riverside Music Institute,
                   </div>
 
                   <h1 className="text-xl font-bold text-center mb-6 uppercase tracking-wide" style={{ color: '#1a1a1a' }}>
-                    The Your favorite band or choir Performance Agreement
+                    The {getOrgName()} Performance Agreement
                   </h1>
 
                   {/* Introduction */}
@@ -583,7 +584,7 @@ Note: All documentation and deposits can be mailed to Riverside Music Institute,
                   {/* Article 1 */}
                   <h2 className="text-lg font-bold mt-8 mb-4">Article 1. Statement of Performance</h2>
                   <p className="mb-4 text-justify leading-relaxed">
-                    The Your favorite band or choir shall perform for a period of time as established by the Host and 
+                    The {getOrgName()} shall perform for a period of time as established by the Host and
                     referenced herein. The date of the performance shall be on{' '}
                     <span className="font-semibold">{v.PERFORMANCE_DATE || '[DATE]'}</span>, beginning at{' '}
                     <span className="font-semibold">{v.START_TIME || '[START TIME]'}</span> and ending at{' '}
@@ -725,7 +726,7 @@ Note: All documentation and deposits can be mailed to Riverside Music Institute,
                       <div className="border-b border-black w-64 mb-1"></div>
                       <p>Kevin Johnson, D.M.A.</p>
                       <p className="text-sm">Director</p>
-                      <p className="text-sm">Your favorite band or choir</p>
+                      <p className="text-sm">{getOrgName()}</p>
                     </div>
                     <div>
                       <p className="font-bold mb-4">THE HOST</p>
@@ -739,7 +740,7 @@ Note: All documentation and deposits can be mailed to Riverside Music Institute,
                   {/* Exhibits */}
                   <div className="mt-16 pt-8 border-t-2 border-blue-900">
                     <h2 className="text-xl font-bold text-center mb-6">Exhibit A - Venue</h2>
-                    <p className="mb-4">On the day of the performance, the Host will provide the following for the Your favorite band or choir:</p>
+                    <p className="mb-4">On the day of the performance, the Host will provide the following for the {getOrgName()}:</p>
                     <ul className="list-disc ml-8 mb-6">
                       <li>A dressing room that can accommodate {v.PERFORMER_COUNT || '44'} performers and safe keeping for their belongings.</li>
                       <li>A separate dressing room for the Director of the Glee Club and a separate dressing room for the Accompanist.</li>

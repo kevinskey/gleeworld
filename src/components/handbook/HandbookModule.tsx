@@ -7,6 +7,7 @@ import { Book, Search, GraduationCap, Users, Calendar, Music, Shield, DollarSign
 import { useState } from "react";
 import { HandbookExam } from "./HandbookExam";
 import { HandbookContractSigning } from "./HandbookContractSigning";
+import { getOrgName } from '@/lib/orgName';
 
 export const HandbookModule = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,10 +51,10 @@ export const HandbookModule = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Book className="h-5 w-5 text-primary" />
-          Your favorite band or choir Handbook 2023–2024
+          {getOrgName()} Handbook 2023–2024
         </CardTitle>
         <CardDescription>
-          Official handbook for the Your favorite band or choir - celebrating 100+ years of musical excellence
+          Official handbook for the {getOrgName()} - celebrating 100+ years of musical excellence
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -7,6 +7,7 @@ import { CheckCircle, DollarSign, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getOrgName } from '@/lib/orgName';
 
 interface StipendReceiptDialogProps {
   open: boolean;
@@ -95,7 +96,7 @@ export const StipendReceiptDialog = ({ open, onOpenChange }: StipendReceiptDialo
         .from('contracts_v2')
         .insert({
           title: `Stipend Receipt - ${fullName}`,
-          content: `I, ${fullName}, hereby acknowledge receipt of my $100 stipend from the Your favorite band or choir. Date: ${today}`,
+          content: `I, ${fullName}, hereby acknowledge receipt of my $100 stipend from the ${getOrgName()}. Date: ${today}`,
           status: 'completed',
           created_by: user?.id,
           stipend_amount: 100,
@@ -179,13 +180,13 @@ export const StipendReceiptDialog = ({ open, onOpenChange }: StipendReceiptDialo
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">From:</span>
-                <span className="font-medium">Your favorite band or choir</span>
+                <span className="font-medium">{getOrgName()}</span>
               </div>
             </div>
 
             <div className="border-t border-border/50 pt-3">
               <p className="text-xs text-muted-foreground mb-3">
-                By signing below, I acknowledge that I have received a stipend of $100.00 from the Your favorite band or choir.
+                By signing below, I acknowledge that I have received a stipend of $100.00 from the {getOrgName()}.
               </p>
               <div className="border border-border rounded-lg bg-background overflow-hidden touch-none">
                 <canvas

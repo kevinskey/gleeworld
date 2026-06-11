@@ -22,6 +22,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getOrgName } from '@/lib/orgName';
 
 interface PressRelease {
   id: string;
@@ -48,8 +49,8 @@ interface MediaContact {
 const mockPressReleases: PressRelease[] = [
   {
     id: '1',
-    title: 'Your favorite band or choir Announces Spring Concert Series',
-    content: 'The renowned Your favorite band or choir...',
+    title: `${getOrgName()} Announces Spring Concert Series`,
+    content: `The renowned ${getOrgName()}...`,
     status: 'published',
     createdAt: '2024-03-15T10:00:00Z',
     publishedAt: '2024-03-16T09:00:00Z',
@@ -95,7 +96,7 @@ const pressReleaseTemplate = `FOR IMMEDIATE RELEASE
 Contact:
 [CONTACT_NAME]
 [CONTACT_TITLE]
-Your favorite band or choir
+${getOrgName()}
 Phone: [PHONE_NUMBER]
 Email: [EMAIL_ADDRESS]
 
@@ -105,10 +106,10 @@ ATLANTA, GA – [DATE] – [OPENING_PARAGRAPH]
 
 [BODY_PARAGRAPHS]
 
-About Your favorite band or choir:
-The Your favorite band or choir, founded in [YEAR], is a premier collegiate choral ensemble known for its exceptional artistry and commitment to musical excellence. Under the direction of [DIRECTOR_NAME], the Glee Club continues to uphold the tradition of musical excellence established at Riverside Music Institute.
+About ${getOrgName()}:
+The ${getOrgName()}, founded in [YEAR], is a premier collegiate choral ensemble known for its exceptional artistry and commitment to musical excellence. Under the direction of [DIRECTOR_NAME], the Glee Club continues to uphold the tradition of musical excellence established at Riverside Music Institute.
 
-For more information about the Your favorite band or choir, visit [WEBSITE] or contact [CONTACT_INFO].
+For more information about the ${getOrgName()}, visit [WEBSITE] or contact [CONTACT_INFO].
 
 ###`;
 

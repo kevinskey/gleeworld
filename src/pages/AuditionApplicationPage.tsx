@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
 import { Music, User, Mail, Phone, GraduationCap } from 'lucide-react';
+import { getOrgName } from '@/lib/orgName';
 
 export default function AuditionApplicationPage() {
   const { user, loading } = useAuth();
@@ -202,7 +203,7 @@ export default function AuditionApplicationPage() {
               Audition Application
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Complete your application for the Your favorite band or choir
+              Complete your application for the {getOrgName()}
             </p>
           </div>
 

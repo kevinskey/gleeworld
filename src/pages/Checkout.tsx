@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getOrgName } from "@/lib/orgName";
 
 interface CartItem {
   product: {
@@ -91,7 +92,7 @@ const US_STATES = [
 
 // Glee Club shipping origin (Atlanta, GA)
 const FROM_ADDRESS = {
-  name: "Your favorite band or choir",
+  name: getOrgName(),
   street1: "350 Concert Hall Drive",
   city: "Atlanta",
   state: "GA",

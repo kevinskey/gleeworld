@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import WebFont from 'webfontloader';
+import { getOrgName } from '@/lib/orgName';
 
 interface TitleFormatting {
   fontSize: number;
@@ -121,7 +122,7 @@ export const GraduatesHero = () => {
               ? "drop-shadow-2xl"
               : "text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent drop-shadow-2xl"}
           >
-            Your favorite band or choir
+            {getOrgName()}
           </h1>
           
           {/* Subtitle with metallic effect */}

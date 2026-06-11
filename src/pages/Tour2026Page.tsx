@@ -20,6 +20,7 @@ import { CrewAssignmentsSection } from "@/components/tour/CrewAssignmentsSection
 import { BusBuddiesSection } from "@/components/tour/BusBuddiesSection";
 import { TourDocumentsSection } from "@/components/tour/TourDocumentsSection";
 import { LivePerformancesSection } from "@/components/tour/LivePerformancesSection";
+import { getOrgName } from "@/lib/orgName";
 
 const Tour2026Page = () => {
   return (
@@ -38,7 +39,7 @@ const Tour2026Page = () => {
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Tour Information Center</h1>
             <p className="text-xl text-white/90 max-w-2xl">
-              Everything you need for the 2026 Your favorite band or choir tour. Access schedules, assignments, documents, and live performances all in one place.
+              Everything you need for the 2026 {getOrgName()} tour. Access schedules, assignments, documents, and live performances all in one place.
             </p>
           </div>
         </div>

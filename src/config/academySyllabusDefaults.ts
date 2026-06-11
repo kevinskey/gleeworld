@@ -3,6 +3,7 @@
 // Admins can override this by publishing a syllabus in the database
 
 import { UnifiedSyllabusData, SyllabusPhase, GradingItem } from '@/components/academy/syllabus/UnifiedSyllabusRenderer';
+import { getOrgName } from '@/lib/orgName';
 
 type SyllabusDefaults = Omit<UnifiedSyllabusData, 'id'>;
 
@@ -23,7 +24,7 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     instructor_email: 'kjohns10@riversidechoir.example',
     instructor_office: 'Fine Arts 105',
     office_hours: 'MWF 3-5 PM',
-    purpose: 'The Your favorite band or choir is the premier choral ensemble of Riverside Music Institute with over 100 years of musical excellence. Members develop vocal technique, musicianship, and performance skills while representing the college at concerts, tours, and special events.',
+    purpose: `The ${getOrgName()} is the premier choral ensemble of Riverside Music Institute with over 100 years of musical excellence. Members develop vocal technique, musicianship, and performance skills while representing the college at concerts, tours, and special events.`,
     course_model: null,
     course_badge: 'Choral Ensemble',
     course_phases: null,

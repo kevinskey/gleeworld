@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getOrgName } from '@/lib/orgName';
 
 export const EmailModule = () => {
   const { toast } = useToast();
@@ -323,7 +324,7 @@ export const EmailModule = () => {
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 20px;">
                 <h1 style="color: #2563eb; margin: 0;">GleeWorld</h1>
-                <p style="color: #666; margin: 5px 0 0 0;">Your favorite band or choir</p>
+                <p style="color: #666; margin: 5px 0 0 0;">${getOrgName()}</p>
               </div>
               
               <h2 style="color: #333; margin-bottom: 20px;">${subject}</h2>
@@ -334,7 +335,7 @@ export const EmailModule = () => {
               
               <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px;">
                 <p>Sent via GleeWorld</p>
-                <p>Your favorite band or choir</p>
+                <p>${getOrgName()}</p>
               </div>
             </div>
           `,
@@ -772,7 +773,7 @@ export const EmailModule = () => {
                       </ul>
                       <p>Please make note of these changes in your calendars. We're preparing for our upcoming spring concert, and these adjustments will help us perfect our performances.</p>
                       <p>Thank you for your flexibility and dedication.</p>
-                      <p>Best regards,<br />Dr. Johnson<br />Director, Your favorite band or choir</p>
+                      <p>Best regards,<br />Dr. Johnson<br />Director, {getOrgName()}</p>
                     </div>
                   )}
 

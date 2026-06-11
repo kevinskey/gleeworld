@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Send, Mail, MessageSquare, Users, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import PhoneNumberStatus from './PhoneNumberStatus';
+import { getOrgName } from '@/lib/orgName';
 
 interface QuickNotificationData {
   type: 'email' | 'sms' | 'in-app';
@@ -106,7 +107,7 @@ export const QuickNotificationPanel: React.FC = () => {
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
-                  <h1 style="color: white; margin: 0;">Your favorite band or choir</h1>
+                  <h1 style="color: white; margin: 0;">${getOrgName()}</h1>
                 </div>
                 <div style="padding: 30px; background: white;">
                   <h2 style="color: #8B2635; margin-top: 0;">${formData.subject || 'Notification'}</h2>

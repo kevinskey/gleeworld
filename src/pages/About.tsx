@@ -20,6 +20,7 @@ import {
   Mic,
   BookOpen
 } from "lucide-react";
+import { getOrgName } from "@/lib/orgName";
 
 export default function About() {
   const { data: artisticDirector } = useArtisticDirectorAvatar();
@@ -34,7 +35,7 @@ export default function About() {
           <div className="relative z-10 text-center text-primary-foreground px-4 max-w-5xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 font-['Bebas_Neue']">Welcome to GleeWorld</h1>
             <p className="text-xl md:text-3xl opacity-90 mb-8 font-light">
-              The Digital Home of the Your favorite band or choir and Beyond
+              The Digital Home of the {getOrgName()} and Beyond
             </p>
           </div>
           

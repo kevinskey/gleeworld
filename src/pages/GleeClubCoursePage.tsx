@@ -6,6 +6,7 @@ import { useCourseTA } from '@/hooks/useCourseTA';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Badge } from '@/components/ui/badge';
 import { GraduationCap } from 'lucide-react';
+import { getOrgName } from '@/lib/orgName';
 
 const GleeClubCoursePage = () => {
   const { user } = useAuth();
@@ -32,9 +33,9 @@ const GleeClubCoursePage = () => {
         courseSemester="SPRING 2026"
         courseCode="GLEE 101"
         courseTitle="GLEE CLUB"
-        welcomeMessage="Welcome to the Your favorite band or choir!"
-        welcomeDetails="Welcome to the Your favorite band or choir, a premier choral ensemble with over 100 years of musical excellence. This course encompasses all aspects of participation in the Glee Club including rehearsals, performances, and community engagement."
-        courseOverview="The Your favorite band or choir is a highly selective, auditioned choral ensemble dedicated to the study and performance of choral music from diverse traditions. Members develop vocal technique, musicianship, and performance skills while representing Riverside Music Institute at campus events, community performances, and national tours."
+        welcomeMessage={`Welcome to the ${getOrgName()}!`}
+        welcomeDetails={`Welcome to the ${getOrgName()}, a premier choral ensemble with over 100 years of musical excellence. This course encompasses all aspects of participation in the Glee Club including rehearsals, performances, and community engagement.`}
+        courseOverview={`The ${getOrgName()} is a highly selective, auditioned choral ensemble dedicated to the study and performance of choral music from diverse traditions. Members develop vocal technique, musicianship, and performance skills while representing Riverside Music Institute at campus events, community performances, and national tours.`}
         instructor={{
           name: 'Dr. Kevin Johnson',
           email: 'kjohns10@riversidechoir.example',

@@ -7,6 +7,7 @@ import { supabase, getTenantSlug } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { getOrgName } from '@/lib/orgName';
 
 export function RegistrationPage() {
   const { form, setIsNewUser } = useAuditionForm();
@@ -67,7 +68,7 @@ export function RegistrationPage() {
     <div className="space-y-4 md:space-y-6">
       <div className="text-center mb-4 md:mb-6">
         <h2 className="text-xl md:text-2xl font-bold text-gray-900">Create Your Account</h2>
-        <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">Join the Your favorite band or choir community</p>
+        <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">Join the {getOrgName()} community</p>
       </div>
 
       <div className="space-y-3 md:space-y-4">

@@ -31,9 +31,10 @@ import {
 } from "lucide-react";
 import { useInvoices, type InvoiceLineItem, type CreateInvoiceData } from "@/hooks/useInvoices";
 import { InvoicePreview } from "./InvoicePreview";
+import { getOrgName } from '@/lib/orgName';
 
 const BRAND_INFO = {
-  name: "Your favorite band or choir",
+  name: getOrgName(),
   address: "350 Concert Hall Drive, SW",
   cityStateZip: "Atlanta, GA 30314",
   taxId: "58-0566243",
@@ -63,7 +64,7 @@ export const InvoiceMaker = () => {
   const [donorEmail, setDonorEmail] = useState("");
   const [donorPhone, setDonorPhone] = useState("");
   const [directorName, setDirectorName] = useState("Dr. Kevin Phillip Johnson");
-  const [directorTitle, setDirectorTitle] = useState("Director, Your favorite band or choir");
+  const [directorTitle, setDirectorTitle] = useState(`Director, ${getOrgName()}`);
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([{ ...emptyLineItem }]);
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -78,7 +79,7 @@ export const InvoiceMaker = () => {
     setDonorEmail("");
     setDonorPhone("");
     setDirectorName("Dr. Kevin Phillip Johnson");
-    setDirectorTitle("Director, Your favorite band or choir");
+    setDirectorTitle(`Director, ${getOrgName()}`);
     setLineItems([{ ...emptyLineItem }]);
     setNotes("");
     setDueDate("");
@@ -163,7 +164,7 @@ export const InvoiceMaker = () => {
                 Invoice Maker
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Generate nonprofit donation invoices for the Your favorite band or choir
+                Generate nonprofit donation invoices for the {getOrgName()}
               </p>
             </div>
             <Button onClick={() => setShowForm(true)}>

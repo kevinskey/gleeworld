@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTemplateImageUpload } from "./templates/useTemplateImageUpload";
+import { getOrgName } from "@/lib/orgName";
 
 export interface ContractTemplate {
   id: string;
@@ -34,12 +35,12 @@ This Agreement (the "Agreement") is entered into by and between Riverside Music 
 Whereas the College has agreed to perform musical presentations and whereas the Host is ready, willing and able to support the efforts that are herein set forth.
 
 Article 1. Statement of Performance
-The Your favorite band or choir shall perform for a period of time as established by the Host and referenced herein. The date of the performance shall be on {{PERFORMANCE_DATE}}, beginning at {{START_TIME}} and ending at {{END_TIME}}. The performance shall be held at {{VENUE_NAME}}, located at {{VENUE_ADDRESS}}.
+The ${getOrgName()} shall perform for a period of time as established by the Host and referenced herein. The date of the performance shall be on {{PERFORMANCE_DATE}}, beginning at {{START_TIME}} and ending at {{END_TIME}}. The performance shall be held at {{VENUE_NAME}}, located at {{VENUE_ADDRESS}}.
 
 Article 2. Honorarium and Accommodations
 This agreement is to be signed and returned within fifteen (15) business days of receipt.
 
-The Your favorite band or choir will receive an honorarium of $\{{HONORARIUM_AMOUNT}} in the form of check, cashier's check, money order, or electronic transfer. All payments should be made payable to Your favorite band or choir in the form of a check, cashier's check, or money order.
+The ${getOrgName()} will receive an honorarium of $\{{HONORARIUM_AMOUNT}} in the form of check, cashier's check, money order, or electronic transfer. All payments should be made payable to ${getOrgName()} in the form of a check, cashier's check, or money order.
 
 The deposit of 50% of the honorarium, $\{{DEPOSIT_AMOUNT}}, is due at contract signing. The remaining 50% is due the day of the performance and should be given to the Director of the Glee Club immediately following the performance.
 
@@ -88,12 +89,12 @@ _________________________         ____________________________
 _________________________         ____________________________
 {{DIRECTOR_NAME}}                 Print: {{HOST_CONTACT_NAME}}
 Director                          Title: {{HOST_CONTACT_TITLE}}
-Your favorite band or choir         Department: {{HOST_CONTACT_DEPARTMENT}}
+${getOrgName()}         Department: {{HOST_CONTACT_DEPARTMENT}}
 
 Exhibit A
 Venue, Green Room, and Stage Equipment
 
-On the day of the performance, the Host will provide the following for the Your favorite band or choir:
+On the day of the performance, the Host will provide the following for the ${getOrgName()}:
 
 • A dressing room that can accommodate {{PERFORMER_COUNT}} performers and safe keeping for their belongings.
 • A separate dressing room for the Director of the Glee Club and a separate dressing room for the Accompanist.
@@ -108,7 +109,7 @@ Dinner
 
 Dinner (hot) options should include: protein options, (chicken/extra lean beef, fish, beans/tofu), fresh vegetables/salad, a whole grain, pasta, or potato, and vegan option. The Host will be notified of specific food allergies, restrictions, or requests within thirty (30) days prior to the performance.
 
-Note: All documentation and deposits can be mailed to Riverside Music Institute, Dr. Kevin Johnson Director, Your favorite band or choir 350 Concert Hall Drive, SW, Campus Box 312, Atlanta, Georgia, 30314-4399. All payments should be given in the form of a check, cashier's check, or money order, or electronic transfer made payable to the Your favorite band or choir.`,
+Note: All documentation and deposits can be mailed to Riverside Music Institute, Dr. Kevin Johnson Director, ${getOrgName()} 350 Concert Hall Drive, SW, Campus Box 312, Atlanta, Georgia, 30314-4399. All payments should be given in the form of a check, cashier's check, or money order, or electronic transfer made payable to the ${getOrgName()}.`,
       is_active: true
     };
 

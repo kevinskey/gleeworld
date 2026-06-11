@@ -12,6 +12,7 @@ import { FileText, Send, Calendar, Users, Eye, Edit, Trash2, Plus, Save } from '
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getOrgName } from '@/lib/orgName';
 
 interface Newsletter {
   id: string;
@@ -95,7 +96,7 @@ export const NewsletterManager = () => {
       content += `## Upcoming Events\n\n- Performance dates and venues\n- Rehearsal schedules\n- Special events and celebrations\n\n`;
     }
 
-    content += `Thank you for being part of our musical family!\n\nBest regards,\nYour favorite band or choir`;
+    content += `Thank you for being part of our musical family!\n\nBest regards,\n${getOrgName()}`;
 
     return content;
   };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Youtube, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { getOrgName } from '@/lib/orgName';
 
 const CHANNEL_URL = 'https://www.youtube.com/@your-program';
 const CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw';
@@ -99,7 +100,7 @@ export const YoutubeVideoSection: React.FC = () => {
                 Watch Our Performances
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Experience the Your favorite band or choir
+                Experience the {getOrgName()}
               </p>
             </div>
           </div>
@@ -188,7 +189,7 @@ export const YoutubeVideoSection: React.FC = () => {
             <div className="aspect-video max-h-[450px]">
               <iframe
                 src={`https://www.youtube.com/embed/videoseries?list=${UPLOADS_PLAYLIST_ID}&rel=0`}
-                title="Your favorite band or choir Videos"
+                title={`${getOrgName()} Videos`}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

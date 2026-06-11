@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Copy, Download, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getOrgName } from '@/lib/orgName';
 
 interface TemplateData {
   templateType: string;
@@ -32,7 +33,7 @@ const PressKitTemplateGenerator = () => {
       venue: ''
     },
     bandInfo: {
-      name: 'Your favorite band or choir',
+      name: getOrgName(),
       genre: 'Classical, Gospel, Contemporary',
       members: '60+ talented vocalists'
     }

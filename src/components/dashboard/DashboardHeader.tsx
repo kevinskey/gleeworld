@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { AnnouncementsDisplay } from './AnnouncementsDisplay';
+import { getOrgName } from '@/lib/orgName';
 
 interface DashboardHeaderProps {
   user: any;
@@ -43,7 +44,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
               Portal
             </h1>
             <p className="text-[10px] lg:text-xs font-['Dancing_Script'] lg:text-base italic text-white/80">
-              Your favorite band or choir
+              {getOrgName()}
             </p>
           </div>
         </div>

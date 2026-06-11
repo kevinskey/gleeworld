@@ -42,6 +42,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { RECIPIENT_GROUPS, RecipientGroup } from '@/types/communication';
+import { getOrgName } from '@/lib/orgName';
 
 const EmailComposerPage = () => {
   const navigate = useNavigate();
@@ -213,7 +214,7 @@ const EmailComposerPage = () => {
                 ✨ GleeWorld
               </h1>
               <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
-                Your favorite band or choir
+                ${getOrgName()}
               </p>
             </td>
           </tr>
@@ -240,7 +241,7 @@ const EmailComposerPage = () => {
                       Sent from GleeWorld by ${userProfile?.full_name || user?.email}
                     </p>
                     <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 12px;">
-                      © ${new Date().getFullYear()} Your favorite band or choir. All rights reserved.
+                      © ${new Date().getFullYear()} ${getOrgName()}. All rights reserved.
                     </p>
                   </td>
                   <td align="right">
@@ -854,7 +855,7 @@ const EmailComposerPage = () => {
                 <div className="rounded-lg border overflow-hidden">
                   <div className="bg-gradient-to-r from-primary to-primary/70 p-4 text-center">
                     <h3 className="text-white font-bold text-lg">✨ GleeWorld</h3>
-                    <p className="text-white/80 text-xs">Your favorite band or choir</p>
+                    <p className="text-white/80 text-xs">{getOrgName()}</p>
                   </div>
                   <div className="p-4 bg-card">
                     <h4 className="font-semibold text-sm mb-2 truncate">

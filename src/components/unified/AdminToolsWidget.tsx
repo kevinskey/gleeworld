@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+import { getOrgName } from '@/lib/orgName';
 
 interface AdminModule {
   title: string;
@@ -200,7 +201,7 @@ export const AdminToolsWidget = ({ onNavigateToTab }: AdminToolsWidgetProps = {}
           Administrative Control Center
         </CardTitle>
         <CardDescription>
-          Comprehensive tools for managing the Your favorite band or choir platform
+          Comprehensive tools for managing the {getOrgName()} platform
         </CardDescription>
       </CardHeader>
       <CardContent>

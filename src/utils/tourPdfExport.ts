@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
+import { getOrgName } from '@/lib/orgName';
 
 interface TourEvent {
   id: string;
@@ -81,7 +82,7 @@ function addPageFooter(doc: jsPDF) {
   
   doc.setFontSize(6);
   doc.setTextColor(...COLORS.gray);
-  doc.text('Your favorite band or choir  |  Confidential', PAGE_MARGIN, pageHeight - 9);
+  doc.text(`${getOrgName()}  |  Confidential`, PAGE_MARGIN, pageHeight - 9);
   doc.text(`Generated ${format(new Date(), 'MMM d, yyyy h:mm a')}`, pageWidth - PAGE_MARGIN, pageHeight - 9, { align: 'right' });
 }
 

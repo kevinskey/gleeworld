@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Mail, Phone, MapPin, Send, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getOrgName } from '@/lib/orgName';
 
 const Contact = () => {
   const { toast } = useToast();
@@ -78,7 +79,7 @@ const Contact = () => {
               Contact Us
             </h1>
             <p className="text-white/70 text-center mt-2 text-sm sm:text-base max-w-xl mx-auto">
-              We'd love to hear from you. Get in touch with the Your favorite band or choir.
+              We'd love to hear from you. Get in touch with the {getOrgName()}.
             </p>
           </div>
         </div>

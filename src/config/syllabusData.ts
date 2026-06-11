@@ -1,5 +1,7 @@
 // Complete syllabus data for all Glee Academy courses
 
+import { getOrgName } from '@/lib/orgName';
+
 export interface SyllabusWeek {
   week: number;
   title: string;
@@ -62,7 +64,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
       office: 'Rock Fine Arts Bldg. 109',
       officeHours: 'MWF 3–5 PM or by appointment',
     },
-    description: 'The Your favorite band or choir is the premier choral ensemble with over 100 years of musical excellence. This performance-based course develops vocal technique, musicianship, and ensemble skills through rehearsals, concerts, and touring experiences. Members represent the college at local, national, and international events.',
+    description: `The ${getOrgName()} is the premier choral ensemble with over 100 years of musical excellence. This performance-based course develops vocal technique, musicianship, and ensemble skills through rehearsals, concerts, and touring experiences. Members represent the college at local, national, and international events.`,
     objectives: [
       'Develop advanced choral singing techniques and vocal production',
       'Master repertoire spanning spirituals, classical, contemporary, and world music traditions',
@@ -339,7 +341,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
       office: 'Rock Fine Arts Bldg. 109',
       officeHours: 'By appointment',
     },
-    description: 'This course prepares executive board members and emerging leaders for their roles within the Your favorite band or choir organization. Topics include event planning, team management, communication, conflict resolution, and institutional memory preservation.',
+    description: `This course prepares executive board members and emerging leaders for their roles within the ${getOrgName()} organization. Topics include event planning, team management, communication, conflict resolution, and institutional memory preservation.`,
     objectives: [
       'Understand and execute executive board responsibilities as outlined in the Glee Club Handbook',
       'Develop effective communication and delegation skills',

@@ -10,6 +10,7 @@ import { UserPlus, LogIn, ArrowLeft, Eye, EyeOff, KeyRound } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import gleeWorldLogoCircle from '@/assets/glee-world-logo-circle.png';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { getOrgName } from '@/lib/orgName';
 const authBackground = '/lovable-uploads/1e93a440-6349-4948-a145-7b55dedea9fc.png';
 export default function AuthPage() {
   const {
@@ -353,7 +354,7 @@ export default function AuthPage() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-white/60 text-sm">
-            © 2024 Your favorite band or choir. All rights reserved.
+            © 2024 {getOrgName()}. All rights reserved.
           </p>
         </div>
       </div>

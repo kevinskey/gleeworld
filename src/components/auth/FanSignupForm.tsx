@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { supabase, getTenantSlug } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { HeartIcon, MusicIcon, UsersIcon } from "lucide-react";
+import { getOrgName } from '@/lib/orgName';
 
 export function FanSignupForm() {
   const [formData, setFormData] = useState({
@@ -64,7 +65,7 @@ export function FanSignupForm() {
           <HeartIcon className="h-6 w-6 text-pink-600" />
           Join as a Fan
         </CardTitle>
-        <p className="text-sm text-gray-600">Support the Your favorite band or choir</p>
+        <p className="text-sm text-gray-600">Support the {getOrgName()}</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

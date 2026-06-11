@@ -15,6 +15,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { HeroSlideshow } from "@/components/graduates/HeroSlideshow";
 import { SpotlightSection } from "@/components/graduates/SpotlightSection";
 import { AnnouncementSection } from "@/components/graduates/AnnouncementSection";
+import { getOrgName } from "@/lib/orgName";
 interface GraduatesStats {
   classYear: number | null;
   yearsOut: number;
@@ -212,7 +213,7 @@ export default function GraduatesLanding() {
                 Request Your Concert Tickets
               </h2>
               <p className="text-lg md:text-xl text-white/90 leading-relaxed">
-                Join us for an unforgettable evening of music and sisterhood. Reserve your seats for the upcoming Your favorite band or choir performance.
+                Join us for an unforgettable evening of music and sisterhood. Reserve your seats for the upcoming {getOrgName()} performance.
               </p>
             </div>
             <div className="flex flex-col items-center gap-4">

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Ticket, CheckCircle } from 'lucide-react';
+import { getOrgName } from '@/lib/orgName';
 
 const ticketRequestSchema = z.object({
   full_name: z.string().trim().min(1, 'Name is required').max(100),
@@ -128,7 +129,7 @@ export const ConcertTicketRequestForm = () => {
           <CardTitle>Concert Ticket Request</CardTitle>
         </div>
         <CardDescription>
-          Request tickets to attend an upcoming Your favorite band or choir concert
+          Request tickets to attend an upcoming {getOrgName()} concert
         </CardDescription>
       </CardHeader>
       <CardContent>

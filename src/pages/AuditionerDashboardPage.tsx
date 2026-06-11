@@ -6,13 +6,14 @@ import { AuditionerDashboard } from '@/components/member-view/dashboards/Auditio
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { HeroSlider } from '@/components/hero/HeroSlider';
 import { useUniversalHeroSlides } from '@/hooks/useUniversalSlider';
+import { getOrgName } from '@/lib/orgName';
 
 const AuditionerDashboardPage = () => {
   const { user, loading } = useAuth();
   const { user: profile, loading: profileLoading } = useUserById(user?.id);
 
   useEffect(() => {
-    document.title = 'GleeWorld Auditions | Your favorite band or choir';
+    document.title = `GleeWorld Auditions | ${getOrgName()}`;
   }, []);
 
   if (loading || (user && profileLoading)) {

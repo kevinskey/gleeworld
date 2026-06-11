@@ -16,6 +16,7 @@ import {
 import { useRoomAssignments, RoomAssignment, TourHotel } from "@/hooks/useRoomAssignments";
 import { format } from "date-fns";
 import jsPDF from "jspdf";
+import { getOrgName } from '@/lib/orgName';
 
 export const RoomingAssignmentsSection = () => {
   const {
@@ -206,7 +207,7 @@ export const RoomingAssignmentsSection = () => {
     y += 4;
     doc.setFontSize(8);
     doc.setTextColor(120, 120, 120);
-    doc.text(`Generated on ${format(new Date(), "MMM d, yyyy 'at' h:mm a")}  •  Your favorite band or choir`, pageWidth / 2, y, { align: "center" });
+    doc.text(`Generated on ${format(new Date(), "MMM d, yyyy 'at' h:mm a")}  •  ${getOrgName()}`, pageWidth / 2, y, { align: "center" });
 
     const filename = `rooming-list-${selectedHotel.hotel_name.replace(/\s+/g, "-").toLowerCase()}.pdf`;
     doc.save(filename);

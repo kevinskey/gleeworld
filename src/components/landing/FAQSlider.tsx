@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Music, MessageCircleQuestion } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getOrgName } from '@/lib/orgName';
 
 const faqData = [
   {
@@ -79,7 +80,7 @@ export const FAQSlider = () => {
               Frequently Asked Questions
             </h2>
             <p className="text-base md:text-xl text-muted-foreground">
-              Your favorite band or choir
+              {getOrgName()}
             </p>
           </div>
         </div>
