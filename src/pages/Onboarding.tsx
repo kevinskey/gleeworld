@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboardingProfile } from '@/hooks/useOnboardingProfile';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { useToast } from '@/hooks/use-toast';
 
 import { AccountGate } from '@/components/onboarding/AccountGate';
@@ -18,6 +19,8 @@ import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 export const Onboarding = () => {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading, saving, updateField, updateFields, getStepCompletion } = useOnboardingProfile();
+  const { settings: branding } = useBrandingSettings();
+  const orgName = branding.org_name || 'your organization';
   const { toast } = useToast();
   const navigate = useNavigate();
   const nextDest = typeof window !== 'undefined'
@@ -85,7 +88,7 @@ export const Onboarding = () => {
     
     toast({
       title: "Onboarding Complete!",
-      description: "Welcome to the Your favorite band or choir family!",
+      description: `Welcome to the ${orgName} family!`,
     });
 
     // Redirect after a short delay — honor ?next= if the user came from an invite link.
@@ -166,7 +169,7 @@ export const Onboarding = () => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold">GleeWorld Onboarding</h1>
           <p className="text-muted-foreground mt-2">
-            Complete your profile to join the Your favorite band or choir
+            Complete your profile to join {orgName}
           </p>
         </div>
 
