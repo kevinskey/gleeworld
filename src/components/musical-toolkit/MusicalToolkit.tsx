@@ -66,8 +66,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     if (open.pitch) {
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
-      const isMobileSize = screenWidth < 400;
-      const initialSize = isMobileSize ? Math.min(screenWidth - 40, 380) : 420;
+      const initialSize = Math.min(screenWidth - 40, screenHeight - 160, 420);
       setPitchPipeSize({ width: initialSize, height: initialSize });
       const centerX = (screenWidth - initialSize) / 2;
       const centerY = (screenHeight - initialSize) / 2;
@@ -230,7 +229,8 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
                 </svg>
               </div>
               
-              <div style={{ transform: `scale(${pitchPipeSize.width / 264})`, transformOrigin: 'center' }}>
+              {/* PitchPipe renders at a fixed 384px (w-96); scale it to the Rnd box */}
+              <div style={{ transform: `scale(${pitchPipeSize.width / 384})`, transformOrigin: 'center' }}>
                 <PitchPipe />
               </div>
             </div>
