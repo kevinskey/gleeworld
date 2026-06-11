@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*", // consider narrowing to your domain
@@ -62,6 +63,12 @@ serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Sends to arbitrary phone lists/groups — admin or internal only.
+    // (FUNCTIONS_VERIFY_JWT=false in production, so config.toml gating is a no-op.)
+    const caller = await authenticateCaller(req);
+    if (!caller) return unauthorizedResponse(corsHeaders);
+    if (!caller.internal && !caller.isAdmin) return unauthorizedResponse(corsHeaders, 403);
+
     const { groupId, message, senderName, phoneNumbers }: SMSNotificationRequest = await req.json();
 
     if (!message || !senderName) {
@@ -72,7 +79,6 @@ serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // JWT is already validated by Supabase (verify_jwt = true in config.toml)
     console.log("SMS notification request received");
 
     const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");

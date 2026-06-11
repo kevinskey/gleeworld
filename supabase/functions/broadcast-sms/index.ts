@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,11 @@ const handler = async (req: Request): Promise<Response> => {
       status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
+
+  // Broadcasts to all members — admin or internal only.
+  const caller = await authenticateCaller(req);
+  if (!caller) return unauthorizedResponse(corsHeaders);
+  if (!caller.internal && !caller.isAdmin) return unauthorizedResponse(corsHeaders, 403);
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");

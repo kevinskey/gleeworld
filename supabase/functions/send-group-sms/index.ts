@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,8 +68,16 @@ const handler = async (req: Request): Promise<Response> => {
     });
   }
 
+  const caller = await authenticateCaller(req);
+  if (!caller) return unauthorizedResponse(corsHeaders);
+
   try {
     const { conversationId, message, senderUserId, senderName, mediaUrl }: GroupSMSRequest = await req.json();
+
+    // Callers may only send as themselves unless internal or admin.
+    if (!caller.internal && !caller.isAdmin && senderUserId !== caller.userId) {
+      return unauthorizedResponse(corsHeaders, 403);
+    }
     
     console.log('Processing group SMS:', { conversationId, senderUserId, senderName, hasMedia: Boolean(mediaUrl) });
 

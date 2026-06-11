@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,6 +47,11 @@ const handler = async (req: Request): Promise<Response> => {
       status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
+
+  // Used by member flows (DM notifications), so any authenticated user may
+  // call it — the auth gate exists to block anonymous internet traffic.
+  const caller = await authenticateCaller(req);
+  if (!caller) return unauthorizedResponse(corsHeaders);
 
   const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
   const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
