@@ -89,7 +89,9 @@ export const useGleeWorldEvents = () => {
       setLoading(true);
       
       // Fetch events from gw_events table with calendar information
-      // Show all events for calendar display
+      // Window to the last 18 months to keep payloads bounded
+      const windowStart = new Date();
+      windowStart.setMonth(windowStart.getMonth() - 18);
       let eventsQuery = supabase
         .from('gw_events')
         .select(`
@@ -104,6 +106,7 @@ export const useGleeWorldEvents = () => {
             course_code
           )
         `)
+        .gte('start_date', windowStart.toISOString())
         .order('start_date', { ascending: true });
 
       // If user is not authenticated, only show public events

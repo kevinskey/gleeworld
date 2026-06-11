@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -93,6 +94,11 @@ serve(async (req) => {
   }
 
   try {
+    // Blasts email/SMS to arbitrary user lists — admin or internal only.
+    const caller = await authenticateCaller(req);
+    if (!caller) return unauthorizedResponse(corsHeaders);
+    if (!caller.internal && !caller.isAdmin) return unauthorizedResponse(corsHeaders, 403);
+
     const { eventId, eventTitle, eventDate, userIds, message }: NotificationRequest = await req.json();
 
     console.log('Sending notifications for event:', { eventId, eventTitle, userIds });

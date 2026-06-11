@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const supabase = createClient(
+    const anonClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
@@ -38,6 +38,32 @@ const handler = async (req: Request): Promise<Response> => {
     const token = url.searchParams.get('token'); // For private feeds
     const eventType = url.searchParams.get('event_type'); // Filter by event type
     const range = url.searchParams.get('range') || 'future'; // future, past, all
+
+    let supabase = anonClient;
+    let isPrivateFeed = false;
+
+    if (feedType === 'private' && token) {
+      // Token lookup and the full-event query both need service role:
+      // RLS limits the anon key to is_public=true rows.
+      const serviceClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      const { data: profile } = await serviceClient
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('calendar_feed_token', token)
+        .single();
+
+      if (!profile) {
+        return new Response('Invalid feed token', {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+        });
+      }
+      supabase = serviceClient;
+      isPrivateFeed = true;
+    }
 
     let query = supabase
       .from('gw_events')
@@ -59,24 +85,8 @@ const handler = async (req: Request): Promise<Response> => {
         break;
     }
 
-    // Handle feed type and authentication
-    if (feedType === 'private' && token) {
-      // Verify token for private feeds
-      const { data: profile } = await supabase
-        .from('gw_profiles')
-        .select('user_id')
-        .eq('calendar_feed_token', token)
-        .single();
-      
-      if (!profile) {
-        return new Response('Invalid feed token', {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
-        });
-      }
-      // Private feeds show all events
-    } else {
-      // Public feeds only show public events
+    // Public feeds only show public events; validated private feeds see all
+    if (!isPrivateFeed) {
       query = query.eq('is_public', true);
     }
 
@@ -143,7 +153,7 @@ function generateICalendarFeed(events: CalendarEvent[], feedType: string, eventT
     const dtStart = formatDateForICal(startDate);
     const dtEnd = formatDateForICal(endDate);
     const dtStamp = timestamp;
-    const uid = `${event.id}@spelman-glee.app`;
+    const uid = `${event.id}@gleeworld.org`;
 
     // Build location string
     let locationStr = '';

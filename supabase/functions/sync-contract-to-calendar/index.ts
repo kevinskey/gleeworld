@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { getOrgName } from "../_shared/branding.ts";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -100,6 +101,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Writes to the touring calendar with service role — admin or internal only.
+    const caller = await authenticateCaller(req);
+    if (!caller) return unauthorizedResponse(corsHeaders);
+    if (!caller.internal && !caller.isAdmin) return unauthorizedResponse(corsHeaders, 403);
+
     const { contractId }: SyncContractRequest = await req.json();
 
     console.log("Syncing contract to calendar:", contractId);

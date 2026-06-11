@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -23,6 +24,9 @@ serve(async (req) => {
   }
 
   try {
+    const caller = await authenticateCaller(req);
+    if (!caller) return unauthorizedResponse(corsHeaders);
+
     // Check if OpenAI API key is available
     if (!openAIApiKey) {
       console.error('OpenAI API key not found in environment variables');

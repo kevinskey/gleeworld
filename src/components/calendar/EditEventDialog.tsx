@@ -93,7 +93,9 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
     if (!startDate) return '';
     const start = new Date(startDate + ':00');
     const deadline = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
-    return deadline.toISOString().slice(0, 16);
+    // Format in local time for the datetime-local input (toISOString would shift to UTC)
+    const local = new Date(deadline.getTime() - deadline.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
   };
 
   const eventTypes = EVENT_TYPES;
@@ -290,7 +292,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
           is_recurring: formData.is_recurring,
           recurrence_type: formData.is_recurring ? formData.recurrence_type : null,
           recurrence_interval: formData.is_recurring ? formData.recurrence_interval : null,
-          recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date).toISOString() : null,
+          recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date + 'T23:59:59').toISOString() : null,
           max_occurrences: formData.is_recurring ? formData.max_occurrences : null,
           recurrence_days_of_week: formData.is_recurring && formData.recurrence_type === 'weekly' ? formData.recurrence_days_of_week : null,
         } : {}),

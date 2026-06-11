@@ -39,6 +39,8 @@ export const usePublicGleeWorldEvents = () => {
       console.log('usePublicGleeWorldEvents: Starting fetch...');
       setLoading(true);
       
+      const windowStart = new Date();
+      windowStart.setMonth(windowStart.getMonth() - 18);
       const { data, error } = await supabase
         .from('gw_events')
         .select(`
@@ -50,6 +52,7 @@ export const usePublicGleeWorldEvents = () => {
           )
         `)
         .eq('is_public', true)
+        .gte('start_date', windowStart.toISOString())
         .order('start_date', { ascending: true });
 
       console.log('usePublicGleeWorldEvents: Query result', { 
