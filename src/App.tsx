@@ -1413,7 +1413,9 @@ const App = () => {
                         path="/librarian-dashboard" 
                         element={
                           <ProtectedRoute>
-                            <LibrarianDashboardPage />
+                            <UniversalLayout>
+                              <LibrarianDashboardPage />
+                            </UniversalLayout>
                           </ProtectedRoute>
                         } 
                       />
