@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useNavigate } from "react-router-dom";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
-import { 
 import { useHomePath } from '@/hooks/useHomePath';
+import {
   BookOpen,
   Home,
   Play,
