@@ -1,6 +1,8 @@
 import { Routes, Route, Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import { LEVELS, getLevel } from "./lib/curriculum";
 import { type Clef } from "./components/Staff";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+import { CurriculumHome, CurriculumLevelPage, CurriculumLessonPage } from "./curriculum/CurriculumPages";
 import "./read-music.css";
 
 import ElementaryDrill from "./drills/ElementaryDrill";
@@ -28,6 +30,7 @@ const CLEFS_BY_LEVEL: Record<string, Clef[]> = {
 const BASE = "/read-music";
 
 function Home() {
+  const { enabled: theoryV2 } = useFeatureFlag("THEORY_V2");
   return (
     <div className="flex flex-col flex-1">
       <section className="bg-brand-gradient">
@@ -44,6 +47,16 @@ function Home() {
       </section>
 
       <section className="mx-auto w-full max-w-5xl px-6 py-12">
+        {theoryV2 && (
+          <Link
+            to={`${BASE}/curriculum`}
+            className="mb-8 block rounded-lg border border-border bg-card p-5 text-center transition-all hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--brand-blue-dark))]">New</div>
+            <div className="mt-1 text-xl font-bold text-foreground">Full Music Theory Curriculum</div>
+            <div className="mt-1 text-sm text-muted-foreground">Guided lessons from elementary through college — units, lessons, and progress tracking.</div>
+          </Link>
+        )}
         <div className="mb-8 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Choose your level</h2>
           <p className="mt-1 text-muted-foreground text-sm">Each tier scales the clefs and exercises to age.</p>
@@ -172,10 +185,20 @@ function ExercisePage() {
 }
 
 export default function ReadMusic() {
+  const { enabled: theoryV2, isLoading: flagLoading } = useFeatureFlag("THEORY_V2");
   return (
     <div className="read-music-root flex flex-col min-h-[calc(100vh-4rem)]">
       <Routes>
         <Route index element={<Home />} />
+        {theoryV2 && (
+          <>
+            <Route path="curriculum" element={<CurriculumHome />} />
+            <Route path="curriculum/:levelSlug" element={<CurriculumLevelPage />} />
+            <Route path="curriculum/lesson/:lessonId" element={<CurriculumLessonPage />} />
+          </>
+        )}
+        {/* While the flag loads, don't let :level swallow /curriculum URLs */}
+        {!theoryV2 && flagLoading && <Route path="curriculum/*" element={null} />}
         <Route path=":level" element={<LevelPage />} />
         <Route path=":level/:exercise" element={<ExercisePage />} />
       </Routes>
