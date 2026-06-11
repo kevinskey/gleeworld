@@ -192,7 +192,7 @@ export const useDirectMessages = () => {
     }
   };
 
-  const sendMessage = async (conversationId: string, content: string, file?: File) => {
+  const sendMessage = async (conversationId: string, content: string, file?: File, sendSMS = true) => {
     const trimmedContent = content.trim();
     if (!user || (!trimmedContent && !file)) return;
 
@@ -237,7 +237,7 @@ export const useDirectMessages = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (senderProfile?.phone_number) {
+      if (sendSMS && senderProfile?.phone_number) {
         try {
           await supabase.functions.invoke('gw-send-sms', {
             body: {
@@ -273,7 +273,7 @@ export const useDirectMessages = () => {
             .eq('user_id', conversation.other_user_id)
             .single();
 
-          if (recipientProfile?.phone_number) {
+          if (sendSMS && recipientProfile?.phone_number) {
             await supabase.functions.invoke('gw-send-sms', {
               body: {
                 to: recipientProfile.phone_number,

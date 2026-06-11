@@ -39,7 +39,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     const trimmedMessage = message.trim();
     if ((!trimmedMessage && !selectedFile) || disabled) return;
 
-    onSendMessage(trimmedMessage, selectedFile || undefined, groupId ? sendSMS : undefined);
+    onSendMessage(trimmedMessage, selectedFile || undefined, sendSMS);
     setMessage('');
     clearSelectedFile();
   };
@@ -109,11 +109,12 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         </div>
       )}
 
-      {groupId && (
-        <div className="flex items-center justify-between rounded-lg bg-muted/50 px-2 py-1.5">
+      <div className="flex items-center justify-between rounded-lg bg-muted/50 px-2 py-1.5">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Also send as SMS to group members</span>
+            <span className="text-xs text-muted-foreground">
+              {groupId ? 'Also send as SMS to group members' : 'Also send as SMS'}
+            </span>
           </div>
           <TooltipProvider>
             <Tooltip>
@@ -126,12 +127,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Toggle to send this message via SMS to all group members with SMS enabled</p>
+                <p>{groupId ? 'Toggle to send this message via SMS to all group members with SMS enabled' : 'Toggle to also text this message to the recipient'}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </div>
-      )}
+      </div>
 
       <div className="flex items-end gap-1.5">
         {groupId && <PollCreator groupId={groupId} onPollCreated={onPollCreated} />}

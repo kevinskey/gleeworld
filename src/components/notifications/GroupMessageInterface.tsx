@@ -158,10 +158,10 @@ export const GroupMessageInterface: React.FC = () => {
           description: sendSMS ? 'Your message has been delivered via in-app and SMS.' : 'Your message has been delivered.',
         });
       } else {
-        await sendDirectMessage(selectedConversationId, message, file);
+        await sendDirectMessage(selectedConversationId, message, file, sendSMS ?? true);
         toast({
           title: 'Message Sent',
-          description: 'Your direct message has been sent.',
+          description: sendSMS ? 'Your direct message has been sent via in-app and SMS.' : 'Your direct message has been sent.',
         });
       }
     } catch (error: any) {

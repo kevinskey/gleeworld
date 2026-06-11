@@ -23,14 +23,14 @@ const GROUPS: Array<{ value: Group; label: string }> = [
 const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file
 const MAX_ATTACHMENTS = 5;
 
-export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
+export function EmailBlastComposer({ onClose, defaultChannel = 'email' }: { onClose: () => void; defaultChannel?: 'email' | 'sms' }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [group, setGroup] = useState<Group>('students');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const [sendEmail, setSendEmail] = useState(true);
-  const [sendSms, setSendSms] = useState(false);
+  const [sendEmail, setSendEmail] = useState(defaultChannel === 'email');
+  const [sendSms, setSendSms] = useState(defaultChannel === 'sms');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import {
   Send, Users, Plus, MessageSquare, X, Loader2, Image as ImageIcon,
-  Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Newspaper, Video,
+  Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Newspaper, Video, Smartphone,
 } from 'lucide-react';
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -76,6 +76,7 @@ export default function Messenger() {
   const [showPollComposer, setShowPollComposer] = useState(false);
   const [showRsvpComposer, setShowRsvpComposer] = useState(false);
   const [showEmailBlast, setShowEmailBlast] = useState(false);
+  const [showSmsBlast, setShowSmsBlast] = useState(false);
   const [showNewsletters, setShowNewsletters] = useState(false);
   const [activeMeetingRoom, setActiveMeetingRoom] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -338,6 +339,9 @@ export default function Messenger() {
             <Button variant="ghost" size="sm" onClick={() => setShowEmailBlast(true)} title="Quick email blast">
               <Mail className="w-4 h-4" />
             </Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowSmsBlast(true)} title="Quick SMS blast">
+              <Smartphone className="w-4 h-4" />
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowBroadcast(true)} title="Emergency broadcast to all groups">
               <Megaphone className="w-4 h-4" />
             </Button>
@@ -578,6 +582,9 @@ export default function Messenger() {
       )}
       {showEmailBlast && (
         <EmailBlastComposer onClose={() => setShowEmailBlast(false)} />
+      )}
+      {showSmsBlast && (
+        <EmailBlastComposer defaultChannel="sms" onClose={() => setShowSmsBlast(false)} />
       )}
       {showNewsletters && (
         <NewsletterList onClose={() => setShowNewsletters(false)} />
