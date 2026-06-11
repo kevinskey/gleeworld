@@ -56,22 +56,6 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
   const [debugInfo, setDebugInfo] = useState<string>('Component loaded');
 
-  // Debug logging
-  console.log('QRAttendanceDisplay mounted with:', { 
-    user: user?.id, 
-    eventId, 
-    eventTitle,
-    userRole: user?.role 
-  });
-
-  // Show debug info immediately
-  useEffect(() => {
-    toast({
-      title: "Debug Info",
-      description: `User: ${user?.id || 'No user'}, Event: ${eventId || 'No event'}`,
-    });
-  }, []);
-
   useEffect(() => {
     console.log('Loading existing QR code on mount...');
     setDebugInfo('Loading existing QR code...');

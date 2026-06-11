@@ -73,10 +73,12 @@ export default function QRAnalytics() {
 
   const fetchAnalytics = async () => {
     try {
-      // Fetch overall stats
+      // Fetch stats for the last 90 days
+      const windowStart = subDays(new Date(), 90).toISOString();
       const { data: scanLogs } = await supabase
         .from('qr_scan_logs')
-        .select('*');
+        .select('*')
+        .gte('scanned_at', windowStart);
 
       if (scanLogs) {
         const totalScans = scanLogs.length;
@@ -133,7 +135,8 @@ export default function QRAnalytics() {
       const { data: eventScans } = await supabase
         .from('qr_scan_logs')
         .select('event_id')
-        .not('event_id', 'is', null);
+        .not('event_id', 'is', null)
+        .gte('scanned_at', windowStart);
 
       if (eventScans && eventScans.length > 0) {
         const eventIds = [...new Set(eventScans.map(scan => scan.event_id))];
