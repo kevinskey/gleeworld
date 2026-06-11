@@ -70,6 +70,7 @@ export const Tuner: React.FC<{ className?: string }>
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
 
   const start = async () => {
@@ -95,6 +96,7 @@ export const Tuner: React.FC<{ className?: string }>
       audioCtxRef.current = audioCtx;
       analyserRef.current = analyser;
       micSourceRef.current = source;
+      streamRef.current = stream;
       setIsListening(true);
       setError(null);
 
@@ -120,6 +122,9 @@ export const Tuner: React.FC<{ className?: string }>
 
   const stop = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    micSourceRef.current?.disconnect();
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
     // Don't close the shared audio context
     audioCtxRef.current = null;
     analyserRef.current = null;
