@@ -295,9 +295,7 @@ export const UniversalHeader = ({
                 </EnhancedTooltip>}
 
             {/* Musical Toolkit - positioned left of Academy */}
-            <div className="hidden sm:block">
-              <MusicalToolkit />
-            </div>
+            <MusicalToolkit />
 
             {/* Institute Dropdown with Courses */}
             {user && <div className="hidden sm:block">
