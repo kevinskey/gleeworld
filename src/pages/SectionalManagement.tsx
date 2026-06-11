@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useNavigate } from "react-router-dom";
 import { useSectionalPlans } from "@/hooks/useSectionalPlans";
-import { 
 import { useHomePath } from '@/hooks/useHomePath';
+import {
   UserCheck,
   Home,
   Eye,
