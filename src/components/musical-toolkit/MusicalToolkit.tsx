@@ -20,7 +20,6 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   }>({ metronome: false, pitch: false, piano: false, tuner: false });
 
   const [pitchPipeSize, setPitchPipeSize] = useState({ width: 280, height: 280 });
-  const [pitchPipePosition, setPitchPipePosition] = useState({ x: 20, y: 80 });
 
   const [metronomeSize, setMetronomeSize] = useState({ width: 480, height: 620 });
   const [metronomePosition, setMetronomePosition] = useState({ x: 100, y: 100 });
@@ -61,16 +60,11 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     return cleanup;
   }, []);
 
-  // Center pitch pipe on open, size based on screen
+  // Size pitch pipe to fit the screen on open
   useEffect(() => {
     if (open.pitch) {
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-      const initialSize = Math.min(screenWidth - 40, screenHeight - 160, 420);
-      setPitchPipeSize({ width: initialSize, height: initialSize });
-      const centerX = (screenWidth - initialSize) / 2;
-      const centerY = (screenHeight - initialSize) / 2;
-      setPitchPipePosition({ x: Math.max(10, centerX), y: Math.max(60, centerY) });
+      const size = Math.min(window.innerWidth - 40, window.innerHeight - 160, 420);
+      setPitchPipeSize({ width: size, height: size });
     }
   }, [open.pitch]);
 
@@ -185,56 +179,26 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         </div>
       )}
 
-      {/* Pitch Pipe - Draggable and Resizable */}
+      {/* Pitch Pipe - fixed, centered, not movable or resizable */}
       {open.pitch && (
-        <div className="fixed inset-0 z-[9999] pointer-events-none">
-          <Rnd
-            size={{ width: pitchPipeSize.width, height: pitchPipeSize.height }}
-            position={{ x: pitchPipePosition.x, y: pitchPipePosition.y }}
-            onDragStop={(e, d) => setPitchPipePosition({ x: d.x, y: d.y })}
-            onResizeStop={(e, direction, ref, delta, position) => {
-              const size = Math.min(ref.offsetWidth, ref.offsetHeight);
-              setPitchPipeSize({ width: size, height: size });
-              setPitchPipePosition(position);
-            }}
-            lockAspectRatio={true}
-            minWidth={150}
-            minHeight={150}
-            maxWidth={Math.min(500, window.innerWidth - 20)}
-            maxHeight={Math.min(500, window.innerHeight - 100)}
-            bounds="window"
-            dragHandleClassName="pitch-pipe-drag-handle"
-            className="pointer-events-auto"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+          <div
+            className="relative pointer-events-auto flex items-center justify-center"
+            style={{ width: pitchPipeSize.width, height: pitchPipeSize.height }}
           >
-            <div className="relative w-full h-full flex items-center justify-center">
-              {/* Close button */}
-              <button
-                onClick={() => setOpen((o) => ({ ...o, pitch: false }))}
-                className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center shadow-lg transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              
-              {/* Drag handle */}
-              <div className="pitch-pipe-drag-handle absolute -top-2 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-gray-800 hover:bg-gray-700 text-white cursor-move flex items-center gap-1 shadow-lg">
-                <GripHorizontal className="h-3 w-3" />
-                <span className="text-[10px]">Drag</span>
-              </div>
+            {/* Close button */}
+            <button
+              onClick={() => setOpen((o) => ({ ...o, pitch: false }))}
+              className="absolute top-0 right-0 z-10 w-8 h-8 rounded-full bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center shadow-lg transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-              {/* Resize indicator */}
-              <div className="absolute -bottom-2 -right-2 z-10 w-6 h-6 rounded-full bg-gray-800 text-white flex items-center justify-center shadow-lg cursor-se-resize">
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 21L12 21M21 21L21 12M21 21L9 9" />
-                </svg>
-              </div>
-              
-              {/* PitchPipe renders at a fixed 384px (w-96); scale it to the Rnd box */}
-              <div style={{ transform: `scale(${pitchPipeSize.width / 384})`, transformOrigin: 'center' }}>
-                <PitchPipe />
-              </div>
+            {/* PitchPipe renders at a fixed 384px (w-96); scale it to fit */}
+            <div style={{ transform: `scale(${pitchPipeSize.width / 384})`, transformOrigin: 'center' }}>
+              <PitchPipe />
             </div>
-          </Rnd>
+          </div>
         </div>
       )}
 
