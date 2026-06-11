@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
+import { getOrgName } from "../_shared/branding.ts";
 import { Resend } from "npm:resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -32,6 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+    const orgName = await getOrgName(supabaseClient);
 
     // Verify admin user
     const supabaseUserClient = createClient(
@@ -192,13 +194,13 @@ const handler = async (req: Request): Promise<Response> => {
             
             <p style="font-size: 16px; margin-top: 10px;">
               The GleeWorld Team<br>
-              <em>Spelman College Glee Club</em>
+              <em>${orgName}</em>
             </p>
           </div>
-          
+
           <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #666; font-size: 14px;">
             <p style="margin: 0;">
-              GleeWorld.org | Spelman College Glee Club<br>
+              GleeWorld.org | ${orgName}<br>
               "To Amaze and Inspire"
             </p>
           </div>
@@ -249,13 +251,13 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="font-size: 16px; margin-top: 30px;">
               Best regards,<br>
               The GleeWorld Team<br>
-              <em>Spelman College Glee Club</em>
+              <em>${orgName}</em>
             </p>
           </div>
-          
+
           <div style="border-top: 1px solid #eee; padding-top: 20px; text-align: center; color: #666; font-size: 14px;">
             <p style="margin: 0;">
-              GleeWorld.org | Spelman College Glee Club
+              GleeWorld.org | ${orgName}
             </p>
           </div>
         </body>

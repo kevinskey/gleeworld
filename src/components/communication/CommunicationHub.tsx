@@ -12,9 +12,11 @@ import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useHomePath } from '@/hooks/useHomePath';
 
 export const CommunicationHub = () => {
   const navigate = useNavigate();
+  const homePath = useHomePath();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedGroups, setSelectedGroups] = useState<RecipientGroup[]>([]);
@@ -88,7 +90,7 @@ export const CommunicationHub = () => {
       setScheduledFor(undefined);
       
       // Navigate back to dashboard
-      navigate('/dashboard');
+      navigate(homePath);
     } catch (error) {
       console.error('Failed to send communication:', error);
     }
@@ -101,7 +103,7 @@ export const CommunicationHub = () => {
 
     try {
       await saveDraft(title, content, selectedGroups, selectedChannels);
-      navigate('/dashboard');
+      navigate(homePath);
     } catch (error) {
       console.error('Failed to save draft:', error);
     }
@@ -117,7 +119,7 @@ export const CommunicationHub = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(homePath)}
                 className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />

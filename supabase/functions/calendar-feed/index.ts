@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,6 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
+    const orgName = await getOrgName();
 
     const url = new URL(req.url);
     const feedType = url.searchParams.get('type') || 'public'; // public, private, performance, rehearsal, meeting
@@ -94,14 +96,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Generate iCalendar content
-    const icalContent = generateICalendarFeed(events || [], feedType, eventType);
+    const icalContent = generateICalendarFeed(events || [], feedType, eventType, orgName);
 
     return new Response(icalContent, {
       status: 200,
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/calendar; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${getFeedFilename(feedType, eventType)}"`,
+        'Content-Disposition': `attachment; filename="${getFeedFilename(feedType, eventType, orgName)}"`,
       }
     });
 
@@ -114,17 +116,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-function generateICalendarFeed(events: CalendarEvent[], feedType: string, eventType?: string | null): string {
+function generateICalendarFeed(events: CalendarEvent[], feedType: string, eventType: string | null | undefined, orgName: string): string {
   const now = new Date();
   const timestamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
-  const calendarName = getCalendarName(feedType, eventType);
-  const calendarDescription = getCalendarDescription(feedType, eventType);
+  const calendarName = getCalendarName(feedType, eventType, orgName);
+  const calendarDescription = getCalendarDescription(feedType, eventType, orgName);
 
   let icalContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Spelman College Glee Club//Calendar Feed//EN',
+    `PRODID:-//${orgName}//Calendar Feed//EN`,
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${calendarName}`,
@@ -196,41 +198,42 @@ function escapeICalText(text: string): string {
     .replace(/\r/g, '');
 }
 
-function getCalendarName(feedType: string, eventType?: string | null): string {
+function getCalendarName(feedType: string, eventType: string | null | undefined, orgName: string): string {
   const baseNames: Record<string, string> = {
-    public: 'Spelman Glee Club - Public Events',
-    private: 'Spelman Glee Club - All Events',
-    performance: 'Spelman Glee Club - Performances',
-    rehearsal: 'Spelman Glee Club - Rehearsals',
-    meeting: 'Spelman Glee Club - Meetings'
+    public: `${orgName} - Public Events`,
+    private: `${orgName} - All Events`,
+    performance: `${orgName} - Performances`,
+    rehearsal: `${orgName} - Rehearsals`,
+    meeting: `${orgName} - Meetings`
   };
 
   if (eventType && baseNames[eventType]) {
     return baseNames[eventType];
   }
 
-  return baseNames[feedType] || 'Spelman Glee Club Events';
+  return baseNames[feedType] || `${orgName} Events`;
 }
 
-function getCalendarDescription(feedType: string, eventType?: string | null): string {
+function getCalendarDescription(feedType: string, eventType: string | null | undefined, orgName: string): string {
   const descriptions: Record<string, string> = {
-    public: 'Live calendar feed for public Spelman College Glee Club events',
-    private: 'Live calendar feed for all Spelman College Glee Club events (requires authentication)',
-    performance: 'Live calendar feed for Spelman College Glee Club performances only',
-    rehearsal: 'Live calendar feed for Spelman College Glee Club rehearsals only',
-    meeting: 'Live calendar feed for Spelman College Glee Club meetings only'
+    public: `Live calendar feed for public ${orgName} events`,
+    private: `Live calendar feed for all ${orgName} events (requires authentication)`,
+    performance: `Live calendar feed for ${orgName} performances only`,
+    rehearsal: `Live calendar feed for ${orgName} rehearsals only`,
+    meeting: `Live calendar feed for ${orgName} meetings only`
   };
 
   if (eventType && descriptions[eventType]) {
     return descriptions[eventType];
   }
 
-  return descriptions[feedType] || 'Live calendar feed for Spelman College Glee Club events';
+  return descriptions[feedType] || `Live calendar feed for ${orgName} events`;
 }
 
-function getFeedFilename(feedType: string, eventType?: string | null): string {
+function getFeedFilename(feedType: string, eventType: string | null | undefined, orgName: string): string {
   const name = eventType || feedType;
-  return `spelman-glee-${name}-calendar.ics`;
+  const orgSlug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `${orgSlug}-${name}-calendar.ics`;
 }
 
 serve(handler);

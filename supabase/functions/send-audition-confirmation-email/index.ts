@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,6 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const resend = new Resend(resendApiKey);
+    const orgName = await getOrgName();
     const { applicationId, applicantName, applicantEmail, auditionDate, auditionTime, auditionLocation }: AuditionConfirmationRequest = await req.json();
 
     console.log('🎭 Sending audition confirmation email to:', applicantEmail);
@@ -45,9 +47,9 @@ const handler = async (req: Request): Promise<Response> => {
     const dashboardUrl = `${Deno.env.get('SITE_URL') || 'https://gleeworld.org'}/auditioner-dashboard`;
 
     const emailResponse = await resend.emails.send({
-      from: 'Spelman Glee Club <auditions@gleeworld.org>',
+      from: `${orgName} <auditions@gleeworld.org>`,
       to: [applicantEmail],
-      subject: 'Audition Confirmation - Spelman College Glee Club',
+      subject: `Audition Confirmation - ${orgName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -79,13 +81,13 @@ const handler = async (req: Request): Promise<Response> => {
                 <span>♪</span>
               </div>
               <h1>Audition Confirmed!</h1>
-              <p class="subtitle">Spelman College Glee Club</p>
+              <p class="subtitle">${orgName}</p>
             </div>
             
             <div class="content">
               <p>Dear ${applicantName},</p>
               
-              <p>🎵 Thank you for applying to audition for the prestigious Spelman College Glee Club! We're thrilled to confirm your audition details.</p>
+              <p>🎵 Thank you for applying to audition for the prestigious ${orgName}! We're thrilled to confirm your audition details.</p>
               
               <div class="highlight-box">
                 <h2 style="margin: 0 0 15px; font-size: 24px;">Your Audition Details</h2>
@@ -121,13 +123,13 @@ const handler = async (req: Request): Promise<Response> => {
               <p><strong>Break a leg! 🌟</strong></p>
               
               <p>Best regards,<br>
-              <strong>The Spelman College Glee Club</strong><br>
+              <strong>${orgName}</strong><br>
               <em>"To Amaze and Inspire"</em></p>
             </div>
             
             <div class="footer">
               <p>Questions? Contact us at <a href="mailto:auditions@gleeworld.org">auditions@gleeworld.org</a></p>
-              <p>© 2025 Spelman College Glee Club. All rights reserved.</p>
+              <p>© 2025 ${orgName}. All rights reserved.</p>
             </div>
           </div>
         </body>

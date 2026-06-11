@@ -11,12 +11,14 @@ import { useAccountingData } from "@/hooks/useAccountingData";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useHomePath } from '@/hooks/useHomePath';
 
 const Accounting = () => {
   const { accountingData, loading, totalStipends, contractCount } = useAccountingData();
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
   const navigate = useNavigate();
+  const homePath = useHomePath();
 
   const {
     filteredAndSortedData,
@@ -61,7 +63,7 @@ const Accounting = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(homePath)}
                 className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100"
               >
                 <ArrowLeft className="h-4 w-4" />

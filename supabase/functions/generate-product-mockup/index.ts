@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,39 +21,41 @@ serve(async (req) => {
     
     console.log(`Generating mockup for ${productName} (${productType})`);
 
+    const orgName = await getOrgName();
+
     // Product-specific mockup prompts with realistic logo placement
     const mockupPrompts = {
-      't-shirt': `Professional product mockup of a ${productName.toLowerCase()} on a clean white background. The Spelman College Glee Club logo should be centered on the chest area, approximately 4-5 inches wide, printed in a complementary color. The shirt should be laid flat or on a model, commercial photography style, high quality, realistic proportions. The logo should look professionally screen printed, not oversized.`,
+      't-shirt': `Professional product mockup of a ${productName.toLowerCase()} on a clean white background. The ${orgName} logo should be centered on the chest area, approximately 4-5 inches wide, printed in a complementary color. The shirt should be laid flat or on a model, commercial photography style, high quality, realistic proportions. The logo should look professionally screen printed, not oversized.`,
       
-      'hoodie': `Professional product mockup of a ${productName.toLowerCase()} on a clean white background. The Spelman College Glee Club logo should be placed on the left chest area, approximately 3-4 inches wide, embroidered style. The hoodie should look premium quality, commercial photography style, realistic proportions. Show the hoodie in a natural position.`,
+      'hoodie': `Professional product mockup of a ${productName.toLowerCase()} on a clean white background. The ${orgName} logo should be placed on the left chest area, approximately 3-4 inches wide, embroidered style. The hoodie should look premium quality, commercial photography style, realistic proportions. Show the hoodie in a natural position.`,
       
-      'sweatshirt': `Professional product mockup of a ${productName.toLowerCase()} on a clean white background. The Spelman College Glee Club logo should be centered on the chest, approximately 4-5 inches wide, printed style. Commercial photography, premium quality appearance, realistic proportions.`,
+      'sweatshirt': `Professional product mockup of a ${productName.toLowerCase()} on a clean white background. The ${orgName} logo should be centered on the chest, approximately 4-5 inches wide, printed style. Commercial photography, premium quality appearance, realistic proportions.`,
       
-      'polo': `Professional product mockup of a ${productName.toLowerCase()} polo shirt on a clean white background. The Spelman College Glee Club logo should be small and placed on the left chest area, approximately 2-3 inches wide, embroidered style. Premium quality, commercial photography, professional appearance.`,
+      'polo': `Professional product mockup of a ${productName.toLowerCase()} polo shirt on a clean white background. The ${orgName} logo should be small and placed on the left chest area, approximately 2-3 inches wide, embroidered style. Premium quality, commercial photography, professional appearance.`,
       
-      'jacket': `Professional product mockup of a ${productName.toLowerCase()} on a clean white background. The Spelman College Glee Club logo should be placed on the left chest or back, appropriately sized for the jacket style. Premium quality, commercial photography, realistic proportions.`,
+      'jacket': `Professional product mockup of a ${productName.toLowerCase()} on a clean white background. The ${orgName} logo should be placed on the left chest or back, appropriately sized for the jacket style. Premium quality, commercial photography, realistic proportions.`,
       
-      'hat': `Professional product mockup of a ${productName.toLowerCase()} cap/hat on a clean white background. The Spelman College Glee Club logo should be embroidered on the front panel, properly sized for the cap dimensions. Premium quality, commercial photography, realistic proportions, front-facing view.`,
+      'hat': `Professional product mockup of a ${productName.toLowerCase()} cap/hat on a clean white background. The ${orgName} logo should be embroidered on the front panel, properly sized for the cap dimensions. Premium quality, commercial photography, realistic proportions, front-facing view.`,
       
-      'beanie': `Professional product mockup of a ${productName.toLowerCase()} beanie on a clean white background. The Spelman College Glee Club logo should be embroidered or as a woven patch, appropriately sized. Premium quality, commercial photography, realistic proportions.`,
+      'beanie': `Professional product mockup of a ${productName.toLowerCase()} beanie on a clean white background. The ${orgName} logo should be embroidered or as a woven patch, appropriately sized. Premium quality, commercial photography, realistic proportions.`,
       
-      'mug': `Professional product mockup of a ${productName.toLowerCase()} coffee mug on a clean white background. The Spelman College Glee Club logo should be printed on the front center of the mug, properly proportioned for the mug surface. Commercial photography, premium quality ceramic, realistic proportions.`,
+      'mug': `Professional product mockup of a ${productName.toLowerCase()} coffee mug on a clean white background. The ${orgName} logo should be printed on the front center of the mug, properly proportioned for the mug surface. Commercial photography, premium quality ceramic, realistic proportions.`,
       
-      'water-bottle': `Professional product mockup of a ${productName.toLowerCase()} water bottle on a clean white background. The Spelman College Glee Club logo should be printed on the main body, respecting the bottle's curvature. Premium quality, commercial photography, realistic proportions.`,
+      'water-bottle': `Professional product mockup of a ${productName.toLowerCase()} water bottle on a clean white background. The ${orgName} logo should be printed on the main body, respecting the bottle's curvature. Premium quality, commercial photography, realistic proportions.`,
       
-      'tumbler': `Professional product mockup of a ${productName.toLowerCase()} tumbler on a clean white background. The Spelman College Glee Club logo should be centered on the cylindrical surface, properly sized. Premium quality, commercial photography, realistic proportions.`,
+      'tumbler': `Professional product mockup of a ${productName.toLowerCase()} tumbler on a clean white background. The ${orgName} logo should be centered on the cylindrical surface, properly sized. Premium quality, commercial photography, realistic proportions.`,
       
-      'tote-bag': `Professional product mockup of a ${productName.toLowerCase()} tote bag on a clean white background. The Spelman College Glee Club logo should be centered on the front of the bag, appropriately sized for bag dimensions. Commercial photography, premium quality canvas/fabric, realistic proportions.`,
+      'tote-bag': `Professional product mockup of a ${productName.toLowerCase()} tote bag on a clean white background. The ${orgName} logo should be centered on the front of the bag, appropriately sized for bag dimensions. Commercial photography, premium quality canvas/fabric, realistic proportions.`,
       
-      'lanyard': `Professional product mockup of a ${productName.toLowerCase()} lanyard on a clean white background. The Spelman College Glee Club logo should be printed or woven into the lanyard design, appropriately sized. Commercial photography, premium quality, realistic proportions.`,
+      'lanyard': `Professional product mockup of a ${productName.toLowerCase()} lanyard on a clean white background. The ${orgName} logo should be printed or woven into the lanyard design, appropriately sized. Commercial photography, premium quality, realistic proportions.`,
       
-      'pin': `Professional product mockup of a ${productName.toLowerCase()} enamel pin on a clean white background. The design should be a miniaturized version of the Spelman College Glee Club logo, suitable for pin format. Commercial photography, premium quality enamel, realistic proportions.`,
+      'pin': `Professional product mockup of a ${productName.toLowerCase()} enamel pin on a clean white background. The design should be a miniaturized version of the ${orgName} logo, suitable for pin format. Commercial photography, premium quality enamel, realistic proportions.`,
       
-      'sheet-music': `Professional product mockup of ${productName.toLowerCase()} sheet music cover design. The Spelman College Glee Club logo should be integrated into the cover layout professionally. Clean, academic design with musical notation background elements, premium quality appearance.`,
+      'sheet-music': `Professional product mockup of ${productName.toLowerCase()} sheet music cover design. The ${orgName} logo should be integrated into the cover layout professionally. Clean, academic design with musical notation background elements, premium quality appearance.`,
       
-      'course': `Professional product mockup of a ${productName.toLowerCase()} course thumbnail/cover. The Spelman College Glee Club logo should be integrated into the design layout. Educational, premium quality appearance, professional academic styling.`,
+      'course': `Professional product mockup of a ${productName.toLowerCase()} course thumbnail/cover. The ${orgName} logo should be integrated into the design layout. Educational, premium quality appearance, professional academic styling.`,
       
-      'recording': `Professional product mockup of a ${productName.toLowerCase()} album/recording cover. The Spelman College Glee Club logo should be part of the artistic design. Premium quality, professional music industry styling, elegant layout.`
+      'recording': `Professional product mockup of a ${productName.toLowerCase()} album/recording cover. The ${orgName} logo should be part of the artistic design. Premium quality, professional music industry styling, elegant layout.`
     };
 
     // Determine the appropriate prompt based on product type

@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
+import { getOrgName } from "../_shared/branding.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -28,6 +29,8 @@ const handler = async (req: Request): Promise<Response> => {
     const { name, email, subject, message, userRole }: GeneralInquiryRequest = await req.json();
 
     console.log("Processing general inquiry from:", email);
+
+    const orgName = await getOrgName();
 
     // Send email to Chief of Staff
     const emailResponse = await resend.emails.send({
@@ -78,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
           <hr style="margin: 20px 0;">
           
           <p style="color: #666;">
-            <strong>Spelman College Glee Club</strong><br>
+            <strong>${orgName}</strong><br>
             "To Amaze and Inspire"<br>
             <a href="https://gleeworld.org">Visit GleeWorld.org</a>
           </p>

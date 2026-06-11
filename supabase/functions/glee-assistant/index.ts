@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1392,10 +1393,12 @@ async function executeTool(toolName: string, args: any, userId: string) {
         custom: "Report from GleeWorld",
       }[reportType] || "Report";
 
+      const orgName = await getOrgName();
+
       const htmlContent = `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: #d4af37; margin: 0; font-size: 24px;">Spelman College Glee Club</h1>
+            <h1 style="color: #d4af37; margin: 0; font-size: 24px;">${orgName}</h1>
             <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0; font-style: italic;">"To Amaze and Inspire"</p>
           </div>
           <div style="background: #fff; padding: 30px; border: 1px solid #e0e0e0;">
@@ -2195,10 +2198,12 @@ Format as JSON array:
           `;
         }
 
+        const orgName = await getOrgName();
+
         const htmlContent = `
           <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="color: #d4af37; margin: 0; font-size: 24px;">Spelman College Glee Club</h1>
+              <h1 style="color: #d4af37; margin: 0; font-size: 24px;">${orgName}</h1>
               <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0; font-style: italic;">${course.course_code} - ${course.title}</p>
             </div>
             <div style="background: #fff; padding: 30px; border: 1px solid #e0e0e0;">
@@ -3966,10 +3971,11 @@ Format as JSON array:
       let imageUrl: string | null = null;
       if (args.generate_image) {
         try {
-          const imagePrompt = args.image_prompt || 
-            `Create a professional event poster image for a ${args.event_type || 'music'} event titled "${args.title}". 
+          const orgName = await getOrgName();
+          const imagePrompt = args.image_prompt ||
+            `Create a professional event poster image for a ${args.event_type || 'music'} event titled "${args.title}".
              ${args.description ? `Event description: ${args.description}. ` : ''}
-             Style: Elegant, modern design suitable for the Spelman College Glee Club. 
+             Style: Elegant, modern design suitable for ${orgName}.
              Color palette: Deep navy blue, gold accents, warm cream tones.
              Include subtle musical elements like notes or choir silhouettes.
              The image should be visually striking and suitable for social media.`;
@@ -4112,7 +4118,9 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are Glee Assistant, a powerful AI assistant for GleeWorld - the official digital platform of the Spelman College Glee Club, celebrating over 100 years of musical excellence. The Glee Club's motto is "To Amaze and Inspire."
+    const orgName = await getOrgName();
+
+    const systemPrompt = `You are Glee Assistant, a powerful AI assistant for GleeWorld - the official digital platform of ${orgName}, celebrating over 100 years of musical excellence. The Glee Club's motto is "To Amaze and Inspire."
 
 ${GLEEWORLD_KNOWLEDGE}
 

@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +28,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+    const orgName = await getOrgName(supabase)
 
     const { messageId, messageType, recipientType, recipientIds, subject, content, senderId }: MessageRequest = await req.json()
 
@@ -123,7 +125,7 @@ Deno.serve(async (req) => {
                     
                     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px;">
                       <p>Sent via GleeWorld</p>
-                      <p>Spelman College Glee Club</p>
+                      <p>${orgName}</p>
                     </div>
                   </div>
                 `,

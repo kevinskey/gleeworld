@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,11 +19,12 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+    const orgName = await getOrgName(supabase);
 
     console.log('🎭 Manually sending audition confirmation to Mya Jones...');
 
     // Mya's confirmation message
-    const myaMessage = `Hi Mya! 🎵 Thank you for signing up for the Spelman College Glee Club audition! Your audition is confirmed for August 15, 2025 at 3:30 PM. We're excited to hear you sing! Please arrive 15 minutes early. Break a leg! 🌟 - Spelman Glee Club`;
+    const myaMessage = `Hi Mya! 🎵 Thank you for signing up for the ${orgName} audition! Your audition is confirmed for August 15, 2025 at 3:30 PM. We're excited to hear you sing! Please arrive 15 minutes early. Break a leg! 🌟 - ${orgName}`;
     
     // Admin notification message
     const adminMessage = `SMS COPY: Sent to Mya Jones (443) 688-3051: "${myaMessage}"`;

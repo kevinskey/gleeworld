@@ -28,6 +28,7 @@ import { BulkPDFCroppingTool } from '@/components/glee-library/BulkPDFCroppingTo
 import { SinglePDFCropTool } from './SinglePDFCropTool';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useHomePath } from '@/hooks/useHomePath';
 
 type ModuleKey = 'home' | 'library' | 'pdf-import' | 'ai-tools' | 'inventory' | 'csv';
 
@@ -51,6 +52,7 @@ export const LibrarianDashboard = () => {
   const [activeModule, setActiveModule] = useState<ModuleKey>('home');
   const [showScanner, setShowScanner] = useState(false);
   const navigate = useNavigate();
+  const homePath = useHomePath();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -124,7 +126,7 @@ export const LibrarianDashboard = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(homePath)}
               className="h-9 w-9 p-0 shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />

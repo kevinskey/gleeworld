@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 import { Resend } from "npm:resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -32,6 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const orgName = await getOrgName(supabase);
 
     // Fetch the newsletter
     const { data: newsletter, error: newsletterError } = await supabase
@@ -133,7 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
         </head>
         <body>
           <div class="header">
-            <h1>🎵 Spelman College Glee Club</h1>
+            <h1>🎵 ${orgName}</h1>
             <p>New Newsletter Available</p>
           </div>
           <div class="content">
@@ -158,11 +160,11 @@ const handler = async (req: Request): Promise<Response> => {
             ` : ''}
             
             <p>We hope you enjoy this month's edition!</p>
-            <p>With love,<br><strong>Spelman College Glee Club</strong></p>
+            <p>With love,<br><strong>${orgName}</strong></p>
           </div>
           <div class="footer">
-            <p>You received this email as a verified alumna of the Spelman College Glee Club.</p>
-            <p>© ${new Date().getFullYear()} Spelman College Glee Club. All rights reserved.</p>
+            <p>You received this email as a verified graduate of ${orgName}.</p>
+            <p>© ${new Date().getFullYear()} ${orgName}. All rights reserved.</p>
           </div>
         </body>
       </html>
@@ -180,7 +182,7 @@ const handler = async (req: Request): Promise<Response> => {
       const emailPromises = batch.map(async (alumna) => {
         try {
           const { error } = await resend.emails.send({
-            from: "Spelman Glee Club <newsletter@gleeworld.org>",
+            from: `${orgName} <newsletter@gleeworld.org>`,
             to: [alumna.email],
             subject: `📬 New Newsletter: ${newsletter.title} - ${monthName} ${newsletter.year}`,
             html: emailHtml,

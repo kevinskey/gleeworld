@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getOrgName } from "../_shared/branding.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -34,10 +35,12 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are a professional social media content creator for the Spelman College Glee Club. Create engaging, platform-optimized content that maintains the club's prestigious reputation while connecting with audiences.
+    const orgName = await getOrgName();
+
+    const systemPrompt = `You are a professional social media content creator for ${orgName}. Create engaging, platform-optimized content that maintains the organization's prestigious reputation while connecting with audiences.
 
 Guidelines:
-- Maintain the elegant, inspirational tone befitting Spelman College's legacy
+- Maintain the elegant, inspirational tone befitting ${orgName}'s legacy
 - Include relevant hashtags for each platform
 - Respect character limits (Twitter: 280 chars)
 - Use appropriate emojis sparingly and tastefully

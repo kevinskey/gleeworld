@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,6 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const orgName = await getOrgName(supabase);
 
     console.log(`Received SMS from: ${smsData.From}, Body: ${smsData.Body}`);
 
@@ -131,8 +133,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation SMS to the client
     const clientMessage = isApproval 
-      ? `Your wardrobe fitting appointment for ${new Date(appointment.appointment_date).toLocaleDateString()} at ${new Date(appointment.appointment_date).toLocaleTimeString()} has been APPROVED. Please arrive 5 minutes early. - Spelman Glee Club Wardrobe`
-      : `Your wardrobe fitting appointment for ${new Date(appointment.appointment_date).toLocaleDateString()} has been DENIED. Please contact the wardrobe team for more information. - Spelman Glee Club Wardrobe`;
+      ? `Your wardrobe fitting appointment for ${new Date(appointment.appointment_date).toLocaleDateString()} at ${new Date(appointment.appointment_date).toLocaleTimeString()} has been APPROVED. Please arrive 5 minutes early. - ${orgName} Wardrobe`
+      : `Your wardrobe fitting appointment for ${new Date(appointment.appointment_date).toLocaleDateString()} has been DENIED. Please contact the wardrobe team for more information. - ${orgName} Wardrobe`;
 
     // Look up client phone number
     const { data: clientProfile } = await supabase

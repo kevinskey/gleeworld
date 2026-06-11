@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { getOrgName } from "../_shared/branding.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -52,17 +53,19 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const orgName = await getOrgName();
+
     // Send emails (using BCC for privacy)
     const emailResponse = await resend.emails.send({
-      from: "Spelman Glee Club <noreply@gleeworld.org>",
+      from: `${orgName} <noreply@gleeworld.org>`,
       to: "noreply@gleeworld.org",
       bcc: recipients.map(r => r.email),
       subject: subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Alumnae Communication</p>
+            <h1 style="color: white; margin: 0;">${orgName}</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Graduate Communication</p>
           </div>
           <div style="padding: 30px; background: white;">
             <div style="white-space: pre-wrap; line-height: 1.6; color: #333;">
@@ -70,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
           </div>
           <div style="padding: 20px; background: #f5f5f5; text-align: center; color: #666; font-size: 12px;">
-            <p>This email was sent to you as a member of the Spelman College Glee Club Alumnae community.</p>
+            <p>This email was sent to you as a member of the ${orgName} graduate community.</p>
             <p style="margin: 10px 0 0 0;">
               <a href="https://gleeworld.org/alumnae" style="color: #667eea; text-decoration: none;">
                 Visit Alumnae Portal

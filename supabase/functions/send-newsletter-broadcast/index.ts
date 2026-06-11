@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -60,11 +61,13 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Unauthorized: Admin access required");
     }
 
-    const { 
+    const orgName = await getOrgName();
+
+    const {
       newsletter_id, 
       audience_id,
       from_email = "onboarding@resend.dev",
-      from_name = "Spelman College Glee Club"
+      from_name = orgName
     }: NewsletterBroadcastRequest = await req.json();
 
     console.log("Sending newsletter broadcast:", { newsletter_id, audience_id });
@@ -161,7 +164,7 @@ const handler = async (req: Request): Promise<Response> => {
               ${newsletter.content}
             </div>
             <div class="footer">
-              <p>Spelman College Glee Club Alumnae Newsletter</p>
+              <p>${orgName} Graduates Newsletter</p>
               <p>To Amaze and Inspire</p>
             </div>
           </div>

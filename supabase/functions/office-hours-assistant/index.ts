@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -386,8 +387,8 @@ async function executeTool(name: string, args: any, userId: string): Promise<str
 }
 
 // ── Main System Prompt ──
-function buildSystemPrompt(currentDate: string, appointments: any[]) {
-  return `You are Aria, Dr. Johnson's personal AI executive assistant for GleeWorld — the official digital platform of the Spelman College Glee Club. You know every aspect of this platform and can take real actions.
+function buildSystemPrompt(currentDate: string, appointments: any[], orgName: string) {
+  return `You are Aria, Dr. Johnson's personal AI executive assistant for GleeWorld — the official digital platform of ${orgName}. You know every aspect of this platform and can take real actions.
 
 CURRENT DATE/TIME: ${currentDate}
 
@@ -480,7 +481,8 @@ serve(async (req) => {
   }
 
   const { messages, appointments, currentDate, userId } = payload;
-  const systemPrompt = buildSystemPrompt(currentDate || new Date().toISOString(), appointments || []);
+  const orgName = await getOrgName(supabase);
+  const systemPrompt = buildSystemPrompt(currentDate || new Date().toISOString(), appointments || [], orgName);
   const activeUserId = userId || "00000000-0000-0000-0000-000000000000";
 
   try {

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +28,7 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const orgName = await getOrgName(supabase);
 
     // Download the signed PDF from storage
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -62,7 +64,7 @@ serve(async (req) => {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background-color: #003366; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Spelman College Glee Club</h1>
+              <h1 style="color: #ffffff; margin: 0; font-size: 22px;">${orgName}</h1>
               <p style="color: #87CEEB; margin: 5px 0 0 0; font-size: 14px;">Spring Tour 2026</p>
             </div>
             <div style="background-color: #ffffff; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
@@ -78,7 +80,7 @@ serve(async (req) => {
               <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
               <p style="color: #9ca3af; font-size: 12px; text-align: center;">
                 This is an automated email from GleeWorld.org<br/>
-                Spelman College Glee Club · "To Amaze and Inspire"
+                ${orgName} · "To Amaze and Inspire"
               </p>
             </div>
           </div>

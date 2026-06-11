@@ -216,7 +216,7 @@ export const UnifiedDashboard = () => {
     return <div className="min-h-screen">
         <div className={hideBackButton ? '' : 'px-1 py-1 sm:px-6 sm:py-4'}>
           {!hideBackButton &&
-        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="mb-2 sm:mb-4 hover:bg-primary/10">
+        <Button variant="ghost" size="sm" onClick={() => navigate(profile?.is_admin || profile?.is_super_admin || profile?.role === 'admin' || profile?.role === 'super-admin' ? '/control-center' : '/dashboard')} className="mb-2 sm:mb-4 hover:bg-primary/10">
               <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline bg-primary">Back to Dashboard</span>
               <span className="sm:hidden">Back</span>

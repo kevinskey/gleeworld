@@ -5,6 +5,7 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useNavigate } from "react-router-dom";
 import { useSectionalPlans } from "@/hooks/useSectionalPlans";
 import { 
+import { useHomePath } from '@/hooks/useHomePath';
   UserCheck,
   Home,
   Eye,
@@ -14,6 +15,7 @@ import {
 
 export const SectionalManagement = () => {
   const navigate = useNavigate();
+  const homePath = useHomePath();
   const { plans: sectionalPlans, loading, updatePlanStatus } = useSectionalPlans();
 
   const getStatusColor = (status: string) => {
@@ -32,7 +34,7 @@ export const SectionalManagement = () => {
           <div className="flex items-center gap-3 mb-4">
             <Button 
               variant="outline" 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(homePath)}
               className="flex items-center gap-2"
             >
               <Home className="h-4 w-4" />

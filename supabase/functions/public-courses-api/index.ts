@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,12 +7,12 @@ const corsHeaders = {
 };
 
 // Course data matching the academyCourses.ts configuration
-const ACADEMY_COURSES = [
+const buildAcademyCourses = (orgName: string) => [
   {
     id: 'a0000000-0000-0000-0000-000000000070',
     courseCode: 'MUS 070',
     title: 'Glee Club',
-    description: 'The premier choral ensemble of Spelman College with over 100 years of musical excellence.',
+    description: `The premier choral ensemble of ${orgName} with over 100 years of musical excellence.`,
     level: 'Audition Required',
     duration: 'Semester',
     highlights: ['Choral Performance', 'Vocal Training', 'Tours & Concerts', 'Community'],
@@ -143,7 +144,8 @@ serve(async (req) => {
     const level = url.searchParams.get('level');
     const courseCode = url.searchParams.get('courseCode');
 
-    let courses = [...ACADEMY_COURSES];
+    const orgName = await getOrgName();
+    let courses = buildAcademyCourses(orgName);
 
     // Apply filters
     if (activeOnly) {

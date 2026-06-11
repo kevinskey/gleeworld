@@ -31,6 +31,7 @@ import { TourRollCallSection } from './TourRollCallSection';
 import { TourWeatherSection } from './TourWeatherSection';
 import { BusDriverTipReceiptSection } from '@/components/tour/BusDriverTipReceiptSection';
 import { supabase } from '@/integrations/supabase/client';
+import { useHomePath } from '@/hooks/useHomePath';
 interface TourManagerDashboardProps {
   user?: {
     id: string;
@@ -216,6 +217,7 @@ export const TourManagerDashboard = ({
   user
 }: TourManagerDashboardProps) => {
   const navigate = useNavigate();
+  const homePath = useHomePath();
   const [activeSection, setActiveSection] = useState('overview');
   const [contractEventData, setContractEventData] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -359,7 +361,7 @@ export const TourManagerDashboard = ({
               variant="ghost"
               size="icon"
               className="lg:hidden h-8 w-8 text-primary-foreground"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(homePath)}
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>

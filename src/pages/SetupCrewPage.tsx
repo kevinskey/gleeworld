@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Plus, Users, Calendar, Settings, Trash2 } from 'lucide-react';
 import { SetupCrewDetails } from '@/components/setup-crew/SetupCrewDetails';
 import { useToast } from '@/hooks/use-toast';
+import { useHomePath } from '@/hooks/useHomePath';
 
 interface Event {
   id: string;
@@ -22,6 +23,7 @@ interface Event {
 
 export default function SetupCrewPage() {
   const navigate = useNavigate();
+  const homePath = useHomePath();
   const { crews, loading, fetchCrews, createCrew } = useSetupCrews();
   const { toast } = useToast();
   
@@ -107,7 +109,7 @@ export default function SetupCrewPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(homePath)}
                 className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />

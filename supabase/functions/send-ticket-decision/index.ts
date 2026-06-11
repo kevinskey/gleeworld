@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Twilio from "npm:twilio@4.19.0";
+import { getOrgName } from "../_shared/branding.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -39,6 +40,8 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const orgName = await getOrgName(supabase);
+
     // Map decision to valid database status (rejected -> cancelled)
     const dbStatus = decision === 'rejected' ? 'cancelled' : decision;
 
@@ -60,8 +63,8 @@ const handler = async (req: Request): Promise<Response> => {
     // Prepare email content based on decision
     const isApproved = decision === 'approved';
     const subjectLine = isApproved 
-      ? "🎉 Your Spelman Glee Club Concert Ticket Request is Approved!" 
-      : "Spelman Glee Club Concert Ticket Request Update";
+      ? `🎉 Your ${orgName} Concert Ticket Request is Approved!`
+      : `${orgName} Concert Ticket Request Update`;
 
     const emailHtml = isApproved ? `
       <!DOCTYPE html>
@@ -83,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Spelman College Glee Club</h1>
+            <h1>${orgName}</h1>
             <p>To Amaze and Inspire</p>
           </div>
           <div class="content">
@@ -101,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p>We look forward to seeing you at the concert! Please check your text messages for additional pickup instructions.</p>
           </div>
           <div class="footer">
-            <p>Spelman College Glee Club • Atlanta, GA</p>
+            <p>${orgName} • Atlanta, GA</p>
             <p>Questions? Reply to this email.</p>
           </div>
         </div>
@@ -125,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Spelman College Glee Club</h1>
+            <h1>${orgName}</h1>
             <p>To Amaze and Inspire</p>
           </div>
           <div class="content">
@@ -137,11 +140,11 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="margin: 10px 0 0;">${adminMessage}</p>
             </div>
             ` : ''}
-            <p>We truly appreciate your support of the Spelman College Glee Club and hope to see you at a future performance.</p>
-            <p>With gratitude,<br><strong>The Spelman College Glee Club</strong></p>
+            <p>We truly appreciate your support of ${orgName} and hope to see you at a future performance.</p>
+            <p>With gratitude,<br><strong>${orgName}</strong></p>
           </div>
           <div class="footer">
-            <p>Spelman College Glee Club • Atlanta, GA</p>
+            <p>${orgName} • Atlanta, GA</p>
             <p>Questions? Reply to this email.</p>
           </div>
         </div>
@@ -152,7 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email
     console.log(`Sending email to ${recipientEmail}`);
     const emailResponse = await resend.emails.send({
-      from: "Spelman Glee Club <onboarding@resend.dev>",
+      from: `${orgName} <onboarding@resend.dev>`,
       to: [recipientEmail],
       subject: subjectLine,
       html: emailHtml,
@@ -177,8 +180,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         const smsBody = isApproved 
-          ? `🎉 Hi ${recipientName}! Your Spelman Glee Club concert ticket request has been APPROVED for ${numTickets} ticket(s)!\n\n${adminMessage}\n\n- Spelman Glee Club`
-          : `Hi ${recipientName}, regarding your Spelman Glee Club concert ticket request:\n\n${adminMessage}\n\n- Spelman Glee Club`;
+          ? `🎉 Hi ${recipientName}! Your ${orgName} concert ticket request has been APPROVED for ${numTickets} ticket(s)!\n\n${adminMessage}\n\n- ${orgName}`
+          : `Hi ${recipientName}, regarding your ${orgName} concert ticket request:\n\n${adminMessage}\n\n- ${orgName}`;
 
         console.log(`Sending SMS to ${formattedPhone}`);
         await twilioClient.messages.create({

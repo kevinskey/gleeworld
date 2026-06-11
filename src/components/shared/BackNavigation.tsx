@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Home } from 'lucide-react';
+import { useHomePath } from '@/hooks/useHomePath';
 
 interface BackNavigationProps {
   fallbackPath?: string;
@@ -9,26 +10,26 @@ interface BackNavigationProps {
   className?: string;
 }
 
-export const BackNavigation = ({ 
-  fallbackPath = '/dashboard', 
+export const BackNavigation = ({
+  fallbackPath,
   showHomeButton = true,
-  className = '' 
+  className = ''
 }: BackNavigationProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const homePath = useHomePath();
 
   const handleBack = () => {
     // Check if there's history to go back to
     if (window.history.length > 1) {
       navigate(-1);
     } else {
-      // Fallback to dashboard if no history
-      navigate(fallbackPath);
+      navigate(fallbackPath ?? homePath);
     }
   };
 
   const handleHome = () => {
-    navigate('/dashboard');
+    navigate(homePath);
   };
 
   return (

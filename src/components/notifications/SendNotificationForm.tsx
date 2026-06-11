@@ -13,10 +13,12 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Bell, ArrowLeft, Send } from "lucide-react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { useHomePath } from '@/hooks/useHomePath';
 
 export const SendNotificationForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const homePath = useHomePath();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -146,7 +148,7 @@ export const SendNotificationForm = () => {
         <div className="mb-6">
           <Button
             variant="outline"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(homePath)}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

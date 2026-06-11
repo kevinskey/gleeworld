@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +33,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
+
+    const orgName = await getOrgName(supabaseAdmin);
 
     // Fetch order details
     const { data: order, error: orderError } = await supabaseAdmin
@@ -130,10 +133,10 @@ serve(async (req) => {
               </table>
               
               <p style="margin-top: 30px; color: #666;">We'll send you another email when your order ships.</p>
-              <p style="color: #666;">Thank you for supporting the Spelman College Glee Club!</p>
+              <p style="color: #666;">Thank you for supporting ${orgName}!</p>
             </div>
             <div style="background: #003666; padding: 15px; text-align: center; color: white; font-size: 12px;">
-              <p>© ${new Date().getFullYear()} Spelman College Glee Club. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} ${orgName}. All rights reserved.</p>
             </div>
           </div>
         `;
@@ -160,7 +163,7 @@ serve(async (req) => {
               <p style="color: #666;">Thank you for shopping with GleeWorld!</p>
             </div>
             <div style="background: #003666; padding: 15px; text-align: center; color: white; font-size: 12px;">
-              <p>© ${new Date().getFullYear()} Spelman College Glee Club. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} ${orgName}. All rights reserved.</p>
             </div>
           </div>
         `;

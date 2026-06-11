@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const handler = async (req: Request): Promise<Response> => {
   try {
@@ -27,6 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+    const orgName = await getOrgName(supabase);
 
     // Find the checkout with this ID
     const { data: checkout, error: findError } = await supabase
@@ -104,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
         </head>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #007bff;">Spelman College Glee Club</h1>
+            <h1 style="color: #007bff;">${orgName}</h1>
             <h2 style="color: #28a745;">Checkout Confirmed! ✓</h2>
           </div>
           

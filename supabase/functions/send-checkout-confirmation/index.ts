@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -37,8 +38,9 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+    const orgName = await getOrgName(supabase);
 
-    const { 
+    const {
       checkoutId, 
       recipientEmail, 
       recipientName, 
@@ -98,7 +100,7 @@ const handler = async (req: Request): Promise<Response> => {
         
         <p>If you have any questions or did not receive these items, please contact the wardrobe manager immediately.</p>
         
-        <p>Best regards,<br>Spelman College Glee Club<br>Wardrobe Management Team</p>
+        <p>Best regards,<br>${orgName}<br>Wardrobe Management Team</p>
         
         <hr style="margin: 30px 0;">
         <p style="font-size: 12px; color: #666;">

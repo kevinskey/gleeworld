@@ -3,6 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
+import { getOrgName } from "../_shared/branding.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabase = createClient(
@@ -54,6 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
     const payload: NotificationPayload = await req.json();
     console.log('Processing notification:', payload);
 
+    const orgName = await getOrgName(supabase);
+
     const results = {
       notification: null as any,
       email: null as any,
@@ -97,13 +100,13 @@ const handler = async (req: Request): Promise<Response> => {
 
       if (userProfile?.email) {
         const emailResponse = await resend.emails.send({
-          from: 'Spelman Glee Club <notifications@gleeworld.com>',
+          from: `${orgName} <notifications@gleeworld.com>`,
           to: [userProfile.email],
           subject: payload.title,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <div style="background: linear-gradient(135deg, #8B2635, #6B1E29); padding: 20px; text-align: center;">
-                <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
+                <h1 style="color: white; margin: 0;">${orgName}</h1>
               </div>
               
               <div style="padding: 30px; background: white;">

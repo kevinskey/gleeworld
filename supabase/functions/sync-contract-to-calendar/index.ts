@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -109,6 +110,8 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    const orgName = await getOrgName(supabase);
+
     // Get contract with metadata
     const { data: contract, error: contractError } = await supabase
       .from('contracts_v2')
@@ -194,7 +197,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Build event description
-    const description = buildEventDescription(contract, metadata);
+    const description = buildEventDescription(contract, metadata, orgName);
 
     // Check if calendar event already exists
     const { data: existingEvent, error: existingEventError } = await supabase
@@ -384,10 +387,10 @@ function parseContractContent(content: string, existingMetadata: ContractMetadat
   return metadata;
 }
 
-function buildEventDescription(contract: any, metadata: ContractMetadata): string {
+function buildEventDescription(contract: any, metadata: ContractMetadata, orgName: string): string {
   const lines: string[] = [];
-  
-  lines.push("📋 SPELMAN COLLEGE GLEE CLUB TOUR PERFORMANCE");
+
+  lines.push(`📋 ${orgName.toUpperCase()} TOUR PERFORMANCE`);
   lines.push("");
   
   if (metadata.HOST_NAME) {

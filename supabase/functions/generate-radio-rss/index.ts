@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +29,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const orgName = await getOrgName(supabase)
 
     console.log('Generating RSS feed for Glee World 101...')
 
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
     console.log(`Found ${episodes?.length || 0} episodes for RSS feed`)
 
     // Generate RSS XML
-    const rssXml = generateRSSXML(episodes || [])
+    const rssXml = generateRSSXML(episodes || [], orgName)
 
     // Store RSS feed in storage or return directly
     return new Response(rssXml, {
@@ -71,7 +73,7 @@ Deno.serve(async (req) => {
   }
 })
 
-function generateRSSXML(episodes: any[]): string {
+function generateRSSXML(episodes: any[], orgName: string): string {
   const now = new Date().toUTCString()
   const baseUrl = 'https://gleeworld.org'
   
@@ -79,19 +81,19 @@ function generateRSSXML(episodes: any[]): string {
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Glee World 101</title>
-    <description>The official podcast of Spelman College Glee Club featuring performances, alumni stories, and behind-the-scenes content celebrating 100+ years of musical excellence.</description>
+    <description>The official podcast of ${orgName} featuring performances, graduate stories, and behind-the-scenes content.</description>
     <link>${baseUrl}/radio</link>
     <language>en-us</language>
     <pubDate>${now}</pubDate>
     <lastBuildDate>${now}</lastBuildDate>
-    <managingEditor>gleeclubofficial@spelman.edu (Spelman Glee Club)</managingEditor>
-    <webMaster>gleeclubofficial@spelman.edu (Spelman Glee Club)</webMaster>
+    <managingEditor>gleeclubofficial@spelman.edu (${orgName})</managingEditor>
+    <webMaster>gleeclubofficial@spelman.edu (${orgName})</webMaster>
     <category>Music</category>
     <category>Education</category>
-    <itunes:author>Spelman College Glee Club</itunes:author>
-    <itunes:summary>The official podcast of Spelman College Glee Club featuring performances, alumni stories, and behind-the-scenes content celebrating 100+ years of musical excellence.</itunes:summary>
+    <itunes:author>${orgName}</itunes:author>
+    <itunes:summary>The official podcast of ${orgName} featuring performances, graduate stories, and behind-the-scenes content.</itunes:summary>
     <itunes:owner>
-      <itunes:name>Spelman College Glee Club</itunes:name>
+      <itunes:name>${orgName}</itunes:name>
       <itunes:email>gleeclubofficial@spelman.edu</itunes:email>
     </itunes:owner>
     <itunes:image href="${baseUrl}/images/glee-world-101-logo.jpg"/>
@@ -118,7 +120,7 @@ function generateRSSXML(episodes: any[]): string {
       <enclosure url="${episode.audio_url}" type="audio/mpeg" length="0"/>
       <guid isPermaLink="false">${episode.id}</guid>
       <link>${baseUrl}/radio/episodes/${episode.id}</link>
-      <itunes:author>Spelman College Glee Club</itunes:author>
+      <itunes:author>${orgName}</itunes:author>
       <itunes:duration>${duration}</itunes:duration>
       <itunes:explicit>clean</itunes:explicit>
       <itunes:summary><![CDATA[${episode.description || 'A special episode from Glee World 101'}]]></itunes:summary>

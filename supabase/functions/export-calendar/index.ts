@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,6 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
+    const orgName = await getOrgName();
 
     const url = new URL(req.url);
     const exportType = url.searchParams.get('type') || 'all'; // all, month, public
@@ -74,14 +76,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Generate iCalendar content
-    const icalContent = generateICalendar(events || []);
+    const icalContent = generateICalendar(events || [], orgName);
 
     return new Response(icalContent, {
       status: 200,
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/calendar; charset=utf-8',
-        'Content-Disposition': `attachment; filename="spelman-glee-calendar-${exportType}.ics"`
+        'Content-Disposition': `attachment; filename="${orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-calendar-${exportType}.ics"`
       }
     });
 
@@ -94,18 +96,18 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-function generateICalendar(events: CalendarEvent[]): string {
+function generateICalendar(events: CalendarEvent[], orgName: string): string {
   const now = new Date();
   const timestamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
   let icalContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Spelman College Glee Club//Calendar Export//EN',
+    `PRODID:-//${orgName}//Calendar Export//EN`,
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    'X-WR-CALNAME:Spelman College Glee Club',
-    'X-WR-CALDESC:Official events calendar for the Spelman College Glee Club'
+    `X-WR-CALNAME:${orgName}`,
+    `X-WR-CALDESC:Official events calendar for ${orgName}`
   ];
 
   events.forEach(event => {

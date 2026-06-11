@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
+import { getOrgName } from "../_shared/branding.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -25,10 +26,12 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { recipientEmail, recipientName, currentDate, currentTime, copyEmail }: RescheduleEmailRequest = await req.json();
 
+    const orgName = await getOrgName();
+
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #1a365d; margin-bottom: 10px;">Spelman College Glee Club</h1>
+          <h1 style="color: #1a365d; margin-bottom: 10px;">${orgName}</h1>
           <p style="color: #4a5568; font-size: 18px; margin: 0;">Audition Schedule Update</p>
         </div>
 
@@ -41,7 +44,7 @@ const handler = async (req: Request): Promise<Response> => {
           <h3 style="color: #2d3748; margin-top: 0;">Dear ${recipientName},</h3>
           
           <p style="color: #4a5568; line-height: 1.6;">
-            We hope this message finds you well and excited about your upcoming Spelman College Glee Club audition!
+            We hope this message finds you well and excited about your upcoming ${orgName} audition!
           </p>
 
           <p style="color: #4a5568; line-height: 1.6;">
@@ -86,13 +89,13 @@ const handler = async (req: Request): Promise<Response> => {
 
           <p style="color: #4a5568; line-height: 1.6;">
             Warm regards,<br>
-            <strong>The Spelman College Glee Club Team</strong>
+            <strong>The ${orgName} Team</strong>
           </p>
         </div>
 
         <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center;">
           <p style="color: #a0aec0; font-size: 14px; margin: 0;">
-            Spelman College Glee Club<br>
+            ${orgName}<br>
             350 Spelman Lane SW, Atlanta, GA 30314<br>
             <a href="mailto:glee@spelman.edu" style="color: #4299e1;">glee@spelman.edu</a>
           </p>
@@ -101,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Spelman Glee Club <noreply@gleeworld.org>",
+      from: `${orgName} <noreply@gleeworld.org>`,
       to: [recipientEmail],
       cc: copyEmail ? [copyEmail] : undefined,
       subject: "🎵 Important: Please Reschedule Your Glee Club Audition",

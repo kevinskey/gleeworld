@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getOrgName } from "../_shared/branding.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
@@ -37,6 +38,7 @@ serve(async (req) => {
     }
 
     const { templateType, eventDetails, bandInfo } = await req.json();
+    const orgName = await getOrgName();
 
     const prompts = {
       biography: `Write a compelling professional biography for ${bandInfo.name}. Include their musical style, achievements, and what makes them unique. Keep it engaging and suitable for media outlets. Length: 150-250 words.`,
@@ -63,7 +65,7 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a professional music publicist and press kit writer. Generate high-quality, professional content suitable for media outlets and press kits. Focus on the Spelman College Glee Club context - a prestigious collegiate ensemble with over 100 years of musical excellence.' 
+            content: `You are a professional music publicist and press kit writer. Generate high-quality, professional content suitable for media outlets and press kits. Focus on the ${orgName} context - a prestigious ensemble.`
           },
           { role: 'user', content: prompt }
         ],

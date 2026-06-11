@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@4.0.0?target=deno";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,6 +68,8 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
+
+    const orgName = await getOrgName(authClient);
 
     const {
       communicationId,
@@ -138,13 +141,13 @@ const handler = async (req: Request): Promise<Response> => {
           if (channel === 'email' && recipient.email) {
             // Send email via Resend
             const emailResult = await resend.emails.send({
-              from: 'Spelman Glee Club <notifications@gleeworld.org>',
+              from: `${orgName} <notifications@gleeworld.org>`,
               to: [recipient.email],
               subject: title,
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <div style="background: linear-gradient(135deg, #8B5CF6, #3B82F6); padding: 20px; text-align: center;">
-                    <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
+                    <h1 style="color: white; margin: 0;">${orgName}</h1>
                   </div>
                   <div style="padding: 20px; background: white;">
                     <h2 style="color: #374151; margin-top: 0;">${escapeHtml(title)}</h2>
@@ -154,7 +157,7 @@ const handler = async (req: Request): Promise<Response> => {
                     </div>
                   </div>
                   <div style="background: #F9FAFB; padding: 15px; text-align: center; color: #6B7280; font-size: 14px;">
-                    <p>You received this message as a member of the Spelman College Glee Club.</p>
+                    <p>You received this message as a member of ${orgName}.</p>
                     <p>Visit <a href="https://gleeworld.org" style="color: #3B82F6;">GleeWorld.org</a> to manage your notification preferences.</p>
                   </div>
                 </div>
@@ -176,7 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           } else if (channel === 'sms' && recipient.phone && twilioAccountSid && twilioAuthToken && twilioPhoneNumber) {
             // Send SMS via Twilio
-            const smsMessage = `${title}\n\nFrom: ${senderName}\n\n${content}\n\n--\nSpelman Glee Club\ngleeworld.org`;
+            const smsMessage = `${title}\n\nFrom: ${senderName}\n\n${content}\n\n--\n${orgName}\ngleeworld.org`;
             
             const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`;
             const credentials = btoa(`${twilioAccountSid}:${twilioAuthToken}`);

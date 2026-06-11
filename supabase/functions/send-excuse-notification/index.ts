@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,6 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    const orgName = await getOrgName(supabase);
 
     const { requestId, userId, status, message, adminNotes }: NotificationRequest = await req.json();
 
@@ -79,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Dear ${userProfile.full_name || 'Student'},</p>
           <p>Your excuse request for <strong>${request.event_title}</strong> on ${new Date(request.event_date).toLocaleDateString()} has been forwarded to the director for final approval.</p>
           <p>You will receive another notification once a decision has been made.</p>
-          <p>Best regards,<br>Spelman College Glee Club</p>
+          <p>Best regards,<br>${orgName}</p>
         `;
         break;
 
@@ -94,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p>${message || 'Please provide additional information.'}</p>
           </div>
           <p>Please log in to the attendance system to view your request and provide any additional information needed.</p>
-          <p>Best regards,<br>Spelman College Glee Club</p>
+          <p>Best regards,<br>${orgName}</p>
         `;
         break;
 
@@ -111,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           ` : ''}
           <p>This excuse will be reflected in your attendance records.</p>
-          <p>Best regards,<br>Spelman College Glee Club</p>
+          <p>Best regards,<br>${orgName}</p>
         `;
         break;
 
@@ -128,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           ` : ''}
           <p>If you have questions about this decision, please contact the Glee Club administration.</p>
-          <p>Best regards,<br>Spelman College Glee Club</p>
+          <p>Best regards,<br>${orgName}</p>
         `;
         break;
 
@@ -138,7 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email notification
     const emailResponse = await resend.emails.send({
-      from: "Spelman Glee Club <notifications@gleeworld.org>",
+      from: `${orgName} <notifications@gleeworld.org>`,
       to: [userProfile.email],
       subject: emailSubject,
       html: emailBody,

@@ -5,6 +5,7 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useNavigate } from "react-router-dom";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
 import { 
+import { useHomePath } from '@/hooks/useHomePath';
   BookOpen,
   Home,
   Play,
@@ -16,6 +17,7 @@ import {
 
 export const SRFManagement = () => {
   const navigate = useNavigate();
+  const homePath = useHomePath();
   const { assignments: srfAssignments, loading, createAssignment, sendReminder } = useSRFAssignments();
 
   return (
@@ -25,7 +27,7 @@ export const SRFManagement = () => {
           <div className="flex items-center gap-3 mb-4">
             <Button 
               variant="outline" 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(homePath)}
               className="flex items-center gap-2"
             >
               <Home className="h-4 w-4" />

@@ -17,19 +17,30 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-SHIPPING-LABEL] ${step}${detailsStr}`);
 };
 
-// GleeWorld shipping origin address
-const FROM_ADDRESS = {
-  name: "Spelman College Glee Club",
-  company: "GleeWorld",
-  street1: "350 Spelman Ln SW",
-  street2: "Campus Box 1234",
-  city: "Atlanta",
-  state: "GA",
-  zip: "30314",
-  country: "US",
-  phone: "4042705000",
-  email: "shop@gleeworld.org"
-};
+// Shipping origin address from environment
+function getFromAddress() {
+  const name = Deno.env.get("SHIP_FROM_NAME");
+  const street1 = Deno.env.get("SHIP_FROM_STREET1");
+  const city = Deno.env.get("SHIP_FROM_CITY");
+  const state = Deno.env.get("SHIP_FROM_STATE");
+  const zip = Deno.env.get("SHIP_FROM_ZIP");
+  const phone = Deno.env.get("SHIP_FROM_PHONE");
+  if (!name || !street1 || !city || !state || !zip || !phone) {
+    return null;
+  }
+  return {
+    name,
+    company: "GleeWorld",
+    street1,
+    street2: Deno.env.get("SHIP_FROM_STREET2") ?? "",
+    city,
+    state,
+    zip,
+    country: "US",
+    phone,
+    email: "shop@gleeworld.org"
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -47,6 +58,14 @@ serve(async (req) => {
 
     const easypostKey = Deno.env.get("EASYPOST_API_KEY");
     if (!easypostKey) throw new Error("EASYPOST_API_KEY is not set");
+
+    const fromAddress = getFromAddress();
+    if (!fromAddress) {
+      return new Response(JSON.stringify({ error: "Shipping origin not configured" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
 
     // Verify admin authorization
     const authHeader = req.headers.get("Authorization");
@@ -106,7 +125,7 @@ serve(async (req) => {
     // Create EasyPost shipment
     const shipmentPayload = {
       shipment: {
-        from_address: FROM_ADDRESS,
+        from_address: fromAddress,
         to_address: {
           name: order.shipping_address.name,
           street1: order.shipping_address.street1,

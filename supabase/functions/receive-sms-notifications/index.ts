@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { getOrgName } from "../_shared/branding.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -295,11 +296,12 @@ const handler = async (req: Request): Promise<Response> => {
     if (hasImages) {
       // Handle image processing
       await handleSMSImages(formData, smsData);
-      
+
+      const orgName = await getOrgName(supabase);
       // Send thank you response for images
       const imageResponse = `<?xml version="1.0" encoding="UTF-8"?>
         <Response>
-          <Message>Thank you for the pic! The Spelman College Glee Club</Message>
+          <Message>Thank you for the pic! ${orgName}</Message>
         </Response>`;
       
       return new Response(imageResponse, {
