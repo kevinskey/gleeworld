@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { isNativeApp, syncNativeTenant } from "@/lib/nativeTenant";
 
 interface AuthContextType {
   user: User | null;
@@ -113,25 +114,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // current subdomain's bootstrap tenant, the user signed into
             // the wrong tenant. Sign them out immediately to prevent
             // cross-tenant data display.
-            const expectedTenant = (window as any).__TENANT_CONFIG__?.tenant;
-            if (session && expectedTenant) {
-              try {
-                const p = session.access_token.split('.')[1];
-                const padded = p + '='.repeat((-p.length) % 4);
-                const claims = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')));
-                if (claims.tenant_slug && claims.tenant_slug !== expectedTenant) {
-                  console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Signing out.`);
-                  await supabase.auth.signOut();
-                  cleanupAuthState();
-                  setSession(null);
-                  setUser(null);
-                  alert(`This account belongs to a different organization (${claims.tenant_slug}). Please sign in on the correct site.`);
-                  const correctHost = claims.tenant_slug === 'main' ? 'gleeworld.org' : `${claims.tenant_slug}.gleeworld.org`;
-                  window.location.href = `https://${correctHost}/auth`;
-                  return;
+            // Native app: no subdomain bootstrap — cache the JWT's tenant and
+            // reload so the client/branding pick it up (no-op if unchanged).
+            if (session && isNativeApp()) {
+              syncNativeTenant(session);
+            } else {
+              const expectedTenant = (window as any).__TENANT_CONFIG__?.tenant;
+              if (session && expectedTenant) {
+                try {
+                  const p = session.access_token.split('.')[1];
+                  const padded = p + '='.repeat((-p.length) % 4);
+                  const claims = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')));
+                  if (claims.tenant_slug && claims.tenant_slug !== expectedTenant) {
+                    console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Signing out.`);
+                    await supabase.auth.signOut();
+                    cleanupAuthState();
+                    setSession(null);
+                    setUser(null);
+                    alert(`This account belongs to a different organization (${claims.tenant_slug}). Please sign in on the correct site.`);
+                    const correctHost = claims.tenant_slug === 'main' ? 'gleeworld.org' : `${claims.tenant_slug}.gleeworld.org`;
+                    window.location.href = `https://${correctHost}/auth`;
+                    return;
+                  }
+                } catch (e) {
+                  console.warn('[auth] could not decode JWT for tenant check', e);
                 }
-              } catch (e) {
-                console.warn('[auth] could not decode JWT for tenant check', e);
               }
             }
 

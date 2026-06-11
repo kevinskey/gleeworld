@@ -89,6 +89,8 @@
          the same static build can power many tenants. Default (main domain)
          serves an empty no-op file. Must run BEFORE the React bundle. -->
     <script src="/tenant-bootstrap.js"></script>
+    <!-- Native app only: restores cached tenant config (no subdomain on device). -->
+    <script src="/native-boot.js"></script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       (function() {
