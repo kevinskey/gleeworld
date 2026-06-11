@@ -137,6 +137,14 @@ export const SimpleHeroManager: React.FC<SimpleHeroManagerProps> = ({
     file: File,
     field: 'image_url' | 'mobile_image_url',
   ) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image must be under 10MB');
+      return;
+    }
     setUploadingId(slide.id);
     try {
       const ext = file.name.split('.').pop() ?? 'jpg';

@@ -143,6 +143,10 @@ export const HeroManager = () => {
       toast.error("Please upload an image file");
       return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10MB");
+      return;
+    }
 
     setImageFile(file);
     toast.success(`${file.name} ready to upload`);
