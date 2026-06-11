@@ -31,6 +31,7 @@ import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
 import { ModuleRouteRedirect } from "@/components/routing/module-route-redirect";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { NativeTenantGate } from "@/components/native/NativeTenantGate";
 import { UsageTracker } from "@/components/tracking/UsageTracker";
 import SiteSetup from "./pages/admin/SiteSetup";
 import ModulesSettings from "./pages/admin/ModulesSettings";
@@ -359,6 +360,7 @@ const App = () => {
     <BrowserRouter>
       <ScrollToTop />
       <QueryClientProvider client={queryClient}>
+        <NativeTenantGate>
         <AuthProvider>
           <ThemeProvider>
             <TooltipProvider>
@@ -2465,6 +2467,7 @@ const App = () => {
               </TooltipProvider>
             </ThemeProvider>
           </AuthProvider>
+        </NativeTenantGate>
         </QueryClientProvider>
       </BrowserRouter>
   );
