@@ -546,7 +546,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))',
       background: 'linear-gradient(to bottom, #1a1a1a 0%, #0d0d0d 100%)',
       padding: '12px 8px 8px 8px',
-      boxShadow: 'inset 0 5px 15px rgba(0,0,0,0.5)'
+      boxShadow: 'inset 0 5px 15px rgba(0,0,0,0.5)',
+      touchAction: 'pan-x',
+      WebkitOverflowScrolling: 'touch'
     }} className="flex-1 overflow-x-auto overflow-y-hidden">
         <div className="relative inline-block min-w-max mx-0 py-0">
           {/* White Keys */}
@@ -577,9 +579,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 borderLeft: '1px solid rgba(0,0,0,0.08)',
                 borderRight: '1px solid rgba(0,0,0,0.15)',
                 borderBottom: isActive ? '2px solid #3b82f6' : '4px solid #c0c0c0',
-              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none touch-manipulation ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
-              onPointerDown={(e) => {
-                e.preventDefault();
+                // pan-x lets a horizontal drag scroll the keyboard; preventDefault on
+                // pointerdown would cancel WebKit's scroll gesture, so don't call it
+                touchAction: 'pan-x',
+              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
+              onPointerDown={() => {
                 playNote(keyName, key.frequency);
               }}
               onPointerUp={() => stopNote(keyName)} 
@@ -606,7 +610,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 const gap = 2; // gap-0.5 = 0.125rem ≈ 2px
                 // Position accounts for key width + gap between keys
                 const leftPosition = key.position * (whiteKeyWidth + gap) - blackKeyWidth / 2;
-                return <button key={keyName} className="absolute h-full cursor-pointer transition-all duration-150 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation" style={{
+                return <button key={keyName} className="absolute h-full cursor-pointer transition-all duration-150 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none" style={{
+                  touchAction: 'pan-x',
                   left: `${leftPosition}px`,
                   width: `${blackKeyWidth}px`,
                   minWidth: '36px',
@@ -623,8 +628,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                   borderBottom: isActive ? '2px solid #60a5fa' : '3px solid #0a0a0a',
                   transform: isActive ? 'translateY(2px) scale(1.05)' : 'translateY(0) scale(1)',
                 }}
-                onPointerDown={(e) => {
-                  e.preventDefault();
+                onPointerDown={() => {
                   playNote(keyName, key.frequency);
                 }}
                 onPointerUp={() => stopNote(keyName)} 
