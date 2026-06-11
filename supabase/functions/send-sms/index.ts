@@ -104,13 +104,56 @@ const sendSingleSMS = async (
   }
 };
 
+const ADMIN_ROLES = ['admin', 'super-admin', 'executive'];
+
+// Returns { internal: true } for service-role callers, { userId, isAdmin } for
+// valid user JWTs, or null when unauthenticated.
+const authenticateCaller = async (req: Request): Promise<{ internal: boolean; userId?: string; isAdmin?: boolean } | null> => {
+  const authHeader = req.headers.get('Authorization') || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  if (!token) return null;
+
+  if (token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+    return { internal: true };
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+  if (userError || !userData?.user) return null;
+
+  const { data: profile } = await supabase
+    .from('gw_profiles')
+    .select('role, is_admin, is_super_admin')
+    .eq('user_id', userData.user.id)
+    .maybeSingle();
+
+  const isAdmin = !!(profile?.is_admin || profile?.is_super_admin || ADMIN_ROLES.includes(profile?.role || ''));
+  return { internal: false, userId: userData.user.id, isAdmin };
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const caller = await authenticateCaller(req);
+    if (!caller) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
     const payload: SMSPayload = await req.json();
+
+    // Bulk sends are restricted to admins (internal service calls excepted)
+    const isBulk = payload.sendToAll || (payload.recipients && payload.recipients.length > 1);
+    if (isBulk && !caller.internal && !caller.isAdmin) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Admin role required for bulk SMS' }),
+        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
     const mediaUrls = payload.mediaUrls?.filter(Boolean) ?? (payload.mediaUrl ? [payload.mediaUrl] : []);
 
     console.log('SMS request received:', {

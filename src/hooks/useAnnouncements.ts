@@ -52,7 +52,8 @@ export const useAnnouncements = () => {
       const announcementsResult = await supabase
         .from('gw_announcements')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (!announcementsResult.error && announcementsResult.data) {
         announcementsData = announcementsResult.data as Announcement[];

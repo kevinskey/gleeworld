@@ -1,10 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { create } from "https://deno.land/x/djwt@v2.8/mod.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const ADMIN_ROLES = ['admin', 'super-admin', 'executive'];
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,16 +16,57 @@ serve(async (req) => {
   }
 
   try {
-    const { roomName, userName, isModerator = true, userEmail, userId } = await req.json();
-    
-    console.log('Generating JaaS JWT for room:', roomName, 'user:', userName);
+    // Authenticate the caller and derive identity/moderator server-side —
+    // never trust these from the request body.
+    const authClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const user = userData.user;
+
+    const { data: profile } = await authClient
+      .from('gw_profiles')
+      .select('role, is_admin, is_super_admin, first_name, last_name, full_name')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const isModerator = !!(profile?.is_admin || profile?.is_super_admin || ADMIN_ROLES.includes(profile?.role || ''));
+
+    const { roomName, userName: requestedName } = await req.json();
+
+    const roomSlug = String(roomName || '').trim();
+    if (!roomSlug || !/^[a-zA-Z0-9._-]+$/.test(roomSlug)) {
+      return new Response(JSON.stringify({ error: 'Invalid room name' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const userName = profile?.full_name
+      || [profile?.first_name, profile?.last_name].filter(Boolean).join(' ')
+      || requestedName
+      || 'Member';
+
+    console.log('Generating JaaS JWT for room:', roomSlug, 'user:', user.id, 'moderator:', isModerator);
 
     const privateKeyPem = Deno.env.get('JAAS_PRIVATE_KEY');
 
     // JAAS_APP_ID should be the full vpaas app id, typically: "vpaas-magic-cookie-<tenant>"
-    const appId = (Deno.env.get('JAAS_APP_ID') || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9')
+    const appId = (Deno.env.get('JAAS_APP_ID') || '')
       .trim()
       .replace(/^['"]|['"]$/g, "");
+
+    if (!appId) {
+      throw new Error('JAAS_APP_ID not configured');
+    }
 
     // JAAS_KEY_ID should match the JaaS Console "API keys" value.
     // 8x8 expects header.kid to be: "vpaas-magic-cookie-<tenant>/<apiKeyId>"
@@ -128,17 +172,15 @@ serve(async (req) => {
       aud: "jitsi",
       iss: "chat",
       sub: appId,
-      // TEMP/robust: allow any room to avoid "Room and token mismatched" while tenant/sub/kid are correct.
-      // You can later tighten this back to a specific room slug once everything is stable.
-      room: "*",
+      room: roomSlug,
       exp: exp,
       nbf: now,
       iat: now,
       context: {
         user: {
-          id: userId || crypto.randomUUID(),
-          name: userName || "Glee Member",
-          email: userEmail || "",
+          id: user.id,
+          name: userName,
+          email: user.email || "",
           moderator: isModerator, // boolean, not string
           avatar: ""
         },

@@ -26,12 +26,48 @@ interface CommunicationRequest {
 }
 
 
+const ADMIN_ROLES = ['admin', 'super-admin', 'executive'];
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Require an admin caller (or internal service-role call) — this function
+    // can broadcast to the entire roster
+    const authClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+    let authorized = token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!authorized && token) {
+      const { data: userData } = await authClient.auth.getUser(token);
+      if (userData?.user) {
+        const { data: profile } = await authClient
+          .from('gw_profiles')
+          .select('role, is_admin, is_super_admin')
+          .eq('user_id', userData.user.id)
+          .maybeSingle();
+        authorized = !!(profile?.is_admin || profile?.is_super_admin || ADMIN_ROLES.includes(profile?.role || ''));
+      }
+    }
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: 'Admin role required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
     const {
       communicationId,
       title,
@@ -111,10 +147,10 @@ const handler = async (req: Request): Promise<Response> => {
                     <h1 style="color: white; margin: 0;">Spelman College Glee Club</h1>
                   </div>
                   <div style="padding: 20px; background: white;">
-                    <h2 style="color: #374151; margin-top: 0;">${title}</h2>
-                    <div style="color: #6B7280; margin-bottom: 20px;">From: ${senderName}</div>
+                    <h2 style="color: #374151; margin-top: 0;">${escapeHtml(title)}</h2>
+                    <div style="color: #6B7280; margin-bottom: 20px;">From: ${escapeHtml(senderName)}</div>
                     <div style="line-height: 1.6; color: #374151;">
-                      ${content.replace(/\n/g, '<br>')}
+                      ${escapeHtml(content).replace(/\n/g, '<br>')}
                     </div>
                   </div>
                   <div style="background: #F9FAFB; padding: 15px; text-align: center; color: #6B7280; font-size: 14px;">
