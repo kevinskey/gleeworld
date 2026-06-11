@@ -12,13 +12,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { X, Send, Loader2, Mail, Smartphone, Paperclip, FileIcon } from 'lucide-react';
 
-type Group = 'all' | 'students' | 'admins' | 'fans';
+type Group = 'all' | 'students' | 'admins' | 'fans' | 'custom';
 const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'all', label: 'Everyone' },
   { value: 'students', label: 'Students only' },
   { value: 'admins', label: 'Staff / Admins only' },
   { value: 'fans', label: 'Fans only' },
+  { value: 'custom', label: 'Specific people…' },
 ];
+
+interface Person {
+  user_id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+}
 
 const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file
 const MAX_ATTACHMENTS = 5;
@@ -33,10 +41,41 @@ export function EmailBlastComposer({ onClose, defaultChannel = 'email' }: { onCl
   const [sendSms, setSendSms] = useState(defaultChannel === 'sms');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
+  const [personSearch, setPersonSearch] = useState('');
+  const [selectedPeople, setSelectedPeople] = useState<Person[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const { data: counts = { emails: 0, phones: 0 } } = useQuery({
+  const { data: people = [] } = useQuery({
+    queryKey: ['blast-people'],
+    enabled: group === 'custom',
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, first_name, last_name, email, phone')
+        .eq('status', 'active')
+        .not('user_id', 'is', null)
+        .order('full_name');
+      if (error) throw error;
+      return (data ?? []).map((p: any): Person => ({
+        user_id: p.user_id,
+        full_name: p.full_name || [p.first_name, p.last_name].filter(Boolean).join(' ') || p.email || 'Unknown',
+        email: p.email,
+        phone: p.phone,
+      }));
+    },
+  });
+
+  const searchResults = personSearch.trim()
+    ? people.filter((p) =>
+        !selectedPeople.find((s) => s.user_id === p.user_id) &&
+        (p.full_name.toLowerCase().includes(personSearch.toLowerCase()) ||
+          (p.email ?? '').toLowerCase().includes(personSearch.toLowerCase())))
+        .slice(0, 8)
+    : [];
+
+  const { data: groupCounts = { emails: 0, phones: 0 } } = useQuery({
     queryKey: ['blast-count', group],
+    enabled: group !== 'custom',
     queryFn: async () => {
       let q = supabase.from('gw_profiles').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
       let p = supabase.from('gw_profiles').select('user_id', { count: 'exact', head: true }).not('phone', 'is', null);
@@ -49,6 +88,13 @@ export function EmailBlastComposer({ onClose, defaultChannel = 'email' }: { onCl
       return { emails: emails ?? 0, phones: phones ?? 0 };
     },
   });
+
+  const counts = group === 'custom'
+    ? {
+        emails: selectedPeople.filter((p) => p.email).length,
+        phones: selectedPeople.filter((p) => p.phone).length,
+      }
+    : groupCounts;
 
   function pickFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
@@ -84,20 +130,28 @@ export function EmailBlastComposer({ onClose, defaultChannel = 'email' }: { onCl
     if (!sendEmail && !sendSms) return toast({ title: 'Pick at least one channel', variant: 'destructive' });
     if (sendEmail && (!subject.trim() || !body.trim())) return toast({ title: 'Subject + message required for email', variant: 'destructive' });
     if (sendSms && !body.trim()) return toast({ title: 'Message required for SMS', variant: 'destructive' });
+    if (group === 'custom' && selectedPeople.length === 0) {
+      return toast({ title: 'Pick at least one recipient', variant: 'destructive' });
+    }
     setSending(true);
     try {
-      const role = group !== 'all' ? (group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan') : undefined;
+      const role = group !== 'all' && group !== 'custom' ? (group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan') : undefined;
 
       let emailCount = 0;
       let smsCount = 0;
 
       if (sendEmail) {
-        let rq = supabase.from('gw_profiles').select('email').not('email', 'is', null);
-        if (role) rq = rq.eq('role', role);
-        const { data: recipients, error: rErr } = await rq;
-        if (rErr) throw rErr;
-        const emails = (recipients ?? []).map((r: any) => r.email).filter(Boolean);
-        if (emails.length === 0) throw new Error('No email recipients in that group.');
+        let emails: string[];
+        if (group === 'custom') {
+          emails = selectedPeople.map((p) => p.email).filter(Boolean) as string[];
+        } else {
+          let rq = supabase.from('gw_profiles').select('email').not('email', 'is', null);
+          if (role) rq = rq.eq('role', role);
+          const { data: recipients, error: rErr } = await rq;
+          if (rErr) throw rErr;
+          emails = (recipients ?? []).map((r: any) => r.email).filter(Boolean);
+        }
+        if (emails.length === 0) throw new Error('No email recipients selected.');
 
         const attachmentPayload = attachments.length > 0
           ? await Promise.all(attachments.map(fileToBase64))
@@ -117,13 +171,18 @@ export function EmailBlastComposer({ onClose, defaultChannel = 'email' }: { onCl
       }
 
       if (sendSms) {
-        let pq = supabase.from('gw_profiles').select('phone').not('phone', 'is', null);
-        if (role) pq = pq.eq('role', role);
-        const { data: phones, error: pErr } = await pq;
-        if (pErr) throw pErr;
-        const numbers = (phones ?? []).map((p: any) => p.phone).filter(Boolean);
+        let numbers: string[];
+        if (group === 'custom') {
+          numbers = selectedPeople.map((p) => p.phone).filter(Boolean) as string[];
+        } else {
+          let pq = supabase.from('gw_profiles').select('phone').not('phone', 'is', null);
+          if (role) pq = pq.eq('role', role);
+          const { data: phones, error: pErr } = await pq;
+          if (pErr) throw pErr;
+          numbers = (phones ?? []).map((p: any) => p.phone).filter(Boolean);
+        }
         if (numbers.length === 0) {
-          if (!sendEmail) throw new Error('No phone numbers in that group.');
+          if (!sendEmail) throw new Error('No phone numbers among selected recipients.');
         } else {
           const { data: user } = await supabase.auth.getUser();
           const { error: smsErr } = await supabase.functions.invoke('send-sms', {
@@ -184,6 +243,48 @@ export function EmailBlastComposer({ onClose, defaultChannel = 'email' }: { onCl
             </Select>
             <p className="text-xs text-muted-foreground mt-1">{counts.emails} email · {counts.phones} phone on file</p>
           </div>
+
+          {group === 'custom' && (
+            <div>
+              <Label className="text-xs">Recipients</Label>
+              {selectedPeople.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {selectedPeople.map((p) => (
+                    <span key={p.user_id} className="inline-flex items-center gap-1 bg-muted rounded-full px-2 py-0.5 text-xs">
+                      {p.full_name}
+                      {!p.phone && <span className="text-amber-600" title="No phone on file">(no phone)</span>}
+                      <button type="button" onClick={() => setSelectedPeople((prev) => prev.filter((s) => s.user_id !== p.user_id))} aria-label={`Remove ${p.full_name}`}>
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <Input
+                value={personSearch}
+                onChange={(e) => setPersonSearch(e.target.value)}
+                placeholder="Search by name or email…"
+              />
+              {searchResults.length > 0 && (
+                <div className="border rounded-md mt-1 max-h-48 overflow-y-auto divide-y">
+                  {searchResults.map((p) => (
+                    <button
+                      key={p.user_id}
+                      type="button"
+                      className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted flex items-center justify-between"
+                      onClick={() => { setSelectedPeople((prev) => [...prev, p]); setPersonSearch(''); }}
+                    >
+                      <span className="truncate">{p.full_name}</span>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0">
+                        {p.phone ? <Smartphone className="w-3 h-3" /> : null}
+                        {p.email ? <Mail className="w-3 h-3" /> : null}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-3 text-sm">
             <label className="flex items-center gap-2">
