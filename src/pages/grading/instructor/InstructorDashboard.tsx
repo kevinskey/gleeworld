@@ -1,21 +1,41 @@
 import React from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ACADEMY_COURSES } from '@/config/academyCourses';
+import { supabase } from '@/integrations/supabase/client';
 import { BookOpen, GraduationCap, ChevronRight } from 'lucide-react';
+
+interface InstructorCourse {
+  id: string;
+  course_code: string;
+  title: string;
+  instructor_name: string | null;
+  semester: string | null;
+}
 
 const InstructorDashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useUserRole();
   const navigate = useNavigate();
 
-  if (authLoading || profileLoading) {
+  const { data: activeCourses = [], isLoading: coursesLoading } = useQuery({
+    queryKey: ['instructor-dashboard-courses', user?.id],
+    queryFn: async (): Promise<InstructorCourse[]> => {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('id, course_code, title, instructor_name, semester')
+        .eq('is_active', true)
+        .order('course_code');
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  if (authLoading || profileLoading || coursesLoading) {
     return <LoadingSpinner size="lg" text="Loading..." />;
   }
 
@@ -28,9 +48,6 @@ const InstructorDashboard: React.FC = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Get active courses
-  const activeCourses = ACADEMY_COURSES.filter(c => c.isActive);
-
   return (
     <UniversalLayout>
       <div className="max-w-6xl mx-auto p-4 sm:p-6" style={{ background: '#f8f9fb' }}>
@@ -39,9 +56,17 @@ const InstructorDashboard: React.FC = () => {
           <p className="text-sm" style={{ color: '#64748b' }}>Select a course to manage</p>
         </div>
 
+        {activeCourses.length === 0 && (
+          <div className="rounded-xl border p-8 text-center" style={{ background: '#ffffff', borderColor: '#e2e8f0' }}>
+            <GraduationCap className="h-10 w-10 mx-auto mb-3" style={{ color: '#94a3b8' }} />
+            <p className="font-medium" style={{ color: '#0f172a' }}>No active courses</p>
+            <p className="text-sm mt-1" style={{ color: '#64748b' }}>Create a course to see it here.</p>
+          </div>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {activeCourses.map((course) => {
-            const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
+            const courseSlug = course.course_code.toLowerCase().replace(' ', '-');
             return (
               <div
                 key={course.id}
@@ -52,18 +77,18 @@ const InstructorDashboard: React.FC = () => {
                 <div className="p-5 pb-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="inline-block text-xs font-medium px-2.5 py-0.5 rounded-full" style={{ background: '#e0f2fe', color: '#003366' }}>
-                      {course.level}
+                      {course.semester || 'Course'}
                     </span>
                     <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" style={{ color: '#94a3b8' }} />
                   </div>
                   <h3 className="flex items-center gap-2 text-xl font-bold mt-2" style={{ color: '#0f172a' }}>
                     <GraduationCap className="h-5 w-5" style={{ color: '#003366' }} />
-                    {course.courseCode}
+                    {course.course_code}
                   </h3>
                   <p className="text-sm mt-1" style={{ color: '#475569' }}>{course.title}</p>
                 </div>
                 <div className="px-5 pb-5">
-                  <p className="text-sm mb-3" style={{ color: '#64748b' }}>{course.instructor?.name}</p>
+                  <p className="text-sm mb-3" style={{ color: '#64748b' }}>{course.instructor_name}</p>
                   <button className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-colors" style={{ background: '#003366', color: '#ffffff' }}>
                     <BookOpen className="h-4 w-4" />
                     Open Instructor Console
