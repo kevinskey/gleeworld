@@ -21,8 +21,21 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Twilio can't send a JWT, so this webhook is gated by a shared secret in
+    // the URL (?secret=...). Without it, anyone could spoof a manager's phone
+    // number in the From field and approve/deny fittings.
+    const webhookSecret = Deno.env.get('FITTING_SMS_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      console.error('FITTING_SMS_WEBHOOK_SECRET not configured');
+      return new Response('Webhook not configured', { status: 503, headers: corsHeaders });
+    }
+    const url = new URL(req.url);
+    if (url.searchParams.get('secret') !== webhookSecret) {
+      return new Response('Unauthorized', { status: 401, headers: corsHeaders });
+    }
+
     console.log('Processing fitting approval SMS...');
-    
+
     // Parse SMS payload (can be from Twilio webhook or JSON)
     let smsData: SMSWebhookPayload;
     const contentType = req.headers.get('content-type');
@@ -102,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from('gw_appointments')
       .select('*')
       .eq('id', appointmentId)
-      .eq('status', 'pending_approval')
+      .in('status', ['pending', 'pending_approval'])
       .single();
 
     if (appointmentError || !appointment) {

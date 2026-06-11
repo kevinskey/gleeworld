@@ -28,7 +28,7 @@ export const WardrobeAppointmentSystem = () => {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'today'>('upcoming');
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
-  // Check if user is Drew or Soleil
+  // Wardrobe managers and admins only
   useEffect(() => {
     const checkAccess = async () => {
       if (!user) {
@@ -39,22 +39,18 @@ export const WardrobeAppointmentSystem = () => {
       try {
         const { data: profile, error } = await supabase
           .from('gw_profiles')
-          .select('email, full_name, exec_board_role')
+          .select('exec_board_role, is_admin, is_super_admin')
           .eq('user_id', user.id)
           .single();
 
         if (error) throw error;
 
-        const allowedUsers = [
-          'drewroberts@riversidechoir.example', 
-          'soleilvailes@riversidechoir.example',
-          'soleilvailes111@gmail.com'
-        ];
+        const isAllowed = !!(
+          profile?.is_admin ||
+          profile?.is_super_admin ||
+          profile?.exec_board_role === 'wardrobe_manager'
+        );
 
-        const userEmail = profile?.email?.toLowerCase() || '';
-        const isWardrobe = profile?.exec_board_role === 'wardrobe_manager';
-        const isAllowed = allowedUsers.includes(userEmail) || isWardrobe;
-        
         setHasAccess(isAllowed);
       } catch (error) {
         console.error('Error checking access:', error);
@@ -80,7 +76,7 @@ export const WardrobeAppointmentSystem = () => {
       let query = supabase
         .from('gw_appointments')
         .select('*')
-        .in('appointment_type', ['fitting', 'wardrobe_consultation', 'costume_alteration', 'dress_rehearsal'])
+        .eq('appointment_type', 'Wardrobe Fitting')
         .order('appointment_date', { ascending: true });
 
       // Apply filters

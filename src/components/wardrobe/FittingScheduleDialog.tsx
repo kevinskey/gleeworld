@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useBookAppointment } from '@/hooks/useAppointments';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FittingScheduleDialogProps {
   isOpen: boolean;
@@ -77,9 +78,24 @@ export const FittingScheduleDialog = ({
 
       const timeFormatted = `${hour24.toString().padStart(2, '0')}:${minutes.padStart(2, '0')}:00`;
 
-      // Use the proper booking system with a default service ID for wardrobe fittings
+      const { data: service, error: serviceError } = await supabase
+        .from('gw_services')
+        .select('id')
+        .eq('name', 'Wardrobe Fitting')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (serviceError || !service) {
+        toast({
+          title: "Error",
+          description: "The wardrobe fitting service is not configured. Please contact an administrator.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await bookAppointment.mutateAsync({
-        service_id: 'wardrobe-fitting', // Default service ID for wardrobe fittings
+        service_id: service.id,
         appointment_date: format(selectedDate, 'yyyy-MM-dd'),
         start_time: timeFormatted,
         customer_name: user.user_metadata?.full_name || user.email || 'Member',

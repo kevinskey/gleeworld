@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,8 +23,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Sends SMS to wardrobe managers — signed-in callers only.
+    const caller = await authenticateCaller(req);
+    if (!caller) return unauthorizedResponse(corsHeaders);
+
     console.log('Processing fitting approval request...');
-    
+
     const { appointmentId, clientName, appointmentDate, appointmentTime, notes }: FittingApprovalRequest = await req.json();
     
     // Initialize Supabase client
@@ -45,29 +50,35 @@ DENY ${appointmentId} - to deny`;
 
     console.log('Sending approval messages to wardrobe managers...');
 
-    // Send SMS to both wardrobe managers
-    const approvalPhones = [
-      { email: 'soleilvailes@spelman.edu', name: 'Soleil' },
-      { email: 'drewroberts@spelman.edu', name: 'Drew' }
-    ];
+    // Look up active wardrobe managers from the executive board
+    const { data: boardMembers } = await supabase
+      .from('gw_executive_board_members')
+      .select('user_id')
+      .eq('position', 'wardrobe_manager')
+      .eq('is_active', true);
+
+    const managerIds = (boardMembers ?? []).map(m => m.user_id);
+    const { data: managers } = managerIds.length > 0
+      ? await supabase
+          .from('gw_profiles')
+          .select('email, full_name, phone_number')
+          .in('user_id', managerIds)
+      : { data: [] };
+
+    const approvalPhones = (managers ?? []).filter(m => m.phone_number);
+
+    if (approvalPhones.length === 0) {
+      console.warn('No active wardrobe managers with phone numbers found');
+      return new Response(
+        JSON.stringify({ success: false, error: 'No wardrobe managers with phone numbers configured' }),
+        { status: 422, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
 
     const smsPromises = approvalPhones.map(async (manager) => {
-      // Look up phone number from profiles
-      const { data: profile } = await supabase
-        .from('gw_profiles')
-        .select('phone_number, full_name')
-        .eq('email', manager.email)
-        .single();
-
-      if (!profile?.phone_number) {
-        console.warn(`No phone number found for ${manager.email}`);
-        return null;
-      }
-
-      // Send SMS via existing SMS function
       const { data: smsResult, error: smsError } = await supabase.functions.invoke('gw-send-sms', {
         body: {
-          to: profile.phone_number,
+          to: manager.phone_number,
           message: approvalMessage
         }
       });
