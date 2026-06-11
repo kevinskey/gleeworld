@@ -583,7 +583,10 @@ function MarketingSite() {
 
 function AppleNav() {
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 shadow-sm">
+    <header
+      className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 shadow-sm"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="max-w-7xl mx-auto px-6 h-14 sm:h-16 flex items-center justify-between">
         <a href="/" className="flex items-center gap-3">
           {/* The source PNG is 1536×1024 with the glyph centered on a
