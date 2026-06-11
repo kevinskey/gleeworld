@@ -112,14 +112,20 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const stopTone = useCallback(() => {
     if (gainNodeRef.current && audioContextRef.current) {
       try {
-        gainNodeRef.current.gain.linearRampToValueAtTime(0, audioContextRef.current.currentTime + 0.08);
+        const gain = gainNodeRef.current.gain;
+        const now = audioContextRef.current.currentTime;
+        // Anchor at the current value first; otherwise the ramp interpolates
+        // from the attack event in the past and the gain jumps — audible click.
+        gain.cancelScheduledValues(now);
+        gain.setValueAtTime(gain.value, now);
+        gain.linearRampToValueAtTime(0, now + 0.12);
         setTimeout(() => {
           oscillatorsRef.current.forEach(osc => {
             try { osc.stop(); } catch {}
           });
           oscillatorsRef.current = [];
           gainNodeRef.current = null;
-        }, 100);
+        }, 180);
       } catch {
         oscillatorsRef.current = [];
         gainNodeRef.current = null;
