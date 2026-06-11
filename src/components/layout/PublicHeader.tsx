@@ -115,7 +115,6 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
       {/* Wrapper for iOS safe-area offset (PWA) */}
       <div
         className="sticky top-0 z-50 w-full"
-        style={{ top: 'var(--gw-safe-top)' }}
       >
         {/* ================================================================
             MAIN HEADER ELEMENT
@@ -123,6 +122,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
         <header 
           className={`border-b border-border/40 shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}
           style={{
+            paddingTop: 'var(--gw-safe-top)',
             backgroundColor: HEADER_STYLES.backgroundColor,
             // Ensure ALL headings (h1-h6) inside the public header use Cinzel
             // (GlobalDesignFixes uses --heading-font as the source of truth)
