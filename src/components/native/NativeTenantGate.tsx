@@ -11,7 +11,10 @@ interface TenantOption {
 }
 
 function selectTenant(t: TenantOption) {
-  localStorage.setItem(KEY, JSON.stringify({ tenant: t.slug, org: t.name }));
+  // 'main' is the GleeWorld marketing site, not a tenant clone — an org name
+  // would flip GleeWorldLanding/HomeRoute into tenant-clone mode.
+  const org = t.slug === 'main' ? undefined : t.name;
+  localStorage.setItem(KEY, JSON.stringify({ tenant: t.slug, org }));
   window.location.reload();
 }
 

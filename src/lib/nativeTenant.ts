@@ -31,7 +31,7 @@ export async function syncNativeTenant(session: Session): Promise<void> {
   if (current?.tenant === slug) return;
 
   let org: string | undefined;
-  try {
+  if (slug !== 'main') try {
     const { supabase } = await import('@/integrations/supabase/client');
     const { data } = await supabase
       .from('gw_tenants')
