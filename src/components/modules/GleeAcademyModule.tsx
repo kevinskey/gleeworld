@@ -23,7 +23,6 @@ import {
   Pencil,
   Trash2,
   MoreVertical,
-  Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CourseLibrarySection } from '@/components/academy/CourseLibrarySection';
@@ -393,7 +392,7 @@ function ClassCard({
     <div className="relative bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors group">
       <button
         onClick={onOpen}
-        className="w-full text-left p-5 pb-12 flex flex-col"
+        className="w-full text-left p-5 flex flex-col"
       >
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="text-xs font-mono text-sky-400">{course.course_code}</div>
@@ -414,15 +413,6 @@ function ClassCard({
             <ArrowRight className="w-3 h-3 text-sky-400 group-hover:translate-x-0.5 transition-transform" />
           </span>
         </div>
-      </button>
-      {/* Rehearsal-tonight quick action — always visible, the highest-frequency thing a director does */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); window.location.href = `/academy/${course.course_code.toLowerCase().replace(/\s+/g, '-')}/rehearsal-today`; }}
-        className="absolute bottom-3 left-3 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-semibold shadow"
-        title="Open Rehearsal Tonight"
-      >
-        <Zap className="w-3 h-3" /> Rehearsal tonight
       </button>
       {canManage && (
         <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
