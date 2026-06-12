@@ -10,8 +10,10 @@ type Props = {
   onSelect: (key: string) => void;
 };
 
-const WIDTH = 300;
-const HEIGHT = 170;
+// Narrow logical width + responsive viewBox scaling = staff lines ~2x farther apart
+// on a phone screen, so lines/spaces are big enough to tap accurately.
+const WIDTH = 180;
+const HEIGHT = 150;
 const STAVE_Y = 30;
 
 /**
@@ -30,7 +32,7 @@ export default function StaffPlacement({ clef, targetKey, chosenKey, onSelect }:
     const renderer = new Renderer(ref.current, Renderer.Backends.SVG);
     renderer.resize(WIDTH, HEIGHT);
     const ctx = renderer.getContext();
-    const stave = new Stave(10, STAVE_Y, WIDTH - 20);
+    const stave = new Stave(6, STAVE_Y, WIDTH - 12);
     stave.addClef(clef).setContext(ctx).draw();
 
     const spacing = stave.getSpacingBetweenLines();
@@ -50,25 +52,41 @@ export default function StaffPlacement({ clef, targetKey, chosenKey, onSelect }:
     if (notes.length) {
       const voice = new Voice({ numBeats: 4, beatValue: 4 }).setStrict(false);
       voice.addTickables(notes);
-      new Formatter().joinVoices([voice]).format([voice], WIDTH - 110);
+      new Formatter().joinVoices([voice]).format([voice], WIDTH - 90);
       voice.draw(ctx, stave);
+    }
+
+    // Scale the SVG to the container width so the staff is big enough to tap on phones
+    const svg = ref.current.querySelector('svg');
+    if (svg) {
+      svg.setAttribute('viewBox', `0 0 ${WIDTH} ${HEIGHT}`);
+      svg.removeAttribute('width');
+      svg.removeAttribute('height');
+      // VexFlow sets inline style width/height; override so the SVG stretches
+      svg.style.width = '100%';
+      svg.style.height = 'auto';
+      svg.style.aspectRatio = `${WIDTH} / ${HEIGHT}`;
+      svg.style.display = 'block';
     }
   }, [clef, targetKey, chosenKey, answered]);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (answered || !zones) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const y = e.clientY - rect.top;
+    const svg = e.currentTarget.querySelector('svg');
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const y = (e.clientY - rect.top) / (rect.height / HEIGHT);
     const idx = Math.round((zones.bottomY - y) / zones.step);
     if (idx < 0 || idx >= pool.length) return;
     onSelect(pool[idx].key);
   };
 
   return (
-    <div className="inline-block">
+    <div className="w-full max-w-[560px]">
       <div
         ref={ref}
         onClick={handleClick}
+        style={{ touchAction: 'manipulation' }}
         className={`rounded-md bg-white p-1 ${answered ? '' : 'cursor-crosshair'}`}
       />
       {!answered && <p className="mt-1 text-xs text-muted-foreground text-center">Tap the line or space on the staff</p>}
