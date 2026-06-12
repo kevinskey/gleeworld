@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import {
   Send, Users, Plus, MessageSquare, X, Loader2, Image as ImageIcon,
-  Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Newspaper, Video, Zap, Smartphone,
+  Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Video, Zap, Smartphone,
   ChevronLeft, Bell, BellOff,
 } from 'lucide-react';
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
@@ -458,12 +458,6 @@ export default function Messenger() {
             <MessageSquare className="w-4 h-4" /> Groups
           </h2>
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={startGroupMeeting} title={selectedGroup ? `Start meeting in ${selectedGroup.name}` : 'Start instant meeting'}>
-              <Video className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowNewsletters(true)} title="Newsletters (drafts, scheduled, sent)">
-              <Newspaper className="w-4 h-4" />
-            </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowSmsComposer(true)} title="Send a text (SMS)">
               <Smartphone className="w-4 h-4" />
             </Button>
