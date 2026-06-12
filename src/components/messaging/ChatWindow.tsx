@@ -9,6 +9,7 @@ import { TypingIndicator } from './TypingIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { X } from 'lucide-react';
+import { scrollChatToBottom } from './scrollChat';
 
 interface ChatWindowProps {
   groupId: string | null;
@@ -30,7 +31,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollChatToBottom(messagesEndRef.current);
   };
 
   useEffect(() => {

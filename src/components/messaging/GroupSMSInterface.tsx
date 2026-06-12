@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { MessageSquare, Send, Phone, Users, Plus } from 'lucide-react';
+import { scrollChatToBottom } from './scrollChat';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   useGroupSMSStatus,
@@ -42,7 +43,7 @@ export const GroupSMSInterface: React.FC<GroupSMSInterfaceProps> = ({
   useRealtimeSMSMessages(smsStatus?.conversation?.id);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollChatToBottom(messagesEndRef.current);
   };
 
   useEffect(() => {

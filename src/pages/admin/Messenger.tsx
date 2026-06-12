@@ -16,6 +16,7 @@ import {
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { VoiceRecorder } from '@/components/messenger/VoiceRecorder';
+import { scrollChatToBottom } from '@/components/messaging/scrollChat';
 import { PollCard } from '@/components/messenger/PollCard';
 import { PollComposer } from '@/components/messenger/PollComposer';
 import { RsvpCard } from '@/components/messenger/RsvpCard';
@@ -158,7 +159,7 @@ export default function Messenger() {
   }, [selectedGroupId, qc]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollChatToBottom(messagesEndRef.current);
   }, [messages.length]);
 
   useEffect(() => {
