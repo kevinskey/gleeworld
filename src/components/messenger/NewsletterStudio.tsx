@@ -1,6 +1,6 @@
 // Mass-email-marketing style newsletter window: campaign list with status
 // filters, and an editor with side-by-side live email preview.
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   X, Send, Loader2, Plus, Trash2, ArrowUp, ArrowDown, Save, Clock, Newspaper,
   ChevronLeft, Copy, Eye, Pencil, CheckCircle2, FileEdit, Users, LayoutTemplate,
+  Upload, ArrowLeft,
 } from 'lucide-react';
 
 type Group = 'all' | 'students' | 'admins' | 'fans';
@@ -601,6 +602,11 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
               </Button>
             </div>
           )}
+          {!showTemplatePicker && !newsletterId && (
+            <Button variant="ghost" size="sm" className="text-muted-foreground -ml-2" onClick={() => setShowTemplatePicker(true)}>
+              <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back to starting points
+            </Button>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">To</Label>
@@ -624,8 +630,8 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
           </div>
 
           <div>
-            <Label className="text-xs">Header image URL (optional)</Label>
-            <Input value={headerImage} onChange={(e) => setHeaderImage(e.target.value)} placeholder="https://..." />
+            <Label className="text-xs">Header image (optional)</Label>
+            <ImageField value={headerImage} onChange={setHeaderImage} />
           </div>
 
           <div>
@@ -661,7 +667,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                 </div>
                 <Input value={s.heading} onChange={(e) => updateSection(i, { heading: e.target.value })} placeholder="Heading" />
                 <Textarea value={s.body} onChange={(e) => updateSection(i, { body: e.target.value })} placeholder="Body…" className="min-h-[100px]" />
-                <Input value={s.image_url || ''} onChange={(e) => updateSection(i, { image_url: e.target.value })} placeholder="Image URL (optional)" />
+                <ImageField value={s.image_url || ''} onChange={(url) => updateSection(i, { image_url: url })} placeholder="Image (optional) — URL or upload" />
               </div>
             ))}
             <div className="flex flex-wrap gap-1 items-center">
@@ -708,6 +714,49 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
           />
         </div>
       </div>
+    </div>
+  );
+}
+
+function ImageField({ value, onChange, placeholder }: { value: string; onChange: (url: string) => void; placeholder?: string }) {
+  const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function upload(file: File) {
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `newsletters/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage
+        .from('messenger-attachments')
+        .upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { data: pub } = supabase.storage.from('messenger-attachments').getPublicUrl(path);
+      onChange(pub.publicUrl);
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="flex gap-1">
+        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || 'Image URL or upload…'} />
+        <Button variant="outline" size="sm" className="shrink-0 h-10" onClick={() => fileRef.current?.click()} disabled={uploading} title="Upload image">
+          {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+        </Button>
+        {value && (
+          <Button variant="ghost" size="sm" className="shrink-0 h-10" onClick={() => onChange('')} title="Remove image">
+            <X className="w-3.5 h-3.5" />
+          </Button>
+        )}
+        <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+      </div>
+      {value && <img src={value} alt="" className="h-16 rounded border object-cover" />}
     </div>
   );
 }
