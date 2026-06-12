@@ -9,7 +9,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { LEVEL_LABEL } from '@/hooks/useCourseStore';
 import {
   ArrowLeft, ChevronDown, ChevronRight, Loader2, Headphones, PenSquare,
-  Pencil, Plus, X,
+  Pencil, Plus, X, Music,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -210,21 +210,59 @@ function UnitSection({
   );
 }
 
-function listeningToText(listening: Listening[]): string {
-  return listening
-    .map((l) => [l.title, l.composer].filter(Boolean).join(' — '))
-    .join('\n');
-}
+type MediaAudio = { id: string; title: string; file_url: string };
 
-function textToListening(text: string): Listening[] {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [title, composer] = line.split(/\s+—\s+|\s+--\s+/);
-      return composer ? { title, composer } : { title: line };
-    });
+function MediaLibraryPicker({ onPick, onClose }: { onPick: (m: MediaAudio) => void; onClose: () => void }) {
+  const [search, setSearch] = useState('');
+  const { data: files = [], isLoading } = useQuery({
+    queryKey: ['media-audio', search],
+    queryFn: async (): Promise<MediaAudio[]> => {
+      let q = supabase
+        .from('gw_media_library')
+        .select('id, title, file_url')
+        .or('file_type.ilike.audio%,file_url.ilike.%.mp3')
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (search.trim()) q = q.ilike('title', `%${search.trim()}%`);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as MediaAudio[];
+    },
+  });
+
+  return (
+    <div className="border border-border rounded-md bg-muted/30 p-2 space-y-2">
+      <div className="flex items-center gap-2">
+        <Input
+          autoFocus
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search audio in media library..."
+          className="h-8 text-sm"
+        />
+        <Button size="sm" variant="ghost" onClick={onClose}><X className="w-3.5 h-3.5" /></Button>
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-3"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /></div>
+      ) : files.length === 0 ? (
+        <p className="text-xs text-muted-foreground px-1 py-2">No audio files found.</p>
+      ) : (
+        <div className="max-h-48 overflow-y-auto divide-y divide-border">
+          {files.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => onPick(f)}
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-sm text-foreground hover:bg-muted rounded"
+            >
+              <Music className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className="truncate">{f.title}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function LessonRow({
@@ -239,7 +277,8 @@ function LessonRow({
   const [title, setTitle] = useState(lesson.title);
   const [content, setContent] = useState(lesson.content ?? '');
   const [objectivesText, setObjectivesText] = useState('');
-  const [listeningText, setListeningText] = useState('');
+  const [listeningItems, setListeningItems] = useState<Listening[]>([]);
+  const [showPicker, setShowPicker] = useState(false);
 
   const objectives = Array.isArray(lesson.objectives) ? lesson.objectives : [];
   const listening = Array.isArray(lesson.listening) ? lesson.listening : [];
@@ -248,9 +287,14 @@ function LessonRow({
     setTitle(lesson.title);
     setContent(lesson.content ?? '');
     setObjectivesText(objectives.map(String).join('\n'));
-    setListeningText(listeningToText(listening));
+    setListeningItems(listening.map((l) => ({ ...l })));
+    setShowPicker(false);
     setEditing(true);
     setOpen(true);
+  }
+
+  function updateItem(i: number, patch: Partial<Listening>) {
+    setListeningItems((items) => items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
   }
 
   async function save() {
@@ -261,7 +305,7 @@ function LessonRow({
         p_title: title.trim() || lesson.title,
         p_content: content.trim() || null,
         p_objectives: objectivesText.split('\n').map((s) => s.trim()).filter(Boolean),
-        p_listening: textToListening(listeningText),
+        p_listening: listeningItems.filter((l) => (l.title ?? '').trim() || l.url),
       });
       if (error) throw error;
       toast.success('Lesson saved');
@@ -329,15 +373,54 @@ function LessonRow({
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Listening (one per line, “Title — Composer”)
-            </label>
-            <textarea
-              value={listeningText}
-              onChange={(e) => setListeningText(e.target.value)}
-              rows={4}
-              className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm text-foreground"
-            />
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Listening</label>
+            <div className="mt-1 space-y-2">
+              {listeningItems.map((l, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    value={l.title ?? ''}
+                    onChange={(e) => updateItem(i, { title: e.target.value })}
+                    placeholder="Title"
+                    className="h-8 text-sm flex-1"
+                  />
+                  <Input
+                    value={l.composer ?? ''}
+                    onChange={(e) => updateItem(i, { composer: e.target.value })}
+                    placeholder="Composer"
+                    className="h-8 text-sm flex-1"
+                  />
+                  {l.url && (
+                    <span title={l.url} className="text-emerald-600 shrink-0">
+                      <Music className="w-3.5 h-3.5" />
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setListeningItems((items) => items.filter((_, idx) => idx !== i))}
+                    className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
+                    title="Remove"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setListeningItems((items) => [...items, { title: '' }])}>
+                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Add item
+                </Button>
+                <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setShowPicker((s) => !s)}>
+                  <Music className="w-3.5 h-3.5 mr-1.5" /> Add from media library
+                </Button>
+              </div>
+              {showPicker && (
+                <MediaLibraryPicker
+                  onClose={() => setShowPicker(false)}
+                  onPick={(m) => {
+                    setListeningItems((items) => [...items, { title: m.title, url: m.file_url }]);
+                    setShowPicker(false);
+                  }}
+                />
+              )}
+            </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="ghost" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
@@ -363,11 +446,16 @@ function LessonRow({
           {listening.length > 0 && (
             <div>
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Listening</div>
-              <ul className="space-y-0.5 text-foreground/85">
+              <ul className="space-y-2 text-foreground/85">
                 {listening.map((l, i) => (
-                  <li key={i} className="flex items-center gap-1.5">
-                    <Headphones className="w-3 h-3 text-muted-foreground shrink-0" />
-                    {l.title ?? ''}{l.composer ? ` — ${l.composer}` : ''}
+                  <li key={i}>
+                    <div className="flex items-center gap-1.5">
+                      <Headphones className="w-3 h-3 text-muted-foreground shrink-0" />
+                      {l.title ?? ''}{l.composer ? ` — ${l.composer}` : ''}
+                    </div>
+                    {l.url && (
+                      <audio controls preload="none" src={l.url} className="mt-1 w-full max-w-sm h-9" />
+                    )}
                   </li>
                 ))}
               </ul>
