@@ -65,6 +65,8 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
     },
   });
 
+  const adHocPhone = parsePhone(personSearch);
+
   const searchResults = personSearch.trim()
     ? people.filter((p) =>
         !selectedPeople.find((s) => s.user_id === p.user_id) &&
@@ -263,10 +265,23 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
               <Input
                 value={personSearch}
                 onChange={(e) => setPersonSearch(e.target.value)}
-                placeholder="Search by name or email…"
+                placeholder="Search by name or email, or type a phone number…"
               />
-              {searchResults.length > 0 && (
+              {(searchResults.length > 0 || adHocPhone) && (
                 <div className="border rounded-md mt-1 max-h-48 overflow-y-auto divide-y">
+                  {adHocPhone && !selectedPeople.find((s) => s.phone === adHocPhone) && (
+                    <button
+                      type="button"
+                      className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted flex items-center justify-between"
+                      onClick={() => {
+                        setSelectedPeople((prev) => [...prev, { user_id: `phone:${adHocPhone}`, full_name: adHocPhone, email: null, phone: adHocPhone }]);
+                        setPersonSearch('');
+                      }}
+                    >
+                      <span>Text {adHocPhone}</span>
+                      <Smartphone className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                  )}
                   {searchResults.map((p) => (
                     <button
                       key={p.user_id}
@@ -342,6 +357,15 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
       </Card>
     </div>
   );
+}
+
+function parsePhone(input: string): string | null {
+  const cleaned = input.trim().replace(/[\s().-]/g, '');
+  if (!/^\+?\d{10,15}$/.test(cleaned)) return null;
+  if (cleaned.startsWith('+')) return cleaned;
+  if (cleaned.length === 10) return `+1${cleaned}`;
+  if (cleaned.length === 11 && cleaned.startsWith('1')) return `+${cleaned}`;
+  return `+${cleaned}`;
 }
 
 function escapeHtml(s: string) {
