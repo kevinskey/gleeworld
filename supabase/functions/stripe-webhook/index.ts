@@ -140,11 +140,18 @@ serve(async (req) => {
 });
 
 // Module add-on checkout (create-module-checkout) — activates the tenant's
-// subscription row. Shop/order checkouts have no module_id metadata and are skipped.
+// subscription row. Course add-on checkout (create-course-checkout) — writes
+// entitlement rows. Shop/order checkouts have neither metadata key and are skipped.
 async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.Session) {
   const tenantId = session.metadata?.tenant_id || session.client_reference_id;
   const moduleId = session.metadata?.module_id;
-  logStep("Processing checkout.session.completed", { id: session.id, tenantId, moduleId });
+  const courseSku = session.metadata?.course_sku;
+  logStep("Processing checkout.session.completed", { id: session.id, tenantId, moduleId, courseSku });
+
+  if (tenantId && courseSku && session.mode === 'payment') {
+    await handleCoursePurchase(supabase, session, tenantId, courseSku);
+    return;
+  }
 
   if (!tenantId || !moduleId || session.mode !== 'subscription') {
     logStep("Not a module subscription checkout — skipping");
@@ -169,6 +176,59 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
   logStep("Module activated", { tenantId, moduleId });
 
   // First checkout may have used customer_email — persist the customer id for next time.
+  if (session.customer) {
+    await supabase
+      .from('gw_tenants')
+      .update({ stripe_customer_id: session.customer as string })
+      .eq('id', tenantId)
+      .is('stripe_customer_id', null);
+  }
+}
+
+// Course add-on purchase: write entitlement rows (4 rows for a bundle).
+// Idempotent: unique(tenant_id, product_id) + upsert ignoreDuplicates.
+async function handleCoursePurchase(
+  supabase: any,
+  session: Stripe.Checkout.Session,
+  tenantId: string,
+  courseSku: string
+) {
+  const paymentIntent = (session.payment_intent as string) || null;
+
+  const { data: product, error: prodErr } = await supabase
+    .from('gw_course_product')
+    .select('id, sku, bundle_key, template_course_id')
+    .eq('sku', courseSku)
+    .maybeSingle();
+  if (prodErr || !product) {
+    logStep("Course product not found for sku", { courseSku });
+    throw new Error(`Course product not found: ${courseSku}`);
+  }
+
+  let rows: { tenant_id: string; product_id: string; source: string; stripe_payment_intent: string | null }[];
+  if (!product.template_course_id && product.bundle_key) {
+    const { data: members } = await supabase
+      .from('gw_course_product')
+      .select('id')
+      .eq('bundle_key', product.bundle_key)
+      .eq('active', true)
+      .not('template_course_id', 'is', null);
+    rows = (members ?? []).map((m: { id: string }) => ({
+      tenant_id: tenantId, product_id: m.id, source: 'bundle', stripe_payment_intent: paymentIntent,
+    }));
+  } else {
+    rows = [{ tenant_id: tenantId, product_id: product.id, source: 'purchase', stripe_payment_intent: paymentIntent }];
+  }
+
+  const { error } = await supabase
+    .from('gw_tenant_entitlement')
+    .upsert(rows, { onConflict: 'tenant_id,product_id', ignoreDuplicates: true });
+  if (error) {
+    logStep("Entitlement insert failed", { error: error.message });
+    throw new Error(`Entitlement insert failed: ${error.message}`);
+  }
+  logStep("Course entitlements written", { tenantId, courseSku, count: rows.length });
+
   if (session.customer) {
     await supabase
       .from('gw_tenants')

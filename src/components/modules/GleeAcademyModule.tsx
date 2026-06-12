@@ -26,6 +26,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CourseLibrarySection } from '@/components/academy/CourseLibrarySection';
 
 interface Course {
   id: string;
@@ -294,6 +295,9 @@ export const GleeAcademyModule = ({ user: _user, isFullPage = false }: ModulePro
           </div>
         )}
       </Section>
+
+      {/* Course Library (premium templates) */}
+      <CourseLibrarySection isSuperAdmin={!!profile?.is_super_admin} />
 
       {/* Quick Tools */}
       <Section title="Tools" subtitle="Cross-class admin tools.">
