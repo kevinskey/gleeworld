@@ -478,9 +478,6 @@ export default function Messenger() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="sm" onClick={startGroupMeeting} title={selectedGroup ? `Start meeting in ${selectedGroup.name}` : 'Start instant meeting'}>
-              <Video className="w-4 h-4" />
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" title="Quick blast">
