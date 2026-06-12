@@ -31,10 +31,10 @@ interface Person {
 const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file
 const MAX_ATTACHMENTS = 5;
 
-export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
+export function EmailBlastComposer({ onClose, initialGroup = 'students' }: { onClose: () => void; initialGroup?: Group }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const [group, setGroup] = useState<Group>('students');
+  const [group, setGroup] = useState<Group>(initialGroup);
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);

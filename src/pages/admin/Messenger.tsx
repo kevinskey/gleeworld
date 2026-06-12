@@ -13,8 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Send, Users, Plus, MessageSquare, X, Loader2, Image as ImageIcon,
   Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Video, Zap, Smartphone,
-  ChevronLeft, Bell, BellOff,
+  ChevronLeft, Bell, BellOff, Newspaper, User as UserIcon,
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { VoiceRecorder } from '@/components/messenger/VoiceRecorder';
@@ -80,7 +81,7 @@ export default function Messenger() {
   const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
   const [showPollComposer, setShowPollComposer] = useState(false);
   const [showRsvpComposer, setShowRsvpComposer] = useState(false);
-  const [showQuickBlast, setShowQuickBlast] = useState(false);
+  const [quickBlastMode, setQuickBlastMode] = useState<null | 'group' | 'custom'>(null);
   const [showSmsComposer, setShowSmsComposer] = useState(false);
   const [showEmailClient, setShowEmailClient] = useState(false);
   const [showNewsletters, setShowNewsletters] = useState(false);
@@ -119,7 +120,7 @@ export default function Messenger() {
     if (!open) return;
     if (open === 'email') setShowEmailClient(true);
     else if (open === 'newsletter') setShowNewsletters(true);
-    else if (open === 'blast') setShowQuickBlast(true);
+    else if (open === 'blast') setQuickBlastMode('group');
     else if (open === 'sms') setShowSmsComposer(true);
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams]);
@@ -461,9 +462,39 @@ export default function Messenger() {
             <Button variant="ghost" size="sm" onClick={() => setShowSmsComposer(true)} title="Send a text (SMS)">
               <Smartphone className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowQuickBlast(true)} title="Email blast">
-              <Zap className="w-4 h-4" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" title="Email & newsletters">
+                  <Mail className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowEmailClient(true)}>
+                  <Mail className="w-4 h-4 mr-2" /> Email
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowNewsletters(true)}>
+                  <Newspaper className="w-4 h-4 mr-2" /> Newsletters
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button variant="ghost" size="sm" onClick={startGroupMeeting} title={selectedGroup ? `Start meeting in ${selectedGroup.name}` : 'Start instant meeting'}>
+              <Video className="w-4 h-4" />
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" title="Quick blast">
+                  <Zap className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setQuickBlastMode('custom')}>
+                  <UserIcon className="w-4 h-4 mr-2" /> Blast a person
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setQuickBlastMode('group')}>
+                  <Users className="w-4 h-4 mr-2" /> Blast a group
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="ghost" size="sm" onClick={() => setShowBroadcast(true)} title="Emergency broadcast to all groups">
               <Megaphone className="w-4 h-4" />
             </Button>
@@ -723,8 +754,8 @@ export default function Messenger() {
         </aside>
       )}
 
-      {showQuickBlast && (
-        <EmailBlastComposer onClose={() => setShowQuickBlast(false)} />
+      {quickBlastMode && (
+        <EmailBlastComposer initialGroup={quickBlastMode === 'custom' ? 'custom' : 'students'} onClose={() => setQuickBlastMode(null)} />
       )}
       {showSmsComposer && (
         <SmsComposer onClose={() => setShowSmsComposer(false)} />
