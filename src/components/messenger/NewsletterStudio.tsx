@@ -30,6 +30,68 @@ interface Section {
   image_url?: string;
 }
 
+// Built-in starting points so users never face a blank page.
+const LAYOUTS: Array<{ name: string; intro: string; sections: Section[]; footer: string }> = [
+  {
+    name: 'Monthly update',
+    intro: 'Dear friends,\n\nHere’s what’s been happening with us this month.',
+    sections: [
+      { heading: 'Highlights', body: '' },
+      { heading: 'Upcoming events', body: '' },
+      { heading: 'Member spotlight', body: '' },
+    ],
+    footer: 'With gratitude,\n[Your name]\n[Title] · [Email]',
+  },
+  {
+    name: 'Event announcement',
+    intro: 'You’re invited!',
+    sections: [
+      { heading: 'Event details', body: '📅 Date: \n🕒 Time: \n📍 Location: \n🎟️ Tickets: ' },
+      { heading: 'About the program', body: '' },
+    ],
+    footer: 'We hope to see you there!\n[Your name] · [Email]',
+  },
+  {
+    name: 'Concert recap',
+    intro: 'Thank you to everyone who joined us!',
+    sections: [
+      { heading: 'The performance', body: '' },
+      { heading: 'Photo highlights', body: '' },
+      { heading: 'What’s next', body: '' },
+    ],
+    footer: 'With appreciation,\n[Your name]\n[Title] · [Email]',
+  },
+  {
+    name: 'Fundraising appeal',
+    intro: 'Dear supporters,\n\nYour generosity makes our music possible.',
+    sections: [
+      { heading: 'Why we’re asking', body: '' },
+      { heading: 'How to give', body: 'Give online: \nMail a check: \nQuestions? Contact: ' },
+    ],
+    footer: 'Thank you for your support.\n[Your name] · [Email]',
+  },
+];
+
+const BLOCK_PRESETS: Array<{ name: string; section: Section }> = [
+  { name: 'Text', section: { heading: '', body: '' } },
+  { name: 'Announcement', section: { heading: 'Announcement', body: '' } },
+  { name: 'Event details', section: { heading: 'Event details', body: '📅 Date: \n🕒 Time: \n📍 Location: ' } },
+  { name: 'Spotlight', section: { heading: 'Member spotlight', body: '' } },
+  { name: 'Image + caption', section: { heading: '', body: '', image_url: '' } },
+];
+
+const HEADER_PRESETS: Array<{ name: string; intro: string }> = [
+  { name: 'Warm greeting', intro: 'Dear friends,\n\nWe hope this finds you well.' },
+  { name: 'Big news', intro: 'We have exciting news to share!' },
+  { name: 'Invitation', intro: 'You’re invited to join us for a special event.' },
+];
+
+const FOOTER_PRESETS: Array<{ name: string; footer: string }> = [
+  { name: 'Signature', footer: 'Warmly,\n[Your name]\n[Title]' },
+  { name: 'Contact info', footer: '[Organization name]\n[Email] · [Phone]\n[Website]' },
+  { name: 'Full footer', footer: 'Warmly,\n[Your name], [Title]\n\n[Organization name]\n[Email] · [Phone] · [Website]\n\nYou’re receiving this because you’re part of our community.' },
+];
+
 interface Campaign {
   id: string;
   title: string;
@@ -242,7 +304,14 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
   const [busy, setBusy] = useState(false);
   const [mobilePane, setMobilePane] = useState<'edit' | 'preview'>('edit');
   const [savedId, setSavedId] = useState<string | undefined>(newsletterId);
-  const [showTemplatePicker, setShowTemplatePicker] = useState(!newsletterId && templates.length > 0);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(!newsletterId);
+
+  function applyLayout(layout: typeof LAYOUTS[number]) {
+    setIntro(layout.intro);
+    setSections(layout.sections.map((s) => ({ ...s })));
+    setFooter(layout.footer);
+    setShowTemplatePicker(false);
+  }
 
   async function applyTemplate(id: string) {
     const { data } = await supabase.from('gw_newsletters').select('*').eq('id', id).maybeSingle();
@@ -318,7 +387,9 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
   function updateSection(i: number, patch: Partial<Section>) {
     setSections((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
   }
-  function addSection() { setSections((p) => [...p, { heading: '', body: '' }]); }
+  function addSection(preset?: Section) {
+    setSections((p) => [...p, preset ? { ...preset } : { heading: '', body: '' }]);
+  }
   function removeSection(i: number) { setSections((p) => p.filter((_, idx) => idx !== i)); }
   function moveSection(i: number, dir: -1 | 1) {
     setSections((p) => {
@@ -494,25 +565,40 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
         {/* Edit pane */}
         <div className={`flex-1 min-w-0 overflow-y-auto p-4 space-y-4 ${mobilePane === 'preview' ? 'hidden lg:block' : ''} lg:max-w-[50%] lg:border-r`}>
           {showTemplatePicker && (
-            <div className="border rounded-lg p-3 bg-purple-50/60 space-y-2">
+            <div className="border rounded-lg p-3 bg-purple-50/60 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold flex items-center gap-2">
-                  <LayoutTemplate className="w-4 h-4 text-purple-700" /> Start from a template
+                  <LayoutTemplate className="w-4 h-4 text-purple-700" /> Pick a starting point
                 </span>
                 <Button variant="ghost" size="sm" onClick={() => setShowTemplatePicker(false)}>
                   <X className="w-3.5 h-3.5" />
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {templates.map((t) => (
-                  <Button key={t.id} variant="outline" size="sm" onClick={() => applyTemplate(t.id)}>
-                    {t.title}
-                  </Button>
-                ))}
-                <Button variant="ghost" size="sm" onClick={() => setShowTemplatePicker(false)}>
-                  Start blank
-                </Button>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Layouts</p>
+                <div className="flex flex-wrap gap-2">
+                  {LAYOUTS.map((l) => (
+                    <Button key={l.name} variant="outline" size="sm" onClick={() => applyLayout(l)}>
+                      {l.name}
+                    </Button>
+                  ))}
+                </div>
               </div>
+              {templates.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Your templates</p>
+                  <div className="flex flex-wrap gap-2">
+                    {templates.map((t) => (
+                      <Button key={t.id} variant="outline" size="sm" onClick={() => applyTemplate(t.id)}>
+                        {t.title}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => setShowTemplatePicker(false)}>
+                Start blank
+              </Button>
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -545,6 +631,20 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
           <div>
             <Label className="text-xs">Intro (optional)</Label>
             <Textarea value={intro} onChange={(e) => setIntro(e.target.value)} placeholder="Dear friends…" className="min-h-[80px]" />
+            {!intro && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {HEADER_PRESETS.map((h) => (
+                  <button
+                    key={h.name}
+                    type="button"
+                    onClick={() => setIntro(h.intro)}
+                    className="text-[11px] px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
+                  >
+                    {h.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -564,14 +664,33 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                 <Input value={s.image_url || ''} onChange={(e) => updateSection(i, { image_url: e.target.value })} placeholder="Image URL (optional)" />
               </div>
             ))}
-            <Button variant="outline" size="sm" onClick={addSection}>
-              <Plus className="w-3 h-3 mr-1" /> Add block
-            </Button>
+            <div className="flex flex-wrap gap-1 items-center">
+              <span className="text-xs text-muted-foreground mr-1">Add block:</span>
+              {BLOCK_PRESETS.map((b) => (
+                <Button key={b.name} variant="outline" size="sm" onClick={() => addSection(b.section)}>
+                  <Plus className="w-3 h-3 mr-1" /> {b.name}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div>
             <Label className="text-xs">Footer (optional)</Label>
             <Textarea value={footer} onChange={(e) => setFooter(e.target.value)} placeholder="Dr. Smith · Director · choir@school.edu" />
+            {!footer && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {FOOTER_PRESETS.map((f) => (
+                  <button
+                    key={f.name}
+                    type="button"
+                    onClick={() => setFooter(f.footer)}
+                    className="text-[11px] px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
+                  >
+                    {f.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
