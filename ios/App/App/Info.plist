@@ -24,6 +24,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>GleeWorld uses the camera for video meetings and profile photos.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>GleeWorld uses the microphone for the instrument tuner and music practice tools.</string>
 	<key>UILaunchStoryboardName</key>

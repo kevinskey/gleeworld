@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
+import { DeleteAccountDialog } from "@/components/auth/DeleteAccountDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useToast } from "@/hooks/use-toast";
@@ -61,6 +62,7 @@ export default function Settings() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
 
   const {
     register,
@@ -506,7 +508,7 @@ export default function Settings() {
                       <p className="text-sm text-muted-foreground mb-2">
                         These actions cannot be undone
                       </p>
-                      <Button variant="destructive" type="button">
+                      <Button variant="destructive" type="button" onClick={() => setShowDeleteAccount(true)}>
                         Delete Account
                       </Button>
                     </div>
@@ -534,10 +536,12 @@ export default function Settings() {
           </div>
         </form>
 
-        <ChangePasswordDialog 
-          open={showChangePassword} 
-          onOpenChange={setShowChangePassword} 
+        <ChangePasswordDialog
+          open={showChangePassword}
+          onOpenChange={setShowChangePassword}
         />
+
+        <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
       </div>
     </UniversalLayout>
   );
