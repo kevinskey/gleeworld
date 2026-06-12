@@ -35,6 +35,7 @@ export default function SightSingLab() {
   const [cents, setCents] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [hit, setHit] = useState(false);
+  const [hold, setHold] = useState(0);
 
   const ctxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -53,6 +54,7 @@ export default function SightSingLab() {
     streamRef.current = null;
     setListening(false);
     setCents(null);
+    setHold(0);
   };
 
   useEffect(() => stop, []);
@@ -64,6 +66,7 @@ export default function SightSingLab() {
     holdRef.current = 0;
     hitRef.current = false;
     setHit(false);
+    setHold(0);
   };
 
   const start = async () => {
@@ -91,8 +94,13 @@ export default function SightSingLab() {
         if (freq && freq > 60 && freq < 1500) {
           const c = bestCents(freq, targetFreqRef.current);
           setCents(c);
-          if (Math.abs(c) <= CENTS_TOL && !hitRef.current) {
-            holdRef.current += 1;
+          if (!hitRef.current) {
+            // Decay instead of hard reset: real voices have vibrato and the
+            // detector drops frames, so demanding consecutive clean frames
+            // means the hold never completes on a phone mic.
+            if (Math.abs(c) <= CENTS_TOL) holdRef.current += 1;
+            else holdRef.current = Math.max(0, holdRef.current - 2);
+            setHold(Math.min(1, holdRef.current / HOLD_FRAMES));
             if (holdRef.current >= HOLD_FRAMES) {
               hitRef.current = true;
               setHit(true);
@@ -100,12 +108,13 @@ export default function SightSingLab() {
               playChime('right');
               window.setTimeout(nextNote, 1200);
             }
-          } else if (Math.abs(c) > CENTS_TOL) {
-            holdRef.current = 0;
           }
         } else {
           setCents(null);
-          holdRef.current = 0;
+          if (!hitRef.current) {
+            holdRef.current = Math.max(0, holdRef.current - 1);
+            setHold(Math.min(1, holdRef.current / HOLD_FRAMES));
+          }
         }
         rafRef.current = requestAnimationFrame(tick);
       };
@@ -143,6 +152,9 @@ export default function SightSingLab() {
               className={`absolute inset-y-0 w-2 rounded-full transition-all duration-75 ${inTune ? 'bg-emerald-500' : 'bg-amber-400'}`}
               style={{ left: `calc(50% + ${needle}% - 4px)` }}
             />
+          </div>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+            <div className="h-1.5 rounded-full bg-emerald-500 transition-all duration-100" style={{ width: `${(hit ? 1 : hold) * 100}%` }} />
           </div>
           <p className="text-center text-sm text-muted-foreground">
             {hit ? (
