@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark, ShoppingBag } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark, ShoppingBag, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -275,9 +275,16 @@ export const UniversalHeader = ({
           {/* Right side actions - Mobile-optimized icon bar */}
           <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 xl:gap-4 text-white/80 pr-2 sm:pr-4 md:pr-6 lg:pr-8 xl:pr-12">
             
-            {/* Email/SMS Messenger - Available to all authenticated users */}
-            {user && <EnhancedTooltip content="Send Email/SMS">
+            {/* Group chat / SMS notifications - Available to all authenticated users */}
+            {user && <EnhancedTooltip content="Messages & SMS">
                 <Button variant="ghost" size="sm" onClick={() => navigate('/messenger')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                  <Zap className={HEADER_ICON_SIZES.icon} />
+                </Button>
+              </EnhancedTooltip>}
+
+            {/* Email, newsletters & video - Available to all authenticated users */}
+            {user && <EnhancedTooltip content="Email & Newsletters">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/communications?open=email')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                   <Mail className={HEADER_ICON_SIZES.icon} />
                 </Button>
               </EnhancedTooltip>}

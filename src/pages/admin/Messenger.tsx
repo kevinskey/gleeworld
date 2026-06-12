@@ -1,6 +1,7 @@
 // /messenger — GroupMe-style group chat. Phase 2: multi-emoji reactions,
 // image upload, AI summary, @mentions, section auto-groups, emergency broadcast.
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -99,6 +100,16 @@ export default function Messenger() {
       return data ?? [];
     },
   });
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const open = searchParams.get('open');
+    if (!open) return;
+    if (open === 'email') setShowEmailClient(true);
+    else if (open === 'newsletter') setShowNewsletters(true);
+    else if (open === 'blast') setShowQuickBlast(true);
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const { data: groupMeta = {} } = useQuery<Record<string, { unread: number; muted: boolean }>>({
     queryKey: ['messenger-unread'],
