@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Users, UserPlus, Shield, Settings, Search, Filter, Mail, Calendar, Crown, UserCheck } from "lucide-react";
+import { Users, UserPlus, Shield, Settings, Search, Filter, Mail, Calendar, Crown, UserCheck, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { RosterImport } from "@/components/admin/RosterImport";
 interface UserProfile {
   id: string;
   user_id: string;
@@ -29,6 +30,7 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [showRosterImport, setShowRosterImport] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -154,6 +156,11 @@ const updateUserRole = async (userId: string, newRole: string) => {
           <h1 className="text-3xl font-bold">User Management</h1>
           <p className="text-muted-foreground">Manage member accounts, roles, and permissions</p>
         </div>
+        <div className="flex gap-2">
+        <Button variant="outline" onClick={() => setShowRosterImport(true)}>
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          Import Roster (CSV)
+        </Button>
         <Dialog>
           <DialogTrigger asChild>
             <Button>
@@ -195,7 +202,10 @@ const updateUserRole = async (userId: string, newRole: string) => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      <RosterImport open={showRosterImport} onOpenChange={setShowRosterImport} onImported={fetchUsers} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
