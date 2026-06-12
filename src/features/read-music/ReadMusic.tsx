@@ -1,7 +1,9 @@
 import { Routes, Route, Link, useParams, Navigate, useNavigate } from "react-router-dom";
+import { ChevronRight, GraduationCap, PlayCircle } from "lucide-react";
 import { LEVELS, getLevel } from "./lib/curriculum";
 import { type Clef } from "./components/Staff";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
+import { useTheoryCurriculum, useTheoryProgress, type TheoryLevel } from "./curriculum/hooks";
 import { CurriculumHome, CurriculumLevelPage, CurriculumLessonPage, CurriculumUnitQuizPage, CurriculumPlacementPage, CurriculumSightSingPage } from "./curriculum/CurriculumPages";
 import "./read-music.css";
 
@@ -29,8 +31,27 @@ const CLEFS_BY_LEVEL: Record<string, Clef[]> = {
 
 const BASE = "/read-music";
 
+const LEVEL_AGE_RANGE: Record<number, string> = {
+  1: "Grades K–5",
+  2: "Grades 6–8",
+  3: "Grades 9–12",
+  4: "Undergraduate",
+};
+
+function curriculumProgress(level: TheoryLevel, progress?: Map<string, { status: string }>) {
+  const lessons = level.gw_theory_units.flatMap((u) => u.gw_theory_lessons);
+  const done = lessons.filter((l) => {
+    const s = progress?.get(l.id)?.status;
+    return s === "complete" || s === "mastered";
+  }).length;
+  return { done, total: lessons.length };
+}
+
 function Home() {
   const { enabled: theoryV2 } = useFeatureFlag("THEORY_V2");
+  const { data: levels = [], isLoading } = useTheoryCurriculum();
+  const { data: progress } = useTheoryProgress();
+
   return (
     <div className="flex flex-col flex-1">
       <section className="bg-brand-gradient">
@@ -41,48 +62,110 @@ function Home() {
             <span className="block font-light italic text-white/90">Beautifully.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/85">
-            A practice studio for students from their very first note through college theory.
+            A guided music theory curriculum from your very first note through college theory.
           </p>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-5xl px-6 py-12">
-        {theoryV2 && (
-          <Link
-            to={`${BASE}/curriculum`}
-            className="mb-8 block rounded-lg border border-border bg-card p-5 text-center transition-all hover:-translate-y-0.5 hover:shadow-lg"
-          >
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--brand-blue-dark))]">New</div>
-            <div className="mt-1 text-xl font-bold text-foreground">Full Music Theory Curriculum</div>
-            <div className="mt-1 text-sm text-muted-foreground">Guided lessons from elementary through college — units, lessons, and progress tracking.</div>
-          </Link>
-        )}
-        <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Choose your level</h2>
-          <p className="mt-1 text-muted-foreground text-sm">Each tier scales the clefs and exercises to age.</p>
-        </div>
-
-        <div className="grid gap-5 sm:grid-cols-2">
-          {LEVELS.map((level) => {
-            const ready = level.exercises.filter((e) => e.available).length;
-            return (
-              <Link
-                key={level.slug}
-                to={`${BASE}/${level.slug}`}
-                className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="absolute inset-x-0 top-0 h-1 bg-brand-gradient" />
-                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{level.ageRange}</div>
-                <div className="mt-2 text-2xl font-bold text-foreground">{level.title}</div>
-                <div className="mt-2 text-muted-foreground">{level.subtitle}</div>
-                <div className="mt-4 text-sm font-medium text-[hsl(var(--brand-blue-dark))]">
-                  {ready} ready · {level.exercises.length} total
+      {theoryV2 ? (
+        <section className="mx-auto w-full max-w-5xl px-6 py-12">
+          <div className="mb-6 grid gap-4 sm:grid-cols-2">
+            <Link
+              to={`${BASE}/curriculum/placement`}
+              className="flex items-center gap-3 rounded-lg border border-dashed border-[hsl(var(--brand-blue-dark))]/40 bg-card p-4 hover:border-brand hover:shadow transition-all"
+            >
+              <GraduationCap className="h-5 w-5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-foreground">Not sure where to start?</div>
+                <div className="text-xs text-muted-foreground">Take the 24-question placement test to find your level.</div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+            <Link
+              to={`${BASE}/curriculum/sight-singing`}
+              className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 hover:border-brand hover:shadow transition-all"
+            >
+              <PlayCircle className="h-5 w-5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-foreground">
+                  Sight-Singing Lab <span className="ml-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-primary">Experimental</span>
                 </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+                <div className="text-xs text-muted-foreground">Sing notes from the staff — live pitch feedback from your mic.</div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </div>
+
+          <div className="mb-8 text-center">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Choose your level</h2>
+            <p className="mt-1 text-muted-foreground text-sm">Four levels of guided units, lessons, drills, and quizzes.</p>
+          </div>
+
+          {isLoading ? (
+            <div className="grid gap-5 sm:grid-cols-2">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="h-44 rounded-lg border border-border bg-muted/40 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2">
+              {levels.map((level) => {
+                const { done, total } = curriculumProgress(level, progress);
+                const pct = total ? Math.round((done / total) * 100) : 0;
+                return (
+                  <Link
+                    key={level.id}
+                    to={`${BASE}/curriculum/${level.slug}`}
+                    className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-xl"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-1 bg-brand-gradient" />
+                    <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {LEVEL_AGE_RANGE[level.id] ?? `Level ${level.id}`}
+                    </div>
+                    <div className="mt-2 text-2xl font-bold text-foreground">{level.name}</div>
+                    <div className="mt-2 text-sm text-muted-foreground">{level.description}</div>
+                    <div className="mt-4 flex items-center gap-3">
+                      <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full bg-brand-gradient rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-xs font-medium text-[hsl(var(--brand-blue-dark))] whitespace-nowrap">
+                        {done}/{total} lessons
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="mx-auto w-full max-w-5xl px-6 py-12">
+          <div className="mb-8 text-center">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Choose your level</h2>
+            <p className="mt-1 text-muted-foreground text-sm">Each tier scales the clefs and exercises to age.</p>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            {LEVELS.map((level) => {
+              const ready = level.exercises.filter((e) => e.available).length;
+              return (
+                <Link
+                  key={level.slug}
+                  to={`${BASE}/${level.slug}`}
+                  className="group relative overflow-hidden rounded-lg border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:shadow-xl"
+                >
+                  <div className="absolute inset-x-0 top-0 h-1 bg-brand-gradient" />
+                  <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{level.ageRange}</div>
+                  <div className="mt-2 text-2xl font-bold text-foreground">{level.title}</div>
+                  <div className="mt-2 text-muted-foreground">{level.subtitle}</div>
+                  <div className="mt-4 text-sm font-medium text-[hsl(var(--brand-blue-dark))]">
+                    {ready} ready · {level.exercises.length} total
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
