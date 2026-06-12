@@ -389,21 +389,6 @@ export default function Messenger() {
     }
   }
 
-  async function startGroupMeeting() {
-    if (!user) return;
-    const slug = selectedGroup ? selectedGroup.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'meeting';
-    const roomName = `gleeworld-${slug}-${Date.now().toString(36)}`;
-    setActiveMeetingRoom(roomName);
-    if (selectedGroup) {
-      await supabase.from('gw_group_messages').insert({
-        group_id: selectedGroup.id,
-        user_id: user.id,
-        content: `🎥 Video meeting started — room: ${roomName}`,
-        message_type: 'system',
-      });
-    }
-  }
-
   async function sendBroadcast() {
     if (!broadcastBody.trim() || !user) return;
     const text = `🚨 ANNOUNCEMENT: ${broadcastBody.trim()}`;
@@ -577,9 +562,6 @@ export default function Messenger() {
               <div className="flex items-center gap-1">
                 <Button variant="ghost" size="sm" onClick={toggleMute} title={groupMeta[selectedGroup.id]?.muted ? 'Unmute notifications' : 'Mute notifications'}>
                   {groupMeta[selectedGroup.id]?.muted ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={startGroupMeeting} title="Start video meeting">
-                  <Video className="w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="sm" onClick={summarize} disabled={summarizing || messages.length === 0} title="AI summary">
                   {summarizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
