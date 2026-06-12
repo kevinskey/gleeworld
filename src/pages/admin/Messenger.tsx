@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Send, Users, Plus, MessageSquare, X, Loader2, Image as ImageIcon,
   Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Newspaper, Video, Zap,
+  ChevronLeft,
 } from 'lucide-react';
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -100,7 +101,10 @@ export default function Messenger() {
   });
 
   useEffect(() => {
-    if (!selectedGroupId && groups.length > 0) setSelectedGroupId(groups[0].id);
+    // On phones, land on the group list (GroupMe-style) instead of auto-opening a chat.
+    if (!selectedGroupId && groups.length > 0 && window.innerWidth >= 768) {
+      setSelectedGroupId(groups[0].id);
+    }
   }, [groups, selectedGroupId]);
 
   const { data: messages = [] } = useQuery<Message[]>({
@@ -353,7 +357,10 @@ export default function Messenger() {
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
-      <aside style={{ width: sidebarWidth }} className="shrink-0 flex flex-col bg-muted/30">
+      <aside
+        style={{ width: sidebarWidth }}
+        className={`shrink-0 flex-col bg-muted/30 max-md:!w-full ${selectedGroupId ? 'hidden md:flex' : 'flex'}`}
+      >
         <div className="p-3 border-b flex items-center justify-between">
           <h2 className="font-semibold text-sm flex items-center gap-2">
             <MessageSquare className="w-4 h-4" /> Groups
@@ -418,13 +425,13 @@ export default function Messenger() {
 
       <div
         onPointerDown={startResize}
-        className="w-3 -mx-1 shrink-0 cursor-col-resize touch-none flex items-stretch justify-center group z-10"
+        className="w-3 -mx-1 shrink-0 cursor-col-resize touch-none hidden md:flex items-stretch justify-center group z-10"
         title="Drag to resize"
       >
         <div className="w-px bg-border group-hover:w-1 group-hover:bg-primary/50 group-active:w-1 group-active:bg-primary transition-all" />
       </div>
 
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className={`flex-1 flex-col min-w-0 ${selectedGroupId ? 'flex' : 'hidden md:flex'}`}>
         {activeMeetingRoom && user ? (
           <JitsiMeetingPanel
             roomName={activeMeetingRoom}
@@ -434,8 +441,11 @@ export default function Messenger() {
           />
         ) : selectedGroup ? (
           <>
-            <header className="border-b px-4 py-3 flex items-center justify-between">
-              <div className="min-w-0">
+            <header className="border-b px-2 sm:px-4 py-3 flex items-center justify-between">
+              <Button variant="ghost" size="sm" className="md:hidden shrink-0 mr-1" onClick={() => setSelectedGroupId(null)} aria-label="Back to groups">
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <div className="min-w-0 flex-1">
                 <h1 className="font-semibold truncate">{selectedGroup.name}</h1>
                 {selectedGroup.description && (
                   <p className="text-xs text-muted-foreground truncate">{selectedGroup.description}</p>
