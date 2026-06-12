@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -32,16 +33,36 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Authorize: service-role callers pass; otherwise require a signed-in user.
+    const callerToken = (req.headers.get("authorization") ?? "").replace(/^bearer\s+/i, "");
+    if (callerToken !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+      const admin = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const { data: userData } = await admin.auth.getUser(callerToken);
+      if (!userData?.user) {
+        return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+    }
+
     const emailData: SendEmailRequest = await req.json();
-    
+
     console.log("GleeWorld Email Request:", {
       to: emailData.to,
       subject: emailData.subject,
       from: emailData.from
     });
 
-    // Default from address for GleeWorld - use verified domain
-    const fromAddress = emailData.from || "GleeWorld <noreply@gleeworld.org>";
+    // Only allow senders on our verified domain; otherwise spoofed From
+    // addresses would relay through Resend under our account.
+    const requestedFrom = emailData.from ?? "";
+    const fromAddress = /(@|<[^>]*@)gleeworld\.org>?\s*$/i.test(requestedFrom)
+      ? requestedFrom
+      : "GleeWorld <noreply@gleeworld.org>";
 
     const emailPayload: any = {
       from: fromAddress,
