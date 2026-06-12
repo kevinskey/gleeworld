@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, XCircle, RotateCcw, ArrowRight, Volume2, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Question } from './types';
@@ -44,7 +44,10 @@ export default function QuizRunner({ title, build, onFinish, onExit, renderResul
   const [chosenPc, setChosenPc] = useState<number | null>(null);
   const [chosenKey, setChosenKey] = useState<string | null>(null);
   const [rhythmResult, setRhythmResult] = useState<boolean | null>(null);
-  const [reported, setReported] = useState(false);
+  // Ref, not state: onFinish may trigger a react-query mutation whose sync store
+  // update can make React (WebKit) drop a state update scheduled in the same
+  // effect, re-running the effect forever (max update depth crash on iOS).
+  const reportedRef = useRef(false);
   const [aiText, setAiText] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -55,11 +58,11 @@ export default function QuizRunner({ title, build, onFinish, onExit, renderResul
   const scorePct = questions.length ? Math.round((correctCount / questions.length) * 100) : 0;
 
   useEffect(() => {
-    if (done && !reported) {
-      setReported(true);
+    if (done && !reportedRef.current) {
+      reportedRef.current = true;
       onFinish?.(scorePct, answers);
     }
-  }, [done, reported, scorePct, answers, onFinish]);
+  }, [done, scorePct, answers, onFinish]);
 
   const record = (correct: boolean) => setAnswers((a) => [...a, correct]);
 
@@ -101,7 +104,7 @@ export default function QuizRunner({ title, build, onFinish, onExit, renderResul
     setIdx(0);
     setAnswers([]);
     clearChoice();
-    setReported(false);
+    reportedRef.current = false;
   };
 
   if (done) {
