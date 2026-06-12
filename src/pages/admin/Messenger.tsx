@@ -23,7 +23,7 @@ import { RsvpCard } from '@/components/messenger/RsvpCard';
 import { RsvpComposer } from '@/components/messenger/RsvpComposer';
 import { EmailBlastComposer } from '@/components/messenger/EmailBlastComposer';
 import { EmailClient } from '@/components/messenger/EmailClient';
-import { NewsletterList } from '@/components/messenger/NewsletterList';
+import { NewsletterStudio } from '@/components/messenger/NewsletterStudio';
 import { JitsiEmbedModal } from '@/components/messenger/JitsiEmbedModal';
 
 interface Group {
@@ -624,7 +624,7 @@ export default function Messenger() {
         <EmailClient onClose={() => setShowEmailClient(false)} />
       )}
       {showNewsletters && (
-        <NewsletterList onClose={() => setShowNewsletters(false)} />
+        <NewsletterStudio onClose={() => setShowNewsletters(false)} />
       )}
       {showPollComposer && selectedGroup && user && (
         <PollComposer
