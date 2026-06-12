@@ -11,10 +11,9 @@ import {
   useTenantCourses,
   useAdoptCourse,
   LEVEL_LABEL,
-  formatPrice,
 } from '@/hooks/useCourseStore';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { Lock, Loader2, BookOpen, Check, Gift } from 'lucide-react';
+import { Loader2, BookOpen, Check, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function CourseLibrarySection({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
@@ -91,10 +90,6 @@ export function CourseLibrarySection({ isSuperAdmin = false }: { isSuperAdmin?: 
                     </Badge>
                   ) : isOwned ? (
                     <Badge className="bg-emerald-600 text-white border-0 text-[10px]">Owned</Badge>
-                  ) : product ? (
-                    <Badge className="bg-slate-700 text-slate-200 border-0 text-[10px]">
-                      <Lock className="w-3 h-3 mr-0.5" /> {formatPrice(product.price_cents)}
-                    </Badge>
                   ) : null}
                 </div>
                 <div className="font-semibold text-white mb-1 line-clamp-2">{t.title}</div>
@@ -104,31 +99,28 @@ export function CourseLibrarySection({ isSuperAdmin = false }: { isSuperAdmin?: 
                 {t.description && (
                   <div className="text-xs text-slate-300 line-clamp-3 mb-3">{t.description}</div>
                 )}
-                <div className="mt-auto pt-2">
-                  {isOwned || !product ? (
-                    <Button
-                      size="sm"
-                      className="w-full bg-sky-600 hover:bg-sky-500 text-white"
-                      disabled={isAdopting}
-                      onClick={() => handleAdopt(t.id, t.title)}
-                    >
-                      {isAdopting ? (
-                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                      ) : (
-                        <BookOpen className="w-4 h-4 mr-1.5" />
-                      )}
-                      {isAdopted ? 'Adopt Again' : 'Adopt'}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full border-slate-600 text-slate-200 hover:bg-slate-700"
-                      onClick={() => navigate('/control-center')}
-                    >
-                      <Lock className="w-3.5 h-3.5 mr-1.5" /> Purchase in Control Center
-                    </Button>
-                  )}
+                <div className="mt-auto pt-2 flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 border-slate-600 text-slate-200 hover:bg-slate-700"
+                    onClick={() => navigate(`/academy/templates/${t.id}`)}
+                  >
+                    Open
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-sky-600 hover:bg-sky-500 text-white"
+                    disabled={isAdopting}
+                    onClick={() => handleAdopt(t.id, t.title)}
+                  >
+                    {isAdopting ? (
+                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                    ) : (
+                      <BookOpen className="w-4 h-4 mr-1.5" />
+                    )}
+                    {isAdopted ? 'Adopt Again' : 'Adopt'}
+                  </Button>
                 </div>
               </div>
             );
@@ -198,7 +190,7 @@ function GrantCoursePanel() {
         >
           <option value="">Select course…</option>
           {products.map((p) => (
-            <option key={p.id} value={p.sku}>{p.name} ({formatPrice(p.price_cents)})</option>
+            <option key={p.id} value={p.sku}>{p.name}</option>
           ))}
         </select>
         <Button size="sm" onClick={grant} disabled={!tenantId || !sku || granting} className="bg-sky-600 hover:bg-sky-500 text-white">

@@ -158,7 +158,12 @@ begin
   if v_role not in ('admin','super_admin') then
     raise exception 'Only tenant admins can adopt courses';
   end if;
-  if not exists (
+  -- Entitlement only enforced once the course is actually sellable (has a Stripe price).
+  if exists (
+    select 1 from gw_course_product p
+    where p.template_course_id = p_template_course_id
+      and p.active and p.stripe_price_id is not null
+  ) and not exists (
     select 1 from gw_tenant_entitlement e
     join gw_course_product p on p.id = e.product_id
     where e.tenant_id = v_tenant and p.template_course_id = p_template_course_id

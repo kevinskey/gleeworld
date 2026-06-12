@@ -14,7 +14,7 @@ import { Loader2, CheckCircle2 } from 'lucide-react';
 import { Shield, Database, Search, Eye, GraduationCap } from 'lucide-react';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { useCourseProducts, useOwnedProductIds, startCourseCheckout, formatPrice, LEVEL_LABEL } from '@/hooks/useCourseStore';
+import { useCourseProducts, LEVEL_LABEL } from '@/hooks/useCourseStore';
 
 interface ControlCenterProps {
   onModuleSelect: (moduleId: string) => void;
@@ -32,18 +32,10 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
   const activeBillingSlugs = useMemo(() => new Set(tenantModules.map(m => m.module_id)), [tenantModules]);
   const { enabled: courseStore } = useFeatureFlag('COURSE_STORE');
   const { data: courseProducts = [] } = useCourseProducts();
-  const { data: ownedProducts = new Set<string>() } = useOwnedProductIds();
-  const [buyingSku, setBuyingSku] = useState<string | null>(null);
-
-  async function buyCourse(sku: string) {
-    setBuyingSku(sku);
-    try {
-      window.location.href = await startCourseCheckout(sku);
-    } catch (e: any) {
-      toast({ title: 'Could not start checkout', description: e.message, variant: 'destructive' });
-      setBuyingSku(null);
-    }
-  }
+  const courseItems = useMemo(
+    () => courseProducts.filter((p) => p.template_course_id),
+    [courseProducts]
+  );
 
   async function activateAddon(billingId: string) {
     setActivatingId(billingId);
@@ -254,57 +246,27 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
       )}
 
       {/* Premium course add-ons */}
-      {courseStore && courseProducts.length > 0 && (
+      {courseStore && courseItems.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[hsl(var(--brand-blue-dark))] mb-3">
-            Premium Courses <span className="text-muted-foreground">({courseProducts.length})</span>
+            Premium Courses <span className="text-muted-foreground">({courseItems.length})</span>
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-            {courseProducts.map((p) => {
-              const isBundle = !p.template_course_id && !!p.bundle_key;
-              const bundleMembers = isBundle
-                ? courseProducts.filter((x) => x.bundle_key === p.bundle_key && x.template_course_id)
-                : [];
-              const owned = isBundle
-                ? bundleMembers.length > 0 && bundleMembers.every((x) => ownedProducts.has(x.id))
-                : ownedProducts.has(p.id);
-              const isBuying = buyingSku === p.sku;
-              return (
-                <div key={p.sku} className="rounded-md border-2 border-[hsl(var(--brand-blue-dark)/0.35)] bg-card p-3 flex flex-col gap-2 shadow-sm">
-                  <div className="flex items-start gap-2">
-                    <GraduationCap className="h-4 w-4 mt-0.5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-sm font-semibold text-foreground">{p.name}</span>
-                        {owned && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0 border-emerald-500 text-emerald-700">
-                            <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" /> Owned
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {isBundle
-                          ? `Includes all four levels: ${bundleMembers.map((x) => LEVEL_LABEL[x.level ?? ''] ?? x.level).join(', ')}`
-                          : LEVEL_LABEL[p.level ?? ''] ?? p.level}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 mt-auto">
-                    <span className="text-sm font-bold text-foreground">{formatPrice(p.price_cents)}</span>
-                    {owned ? (
-                      <Button size="sm" variant="outline" onClick={() => onModuleSelect('glee-academy')}>
-                        Adopt in Academy
-                      </Button>
-                    ) : (
-                      <Button size="sm" disabled={isBuying || !p.stripe_price_id} onClick={() => buyCourse(p.sku)}>
-                        {isBuying ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
-                        Buy
-                      </Button>
-                    )}
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {courseItems.map((p) => (
+              <button
+                key={p.sku}
+                onClick={() => navigate(`/academy/templates/${p.template_course_id}`)}
+                className="text-left rounded-md border-2 border-[hsl(var(--brand-blue-dark)/0.35)] bg-card p-3 flex items-start gap-2 shadow-sm hover:border-[hsl(var(--brand-blue-dark)/0.6)] hover:shadow transition-all"
+              >
+                <GraduationCap className="h-4 w-4 mt-0.5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <span className="text-sm font-semibold text-foreground">{p.name}</span>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {LEVEL_LABEL[p.level ?? ''] ?? p.level}
+                  </p>
                 </div>
-              );
-            })}
+              </button>
+            ))}
           </div>
         </section>
       )}

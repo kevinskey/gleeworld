@@ -52,6 +52,7 @@ import { Terms, Privacy } from "./pages/Legal";
 import ThankYou from "./pages/ThankYou";
 import RehearsalTonight from "./pages/academy/RehearsalTonight";
 import CourseShell from "./pages/academy/CourseShell";
+import TemplateCoursePage from "./pages/academy/TemplateCoursePage";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
 import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
 import Mus210 from "./pages/Mus210";
@@ -414,6 +415,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <CourseShell />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/templates/:courseId"
+                element={
+                  <ProtectedRoute>
+                    <TemplateCoursePage />
                   </ProtectedRoute>
                 }
               />
