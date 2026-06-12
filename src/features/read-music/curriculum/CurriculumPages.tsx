@@ -7,12 +7,16 @@ import {
   useUnitMastery,
   useSaveUnitMastery,
   useSavePlacement,
+  useTheoryExercises,
   type TheoryLevel,
   type TheoryLesson,
 } from './hooks';
 import QuizRunner from './engine/QuizRunner';
-import { buildUnitQuiz } from './engine/quiz';
-import { buildPlacementTest, gradePlacement } from './engine/placement';
+import { buildUnitQuizWithExtras } from './engine/quiz';
+import { buildPlacementTest, gradePlacement, type PlacementResult } from './engine/placement';
+import { placementSummary } from './engine/ai';
+import SightSingLab from './engine/SightSingLab';
+import { useEffect, useState } from 'react';
 
 const BASE = '/read-music';
 const CBASE = `${BASE}/curriculum`;
@@ -51,6 +55,17 @@ export function CurriculumHome() {
           <div className="flex-1">
             <div className="text-sm font-semibold text-foreground">Not sure where to start?</div>
             <div className="text-xs text-muted-foreground">Take the 24-question placement test to find your level.</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
+        <Link
+          to={`${CBASE}/sight-singing`}
+          className="mb-4 flex items-center gap-3 rounded-lg border border-border bg-card p-4 hover:border-brand hover:shadow transition-all"
+        >
+          <PlayCircle className="h-5 w-5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-foreground">Sight-Singing Lab <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-800">Experimental</span></div>
+            <div className="text-xs text-muted-foreground">Sing notes from the staff — live pitch feedback from your mic.</div>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </Link>
@@ -193,10 +208,11 @@ export function CurriculumUnitQuizPage() {
   const { data: levels = [], isLoading } = useTheoryCurriculum();
   const saveMastery = useSaveUnitMastery();
   const navigate = useNavigate();
-
-  if (isLoading) return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
   const level = levels.find((l) => l.slug === levelSlug);
   const unit = level?.gw_theory_units.find((u) => u.sort_order === Number(unitSort));
+  const { data: extras = [] } = useTheoryExercises(unit?.gw_theory_lessons.map((l) => l.id) ?? []);
+
+  if (isLoading) return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
   if (!level || !unit) return <Navigate to={CBASE} replace />;
 
   return (
@@ -208,7 +224,8 @@ export function CurriculumUnitQuizPage() {
         <div className="mt-4">
           <QuizRunner
             title={`${unit.title} — Unit Quiz`}
-            build={() => buildUnitQuiz(level.id, unit.sort_order)}
+            aiLevel={level.id}
+            build={() => buildUnitQuizWithExtras(level.id, unit.sort_order, extras)}
             onFinish={(scorePct) => saveMastery.mutate({ unitId: unit.id, score: scorePct })}
             onExit={() => navigate(`${CBASE}/${level.slug}`)}
           />
@@ -216,6 +233,21 @@ export function CurriculumUnitQuizPage() {
       </main>
     </div>
   );
+}
+
+function PlacementNarrative({ result }: { result: PlacementResult }) {
+  const [text, setText] = useState<string | null>(null);
+  const key = JSON.stringify(result.perLevel);
+  useEffect(() => {
+    let alive = true;
+    placementSummary(result)
+      .then((t) => { if (alive) setText(t); })
+      .catch(() => { if (alive) setText(null); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  if (!text) return null;
+  return <p className="rounded-md bg-muted/50 px-4 py-3 text-sm text-foreground leading-relaxed">{text}</p>;
 }
 
 export function CurriculumPlacementPage() {
@@ -268,6 +300,7 @@ export function CurriculumPlacementPage() {
                       </div>
                     ))}
                   </div>
+                  <PlacementNarrative result={result} />
                   <div className="flex justify-center gap-2">
                     <button onClick={retake} className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">
                       Retake
@@ -285,6 +318,23 @@ export function CurriculumPlacementPage() {
               );
             }}
           />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export function CurriculumSightSingPage() {
+  return (
+    <div className="flex flex-col flex-1">
+      <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 py-8">
+        <Link to={CBASE} className="text-sm text-muted-foreground hover:underline">← Curriculum</Link>
+        <h1 className="mt-3 text-2xl font-bold text-foreground">Sight-Singing Lab</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Sing the note shown — the mic checks your pitch in real time. Works best in a quiet room.
+        </p>
+        <div className="mt-4">
+          <SightSingLab />
         </div>
       </main>
     </div>

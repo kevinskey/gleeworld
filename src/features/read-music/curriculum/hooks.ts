@@ -151,6 +151,33 @@ export function useSavePlacement() {
   });
 }
 
+export type ExerciseBankQ = { p: string; c: string; w: string[]; e?: string };
+
+export function useTheoryExercises(lessonIds: string[]) {
+  return useQuery({
+    queryKey: ['theory-exercises', ...lessonIds],
+    queryFn: async (): Promise<ExerciseBankQ[]> => {
+      const { data, error } = await supabase
+        .from('gw_theory_exercises')
+        .select('prompt, answer')
+        .in('lesson_id', lessonIds)
+        .eq('type', 'multiple_choice');
+      if (error) throw error;
+      const out: ExerciseBankQ[] = [];
+      for (const row of data ?? []) {
+        const prompt = row.prompt as { p?: string; w?: string[]; e?: string } | null;
+        const answer = row.answer as { c?: string } | null;
+        if (prompt?.p && answer?.c && Array.isArray(prompt.w) && prompt.w.length === 3) {
+          out.push({ p: prompt.p, c: answer.c, w: prompt.w, e: prompt.e });
+        }
+      }
+      return out;
+    },
+    enabled: lessonIds.length > 0,
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useUpdateLessonProgress() {
   const { user } = useAuth();
   const queryClient = useQueryClient();

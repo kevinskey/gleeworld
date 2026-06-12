@@ -266,6 +266,14 @@ const BLUEPRINTS: Record<string, () => Question[]> = {
   '4.10': () => [...bank('4.10', 6), ...gens(4, () => genEarInterval(INTERVAL_FULL, true))],
 };
 
+/** Mix AI-generated bank questions (from gw_theory_exercises) into a unit quiz. */
+export function buildUnitQuizWithExtras(levelId: number, unitSortOrder: number, extras: BankQ[]): Question[] {
+  const base = buildUnitQuiz(levelId, unitSortOrder);
+  if (extras.length === 0) return base;
+  const mixed = [...base, ...sample(extras, 3).map(bankToMc)];
+  return shuffle(mixed).slice(0, QUIZ_LENGTH);
+}
+
 export function buildUnitQuiz(levelId: number, unitSortOrder: number): Question[] {
   const key = `${levelId}.${unitSortOrder}`;
   const builder = BLUEPRINTS[key];

@@ -2,7 +2,7 @@ import { Routes, Route, Link, useParams, Navigate, useNavigate } from "react-rou
 import { LEVELS, getLevel } from "./lib/curriculum";
 import { type Clef } from "./components/Staff";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
-import { CurriculumHome, CurriculumLevelPage, CurriculumLessonPage, CurriculumUnitQuizPage, CurriculumPlacementPage } from "./curriculum/CurriculumPages";
+import { CurriculumHome, CurriculumLevelPage, CurriculumLessonPage, CurriculumUnitQuizPage, CurriculumPlacementPage, CurriculumSightSingPage } from "./curriculum/CurriculumPages";
 import "./read-music.css";
 
 import ElementaryDrill from "./drills/ElementaryDrill";
@@ -196,6 +196,7 @@ export default function ReadMusic() {
             <Route path="curriculum/:levelSlug" element={<CurriculumLevelPage />} />
             <Route path="curriculum/lesson/:lessonId" element={<CurriculumLessonPage />} />
             <Route path="curriculum/placement" element={<CurriculumPlacementPage />} />
+            <Route path="curriculum/sight-singing" element={<CurriculumSightSingPage />} />
             <Route path="curriculum/:levelSlug/quiz/:unitSort" element={<CurriculumUnitQuizPage />} />
           </>
         )}

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { CheckCircle2, XCircle, RotateCcw, ArrowRight, Volume2 } from 'lucide-react';
+import { CheckCircle2, XCircle, RotateCcw, ArrowRight, Volume2, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Question } from './types';
 import { PASS_PCT } from './quiz';
+import { explainMistake } from './ai';
 import { playSequence, playChord } from '../../lib/audio';
 import Notation from './Notation';
 import KeyboardId from './KeyboardId';
@@ -24,6 +25,8 @@ type Props = {
   onExit: () => void;
   /** Custom results screen; default is the 80% pass/fail unit-quiz screen */
   renderResult?: (ctx: ResultCtx) => ReactNode;
+  /** Curriculum level (1–4) — enables the AI "Explain my mistake" button */
+  aiLevel?: number;
 };
 
 function playAudio(q: Extract<Question, { kind: 'audio' }>) {
@@ -31,7 +34,7 @@ function playAudio(q: Extract<Question, { kind: 'audio' }>) {
   else playSequence(q.playKeys, q.playMode === 'scale' ? 320 : 600, q.playMode === 'scale' ? 40 : 60);
 }
 
-export default function QuizRunner({ title, build, onFinish, onExit, renderResult }: Props) {
+export default function QuizRunner({ title, build, onFinish, onExit, renderResult, aiLevel }: Props) {
   const [seed, setSeed] = useState(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const questions = useMemo(() => build(), [seed]);
@@ -42,6 +45,8 @@ export default function QuizRunner({ title, build, onFinish, onExit, renderResul
   const [chosenKey, setChosenKey] = useState<string | null>(null);
   const [rhythmResult, setRhythmResult] = useState<boolean | null>(null);
   const [reported, setReported] = useState(false);
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const q = questions[idx] as Question | undefined;
   const answered = choice !== null || chosenPc !== null || chosenKey !== null || rhythmResult !== null;
@@ -63,6 +68,27 @@ export default function QuizRunner({ title, build, onFinish, onExit, renderResul
     setChosenPc(null);
     setChosenKey(null);
     setRhythmResult(null);
+    setAiText(null);
+    setAiLoading(false);
+  };
+
+  const askAi = async (q: Extract<Question, { kind: 'mc' | 'audio' }>) => {
+    if (choice === null) return;
+    setAiLoading(true);
+    try {
+      const text = await explainMistake({
+        prompt: q.prompt,
+        choices: q.choices,
+        correct: q.choices[q.answerIndex],
+        chosen: q.choices[choice],
+        level: aiLevel,
+      });
+      setAiText(text);
+    } catch {
+      setAiText('Sorry — the tutor is unavailable right now.');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const next = () => {
@@ -192,6 +218,17 @@ export default function QuizRunner({ title, build, onFinish, onExit, renderResul
         <div className={`rounded-md px-3 py-2 text-sm ${isCorrect ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'}`}>
           {isCorrect ? 'Correct!' : q.kind === 'rhythm' ? 'Not quite in time.' : 'Not quite.'}
           {q.explain ? ` ${q.explain}` : ''}
+          {!isCorrect && aiLevel != null && (q.kind === 'mc' || q.kind === 'audio') && !aiText && (
+            <button
+              onClick={() => askAi(q)}
+              disabled={aiLoading}
+              className="mt-2 flex items-center gap-1.5 rounded-md border border-red-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-red-800 hover:bg-red-100 disabled:opacity-60"
+            >
+              {aiLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              {aiLoading ? 'Thinking…' : 'Explain my mistake'}
+            </button>
+          )}
+          {aiText && <p className="mt-2 border-t border-red-200 pt-2 text-red-900">{aiText}</p>}
         </div>
       )}
 

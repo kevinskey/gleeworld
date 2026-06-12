@@ -22,7 +22,7 @@ function freqToNote(frequency: number) {
   return { note: `${noteName}${octave}`, cents, exactFreq };
 }
 
-function autoCorrelate(buf: Float32Array, sampleRate: number): number | null {
+export function autoCorrelate(buf: Float32Array, sampleRate: number): number | null {
   // Adapted from Chris Wilson's auto-correlation technique
   const SIZE = buf.length;
   const MAX_SAMPLES = Math.floor(SIZE / 2);
