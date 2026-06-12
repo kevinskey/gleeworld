@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, Volume2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { autoCorrelate } from '@/components/tuner/Tuner';
+import { forceUnlockAudio, getSharedAudioContext } from '@/utils/mobileAudioUnlock';
 import { POOLS } from '../../lib/notes';
 import { noteKeyToFreq } from '../../lib/notes';
 import { playNote, playChime } from '../../lib/audio';
@@ -68,12 +69,12 @@ export default function SightSingLab() {
   const start = async () => {
     setError(null);
     try {
+      // Unlock inside the tap gesture — a context created after the getUserMedia
+      // await stays suspended on iOS and the analyser only ever sees silence.
+      forceUnlockAudio();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
       streamRef.current = stream;
-      if (!ctxRef.current) {
-        const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        ctxRef.current = new Ctor();
-      }
+      ctxRef.current = getSharedAudioContext();
       if (ctxRef.current.state === 'suspended') await ctxRef.current.resume();
       const source = ctxRef.current.createMediaStreamSource(stream);
       sourceRef.current = source;
