@@ -76,7 +76,7 @@ export const useRoleBasedRedirect = () => {
   return { userProfile, loading };
 };
 
-function pickDestination(profile: {
+export function pickDestination(profile: {
   role?: string | null;
   is_super_admin?: boolean | null;
   is_admin?: boolean | null;

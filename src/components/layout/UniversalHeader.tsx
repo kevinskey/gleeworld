@@ -12,6 +12,7 @@ import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, Gradua
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { pickDestination } from "@/hooks/useRoleBasedRedirect";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -246,7 +247,7 @@ export const UniversalHeader = ({
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 min-w-0">
             <EnhancedTooltip content={`Go to ${siteName} Home`} disabled={isMobile || location.pathname === '/admin'} className="z-10">
-              <Link to="/" className="flex items-center gap-0.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-white p-0">
+              <Link to={user && userProfile ? (pickDestination(userProfile) ?? '/') : '/'} className="flex items-center gap-0.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-white p-0">
                 <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex-shrink-0">
                   <img
                     src={siteLogo}
