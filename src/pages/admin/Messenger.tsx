@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import {
   Send, Users, Plus, MessageSquare, X, Loader2, Image as ImageIcon,
-  Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Newspaper, Video, Smartphone,
+  Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Newspaper, Video, Zap,
 } from 'lucide-react';
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -22,6 +22,7 @@ import { PollComposer } from '@/components/messenger/PollComposer';
 import { RsvpCard } from '@/components/messenger/RsvpCard';
 import { RsvpComposer } from '@/components/messenger/RsvpComposer';
 import { EmailBlastComposer } from '@/components/messenger/EmailBlastComposer';
+import { EmailClient } from '@/components/messenger/EmailClient';
 import { NewsletterList } from '@/components/messenger/NewsletterList';
 import { JitsiEmbedModal } from '@/components/messenger/JitsiEmbedModal';
 
@@ -76,8 +77,8 @@ export default function Messenger() {
   const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
   const [showPollComposer, setShowPollComposer] = useState(false);
   const [showRsvpComposer, setShowRsvpComposer] = useState(false);
-  const [showEmailBlast, setShowEmailBlast] = useState(false);
-  const [showSmsBlast, setShowSmsBlast] = useState(false);
+  const [showQuickBlast, setShowQuickBlast] = useState(false);
+  const [showEmailClient, setShowEmailClient] = useState(false);
   const [showNewsletters, setShowNewsletters] = useState(false);
   const [activeMeetingRoom, setActiveMeetingRoom] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -364,11 +365,11 @@ export default function Messenger() {
             <Button variant="ghost" size="sm" onClick={() => setShowNewsletters(true)} title="Newsletters (drafts, scheduled, sent)">
               <Newspaper className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowEmailBlast(true)} title="Quick email blast">
+            <Button variant="ghost" size="sm" onClick={() => setShowEmailClient(true)} title="Email — compose & history">
               <Mail className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowSmsBlast(true)} title="Quick SMS blast">
-              <Smartphone className="w-4 h-4" />
+            <Button variant="ghost" size="sm" onClick={() => setShowQuickBlast(true)} title="Quick blast (email + SMS)">
+              <Zap className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowBroadcast(true)} title="Emergency broadcast to all groups">
               <Megaphone className="w-4 h-4" />
@@ -616,11 +617,11 @@ export default function Messenger() {
           onClose={() => setActiveMeetingRoom(null)}
         />
       )}
-      {showEmailBlast && (
-        <EmailBlastComposer onClose={() => setShowEmailBlast(false)} />
+      {showQuickBlast && (
+        <EmailBlastComposer onClose={() => setShowQuickBlast(false)} />
       )}
-      {showSmsBlast && (
-        <EmailBlastComposer defaultChannel="sms" onClose={() => setShowSmsBlast(false)} />
+      {showEmailClient && (
+        <EmailClient onClose={() => setShowEmailClient(false)} />
       )}
       {showNewsletters && (
         <NewsletterList onClose={() => setShowNewsletters(false)} />

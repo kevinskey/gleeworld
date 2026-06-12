@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { X, Send, Loader2, Mail, Smartphone, Paperclip, FileIcon } from 'lucide-react';
+import { X, Send, Loader2, Mail, Smartphone, Paperclip, FileIcon, Zap } from 'lucide-react';
 
 type Group = 'all' | 'students' | 'admins' | 'fans' | 'custom';
 const GROUPS: Array<{ value: Group; label: string }> = [
@@ -31,14 +31,14 @@ interface Person {
 const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024; // 25MB per file
 const MAX_ATTACHMENTS = 5;
 
-export function EmailBlastComposer({ onClose, defaultChannel = 'email' }: { onClose: () => void; defaultChannel?: 'email' | 'sms' }) {
+export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [group, setGroup] = useState<Group>('students');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const [sendEmail, setSendEmail] = useState(defaultChannel === 'email');
-  const [sendSms, setSendSms] = useState(defaultChannel === 'sms');
+  const [sendEmail, setSendEmail] = useState(true);
+  const [sendSms, setSendSms] = useState(true);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [personSearch, setPersonSearch] = useState('');
@@ -227,7 +227,7 @@ export function EmailBlastComposer({ onClose, defaultChannel = 'email' }: { onCl
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
       <Card className="w-full max-w-lg my-4 bg-white text-gray-900">
         <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-white text-gray-900 z-10 border-b rounded-t-xl">
-          <CardTitle className="flex items-center gap-2 text-gray-900"><Mail className="w-5 h-5" /> Quick blast</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-gray-900"><Zap className="w-5 h-5" /> Quick blast</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close" className="text-gray-900 hover:bg-gray-100"><X className="w-4 h-4" /></Button>
         </CardHeader>
         <CardContent className="space-y-3 pt-4">
