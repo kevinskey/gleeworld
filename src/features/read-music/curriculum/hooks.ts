@@ -75,6 +75,63 @@ export function useTheoryProgress() {
   });
 }
 
+export type UnitMasteryRow = {
+  unit_id: string;
+  best_score: number;
+  attempts: number;
+  passed: boolean;
+};
+
+export function useUnitMastery() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['theory-mastery', user?.id],
+    queryFn: async (): Promise<Map<string, UnitMasteryRow>> => {
+      const { data, error } = await supabase
+        .from('gw_theory_unit_mastery')
+        .select('unit_id, best_score, attempts, passed')
+        .eq('user_id', user!.id);
+      if (error) throw error;
+      return new Map((data ?? []).map((r) => [r.unit_id, r as UnitMasteryRow]));
+    },
+    enabled: !!user,
+  });
+}
+
+export function useSaveUnitMastery() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ unitId, score }: { unitId: string; score: number }) => {
+      if (!user) throw new Error('Sign in to track progress');
+      const { data: existing } = await supabase
+        .from('gw_theory_unit_mastery')
+        .select('best_score, attempts, passed')
+        .eq('user_id', user.id)
+        .eq('unit_id', unitId)
+        .maybeSingle();
+      const passed = (existing?.passed ?? false) || score >= 80;
+      const best = Math.max(existing?.best_score ?? 0, score);
+      const { error } = await supabase.from('gw_theory_unit_mastery').upsert(
+        {
+          user_id: user.id,
+          unit_id: unitId,
+          best_score: best,
+          attempts: (existing?.attempts ?? 0) + 1,
+          passed,
+          ...(passed && !existing?.passed ? { passed_at: new Date().toISOString() } : {}),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,unit_id' }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['theory-mastery', user?.id] });
+    },
+  });
+}
+
 export function useUpdateLessonProgress() {
   const { user } = useAuth();
   const queryClient = useQueryClient();

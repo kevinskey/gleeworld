@@ -1,12 +1,15 @@
 import { Link, useNavigate, useParams, Navigate } from 'react-router-dom';
-import { CheckCircle2, Circle, PlayCircle, BookOpen, ChevronRight, GraduationCap } from 'lucide-react';
+import { CheckCircle2, Circle, PlayCircle, BookOpen, ChevronRight, GraduationCap, Lock, Trophy } from 'lucide-react';
 import {
   useTheoryCurriculum,
   useTheoryProgress,
   useUpdateLessonProgress,
+  useUnitMastery,
+  useSaveUnitMastery,
   type TheoryLevel,
   type TheoryLesson,
 } from './hooks';
+import QuizRunner from './engine/QuizRunner';
 
 const BASE = '/read-music';
 const CBASE = `${BASE}/curriculum`;
@@ -77,6 +80,7 @@ export function CurriculumLevelPage() {
   const { levelSlug } = useParams<{ levelSlug: string }>();
   const { data: levels = [], isLoading } = useTheoryCurriculum();
   const { data: progress } = useTheoryProgress();
+  const { data: mastery } = useUnitMastery();
   const navigate = useNavigate();
 
   if (isLoading) return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
@@ -95,50 +99,108 @@ export function CurriculumLevelPage() {
       </section>
 
       <section className="mx-auto w-full max-w-3xl px-6 py-10 space-y-6">
-        {level.gw_theory_units.map((unit) => {
+        {level.gw_theory_units.map((unit, unitIdx) => {
           const done = unit.gw_theory_lessons.filter((l) => {
             const s = progress?.get(l.id)?.status;
             return s === 'complete' || s === 'mastered';
           }).length;
+          const m = mastery?.get(unit.id);
+          const prevUnit = unitIdx > 0 ? level.gw_theory_units[unitIdx - 1] : null;
+          const locked = !!mastery && !!prevUnit && !mastery.get(prevUnit.id)?.passed;
           return (
-            <div key={unit.id} className="rounded-lg border border-border bg-card overflow-hidden">
+            <div key={unit.id} className={`rounded-lg border border-border bg-card overflow-hidden ${locked ? 'opacity-70' : ''}`}>
               <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-3">
-                <h2 className="font-semibold text-foreground">
-                  <span className="text-muted-foreground mr-2">{level.id}.{unit.sort_order}</span>
-                  {unit.title}
+                <h2 className="font-semibold text-foreground flex items-center gap-2">
+                  {locked && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+                  <span><span className="text-muted-foreground mr-2">{level.id}.{unit.sort_order}</span>{unit.title}</span>
                 </h2>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">{done}/{unit.gw_theory_lessons.length}</span>
+                <span className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-2">
+                  {m?.passed && <Trophy className="h-3.5 w-3.5 text-amber-500" />}
+                  {done}/{unit.gw_theory_lessons.length}
+                </span>
               </div>
-              <ul>
-                {unit.gw_theory_lessons.map((lesson) => {
-                  const status = progress?.get(lesson.id)?.status ?? 'not_started';
-                  const isDone = status === 'complete' || status === 'mastered';
-                  return (
-                    <li key={lesson.id} className="border-b border-border last:border-b-0">
-                      <Link
-                        to={`${CBASE}/lesson/${lesson.id}`}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors"
-                      >
-                        {isDone ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                        ) : status === 'in_progress' ? (
-                          <PlayCircle className="h-4 w-4 text-[hsl(var(--brand-blue-dark))] shrink-0" />
-                        ) : (
-                          <Circle className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                        )}
-                        <span className="text-sm text-foreground flex-1">{lesson.title}</span>
-                        {lesson.legacy_exercise_slug && (
-                          <span className="text-[10px] font-medium uppercase tracking-wider text-[hsl(var(--brand-blue-dark))] whitespace-nowrap">Drill</span>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              {locked ? (
+                <p className="px-4 py-4 text-sm text-muted-foreground">
+                  Score 80% on the Unit {level.id}.{prevUnit!.sort_order} quiz to unlock this unit.
+                </p>
+              ) : (
+                <>
+                  <ul>
+                    {unit.gw_theory_lessons.map((lesson) => {
+                      const status = progress?.get(lesson.id)?.status ?? 'not_started';
+                      const isDone = status === 'complete' || status === 'mastered';
+                      return (
+                        <li key={lesson.id} className="border-b border-border last:border-b-0">
+                          <Link
+                            to={`${CBASE}/lesson/${lesson.id}`}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors"
+                          >
+                            {isDone ? (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                            ) : status === 'in_progress' ? (
+                              <PlayCircle className="h-4 w-4 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+                            ) : (
+                              <Circle className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                            )}
+                            <span className="text-sm text-foreground flex-1">{lesson.title}</span>
+                            {lesson.legacy_exercise_slug && (
+                              <span className="text-[10px] font-medium uppercase tracking-wider text-[hsl(var(--brand-blue-dark))] whitespace-nowrap">Drill</span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <Link
+                    to={`${CBASE}/${level.slug}/quiz/${unit.sort_order}`}
+                    className="flex items-center gap-3 border-t border-border px-4 py-3 bg-muted/20 hover:bg-muted/50 transition-colors"
+                  >
+                    <GraduationCap className="h-4 w-4 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+                    <span className="text-sm font-semibold text-foreground flex-1">Unit Quiz</span>
+                    {m && (
+                      <span className={`text-xs font-medium ${m.passed ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                        {m.passed ? `Passed · best ${Math.round(m.best_score)}%` : `Best ${Math.round(m.best_score)}%`}
+                      </span>
+                    )}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </Link>
+                </>
+              )}
             </div>
           );
         })}
       </section>
+    </div>
+  );
+}
+
+export function CurriculumUnitQuizPage() {
+  const { levelSlug, unitSort } = useParams<{ levelSlug: string; unitSort: string }>();
+  const { data: levels = [], isLoading } = useTheoryCurriculum();
+  const saveMastery = useSaveUnitMastery();
+  const navigate = useNavigate();
+
+  if (isLoading) return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
+  const level = levels.find((l) => l.slug === levelSlug);
+  const unit = level?.gw_theory_units.find((u) => u.sort_order === Number(unitSort));
+  if (!level || !unit) return <Navigate to={CBASE} replace />;
+
+  return (
+    <div className="flex flex-col flex-1">
+      <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 py-8">
+        <Link to={`${CBASE}/${level.slug}`} className="text-sm text-muted-foreground hover:underline">
+          ← {level.name} · Unit {level.id}.{unit.sort_order} {unit.title}
+        </Link>
+        <div className="mt-4">
+          <QuizRunner
+            levelId={level.id}
+            unitSortOrder={unit.sort_order}
+            unitTitle={unit.title}
+            onFinish={(scorePct) => saveMastery.mutate({ unitId: unit.id, score: scorePct })}
+            onExit={() => navigate(`${CBASE}/${level.slug}`)}
+          />
+        </div>
+      </main>
     </div>
   );
 }
