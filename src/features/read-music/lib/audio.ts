@@ -46,6 +46,32 @@ export function playNote(noteKey: string, durationMs = 700): void {
   osc2.stop(now + dur + 0.05);
 }
 
+export function playSequence(noteKeys: string[], noteMs = 600, gapMs = 60): void {
+  noteKeys.forEach((k, i) => {
+    window.setTimeout(() => playNote(k, noteMs), i * (noteMs + gapMs));
+  });
+}
+
+export function playChord(noteKeys: string[], durationMs = 1400): void {
+  noteKeys.forEach((k) => playNote(k, durationMs));
+}
+
+export function playClick(accent = false): void {
+  const c = getCtx();
+  if (!c) return;
+  const now = c.currentTime;
+  const osc = c.createOscillator();
+  osc.type = "square";
+  osc.frequency.value = accent ? 1320 : 880;
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(accent ? 0.2 : 0.12, now + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+  osc.connect(g).connect(c.destination);
+  osc.start(now);
+  osc.stop(now + 0.08);
+}
+
 export function playChime(kind: "right" | "wrong" | "win"): void {
   const c = getCtx();
   if (!c) return;

@@ -4,7 +4,7 @@ import {
   KEYS_BASIC, KEYS_FULL, RELATIVE_MINOR, INTERVAL_FULL, TRIAD_QUALITIES,
   transposeUp, pick, type MajorKey,
 } from '../../lib/theory';
-import type { Question, BankQ } from './types';
+import type { Question, BankQ, RhythmDur } from './types';
 import { BANKS } from './banks';
 
 export const QUIZ_LENGTH = 10;
@@ -155,6 +155,84 @@ function genTriadQuality(values: readonly string[]): Question {
   };
 }
 
+// ─── Ear-training generators (Phase 3) ───
+
+const EAR_BASIC = INTERVAL_FULL.filter((i) => ['M2', 'M3', 'P4', 'P5', 'P8'].includes(i.value));
+
+function genEarInterval(opts: readonly typeof INTERVAL_FULL[number][], harmonic = false): Question {
+  const iv = pick(opts);
+  const root = pick(NATURAL_ROOTS);
+  const keys = [root, transposeUp(root, iv.semitones)];
+  const wrong = sample(opts.filter((i) => i.value !== iv.value), 3).map((i) => i.label);
+  const choices = shuffle([iv.label, ...wrong]);
+  return {
+    kind: 'audio',
+    prompt: `Listen to this ${harmonic ? 'harmonic' : 'melodic'} interval. What is it?`,
+    playKeys: keys,
+    playMode: harmonic ? 'harmonic' : 'melodic',
+    choices,
+    answerIndex: choices.indexOf(iv.label),
+  };
+}
+
+function genEarTriad(values: readonly string[]): Question {
+  const opts = TRIAD_QUALITIES.filter((t) => values.includes(t.value));
+  const tq = pick(opts);
+  const root = pick(NATURAL_ROOTS);
+  const keys = tq.intervals.map((s) => transposeUp(root, s));
+  const choices = shuffle(opts.map((t) => t.label));
+  return {
+    kind: 'audio',
+    prompt: 'Listen to this chord. What quality is it?',
+    playKeys: keys,
+    playMode: 'harmonic',
+    choices,
+    answerIndex: choices.indexOf(tq.label),
+  };
+}
+
+const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11, 12];
+const NAT_MINOR_STEPS = [0, 2, 3, 5, 7, 8, 10, 12];
+
+function genEarScale(): Question {
+  const isMajor = Math.random() < 0.5;
+  const root = pick(['c/4', 'd/4', 'e/4', 'f/4', 'g/4']);
+  const steps = isMajor ? MAJOR_STEPS : NAT_MINOR_STEPS;
+  const keys = steps.map((s) => transposeUp(root, s, !isMajor));
+  const correct = isMajor ? 'Major' : 'Minor';
+  const choices = shuffle(['Major', 'Minor']);
+  return {
+    kind: 'audio',
+    prompt: 'Listen to this scale. Is it major or minor?',
+    playKeys: keys,
+    playMode: 'scale',
+    choices,
+    answerIndex: choices.indexOf(correct),
+    explain: isMajor ? undefined : 'The lowered 3rd gives minor its darker color.',
+  };
+}
+
+const RHYTHM_EASY: RhythmDur[][] = [
+  ['q', 'q', 'q', 'q'], ['h', 'h'], ['h', 'q', 'q'], ['q', 'q', 'h'], ['w'], ['q', 'h', 'q'],
+];
+const RHYTHM_MEDIUM: RhythmDur[][] = [
+  ['q', '8', '8', 'q', 'q'], ['8', '8', '8', '8', 'h'], ['h', '8', '8', 'q'],
+  ['8', '8', 'q', 'q', 'q'], ['q', 'q', '8', '8', 'q'],
+];
+const RHYTHM_HARD: RhythmDur[][] = [
+  ['8', 'q', '8', 'q', 'q'], ['8', '8', 'q', '8', '8', 'q'], ['q', '8', 'q', '8', 'q'],
+  ['8', 'q', 'q', '8', 'q'], ['8', '8', 'h', '8', '8'],
+];
+
+function genRhythm(pool: RhythmDur[][], bpm: number): Question {
+  return {
+    kind: 'rhythm',
+    prompt: 'Tap this rhythm along with the beat (4 count-in clicks first).',
+    durations: pick(pool),
+    bpm,
+  };
+}
+
 // ─── Per-unit quiz blueprints ───
 
 type Gen = () => Question;
@@ -169,17 +247,23 @@ function bank(key: string, n: number): Question[] {
 
 /** Builders for units that mix authored + generated questions. Default: bank only. */
 const BLUEPRINTS: Record<string, () => Question[]> = {
+  '1.2': () => [...bank('1.2', 7), ...gens(3, () => genRhythm(RHYTHM_EASY, 70))],
   '1.3': () => [...bank('1.3', 7), ...gens(3, () => genStaffPlace('treble'))],
   '1.4': () => [...bank('1.4', 3), ...gens(4, () => genNoteId('treble')), ...gens(3, () => genStaffPlace('treble'))],
   '2.1': () => [...bank('2.1', 5), ...gens(3, () => genNoteId('bass')), ...gens(2, () => genStaffPlace('bass'))],
+  '2.2': () => [...bank('2.2', 7), ...gens(3, () => genRhythm(RHYTHM_MEDIUM, 80))],
   '2.3': () => [...bank('2.3', 7), ...gens(3, () => genKeyboard(true))],
   '2.4': () => [...bank('2.4', 6), ...gens(4, () => genKeySig(KEYS_BASIC))],
-  '2.5': () => [...bank('2.5', 6), ...gens(4, () => genRelativeMinor(KEYS_BASIC))],
-  '2.6': () => [...bank('2.6', 6), ...gens(4, genIntervalNumber)],
-  '2.7': () => [...bank('2.7', 7), ...gens(3, () => genTriadQuality(['M', 'm']))],
+  '2.5': () => [...bank('2.5', 4), ...gens(3, () => genRelativeMinor(KEYS_BASIC)), ...gens(3, genEarScale)],
+  '2.6': () => [...bank('2.6', 4), ...gens(3, genIntervalNumber), ...gens(3, () => genEarInterval(EAR_BASIC))],
+  '2.7': () => [...bank('2.7', 5), ...gens(2, () => genTriadQuality(['M', 'm'])), ...gens(3, () => genEarTriad(['M', 'm']))],
   '3.1': () => [...bank('3.1', 4), ...gens(3, () => genKeySig(KEYS_FULL)), ...gens(2, () => genNoteId('alto')), genNoteId('tenor')],
-  '3.3': () => [...bank('3.3', 6), ...gens(4, genIntervalQuality)],
-  '3.4': () => [...bank('3.4', 7), ...gens(3, () => genTriadQuality(['M', 'm', 'd', 'A']))],
+  '3.2': () => [...bank('3.2', 8), ...gens(2, genEarScale)],
+  '3.3': () => [...bank('3.3', 4), ...gens(3, genIntervalQuality), ...gens(3, () => genEarInterval(INTERVAL_FULL))],
+  '3.4': () => [...bank('3.4', 5), ...gens(2, () => genTriadQuality(['M', 'm', 'd', 'A'])), ...gens(3, () => genEarTriad(['M', 'm', 'd', 'A']))],
+  '3.9': () => [...bank('3.9', 7), ...gens(3, () => genRhythm(RHYTHM_HARD, 88))],
+  '3.11': () => [...bank('3.11', 5), ...gens(2, () => genEarInterval(INTERVAL_FULL)), ...gens(2, () => genEarTriad(['M', 'm', 'd', 'A'])), genEarScale()],
+  '4.10': () => [...bank('4.10', 6), ...gens(4, () => genEarInterval(INTERVAL_FULL, true))],
 };
 
 export function buildUnitQuiz(levelId: number, unitSortOrder: number): Question[] {

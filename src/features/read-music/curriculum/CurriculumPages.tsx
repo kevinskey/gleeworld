@@ -6,10 +6,13 @@ import {
   useUpdateLessonProgress,
   useUnitMastery,
   useSaveUnitMastery,
+  useSavePlacement,
   type TheoryLevel,
   type TheoryLesson,
 } from './hooks';
 import QuizRunner from './engine/QuizRunner';
+import { buildUnitQuiz } from './engine/quiz';
+import { buildPlacementTest, gradePlacement } from './engine/placement';
 
 const BASE = '/read-music';
 const CBASE = `${BASE}/curriculum`;
@@ -40,6 +43,17 @@ export function CurriculumHome() {
 
       <section className="mx-auto w-full max-w-3xl px-6 py-10">
         {isLoading && <p className="text-sm text-muted-foreground">Loading curriculum…</p>}
+        <Link
+          to={`${CBASE}/placement`}
+          className="mb-4 flex items-center gap-3 rounded-lg border border-dashed border-[hsl(var(--brand-blue-dark))]/40 bg-card p-4 hover:border-brand hover:shadow transition-all"
+        >
+          <GraduationCap className="h-5 w-5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-foreground">Not sure where to start?</div>
+            <div className="text-xs text-muted-foreground">Take the 24-question placement test to find your level.</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </Link>
         <div className="grid gap-4">
           {levels.map((level) => {
             const { done, total } = levelProgress(level, progress);
@@ -193,11 +207,83 @@ export function CurriculumUnitQuizPage() {
         </Link>
         <div className="mt-4">
           <QuizRunner
-            levelId={level.id}
-            unitSortOrder={unit.sort_order}
-            unitTitle={unit.title}
+            title={`${unit.title} — Unit Quiz`}
+            build={() => buildUnitQuiz(level.id, unit.sort_order)}
             onFinish={(scorePct) => saveMastery.mutate({ unitId: unit.id, score: scorePct })}
             onExit={() => navigate(`${CBASE}/${level.slug}`)}
+          />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export function CurriculumPlacementPage() {
+  const { data: levels = [], isLoading } = useTheoryCurriculum();
+  const savePlacement = useSavePlacement();
+  const navigate = useNavigate();
+
+  if (isLoading) return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
+
+  return (
+    <div className="flex flex-col flex-1">
+      <main className="mx-auto w-full max-w-2xl px-4 sm:px-6 py-8">
+        <Link to={CBASE} className="text-sm text-muted-foreground hover:underline">← Curriculum</Link>
+        <h1 className="mt-3 text-2xl font-bold text-foreground">Placement Test</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          24 questions sampling all four levels. Your result suggests where to start — you can always work from Level 1.
+        </p>
+        <div className="mt-4">
+          <QuizRunner
+            title="Placement Test"
+            build={buildPlacementTest}
+            onFinish={(_pct, answers) => {
+              const result = gradePlacement(answers);
+              savePlacement.mutate({ placedLevel: result.placedLevel, detail: result });
+            }}
+            onExit={() => navigate(CBASE)}
+            renderResult={({ answers, retake }) => {
+              const result = gradePlacement(answers);
+              const level = levels.find((l) => l.id === result.placedLevel);
+              return (
+                <div className="rounded-xl border bg-card p-6 space-y-5">
+                  <div className="text-center">
+                    <GraduationCap className="mx-auto h-10 w-10 text-[hsl(var(--brand-blue-dark))]" />
+                    <p className="mt-2 text-sm text-muted-foreground">Recommended starting point</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      Level {result.placedLevel}{level ? ` — ${level.name}` : ''}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {result.perLevel.map((l) => (
+                      <div key={l.level} className="flex items-center gap-3 text-sm">
+                        <span className="w-16 text-muted-foreground">Level {l.level}</span>
+                        <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${l.pct >= 70 ? 'bg-emerald-500' : 'bg-amber-400'}`}
+                            style={{ width: `${l.pct}%` }}
+                          />
+                        </div>
+                        <span className="w-20 text-right text-muted-foreground">{l.correct}/{l.total} · {l.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-center gap-2">
+                    <button onClick={retake} className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-muted">
+                      Retake
+                    </button>
+                    {level && (
+                      <Link
+                        to={`${CBASE}/${level.slug}`}
+                        className="rounded-md bg-brand-gradient px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                      >
+                        Start Level {result.placedLevel}
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            }}
           />
         </div>
       </main>

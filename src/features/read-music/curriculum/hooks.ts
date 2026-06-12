@@ -132,6 +132,25 @@ export function useSaveUnitMastery() {
   });
 }
 
+export function useSavePlacement() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ placedLevel, detail }: { placedLevel: number; detail: unknown }) => {
+      if (!user) return; // anonymous placement isn't persisted
+      const { error } = await supabase.from('gw_theory_placements').insert({
+        user_id: user.id,
+        placed_level: placedLevel,
+        detail,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['theory-placement', user?.id] });
+    },
+  });
+}
+
 export function useUpdateLessonProgress() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
