@@ -1,5 +1,5 @@
-// Email + SMS blast modal. Reaches people by email and/or SMS in one composer.
-// Supports file attachments (up to 5 files, 25MB each) for email.
+// Email blast modal with attachments (up to 5 files, 25MB each).
+// SMS lives in SmsComposer.
 import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { X, Send, Loader2, Mail, Smartphone, Paperclip, FileIcon, Zap } from 'lucide-react';
+import { X, Send, Loader2, Mail, Paperclip, FileIcon } from 'lucide-react';
 
 type Group = 'all' | 'students' | 'admins' | 'fans' | 'custom';
 const GROUPS: Array<{ value: Group; label: string }> = [
@@ -37,8 +37,6 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
   const [group, setGroup] = useState<Group>('students');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const [sendEmail, setSendEmail] = useState(true);
-  const [sendSms, setSendSms] = useState(true);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [personSearch, setPersonSearch] = useState('');
@@ -65,8 +63,6 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
     },
   });
 
-  const adHocPhone = parsePhone(personSearch);
-
   const searchResults = personSearch.trim()
     ? people.filter((p) =>
         !selectedPeople.find((s) => s.user_id === p.user_id) &&
@@ -80,22 +76,17 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
     enabled: group !== 'custom',
     queryFn: async () => {
       let q = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
-      let p = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('phone', 'is', null);
       if (group !== 'all') {
         const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
         q = q.eq('role', role);
-        p = p.eq('role', role);
       }
-      const [{ count: emails }, { count: phones }] = await Promise.all([q, p]);
-      return { emails: emails ?? 0, phones: phones ?? 0 };
+      const { count: emails } = await q;
+      return { emails: emails ?? 0, phones: 0 };
     },
   });
 
   const counts = group === 'custom'
-    ? {
-        emails: selectedPeople.filter((p) => p.email).length,
-        phones: selectedPeople.filter((p) => p.phone).length,
-      }
+    ? { emails: selectedPeople.filter((p) => p.email).length, phones: 0 }
     : groupCounts;
 
   function pickFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -129,104 +120,54 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
   }
 
   async function send() {
-    if (!sendEmail && !sendSms) return toast({ title: 'Pick at least one channel', variant: 'destructive' });
-    if (!body.trim()) return toast({ title: 'Message required', variant: 'destructive' });
-    // Count a phone number still sitting in the search box as a recipient.
-    let recipients = selectedPeople;
-    if (group === 'custom' && adHocPhone && !selectedPeople.find((s) => s.phone === adHocPhone)) {
-      recipients = [...selectedPeople, { user_id: `phone:${adHocPhone}`, full_name: adHocPhone, email: null, phone: adHocPhone }];
-      setSelectedPeople(recipients);
-      setPersonSearch('');
-    }
-    if (group === 'custom' && recipients.length === 0) {
+    if (!subject.trim() || !body.trim()) return toast({ title: 'Subject + message required', variant: 'destructive' });
+    if (group === 'custom' && selectedPeople.length === 0) {
       return toast({ title: 'Pick at least one recipient', variant: 'destructive' });
     }
-    const willEmail = sendEmail && (group !== 'custom' || recipients.some((p) => p.email));
-    if (willEmail && !subject.trim()) return toast({ title: 'Subject required for email', variant: 'destructive' });
     setSending(true);
     try {
       const role = group !== 'all' && group !== 'custom' ? (group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan') : undefined;
 
-      let emailCount = 0;
-      let smsCount = 0;
-
-      if (sendEmail) {
-        let emails: string[];
-        if (group === 'custom') {
-          emails = recipients.map((p) => p.email).filter(Boolean) as string[];
-        } else {
-          let rq = supabase.from('gw_profiles_directory').select('email').not('email', 'is', null);
-          if (role) rq = rq.eq('role', role);
-          const { data: recipients, error: rErr } = await rq;
-          if (rErr) throw rErr;
-          emails = (recipients ?? []).map((r: any) => r.email).filter(Boolean);
-        }
-        if (emails.length === 0) {
-          // Phone-only recipients are fine as long as SMS is going out.
-          if (!sendSms) throw new Error('No email recipients selected.');
-        } else {
-          const attachmentPayload = attachments.length > 0
-            ? await Promise.all(attachments.map(fileToBase64))
-            : undefined;
-
-          const { error: sErr } = await supabase.functions.invoke('gw-send-email', {
-            body: {
-              to: emails,
-              subject,
-              text: body,
-              html: `<div style="font-family:sans-serif;max-width:600px;white-space:pre-wrap;">${escapeHtml(body)}</div>`,
-              attachments: attachmentPayload,
-            },
-          });
-          if (sErr) throw sErr;
-          emailCount = emails.length;
-        }
+      let emails: string[];
+      if (group === 'custom') {
+        emails = selectedPeople.map((p) => p.email).filter(Boolean) as string[];
+      } else {
+        let rq = supabase.from('gw_profiles_directory').select('email').not('email', 'is', null);
+        if (role) rq = rq.eq('role', role);
+        const { data: rows, error: rErr } = await rq;
+        if (rErr) throw rErr;
+        emails = (rows ?? []).map((r: any) => r.email).filter(Boolean);
       }
+      if (emails.length === 0) throw new Error('No email recipients selected.');
 
-      if (sendSms) {
-        let numbers: string[];
-        if (group === 'custom') {
-          numbers = recipients.map((p) => p.phone).filter(Boolean) as string[];
-        } else {
-          let pq = supabase.from('gw_profiles_directory').select('phone').not('phone', 'is', null);
-          if (role) pq = pq.eq('role', role);
-          const { data: phones, error: pErr } = await pq;
-          if (pErr) throw pErr;
-          numbers = (phones ?? []).map((p: any) => p.phone).filter(Boolean);
-        }
-        if (numbers.length === 0) {
-          if (!sendEmail) throw new Error('No phone numbers among selected recipients.');
-        } else {
-          const { data: user } = await supabase.auth.getUser();
-          const { error: smsErr } = await supabase.functions.invoke('send-sms', {
-            body: {
-              message: body,
-              recipients: numbers,
-              sendToAll: false,
-              senderId: user.user?.id,
-            },
-          });
-          if (smsErr) throw smsErr;
-          smsCount = numbers.length;
-        }
-      }
+      const attachmentPayload = attachments.length > 0
+        ? await Promise.all(attachments.map(fileToBase64))
+        : undefined;
+
+      const { error: sErr } = await supabase.functions.invoke('gw-send-email', {
+        body: {
+          to: emails,
+          subject,
+          text: body,
+          html: `<div style="font-family:sans-serif;max-width:600px;white-space:pre-wrap;">${escapeHtml(body)}</div>`,
+          attachments: attachmentPayload,
+        },
+      });
+      if (sErr) throw sErr;
 
       const { data: user } = await supabase.auth.getUser();
       await supabase.from('gw_communications').insert({
-        title: subject || body.slice(0, 60),
+        title: subject,
         content: body,
         sender_id: user.user?.id,
         recipient_groups: [{ id: group, name: GROUPS.find((g) => g.value === group)?.label }],
-        channels: [sendEmail && 'email', sendSms && 'sms'].filter(Boolean),
-        total_recipients: Math.max(emailCount, smsCount),
+        channels: ['email'],
+        total_recipients: emails.length,
         status: 'sent',
         sent_at: new Date().toISOString(),
       });
 
-      const parts = [];
-      if (emailCount) parts.push(`${emailCount} email${emailCount === 1 ? '' : 's'}`);
-      if (smsCount) parts.push(`${smsCount} SMS`);
-      toast({ title: 'Sent', description: parts.join(' + ') });
+      toast({ title: 'Sent', description: `${emails.length} email${emails.length === 1 ? '' : 's'}` });
       qc.invalidateQueries({ queryKey: ['comm-history'] });
       onClose();
     } catch (e: any) {
@@ -240,11 +181,11 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
       <Card className="w-full max-w-lg my-4 bg-white text-gray-900">
         <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-white text-gray-900 z-10 border-b rounded-t-xl">
-          <CardTitle className="flex items-center gap-2 text-gray-900"><Zap className="w-5 h-5" /> Quick blast</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-gray-900"><Mail className="w-5 h-5" /> Email blast</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close" className="text-gray-900 hover:bg-gray-100"><X className="w-4 h-4" /></Button>
         </CardHeader>
         <CardContent className="space-y-3 pt-4">
-          <p className="text-xs text-muted-foreground">For reaching people by email and/or SMS — useful for people not in any chat group.</p>
+          <p className="text-xs text-muted-foreground">Email a group or specific people — useful for people not in any chat group.</p>
 
           <div>
             <Label className="text-xs">Send to</Label>
@@ -254,7 +195,7 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
                 {GROUPS.map((g) => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-1">{counts.emails} email · {counts.phones} phone on file</p>
+            <p className="text-xs text-muted-foreground mt-1">{counts.emails} email addresses on file</p>
           </div>
 
           {group === 'custom' && (
@@ -265,7 +206,7 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
                   {selectedPeople.map((p) => (
                     <span key={p.user_id} className="inline-flex items-center gap-1 bg-muted rounded-full px-2 py-0.5 text-xs">
                       {p.full_name}
-                      {!p.phone && <span className="text-amber-600" title="No phone on file">(no phone)</span>}
+                      {!p.email && <span className="text-amber-600" title="No email on file">(no email)</span>}
                       <button type="button" onClick={() => setSelectedPeople((prev) => prev.filter((s) => s.user_id !== p.user_id))} aria-label={`Remove ${p.full_name}`}>
                         <X className="w-3 h-3" />
                       </button>
@@ -276,23 +217,10 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
               <Input
                 value={personSearch}
                 onChange={(e) => setPersonSearch(e.target.value)}
-                placeholder="Search by name or email, or type a phone number…"
+                placeholder="Search by name or email…"
               />
-              {(searchResults.length > 0 || adHocPhone) && (
+              {searchResults.length > 0 && (
                 <div className="border rounded-md mt-1 max-h-48 overflow-y-auto divide-y">
-                  {adHocPhone && !selectedPeople.find((s) => s.phone === adHocPhone) && (
-                    <button
-                      type="button"
-                      className="w-full text-left px-2 py-1.5 text-sm hover:bg-muted flex items-center justify-between"
-                      onClick={() => {
-                        setSelectedPeople((prev) => [...prev, { user_id: `phone:${adHocPhone}`, full_name: adHocPhone, email: null, phone: adHocPhone }]);
-                        setPersonSearch('');
-                      }}
-                    >
-                      <span>Text {adHocPhone}</span>
-                      <Smartphone className="w-3 h-3 text-muted-foreground" />
-                    </button>
-                  )}
                   {searchResults.map((p) => (
                     <button
                       key={p.user_id}
@@ -302,7 +230,6 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
                     >
                       <span className="truncate">{p.full_name}</span>
                       <span className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0">
-                        {p.phone ? <Smartphone className="w-3 h-3" /> : null}
                         {p.email ? <Mail className="w-3 h-3" /> : null}
                       </span>
                     </button>
@@ -312,34 +239,17 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          <div className="flex gap-3 text-sm">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
-              <Mail className="w-3 h-3" /> Email
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={sendSms} onChange={(e) => setSendSms(e.target.checked)} />
-              <Smartphone className="w-3 h-3" /> SMS
-            </label>
+          <div>
+            <Label className="text-xs">Subject</Label>
+            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Spring concert reminder" />
           </div>
-
-          {sendEmail && (
-            <div>
-              <Label className="text-xs">Subject</Label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Spring concert reminder" />
-            </div>
-          )}
           <div>
             <Label className="text-xs">Message</Label>
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Hi everyone…" className="min-h-[140px]" />
-            {sendSms && body.length > 160 && (
-              <p className="text-xs text-amber-600 mt-1">SMS is {body.length} chars — will split into {Math.ceil(body.length / 160)} segments.</p>
-            )}
           </div>
 
-          {sendEmail && (
-            <div>
-              <Label className="text-xs">Attachments (email only)</Label>
+          <div>
+            <Label className="text-xs">Attachments</Label>
               <div className="space-y-1">
                 {attachments.map((f, i) => (
                   <div key={i} className="text-xs flex items-center justify-between bg-muted/40 rounded px-2 py-1">
@@ -354,12 +264,11 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
                 </Button>
                 <input ref={fileRef} type="file" multiple className="hidden" onChange={pickFiles} />
               </div>
-            </div>
-          )}
+          </div>
 
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button onClick={send} disabled={sending || (!sendEmail && !sendSms) || !body.trim()}>
+            <Button onClick={send} disabled={sending || !subject.trim() || !body.trim()}>
               {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Send
             </Button>
@@ -368,15 +277,6 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
       </Card>
     </div>
   );
-}
-
-function parsePhone(input: string): string | null {
-  const cleaned = input.trim().replace(/[\s().-]/g, '');
-  if (!/^\+?\d{10,15}$/.test(cleaned)) return null;
-  if (cleaned.startsWith('+')) return cleaned;
-  if (cleaned.length === 10) return `+1${cleaned}`;
-  if (cleaned.length === 11 && cleaned.startsWith('1')) return `+${cleaned}`;
-  return `+${cleaned}`;
 }
 
 function escapeHtml(s: string) {
