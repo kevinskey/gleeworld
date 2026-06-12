@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Send, Users, Plus, MessageSquare, X, Loader2, Image as ImageIcon,
   Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Newspaper, Video, Zap,
-  ChevronLeft,
+  ChevronLeft, Bell, BellOff,
 } from 'lucide-react';
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -100,6 +100,40 @@ export default function Messenger() {
     },
   });
 
+  const { data: groupMeta = {} } = useQuery<Record<string, { unread: number; muted: boolean }>>({
+    queryKey: ['messenger-unread'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('gw_unread_counts');
+      if (error) throw error;
+      return Object.fromEntries(
+        (data ?? []).map((r: any) => [r.group_id, { unread: Number(r.unread), muted: !!r.muted }]),
+      );
+    },
+    enabled: !!user,
+    refetchInterval: 60000,
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('messenger-unread')
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'gw_group_messages',
+      }, () => qc.invalidateQueries({ queryKey: ['messenger-unread'] }))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, qc]);
+
+  async function toggleMute() {
+    if (!selectedGroupId || !user) return;
+    const muted = !groupMeta[selectedGroupId]?.muted;
+    await supabase.from('gw_group_members')
+      .update({ muted })
+      .eq('group_id', selectedGroupId)
+      .eq('user_id', user.id);
+    qc.invalidateQueries({ queryKey: ['messenger-unread'] });
+  }
+
   useEffect(() => {
     // On phones, land on the group list (GroupMe-style) instead of auto-opening a chat.
     if (!selectedGroupId && groups.length > 0 && window.innerWidth >= 768) {
@@ -173,7 +207,7 @@ export default function Messenger() {
       .update({ last_read_at: new Date().toISOString() })
       .eq('group_id', selectedGroupId)
       .eq('user_id', user.id)
-      .then(() => {});
+      .then(() => qc.invalidateQueries({ queryKey: ['messenger-unread'] }));
   }, [selectedGroupId, user, messages.length]);
 
   async function sendMessage(content?: string, type: string = 'text', fileUrl?: string) {
@@ -198,6 +232,7 @@ export default function Messenger() {
       .select('user_id')
       .eq('group_id', selectedGroupId)
       .neq('user_id', user.id)
+      .eq('muted', false)
       .then(({ data }) => {
         const ids = (data ?? []).map((m) => m.user_id).filter(Boolean);
         if (ids.length === 0) return;
@@ -448,7 +483,15 @@ export default function Messenger() {
                 g.id === selectedGroupId ? 'bg-muted' : ''
               }`}
             >
-              <div className="font-semibold text-sm truncate">{g.name}</div>
+              <div className="flex items-center gap-2">
+                <div className={`text-sm truncate flex-1 ${groupMeta[g.id]?.unread ? 'font-bold' : 'font-semibold'}`}>{g.name}</div>
+                {groupMeta[g.id]?.muted && <BellOff className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                {(groupMeta[g.id]?.unread ?? 0) > 0 && (
+                  <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold flex items-center justify-center">
+                    {groupMeta[g.id].unread > 99 ? '99+' : groupMeta[g.id].unread}
+                  </span>
+                )}
+              </div>
               <div className="text-xs text-muted-foreground truncate">{g.description || g.group_type}</div>
             </button>
           ))}
@@ -484,6 +527,9 @@ export default function Messenger() {
                 )}
               </div>
               <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" onClick={toggleMute} title={groupMeta[selectedGroup.id]?.muted ? 'Unmute notifications' : 'Mute notifications'}>
+                  {groupMeta[selectedGroup.id]?.muted ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+                </Button>
                 <Button variant="ghost" size="sm" onClick={startGroupMeeting} title="Start video meeting">
                   <Video className="w-4 h-4" />
                 </Button>

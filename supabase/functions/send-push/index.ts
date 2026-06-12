@@ -88,10 +88,19 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const jwt = await apnsJwt();
-    const payload = JSON.stringify({
+
+    // Per-user unread totals drive the app icon badge.
+    const badges = new Map<string, number>();
+    const { data: totals } = await admin.rpc("gw_unread_totals", {
+      uids: [...new Set(tokens.map((t: { user_id: string }) => t.user_id))],
+    });
+    for (const r of totals ?? []) badges.set(r.user_id, Number(r.unread));
+
+    const payloadFor = (userId: string) => JSON.stringify({
       aps: {
         alert: { title: title || "GleeWorld", body: String(body).slice(0, 500) },
         sound: "default",
+        badge: badges.get(userId) ?? 1,
         "mutable-content": 1,
       },
       ...(data || {}),
@@ -99,7 +108,7 @@ serve(async (req: Request): Promise<Response> => {
 
     let sent = 0;
     const stale: string[] = [];
-    await Promise.all(tokens.map(async (t: { token: string }) => {
+    await Promise.all(tokens.map(async (t: { token: string; user_id: string }) => {
       try {
         const res = await fetch(`${APNS_HOST}/3/device/${t.token}`, {
           method: "POST",
@@ -110,7 +119,7 @@ serve(async (req: Request): Promise<Response> => {
             "apns-priority": "10",
             "content-type": "application/json",
           },
-          body: payload,
+          body: payloadFor(t.user_id),
         });
         if (res.ok) { sent++; return; }
         const errBody = await res.json().catch(() => ({}));
