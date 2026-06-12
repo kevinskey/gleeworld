@@ -97,7 +97,7 @@ export const UsageAnalyticsModule: React.FC = () => {
       // Fetch user profiles for names
       const userIds = [...new Set(viewsData?.map(v => v.user_id) || [])];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .in('user_id', userIds);
 

@@ -83,7 +83,7 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
       let profileMap = new Map<string, { full_name: string; email: string; role: string }>();
       if (userIds.length > 0) {
         const { data: profiles, error: profileError } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email, role')
           .in('user_id', userIds);
 
@@ -125,7 +125,7 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
     mutationFn: async (email: string) => {
       // 1. Look up user in gw_profiles by email
       const { data: profileData, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('id, user_id, email')
         .eq('email', email.trim().toLowerCase())
         .maybeSingle();

@@ -48,7 +48,7 @@ export const CreateDuesRecord = ({ onSuccess, editingRecord, onCancel }: CreateD
       
       // First try to get all profiles
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, voice_part, class_year')
         .not('user_id', 'is', null)
         .order('full_name');

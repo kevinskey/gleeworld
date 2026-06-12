@@ -50,7 +50,7 @@ export const useAcademyGroups = (courseId?: string) => {
         .from('gw_group_members')
         .select(`
           *,
-          profile:gw_profiles(full_name, email)
+          profile:gw_profiles_directory(full_name, email)
         `)
         .in('group_id', groupIds);
 

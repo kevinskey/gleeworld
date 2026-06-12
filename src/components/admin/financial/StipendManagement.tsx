@@ -26,7 +26,7 @@ export const StipendManagement = () => {
         .from('user_payments')
         .insert({
           user_id: stipend.user_id || (await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id')
             .eq('email', stipend.user_email)
             .maybeSingle()).data?.user_id,

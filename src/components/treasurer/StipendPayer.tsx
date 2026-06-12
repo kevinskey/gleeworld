@@ -69,7 +69,7 @@ export const StipendPayer = () => {
         .from('gw_stipend_payments')
         .select(`
           *,
-          gw_profiles (
+          gw_profiles:gw_profiles_directory (
             full_name,
             email
           )

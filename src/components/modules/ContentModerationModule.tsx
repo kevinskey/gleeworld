@@ -91,7 +91,7 @@ export function ContentModerationModule() {
               isHidden = post.is_hidden;
               
               const { data: author } = await supabase
-                .from('gw_profiles')
+                .from('gw_profiles_directory')
                 .select('full_name')
                 .eq('user_id', post.user_id)
                 .single();
@@ -109,7 +109,7 @@ export function ContentModerationModule() {
               isHidden = comment.is_hidden;
               
               const { data: author } = await supabase
-                .from('gw_profiles')
+                .from('gw_profiles_directory')
                 .select('full_name')
                 .eq('user_id', comment.user_id)
                 .single();
@@ -118,7 +118,7 @@ export function ContentModerationModule() {
           }
 
           const { data: reporter } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name')
             .eq('user_id', report.reported_by)
             .single();
@@ -153,7 +153,7 @@ export function ContentModerationModule() {
       const enrichedLogs: ModerationLog[] = await Promise.all(
         (data || []).map(async (log) => {
           const { data: moderator } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name')
             .eq('user_id', log.moderator_id)
             .single();

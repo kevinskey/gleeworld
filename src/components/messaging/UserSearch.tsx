@@ -46,7 +46,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, avatar_url, voice_part')
         .neq('user_id', currentUser.id)
         .order('full_name');

@@ -45,7 +45,7 @@ export const MeetingWaitingRoom: React.FC<MeetingWaitingRoomProps> = ({
           scheduled_at,
           description,
           created_by,
-          gw_profiles!scheduled_meetings_created_by_fkey(full_name)
+          gw_profiles:gw_profiles_directory!scheduled_meetings_created_by_fkey(full_name)
         `)
         .eq('room_name', roomName)
         .maybeSingle();

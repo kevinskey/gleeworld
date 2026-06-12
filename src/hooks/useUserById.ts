@@ -31,7 +31,7 @@ export const useUserById = (userId: string | undefined) => {
 
         // Fetch from gw_profiles table
         const { data: profileData, error: profileError } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, email, full_name, role, created_at, avatar_url')
           .eq('user_id', userId)
           .maybeSingle();

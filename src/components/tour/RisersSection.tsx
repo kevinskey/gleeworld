@@ -106,7 +106,7 @@ const RiserGrid = ({ config }: { config: RiserConfig }) => {
 
       if (rosterUserIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, voice_part')
           .in('user_id', rosterUserIds);
 

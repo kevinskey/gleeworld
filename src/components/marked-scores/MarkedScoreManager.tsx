@@ -98,7 +98,7 @@ export const MarkedScoreManager = ({
       // Get uploader names
       const uploaderIds = [...new Set(data?.map(score => score.uploader_id) || [])];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, first_name, last_name')
         .in('user_id', uploaderIds);
 

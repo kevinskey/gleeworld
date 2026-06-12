@@ -57,7 +57,7 @@ export const useReceipts = () => {
       // Manually fetch profile data for each receipt
       const receiptsWithProfiles = await Promise.all((data || []).map(async (receipt) => {
         const { data: profileData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('full_name')
           .eq('user_id', receipt.created_by)
           .single();

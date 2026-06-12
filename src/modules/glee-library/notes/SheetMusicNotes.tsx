@@ -58,7 +58,7 @@ export const SheetMusicNotes = ({ musicId }: SheetMusicNotesProps) => {
       // Get author names separately
       const authorIds = [...new Set(data?.map(note => note.author_id) || [])];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', authorIds);
 

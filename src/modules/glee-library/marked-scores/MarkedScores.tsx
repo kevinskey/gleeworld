@@ -77,7 +77,7 @@ export const MarkedScores = ({ musicId, musicTitle, originalPdfUrl, voiceParts }
       // Get uploader names separately
       const uploaderIds = [...new Set(data?.map(score => score.uploader_id) || [])];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', uploaderIds);
 

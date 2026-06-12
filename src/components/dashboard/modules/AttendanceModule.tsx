@@ -67,7 +67,7 @@ export const AttendanceModule = () => {
       if (!userIds.length) { setStudents([]); setAttendance({}); setLoading(false); return; }
 
       const profileResult = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, voice_part, avatar_url')
         .in('user_id', userIds as string[])
         .order('full_name');

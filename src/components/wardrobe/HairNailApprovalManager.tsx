@@ -42,7 +42,7 @@ export const HairNailApprovalManager = () => {
         .from('gw_hair_nail_submissions')
         .select(`
           *,
-          gw_profiles!gw_hair_nail_submissions_user_id_fkey(
+          gw_profiles:gw_profiles_directory!gw_hair_nail_submissions_user_id_fkey(
             full_name,
             email
           )

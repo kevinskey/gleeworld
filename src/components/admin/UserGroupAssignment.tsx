@@ -148,7 +148,7 @@ export const UserGroupAssignment = () => {
       
       // First get all users with valid user_ids
       const { data: usersData, error: usersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, email, full_name, role')
         .not('user_id', 'is', null); // Filter out null user_ids
 

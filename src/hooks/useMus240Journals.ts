@@ -78,7 +78,7 @@ export const useMus240Journals = () => {
         if (journals.length > 0) {
           const studentIds = [...new Set(journals.map((j: any) => j.student_id))];
           const { data: profiles } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name')
             .in('user_id', studentIds as string[]);
 
@@ -142,7 +142,7 @@ export const useMus240Journals = () => {
       
       const studentIds = [...new Set(journals.map((j: any) => j.student_id))];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', studentIds as string[]);
 
@@ -170,7 +170,7 @@ export const useMus240Journals = () => {
       
       const commenterIds = [...new Set(comments.map((c: any) => c.commenter_id))];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', commenterIds as string[]);
 

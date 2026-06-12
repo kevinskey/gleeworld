@@ -38,7 +38,7 @@ export const ServiceProviderManagementModule = ({ user, isFullPage = false }: Mo
     queryKey: ['all-users'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, role')
         .order('full_name');
       

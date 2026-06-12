@@ -94,7 +94,7 @@ export const SpotlightContentForm = ({ content, onSuccess, onCancel }: Spotlight
   const loadUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .order('full_name');
 

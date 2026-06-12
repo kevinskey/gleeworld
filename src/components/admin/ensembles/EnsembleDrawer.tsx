@@ -516,7 +516,7 @@ function ImportFromCourseDialog({
       }
       // 2. Map auth user ids → gw_profiles.id.
       const { data: profiles, error: pErr } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('id, user_id')
         .in('user_id', userIds);
       if (pErr) throw pErr;

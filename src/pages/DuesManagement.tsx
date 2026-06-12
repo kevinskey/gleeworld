@@ -85,7 +85,7 @@ export const DuesManagement = () => {
         .from('gw_dues_records')
         .select(`
           *,
-          gw_profiles (
+          gw_profiles:gw_profiles_directory (
             full_name,
             email
           )

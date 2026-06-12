@@ -66,7 +66,7 @@ export const useDuesManagement = () => {
         .from('gw_dues_records')
         .select(`
           *,
-          user_profile:gw_profiles!user_id (
+          user_profile:gw_profiles_directory!user_id (
             full_name,
             email,
             role
@@ -118,7 +118,7 @@ export const useDuesManagement = () => {
       
       // Get all current members who don't have dues records for this semester
       const { data: members, error: membersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .eq('role', 'member')
         .not('user_id', 'is', null);

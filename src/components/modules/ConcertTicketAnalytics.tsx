@@ -49,7 +49,7 @@ export const ConcertTicketAnalytics = () => {
 
       // Fetch profiles to join
       const { data: profiles, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('email, role, class_year');
       
       if (profileError) throw profileError;

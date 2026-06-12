@@ -85,14 +85,14 @@ export const EventAttendanceDialog = ({
           .from("gw_event_attendance")
           .select(`
             id, user_id, attendance_status, check_in_time, notes,
-            gw_profiles!gw_event_attendance_user_id_fkey(display_name, first_name, last_name, email)
+            gw_profiles:gw_profiles_directory!gw_event_attendance_user_id_fkey(display_name, first_name, last_name, email)
           `)
           .eq("event_id", event.id),
         supabase
           .from("attendance")
           .select(`
             id, user_id, status, recorded_at, notes,
-            gw_profiles!attendance_user_id_fkey(display_name, first_name, last_name, email)
+            gw_profiles:gw_profiles_directory!attendance_user_id_fkey(display_name, first_name, last_name, email)
           `)
           .eq("event_id", event.id),
       ]);

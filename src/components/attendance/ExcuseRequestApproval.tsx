@@ -95,7 +95,7 @@ export const ExcuseRequestApproval = () => {
 
       // Get profiles from gw_profiles first
       const { data: gwProfilesData, error: gwProfilesError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .in('user_id', userIds);
 
@@ -110,7 +110,7 @@ export const ExcuseRequestApproval = () => {
       let profilesData: any[] = [];
       if (missingUserIds.length > 0) {
         const { data: fallbackProfiles, error: profilesError } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, email, full_name')
           .in('user_id', missingUserIds);
 

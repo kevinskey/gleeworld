@@ -77,7 +77,7 @@ export function SimpleModuleManager() {
         for (const assignment of assignmentsData) {
           // Get user info
           const { data: userProfile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('email, full_name')
             .eq('user_id', assignment.user_id)
             .maybeSingle();
@@ -129,7 +129,7 @@ export function SimpleModuleManager() {
     try {
       // First get user info
       const { data: userProfile, error: userError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .eq('email', selectedUser)
         .maybeSingle();

@@ -174,7 +174,7 @@ export const useInstructorId = (instructorEmail: string) => {
 
       try {
         const { data, error } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id')
           .eq('email', instructorEmail)
           .maybeSingle();

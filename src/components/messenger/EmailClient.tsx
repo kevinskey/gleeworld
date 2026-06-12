@@ -63,7 +63,7 @@ export function EmailClient({ onClose }: { onClose: () => void }) {
     enabled: group === 'custom',
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, first_name, last_name, email')
         .eq('status', 'active')
         .not('user_id', 'is', null)
@@ -90,7 +90,7 @@ export function EmailClient({ onClose }: { onClose: () => void }) {
     queryKey: ['email-count', group],
     enabled: group !== 'custom',
     queryFn: async () => {
-      let q = supabase.from('gw_profiles').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
+      let q = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
       if (group !== 'all') {
         const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
         q = q.eq('role', role);
@@ -158,7 +158,7 @@ export function EmailClient({ onClose }: { onClose: () => void }) {
       if (group === 'custom') {
         emails = selectedPeople.map((p) => p.email).filter(Boolean) as string[];
       } else {
-        let rq = supabase.from('gw_profiles').select('email').not('email', 'is', null);
+        let rq = supabase.from('gw_profiles_directory').select('email').not('email', 'is', null);
         if (group !== 'all') {
           const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
           rq = rq.eq('role', role);

@@ -214,7 +214,7 @@ export default function Groups() {
         error: enrollmentError
       } = await supabase.from('mus240_enrollments').select(`
           student_id,
-          gw_profiles!student_id(
+          gw_profiles:gw_profiles_directory!student_id(
             user_id,
             full_name,
             email

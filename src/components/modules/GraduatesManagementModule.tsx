@@ -27,7 +27,7 @@ export const GraduatesManagementModule = ({
       // Alumni count — gw_profiles is tenant-scoped via RLS; user_roles is a
       // global legacy table without tenant_id and would leak counts across tenants.
       const { data: profileRoleData } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .eq('role', 'graduate');
       setGraduatesCount((profileRoleData ?? []).length);

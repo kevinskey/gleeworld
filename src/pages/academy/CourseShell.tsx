@@ -527,7 +527,7 @@ function PeopleTab({ course, canEdit }: TabProps) {
       let pMap = new Map<string, { full_name: string | null; email: string | null; voice_part: string | null }>();
       if (ids.length) {
         const { data: profs } = await supabase
-          .from("gw_profiles")
+          .from("gw_profiles_directory")
           .select("user_id, full_name, email, voice_part")
           .in("user_id", ids);
         (profs || []).forEach((p: any) =>
@@ -593,7 +593,7 @@ function PeopleTab({ course, canEdit }: TabProps) {
     const pMap = new Map<string, any>();
     if (ids.length) {
       const { data: profs } = await supabase
-        .from("gw_profiles").select("user_id, full_name, email, voice_part").in("user_id", ids);
+        .from("gw_profiles_directory").select("user_id, full_name, email, voice_part").in("user_id", ids);
       (profs || []).forEach((p: any) => pMap.set(p.user_id, p));
     }
     setRows((enrolls || []).map((e: any) => ({ ...e, ...(pMap.get(e.user_id) || {}) })));

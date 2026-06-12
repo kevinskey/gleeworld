@@ -60,7 +60,7 @@ export const WardrobeCheckoutSystem = () => {
     setSearchingUsers(true);
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, email, first_name, last_name, full_name, avatar_url, role')
         .or(`email.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%,full_name.ilike.%${query}%`)
         .limit(10);

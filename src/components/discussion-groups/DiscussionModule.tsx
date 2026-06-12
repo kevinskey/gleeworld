@@ -131,7 +131,7 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
       if (userIds.length > 0) {
         // @ts-ignore - Suppress deep type instantiation error
         const profileResult = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email')
           .in('user_id', userIds);
         

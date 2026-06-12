@@ -50,7 +50,7 @@ export const AnnotationShareButton = ({ annotationIds, musicTitle }: AnnotationS
       const sharesWithProfiles = await Promise.all(
         uniqueShares.map(async (share) => {
           const { data } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name, email')
             .eq('user_id', share.shared_with)
             .single();
@@ -75,7 +75,7 @@ export const AnnotationShareButton = ({ annotationIds, musicTitle }: AnnotationS
 
     // Look up user by email
     const { data: profile } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id')
       .eq('email', email.trim())
       .single();

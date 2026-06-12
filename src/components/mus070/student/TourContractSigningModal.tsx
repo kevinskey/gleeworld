@@ -60,7 +60,7 @@ export const TourContractSigningModal: React.FC<TourContractSigningModalProps> =
     queryKey: ['student-profile-for-signing', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('full_name, email')
         .eq('user_id', user!.id)
         .single();

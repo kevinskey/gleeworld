@@ -95,7 +95,7 @@ export const TourManagerLanding = ({
       if (!roster || roster.length === 0) return;
       const userIds = roster.map(r => r.user_id);
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, voice_part')
         .in('user_id', userIds);
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));

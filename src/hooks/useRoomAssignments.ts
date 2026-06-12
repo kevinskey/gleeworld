@@ -78,7 +78,7 @@ export const useRoomAssignments = () => {
     const rosterUserIds = rosterData.map(r => r.user_id);
     
     const { data, error } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, full_name, voice_part, avatar_url')
       .in('user_id', rosterUserIds)
       .order('full_name');
@@ -117,7 +117,7 @@ export const useRoomAssignments = () => {
           const userIds = occData.map(o => o.user_id);
           if (userIds.length > 0) {
             const { data: profiles } = await supabase
-              .from('gw_profiles')
+              .from('gw_profiles_directory')
               .select('user_id, full_name, voice_part, avatar_url')
               .in('user_id', userIds);
             

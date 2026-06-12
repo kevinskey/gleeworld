@@ -28,7 +28,7 @@ export function useUserModuleGrants(userId?: string) {
         }
 
         const { data: profileData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('is_admin, is_super_admin, role')
           .eq('user_id', targetUserId)
           .single();

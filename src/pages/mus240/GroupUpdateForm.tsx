@@ -91,7 +91,7 @@ export default function GroupUpdateForm() {
         // Fetch leader
         const { data: groupData, error: groupError } = await supabase
           .from('mus240_project_groups')
-          .select('leader_id, gw_profiles!mus240_project_groups_leader_id_fkey(id, full_name, email)')
+          .select('leader_id, gw_profiles:gw_profiles_directory!mus240_project_groups_leader_id_fkey(id, full_name, email)')
           .eq('id', selectedGroup.id)
           .single();
 
@@ -100,7 +100,7 @@ export default function GroupUpdateForm() {
         // Fetch members
         const { data: membersData, error: membersError } = await supabase
           .from('mus240_group_memberships' as any)
-          .select('member_id, gw_profiles(id, full_name, email)')
+          .select('member_id, gw_profiles:gw_profiles_directory(id, full_name, email)')
           .eq('group_id', selectedGroup.id);
 
         if (membersError) throw membersError;

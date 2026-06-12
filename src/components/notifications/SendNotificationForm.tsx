@@ -45,7 +45,7 @@ export const SendNotificationForm = () => {
       if (!formData.sendToSelf && formData.recipientEmail) {
         // Find user by email
         const { data: recipientUser, error: userError } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id')
           .eq('email', formData.recipientEmail)
           .single();

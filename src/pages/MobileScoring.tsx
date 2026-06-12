@@ -38,7 +38,7 @@ export default function MobileScoring() {
   const fetchPerformers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, first_name, last_name, email, voice_part')
         .not('first_name', 'is', null);
 

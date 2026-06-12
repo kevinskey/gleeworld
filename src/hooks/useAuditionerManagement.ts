@@ -49,7 +49,7 @@ export const useAuditionerManagement = () => {
 
       // Get all users with "auditioner" role
       const { data: profiles, error: profilesError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select(`
           user_id,
           email,

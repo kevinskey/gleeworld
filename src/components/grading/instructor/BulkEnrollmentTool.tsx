@@ -25,7 +25,7 @@ export const BulkEnrollmentTool: React.FC<BulkEnrollmentToolProps> = ({ courseId
         try {
           // Look up user in gw_profiles
           const { data: profileData } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id')
             .eq('email', email.trim().toLowerCase())
             .maybeSingle();

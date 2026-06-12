@@ -257,7 +257,7 @@ export default function GraduatesAdmin() {
     try {
       // Check if this user exists in gw_profiles first
       const { data: gwProfile } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('id')
         .eq('user_id', userId)
         .single();

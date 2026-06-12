@@ -21,7 +21,7 @@ export default function StudentDetail() {
     queryKey: ['student-profile', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, phone, voice_part, role')
         .eq('user_id', id)
         .maybeSingle();

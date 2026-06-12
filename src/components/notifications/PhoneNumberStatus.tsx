@@ -20,7 +20,7 @@ export const PhoneNumberStatus: React.FC<{ groupType?: string }> = ({ groupType 
       if (!user) return;
 
       try {
-        let query = supabase.from('gw_profiles').select('phone_number, user_id');
+        let query = supabase.from('gw_profiles_directory').select('phone_number, user_id');
 
         // Apply filtering based on group type
         switch (groupType) {

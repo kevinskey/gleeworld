@@ -16,7 +16,7 @@ export default function StudentsList() {
     queryKey: ['students-list', q],
     queryFn: async () => {
       let query = supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, voice_part, phone')
         .eq('role', 'student')
         .order('full_name', { ascending: true })

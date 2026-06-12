@@ -172,8 +172,8 @@ export const FeedbackDashboard = () => {
         .from('gw_rehearsal_feedback')
         .select(`
           *,
-          gw_profiles!gw_rehearsal_feedback_user_id_fkey (full_name, voice_part),
-          reviewer_profile:gw_profiles!gw_rehearsal_feedback_reviewer_id_fkey (full_name),
+          gw_profiles:gw_profiles_directory!gw_rehearsal_feedback_user_id_fkey (full_name, voice_part),
+          reviewer_profile:gw_profiles_directory!gw_rehearsal_feedback_reviewer_id_fkey (full_name),
           gw_events (title)
         `)
         .gte('created_at', dateRange.start)
@@ -211,7 +211,7 @@ export const FeedbackDashboard = () => {
         .from('gw_performance_reviews')
         .select(`
           *,
-          gw_profiles!gw_performance_reviews_user_id_fkey (full_name, voice_part),
+          gw_profiles:gw_profiles_directory!gw_performance_reviews_user_id_fkey (full_name, voice_part),
           gw_sheet_music (title)
         `)
         .gte('created_at', dateRange.start)

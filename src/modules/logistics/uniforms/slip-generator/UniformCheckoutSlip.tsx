@@ -46,7 +46,7 @@ const CheckoutSlipComponent = ({ userId, userName, assignments, issuedBy }: Chec
   const fetchUserProfile = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, voice_part')
         .eq('user_id', userId)
         .single();

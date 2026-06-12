@@ -100,7 +100,7 @@ export const UniformTracker = () => {
         .from('gw_uniform_assignments')
         .select(`
           *,
-          gw_profiles!gw_uniform_assignments_user_id_fkey (
+          gw_profiles:gw_profiles_directory!gw_uniform_assignments_user_id_fkey (
             full_name,
             email
           )
@@ -146,7 +146,7 @@ export const UniformTracker = () => {
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .order('full_name');
 

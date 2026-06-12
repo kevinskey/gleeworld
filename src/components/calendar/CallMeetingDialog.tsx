@@ -58,7 +58,7 @@ export const CallMeetingDialog = ({
           id,
           user_id,
           position,
-          gw_profiles:user_id (
+          gw_profiles:gw_profiles_directory!user_id (
             full_name,
             email,
             avatar_url

@@ -199,7 +199,7 @@ if (groupName.includes('soprano 1') || groupName.includes('s1')) {
         .from('gw_group_messages')
         .select(`
           *,
-          user_profile:user_id (
+          user_profile:gw_profiles_directory!user_id (
             full_name,
             first_name,
             phone_number

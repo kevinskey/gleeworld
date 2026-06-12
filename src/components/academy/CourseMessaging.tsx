@@ -327,7 +327,7 @@ const CourseAnnouncements: React.FC<CourseAnnouncementsProps> = ({ courseId, isA
         .from('gw_course_announcements')
         .select(`
           *,
-          author:gw_profiles!gw_course_announcements_created_by_fkey(full_name, avatar_url)
+          author:gw_profiles_directory!gw_course_announcements_created_by_fkey(full_name, avatar_url)
         `)
         .eq('course_id', courseId)
         .order('created_at', { ascending: false });

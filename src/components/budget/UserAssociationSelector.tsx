@@ -47,7 +47,7 @@ export const UserAssociationSelector: React.FC<UserAssociationSelectorProps> = (
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, email, full_name')
         .or(`email.ilike.%${query}%,full_name.ilike.%${query}%`)
         .limit(10);

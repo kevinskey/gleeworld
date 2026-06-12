@@ -56,7 +56,7 @@ export const SightReadingSubmissionsDialog: React.FC<SightReadingSubmissionsDial
       const enrichedSubmissions = await Promise.all(
         (grades || []).map(async (grade: any) => {
           const { data: profile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name')
             .eq('email', grade.student_email)
             .maybeSingle();

@@ -116,7 +116,7 @@ export function GraduatesPortalModule({ user, isFullPage, onNavigate }: ModulePr
   const fetchGraduatesUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, email, full_name, first_name, last_name, graduation_year, headshot_url, verified, created_at')
         .eq('role', 'graduate')
         .order('full_name', { ascending: true });

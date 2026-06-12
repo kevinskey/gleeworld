@@ -67,7 +67,7 @@ export const LibraryTab = () => {
         
         if (uploaderIds.length > 0) {
           const { data: profiles } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name, email')
             .in('user_id', uploaderIds);
           profilesData = profiles || [];

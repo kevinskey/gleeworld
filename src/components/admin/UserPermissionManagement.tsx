@@ -182,7 +182,7 @@ export const UserPermissionManagement = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, email, full_name, role, is_admin, is_super_admin, is_exec_board, verified')
         .not('user_id', 'is', null)
         .order('full_name');

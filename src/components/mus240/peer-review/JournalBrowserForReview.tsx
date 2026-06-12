@@ -53,7 +53,7 @@ export const JournalBrowserForReview: React.FC = () => {
       // Fetch student names separately
       const studentIds = [...new Set(journalData?.map(j => j.student_id) || [])];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('id, full_name')
         .in('id', studentIds);
 

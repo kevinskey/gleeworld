@@ -63,7 +63,7 @@ export const QuickNotificationPanel: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, phone_number, role, voice_part')
         .order('full_name');
 

@@ -7,7 +7,7 @@ export const useArtisticDirectorAvatar = () => {
     queryFn: async () => {
       // Get the artistic director's avatar from gw_profiles
       const { data: gwSuperAdmin, error: gwError } = await supabase
-        .from("gw_profiles")
+        .from("gw_profiles_directory")
         .select("avatar_url, full_name")
         .eq("is_super_admin", true)
         .maybeSingle();
@@ -21,7 +21,7 @@ export const useArtisticDirectorAvatar = () => {
 
       // If no super-admin found, try admin
       const { data: adminData, error: adminError } = await supabase
-        .from("gw_profiles")
+        .from("gw_profiles_directory")
         .select("avatar_url, full_name")
         .eq("is_admin", true)
         .limit(1)

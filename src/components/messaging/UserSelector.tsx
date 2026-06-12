@@ -52,7 +52,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     queryKey: ['all-users-detailed'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, avatar_url, role, voice_part, graduation_year, academic_year')
         .order('full_name');
 

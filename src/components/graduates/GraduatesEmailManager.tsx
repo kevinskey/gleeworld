@@ -36,7 +36,7 @@ export const GraduatesEmailManager = () => {
       // Fetch from both user_roles and gw_profiles to get all graduates
       const [{ data: roleData }, { data: profileData }] = await Promise.all([
         supabase.from('user_roles').select('user_id').eq('role', 'graduate'),
-        supabase.from('gw_profiles').select('user_id, email, full_name').eq('role', 'graduate')
+        supabase.from('gw_profiles_directory').select('user_id, email, full_name').eq('role', 'graduate')
       ]);
 
       const roleIds = (roleData || []).map(r => r.user_id);

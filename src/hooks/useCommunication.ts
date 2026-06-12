@@ -75,7 +75,7 @@ export const useCommunication = () => {
       const processedUserIds = new Set<string>();
 
       for (const group of groups) {
-        let query = supabase.from('gw_profiles').select('user_id', { count: 'exact', head: true });
+        let query = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true });
 
         switch (group.type) {
           case 'role':

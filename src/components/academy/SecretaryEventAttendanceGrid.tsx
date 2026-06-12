@@ -105,7 +105,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
       let studentList: EnrolledStudent[] = [];
       if (userIds.length > 0) {
         const { data: profiles, error: profileError } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email')
           .in('user_id', userIds)
           .order('full_name');

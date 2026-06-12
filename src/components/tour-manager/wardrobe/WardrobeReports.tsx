@@ -62,7 +62,7 @@ export const WardrobeReports = () => {
 
       // Fetch profiles separately
       const { data: profilesData, error: profilesError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('id, full_name, email, voice_part');
 
       if (profilesError) throw profilesError;

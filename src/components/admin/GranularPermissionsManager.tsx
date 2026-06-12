@@ -53,7 +53,7 @@ export const GranularPermissionsManager = () => {
     const fetchUsers = async () => {
       try {
         const { data, error } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('id, user_id, email, full_name, role, exec_board_role, is_admin, is_super_admin, is_exec_board')
           .order('full_name', { ascending: true });
 

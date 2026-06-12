@@ -74,7 +74,7 @@ const SendBucketOfLove: React.FC<SendBucketOfLoveProps> = ({ trigger }) => {
     setUsersLoading(true);
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, first_name, last_name, role')
         .order('full_name');
 

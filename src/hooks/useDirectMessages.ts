@@ -55,7 +55,7 @@ export const useDirectMessages = () => {
       ) || [];
 
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, avatar_url')
         .in('user_id', otherUserIds);
 
@@ -109,7 +109,7 @@ export const useDirectMessages = () => {
 
       const senderIds = [...new Set(msgs?.map((message) => message.sender_id) || [])];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, avatar_url')
         .in('user_id', senderIds);
 
@@ -168,7 +168,7 @@ export const useDirectMessages = () => {
 
       const senderIds = [...new Set(msgs?.map((message) => message.sender_id) || [])];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, avatar_url')
         .in('user_id', senderIds);
 
@@ -268,7 +268,7 @@ export const useDirectMessages = () => {
 
         try {
           const { data: recipientProfile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('phone_number')
             .eq('user_id', conversation.other_user_id)
             .single();
@@ -354,7 +354,7 @@ export const useDirectMessages = () => {
           const newMessage = payload.new as DMMessage;
 
           const { data: profile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name, avatar_url')
             .eq('user_id', newMessage.sender_id)
             .single();

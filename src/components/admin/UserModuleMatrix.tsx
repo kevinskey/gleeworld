@@ -40,7 +40,7 @@ export const UserModuleMatrix: React.FC<Props> = ({ userId }) => {
     try {
       // Check if selected user is a Director (alias of super-admin)
       const { data: profileData } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('is_super_admin, role')
         .eq('user_id', userId)
         .maybeSingle();

@@ -82,7 +82,7 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
       
       if (studentIds.length > 0) {
         const { data: profilesData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email')
           .in('user_id', studentIds);
         

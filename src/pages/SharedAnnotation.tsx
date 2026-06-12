@@ -91,7 +91,7 @@ export const SharedAnnotation = () => {
 
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('full_name, email')
         .eq('user_id', shareData.shared_by)
         .single();

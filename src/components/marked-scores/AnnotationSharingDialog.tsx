@@ -90,7 +90,7 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
       
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email')
           .in('user_id', userIds);
 
@@ -135,7 +135,7 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
     try {
       // First, find the user by email
       const { data: profileData, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .eq('email', shareEmail)
         .single();

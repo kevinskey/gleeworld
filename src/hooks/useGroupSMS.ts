@@ -126,7 +126,7 @@ export const useSMSConversationMessages = (conversationId?: string) => {
         .from('gw_sms_messages')
         .select(`
           *,
-          gw_profiles(full_name, first_name)
+          gw_profiles:gw_profiles_directory(full_name, first_name)
         `)
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });

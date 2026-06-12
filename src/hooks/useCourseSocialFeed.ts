@@ -68,7 +68,7 @@ export function useCourseSocialFeed(courseId: string) {
       // Fetch author profiles
       const authorIds = [...new Set(postsData.map(p => p.author_id))];
       const { data: profilesData } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, avatar_url')
         .in('user_id', authorIds);
 
@@ -183,7 +183,7 @@ export function useCourseSocialFeed(courseId: string) {
           const newPost = payload.new as any;
           
           const { data: authorProfile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name, avatar_url')
             .eq('user_id', newPost.author_id)
             .single();

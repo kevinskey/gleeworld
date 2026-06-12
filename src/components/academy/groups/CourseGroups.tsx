@@ -275,7 +275,7 @@ const CourseGroupDetail = ({ group, canManage, onBack }: CourseGroupDetailProps)
     setSearching(true);
     try {
       const { data } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
         .limit(10);

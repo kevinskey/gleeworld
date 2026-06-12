@@ -1082,7 +1082,7 @@ const ReminderManager: React.FC = () => {
     try {
       // Fetch all members with phone numbers
       const { data: members, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('phone, full_name')
         .not('phone', 'is', null)
         .eq('role', 'member');

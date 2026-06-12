@@ -130,7 +130,7 @@ export default function GroupDetail() {
           member_id,
           role,
           project_role,
-          gw_profiles!member_id(
+          gw_profiles:gw_profiles_directory!member_id(
             user_id,
             full_name,
             email

@@ -76,7 +76,7 @@ export const AttendanceLiveRoster: React.FC<AttendanceLiveRosterProps> = ({
       }
       
       const { data: rawProfiles } = await (supabase as any)
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .in('user_id', userIds);
         

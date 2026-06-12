@@ -75,7 +75,7 @@ export const ResizableMessageCenter = ({
         const userIds = [...new Set(messagesData?.map(m => m.user_id) || [])];
         const {
           data: profilesData
-        } = await supabase.from('gw_profiles').select('user_id, full_name, avatar_url').in('user_id', userIds);
+        } = await supabase.from('gw_profiles_directory').select('user_id, full_name, avatar_url').in('user_id', userIds);
 
         // Map profiles to messages
         const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
@@ -111,7 +111,7 @@ export const ResizableMessageCenter = ({
           // Fetch the profile for the new message
           const {
             data: profileData
-          } = await supabase.from('gw_profiles').select('user_id, full_name, avatar_url').eq('user_id', payload.new.user_id).single();
+          } = await supabase.from('gw_profiles_directory').select('user_id, full_name, avatar_url').eq('user_id', payload.new.user_id).single();
           const enrichedMessage = {
             ...payload.new,
             gw_profiles: profileData || {

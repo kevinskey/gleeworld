@@ -77,7 +77,7 @@ async function fetchEnrolledStudentsWithGrades(
 
   // Step 2: Get profile details
   const { data: profileData, error: profileError } = await supabase
-    .from('gw_profiles')
+    .from('gw_profiles_directory')
     .select('id, user_id, full_name, voice_part')
     .in('id', profileIds);
 

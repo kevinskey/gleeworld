@@ -126,7 +126,7 @@ const AnnouncementForm: React.FC<AnnouncementFormProps> = ({ mode }) => {
     try {
       // Get all users to notify based on target audience
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, email');
 
       if (!profiles) return;

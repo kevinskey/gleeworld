@@ -86,7 +86,7 @@ export const AIGroupProjectManager = () => {
           file_url,
           submitted_at,
           status,
-          gw_profiles!fk_assignment_submissions_student_id (
+          gw_profiles:gw_profiles_directory!fk_assignment_submissions_student_id (
             full_name,
             user_id
           )

@@ -42,7 +42,7 @@ export const MemberMentorshipModule = ({ user, isFullPage = false }: ModuleProps
       // For demo purposes, using gw_profiles to show the concept
       // In a real implementation, you'd create a mentorship_pairs table
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, role, graduation_year')
         .limit(10);
 

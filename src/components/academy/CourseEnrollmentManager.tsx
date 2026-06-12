@@ -98,7 +98,7 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
         const {
           data: profileData,
           error: profileError
-        } = await supabase.from('gw_profiles').select('user_id, full_name, email').in('user_id', userIds);
+        } = await supabase.from('gw_profiles_directory').select('user_id, full_name, email').in('user_id', userIds);
         if (profileError) {
           console.error('Error fetching profiles:', profileError);
           throw profileError;
@@ -158,7 +158,7 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
       const {
         data,
         error
-      } = await supabase.from('gw_profiles').select('user_id, full_name, email').order('full_name');
+      } = await supabase.from('gw_profiles_directory').select('user_id, full_name, email').order('full_name');
       if (error) throw error;
       setAvailableUsers(data || []);
     } catch (error) {

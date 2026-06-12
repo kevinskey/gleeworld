@@ -19,7 +19,7 @@ export const AutoNotificationService = {
   // Contract-related notifications
   async notifyContractCreated(contractId: string, recipientEmail: string, contractTitle: string) {
     const { data: profile } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, full_name')
       .eq('email', recipientEmail)
       .single();
@@ -80,7 +80,7 @@ export const AutoNotificationService = {
   async notifyExcuseRequested(eventId: string, userId: string, reason: string) {
     // Notify admins about excuse requests
     const { data: admins } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, full_name')
       .or('is_admin.eq.true,is_super_admin.eq.true');
 
@@ -91,7 +91,7 @@ export const AutoNotificationService = {
       .single();
 
     const { data: user } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('full_name')
       .eq('user_id', userId)
       .single();
@@ -119,7 +119,7 @@ export const AutoNotificationService = {
   async notifyEventCreated(eventId: string, eventTitle: string, eventDate: string) {
     // Notify all members about new events
     const { data: members } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id');
 
     if (members) {
@@ -203,7 +203,7 @@ export const AutoNotificationService = {
   async notifyScheduleConflict(userId: string, studentName: string, conflictDetails: string) {
     // Notify admins and exec board about schedule conflicts
     const { data: admins } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, full_name')
       .or('is_admin.eq.true,is_super_admin.eq.true,is_exec_board.eq.true');
 

@@ -20,7 +20,7 @@ export const useFirstYearTasks = () => {
             *,
             student:fy_students!inner(
               id,
-              profile:gw_profiles!inner(full_name)
+              profile:gw_profiles_directory!inner(full_name)
             )
           `)
           .order("due_date", { ascending: true });

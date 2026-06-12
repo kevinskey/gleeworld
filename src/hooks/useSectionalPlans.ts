@@ -25,7 +25,7 @@ export const useSectionalPlans = () => {
       
       // Get section leaders and their recent activities
       const { data: sectionLeaders, error: leadersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select(`
           user_id,
           first_name,

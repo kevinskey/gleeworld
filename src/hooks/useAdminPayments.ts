@@ -47,7 +47,7 @@ export const useAdminPayments = () => {
         (paymentsData || []).map(async (payment) => {
           // Get user profile
           const { data: profile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('email, full_name')
             .eq('id', payment.user_id)
             .single();

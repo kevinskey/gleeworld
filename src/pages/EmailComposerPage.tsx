@@ -84,7 +84,7 @@ const EmailComposerPage = () => {
     
     setIsSearching(true);
     const { data, error } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, email, full_name, first_name, last_name, phone_number')
       .or(`email.ilike.%${query}%,full_name.ilike.%${query}%`)
       .limit(10);
@@ -104,7 +104,7 @@ const EmailComposerPage = () => {
     }
     
     const { data, error } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, full_name, first_name, last_name, phone_number')
       .not('phone_number', 'is', null)
       .or(`full_name.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`)

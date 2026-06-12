@@ -63,7 +63,7 @@ export function useStudentDiscussionList(courseId: string) {
 
       // Get profiles
       const { data: profiles, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, avatar_url')
         .in('user_id', studentIds);
 

@@ -97,7 +97,7 @@ export const DiscussionSummaryDashboard: React.FC<DiscussionSummaryDashboardProp
       }
       
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', creatorIds);
       
@@ -132,7 +132,7 @@ export const DiscussionSummaryDashboard: React.FC<DiscussionSummaryDashboardProp
       
       // Get profiles for enrolled users
       const { data: profiles, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', userIds);
       

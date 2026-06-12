@@ -40,7 +40,7 @@ export const useSectionLeaders = () => {
 
       // Fetch section leaders from executive board members and profiles
       const { data: leaders, error: leadersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select(`
           id,
           user_id,

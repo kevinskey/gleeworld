@@ -26,7 +26,7 @@ export const useSRFAssignments = () => {
       
       // Get current members count for assignment calculations
       const { data: members, error: membersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .eq('role', 'member');
 

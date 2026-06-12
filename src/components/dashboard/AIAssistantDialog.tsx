@@ -60,7 +60,7 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
         // Fetch all unique user profiles
         const userIds = [...new Set(messagesData?.map(m => m.user_id) || [])];
         const { data: profilesData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, avatar_url')
           .in('user_id', userIds);
 
@@ -97,7 +97,7 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
         async (payload) => {
           // Fetch the profile for the new message
           const { data: profileData } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name, avatar_url')
             .eq('user_id', payload.new.user_id)
             .single();

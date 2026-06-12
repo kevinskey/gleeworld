@@ -37,7 +37,7 @@ export const useContractRecipientProfile = (contractId: string) => {
 
         // Then get the profile for that email
         const { data: profileData, error: profileError } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, avatar_url, email')
           .eq('email', recipientData.recipient_email)
           .maybeSingle();

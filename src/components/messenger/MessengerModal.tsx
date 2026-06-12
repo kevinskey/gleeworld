@@ -179,7 +179,7 @@ export const MessengerModal: React.FC = () => {
         .from('messenger_group_members' as any)
         .select(`
           user_id,
-          gw_profiles!inner(full_name, first_name, last_name, email, phone, phone_number)
+          gw_profiles:gw_profiles_directory!inner(full_name, first_name, last_name, email, phone, phone_number)
         `)
         .eq('group_id', group.id);
       
@@ -271,7 +271,7 @@ export const MessengerModal: React.FC = () => {
       setIsSearching(true);
       try {
         const { data, error } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, first_name, last_name, email, phone, phone_number, status')
           .eq('status', 'active')
           .not('user_id', 'is', null)

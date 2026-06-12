@@ -71,7 +71,7 @@ export const MeetingInviteDialog: React.FC<MeetingInviteDialogProps> = ({
     try {
       // Fetch all users with either phone or email
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, first_name, last_name, phone_number, email')
         .order('last_name');
 

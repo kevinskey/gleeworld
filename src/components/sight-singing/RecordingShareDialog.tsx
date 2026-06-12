@@ -39,7 +39,7 @@ export const RecordingShareDialog: React.FC<RecordingShareDialogProps> = ({
 
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('*')
         .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
         .limit(10);
@@ -64,7 +64,7 @@ export const RecordingShareDialog: React.FC<RecordingShareDialogProps> = ({
       const userIds = sharesData.map(share => share.shared_with);
       
       const { data: usersData, error: usersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('*')
         .in('user_id', userIds);
 

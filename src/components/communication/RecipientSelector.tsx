@@ -43,7 +43,7 @@ export const RecipientSelector = ({
     let cancelled = false;
     setIsSearchingUsers(true);
     supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, email, full_name, first_name, last_name')
       .or(`email.ilike.%${term}%,full_name.ilike.%${term}%`)
       .limit(8)

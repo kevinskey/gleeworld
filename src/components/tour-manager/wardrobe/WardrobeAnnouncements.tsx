@@ -124,7 +124,7 @@ export const WardrobeAnnouncements = () => {
       if (announcementForm.target_audience === 'specific_checkout' && announcementForm.target_emails) {
         const emails = announcementForm.target_emails.split(',').map(email => email.trim());
         const { data: profiles } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id')
           .in('email', emails);
         

@@ -63,7 +63,7 @@ export const useMus240Enrollments = (semesterOverride?: string) => {
       let profileMap = new Map<string, any>();
       if (userIds.length > 0) {
         const { data: profileData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email, phone, role')
           .in('user_id', userIds);
         

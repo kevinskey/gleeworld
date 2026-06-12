@@ -82,10 +82,10 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
         .from('mus240_project_groups')
         .select(`
           *,
-          leader_profile:gw_profiles!leader_id(user_id, full_name, email),
+          leader_profile:gw_profiles_directory!leader_id(user_id, full_name, email),
           members:mus240_group_memberships(
             id, role, member_id,
-            gw_profiles!member_id(user_id, full_name, email)
+            gw_profiles:gw_profiles_directory!member_id(user_id, full_name, email)
           )
         `)
         .eq('semester', semester)

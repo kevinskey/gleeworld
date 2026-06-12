@@ -44,7 +44,7 @@ export const useBucketsOfLove = () => {
       ])];
 
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, display_name, first_name, full_name')
         .in('user_id', userIds);
 

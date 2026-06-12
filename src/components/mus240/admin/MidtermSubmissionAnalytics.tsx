@@ -47,7 +47,7 @@ export const MidtermSubmissionAnalytics: React.FC = () => {
       // Fetch student profiles
       const studentIds = [...new Set(submissions?.map(s => s.user_id) || [])];
       const { data: profiles, error: profilesError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .in('user_id', studentIds);
 

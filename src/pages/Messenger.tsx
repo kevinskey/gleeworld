@@ -360,7 +360,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           }
           
           const { data: profiles, error: profileError } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name, first_name, last_name, email, phone, phone_number')
             .in('user_id', userIds);
           
@@ -434,7 +434,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           .from('messenger_group_members')
           .select(`
             user_id,
-            gw_profiles!inner(user_id, full_name, first_name, last_name, email, phone, phone_number)
+            gw_profiles:gw_profiles_directory!inner(user_id, full_name, first_name, last_name, email, phone, phone_number)
           `)
           .eq('group_id', groupId);
         

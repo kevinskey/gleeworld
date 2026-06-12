@@ -184,7 +184,7 @@ export const PreEventExcuses = () => {
       
       // Get user profile data for notification
       const { data: profileData } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('full_name, email')
         .eq('user_id', user!.id)
         .single();

@@ -48,7 +48,7 @@ export class ContractService {
       if (filters?.excludeSuperAdminContracts) {
         // Get all super admin user IDs
         const { data: superAdmins } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id')
           .eq('is_super_admin', true);
         

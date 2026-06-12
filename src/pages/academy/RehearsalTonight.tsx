@@ -137,7 +137,7 @@ export default function RehearsalTonight() {
       let profileByUserId = new Map<string, { full_name: string | null; email: string | null; voice_part: string | null }>();
       if (ids.length > 0) {
         const { data: profiles } = await supabase
-          .from("gw_profiles")
+          .from("gw_profiles_directory")
           .select("user_id, full_name, email, voice_part")
           .in("user_id", ids);
         (profiles || []).forEach((p: any) => {

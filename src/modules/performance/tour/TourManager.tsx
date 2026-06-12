@@ -171,7 +171,7 @@ export const TourManager = () => {
         .from('gw_tour_tasks')
         .select(`
           *,
-          assignee:gw_profiles(full_name, email)
+          assignee:gw_profiles_directory(full_name, email)
         `)
         .eq('event_id', eventId)
         .order('due_date', { ascending: true });
@@ -189,7 +189,7 @@ export const TourManager = () => {
         .from('gw_travel_logs')
         .select(`
           *,
-          person:gw_profiles(full_name, email)
+          person:gw_profiles_directory(full_name, email)
         `)
         .eq('event_id', eventId)
         .order('departure_time', { ascending: true });
@@ -204,7 +204,7 @@ export const TourManager = () => {
   const fetchTeamMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .order('full_name');
 
@@ -297,7 +297,7 @@ export const TourManager = () => {
         })
         .select(`
           *,
-          assignee:gw_profiles(full_name, email)
+          assignee:gw_profiles_directory(full_name, email)
         `)
         .single();
 
@@ -381,7 +381,7 @@ export const TourManager = () => {
         })
         .select(`
           *,
-          person:gw_profiles(full_name, email)
+          person:gw_profiles_directory(full_name, email)
         `)
         .single();
 

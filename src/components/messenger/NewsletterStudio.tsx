@@ -378,7 +378,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
   const { data: audienceCount = 0 } = useQuery({
     queryKey: ['newsletter-audience-count', group],
     queryFn: async () => {
-      let q = supabase.from('gw_profiles').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
+      let q = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
       if (group !== 'all') q = q.eq('role', group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan');
       const { count } = await q;
       return count ?? 0;
@@ -492,7 +492,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
   }
 
   async function sendNow(id: string) {
-    let rq = supabase.from('gw_profiles').select('email').not('email', 'is', null);
+    let rq = supabase.from('gw_profiles_directory').select('email').not('email', 'is', null);
     if (group !== 'all') rq = rq.eq('role', group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan');
     const { data: recipients, error: rErr } = await rq;
     if (rErr) throw rErr;

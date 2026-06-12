@@ -39,7 +39,7 @@ export const TourRosterSection = () => {
     setLoading(true);
     try {
       const { data: members, error: membersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, voice_part, avatar_url, role')
         .in('role', ['member', 'student', 'executive', 'admin', 'super-admin'])
         .order('full_name');

@@ -94,7 +94,7 @@ export const useSetupCrews = () => {
         .from('gw_setup_crew_members')
         .select(`
           *,
-          profiles:gw_profiles(full_name, email, voice_part, graduation_year)
+          profiles:gw_profiles_directory(full_name, email, voice_part, graduation_year)
         `)
         .eq('crew_id', crewId)
         .order('assigned_at', { ascending: true });
@@ -277,7 +277,7 @@ export const useSetupCrews = () => {
       const firstYearGradYear = currentYear + 4;
 
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, voice_part, graduation_year')
         .eq('graduation_year', firstYearGradYear)
         .eq('role', 'student')

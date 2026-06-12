@@ -150,7 +150,7 @@ export function useDiscussionGroups(discussionId: string) {
       // Fetch profiles
       const userIds = [...new Set((members || []).map(m => m.user_id))];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', userIds);
       
@@ -202,7 +202,7 @@ export function useMyDiscussionGroup(discussionId: string) {
       
       const userIds = (members || []).map(m => m.user_id);
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', userIds);
       
@@ -239,7 +239,7 @@ export function useDiscussionPosts(discussionId: string, groupId?: string) {
       // Fetch author profiles
       const authorIds = [...new Set((data || []).map(p => p.author_id))];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', authorIds);
       

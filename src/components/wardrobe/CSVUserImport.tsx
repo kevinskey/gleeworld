@@ -178,7 +178,7 @@ export const CSVUserImport = () => {
           try {
             // First, find the user by email
             const { data: profile, error: profileError } = await supabase
-              .from('gw_profiles')
+              .from('gw_profiles_directory')
               .select('user_id')
               .eq('email', row.email)
               .single();

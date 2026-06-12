@@ -46,7 +46,7 @@ export const TourRollCallSection: React.FC = () => {
 
       // Also check gw_profiles.is_super_admin
       const { data: prof } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('is_super_admin')
         .eq('user_id', user!.id)
         .maybeSingle();
@@ -136,7 +136,7 @@ export const TourRollCallSection: React.FC = () => {
       if (!roster?.length) return [];
       const userIds = roster.map(r => r.user_id);
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, voice_part')
         .in('user_id', userIds);
       return profiles || [];

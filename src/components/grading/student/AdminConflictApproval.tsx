@@ -45,7 +45,7 @@ export const AdminConflictApproval: React.FC = () => {
     queryKey: ['is-super-admin', user?.id],
     queryFn: async () => {
       const { data } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('is_super_admin')
         .eq('user_id', user!.id)
         .single();
@@ -73,7 +73,7 @@ export const AdminConflictApproval: React.FC = () => {
       // Enrich with student profile info
       const userIds = [...new Set((data as any[]).map((r: any) => r.user_id))];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, phone')
         .in('user_id', userIds);
 

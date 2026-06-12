@@ -152,7 +152,7 @@ export const UnifiedDashboard = () => {
         const {
           data,
           error
-        } = await supabase.from('gw_profiles').select('user_id').eq('role', 'student').eq('status', 'active').limit(1).single();
+        } = await supabase.from('gw_profiles_directory').select('user_id').eq('role', 'student').eq('status', 'active').limit(1).single();
         if (error) console.error('Error fetching sample student:', error);
         setSimulatedStudentId(data?.user_id || null);
       } finally {
@@ -175,7 +175,7 @@ export const UnifiedDashboard = () => {
         const {
           data,
           error
-        } = await supabase.from('gw_profiles').select('user_id').eq('role', 'member').eq('status', 'active').limit(1).single();
+        } = await supabase.from('gw_profiles_directory').select('user_id').eq('role', 'member').eq('status', 'active').limit(1).single();
         if (error) console.error('Error fetching sample member:', error);
         setSimulatedMemberId(data?.user_id || null);
       } finally {

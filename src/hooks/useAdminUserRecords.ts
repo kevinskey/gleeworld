@@ -42,7 +42,7 @@ export const useAdminUserRecords = () => {
 
       // Fetch all users
       const { data: users } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email');
 
       // Fetch all finance records  

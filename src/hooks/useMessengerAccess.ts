@@ -86,7 +86,7 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
       // for admins running test broadcasts. The UI will still skip self-sends
       // at the actual send step if needed.
       const { data: allUsers } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, first_name, last_name, email, phone, phone_number, role, status')
         .eq('status', 'active')
         .not('user_id', 'is', null);

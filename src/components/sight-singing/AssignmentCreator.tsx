@@ -47,7 +47,7 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
       try {
         // Fetch voice parts
         const { data: voicePartsData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('voice_part')
           .not('voice_part', 'is', null);
         
@@ -55,7 +55,7 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
 
         // Fetch roles
         const { data: rolesData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('role')
           .not('role', 'is', null);
         
@@ -77,7 +77,7 @@ export const AssignmentCreator: React.FC<AssignmentCreatorProps> = ({
 
         // Fetch class years
         const { data: classYearsData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('class_year')
           .not('class_year', 'is', null);
         

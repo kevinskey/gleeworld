@@ -55,7 +55,7 @@ export const TAManagement = () => {
         .from('course_teaching_assistants')
         .select(`
           *,
-          gw_profiles!course_teaching_assistants_user_id_fkey (
+          gw_profiles:gw_profiles_directory!course_teaching_assistants_user_id_fkey (
             email,
             full_name
           )
@@ -89,7 +89,7 @@ export const TAManagement = () => {
     try {
       // First, get the user_id from the email
       const { data: profileData, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .eq('email', userEmail.trim())
         .single();

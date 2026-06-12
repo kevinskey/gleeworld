@@ -126,7 +126,7 @@ const StipendPaymentModule = () => {
       const enrichedData: SurveyResponse[] = [];
       for (const response of data || []) {
         const { data: profile } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('full_name, email, phone_number')
           .eq('user_id', response.user_id)
           .single();

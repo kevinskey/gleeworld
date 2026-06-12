@@ -101,7 +101,7 @@ export const CrewAssignmentsSection = () => {
     try {
       // Fetch all members
       const { data: membersData } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, avatar_url')
         .eq('role', 'member')
         .order('full_name');

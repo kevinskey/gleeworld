@@ -37,7 +37,7 @@ export const StudentAnalyticsDashboard: React.FC = () => {
         .from('mus240_enrollments')
         .select(`
           student_id,
-          gw_profiles(full_name, email)
+          gw_profiles:gw_profiles_directory(full_name, email)
         `)
         .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');

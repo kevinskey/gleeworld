@@ -128,7 +128,7 @@ export const TakeAttendance = () => {
     try {
       // Load all glee club members
       const { data: profilesData, error: profilesError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, voice_part, avatar_url')
         .not('full_name', 'is', null)
         .order('full_name');

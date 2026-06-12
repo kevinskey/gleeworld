@@ -160,7 +160,7 @@ export const MobileScoreWindow = ({
       
       try {
         const { data, error } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('first_name, last_name, avatar_url, class_year, voice_part')
           .eq('user_id', performerId)
           .single();

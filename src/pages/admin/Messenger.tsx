@@ -170,7 +170,7 @@ export default function Messenger() {
         .from('gw_group_messages')
         .select(`
           id, group_id, user_id, content, message_type, file_url, created_at,
-          author:gw_profiles!fk_gw_group_messages_user_profile(full_name, avatar_url),
+          author:gw_profiles_directory!fk_gw_group_messages_user_profile(full_name, avatar_url),
           reactions:gw_message_reactions(user_id, emoji)
         `)
         .eq('group_id', selectedGroupId)
@@ -188,7 +188,7 @@ export default function Messenger() {
       if (!selectedGroupId) return [];
       const { data, error } = await supabase
         .from('gw_group_members')
-        .select('user_id, role, profile:gw_profiles!inner(full_name, email, avatar_url)')
+        .select('user_id, role, profile:gw_profiles_directory!inner(full_name, email, avatar_url)')
         .eq('group_id', selectedGroupId);
       if (error) throw error;
       return (data ?? []).map((m: any) => ({
@@ -288,7 +288,7 @@ export default function Messenger() {
 
   async function addAdminsToGroup(groupId: string) {
     const { data: admins } = await supabase
-      .from('gw_profiles').select('user_id').eq('role', 'admin');
+      .from('gw_profiles_directory').select('user_id').eq('role', 'admin');
     if (!admins || admins.length === 0) return;
     await supabase.from('gw_group_members').upsert(
       admins.map((a) => ({ group_id: groupId, user_id: a.user_id, role: 'admin' })),
@@ -329,7 +329,7 @@ export default function Messenger() {
       await addAdminsToGroup(data.id);
       // Auto-add students with matching voice_part.
       const { data: studs } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .ilike('voice_part', `%${section.toLowerCase()}%`);
       if (studs && studs.length > 0) {
@@ -845,7 +845,7 @@ function MemberAdder({ groupId, currentMembers, onChange }: { groupId: string; c
     queryFn: async () => {
       if (!q.trim()) return [];
       const { data } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
         .limit(10);

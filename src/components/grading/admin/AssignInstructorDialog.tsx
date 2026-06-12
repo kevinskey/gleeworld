@@ -42,7 +42,7 @@ export const AssignInstructorDialog: React.FC<AssignInstructorDialogProps> = ({
     queryKey: ['potential-instructors'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, role, is_admin, is_super_admin')
         .or('role.eq.instructor,is_admin.eq.true,is_super_admin.eq.true')
         .order('full_name');

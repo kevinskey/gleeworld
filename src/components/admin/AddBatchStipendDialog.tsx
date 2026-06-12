@@ -38,7 +38,7 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
     try {
       // Fetch users
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .order('full_name');
 

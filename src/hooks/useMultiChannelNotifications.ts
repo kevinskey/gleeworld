@@ -27,7 +27,7 @@ export const useMultiChannelNotifications = () => {
 
       // Fetch user phone numbers and email preferences from profiles
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, phone_number, email')
         .in('user_id', targetUsers);
 

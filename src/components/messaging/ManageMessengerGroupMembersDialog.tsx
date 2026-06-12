@@ -75,7 +75,7 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
         .select(`
           id,
           user_id,
-          gw_profiles!inner(full_name, first_name, last_name, email, avatar_url)
+          gw_profiles:gw_profiles_directory!inner(full_name, first_name, last_name, email, avatar_url)
         `)
         .eq('group_id', groupId)
         .order('joined_at', { ascending: false });
@@ -147,7 +147,7 @@ export const ManageMessengerGroupMembersDialog: React.FC<ManageMessengerGroupMem
       try {
         setSearchingMembers(true);
         const { data, error } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, first_name, last_name, email, avatar_url, status')
           .eq('status', 'active')
           .not('user_id', 'is', null)

@@ -42,7 +42,7 @@ export const MemberDirectory = () => {
   const fetchMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('id, user_id, full_name, email, role, voice_part, graduation_year, major, bio, avatar_url, verified')
         .in('role', ['member', 'graduate'])
         .eq('verified', true)

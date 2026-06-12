@@ -56,7 +56,7 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_course_enrollments')
-        .select('*, gw_profiles!gw_course_enrollments_user_id_fkey(full_name, email)')
+        .select('*, gw_profiles:gw_profiles_directory!gw_course_enrollments_user_id_fkey(full_name, email)')
         .eq('course_id', courseId)
         .eq('enrollment_status', 'enrolled')
         .order('enrolled_at', { ascending: true });

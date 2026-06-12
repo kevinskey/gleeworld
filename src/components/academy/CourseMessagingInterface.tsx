@@ -72,7 +72,7 @@ async function fetchEnrolledStudents(courseCode: string): Promise<EnrolledStuden
   
   for (const enrollment of enrollmentsResponse.data) {
     const profileResponse = await client
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, full_name, email')
       .eq('user_id', enrollment.user_id)
       .maybeSingle();
@@ -157,7 +157,7 @@ export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> =
       } else if (!isInstructor && instructorEmail) {
         // Student sending to instructor
         const { data: instructorProfile } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id')
           .eq('email', instructorEmail)
           .single();

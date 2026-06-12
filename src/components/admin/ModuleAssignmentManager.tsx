@@ -51,7 +51,7 @@ export const ModuleAssignmentManager: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, role')
         .order('full_name');
 

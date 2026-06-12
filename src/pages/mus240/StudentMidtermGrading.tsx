@@ -99,7 +99,7 @@ export const StudentMidtermGrading = () => {
       
       // @ts-ignore - Avoiding Supabase type complexity issue
       const profileQuery = await (supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('full_name, email')
         .eq('user_id', studentId)
         .maybeSingle() as any);

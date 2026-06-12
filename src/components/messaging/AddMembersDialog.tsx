@@ -59,7 +59,7 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
       const currentMemberIds = currentMembers?.map((member) => member.user_id).filter(Boolean) || [];
 
       let usersQuery = supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, first_name, last_name, email, avatar_url, status')
         .eq('status', 'active')
         .not('user_id', 'is', null)

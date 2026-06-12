@@ -49,7 +49,7 @@ export const CalendarControlsAdmin = () => {
 
       // Then get profile data for each user
       const { data: profilesData, error: profilesError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .in('user_id', (preferencesData || []).map(p => p.user_id));
 

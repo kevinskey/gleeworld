@@ -39,7 +39,7 @@ export const useCourseTeachingAssistants = (courseCode: string) => {
       const tasWithProfiles = await Promise.all(
         (data || []).map(async (ta) => {
           const { data: profile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name, email, avatar_url')
             .eq('user_id', ta.user_id)
             .single();

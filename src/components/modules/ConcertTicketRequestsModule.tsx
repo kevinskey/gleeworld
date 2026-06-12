@@ -74,7 +74,7 @@ export const ConcertTicketRequestsModule = () => {
 
       // Fetch all profiles to match by email or name
       const { data: profiles, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('email, full_name, graduation_year, role');
       if (profileError) throw profileError;
 
@@ -100,7 +100,7 @@ export const ConcertTicketRequestsModule = () => {
     queryKey: ['exec-board-members'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .eq('is_exec_board', true)
         .order('full_name');

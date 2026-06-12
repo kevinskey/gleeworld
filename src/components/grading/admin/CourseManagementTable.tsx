@@ -40,7 +40,7 @@ export const CourseManagementTable: React.FC = () => {
       // Fetch instructor names
       const instructorIds = [...new Set((coursesData as any[])?.map((c: any) => c.created_by).filter(Boolean) || [])];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .in('user_id', instructorIds);
 

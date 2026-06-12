@@ -85,7 +85,7 @@ export const MobileVideoInterface = ({ onJoinSession }: MobileVideoInterfaceProp
       const enrichedSessions = await Promise.all(
         data.map(async (session) => {
           const { data: hostProfile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name, avatar_url')
             .eq('user_id', session.host_user_id)
             .single();

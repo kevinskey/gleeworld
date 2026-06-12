@@ -108,7 +108,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       }
 
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name')
         .in('user_id', studentIds);
       

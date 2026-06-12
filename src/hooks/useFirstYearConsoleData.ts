@@ -28,7 +28,7 @@ export const useFirstYearConsoleData = () => {
           .select(`
             *,
             cohort:fy_cohorts!inner(*),
-            profile:gw_profiles!inner(full_name, email, role)
+            profile:gw_profiles_directory!inner(full_name, email, role)
           `)
           .eq("cohort.is_active", true);
 

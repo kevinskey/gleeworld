@@ -68,7 +68,7 @@ export const DiscussionGradingPanel: React.FC<DiscussionGradingPanelProps> = ({ 
     queryFn: async () => {
       const { data, error } = await (supabase
         .from('gw_course_enrollments' as any)
-        .select('user_id, gw_profiles!inner(user_id, first_name, last_name, email)')
+        .select('user_id, gw_profiles:gw_profiles_directory!inner(user_id, first_name, last_name, email)')
         .eq('course_id', courseId)
         .eq('enrollment_status', 'enrolled') as any);
       if (error) throw error;

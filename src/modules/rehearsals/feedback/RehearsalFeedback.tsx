@@ -158,8 +158,8 @@ export const RehearsalFeedback = () => {
         .from('gw_rehearsal_feedback')
         .select(`
           *,
-          gw_profiles!gw_rehearsal_feedback_user_id_fkey (full_name),
-          reviewer_profile:gw_profiles!gw_rehearsal_feedback_reviewer_id_fkey (full_name)
+          gw_profiles:gw_profiles_directory!gw_rehearsal_feedback_user_id_fkey (full_name),
+          reviewer_profile:gw_profiles_directory!gw_rehearsal_feedback_reviewer_id_fkey (full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -181,7 +181,7 @@ export const RehearsalFeedback = () => {
         .from('gw_performance_reviews')
         .select(`
           *,
-          gw_profiles!gw_performance_reviews_user_id_fkey (full_name),
+          gw_profiles:gw_profiles_directory!gw_performance_reviews_user_id_fkey (full_name),
           gw_sheet_music (title)
         `)
         .order('created_at', { ascending: false });
@@ -198,7 +198,7 @@ export const RehearsalFeedback = () => {
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email')
         .order('full_name');
 

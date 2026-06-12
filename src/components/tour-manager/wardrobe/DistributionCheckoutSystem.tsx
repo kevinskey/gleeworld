@@ -111,7 +111,7 @@ export const DistributionCheckoutSystem = () => {
 
       // Fetch all users for searching
       const { data: usersData, error: usersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('id, user_id, full_name, email, first_name, last_name')
         .order('full_name');
 

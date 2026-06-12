@@ -53,7 +53,7 @@ export const GroupParticipationAnalyzer: React.FC<Props> = ({ onCreditAwarded })
           members:mus240_group_memberships(
             member_id,
             role,
-            gw_profiles!member_id(
+            gw_profiles:gw_profiles_directory!member_id(
               user_id,
               full_name
             )

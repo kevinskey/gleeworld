@@ -125,7 +125,7 @@ export const MessengerAdminModule: React.FC = () => {
           id,
           user_id,
           role,
-          gw_profiles!inner(full_name, first_name, last_name, email, phone, phone_number)
+          gw_profiles:gw_profiles_directory!inner(full_name, first_name, last_name, email, phone, phone_number)
         `)
         .eq('group_id', groupId);
       
@@ -165,7 +165,7 @@ export const MessengerAdminModule: React.FC = () => {
     try {
       setSearchingMembers(true);
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, first_name, last_name, email, phone, phone_number, status')
         .eq('status', 'active')
         .not('user_id', 'is', null)

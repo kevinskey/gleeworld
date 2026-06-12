@@ -67,7 +67,7 @@ export function useCourseGroups(courseId: string | undefined) {
       const leaders: Record<string, string> = {};
       if (leaderIds.length > 0) {
         const { data: leaderRows } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email')
           .in('user_id', leaderIds);
         (leaderRows || []).forEach((l: any) => {
@@ -183,7 +183,7 @@ export function useCourseGroupMembers(groupId: string | undefined) {
       let profiles: Record<string, { full_name: string | null; email: string | null; voice_part: string | null }> = {};
       if (memberIds.length > 0) {
         const { data: profileRows } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email, voice_part')
           .in('user_id', memberIds);
         (profileRows || []).forEach((p: any) => {

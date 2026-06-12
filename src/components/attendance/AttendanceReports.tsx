@@ -141,7 +141,7 @@ export const AttendanceReports = () => {
           event_id,
           user_id,
           attendance_status,
-          gw_profiles!gw_event_attendance_user_id_fkey(
+          gw_profiles:gw_profiles_directory!gw_event_attendance_user_id_fkey(
             full_name,
             voice_part
           )

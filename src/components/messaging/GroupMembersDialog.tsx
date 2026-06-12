@@ -57,7 +57,7 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
           user_id,
           role,
           joined_at,
-          gw_profiles!inner (
+          gw_profiles:gw_profiles_directory!inner (
             user_id,
             full_name,
             email,

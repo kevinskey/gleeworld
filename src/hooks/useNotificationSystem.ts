@@ -52,7 +52,7 @@ export const useNotificationSystem = () => {
 
       // Get user's profile for phone number and email
       const { data: profile, error: profileError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('phone_number, full_name, email')
         .eq('user_id', params.user_id)
         .single();

@@ -105,7 +105,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           if (gwSubs && gwSubs.length > 0) {
             const userIds = [...new Set(gwSubs.map((s: any) => s.user_id))];
             const { data: profiles } = await supabase
-              .from('gw_profiles')
+              .from('gw_profiles_directory')
               .select('user_id, full_name, email')
               .in('user_id', userIds);
 
@@ -128,7 +128,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
         
         // Fetch profiles
         const { data: profiles } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email')
           .in('user_id', studentIds);
 
@@ -242,7 +242,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
       let profileMap: Record<string, any> = {};
       if (uniqueUserIds.length > 0) {
         const { data: profiles } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email')
           .in('user_id', uniqueUserIds);
 

@@ -108,7 +108,7 @@ export default function AttendanceTest() {
         .select(`
           *,
           gw_events!gw_event_attendance_event_id_fkey(title, event_type),
-          gw_profiles!gw_event_attendance_user_id_fkey(full_name)
+          gw_profiles:gw_profiles_directory!gw_event_attendance_user_id_fkey(full_name)
         `)
         .limit(5);
 

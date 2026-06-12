@@ -76,7 +76,7 @@ export default function ScheduleAnalytics() {
       // Fetch user profiles separately and merge data
       const userIds = schedules?.map(s => s.user_id) || [];
       const { data: profiles } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, first_name, last_name, full_name')
         .in('user_id', userIds);
 

@@ -126,7 +126,7 @@ export const EventClassListManager = ({ eventId, eventTitle }: EventClassListMan
       const membersWithUsers = await Promise.all(
         (data || []).map(async (member) => {
           const { data: userData } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name, email')
             .eq('user_id', member.user_id)
             .single();

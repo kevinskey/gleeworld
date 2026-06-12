@@ -83,7 +83,7 @@ export const useCourseStudents = ({
       // Fetch profiles for users with user_id (logged-in users)
       if (userIds.length > 0) {
         const { data: profiles, error: profileError } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('id, user_id, full_name, email, voice_part')
           .in('user_id', userIds);
 

@@ -144,7 +144,7 @@ export const CourseAttendanceLedger: React.FC = () => {
         let studentProfiles: Record<string, { full_name: string; email: string }> = {};
         if (studentIds.length > 0) {
           const { data: profiles } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name, email')
             .in('user_id', studentIds);
 

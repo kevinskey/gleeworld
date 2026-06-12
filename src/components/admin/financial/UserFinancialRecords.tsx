@@ -98,7 +98,7 @@ export const UserFinancialRecords = () => {
     try {
       // Get all users first
       const { data: users } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email');
 
       if (!users) {

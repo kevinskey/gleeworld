@@ -77,7 +77,7 @@ const PermissionsPage: React.FC = () => {
     const loadUserMeta = async () => {
       if (!selectedUserId) return;
       const { data } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('role')
         .eq('user_id', selectedUserId)
         .maybeSingle();

@@ -65,7 +65,7 @@ export function useSocialFeed() {
       // Fetch author profiles
       const userIds = [...new Set(postsData.map(p => p.user_id))];
       const { data: profilesData } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, avatar_url')
         .in('user_id', userIds);
 
@@ -175,7 +175,7 @@ export function useSocialFeed() {
           
           // Fetch author profile for the new post
           const { data: authorProfile } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name, avatar_url')
             .eq('user_id', newPost.user_id)
             .single();

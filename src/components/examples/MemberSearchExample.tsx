@@ -17,7 +17,7 @@ export const MemberSearchExample = () => {
     const fetchMembers = async () => {
       try {
         const { data, error } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('id, user_id, email, full_name, role, exec_board_role, voice_part, class_year')
           .order('full_name', { ascending: true });
 

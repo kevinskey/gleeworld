@@ -33,7 +33,7 @@ export default function AuthCallback() {
       // If there's no profile or full_name is missing → onboarding first.
       const userId = session.user.id;
       const { data: profile } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('full_name, voice_part, role')
         .eq('user_id', userId)
         .maybeSingle();

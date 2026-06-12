@@ -82,7 +82,7 @@ export const PerformanceStipendsRegister = () => {
       const paymentsWithDetails = await Promise.all(
         (data || []).map(async (payment) => {
           const [profileData, contractData] = await Promise.all([
-            supabase.from('gw_profiles').select('full_name, email').eq('user_id', payment.user_id).maybeSingle(),
+            supabase.from('gw_profiles_directory').select('full_name, email').eq('user_id', payment.user_id).maybeSingle(),
             payment.contract_id ? supabase.from('generated_contracts').select('event_name, event_dates').eq('id', payment.contract_id).maybeSingle() : Promise.resolve({ data: null })
           ]);
           

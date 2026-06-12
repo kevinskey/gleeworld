@@ -129,7 +129,7 @@ export const ExcuseRequests = () => {
                 event_type,
                 start_date
               ),
-              gw_profiles!gw_event_attendance_user_id_fkey(
+              gw_profiles:gw_profiles_directory!gw_event_attendance_user_id_fkey(
                 full_name
               )
             )

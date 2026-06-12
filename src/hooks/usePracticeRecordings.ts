@@ -36,7 +36,7 @@ export const usePracticeRecordings = () => {
         .from('gw_practice_links')
         .select(`
           *,
-          gw_profiles!gw_practice_links_owner_id_fkey(full_name),
+          gw_profiles:gw_profiles_directory!gw_practice_links_owner_id_fkey(full_name),
           gw_sheet_music!gw_practice_links_music_id_fkey(title)
         `)
         .or(`voice_part.is.null,voice_part.eq.${userProfile.voice_part || 'none'}`)

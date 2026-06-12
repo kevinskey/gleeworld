@@ -37,7 +37,7 @@ export const EmailModule = () => {
     const fetchUsers = async () => {
       try {
         const { data: profiles, error } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, email, role')
           .not('full_name', 'is', null)
           .order('full_name');

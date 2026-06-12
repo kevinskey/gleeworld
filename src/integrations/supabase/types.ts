@@ -1203,6 +1203,13 @@ export type Database = {
             foreignKeyName: "fk_assignment_submissions_student_id"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_assignment_submissions_student_id"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -1246,6 +1253,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "attendance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -6401,6 +6415,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gw_announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "gw_announcements_parent_announcement_id_fkey"
             columns: ["parent_announcement_id"]
             isOneToOne: false
@@ -10338,6 +10359,13 @@ export type Database = {
             foreignKeyName: "fk_gw_dues_records_user_id"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_gw_dues_records_user_id"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -10468,6 +10496,13 @@ export type Database = {
             foreignKeyName: "gw_enrollments_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -10574,6 +10609,13 @@ export type Database = {
             foreignKeyName: "gw_event_attendance_recorded_by_fkey"
             columns: ["recorded_by"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_event_attendance_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -10582,6 +10624,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_event_attendance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -10631,6 +10680,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_event_rsvps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -10798,6 +10854,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -11302,6 +11365,13 @@ export type Database = {
             referencedRelation: "gw_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gw_fans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       gw_feature_flags: {
@@ -11796,6 +11866,13 @@ export type Database = {
             foreignKeyName: "fk_gw_group_members_user_profile"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_gw_group_members_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -11860,6 +11937,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_gw_group_messages_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -13142,6 +13226,13 @@ export type Database = {
             foreignKeyName: "fk_gw_message_reactions_user_profile"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_gw_message_reactions_user_profile"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -13530,6 +13621,13 @@ export type Database = {
             referencedRelation: "gw_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gw_music_analytics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       gw_music_collection_items: {
@@ -13661,6 +13759,13 @@ export type Database = {
             referencedRelation: "gw_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gw_music_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       gw_news_items: {
@@ -13718,6 +13823,13 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_news_items_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -14482,6 +14594,13 @@ export type Database = {
             referencedRelation: "gw_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gw_performance_grades_student_profile_id_fkey"
+            columns: ["student_profile_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       gw_performance_reviews: {
@@ -14670,6 +14789,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gw_playlist_tracks_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "gw_playlist_tracks_music_file_id_fkey"
             columns: ["music_file_id"]
             isOneToOne: false
@@ -14728,6 +14854,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_playlists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -15033,6 +15166,13 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_pre_event_excuses_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -16389,6 +16529,13 @@ export type Database = {
             foreignKeyName: "gw_recording_shares_shared_by_fkey"
             columns: ["shared_by"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_recording_shares_shared_by_fkey"
+            columns: ["shared_by"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -16397,6 +16544,13 @@ export type Database = {
             columns: ["shared_with"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_recording_shares_shared_with_fkey"
+            columns: ["shared_with"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -16476,6 +16630,13 @@ export type Database = {
             columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_recordings_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -17186,6 +17347,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gw_scores_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "gw_scores_sheet_music_id_fkey"
             columns: ["sheet_music_id"]
             isOneToOne: false
@@ -17197,6 +17365,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_scores_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -17891,6 +18066,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_sheet_music_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -18625,6 +18807,13 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_site_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -21639,6 +21828,13 @@ export type Database = {
             referencedRelation: "gw_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gw_user_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
         ]
       }
       gw_user_permissions: {
@@ -21675,6 +21871,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "gw_user_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "gw_user_permissions_permission_id_fkey"
             columns: ["permission_id"]
             isOneToOne: false
@@ -21686,6 +21889,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -22282,6 +22492,13 @@ export type Database = {
             columns: ["added_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_youtube_videos_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["id"]
           },
         ]
@@ -23733,6 +23950,13 @@ export type Database = {
             foreignKeyName: "messenger_group_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "messenger_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -24088,6 +24312,13 @@ export type Database = {
             foreignKeyName: "fk_mus240_enrollments_student_profile"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_mus240_enrollments_student_profile"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -24232,6 +24463,13 @@ export type Database = {
             foreignKeyName: "mus240_group_applications_applicant_id_fkey"
             columns: ["applicant_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_group_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -24321,6 +24559,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_group_memberships_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -25127,6 +25372,13 @@ export type Database = {
             foreignKeyName: "mus240_project_groups_leader_id_fkey"
             columns: ["leader_id"]
             isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_project_groups_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
@@ -25310,6 +25562,13 @@ export type Database = {
             columns: ["graded_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "mus240_rubric_scores_graded_by_fkey"
+            columns: ["graded_by"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {
@@ -30339,6 +30598,54 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_profiles_directory: {
+        Row: {
+          academic_year: string | null
+          avatar_url: string | null
+          bio: string | null
+          class_year: number | null
+          classification: string | null
+          created_at: string | null
+          disabled: boolean | null
+          display_name: string | null
+          email: string | null
+          exec_board_role: string | null
+          facebook: string | null
+          first_name: string | null
+          full_name: string | null
+          graduation_year: number | null
+          headshot_url: string | null
+          id: string | null
+          instagram: string | null
+          is_admin: boolean | null
+          is_exec_board: boolean | null
+          is_featured: boolean | null
+          is_mentor: boolean | null
+          is_section_leader: boolean | null
+          is_super_admin: boolean | null
+          join_date: string | null
+          last_name: string | null
+          middle_name: string | null
+          music_role: string | null
+          phone: string | null
+          phone_number: string | null
+          pronouns: string | null
+          role: string | null
+          role_tags: string[] | null
+          special_roles: string[] | null
+          status: string | null
+          tenant_id: string | null
+          title: string | null
+          twitter: string | null
+          user_id: string | null
+          verified: boolean | null
+          voice_part: string | null
+          voice_part_preference: string | null
+          website_url: string | null
+          youtube: string | null
+        }
+        Relationships: []
+      }
       student_schedules_with_profiles: {
         Row: {
           avatar_url: string | null
@@ -30407,6 +30714,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "attendance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles_directory"
             referencedColumns: ["user_id"]
           },
           {

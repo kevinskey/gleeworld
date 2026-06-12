@@ -43,7 +43,7 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
     const load = async () => {
       if (!userId) return;
       const { data } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('email, full_name, role, is_admin, is_super_admin, created_at, avatar_url')
         .eq('user_id', userId)
         .maybeSingle();
@@ -111,7 +111,7 @@ export const SelectedUserProfileCard: React.FC<Props> = ({ userId }) => {
 
       toast.success('Profile updated');
       const { data } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('email, full_name, role, is_admin, is_super_admin, created_at, avatar_url')
         .eq('user_id', userId)
         .maybeSingle();

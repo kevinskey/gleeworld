@@ -47,7 +47,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
         let profile: any = null;
         if (base?.student_id) {
           const { data: profileData } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name, email')
             .eq('user_id', base.student_id)
             .maybeSingle();
@@ -78,7 +78,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
       let profile: any = null;
       if (base?.user_id) {
         const { data: profileData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('full_name, email')
           .eq('user_id', base.user_id)
           .maybeSingle();

@@ -213,7 +213,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       // Send SMS notification to superadmins
       try {
         const { data: superadmins } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('phone_number, full_name')
           .eq('role', 'superadmin');
         

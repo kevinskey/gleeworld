@@ -47,7 +47,7 @@ export const useBusSeats = () => {
       let profiles: any[] = [];
       if (userIds.length > 0) {
         const { data: pData } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, full_name, voice_part, avatar_url')
           .in('user_id', userIds);
         profiles = pData || [];
@@ -76,7 +76,7 @@ export const useBusSeats = () => {
     }
 
     const { data } = await supabase
-      .from('gw_profiles')
+      .from('gw_profiles_directory')
       .select('user_id, full_name, voice_part, avatar_url')
       .in('user_id', rosterData.map(r => r.user_id))
       .order('full_name');

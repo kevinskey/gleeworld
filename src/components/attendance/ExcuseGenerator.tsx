@@ -392,7 +392,7 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
 
       // Get secretary and section leaders for notifications
       const { data: notificationUsers } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .or('exec_board_role.eq.secretary,section_leader.eq.true,is_admin.eq.true,is_super_admin.eq.true');
 
@@ -585,7 +585,7 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
 
       // Get section leaders for notifications
       const { data: sectionLeaders } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .eq('is_section_leader', true);
 

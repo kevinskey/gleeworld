@@ -42,7 +42,7 @@ export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDi
     setLoadingUsers(true);
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, role')
         .not('user_id', 'is', null)
         .order('full_name');

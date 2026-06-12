@@ -49,7 +49,7 @@ export const GraduatesMemberList = () => {
   const fetchMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('*')
         .eq('role', 'graduate')
         .order('created_at', { ascending: false });

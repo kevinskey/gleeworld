@@ -97,7 +97,7 @@ export const usePRImages = () => {
 
         if (image.photographer_id) {
           const { data: photographerData } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name, first_name, last_name')
             .eq('user_id', image.photographer_id)
             .single();
@@ -110,7 +110,7 @@ export const usePRImages = () => {
 
         if (image.uploaded_by) {
           const { data: uploaderData } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('full_name, first_name, last_name')
             .eq('user_id', image.uploaded_by)
             .single();

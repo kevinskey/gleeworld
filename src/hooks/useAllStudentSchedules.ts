@@ -56,7 +56,7 @@ export const useAllStudentSchedules = (semester: string = 'Spring 2026') => {
         .from('student_class_schedules')
         .select(`
           *,
-          gw_profiles!inner(
+          gw_profiles:gw_profiles_directory!inner(
             full_name,
             first_name,
             last_name,

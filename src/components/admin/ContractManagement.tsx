@@ -72,7 +72,7 @@ export const ContractManagement = () => {
         const creatorIds = [...new Set(contractsData.map(c => c.created_by).filter(Boolean))];
         if (creatorIds.length > 0) {
           const { data: profilesData } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name, email')
             .in('user_id', creatorIds);
 
@@ -111,7 +111,7 @@ export const ContractManagement = () => {
         
         if (creatorIds.length > 0) {
           const { data: profilesData } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, full_name, email')
             .in('user_id', creatorIds);
 

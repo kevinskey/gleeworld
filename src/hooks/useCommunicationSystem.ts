@@ -124,7 +124,7 @@ export const useCommunicationSystem = () => {
           .from('gw_group_members')
           .select(`
             user_id,
-            gw_profiles!inner(
+            gw_profiles:gw_profiles_directory!inner(
               user_id,
               email,
               full_name,
@@ -145,7 +145,7 @@ export const useCommunicationSystem = () => {
       } else {
         // Dynamic group based on query criteria
         let query = supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('user_id, email, full_name, phone_number');
 
         if (group.query_criteria && typeof group.query_criteria === 'object') {
@@ -238,7 +238,7 @@ export const useCommunicationSystem = () => {
         if (groupId === 'all_members') {
           // Special case for all members
           const { data: allProfiles, error: allError } = await supabase
-            .from('gw_profiles')
+            .from('gw_profiles_directory')
             .select('user_id, email, full_name, phone_number')
             .eq('status', 'active');
 

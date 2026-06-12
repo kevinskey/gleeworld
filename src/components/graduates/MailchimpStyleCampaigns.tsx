@@ -220,7 +220,7 @@ export const MailchimpStyleCampaigns = () => {
       }
 
       const { data: profilesData, error: profilesError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, email, full_name, graduation_year, voice_part')
         .in('user_id', graduatesIds)
         .not('email', 'is', null);

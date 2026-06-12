@@ -49,7 +49,7 @@ export const StudentWorkOverview = () => {
           .from('mus240_enrollments')
           .select(`
             student_id,
-            gw_profiles!inner(user_id, full_name, email)
+            gw_profiles:gw_profiles_directory!inner(user_id, full_name, email)
           `)
           .eq('semester', currentSemester)
           .eq('enrollment_status', 'enrolled')

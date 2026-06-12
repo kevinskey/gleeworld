@@ -79,7 +79,7 @@ export const DirectMessaging = () => {
 
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, avatar_url')
         .neq('user_id', user.id)
         .ilike('full_name', `%${query}%`)

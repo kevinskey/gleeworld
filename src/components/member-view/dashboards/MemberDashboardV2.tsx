@@ -62,7 +62,7 @@ export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
       setMError(null);
       try {
         const { data, error } = await supabase
-          .from("gw_profiles")
+          .from("gw_profiles_directory")
           .select("user_id, full_name, email, avatar_url, role, verified")
           .eq("role", "member")
           .eq("verified", true)

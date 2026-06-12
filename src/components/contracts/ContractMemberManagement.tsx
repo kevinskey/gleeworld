@@ -54,7 +54,7 @@ export const ContractMemberManagement = ({
   const fetchAvailableUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id, full_name, email, avatar_url')
         .neq('user_id', contract.created_by);
 

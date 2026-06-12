@@ -74,7 +74,7 @@ export const RoleBasedModuleAssignment = () => {
     try {
       setAssigning(true);
       const { data: users, error: usersError } = await supabase
-        .from('gw_profiles')
+        .from('gw_profiles_directory')
         .select('user_id')
         .eq('role', selectedRole);
 

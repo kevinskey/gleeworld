@@ -33,7 +33,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
         // Get user profile  
         const { data: profile, error: profileError } = await supabase
-          .from('gw_profiles')
+          .from('gw_profiles_directory')
           .select('role, is_super_admin, is_admin, email')
           .eq('user_id', targetUserId)
           .maybeSingle();

@@ -270,7 +270,7 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
         .from('gw_attendance_qr_scans')
         .select(`
           *,
-          gw_profiles!inner(full_name, avatar_url)
+          gw_profiles:gw_profiles_directory!inner(full_name, avatar_url)
         `)
         .eq('qr_code_id', qrCode.id)
         .order('scanned_at', { ascending: false })
