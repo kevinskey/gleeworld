@@ -278,7 +278,16 @@ export const UniversalHeader = ({
             {/* Group chat / SMS notifications - Available to all authenticated users */}
             {user && <EnhancedTooltip content="Messages & SMS">
                 <Button variant="ghost" size="sm" onClick={() => navigate('/messenger')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                  <Zap className={HEADER_ICON_SIZES.icon} />
+                  <svg width="0" height="0" className="absolute">
+                    <defs>
+                      <linearGradient id="gw-bolt-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#38b6ff" />
+                        <stop offset="50%" stopColor="#8a5cf6" />
+                        <stop offset="100%" stopColor="#f042ff" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <Zap className={HEADER_ICON_SIZES.icon} stroke="url(#gw-bolt-gradient)" fill="url(#gw-bolt-gradient)" />
                 </Button>
               </EnhancedTooltip>}
 
