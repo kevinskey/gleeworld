@@ -28,6 +28,8 @@ export const POOLS: Record<Clef, NoteEntry[]> = {
   ],
 };
 
+export const keyLetter = (key: string): Letter => key[0].toUpperCase() as Letter;
+
 const SEMITONES: Record<Letter, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
 export function noteKeyToFreq(noteKey: string): number {

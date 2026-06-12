@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Renderer, Stave, StaveNote, Voice, Formatter } from 'vexflow';
 import type { Clef } from '../../components/Staff';
-import { POOLS } from '../../lib/notes';
+import { POOLS, keyLetter } from '../../lib/notes';
 
 type Props = {
   clef: Clef;
@@ -40,10 +40,12 @@ export default function StaffPlacement({ clef, targetKey, chosenKey, onSelect }:
 
     const notes: StaveNote[] = [];
     if (answered) {
+      // Any octave of the target letter counts as correct
+      const correctChoice = keyLetter(chosenKey!) === keyLetter(targetKey);
       const chosen = new StaveNote({ keys: [chosenKey!], duration: 'h', clef });
-      chosen.setStyle({ fillStyle: chosenKey === targetKey ? '#059669' : '#dc2626', strokeStyle: chosenKey === targetKey ? '#059669' : '#dc2626' });
+      chosen.setStyle({ fillStyle: correctChoice ? '#059669' : '#dc2626', strokeStyle: correctChoice ? '#059669' : '#dc2626' });
       notes.push(chosen);
-      if (chosenKey !== targetKey) {
+      if (!correctChoice) {
         const correct = new StaveNote({ keys: [targetKey], duration: 'h', clef });
         correct.setStyle({ fillStyle: '#059669', strokeStyle: '#059669' });
         notes.push(correct);

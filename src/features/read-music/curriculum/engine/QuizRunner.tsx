@@ -5,6 +5,7 @@ import type { Question } from './types';
 import { PASS_PCT } from './quiz';
 import { explainMistake } from './ai';
 import { playSequence, playChord } from '../../lib/audio';
+import { keyLetter } from '../../lib/notes';
 import Notation from './Notation';
 import KeyboardId from './KeyboardId';
 import StaffPlacement from './StaffPlacement';
@@ -143,7 +144,7 @@ export default function QuizRunner({ title, build, onFinish, onExit, renderResul
   const isCorrect =
     q.kind === 'mc' || q.kind === 'audio' ? choice === q.answerIndex :
     q.kind === 'keyboard' ? chosenPc === q.targetPc :
-    q.kind === 'staff' ? chosenKey === q.targetKey :
+    q.kind === 'staff' ? chosenKey !== null && keyLetter(chosenKey) === keyLetter(q.targetKey) :
     rhythmResult === true;
 
   return (
@@ -204,7 +205,7 @@ export default function QuizRunner({ title, build, onFinish, onExit, renderResul
           clef={q.clef}
           targetKey={q.targetKey}
           chosenKey={chosenKey}
-          onSelect={(key) => { setChosenKey(key); record(key === q.targetKey); }}
+          onSelect={(key) => { setChosenKey(key); record(keyLetter(key) === keyLetter(q.targetKey)); }}
         />
       )}
 
