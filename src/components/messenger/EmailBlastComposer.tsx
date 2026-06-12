@@ -130,11 +130,19 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
 
   async function send() {
     if (!sendEmail && !sendSms) return toast({ title: 'Pick at least one channel', variant: 'destructive' });
-    if (sendEmail && (!subject.trim() || !body.trim())) return toast({ title: 'Subject + message required for email', variant: 'destructive' });
-    if (sendSms && !body.trim()) return toast({ title: 'Message required for SMS', variant: 'destructive' });
-    if (group === 'custom' && selectedPeople.length === 0) {
+    if (!body.trim()) return toast({ title: 'Message required', variant: 'destructive' });
+    // Count a phone number still sitting in the search box as a recipient.
+    let recipients = selectedPeople;
+    if (group === 'custom' && adHocPhone && !selectedPeople.find((s) => s.phone === adHocPhone)) {
+      recipients = [...selectedPeople, { user_id: `phone:${adHocPhone}`, full_name: adHocPhone, email: null, phone: adHocPhone }];
+      setSelectedPeople(recipients);
+      setPersonSearch('');
+    }
+    if (group === 'custom' && recipients.length === 0) {
       return toast({ title: 'Pick at least one recipient', variant: 'destructive' });
     }
+    const willEmail = sendEmail && (group !== 'custom' || recipients.some((p) => p.email));
+    if (willEmail && !subject.trim()) return toast({ title: 'Subject required for email', variant: 'destructive' });
     setSending(true);
     try {
       const role = group !== 'all' && group !== 'custom' ? (group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan') : undefined;
@@ -145,7 +153,7 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
       if (sendEmail) {
         let emails: string[];
         if (group === 'custom') {
-          emails = selectedPeople.map((p) => p.email).filter(Boolean) as string[];
+          emails = recipients.map((p) => p.email).filter(Boolean) as string[];
         } else {
           let rq = supabase.from('gw_profiles_directory').select('email').not('email', 'is', null);
           if (role) rq = rq.eq('role', role);
@@ -153,29 +161,32 @@ export function EmailBlastComposer({ onClose }: { onClose: () => void }) {
           if (rErr) throw rErr;
           emails = (recipients ?? []).map((r: any) => r.email).filter(Boolean);
         }
-        if (emails.length === 0) throw new Error('No email recipients selected.');
+        if (emails.length === 0) {
+          // Phone-only recipients are fine as long as SMS is going out.
+          if (!sendSms) throw new Error('No email recipients selected.');
+        } else {
+          const attachmentPayload = attachments.length > 0
+            ? await Promise.all(attachments.map(fileToBase64))
+            : undefined;
 
-        const attachmentPayload = attachments.length > 0
-          ? await Promise.all(attachments.map(fileToBase64))
-          : undefined;
-
-        const { error: sErr } = await supabase.functions.invoke('gw-send-email', {
-          body: {
-            to: emails,
-            subject,
-            text: body,
-            html: `<div style="font-family:sans-serif;max-width:600px;white-space:pre-wrap;">${escapeHtml(body)}</div>`,
-            attachments: attachmentPayload,
-          },
-        });
-        if (sErr) throw sErr;
-        emailCount = emails.length;
+          const { error: sErr } = await supabase.functions.invoke('gw-send-email', {
+            body: {
+              to: emails,
+              subject,
+              text: body,
+              html: `<div style="font-family:sans-serif;max-width:600px;white-space:pre-wrap;">${escapeHtml(body)}</div>`,
+              attachments: attachmentPayload,
+            },
+          });
+          if (sErr) throw sErr;
+          emailCount = emails.length;
+        }
       }
 
       if (sendSms) {
         let numbers: string[];
         if (group === 'custom') {
-          numbers = selectedPeople.map((p) => p.phone).filter(Boolean) as string[];
+          numbers = recipients.map((p) => p.phone).filter(Boolean) as string[];
         } else {
           let pq = supabase.from('gw_profiles_directory').select('phone').not('phone', 'is', null);
           if (role) pq = pq.eq('role', role);
