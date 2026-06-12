@@ -229,6 +229,16 @@ export default function Messenger() {
     }
   }
 
+  async function addAdminsToGroup(groupId: string) {
+    const { data: admins } = await supabase
+      .from('gw_profiles').select('user_id').eq('role', 'admin');
+    if (!admins || admins.length === 0) return;
+    await supabase.from('gw_group_members').upsert(
+      admins.map((a) => ({ group_id: groupId, user_id: a.user_id, role: 'admin' })),
+      { onConflict: 'group_id,user_id', ignoreDuplicates: true },
+    );
+  }
+
   async function createGroup() {
     if (!newGroupName.trim() || !user) return;
     const { data, error } = await supabase.from('gw_message_groups')
@@ -241,6 +251,7 @@ export default function Messenger() {
     await supabase.from('gw_group_members').insert({
       group_id: data.id, user_id: user.id, role: 'admin',
     });
+    await addAdminsToGroup(data.id);
     setNewGroupName(''); setShowNewGroup(false);
     qc.invalidateQueries({ queryKey: ['messenger-groups'] });
     setSelectedGroupId(data.id);
@@ -258,6 +269,7 @@ export default function Messenger() {
       }).select('id').single();
       if (error) continue;
       await supabase.from('gw_group_members').insert({ group_id: data.id, user_id: user.id, role: 'admin' });
+      await addAdminsToGroup(data.id);
       // Auto-add students with matching voice_part.
       const { data: studs } = await supabase
         .from('gw_profiles')
