@@ -15,6 +15,7 @@ import { Shield, Database, Search, Eye, GraduationCap } from 'lucide-react';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useCourseProducts, LEVEL_LABEL } from '@/hooks/useCourseStore';
+import { OnboardingChecklist } from './OnboardingChecklist';
 
 interface ControlCenterProps {
   onModuleSelect: (moduleId: string) => void;
@@ -116,6 +117,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
 
   return (
     <div className="space-y-6">
+      <OnboardingChecklist />
       {/* Compact header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>

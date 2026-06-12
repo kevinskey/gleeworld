@@ -23,6 +23,7 @@ import { PollReminderPopup } from '@/components/polls/PollReminderPopup';
 import { MyModules } from './MyModules';
 import { supabase } from '@/integrations/supabase/client';
 import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
+import { OnboardingChecklist } from './OnboardingChecklist';
 import { FourCardLayout } from './FourCardLayout';
 import { DashboardStoreSection } from './DashboardStoreSection';
 import { YouTubeChannelSlider } from './YouTubeChannelSlider';
@@ -444,6 +445,9 @@ export const UnifiedDashboard = () => {
       <div className="w-full">
         <AdvertisingHero />
       </div>
+
+      {/* First-run setup checklist (admins, new tenants only) */}
+      <OnboardingChecklist />
 
       {/* My Modules */}
       {user && <div className="w-full">

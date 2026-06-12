@@ -1,16 +1,19 @@
+import { useState } from "react";
 import { useUsers } from "@/hooks/useUsers";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { EnhancedUserManagement } from "@/components/admin/user-management/EnhancedUserManagement";
+import { RosterImport } from "@/components/admin/RosterImport";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home, Users } from "lucide-react";
+import { ArrowLeft, Home, Users, FileSpreadsheet } from "lucide-react";
 
 const UserManagement = () => {
   console.log('UserManagement: Component starting to load...');
   const { user, loading: authLoading } = useAuth();
   const { userProfile, loading: profileLoading } = useUserProfile(user);
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers();
+  const [showRosterImport, setShowRosterImport] = useState(false);
 
   // Enhanced debugging
   console.log('UserManagement DEBUG - Current state:', {
@@ -74,25 +77,33 @@ const UserManagement = () => {
                 <h1 className="text-xl font-semibold text-slate-800">User Management</h1>
               </div>
             </div>
-            <Link to="/">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Home className="h-4 w-4" />
-                Home
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowRosterImport(true)}>
+                <FileSpreadsheet className="h-4 w-4" />
+                Import Roster (CSV)
               </Button>
-            </Link>
+              <Link to="/">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Home className="h-4 w-4" />
+                  Home
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <EnhancedUserManagement 
+        <EnhancedUserManagement
           users={users}
           loading={usersLoading}
           error={usersError}
           onRefetch={refetchUsers}
         />
       </div>
+
+      <RosterImport open={showRosterImport} onOpenChange={setShowRosterImport} onImported={refetchUsers} />
     </div>
   );
 };
