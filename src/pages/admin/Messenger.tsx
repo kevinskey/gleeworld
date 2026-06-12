@@ -122,6 +122,7 @@ export default function Messenger() {
     else if (open === 'newsletter') setShowNewsletters(true);
     else if (open === 'blast') setQuickBlastMode('group');
     else if (open === 'sms') setShowSmsComposer(true);
+    else if (open === 'video') setActiveMeetingRoom(`gleeworld-meeting-${Date.now().toString(36)}`);
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams]);
 

@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark, ShoppingBag, Zap } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, Camera, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays, Landmark, ShoppingBag, Zap, Video, Newspaper, Users, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -275,26 +275,60 @@ export const UniversalHeader = ({
           {/* Right side actions - Mobile-optimized icon bar */}
           <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 xl:gap-4 text-white/80 pr-2 sm:pr-4 md:pr-6 lg:pr-8 xl:pr-12">
             
-            {/* Group chat / SMS notifications - Available to all authenticated users */}
-            {user && <EnhancedTooltip content="Messages & SMS">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/messenger')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                  <svg width="0" height="0" className="absolute">
-                    <defs>
-                      <linearGradient id="gw-bolt-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#38b6ff" />
-                        <stop offset="50%" stopColor="#8a5cf6" />
-                        <stop offset="100%" stopColor="#f042ff" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <Zap className={HEADER_ICON_SIZES.icon} stroke="url(#gw-bolt-gradient)" fill="url(#gw-bolt-gradient)" />
-                </Button>
-              </EnhancedTooltip>}
+            {/* Messages & SMS - lightning dropdown: a person or groups */}
+            {user && <DropdownMenu>
+                <EnhancedTooltip content="Messages & SMS">
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                      <svg width="0" height="0" className="absolute">
+                        <defs>
+                          <linearGradient id="gw-bolt-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#38b6ff" />
+                            <stop offset="50%" stopColor="#8a5cf6" />
+                            <stop offset="100%" stopColor="#f042ff" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      <Zap className={HEADER_ICON_SIZES.icon} stroke="url(#gw-bolt-gradient)" fill="url(#gw-bolt-gradient)" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </EnhancedTooltip>
+                <DropdownMenuContent align="end" className="bg-popover border border-border shadow-xl z-[100]">
+                  <DropdownMenuItem onClick={() => navigate('/communications?open=sms')} className="cursor-pointer">
+                    <User className="w-4 h-4 mr-2" /> Message a person
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/communications')} className="cursor-pointer">
+                    <Users className="w-4 h-4 mr-2" /> Group chats
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>}
 
-            {/* Email, newsletters & video - Available to all authenticated users */}
-            {user && <EnhancedTooltip content="Email & Newsletters">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/communications?open=email')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                  <Mail className={HEADER_ICON_SIZES.icon} />
+            {/* Mail dropdown: email or newsletters */}
+            {user && <DropdownMenu>
+                <EnhancedTooltip content="Email & Newsletters">
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                      <Mail className={HEADER_ICON_SIZES.icon} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </EnhancedTooltip>
+                <DropdownMenuContent align="end" className="bg-popover border border-border shadow-xl z-[100]">
+                  <DropdownMenuItem onClick={() => navigate('/communications?open=email')} className="cursor-pointer">
+                    <Mail className="w-4 h-4 mr-2" /> Email
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/communications?open=blast')} className="cursor-pointer">
+                    <Zap className="w-4 h-4 mr-2" /> Email blast
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/communications?open=newsletter')} className="cursor-pointer">
+                    <Newspaper className="w-4 h-4 mr-2" /> Newsletters
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>}
+
+            {/* Video meetings */}
+            {user && <EnhancedTooltip content="Video meeting">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/communications?open=video')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                  <Video className={HEADER_ICON_SIZES.icon} />
                 </Button>
               </EnhancedTooltip>}
 
