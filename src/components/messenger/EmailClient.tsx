@@ -218,8 +218,8 @@ export function EmailClient({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="w-full max-w-4xl h-[90vh] sm:h-[85vh] bg-white text-gray-900 rounded-xl shadow-xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 sm:p-4">
+      <div className="w-full max-w-4xl h-full sm:h-[85vh] bg-white text-gray-900 rounded-none sm:rounded-xl shadow-xl flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0">
         {/* Title bar */}
         <div className="border-b px-4 py-3 flex items-center justify-between bg-white">
           <h2 className="font-semibold flex items-center gap-2"><Mail className="w-5 h-5" /> Email</h2>
@@ -228,12 +228,12 @@ export function EmailClient({ onClose }: { onClose: () => void }) {
           </Button>
         </div>
 
-        <div className="flex flex-1 min-h-0">
-          {/* Sidebar */}
-          <aside className="w-36 sm:w-44 border-r bg-gray-50 flex flex-col shrink-0">
-            <div className="p-2 space-y-1">
+        <div className="flex flex-col md:flex-row flex-1 min-h-0">
+          {/* Sidebar — top tab bar on phones, left rail on larger screens */}
+          <aside className="md:w-44 border-b md:border-b-0 md:border-r bg-gray-50 shrink-0">
+            <div className="p-2 flex md:flex-col gap-1">
               <Button
-                className="w-full justify-start"
+                className="flex-1 md:flex-none md:w-full justify-center md:justify-start"
                 variant={view === 'compose' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => { setView('compose'); setSelectedEmail(null); }}
@@ -241,7 +241,7 @@ export function EmailClient({ onClose }: { onClose: () => void }) {
                 <PenSquare className="w-4 h-4 mr-2" /> Compose
               </Button>
               <Button
-                className="w-full justify-start"
+                className="flex-1 md:flex-none md:w-full justify-center md:justify-start"
                 variant={view === 'history' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setView('history')}

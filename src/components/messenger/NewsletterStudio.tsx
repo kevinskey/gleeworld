@@ -165,8 +165,8 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="w-full max-w-6xl h-[92vh] sm:h-[88vh] bg-white text-gray-900 rounded-xl shadow-xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 sm:p-4">
+      <div className="w-full max-w-6xl h-full sm:h-[88vh] bg-white text-gray-900 rounded-none sm:rounded-xl shadow-xl flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0">
         {/* Title bar */}
         <div className="border-b px-4 py-3 flex items-center justify-between bg-white">
           <h2 className="font-semibold flex items-center gap-2"><Newspaper className="w-5 h-5" /> Newsletters</h2>
@@ -182,10 +182,10 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
             onBack={() => setEditing(null)}
           />
         ) : (
-          <div className="flex flex-1 min-h-0">
-            {/* Sidebar */}
-            <aside className="w-36 sm:w-48 border-r bg-gray-50 flex flex-col shrink-0 p-2 gap-1">
-              <Button className="w-full justify-start mb-2" size="sm" onClick={() => setEditing('new')}>
+          <div className="flex flex-col md:flex-row flex-1 min-h-0">
+            {/* Sidebar — horizontal filter bar on phones, left rail on larger screens */}
+            <aside className="md:w-48 border-b md:border-b-0 md:border-r bg-gray-50 flex md:flex-col shrink-0 p-2 gap-1 overflow-x-auto">
+              <Button className="md:w-full justify-start shrink-0 md:mb-2" size="sm" onClick={() => setEditing('new')}>
                 <Plus className="w-4 h-4 mr-2" /> Create
               </Button>
               {([
@@ -199,7 +199,7 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
                   key={v}
                   variant={filter === v ? 'secondary' : 'ghost'}
                   size="sm"
-                  className="w-full justify-between"
+                  className="md:w-full justify-between shrink-0 gap-2"
                   onClick={() => setFilter(v)}
                 >
                   <span className="truncate">{label}</span>
