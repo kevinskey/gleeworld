@@ -636,7 +636,7 @@ export default function Messenger() {
       </main>
 
       {showMembers && selectedGroup && (
-        <aside className="w-64 border-l bg-muted/30 flex flex-col">
+        <aside className="w-64 border-l bg-muted/30 flex flex-col max-md:fixed max-md:inset-0 max-md:z-50 max-md:w-full max-md:bg-background">
           <div className="p-3 border-b flex items-center justify-between">
             <h3 className="font-semibold text-sm">Members ({members.length})</h3>
             <Button variant="ghost" size="sm" onClick={() => setShowMembers(false)}>
