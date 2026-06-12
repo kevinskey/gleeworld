@@ -106,7 +106,7 @@ export default function RhythmTap({ durations, bpm, graded, onResult }: Props) {
           onPointerDown={tap}
           className={`w-full select-none rounded-xl border-2 py-10 text-lg font-semibold transition-colors ${
             phase === 'count'
-              ? `border-amber-300 ${beatFlash ? 'bg-amber-200' : 'bg-amber-50'} text-amber-800`
+              ? `border-primary/40 ${beatFlash ? 'bg-primary/20' : 'bg-primary/5'} text-primary`
               : 'border-brand bg-blue-50 text-blue-900 active:bg-blue-200'
           }`}
           style={{ touchAction: 'manipulation' }}

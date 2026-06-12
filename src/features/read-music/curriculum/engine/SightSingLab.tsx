@@ -131,7 +131,7 @@ export default function SightSingLab() {
   return (
     <div className="rounded-xl border bg-card p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider rounded bg-amber-100 text-amber-800 px-2 py-0.5">Experimental</span>
+        <span className="text-xs font-semibold uppercase tracking-wider rounded bg-primary/10 text-primary px-2 py-0.5">Experimental</span>
         <span className="text-sm text-muted-foreground">Notes matched: <span className="font-bold text-foreground">{score}</span></span>
       </div>
 

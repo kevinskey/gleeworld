@@ -64,7 +64,7 @@ export function CurriculumHome() {
         >
           <PlayCircle className="h-5 w-5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
           <div className="flex-1">
-            <div className="text-sm font-semibold text-foreground">Sight-Singing Lab <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-800">Experimental</span></div>
+            <div className="text-sm font-semibold text-foreground">Sight-Singing Lab <span className="ml-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-primary">Experimental</span></div>
             <div className="text-xs text-muted-foreground">Sing notes from the staff — live pitch feedback from your mic.</div>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
