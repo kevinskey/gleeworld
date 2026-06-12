@@ -194,7 +194,10 @@ export const UniversalHeader = ({
       const el = headerRef.current;
       if (!el) return;
 
-      const baseHeight = Math.round(el.getBoundingClientRect().height);
+      // Exclude the safe-area padding the header applies to itself; CSS re-adds
+      // --gw-safe-top, so including it here double-counts on notched iPhones.
+      const padTop = parseFloat(getComputedStyle(el).paddingTop) || 0;
+      const baseHeight = Math.round(el.getBoundingClientRect().height - padTop);
 
       // Only update on initial mount or if height changes significantly (> 2px)
       // This prevents dropdown interactions from causing layout shifts
