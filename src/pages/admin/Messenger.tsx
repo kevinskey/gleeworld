@@ -24,7 +24,7 @@ import { RsvpComposer } from '@/components/messenger/RsvpComposer';
 import { EmailBlastComposer } from '@/components/messenger/EmailBlastComposer';
 import { EmailClient } from '@/components/messenger/EmailClient';
 import { NewsletterStudio } from '@/components/messenger/NewsletterStudio';
-import { JitsiEmbedModal } from '@/components/messenger/JitsiEmbedModal';
+import { JitsiMeetingPanel } from '@/components/messenger/JitsiEmbedModal';
 
 interface Group {
   id: string;
@@ -425,7 +425,14 @@ export default function Messenger() {
       </div>
 
       <main className="flex-1 flex flex-col min-w-0">
-        {selectedGroup ? (
+        {activeMeetingRoom && user ? (
+          <JitsiMeetingPanel
+            roomName={activeMeetingRoom}
+            userName={userProfile?.full_name || user.email || 'Guest'}
+            userEmail={user.email}
+            onClose={() => setActiveMeetingRoom(null)}
+          />
+        ) : selectedGroup ? (
           <>
             <header className="border-b px-4 py-3 flex items-center justify-between">
               <div className="min-w-0">
@@ -609,14 +616,6 @@ export default function Messenger() {
         </aside>
       )}
 
-      {activeMeetingRoom && user && (
-        <JitsiEmbedModal
-          roomName={activeMeetingRoom}
-          userName={userProfile?.full_name || user.email || 'Guest'}
-          userEmail={user.email}
-          onClose={() => setActiveMeetingRoom(null)}
-        />
-      )}
       {showQuickBlast && (
         <EmailBlastComposer onClose={() => setShowQuickBlast(false)} />
       )}
