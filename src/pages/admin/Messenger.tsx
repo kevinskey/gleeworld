@@ -450,9 +450,6 @@ export default function Messenger() {
             <Button variant="ghost" size="sm" onClick={() => setShowNewsletters(true)} title="Newsletters (drafts, scheduled, sent)">
               <Newspaper className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowEmailClient(true)} title="Email — compose & history">
-              <Mail className="w-4 h-4" />
-            </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowQuickBlast(true)} title="Quick blast (email + SMS)">
               <Zap className="w-4 h-4" />
             </Button>
