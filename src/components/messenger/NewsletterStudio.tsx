@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import {
   X, Send, Loader2, Plus, Trash2, ArrowUp, ArrowDown, Save, Clock, Newspaper,
-  ChevronLeft, Copy, Eye, Pencil, CheckCircle2, FileEdit, Users,
+  ChevronLeft, Copy, Eye, Pencil, CheckCircle2, FileEdit, Users, LayoutTemplate,
 } from 'lucide-react';
 
 type Group = 'all' | 'students' | 'admins' | 'fans';
@@ -22,7 +22,7 @@ const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'fans', label: 'Fans only' },
 ];
 
-type StatusFilter = 'all' | 'draft' | 'scheduled' | 'sent';
+type StatusFilter = 'all' | 'draft' | 'scheduled' | 'sent' | 'template';
 
 interface Section {
   heading: string;
@@ -62,13 +62,16 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
   });
 
   const counts = useMemo(() => ({
-    all: campaigns.length,
+    all: campaigns.filter((c) => c.status !== 'template').length,
     draft: campaigns.filter((c) => c.status === 'draft').length,
     scheduled: campaigns.filter((c) => c.status === 'scheduled').length,
     sent: campaigns.filter((c) => c.status === 'sent').length,
+    template: campaigns.filter((c) => c.status === 'template').length,
   }), [campaigns]);
 
-  const visible = filter === 'all' ? campaigns : campaigns.filter((c) => c.status === filter);
+  const visible = filter === 'all'
+    ? campaigns.filter((c) => c.status !== 'template')
+    : campaigns.filter((c) => c.status === filter);
 
   async function del(id: string) {
     const { error } = await supabase.from('gw_newsletters').delete().eq('id', id);
@@ -76,12 +79,12 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
     qc.invalidateQueries({ queryKey: ['newsletters'] });
   }
 
-  async function duplicate(id: string) {
+  async function copyAs(id: string, status: 'draft' | 'template', titleSuffix: string) {
     const { data } = await supabase.from('gw_newsletters').select('*').eq('id', id).maybeSingle();
     if (!data) return;
     const { data: user } = await supabase.auth.getUser();
     const { data: copy, error } = await supabase.from('gw_newsletters').insert({
-      title: `${data.title} (copy)`,
+      title: `${data.title}${titleSuffix}`,
       subject: data.subject,
       header_image_url: data.header_image_url,
       intro: data.intro,
@@ -89,12 +92,13 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
       footer: data.footer,
       target_audience: data.target_audience,
       content: data.content,
-      status: 'draft',
+      status,
       created_by: user.user?.id,
     }).select('id').single();
-    if (error) { toast({ title: 'Duplicate failed', description: error.message, variant: 'destructive' }); return; }
+    if (error) { toast({ title: 'Copy failed', description: error.message, variant: 'destructive' }); return; }
     qc.invalidateQueries({ queryKey: ['newsletters'] });
-    setEditing(copy.id);
+    if (status === 'draft') setEditing(copy.id);
+    else toast({ title: 'Saved as template' });
   }
 
   return (
@@ -111,6 +115,7 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
         {editing ? (
           <CampaignEditor
             newsletterId={editing === 'new' ? undefined : editing}
+            templates={campaigns.filter((c) => c.status === 'template')}
             onBack={() => setEditing(null)}
           />
         ) : (
@@ -125,6 +130,7 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
                 ['draft', 'Drafts', counts.draft],
                 ['scheduled', 'Scheduled', counts.scheduled],
                 ['sent', 'Sent', counts.sent],
+                ['template', 'Templates', counts.template],
               ] as Array<[StatusFilter, string, number]>).map(([v, label, n]) => (
                 <Button
                   key={v}
@@ -166,16 +172,25 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
                       {c.status === 'scheduled' && c.scheduled_date && (
                         <span>Sends {new Date(c.scheduled_date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
                       )}
-                      {c.status === 'draft' && (
+                      {(c.status === 'draft' || c.status === 'template') && (
                         <span>Edited {new Date(c.created_at).toLocaleDateString()}</span>
                       )}
                     </div>
                   </button>
-                  <div className="flex gap-1 shrink-0">
+                  <div className="flex gap-1 shrink-0 items-center">
+                    {c.status === 'template' ? (
+                      <Button variant="outline" size="sm" onClick={() => copyAs(c.id, 'draft', '')} title="Start a campaign from this template">
+                        <LayoutTemplate className="w-3.5 h-3.5 mr-1" /> Use
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" onClick={() => copyAs(c.id, 'template', '')} title="Save as template">
+                        <LayoutTemplate className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="sm" onClick={() => setEditing(c.id)} title="Edit">
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => duplicate(c.id)} title="Duplicate as draft">
+                    <Button variant="ghost" size="sm" onClick={() => copyAs(c.id, c.status === 'template' ? 'template' : 'draft', ' (copy)')} title="Duplicate">
                       <Copy className="w-3.5 h-3.5" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => del(c.id)} title="Delete">
@@ -197,11 +212,13 @@ function StatusBadge({ status }: { status: string }) {
     draft: 'bg-blue-100 text-blue-800',
     scheduled: 'bg-amber-100 text-amber-800',
     sent: 'bg-green-100 text-green-800',
+    template: 'bg-purple-100 text-purple-800',
   };
   const icons: Record<string, React.ReactNode> = {
     draft: <FileEdit className="w-3 h-3" />,
     scheduled: <Clock className="w-3 h-3" />,
     sent: <CheckCircle2 className="w-3 h-3" />,
+    template: <LayoutTemplate className="w-3 h-3" />,
   };
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${styles[status] || 'bg-gray-100 text-gray-700'}`}>
@@ -210,7 +227,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function CampaignEditor({ newsletterId, onBack }: { newsletterId?: string; onBack: () => void }) {
+function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: string; templates: Campaign[]; onBack: () => void }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [loading, setLoading] = useState(!!newsletterId);
@@ -225,6 +242,50 @@ function CampaignEditor({ newsletterId, onBack }: { newsletterId?: string; onBac
   const [busy, setBusy] = useState(false);
   const [mobilePane, setMobilePane] = useState<'edit' | 'preview'>('edit');
   const [savedId, setSavedId] = useState<string | undefined>(newsletterId);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(!newsletterId && templates.length > 0);
+
+  async function applyTemplate(id: string) {
+    const { data } = await supabase.from('gw_newsletters').select('*').eq('id', id).maybeSingle();
+    if (!data) return;
+    setTitle(data.title || '');
+    setSubject(data.subject || data.title || '');
+    setHeaderImage(data.header_image_url || '');
+    setIntro(data.intro || '');
+    setSections(Array.isArray(data.sections) && data.sections.length ? data.sections : [{ heading: '', body: '' }]);
+    setFooter(data.footer || '');
+    setGroup((data.target_audience as Group) || 'students');
+    setShowTemplatePicker(false);
+  }
+
+  async function saveAsTemplate() {
+    if (!title.trim()) {
+      toast({ title: 'Title required', variant: 'destructive' });
+      return;
+    }
+    setBusy(true);
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      const { error } = await supabase.from('gw_newsletters').insert({
+        title,
+        subject,
+        header_image_url: headerImage || null,
+        intro: intro || null,
+        sections,
+        footer: footer || null,
+        target_audience: group,
+        content: buildText(),
+        status: 'template',
+        created_by: user.user?.id,
+      });
+      if (error) throw error;
+      toast({ title: 'Saved as template' });
+      qc.invalidateQueries({ queryKey: ['newsletters'] });
+    } catch (e: any) {
+      toast({ title: 'Failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!newsletterId) return;
@@ -412,6 +473,9 @@ function CampaignEditor({ newsletterId, onBack }: { newsletterId?: string; onBac
         >
           {mobilePane === 'edit' ? <><Eye className="w-3.5 h-3.5 mr-1" /> Preview</> : <><Pencil className="w-3.5 h-3.5 mr-1" /> Edit</>}
         </Button>
+        <Button variant="outline" size="sm" onClick={saveAsTemplate} disabled={busy || !title.trim()} title="Save a reusable copy as a template">
+          <LayoutTemplate className="w-3.5 h-3.5 mr-1" /> Template
+        </Button>
         <Button variant="outline" size="sm" onClick={() => save('draft')} disabled={busy || !title.trim()}>
           <Save className="w-3.5 h-3.5 mr-1" /> Save
         </Button>
@@ -429,6 +493,28 @@ function CampaignEditor({ newsletterId, onBack }: { newsletterId?: string; onBac
       <div className="flex flex-1 min-h-0">
         {/* Edit pane */}
         <div className={`flex-1 min-w-0 overflow-y-auto p-4 space-y-4 ${mobilePane === 'preview' ? 'hidden lg:block' : ''} lg:max-w-[50%] lg:border-r`}>
+          {showTemplatePicker && (
+            <div className="border rounded-lg p-3 bg-purple-50/60 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold flex items-center gap-2">
+                  <LayoutTemplate className="w-4 h-4 text-purple-700" /> Start from a template
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => setShowTemplatePicker(false)}>
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {templates.map((t) => (
+                  <Button key={t.id} variant="outline" size="sm" onClick={() => applyTemplate(t.id)}>
+                    {t.title}
+                  </Button>
+                ))}
+                <Button variant="ghost" size="sm" onClick={() => setShowTemplatePicker(false)}>
+                  Start blank
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">To</Label>
