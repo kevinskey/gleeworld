@@ -87,11 +87,20 @@ export default function Messenger() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: groups = [] } = useQuery<Group[]>({
-    queryKey: ['messenger-groups'],
+    queryKey: ['messenger-groups', user?.id],
     queryFn: async () => {
+      // Only list groups the user belongs to — message RLS is member-only.
+      const { data: mems, error: memErr } = await supabase
+        .from('gw_group_members')
+        .select('group_id')
+        .eq('user_id', user!.id);
+      if (memErr) throw memErr;
+      const ids = (mems ?? []).map((m) => m.group_id);
+      if (ids.length === 0) return [];
       const { data, error } = await supabase
         .from('gw_message_groups')
         .select('id, name, description, group_type, avatar_url')
+        .in('id', ids)
         .eq('is_active', true)
         .eq('is_archived', false)
         .order('updated_at', { ascending: false })
@@ -99,6 +108,7 @@ export default function Messenger() {
       if (error) throw error;
       return data ?? [];
     },
+    enabled: !!user,
   });
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -252,6 +262,7 @@ export default function Messenger() {
         supabase.functions.invoke('send-push', {
           body: {
             userIds: ids,
+            groupId: selectedGroupId,
             title: selectedGroup?.name || 'New message',
             body: `${senderName}: ${preview}`,
             data: { route: '/messenger' },

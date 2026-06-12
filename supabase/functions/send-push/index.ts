@@ -64,8 +64,9 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    const { userIds, title, body, data } = await req.json();
-    if (!Array.isArray(userIds) || userIds.length === 0 || !body) {
+    const { userIds: rawUserIds, groupId, title, body, data } = await req.json();
+    let userIds: string[] = Array.isArray(rawUserIds) ? rawUserIds : [];
+    if (userIds.length === 0 || !body) {
       return new Response(JSON.stringify({ error: "userIds[] and body required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -75,6 +76,38 @@ serve(async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Authorize: service-role callers pass; users must be members of the
+    // group they're notifying, and may only target fellow members.
+    const callerToken = (req.headers.get("authorization") ?? "").replace(/^bearer\s+/i, "");
+    if (callerToken !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+      const { data: userData } = await admin.auth.getUser(callerToken);
+      const caller = userData?.user;
+      if (!caller) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (typeof groupId !== "string") {
+        return new Response(JSON.stringify({ error: "groupId required" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: roster } = await admin
+        .from("gw_group_members").select("user_id").eq("group_id", groupId);
+      const memberIds = new Set((roster ?? []).map((m: { user_id: string }) => m.user_id));
+      if (!memberIds.has(caller.id)) {
+        return new Response(JSON.stringify({ error: "Not a group member" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userIds = userIds.filter((id) => memberIds.has(id));
+      if (userIds.length === 0) {
+        return new Response(JSON.stringify({ sent: 0 }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const { data: tokens, error } = await admin
       .from("gw_push_tokens")
