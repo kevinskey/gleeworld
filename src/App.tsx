@@ -29,6 +29,7 @@ import { PersistentMeetingOverlay } from "@/components/video/PersistentMeetingOv
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
+import { NativePushBridge } from "@/hooks/useNativePush";
 import { ModuleRouteRedirect } from "@/components/routing/module-route-redirect";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { NativeTenantGate } from "@/components/native/NativeTenantGate";
@@ -375,6 +376,7 @@ const App = () => {
                   <div>
                   <Toaster />
                   <Sonner />
+                  <NativePushBridge />
                   <ServiceWorkerUpdateNotifier />
 
                   <PersistentMeetingOverlay />

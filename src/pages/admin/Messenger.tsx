@@ -191,7 +191,27 @@ export default function Messenger() {
     if (error) {
       toast({ title: 'Send failed', description: error.message, variant: 'destructive' });
       if (type === 'text') setComposer(text);
+      return;
     }
+    // Push-notify other group members (fire-and-forget).
+    supabase.from('gw_group_members')
+      .select('user_id')
+      .eq('group_id', selectedGroupId)
+      .neq('user_id', user.id)
+      .then(({ data }) => {
+        const ids = (data ?? []).map((m) => m.user_id).filter(Boolean);
+        if (ids.length === 0) return;
+        const senderName = userProfile?.full_name || user.email || 'Someone';
+        const preview = type === 'text' ? text : type === 'image' ? '📷 Photo' : type === 'audio' ? '🎤 Voice message' : 'New message';
+        supabase.functions.invoke('send-push', {
+          body: {
+            userIds: ids,
+            title: selectedGroup?.name || 'New message',
+            body: `${senderName}: ${preview}`,
+            data: { route: '/messenger' },
+          },
+        }).catch(() => {});
+      });
   }
 
   async function toggleReaction(msg: Message, emoji: string) {

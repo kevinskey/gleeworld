@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { isNativeApp } from '@/lib/nativeTenant';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -274,7 +275,11 @@ export default function SiteSetup() {
             <Button
               variant="outline"
               onClick={() => {
-                window.open('/?preview=1', '_blank', 'noopener');
+                if (isNativeApp()) {
+                  navigate('/?preview=1');
+                } else {
+                  window.open('/?preview=1', '_blank', 'noopener');
+                }
               }}
               title="Open your public landing in a new tab"
             >
