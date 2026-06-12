@@ -323,9 +323,36 @@ export default function Messenger() {
   const selectedGroup = useMemo(() => groups.find((g) => g.id === selectedGroupId), [groups, selectedGroupId]);
   const memberNames = useMemo(() => new Set(members.map((m) => (m.full_name || m.email).toLowerCase())), [members]);
 
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const v = Number(localStorage.getItem('messenger-sidebar-w'));
+    return v >= 96 && v <= 480 ? v : 272;
+  });
+
+  function startResize(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = sidebarWidth;
+    const target = e.currentTarget;
+    target.setPointerCapture(e.pointerId);
+    const move = (ev: PointerEvent) => {
+      const max = Math.min(480, window.innerWidth * 0.8);
+      setSidebarWidth(Math.min(Math.max(startW + ev.clientX - startX, 96), max));
+    };
+    const up = () => {
+      target.removeEventListener('pointermove', move);
+      target.removeEventListener('pointerup', up);
+      setSidebarWidth((w) => {
+        localStorage.setItem('messenger-sidebar-w', String(Math.round(w)));
+        return w;
+      });
+    };
+    target.addEventListener('pointermove', move);
+    target.addEventListener('pointerup', up);
+  }
+
   return (
     <div className="flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
-      <aside className="w-64 sm:w-72 border-r flex flex-col bg-muted/30">
+      <aside style={{ width: sidebarWidth }} className="shrink-0 flex flex-col bg-muted/30">
         <div className="p-3 border-b flex items-center justify-between">
           <h2 className="font-semibold text-sm flex items-center gap-2">
             <MessageSquare className="w-4 h-4" /> Groups
@@ -387,6 +414,14 @@ export default function Messenger() {
           ))}
         </div>
       </aside>
+
+      <div
+        onPointerDown={startResize}
+        className="w-3 -mx-1 shrink-0 cursor-col-resize touch-none flex items-stretch justify-center group z-10"
+        title="Drag to resize"
+      >
+        <div className="w-px bg-border group-hover:w-1 group-hover:bg-primary/50 group-active:w-1 group-active:bg-primary transition-all" />
+      </div>
 
       <main className="flex-1 flex flex-col min-w-0">
         {selectedGroup ? (
