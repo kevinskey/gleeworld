@@ -1,14 +1,12 @@
 import { noteKeyToFreq } from "./notes";
+import { getSharedAudioContext } from "@/utils/mobileAudioUnlock";
 
-let ctx: AudioContext | null = null;
-
+// Must be the shared context: on iOS, starting playback on a second
+// AudioContext reconfigures the audio session and silences mic input
+// captured on the first (kills sight-singing after the first chime).
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  if (!ctx) {
-    const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!Ctor) return null;
-    ctx = new Ctor();
-  }
+  const ctx = getSharedAudioContext();
   if (ctx.state === "suspended") void ctx.resume();
   return ctx;
 }
