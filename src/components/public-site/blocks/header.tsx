@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { LayoutPanelTop } from 'lucide-react';
+import { LayoutPanelTop, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,6 +51,44 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   const logoHeight = config.logoHeight || 36;
   // Header bar height = logo + 16px breathing room each side, with a sensible floor.
   const barHeight = Math.max(56, logoHeight + 16);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Auto-close the mobile menu if the viewport grows past the sm breakpoint so
+  // a re-resize doesn't leave a stale open panel.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const mql = window.matchMedia('(min-width: 640px)');
+    const handler = (e: MediaQueryListEvent) => { if (e.matches) setMenuOpen(false); };
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, [menuOpen]);
+
+  const hasLinks = config.navLinks.length > 0 || ctx.memberSignIn;
+  const navInline = (
+    <>
+      {config.navLinks.map((l, i) => (
+        <a
+          key={i}
+          href={l.url}
+          onClick={() => setMenuOpen(false)}
+          className="whitespace-nowrap opacity-80 hover:opacity-100 transition-opacity"
+          style={{ color: linkColor }}
+        >
+          {l.label}
+        </a>
+      ))}
+      {ctx.memberSignIn && (
+        <a
+          href="/auth"
+          onClick={() => setMenuOpen(false)}
+          className="rounded-full px-3 py-1 whitespace-nowrap border opacity-90 hover:opacity-100 hover:bg-white/10 transition-opacity"
+          style={{ color: linkColor, borderColor: linkColor + '4d' }}
+        >
+          Sign in
+        </a>
+      )}
+    </>
+  );
+
   return (
     <header
       className="sticky top-0 z-40"
@@ -71,28 +110,52 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           )}
           <span className="font-bold text-base sm:text-lg truncate">{name}</span>
         </a>
-        <nav className="flex items-center gap-4 text-sm">
-          {config.navLinks.map((l, i) => (
-            <a
-              key={i}
-              href={l.url}
-              className="whitespace-nowrap opacity-80 hover:opacity-100 transition-opacity"
-              style={{ color: linkColor }}
-            >
-              {l.label}
-            </a>
-          ))}
-          {ctx.memberSignIn && (
-            <a
-              href="/auth"
-              className="rounded-full px-3 py-1 whitespace-nowrap border opacity-90 hover:opacity-100 hover:bg-white/10 transition-opacity"
-              style={{ color: linkColor, borderColor: linkColor + '4d' }}
-            >
-              Sign in
-            </a>
-          )}
-        </nav>
+        {/* Desktop: inline links. Mobile: a hamburger that toggles the dropdown below. */}
+        <nav className="hidden sm:flex items-center gap-4 text-sm">{navInline}</nav>
+        {hasLinks && (
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            className="sm:hidden inline-flex items-center justify-center w-10 h-10 -mr-2 rounded-md hover:bg-white/10 transition-colors"
+            style={{ color: linkColor }}
+          >
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        )}
       </div>
+      {/* Mobile dropdown: floats over the hero (no content pushed down) on a
+          plain white background. Link color always dark-on-white here, since
+          the dropdown's background is fixed regardless of the theme primary. */}
+      {hasLinks && menuOpen && (
+        <div
+          className="sm:hidden absolute left-0 right-0 top-full bg-white shadow-lg border-t border-slate-200"
+          style={{ color: '#0f172a' }}
+        >
+          <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
+            {config.navLinks.map((l, i) => (
+              <a
+                key={i}
+                href={l.url}
+                onClick={() => setMenuOpen(false)}
+                className="py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors"
+              >
+                {l.label}
+              </a>
+            ))}
+            {ctx.memberSignIn && (
+              <a
+                href="/auth"
+                onClick={() => setMenuOpen(false)}
+                className="py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors border-t border-slate-200 mt-1 pt-3"
+              >
+                Sign in
+              </a>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
