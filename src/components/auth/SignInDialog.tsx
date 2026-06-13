@@ -80,19 +80,24 @@ export function SignInDialog({ open, onOpenChange, onAuthenticated, primaryColor
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Public sign-ups are fans. Students are enrolled by a super-admin and
+      // never self-register; auditions are submitted via a dedicated block on
+      // the public page (not by hitting /auth). So post-confirm we send the
+      // new fan to the tenant's fan landing.
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/audition-application`,
-          data: { full_name: name, tenant_slug: getTenantSlug() },
+          emailRedirectTo: `${window.location.origin}/fan`,
+          data: { full_name: name, tenant_slug: getTenantSlug(), role: 'fan' },
         },
       });
       if (error) throw error;
       if (data.user && !data.user.email_confirmed_at) {
         toast({ title: 'Check your email', description: 'We sent you a confirmation link.' });
       } else {
-        toast({ title: 'Account created!' });
+        toast({ title: 'Welcome! Your fan account is ready.' });
+        navigate('/fan');
       }
       onOpenChange(false);
       onAuthenticated?.();
@@ -132,7 +137,7 @@ export function SignInDialog({ open, onOpenChange, onAuthenticated, primaryColor
           </DialogTitle>
           <DialogDescription>
             {mode === 'login' && 'Sign in to access your account.'}
-            {mode === 'signup' && 'Join with your name and email to get started.'}
+            {mode === 'signup' && 'Become a fan — get news, concert announcements, and access to the fan page.'}
             {mode === 'forgot' && 'Enter your email to receive a reset link.'}
           </DialogDescription>
         </DialogHeader>

@@ -85,7 +85,8 @@ export default function AuthPage() {
         });
       } else {
         // Signup flow
-        const redirectUrl = `${window.location.origin}/audition-application`;
+        // Public sign-ups become fans (students are enrolled by super-admins).
+        const redirectUrl = `${window.location.origin}/fan`;
         const {
           data,
           error
@@ -109,7 +110,7 @@ export default function AuthPage() {
         } else {
           toast({
             title: "Account created!",
-            description: "Please complete your audition application."
+            description: "Welcome — your fan account is ready."
           });
         }
       }
@@ -343,7 +344,7 @@ export default function AuthPage() {
 
                 {!isLogin && <div className="mt-6 p-4 bg-white/10 rounded-lg border border-white/20 backdrop-blur-sm">
                     <p className="text-sm text-white/80">
-                      <strong className="text-white">New users:</strong> After creating your account, you'll be redirected to fill out your audition application with your selected time slot automatically saved.
+                      <strong className="text-white">Becoming a fan:</strong> You&apos;ll get concert announcements, behind-the-scenes news, and access to the fan page. Students are enrolled separately by the program director.
                     </p>
                   </div>}
               </>

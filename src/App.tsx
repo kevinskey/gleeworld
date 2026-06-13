@@ -198,6 +198,8 @@ import ModulesDirectory from "./pages/ModulesDirectory";
 const SharedAnnotation = lazy(() => import("./pages/SharedAnnotation").then(m => ({ default: m.SharedAnnotation })));
 const ReadMusic = lazy(() => import("./features/read-music/ReadMusic"));
 const PublicPageEditor = lazy(() => import("./pages/admin/PublicPageEditor"));
+const FanPageEditor = lazy(() => import("./pages/admin/FanPageEditor"));
+const FanPage = lazy(() => import("./pages/FanPage"));
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
@@ -718,6 +720,17 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              {/* Fan landing page builder (signed-in fans see the published version at /fan) */}
+              <Route
+                path="/admin/fan-page"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <FanPageEditor />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
               {/* Published tenant public sites — no auth */}
               <Route path="/sites/:slug" element={<PublicSitePage />} />
               <Route
@@ -1061,13 +1074,13 @@ const App = () => {
                     </ProtectedRoute>
                    } 
                   />
-               <Route 
-                 path="/fan" 
+               <Route
+                 path="/fan"
                  element={
                    <ProtectedRoute>
-                     <FanDashboard />
+                     <FanPage />
                    </ProtectedRoute>
-                 } 
+                 }
                />
                 <Route 
                   path="/dashboard/member-view/:userId" 
