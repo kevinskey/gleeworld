@@ -32,6 +32,7 @@ import {
   Check,
   X,
   ExternalLink,
+  ChevronDown,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -52,7 +53,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BLOCK_LIST, getBlockModule, isBlockAvailable } from '@/components/public-site/registry';
 import { AutoForm } from '@/components/public-site/AutoForm';
-import { safeConfig, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
+import { fontStack, safeConfig, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
 
 interface SiteRow {
   id: string;
@@ -68,12 +69,15 @@ function SortableBlockRow({
   onSelect,
   onToggle,
   onDelete,
+  expanded,
 }: {
   block: SiteBlock;
   selected: boolean;
   onSelect: () => void;
   onToggle: () => void;
   onDelete: () => void;
+  /** Optional editor form rendered as an accordion panel below the row when selected. */
+  expanded?: React.ReactNode;
 }) {
   const mod = getBlockModule(block.block_type);
   const locked = !!mod?.locked;
@@ -87,30 +91,40 @@ function SortableBlockRow({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2.5 ${
-        selected ? 'border-primary ring-1 ring-primary' : 'border-border'
-      } ${isDragging ? 'opacity-60 shadow-lg' : ''}`}
+      className={isDragging ? 'opacity-60' : ''}
     >
-      {locked ? (
-        <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
-      ) : (
-        <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground touch-none" aria-label="Reorder">
-          <GripVertical className="w-4 h-4" />
+      <div
+        className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2.5 ${
+          selected ? 'border-primary ring-1 ring-primary' : 'border-border'
+        } ${isDragging ? 'shadow-lg' : ''}`}
+      >
+        {locked ? (
+          <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
+        ) : (
+          <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground touch-none" aria-label="Reorder">
+            <GripVertical className="w-4 h-4" />
+          </button>
+        )}
+        <button onClick={onSelect} className="flex items-center gap-2 flex-1 text-left min-w-0">
+          <Icon className="w-4 h-4 shrink-0" />
+          <span className="text-sm font-medium truncate">{mod.name}</span>
+          <ChevronDown className={`w-4 h-4 ml-auto text-muted-foreground transition-transform ${selected ? 'rotate-180' : ''}`} />
         </button>
-      )}
-      <button onClick={onSelect} className="flex items-center gap-2 flex-1 text-left min-w-0">
-        <Icon className="w-4 h-4 shrink-0" />
-        <span className="text-sm font-medium truncate">{mod.name}</span>
-      </button>
-      {!locked && (
-        <>
-          <button onClick={onToggle} className="text-muted-foreground hover:text-foreground" aria-label="Toggle visibility">
-            {block.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-          </button>
-          <button onClick={onDelete} className="text-muted-foreground hover:text-destructive" aria-label="Delete block">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </>
+        {!locked && (
+          <>
+            <button onClick={onToggle} className="text-muted-foreground hover:text-foreground" aria-label="Toggle visibility">
+              {block.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+            <button onClick={onDelete} className="text-muted-foreground hover:text-destructive" aria-label="Delete block">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+      {selected && expanded && (
+        <div className="mt-2 mb-2 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+          {expanded}
+        </div>
       )}
     </div>
   );
@@ -127,6 +141,8 @@ export default function PublicPageEditor() {
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [activating, setActivating] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const sensors = useSensors(
@@ -175,10 +191,14 @@ export default function PublicPageEditor() {
     if (site) setSlugDraft(site.slug);
   }, [site]);
 
+  const [pendingTheme, setPendingTheme] = useState<SiteTheme | null>(null);
+  const themeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const theme: SiteTheme = useMemo(() => {
+    if (pendingTheme) return pendingTheme;
     const parsed = themeSchema.safeParse(site?.theme ?? {});
     return parsed.success ? parsed.data : themeSchema.parse({});
-  }, [site?.theme]);
+  }, [site?.theme, pendingTheme]);
 
   const ctx: SiteRenderContext = useMemo(
     () => ({
@@ -293,11 +313,21 @@ export default function PublicPageEditor() {
     toast({ title: 'Address updated', description: `Your page now lives at /sites/${slugDraft}` });
   };
 
-  const updateTheme = async (patch: Partial<SiteTheme>) => {
+  // Theme changes apply instantly to the preview via local state, then debounce
+  // the DB write so dragging the letter-spacing or color sliders doesn't fire
+  // a flood of UPDATE statements per pixel of movement.
+  const updateTheme = (patch: Partial<SiteTheme>) => {
     if (!site) return;
     const next = { ...theme, ...patch };
-    await supabase.from('gw_public_sites').update({ theme: next }).eq('id', site.id);
-    queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+    setPendingTheme(next);
+    if (themeTimer.current) clearTimeout(themeTimer.current);
+    themeTimer.current = setTimeout(async () => {
+      const { error } = await supabase.from('gw_public_sites').update({ theme: next }).eq('id', site.id);
+      if (!error) {
+        await queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+      }
+      setPendingTheme(null);
+    }, 400);
   };
 
   const publish = async () => {
@@ -330,7 +360,33 @@ export default function PublicPageEditor() {
     toast({ title: 'Unpublished', description: 'Your page is no longer publicly visible.' });
   };
 
+  // Wipes the current block list and asks gw_activate_public_site() to reseed
+  // the 7-block starter template. RLS scopes the delete to the current tenant.
+  const resetToTemplate = async () => {
+    if (!site) return;
+    setResetting(true);
+    const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
+    if (del.error) {
+      toast({ title: 'Reset failed', description: del.error.message, variant: 'destructive' });
+      setResetting(false);
+      return;
+    }
+    const reseed = await supabase.rpc('gw_activate_public_site');
+    if (reseed.error) {
+      toast({ title: 'Reseed failed', description: reseed.error.message, variant: 'destructive' });
+      setResetting(false);
+      return;
+    }
+    setSelectedId(null);
+    await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+    await queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+    setResetting(false);
+    setResetOpen(false);
+    toast({ title: 'Reset complete', description: 'Your page now uses the starter template.' });
+  };
+
   const selected = blocks.find((b) => b.id === selectedId) ?? null;
+  const existingBlockTypes = useMemo(() => new Set(blocks.map((b) => b.block_type)), [blocks]);
   const selectedMod = selected ? getBlockModule(selected.block_type) : null;
 
   if (siteLoading) {
@@ -383,6 +439,30 @@ export default function PublicPageEditor() {
         <Badge variant={site.is_published ? 'default' : 'secondary'}>
           {site.is_published ? 'Published' : 'Draft'}
         </Badge>
+        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" title="Replace all blocks with the default layout">
+              <Rocket className="w-4 h-4 mr-1.5" /> Reset to template
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reset to the starter template?</DialogTitle>
+              <DialogDescription>
+                This deletes every block currently on the page and replaces them with the
+                default 7-block layout: Header, Hero, Events, About, Music Player, Videos,
+                and Contact &amp; Footer. Your theme, brand colors, and uploaded media are kept.
+                This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={resetToTemplate} disabled={resetting}>
+                {resetting ? 'Resetting…' : 'Yes, reset blocks'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         {site.is_published && (
           <Button variant="outline" onClick={unpublish}>Unpublish</Button>
         )}
@@ -400,16 +480,37 @@ export default function PublicPageEditor() {
             <CardContent className="space-y-2">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                 <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-                  {blocks.map((block) => (
-                    <SortableBlockRow
-                      key={block.id}
-                      block={block}
-                      selected={block.id === selectedId}
-                      onSelect={() => setSelectedId(block.id)}
-                      onToggle={() => toggleVisible(block)}
-                      onDelete={() => deleteBlock(block)}
-                    />
-                  ))}
+                  {blocks.map((block) => {
+                    const mod = getBlockModule(block.block_type);
+                    const isSelected = block.id === selectedId;
+                    const expanded = isSelected && mod ? (
+                      mod.EditorForm ? (
+                        <mod.EditorForm
+                          config={safeConfig(mod, block.config)}
+                          onChange={(config) => updateConfig(block.id, config as Record<string, unknown>)}
+                          theme={theme}
+                          onThemeChange={updateTheme}
+                        />
+                      ) : (
+                        <AutoForm
+                          schema={mod.configSchema}
+                          config={safeConfig(mod, block.config)}
+                          onChange={(config) => updateConfig(block.id, config)}
+                        />
+                      )
+                    ) : null;
+                    return (
+                      <SortableBlockRow
+                        key={block.id}
+                        block={block}
+                        selected={isSelected}
+                        onSelect={() => setSelectedId(isSelected ? null : block.id)}
+                        onToggle={() => toggleVisible(block)}
+                        onDelete={() => deleteBlock(block)}
+                        expanded={expanded}
+                      />
+                    );
+                  })}
                 </SortableContext>
               </DndContext>
               <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
@@ -418,40 +519,68 @@ export default function PublicPageEditor() {
                     <Plus className="w-4 h-4 mr-2" /> Add block
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Add a block</DialogTitle>
-                    <DialogDescription>Pick a section to add to your page.</DialogDescription>
+                    <DialogDescription>
+                      Each block is powered by a GleeWorld module. Add-ons unlock additional blocks.
+                    </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-2">
-                    {BLOCK_LIST.filter((m) => !m.locked).map((mod) => {
-                      const available = isBlockAvailable(mod, activeAddons);
-                      const Icon = mod.icon;
+                  <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1">
+                    {([
+                      { key: 'core', label: 'Your essentials' },
+                      { key: 'gleeworld', label: 'GleeWorld extras' },
+                      { key: 'addon', label: 'Add-ons' },
+                    ] as const).map(({ key, label }) => {
+                      const items = BLOCK_LIST.filter((m) => !m.locked && (m.group ?? 'core') === key);
+                      if (items.length === 0) return null;
                       return (
-                        <div
-                          key={mod.type}
-                          className={`flex items-center gap-3 rounded-lg border p-3 ${
-                            available ? 'hover:border-primary cursor-pointer' : 'opacity-70'
-                          }`}
-                          onClick={available ? () => addBlock(mod.type) : undefined}
-                        >
-                          <Icon className="w-5 h-5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium">{mod.name}</span>
-                              {!available && (
-                                <Badge variant="secondary" className="gap-1">
-                                  <Lock className="w-3 h-3" /> Add-on
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground">{mod.description}</p>
+                        <div key={key} className="space-y-2">
+                          <div className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+                            {label}
                           </div>
-                          {!available && (
-                            <Button asChild size="sm" variant="outline" onClick={(e) => e.stopPropagation()}>
-                              <Link to="/settings/modules">Upgrade</Link>
-                            </Button>
-                          )}
+                          {items.map((mod) => {
+                            const available = isBlockAvailable(mod, activeAddons);
+                            const alreadyOnPage = existingBlockTypes.has(mod.type);
+                            const Icon = mod.icon;
+                            return (
+                              <div
+                                key={mod.type}
+                                className={`flex items-center gap-3 rounded-lg border p-3 ${
+                                  available ? 'hover:border-primary cursor-pointer' : 'opacity-70'
+                                }`}
+                                onClick={available ? () => addBlock(mod.type) : undefined}
+                              >
+                                <Icon className="w-5 h-5 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm font-medium">{mod.name}</span>
+                                    {alreadyOnPage && (
+                                      <Badge variant="outline" className="gap-1 border-emerald-500/50 text-emerald-700">
+                                        <Check className="w-3 h-3" /> Added
+                                      </Badge>
+                                    )}
+                                    {!available && (
+                                      <Badge variant="secondary" className="gap-1">
+                                        <Lock className="w-3 h-3" /> Add-on
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">{mod.description}</p>
+                                  {mod.poweredBy && (
+                                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 mt-1">
+                                      Powered by {mod.poweredBy}
+                                    </p>
+                                  )}
+                                </div>
+                                {!available && (
+                                  <Button asChild size="sm" variant="outline" onClick={(e) => e.stopPropagation()}>
+                                    <Link to="/settings/modules">Activate</Link>
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     })}
@@ -460,30 +589,6 @@ export default function PublicPageEditor() {
               </Dialog>
             </CardContent>
           </Card>
-
-          {selected && selectedMod && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Settings2 className="w-4 h-4" /> {selectedMod.name} settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {selectedMod.EditorForm ? (
-                  <selectedMod.EditorForm
-                    config={safeConfig(selectedMod, selected.config)}
-                    onChange={(config) => updateConfig(selected.id, config as Record<string, unknown>)}
-                  />
-                ) : (
-                  <AutoForm
-                    schema={selectedMod.configSchema}
-                    config={safeConfig(selectedMod, selected.config)}
-                    onChange={(config) => updateConfig(selected.id, config)}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           <Card>
             <CardHeader className="pb-3">
@@ -518,41 +623,6 @@ export default function PublicPageEditor() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Theme</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Primary color</Label>
-                <input
-                  type="color"
-                  value={theme.primaryColor}
-                  onChange={(e) => updateTheme({ primaryColor: e.target.value })}
-                  className="h-8 w-12 rounded border cursor-pointer"
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label>Accent color</Label>
-                <input
-                  type="color"
-                  value={theme.accentColor}
-                  onChange={(e) => updateTheme({ accentColor: e.target.value })}
-                  className="h-8 w-12 rounded border cursor-pointer"
-                />
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <Label>Font</Label>
-                <Select value={theme.fontFamily} onValueChange={(v) => updateTheme({ fontFamily: v as SiteTheme['fontFamily'] })}>
-                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sans">Sans</SelectItem>
-                    <SelectItem value="serif">Serif</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <Card className="overflow-hidden">
@@ -560,10 +630,12 @@ export default function PublicPageEditor() {
             <CardTitle className="text-sm text-muted-foreground font-normal">Preview</CardTitle>
           </CardHeader>
           <div
-            className={`bg-white ${theme.fontFamily === 'serif' ? 'font-serif' : 'font-sans'}`}
+            className="bg-white"
             style={{
               ['--site-primary' as string]: theme.primaryColor,
               ['--site-accent' as string]: theme.accentColor,
+              fontFamily: fontStack(theme.fontFamily),
+              letterSpacing: `${theme.letterSpacing ?? 0}em`,
             }}
           >
             {blocks.map((block) => {
@@ -571,7 +643,15 @@ export default function PublicPageEditor() {
               if (!mod || !block.is_visible) return null;
               if (!isBlockAvailable(mod, activeAddons)) return null;
               const Render = mod.Render;
-              return <Render key={block.id} config={safeConfig(mod, block.config)} ctx={ctx} />;
+              const cfg = safeConfig(mod, block.config);
+              return (
+                <Render
+                  key={block.id}
+                  config={cfg}
+                  ctx={ctx}
+                  onConfigChange={(patch) => updateConfig(block.id, { ...cfg, ...patch } as Record<string, unknown>)}
+                />
+              );
             })}
             {blocks.length === 0 && (
               <div className="p-16 text-center text-muted-foreground">Add blocks to see a preview.</div>

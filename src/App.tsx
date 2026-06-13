@@ -34,7 +34,6 @@ import { ModuleRouteRedirect } from "@/components/routing/module-route-redirect"
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { NativeTenantGate } from "@/components/native/NativeTenantGate";
 import { UsageTracker } from "@/components/tracking/UsageTracker";
-import SiteSetup from "./pages/admin/SiteSetup";
 import ModulesSettings from "./pages/admin/ModulesSettings";
 import LandingEditor from "./pages/admin/LandingEditor";
 import AIRehearsalAssistant from "./pages/admin/AIRehearsalAssistant";
@@ -705,15 +704,9 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              {/* Tenant onboarding: branding setup for new admins */}
-              <Route
-                path="/admin/site-setup"
-                element={
-                  <ProtectedRoute>
-                    <SiteSetup />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Legacy site-setup route: the page builder is now the single
+                  source of truth for branding + theme + blocks. */}
+              <Route path="/admin/site-setup" element={<Navigate to="/admin/public-page" replace />} />
               {/* Public landing page builder for tenants */}
               <Route
                 path="/admin/public-page"

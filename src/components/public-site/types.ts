@@ -5,9 +5,42 @@ import type { LucideIcon } from 'lucide-react';
 export const themeSchema = z.object({
   primaryColor: z.string().default('#0f172a'),
   accentColor: z.string().default('#9333ea'),
-  fontFamily: z.enum(['sans', 'serif']).default('sans'),
+  // Free-form string keyed against FONT_OPTIONS below. Legacy values 'sans'
+  // and 'serif' are still honored.
+  fontFamily: z.string().default('sans'),
+  // Letter-spacing in em units. Applied to the root site wrapper; individual
+  // block text inherits unless it explicitly overrides.
+  letterSpacing: z.number().min(-0.05).max(0.3).default(0),
 });
 export type SiteTheme = z.infer<typeof themeSchema>;
+
+/** Curated font list for the public site builder. Each entry maps a stored
+ *  key to a CSS font-family stack. New keys can be added freely; old ones
+ *  must never be removed (or stored values would silently fall back). */
+export const FONT_OPTIONS: { value: string; label: string; css: string }[] = [
+  { value: 'sans', label: 'Sans (system)', css: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' },
+  { value: 'serif', label: 'Serif (system)', css: 'Georgia, "Times New Roman", serif' },
+  { value: 'lato', label: 'Lato', css: '"Lato", system-ui, sans-serif' },
+  { value: 'open-sans', label: 'Open Sans', css: '"Open Sans", system-ui, sans-serif' },
+  { value: 'roboto', label: 'Roboto', css: '"Roboto", system-ui, sans-serif' },
+  { value: 'montserrat', label: 'Montserrat', css: '"Montserrat", system-ui, sans-serif' },
+  { value: 'poppins', label: 'Poppins', css: '"Poppins", system-ui, sans-serif' },
+  { value: 'raleway', label: 'Raleway', css: '"Raleway", system-ui, sans-serif' },
+  { value: 'oswald', label: 'Oswald', css: '"Oswald", Impact, sans-serif' },
+  { value: 'bebas-neue', label: 'Bebas Neue', css: '"Bebas Neue", Impact, sans-serif' },
+  { value: 'playfair', label: 'Playfair Display', css: '"Playfair Display", Georgia, serif' },
+  { value: 'merriweather', label: 'Merriweather', css: '"Merriweather", Georgia, serif' },
+  { value: 'cormorant', label: 'Cormorant Garamond', css: '"Cormorant Garamond", Georgia, serif' },
+  { value: 'libre-baskerville', label: 'Libre Baskerville', css: '"Libre Baskerville", Georgia, serif' },
+  { value: 'cinzel', label: 'Cinzel', css: '"Cinzel", Georgia, serif' },
+  { value: 'dancing-script', label: 'Dancing Script', css: '"Dancing Script", cursive' },
+  { value: 'great-vibes', label: 'Great Vibes', css: '"Great Vibes", cursive' },
+];
+
+export function fontStack(value: string | undefined): string {
+  const opt = FONT_OPTIONS.find((o) => o.value === value);
+  return opt?.css ?? FONT_OPTIONS[0].css;
+}
 
 // A block row as stored in gw_site_blocks (and snapshotted into published_blocks).
 export interface SiteBlock {
@@ -35,11 +68,21 @@ export interface SiteRenderContext {
 export interface BlockRenderProps<C = Record<string, unknown>> {
   config: C;
   ctx: SiteRenderContext;
+  /**
+   * Only set when the block is rendered inside the editor's live preview.
+   * Lets the block surface interactive editing affordances (e.g. drag the
+   * hero text to reposition it) and persist the change via the same path
+   * as the editor form. Undefined on the public site.
+   */
+  onConfigChange?: (patch: Partial<C>) => void;
 }
 
 export interface BlockEditorFormProps<C = Record<string, unknown>> {
   config: C;
   onChange: (config: C) => void;
+  /** Site-level theme (colors/font). Some blocks (Header) surface these inline. */
+  theme?: SiteTheme;
+  onThemeChange?: (patch: Partial<SiteTheme>) => void;
 }
 
 export interface BlockModule<S extends z.ZodTypeAny = z.ZodTypeAny> {
@@ -50,6 +93,14 @@ export interface BlockModule<S extends z.ZodTypeAny = z.ZodTypeAny> {
   tier: 'free' | 'addon';
   /** gw_billing_modules.id that must be active for this block */
   requiredAddon?: string;
+  /**
+   * Human-readable name of the admin module that powers this public block.
+   * Shown in the block picker as "Powered by …". Internal Control Center
+   * surfaces keep using the module's technical name.
+   */
+  poweredBy?: string;
+  /** Group used by the block picker to organize options. */
+  group?: 'core' | 'addon' | 'gleeworld';
   /** Locked blocks pin to position 0 and can't be hidden or deleted (header). */
   locked?: boolean;
   configSchema: S;

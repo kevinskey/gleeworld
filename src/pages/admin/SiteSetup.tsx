@@ -114,22 +114,60 @@ export default function SiteSetup() {
       toast.error('Organization name is required.');
       return;
     }
+    // Resolve the active tenant id at save time. The page's `tenant` state
+    // may not have hydrated yet (or errored quietly) on first paint; falling
+    // back to a fresh lookup from the bootstrap slug avoids the false
+    // "couldn't determine the site" failure.
+    let tenantId = tenant?.id;
+    if (!tenantId) {
+      const slug = (window as any).__TENANT_CONFIG__?.tenant;
+      if (slug) {
+        const { data: lookup } = await supabase
+          .from('gw_tenants')
+          .select('id, slug, subdomain, custom_domain')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (lookup) {
+          setTenant(lookup);
+          tenantId = lookup.id;
+        }
+      }
+    }
+    if (!tenantId) {
+      toast.error("Couldn't determine which site you're editing. Please reload.");
+      return;
+    }
     setSaving(true);
-    // RLS restrictive policy scopes to the current tenant — only that row is updateable.
-    // Match the existing row by its id; if id is unknown (no row exists), the upsert path below handles it.
-    const { data, error } = await supabase
+    const payload = {
+      org_name: orgName.trim(),
+      short_name: shortName.trim() || null,
+      tagline: tagline.trim() || null,
+      show_enroll_cta: showEnrollCta,
+      logo_url: logoUrl.trim() || null,
+      primary_color: primaryColor || '#150d26',
+      ...(markComplete ? { setup_completed: true } : {}),
+    };
+
+    // Scope by tenant_id, not by settings.id — settings.id can be the
+    // fallback "1" when no row exists for this tenant yet, which would
+    // silently target some other tenant's row (or be blocked by RLS).
+    let { data, error } = await supabase
       .from('gw_branding_settings')
-      .update({
-        org_name: orgName.trim(),
-        short_name: shortName.trim() || null,
-        tagline: tagline.trim() || null,
-        show_enroll_cta: showEnrollCta,
-        logo_url: logoUrl.trim() || null,
-        primary_color: primaryColor || '#150d26',
-        ...(markComplete ? { setup_completed: true } : {}),
-      })
-      .eq('id', settings.id)
+      .update(payload)
+      .eq('tenant_id', tenantId)
       .select();
+
+    // No row for this tenant yet — create one. id has a NOT NULL default of 1
+    // but the table has UNIQUE(tenant_id), so we supply a unique id explicitly.
+    if (!error && (!data || data.length === 0)) {
+      const res = await supabase
+        .from('gw_branding_settings')
+        .insert({ id: Date.now(), tenant_id: tenantId, ...payload })
+        .select();
+      data = res.data;
+      error = res.error;
+    }
+
     setSaving(false);
     if (error) {
       toast.error(`Couldn't save: ${error.message}`);
@@ -145,7 +183,10 @@ export default function SiteSetup() {
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(40,10%,96%)] py-8 px-4">
+    <div
+      className="min-h-screen bg-[hsl(40,10%,96%)] pb-8 px-4"
+      style={{ paddingTop: 'max(2rem, calc(env(safe-area-inset-top) + 1rem))' }}
+    >
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -239,24 +280,23 @@ export default function SiteSetup() {
             >
               <div className="flex flex-wrap items-start gap-4">
                 {logoUrl ? (
-                  <div className="relative bg-slate-800 border border-slate-700 rounded-lg p-3">
+                  <div className="relative bg-white border border-slate-200 rounded-lg p-3 shadow-sm">
                     <img
                       src={logoUrl}
                       alt="Logo preview"
                       className="w-24 h-24 object-contain rounded"
-                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                     <button
                       type="button"
                       onClick={() => setLogoUrl('')}
-                      className="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 rounded-full p-1 text-slate-300 hover:text-white"
+                      className="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 rounded-full p-1 text-white hover:bg-slate-700"
                       title="Remove logo"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 ) : (
-                  <div className="w-24 h-24 bg-slate-800 border border-slate-700 border-dashed rounded-lg flex items-center justify-center text-slate-500">
+                  <div className="w-24 h-24 bg-white border border-slate-300 border-dashed rounded-lg flex items-center justify-center text-slate-400">
                     <ImageIcon className="w-8 h-8" />
                   </div>
                 )}

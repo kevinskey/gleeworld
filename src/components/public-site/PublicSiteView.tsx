@@ -2,7 +2,7 @@
 // /sites/:slug route and the tenant root landing when a site is published.
 import { useEffect, useMemo } from 'react';
 import { BLOCK_REGISTRY, isBlockAvailable } from './registry';
-import { safeConfig, themeSchema, type SiteBlock, type SiteRenderContext } from './types';
+import { fontStack, safeConfig, themeSchema, type SiteBlock, type SiteRenderContext } from './types';
 
 export interface PublicSitePayload {
   slug: string;
@@ -66,10 +66,12 @@ export function PublicSiteView({
 
   return (
     <div
-      className={`min-h-screen bg-white text-slate-900 ${theme.fontFamily === 'serif' ? 'font-serif' : 'font-sans'}`}
+      className="min-h-screen bg-white text-slate-900"
       style={{
         ['--site-primary' as string]: theme.primaryColor,
         ['--site-accent' as string]: theme.accentColor,
+        fontFamily: fontStack(theme.fontFamily),
+        letterSpacing: `${theme.letterSpacing ?? 0}em`,
       }}
     >
       {blocks.map((block) => {

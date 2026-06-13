@@ -85,7 +85,10 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
   };
 
   return (
-    <header className={`sticky top-0 z-50 w-full border-b border-border bg-gradient-to-r from-primary/10 via-background to-secondary/10 backdrop-blur-sm shadow-sm ${hideForAnnotation ? 'hidden' : ''}`}>
+    <header
+      className={`sticky top-0 z-50 w-full border-b border-border bg-gradient-to-r from-primary/10 via-background to-secondary/10 backdrop-blur-sm shadow-sm ${hideForAnnotation ? 'hidden' : ''}`}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="flex h-16 items-center justify-between px-6">
         {/* Left Section - Logo & Branding */}
         <div className="flex items-center space-x-4">
@@ -274,7 +277,10 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   };
 
   return (
-    <header className={`glass-nav sticky top-0 z-50 ${hideForAnnotation ? 'hidden' : ''}`}>
+    <header
+      className={`glass-nav sticky top-0 z-50 ${hideForAnnotation ? 'hidden' : ''}`}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="container mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16 md:h-18">
           {/* Logo */}

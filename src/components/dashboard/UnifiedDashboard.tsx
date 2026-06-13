@@ -100,15 +100,16 @@ export const UnifiedDashboard = () => {
   }, [profile, profileLoading, navigate]);
 
   // First-time onboarding: if this tenant admin hasn't completed site setup,
-  // send them to /admin/site-setup before they land on the dashboard.
+  // send them to the page builder (which now owns branding + theme + blocks)
+  // before they land on the dashboard.
   useEffect(() => {
     if (profileLoading || brandingLoading || !profile) return;
     const isAdmin = profile.is_super_admin || profile.is_admin || profile.role === 'super-admin' || profile.role === 'admin';
     if (!isAdmin) return;
     if (branding.setup_completed) return;
-    if (location.pathname === '/admin/site-setup') return;
+    if (location.pathname === '/admin/public-page') return;
     if (location.pathname === '/control-center' || location.pathname === '/dashboard') {
-      navigate('/admin/site-setup', { replace: true });
+      navigate('/admin/public-page', { replace: true });
     }
   }, [profile, profileLoading, branding, brandingLoading, location.pathname, navigate]);
 

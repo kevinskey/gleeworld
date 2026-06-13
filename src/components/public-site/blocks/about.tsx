@@ -18,7 +18,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   const text = (
     <div>
       {config.title && (
-        <h2 className="font-sans normal-case tracking-tight text-2xl sm:text-3xl font-bold mb-4">{config.title}</h2>
+        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4">{config.title}</h2>
       )}
       <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">{config.body}</p>
     </div>
@@ -39,9 +39,11 @@ function Render({ config }: BlockRenderProps<Config>) {
 export const aboutBlock: BlockModule<typeof schema> = {
   type: 'about',
   name: 'About',
-  description: 'Tell your story with text and an optional photo.',
+  description: 'Tell your story — mission, history, or a director\'s message — with an optional photo.',
   icon: Info,
   tier: 'free',
+  group: 'core',
+  poweredBy: 'Public Relations',
   configSchema: schema,
   defaultConfig: { title: 'About us', body: '', imageUrl: '', imageSide: 'right' },
   Render,

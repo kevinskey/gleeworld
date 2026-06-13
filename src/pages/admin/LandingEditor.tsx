@@ -1,8 +1,7 @@
-// /admin/landing-editor — kept as a permanent redirect to the unified Site Setup
-// page so any cards, bookmarks, or old in-app links don't break. All landing
-// editing lives in /admin/site-setup now.
+// /admin/landing-editor — permanent redirect to the public page builder. All
+// landing editing (branding, theme, blocks) now lives at /admin/public-page.
 import { Navigate } from 'react-router-dom';
 
 export default function LandingEditor() {
-  return <Navigate to="/admin/site-setup" replace />;
+  return <Navigate to="/admin/public-page" replace />;
 }

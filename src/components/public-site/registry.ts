@@ -8,18 +8,42 @@ import { aboutBlock } from './blocks/about';
 import { contactBlock } from './blocks/contact';
 import { donationsBlock } from './blocks/donations';
 import { merchBlock } from './blocks/merch';
+import { musicPlayerBlock } from './blocks/music-player';
+import { videoGalleryBlock } from './blocks/video-gallery';
+import { mediaGalleryBlock } from './blocks/media-gallery';
+import { staffBlock } from './blocks/staff';
+import { ensemblesBlock } from './blocks/ensembles';
+import { concertTicketsBlock } from './blocks/concert-tickets';
+import { alumniSpotlightBlock } from './blocks/alumni-spotlight';
+import { appointmentBookingBlock } from './blocks/appointment-booking';
+import { pressBlock } from './blocks/press';
+import { supportBlock } from './blocks/support';
 
 export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [headerBlock.type]: headerBlock,
   [heroBlock.type]: heroBlock,
   [eventsBlock.type]: eventsBlock,
   [aboutBlock.type]: aboutBlock,
+  [mediaGalleryBlock.type]: mediaGalleryBlock,
+  [musicPlayerBlock.type]: musicPlayerBlock,
+  [videoGalleryBlock.type]: videoGalleryBlock,
+  [ensemblesBlock.type]: ensemblesBlock,
+  [staffBlock.type]: staffBlock,
+  [pressBlock.type]: pressBlock,
+  [supportBlock.type]: supportBlock,
   [contactBlock.type]: contactBlock,
   [donationsBlock.type]: donationsBlock,
   [merchBlock.type]: merchBlock,
+  [concertTicketsBlock.type]: concertTicketsBlock,
+  [alumniSpotlightBlock.type]: alumniSpotlightBlock,
+  [appointmentBookingBlock.type]: appointmentBookingBlock,
+  // Back-compat: `video-gallery` was the original key for the Videos block.
+  // Map it to the same module so stored configs continue to render.
+  'video-gallery': videoGalleryBlock,
 };
 
-export const BLOCK_LIST: BlockModule[] = Object.values(BLOCK_REGISTRY);
+// Dedupe — back-compat aliases share a module instance with their canonical key.
+export const BLOCK_LIST: BlockModule[] = Array.from(new Set(Object.values(BLOCK_REGISTRY)));
 
 export function getBlockModule(type: string): BlockModule | undefined {
   return BLOCK_REGISTRY[type];

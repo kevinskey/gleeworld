@@ -50,7 +50,7 @@ export function OnboardingChecklist() {
     {
       label: 'Brand your site',
       detail: 'Upload your logo and set your colors',
-      to: '/admin/site-setup',
+      to: '/admin/public-page',
       done: !!branding.logo_url,
     },
     {

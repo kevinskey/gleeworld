@@ -11,7 +11,7 @@ import { useTenantModules } from '@/hooks/useModuleAccess';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-import { Shield, Database, Search, Eye, GraduationCap } from 'lucide-react';
+import { Shield, Database, Search, Eye, GraduationCap, Settings } from 'lucide-react';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useCourseProducts, LEVEL_LABEL } from '@/hooks/useCourseStore';
@@ -141,6 +141,10 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
           >
             <Eye className="h-4 w-4 mr-2" />
             View public site
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/admin/public-page')}>
+            <Settings className="h-4 w-4 mr-2" />
+            Site setup
           </Button>
           <Button variant="outline" size="sm" onClick={() => navigate('/admin/database')}>
             <Database className="h-4 w-4 mr-2" />

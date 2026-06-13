@@ -99,7 +99,10 @@ export default function AcademyHome() {
           backgroundImage: 'radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 60%, white 1px, transparent 1px)',
           backgroundSize: '40px 40px, 60px 60px',
         }} />
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-10 sm:pb-14 text-white">
+        <div
+          className="relative max-w-5xl mx-auto px-4 sm:px-6 pb-10 sm:pb-14 text-white"
+          style={{ paddingTop: 'max(1rem, calc(env(safe-area-inset-top) + 0.5rem))' }}
+        >
           {/* Slim top bar — logo + sign out */}
           <div className="flex items-center justify-between mb-6">
             <button onClick={() => navigate('/')} className="flex items-center gap-2 text-white/90 hover:text-white">

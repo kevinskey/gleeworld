@@ -56,10 +56,11 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
 export const contactBlock: BlockModule<typeof schema> = {
   type: 'contact',
-  name: 'Contact & footer',
-  description: 'Email, phone, and social links rendered as the page footer.',
+  name: 'Contact & Footer',
+  description: 'Email, phone, website, and social links rendered as the page footer.',
   icon: AtSign,
   tier: 'free',
+  group: 'core',
   configSchema: schema,
   defaultConfig: { email: '', phone: '', facebook: '', instagram: '', youtube: '', twitter: '', spotify: '' },
   Render,
