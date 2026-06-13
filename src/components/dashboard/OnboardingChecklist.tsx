@@ -29,15 +29,17 @@ export function OnboardingChecklist() {
     enabled: isAdmin && !dismissed,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const [members, events, announcements] = await Promise.all([
+      const [members, events, announcements, site] = await Promise.all([
         supabase.from('gw_profiles').select('id', { count: 'exact', head: true }),
         supabase.from('gw_events').select('id', { count: 'exact', head: true }),
         supabase.from('gw_announcements').select('id', { count: 'exact', head: true }),
+        supabase.from('gw_public_sites').select('is_published').maybeSingle(),
       ]);
       return {
         members: members.count ?? 0,
         events: events.count ?? 0,
         announcements: announcements.count ?? 0,
+        sitePublished: !!site.data?.is_published,
       };
     },
   });
@@ -62,6 +64,12 @@ export function OnboardingChecklist() {
       detail: 'Add a rehearsal or performance to the calendar',
       to: '/calendar',
       done: counts.events > 0,
+    },
+    {
+      label: 'Publish your public page',
+      detail: 'Build a public website for your choir from ready-made blocks',
+      to: '/admin/public-page',
+      done: counts.sitePublished,
     },
     {
       label: 'Post an announcement',
