@@ -272,8 +272,9 @@ export const UniversalHeader = ({
             paddingTop: 'var(--gw-safe-top)',
             background: sitePrimary || undefined,
             color: headerFg || undefined,
+            borderBottom: sitePrimary ? `2px solid var(--site-accent)` : undefined,
           }}
-          className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative ${sitePrimary ? '' : 'bg-[hsl(var(--brand-navy))] text-white'} backdrop-blur-md border-b border-white/[0.08] ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300 [&_button>svg]:opacity-85 [&_button:hover>svg]:opacity-100`}
+          className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative ${sitePrimary ? '' : 'bg-[hsl(var(--brand-navy))] text-white'} backdrop-blur-md ${sitePrimary ? '' : `border-b border-white/[0.08] ${user ? getRoleAccentColor() : 'border-b border-white/20'}`} [&_button]:transition-shadow [&_button]:duration-300 [&_button>svg]:opacity-90 [&_button:hover>svg]:opacity-100 ${sitePrimary ? '[&_button>svg]:!text-[#0f172a] [&_a>svg]:!text-[#0f172a] [&_.gw-bolt-btn>svg]:!text-[color:var(--site-accent)]' : ''}`}
         >
           <div className="flex items-center justify-between w-full h-14 sm:h-16 md:h-18 px-2 sm:px-3 md:px-4 lg:px-6">
           {/* Logo and Navigation */}
@@ -291,8 +292,9 @@ export const UniversalHeader = ({
                 <span style={{
                     fontFamily: "'Cinzel', serif",
                     letterSpacing: '0.04em',
-                    textShadow: '0 0 10px rgba(56,146,227,0.3)'
-                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-semibold text-white truncate max-w-[40vw] md:max-w-none">
+                    color: headerFg || '#ffffff',
+                    textShadow: headerFg === '#0f172a' ? 'none' : '0 0 10px rgba(56,146,227,0.3)',
+                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-semibold truncate max-w-[40vw] md:max-w-none">
                   {siteName}
                 </span>
               </Link>
@@ -312,17 +314,11 @@ export const UniversalHeader = ({
             {user && <DropdownMenu>
                 <EnhancedTooltip content="Messages & SMS">
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                      <svg width="0" height="0" className="absolute">
-                        <defs>
-                          <linearGradient id="gw-bolt-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#38b6ff" />
-                            <stop offset="50%" stopColor="#8a5cf6" />
-                            <stop offset="100%" stopColor="#f042ff" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <Zap className={HEADER_ICON_SIZES.icon} stroke="url(#gw-bolt-gradient)" fill="url(#gw-bolt-gradient)" />
+                    <Button variant="ghost" size="sm" className={`gw-bolt-btn ${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                      <Zap
+                        className={HEADER_ICON_SIZES.icon}
+                        fill="currentColor"
+                      />
                     </Button>
                   </DropdownMenuTrigger>
                 </EnhancedTooltip>

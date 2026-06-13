@@ -183,9 +183,13 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
                 <button
                   key={m.id}
                   onClick={() => onModuleSelect(m.id)}
-                  className="text-left flex items-start gap-2 p-2.5 rounded-md border border-border bg-card shadow-sm hover:border-[hsl(var(--brand-blue-dark)/0.45)] hover:shadow transition-all"
+                  className="text-left flex items-start gap-2 p-2.5 rounded-md border border-border bg-card shadow-sm hover:shadow transition-all"
+                  style={{ borderColor: undefined }}
                 >
-                  <Icon className="h-4 w-4 mt-0.5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+                  <Icon
+                    className="h-4 w-4 mt-0.5 shrink-0"
+                    style={{ color: 'var(--site-accent, hsl(var(--brand-blue-dark)))' }}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-semibold text-foreground truncate">{m.title}</span>
@@ -254,7 +258,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
       {/* Premium course add-ons */}
       {courseStore && courseItems.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-[hsl(var(--brand-blue-dark))] mb-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] mb-3">
             Premium Courses <span className="text-muted-foreground">({courseItems.length})</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -262,9 +266,9 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
               <button
                 key={p.sku}
                 onClick={() => navigate(`/academy/templates/${p.template_course_id}`)}
-                className="text-left rounded-md border-2 border-[hsl(var(--brand-blue-dark)/0.35)] bg-card p-3 flex items-start gap-2 shadow-sm hover:border-[hsl(var(--brand-blue-dark)/0.6)] hover:shadow transition-all"
+                className="text-left rounded-md border-2 border-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] border-opacity-40 bg-card p-3 flex items-start gap-2 shadow-sm hover:border-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] hover:shadow transition-all"
               >
-                <GraduationCap className="h-4 w-4 mt-0.5 text-[hsl(var(--brand-blue-dark))] shrink-0" />
+                <GraduationCap className="h-4 w-4 mt-0.5 text-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-sm font-semibold text-foreground">{p.name}</span>
                   <p className="text-[11px] text-muted-foreground mt-0.5">

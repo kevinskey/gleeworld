@@ -2,7 +2,9 @@
 // signing in from the public site doesn't lose their place. The full /auth
 // page still exists for direct deep links — this is just the in-context UX.
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
+import { pickDestination } from '@/hooks/useRoleBasedRedirect';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +27,7 @@ interface Props {
 
 export function SignInDialog({ open, onOpenChange, onAuthenticated, primaryColor, primaryForeground }: Props) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,10 +50,24 @@ export function SignInDialog({ open, onOpenChange, onAuthenticated, primaryColor
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: session, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast({ title: 'Welcome back!' });
       onOpenChange(false);
+      // Route the newly-signed-in user to their role's destination so they
+      // don't sit on the public page wondering where the admin lives. Look
+      // up the profile by the freshly-returned user_id and use pickDestination,
+      // same logic the global useRoleBasedRedirect would apply.
+      const uid = session?.user?.id;
+      if (uid) {
+        const { data: prof } = await supabase
+          .from('gw_profiles')
+          .select('role, is_admin, is_super_admin')
+          .eq('user_id', uid)
+          .maybeSingle();
+        const dest = prof ? pickDestination(prof as any) : null;
+        if (dest) navigate(dest);
+      }
       onAuthenticated?.();
     } catch (err: any) {
       toast({ title: 'Sign in failed', description: err.message || 'Please try again.', variant: 'destructive' });
