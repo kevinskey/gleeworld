@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Calendar, ArrowRight, LogIn, Facebook, Instagram, Youtube, Music, Twitter, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -52,6 +53,7 @@ interface PublicEvent {
 
 export default function TenantLanding() {
   const { settings } = useBrandingSettings();
+  const { isAdmin } = useUserRole();
   const orgName = settings.org_name ?? settings.short_name ?? 'Welcome';
   const tagline = settings.tagline ?? '';
   const logo = settings.logo_url ?? '/lovable-uploads/gleeworld-logo.png?v=6';
@@ -181,12 +183,45 @@ export default function TenantLanding() {
             </div>
           )}
         </section>
+      ) : primaryHero ? (
+        <HeroSlideRender slide={primaryHero} fallbackTitle={`Welcome to ${orgName}`} fallbackBody={tagline || ''} accent={accent} />
       ) : (
-        <HeroSlideRender slide={primaryHero} fallbackTitle={`Welcome to ${orgName}`} fallbackBody={tagline || "This is your public landing page. Sign in as an admin to upload a hero image, write a tagline, and shape what visitors see first."} accent={accent} />
+        <section
+          className="relative overflow-hidden text-white"
+          style={{ background: `linear-gradient(160deg, hsl(var(--brand-navy)) 0%, hsl(var(--brand-navy)) 45%, ${accent} 150%)` }}
+        >
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `radial-gradient(80% 60% at 85% 10%, ${accent}33 0%, transparent 60%), radial-gradient(70% 50% at 10% 90%, rgba(255,255,255,0.08) 0%, transparent 55%)`,
+            }}
+          />
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white shadow-2xl mb-8 p-3">
+              <img src={logo} alt={orgName} className="w-full h-full object-contain" />
+            </div>
+            <h1 className="font-sans normal-case text-4xl sm:text-6xl font-bold tracking-tight mb-5 leading-tight">
+              {orgName}
+            </h1>
+            <p className="text-lg sm:text-2xl text-white/85 max-w-2xl mx-auto leading-relaxed mb-10">
+              {tagline || 'Music, community, and performance — all in one place.'}
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {events.length > 0 && (
+                <Button asChild size="lg" className="bg-white text-gray-900 hover:bg-white/90 rounded-full px-8">
+                  <a href="#events">Upcoming events <ArrowRight className="w-4 h-4 ml-1.5" /></a>
+                </Button>
+              )}
+              <Button asChild size="lg" variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white rounded-full px-8">
+                <Link to="/auth">Member sign in</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
       )}
 
-      {/* Admin onboarding strip — shown only when there's no hero set up yet */}
-      {!primaryHero && (
+      {/* Admin onboarding strip — admins only, when there's no hero set up yet */}
+      {!primaryHero && isAdmin() && (
         <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-10">
           <Card className="p-6 border-primary/30 bg-primary/5">
             <h3 className="font-semibold text-lg mb-1">First time here? Set up your landing page.</h3>
@@ -309,16 +344,16 @@ export default function TenantLanding() {
       {/* Upcoming events — only rendered if the tenant has public events */}
       {events.length > 0 && (
         <section id="events" className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
-            <Calendar className="w-6 h-6" style={{ color: accent }} /> Upcoming
+          <h2 className="font-sans normal-case tracking-tight text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
+            <Calendar className="w-6 h-6" style={{ color: accent }} /> Upcoming events
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {events.map((ev) => (
-              <Card key={ev.id} className="p-4 hover:shadow-lg transition">
-                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                  {new Date(ev.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              <Card key={ev.id} className="p-5 hover:shadow-lg transition">
+                <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: accent }}>
+                  {new Date(ev.start_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                 </div>
-                <h3 className="font-semibold mb-1">{ev.title}</h3>
+                <h3 className="font-sans normal-case font-semibold mb-1 leading-snug">{ev.title}</h3>
                 {ev.location && <p className="text-sm text-muted-foreground">{ev.location}</p>}
               </Card>
             ))}
