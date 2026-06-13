@@ -28,6 +28,8 @@ export interface SiteRenderContext {
   logoUrl: string | null;
   isPreview: boolean;
   activeAddons: string[];
+  /** Show a member sign-in link (set when the site renders on the tenant's own domain). */
+  memberSignIn?: boolean;
 }
 
 export interface BlockRenderProps<C = Record<string, unknown>> {

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Calendar, ArrowRight, LogIn, Facebook, Instagram, Youtube, Music, Twitter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
+import { PublicSiteView, type PublicSitePayload } from '@/components/public-site/PublicSiteView';
 
 interface HeroSlide {
   id: string;
@@ -60,6 +61,19 @@ export default function TenantLanding() {
   const accent = settings.primary_color ?? '#9333ea';
 
   const tenantSlug = (window as any).__TENANT_CONFIG__?.tenant;
+
+  // If this tenant has published a block-built site, that IS the landing page.
+  // The legacy hero/sections below only render as a fallback.
+  const { data: publicSite, isLoading: siteLoading } = useQuery<PublicSitePayload | null>({
+    queryKey: ['public-site', tenantSlug],
+    enabled: !!tenantSlug,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_tenant_public_site');
+      if (error) throw error;
+      return (data as PublicSitePayload) ?? null;
+    },
+  });
 
   // Hero slides for this tenant — read from the universal-slider system, which is
   // what the Hero Manager in /control-center edits. RLS keeps this scoped to the
@@ -136,6 +150,13 @@ export default function TenantLanding() {
   });
 
   const primaryHero = slides[0];
+
+  if (siteLoading) {
+    return <div className="min-h-screen bg-background" />;
+  }
+  if (publicSite) {
+    return <PublicSiteView data={publicSite} slug={publicSite.slug} memberSignIn />;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

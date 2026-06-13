@@ -32,6 +32,14 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
               {l.label}
             </a>
           ))}
+          {ctx.memberSignIn && (
+            <a
+              href="/login"
+              className="border border-white/30 rounded-full px-3 py-1 text-white/90 hover:bg-white/10 whitespace-nowrap"
+            >
+              Sign in
+            </a>
+          )}
         </nav>
       </div>
     </header>
