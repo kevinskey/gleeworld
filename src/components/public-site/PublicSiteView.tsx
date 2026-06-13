@@ -26,6 +26,33 @@ function setMeta(name: string, content: string, property = false) {
   el.setAttribute('content', content);
 }
 
+// Per-tenant favicon: point every <link rel="icon"> to the tenant's logo so
+// the browser tab shows their brand instead of the platform default. Adds a
+// fresh tagged link if none exists. Returns a restore function that puts the
+// default favicon back when the user navigates away from the public site.
+function setFavicon(url: string): () => void {
+  const head = document.head;
+  const existing = Array.from(head.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]'));
+  const previous = existing.map((el) => ({ el, href: el.href, type: el.type, sizes: el.getAttribute('sizes') }));
+  existing.forEach((el) => { el.href = url; el.type = url.endsWith('.svg') ? 'image/svg+xml' : 'image/png'; });
+  let added: HTMLLinkElement | null = null;
+  if (existing.length === 0) {
+    added = document.createElement('link');
+    added.rel = 'icon';
+    added.type = url.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+    added.href = url;
+    head.appendChild(added);
+  }
+  return () => {
+    previous.forEach(({ el, href, type, sizes }) => {
+      el.href = href;
+      el.type = type;
+      if (sizes) el.setAttribute('sizes', sizes);
+    });
+    if (added) head.removeChild(added);
+  };
+}
+
 export function PublicSiteView({
   data,
   slug,
@@ -60,6 +87,14 @@ export function PublicSiteView({
     const hero = (data.blocks ?? []).find((b) => b.block_type === 'hero');
     const ogImage = (hero?.config?.imageUrl as string) || data.logo_url;
     if (ogImage) setMeta('og:image', ogImage, true);
+    // Tab favicon follows the tenant's logo. Header block.config.logoUrl wins
+    // when set (lets a tenant pick a different mark for the tab), otherwise we
+    // fall back to gw_branding_settings.logo_url. Falls through to the
+    // platform default if neither is present.
+    const headerBlock = (data.blocks ?? []).find((b) => b.block_type === 'header');
+    const faviconUrl = (headerBlock?.config?.logoUrl as string | undefined) || data.logo_url;
+    const restore = faviconUrl ? setFavicon(faviconUrl) : null;
+    return () => { restore?.(); };
   }, [data, slug]);
 
   const blocks = [...(data.blocks ?? [])].sort((a, b) => a.position - b.position);

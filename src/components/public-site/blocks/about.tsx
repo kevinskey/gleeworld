@@ -62,7 +62,7 @@ function Render({ config }: BlockRenderProps<Config>) {
     />
   ) : null;
   return (
-    <section id="about" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+    <section id="about" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.title && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <Info className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />

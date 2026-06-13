@@ -32,6 +32,7 @@ import {
   Check,
   X,
   ChevronDown,
+  ExternalLink,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -453,6 +454,21 @@ export default function PublicPageEditor() {
             </div>
           </DialogContent>
         </Dialog>
+        {site.is_published && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Open the canonical public view (/sites/<slug>) in a fresh tab.
+              // The tenant root (/) redirects logged-in admins to the control
+              // center, so we deliberately use the public-only route here.
+              const url = `${window.location.origin}/sites/${site.slug}?_=${Date.now()}`;
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }}
+            title="Open your live site in a new tab"
+          >
+            <ExternalLink className="w-4 h-4 mr-1.5" /> View site
+          </Button>
+        )}
         {site.is_published && (
           <Button variant="outline" onClick={unpublish}>Unpublish</Button>
         )}

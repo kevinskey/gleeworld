@@ -154,8 +154,8 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section
       ref={sectionRef}
       id="top"
-      className={`relative overflow-hidden text-white ${hasImage ? '' : 'min-h-[40vh]'}`}
-      style={{ background: 'var(--site-primary)' }}
+      className={`relative overflow-hidden text-white max-w-6xl mx-auto px-4 sm:px-6 ${hasImage ? '' : 'min-h-[40vh]'}`}
+      style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the
           section's height comes from the image, never from the text overlay,

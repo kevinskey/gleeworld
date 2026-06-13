@@ -70,7 +70,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   const { fg, subFg, mutedFg } = readableOn(ctx.theme?.primaryColor || '#0f172a');
   return (
     <footer id="contact" className="mt-10" style={{ background: 'var(--site-primary)', color: fg }}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-center space-y-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-center space-y-4">
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm" style={{ color: subFg }}>
           {email && (
             <a href={`mailto:${email}`} className="inline-flex items-center gap-1.5 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>

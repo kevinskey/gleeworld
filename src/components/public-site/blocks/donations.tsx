@@ -12,7 +12,7 @@ type Config = z.infer<typeof schema>;
 // Stub: checkout wiring lands with the payments addon work.
 function Render({ config }: BlockRenderProps<Config>) {
   return (
-    <section id="donate" className="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-center">
+    <section id="donate" className="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-center">
       <div className="max-w-3xl mx-auto">
         <HandHeart className="w-10 h-10 mx-auto mb-4" style={{ color: 'var(--site-accent)' }} />
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-3">{config.heading}</h2>

@@ -30,10 +30,23 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
+// Pick black or white based on the primary color's perceived luminance so the
+// header text is always readable. We deliberately override any stored
+// navLinkColor — letting users pick caused white-on-white headers before.
+function readableForeground(hex: string): string {
+  const h = (hex || '').replace('#', '').trim();
+  if (h.length !== 6) return '#ffffff';
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 150 ? '#0f172a' : '#ffffff';
+}
+
 function Render({ config, ctx }: BlockRenderProps<Config>) {
   const name = config.siteName || ctx.orgName;
   const logo = config.logoUrl || ctx.logoUrl;
-  const linkColor = config.navLinkColor || '#ffffff';
+  const linkColor = readableForeground(ctx.theme?.primaryColor || '#0f172a');
   const logoHeight = config.logoHeight || 36;
   // Header bar height = logo + 16px breathing room each side, with a sensible floor.
   const barHeight = Math.max(56, logoHeight + 16);
@@ -186,19 +199,10 @@ function EditorForm({ config, onChange, theme, onThemeChange }: BlockEditorFormP
         </div>
       )}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Menu links</Label>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500">Color</span>
-            <input
-              type="color"
-              value={config.navLinkColor || '#ffffff'}
-              onChange={(e) => set({ navLinkColor: e.target.value })}
-              className="h-7 w-10 rounded border cursor-pointer"
-              title="Menu link text color"
-            />
-          </div>
-        </div>
+        <Label>Menu links</Label>
+        <p className="text-[11px] text-slate-500">
+          Text color is picked automatically (black or white) to stay readable on your primary color.
+        </p>
         {config.navLinks.length > 0 && (
           <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 text-[10px] uppercase tracking-wide text-slate-500 px-1">
             <span>Text</span>

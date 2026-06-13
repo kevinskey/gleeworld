@@ -23,7 +23,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   if (!config.heading && config.services.length === 0 && !config.bookingUrl) return null;
   const services = config.services.filter((s) => s.name);
   return (
-    <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+    <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <CalendarClock className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />

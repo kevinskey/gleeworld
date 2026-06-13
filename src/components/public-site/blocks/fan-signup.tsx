@@ -59,7 +59,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   };
 
   return (
-    <section id="fan-signup" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+    <section id="fan-signup" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <Heart className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />

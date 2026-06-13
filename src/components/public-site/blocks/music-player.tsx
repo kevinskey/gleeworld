@@ -21,7 +21,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   const tracks = config.tracks.filter((t) => t.url);
   if (tracks.length === 0) return null;
   return (
-    <section id="music" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+    <section id="music" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <Music className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
