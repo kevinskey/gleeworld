@@ -41,17 +41,28 @@ export function ImageUploadField({
   // Local blob preview avoids the DO Spaces CDN propagation race that can
   // briefly 404 a just-uploaded URL and cache it as a broken image.
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  // When a stored URL fails to load (CDN race, deleted file, browser cached a
+  // 404), fall back to the empty placeholder instead of leaving a broken-image
+  // icon in the form. Reset whenever the previewSrc changes.
+  const [imgError, setImgError] = useState(false);
   useEffect(() => () => { if (localPreview) URL.revokeObjectURL(localPreview); }, [localPreview]);
 
   const previewSrc = localPreview ?? value;
+  useEffect(() => { setImgError(false); }, [previewSrc]);
+  const showImage = !!previewSrc && !imgError;
 
   return (
     <div className="space-y-2">
       {label && <Label>{label}</Label>}
       <div className="flex items-center gap-3">
-        {previewSrc ? (
+        {showImage ? (
           <div className="relative bg-white border border-slate-200 rounded-lg p-2 shadow-sm shrink-0">
-            <img src={previewSrc} alt="" className={`${thumbClass} object-contain rounded`} />
+            <img
+              src={previewSrc}
+              alt=""
+              className={`${thumbClass} object-contain rounded`}
+              onError={() => setImgError(true)}
+            />
             <button
               type="button"
               onClick={() => { setLocalPreview(null); onChange(''); }}
@@ -65,6 +76,11 @@ export function ImageUploadField({
           <div className={`${thumbClass} bg-white border border-slate-300 border-dashed rounded-lg flex items-center justify-center text-slate-400 shrink-0`}>
             <ImageIcon className="w-7 h-7" />
           </div>
+        )}
+        {imgError && previewSrc && (
+          <p className="text-[11px] text-amber-700 max-w-[180px]">
+            Couldn&apos;t load the saved image. Try uploading it again.
+          </p>
         )}
         <label
           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-white text-xs font-medium cursor-pointer transition-opacity hover:opacity-90 whitespace-nowrap"

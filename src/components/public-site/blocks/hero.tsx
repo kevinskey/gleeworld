@@ -42,9 +42,16 @@ const schema = z.object({
     color: z.string().default('#ffffff'),
     size: z.number().int().min(12).max(36).default(18),
   })).default([]),
-  // Position of the text overlay as % of the hero section, 0–100. (50, 50) = centered.
+  // Position of the text overlay (headline + subheadline) as % of the hero
+  // section, 0–100. (50, 50) = centered.
   textX: z.number().min(0).max(100).default(50),
   textY: z.number().min(0).max(100).default(50),
+  // Buttons group can be repositioned independently of the text. Defaults to
+  // sitting just below the centered text. Old configs without these fields
+  // get the defaults via safeConfig — visually identical to the old behavior
+  // because the buttons used to sit directly under the text.
+  buttonsX: z.number().min(0).max(100).default(50),
+  buttonsY: z.number().min(0).max(100).default(70),
 });
 type Config = z.infer<typeof schema>;
 
@@ -66,49 +73,65 @@ function contrastText(bg: string): string {
 
 function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const [slide, setSlide] = useState(0);
+  const [imgFailed, setImgFailed] = useState(false);
   const slides = config.variant === 'slideshow' ? config.images.filter(Boolean) : [];
   useEffect(() => {
     if (slides.length < 2) return;
     const t = setInterval(() => setSlide((s) => (s + 1) % slides.length), 5000);
     return () => clearInterval(t);
   }, [slides.length]);
+  useEffect(() => { setImgFailed(false); }, [config.imageUrl, slides[slide]]);
 
-  // Drag-to-reposition the text overlay. Only active in the editor preview
-  // (onConfigChange is provided). Stored as % of the section so the position
-  // stays consistent across screen sizes.
+  // Drag-to-reposition for the two independently movable overlay groups
+  // (text and buttons). Only active in the editor preview (onConfigChange is
+  // provided). Positions are stored as % of the section so they remain stable
+  // across screen sizes. `dragging` tracks which group is currently in motion
+  // so we can switch the cursor + suppress the other group's pointer events.
   const sectionRef = useRef<HTMLElement>(null);
-  const dragRef = useRef<{ x: number; y: number; sx: number; sy: number; rect: DOMRect } | null>(null);
-  const [isDragging, setDragging] = useState(false);
+  const dragRef = useRef<{
+    target: 'text' | 'buttons';
+    x: number; y: number;
+    sx: number; sy: number;
+    rect: DOMRect;
+  } | null>(null);
+  const [dragging, setDragging] = useState<'text' | 'buttons' | null>(null);
   const draggable = !!onConfigChange;
 
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (!draggable || !sectionRef.current) return;
-    const rect = sectionRef.current.getBoundingClientRect();
-    dragRef.current = {
-      x: e.clientX, y: e.clientY,
-      sx: config.textX ?? 50, sy: config.textY ?? 50,
-      rect,
-    };
-    setDragging(true);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    const s = dragRef.current;
-    if (!s) return;
-    const dxPct = ((e.clientX - s.x) / s.rect.width) * 100;
-    const dyPct = ((e.clientY - s.y) / s.rect.height) * 100;
-    const newX = Math.max(0, Math.min(100, s.sx + dxPct));
-    const newY = Math.max(0, Math.min(100, s.sy + dyPct));
-    onConfigChange?.({ textX: newX, textY: newY } as Partial<Config>);
-  };
-  const onPointerUp = (e: React.PointerEvent) => {
-    if (!dragRef.current) return;
-    dragRef.current = null;
-    setDragging(false);
-    try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
-  };
+  const makePointerHandlers = (target: 'text' | 'buttons') => ({
+    onPointerDown: (e: React.PointerEvent) => {
+      if (!draggable || !sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      const sx = target === 'text' ? (config.textX ?? 50) : (config.buttonsX ?? 50);
+      const sy = target === 'text' ? (config.textY ?? 50) : (config.buttonsY ?? 70);
+      dragRef.current = { target, x: e.clientX, y: e.clientY, sx, sy, rect };
+      setDragging(target);
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      const s = dragRef.current;
+      if (!s || s.target !== target) return;
+      const dxPct = ((e.clientX - s.x) / s.rect.width) * 100;
+      const dyPct = ((e.clientY - s.y) / s.rect.height) * 100;
+      const newX = Math.max(0, Math.min(100, s.sx + dxPct));
+      const newY = Math.max(0, Math.min(100, s.sy + dyPct));
+      onConfigChange?.(
+        target === 'text'
+          ? ({ textX: newX, textY: newY } as Partial<Config>)
+          : ({ buttonsX: newX, buttonsY: newY } as Partial<Config>),
+      );
+    },
+    onPointerUp: (e: React.PointerEvent) => {
+      if (!dragRef.current || dragRef.current.target !== target) return;
+      dragRef.current = null;
+      setDragging(null);
+      try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
+    },
+  });
+  const textDrag = makePointerHandlers('text');
+  const buttonsDrag = makePointerHandlers('buttons');
 
-  const bgImage = config.variant === 'image' ? config.imageUrl : slides[slide];
+  const rawBgImage = config.variant === 'image' ? config.imageUrl : slides[slide];
+  const bgImage = imgFailed ? '' : rawBgImage;
   const embed = config.variant === 'video' ? youtubeEmbed(config.videoUrl) : null;
   const masterOn = config.showTextOverlay !== false;
   // Each text element has its own visibility flag too. They only matter when
@@ -125,7 +148,6 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
         : []);
   const showCta = masterOn && config.showCta !== false && allButtons.length > 0;
   const showUnderlay = masterOn && config.showUnderlay !== false;
-  const anyText = showHeadline || showSubheadline || showCta;
   const hasImage = !!bgImage;
 
   return (
@@ -139,7 +161,13 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           section's height comes from the image, never from the text overlay,
           so toggling text on/off can't crop the graphic. */}
       {hasImage && (
-        <img src={bgImage} alt="" className="block w-full h-auto" loading="eager" />
+        <img
+          src={bgImage}
+          alt=""
+          className="block w-full h-auto"
+          loading="eager"
+          onError={() => setImgFailed(true)}
+        />
       )}
       {hasImage && showUnderlay && (
         <div
@@ -153,10 +181,30 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           style={{ background: 'radial-gradient(90% 70% at 85% 10%, var(--site-accent) 0%, transparent 55%)' }}
         />
       )}
-      {(anyText || embed) && (
+      {embed && (
         <div
-          className={`text-center ${hasImage ? 'absolute' : 'relative py-20 sm:py-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
-            draggable && hasImage ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : ''
+          className={`text-center ${hasImage ? 'absolute' : 'relative py-20 sm:py-28 max-w-5xl mx-auto px-4 sm:px-6'}`}
+          style={
+            hasImage
+              ? {
+                  left: `${config.textX ?? 50}%`,
+                  top: `${config.textY ?? 50}%`,
+                  transform: 'translate(-50%, -50%)',
+                  width: 'max-content',
+                  maxWidth: '100%',
+                }
+              : undefined
+          }
+        >
+          <div className="aspect-video max-w-3xl mx-auto rounded-xl overflow-hidden shadow-2xl">
+            <iframe src={embed} className="w-full h-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+          </div>
+        </div>
+      )}
+      {(showHeadline || showSubheadline) && (
+        <div
+          className={`text-center ${hasImage ? 'absolute' : 'relative pt-20 sm:pt-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+            draggable && hasImage ? (dragging === 'text' ? 'cursor-grabbing' : 'cursor-grab') : ''
           }`}
           style={
             hasImage
@@ -171,16 +219,11 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
                 }
               : undefined
           }
-          onPointerDown={hasImage ? onPointerDown : undefined}
-          onPointerMove={hasImage ? onPointerMove : undefined}
-          onPointerUp={hasImage ? onPointerUp : undefined}
-          onPointerCancel={hasImage ? onPointerUp : undefined}
+          onPointerDown={hasImage ? textDrag.onPointerDown : undefined}
+          onPointerMove={hasImage ? textDrag.onPointerMove : undefined}
+          onPointerUp={hasImage ? textDrag.onPointerUp : undefined}
+          onPointerCancel={hasImage ? textDrag.onPointerUp : undefined}
         >
-          {embed && (
-            <div className="aspect-video max-w-3xl mx-auto mb-8 rounded-xl overflow-hidden shadow-2xl">
-              <iframe src={embed} className="w-full h-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
-            </div>
-          )}
           {showHeadline && (
             <h1
               className="normal-case font-bold mb-4 leading-tight drop-shadow"
@@ -204,34 +247,62 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
               {config.subheadline}
             </p>
           )}
-          {showCta && (
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              {allButtons.map((btn, i) => (
-                <Button
-                  key={i}
-                  asChild
-                  size="lg"
-                  className="rounded-full px-8 py-6 hover:opacity-90 transition-opacity"
-                  style={{
-                    backgroundColor: btn.color || '#ffffff',
-                    color: contrastText(btn.color || '#ffffff'),
-                    fontSize: `${btn.size ?? 18}px`,
-                  }}
-                >
-                  <a
-                    href={btn.url}
-                    draggable={false}
-                    onClick={draggable ? (e) => e.preventDefault() : undefined}
-                  >
-                    {btn.label}
-                  </a>
-                </Button>
-              ))}
+          {draggable && hasImage && (
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-slate-900/80 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none select-none">
+              Drag text
             </div>
           )}
-          {draggable && hasImage && anyText && (
+        </div>
+      )}
+      {showCta && (
+        <div
+          className={`text-center ${hasImage ? 'absolute' : 'relative pb-20 sm:pb-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+            draggable && hasImage ? (dragging === 'buttons' ? 'cursor-grabbing' : 'cursor-grab') : ''
+          }`}
+          style={
+            hasImage
+              ? {
+                  left: `${config.buttonsX ?? 50}%`,
+                  top: `${config.buttonsY ?? 70}%`,
+                  transform: 'translate(-50%, -50%)',
+                  padding: '0 1rem',
+                  width: 'max-content',
+                  maxWidth: '100%',
+                  touchAction: draggable ? 'none' : undefined,
+                }
+              : undefined
+          }
+          onPointerDown={hasImage ? buttonsDrag.onPointerDown : undefined}
+          onPointerMove={hasImage ? buttonsDrag.onPointerMove : undefined}
+          onPointerUp={hasImage ? buttonsDrag.onPointerUp : undefined}
+          onPointerCancel={hasImage ? buttonsDrag.onPointerUp : undefined}
+        >
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {allButtons.map((btn, i) => (
+              <Button
+                key={i}
+                asChild
+                size="lg"
+                className="rounded-full px-8 py-6 hover:opacity-90 transition-opacity"
+                style={{
+                  backgroundColor: btn.color || '#ffffff',
+                  color: contrastText(btn.color || '#ffffff'),
+                  fontSize: `${btn.size ?? 18}px`,
+                }}
+              >
+                <a
+                  href={btn.url}
+                  draggable={false}
+                  onClick={draggable ? (e) => e.preventDefault() : undefined}
+                >
+                  {btn.label}
+                </a>
+              </Button>
+            ))}
+          </div>
+          {draggable && hasImage && (
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-slate-900/80 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none select-none">
-              Drag to reposition
+              Drag buttons
             </div>
           )}
         </div>
@@ -503,14 +574,14 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
               />
               <div className="flex items-center justify-between pt-1 border-t border-slate-200">
                 <span className="text-xs text-slate-500">
-                  Drag the text on the preview to reposition it.
+                  Drag the text and buttons separately on the preview.
                 </span>
                 <button
                   type="button"
-                  onClick={() => set({ textX: 50, textY: 50 })}
+                  onClick={() => set({ textX: 50, textY: 50, buttonsX: 50, buttonsY: 70 })}
                   className="text-xs text-sky-600 hover:underline"
                 >
-                  Reset to center
+                  Reset positions
                 </button>
               </div>
             </div>
@@ -604,6 +675,7 @@ export const heroBlock: BlockModule<typeof schema> = {
     headlineSize: 60, subheadlineSize: 22, ctaSize: 18,
     buttons: [],
     textX: 50, textY: 50,
+    buttonsX: 50, buttonsY: 70,
   },
   EditorForm,
   Render,
