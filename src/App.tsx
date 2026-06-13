@@ -198,6 +198,8 @@ import PRHubPage from "./pages/PRHubPage";
 import ModulesDirectory from "./pages/ModulesDirectory";
 const SharedAnnotation = lazy(() => import("./pages/SharedAnnotation").then(m => ({ default: m.SharedAnnotation })));
 const ReadMusic = lazy(() => import("./features/read-music/ReadMusic"));
+const PublicPageEditor = lazy(() => import("./pages/admin/PublicPageEditor"));
+const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
 import UserManagement from "./pages/UserManagement";
@@ -712,6 +714,19 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              {/* Public landing page builder for tenants */}
+              <Route
+                path="/admin/public-page"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <PublicPageEditor />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* Published tenant public sites — no auth */}
+              <Route path="/sites/:slug" element={<PublicSitePage />} />
               <Route
                 path="/admin/ai-rehearsal"
                 element={
