@@ -11,7 +11,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import gleeWorldLogoCircle from '@/assets/glee-world-logo-circle.png';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { getOrgName } from '@/lib/orgName';
-const authBackground = '/lovable-uploads/1e93a440-6349-4948-a145-7b55dedea9fc.png';
+// The legacy 2 MB concert photo was the single biggest contributor to the
+// /auth page's slow paint. Replaced with a CSS gradient — same visual feel,
+// zero network bytes.
+const authBackgroundStyle: React.CSSProperties = {
+  background:
+    'linear-gradient(135deg, hsl(220, 60%, 12%) 0%, hsl(265, 50%, 18%) 50%, hsl(290, 45%, 20%) 100%)',
+};
 export default function AuthPage() {
   const {
     user,
@@ -152,9 +158,7 @@ export default function AuthPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative auth-page" style={{
-      backgroundImage: `url(${authBackground})`
-    }}>
+    return <div className="min-h-screen flex items-center justify-center relative auth-page" style={authBackgroundStyle}>
         <div className="absolute inset-0 bg-black/60" />
         <div className="text-center relative z-10">
           <img src={gleeWorldLogoCircle} alt="Loading" className="h-12 w-12 mx-auto mb-4 animate-pulse" />
@@ -162,19 +166,11 @@ export default function AuthPage() {
         </div>
       </div>;
   }
-  return <div className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] auth-page" style={{
-    backgroundImage: `url(${authBackground})`,
+  return <div className="min-h-screen relative flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] auth-page" style={{
+    ...authBackgroundStyle,
     paddingLeft: 'max(1rem, env(safe-area-inset-left))',
     paddingRight: 'max(1rem, env(safe-area-inset-right))'
   }}>
-      {/* Background Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
-      
-      {/* Floating Background Elements */}
-      <div className="absolute top-20 left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl animate-pulse" />
-      <div className="absolute bottom-20 right-10 w-48 h-48 bg-primary/10 rounded-full blur-3xl animate-pulse delay-1000" />
-      <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-accent/5 rounded-full blur-xl animate-pulse delay-500" />
-      
       {/* Back Button */}
       <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="absolute z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300" style={{
       top: 'max(1.5rem, calc(env(safe-area-inset-top) + 0.5rem))',

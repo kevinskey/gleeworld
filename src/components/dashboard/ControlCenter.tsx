@@ -16,6 +16,7 @@ import { isNativeApp } from '@/lib/nativeTenant';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useCourseProducts, LEVEL_LABEL } from '@/hooks/useCourseStore';
 import { OnboardingChecklist } from './OnboardingChecklist';
+import { CreateTenantDialog } from '@/components/admin/CreateTenantDialog';
 
 interface ControlCenterProps {
   onModuleSelect: (moduleId: string) => void;
@@ -27,6 +28,11 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const isSuperAdmin = !!userProfile?.is_super_admin;
+  // Platform super-admin (can create tenants) requires being on the main
+  // tenant — being super-admin of demo, etc. doesn't qualify. The bootstrap
+  // exposes the current tenant slug via window.__TENANT_CONFIG__.
+  const tenantSlug = (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__?.tenant) || null;
+  const isPlatformAdmin = isSuperAdmin && tenantSlug === 'main';
   const [query, setQuery] = useState('');
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const { data: tenantModules = [] } = useTenantModules();
@@ -154,6 +160,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
             <Shield className="h-4 w-4 mr-2" />
             Permissions
           </Button>
+          {isPlatformAdmin && <CreateTenantDialog />}
         </div>
       </div>
 

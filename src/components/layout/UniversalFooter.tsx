@@ -20,7 +20,7 @@ export const UniversalFooter = () => {
   const navigate = useNavigate();
   const { settings: branding } = useBrandingSettings();
   const { data: publicSite } = useQuery<{ theme?: { primaryColor?: string }; org_name?: string } | null>({
-    queryKey: ['universal-footer-public-site'],
+    queryKey: ['tenant-public-site'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_tenant_public_site');

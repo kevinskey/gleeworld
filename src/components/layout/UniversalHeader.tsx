@@ -56,7 +56,7 @@ export const UniversalHeader = ({
   // builder) when gw_branding_settings.logo_url is empty — most tenants
   // upload their logo there now, not in legacy site-setup.
   const { data: publicSite } = useQuery<{ blocks?: Array<{ block_type: string; config?: { logoUrl?: string; siteName?: string } }> } | null>({
-    queryKey: ['universal-header-public-site'],
+    queryKey: ['tenant-public-site'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_tenant_public_site');
@@ -274,7 +274,7 @@ export const UniversalHeader = ({
             color: headerFg || undefined,
             borderBottom: sitePrimary ? `2px solid var(--site-accent)` : undefined,
           }}
-          className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative ${sitePrimary ? '' : 'bg-[hsl(var(--brand-navy))] text-white'} backdrop-blur-md ${sitePrimary ? '' : `border-b border-white/[0.08] ${user ? getRoleAccentColor() : 'border-b border-white/20'}`} [&_button]:transition-shadow [&_button]:duration-300 [&_button>svg]:opacity-90 [&_button:hover>svg]:opacity-100 ${sitePrimary ? '[&_button>svg]:!text-[#0f172a] [&_a>svg]:!text-[#0f172a] [&_.gw-bolt-btn>svg]:!text-[color:var(--site-accent)]' : ''}`}
+          className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative ${sitePrimary ? '' : 'bg-[hsl(var(--brand-navy))] text-white'} backdrop-blur-md ${sitePrimary ? '' : `border-b border-white/[0.08] ${user ? getRoleAccentColor() : 'border-b border-white/20'}`} [&_button]:transition-shadow [&_button]:duration-300 ${sitePrimary ? '[&_button>svg]:!text-[#0f172a] [&_a>svg]:!text-[#0f172a] [&_.gw-bolt-btn>svg]:!text-[color:var(--site-accent)]' : '[&_button>svg]:!text-white/85 [&_a>svg]:!text-white/85 [&_button:hover>svg]:!text-white'}`}
         >
           <div className="flex items-center justify-between w-full h-14 sm:h-16 md:h-18 px-2 sm:px-3 md:px-4 lg:px-6">
           {/* Logo and Navigation */}

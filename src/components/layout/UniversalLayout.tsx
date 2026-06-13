@@ -81,7 +81,7 @@ export const UniversalLayout = ({
   // Pull the tenant's public-site theme so the admin shell stays in lockstep
   // with the brand colors the user picked in the page builder.
   const { data: publicSite } = useQuery<{ theme?: { primaryColor?: string; accentColor?: string } } | null>({
-    queryKey: ['universal-layout-public-site'],
+    queryKey: ['tenant-public-site'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_tenant_public_site');

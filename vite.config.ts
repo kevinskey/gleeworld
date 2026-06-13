@@ -42,5 +42,23 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   server: { port: 8080, host: '::' },
-  build: { outDir: 'dist' },
+  build: {
+    outDir: 'dist',
+    // Code-split only the heavy libs that aren't on the critical render path.
+    // Splitting React itself or anything React-adjacent (react-dom, radix, etc.)
+    // into separate chunks can break load order — the chunk that uses React
+    // initializes before React's module ever runs. Keep those bundled together
+    // in the main entry, just pull verovio + heic2any (multi-MB) out.
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('verovio')) return 'verovio';
+          if (id.includes('heic2any')) return 'heic2any';
+          return undefined;
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1500,
+  },
 });

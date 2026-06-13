@@ -123,7 +123,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               if (session && expectedTenant) {
                 try {
                   const p = session.access_token.split('.')[1];
-                  const padded = p + '='.repeat((-p.length) % 4);
+                  // JS `%` keeps the sign of the dividend — `(-len) % 4` gives a
+                  // *negative* count for any non-multiple of 4. Use the
+                  // canonical base64-padding formula instead.
+                  const padded = p + '='.repeat((4 - (p.length % 4)) % 4);
                   const claims = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')));
                   if (claims.tenant_slug && claims.tenant_slug !== expectedTenant) {
                     console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Signing out.`);
