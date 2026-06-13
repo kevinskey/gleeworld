@@ -63,6 +63,17 @@ interface SiteRow {
   published_at: string | null;
 }
 
+// Returns true when any value in the config tree is a browser blob: URL.
+// Used to skip DB persistence during an in-progress upload — the value gets
+// replaced with the real public URL once the upload completes and the URL
+// is verified reachable.
+function containsBlobUrl(v: unknown): boolean {
+  if (typeof v === 'string') return v.startsWith('blob:');
+  if (Array.isArray(v)) return v.some(containsBlobUrl);
+  if (v && typeof v === 'object') return Object.values(v as Record<string, unknown>).some(containsBlobUrl);
+  return false;
+}
+
 function SortableBlockRow({
   block,
   selected,
@@ -252,6 +263,15 @@ export default function PublicPageEditor() {
 
   const updateConfig = (id: string, config: Record<string, unknown>) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, config } : b)));
+    // Skip persistence when any value is a transient blob: URL — that's a
+    // browser-only object URL from an in-progress upload. Saving it would
+    // store a dead reference that 404s on next page load. The follow-up
+    // onChange(realUrl) (once the public URL is reachable) will trigger
+    // this save path with proper persistable values.
+    if (containsBlobUrl(config)) {
+      clearTimeout(saveTimers.current[id]);
+      return;
+    }
     clearTimeout(saveTimers.current[id]);
     saveTimers.current[id] = setTimeout(async () => {
       const { error } = await supabase.from('gw_site_blocks').update({ config }).eq('id', id);

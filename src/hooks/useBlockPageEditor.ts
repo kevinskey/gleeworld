@@ -10,6 +10,15 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { getBlockModule } from '@/components/public-site/registry';
 import { themeSchema, type SiteBlock, type SiteTheme } from '@/components/public-site/types';
 
+// Returns true when any value in the config tree is a browser blob: URL.
+// Lets the editor skip DB persistence during an in-progress upload.
+function containsBlobUrl(v: unknown): boolean {
+  if (typeof v === 'string') return v.startsWith('blob:');
+  if (Array.isArray(v)) return v.some(containsBlobUrl);
+  if (v && typeof v === 'object') return Object.values(v as Record<string, unknown>).some(containsBlobUrl);
+  return false;
+}
+
 export interface BlockPageEditorOptions {
   /** Postgres table holding the published-site row (with theme/published_blocks). */
   pageTable: string;
@@ -113,6 +122,12 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
 
   const updateConfig = (id: string, config: Record<string, unknown>) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, config } : b)));
+    // Don't persist transient blob: URLs (in-progress uploads). The follow-up
+    // call with the real public URL will hit this path and trigger the save.
+    if (containsBlobUrl(config)) {
+      clearTimeout(saveTimers.current[id]);
+      return;
+    }
     clearTimeout(saveTimers.current[id]);
     saveTimers.current[id] = setTimeout(async () => {
       const { error } = await supabase.from(opts.blocksTable).update({ config }).eq('id', id);

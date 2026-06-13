@@ -73,6 +73,23 @@ export function MediaPicker({ open, onOpenChange, accept, onPick }: Props) {
       return;
     }
     const publicUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
+    // Wait for the public path to actually serve before we hand the URL back —
+    // Storage 1.48 + flatten cron means there's a 5-10s window where the URL
+    // still 404s. Without this the music/video block briefly shows a broken
+    // file before the cron catches up.
+    {
+      const start = Date.now();
+      const delays = [500, 800, 1500, 2500, 3500, 5000];
+      let attempt = 0;
+      while (Date.now() - start < 30000) {
+        try {
+          const res = await fetch(publicUrl, { method: 'HEAD', cache: 'no-store' });
+          if (res.ok) break;
+        } catch { /* retry */ }
+        await new Promise((r) => setTimeout(r, delays[Math.min(attempt, delays.length - 1)]));
+        attempt += 1;
+      }
+    }
     const title = file.name.replace(/\.[^.]+$/, '');
     const { data: row, error: insertErr } = await supabase
       .from('gw_media_library')

@@ -22,6 +22,26 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
   return supabase.storage.from('site-branding').getPublicUrl(path).data.publicUrl;
 }
 
+// Self-hosted Supabase Storage 1.48 writes objects to a stub/ path that takes
+// 5-10s to be flattened to the public path by a background cron. During that
+// window the public URL returns 404 — so we poll the URL until it actually
+// serves before handing it back. The caller keeps the local blob preview up
+// the whole time, so the user never sees a broken image.
+async function waitForUrlReachable(url: string, timeoutMs = 30000): Promise<boolean> {
+  const start = Date.now();
+  const delays = [400, 600, 800, 1200, 1800, 2500, 3500, 5000];
+  let attempt = 0;
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+      if (res.ok) return true;
+    } catch { /* network error — retry */ }
+    await new Promise((r) => setTimeout(r, delays[Math.min(attempt, delays.length - 1)]));
+    attempt += 1;
+  }
+  return false;
+}
+
 interface Props {
   value: string;
   onChange: (url: string) => void;
@@ -99,10 +119,21 @@ export function ImageUploadField({
               if (!file) return;
               const blobUrl = URL.createObjectURL(file);
               setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return blobUrl; });
+              // Push the blob URL through onChange immediately so the LIVE
+              // preview pane (not just this form's thumbnail) shows the image
+              // right away. The editor's updateConfig skips DB writes for
+              // blob: URLs so this never leaks into saved state.
+              onChange(blobUrl);
               setUploading(true);
               const url = await uploadToSiteBranding(file, prefix);
+              if (url) {
+                // Wait until the public URL actually serves (typically 5-10s
+                // on self-hosted Supabase Storage 1.48 due to the stub/ → flat
+                // path flatten cron), then swap blob for real URL.
+                await waitForUrlReachable(url);
+                onChange(url);
+              }
               setUploading(false);
-              if (url) onChange(url);
             }}
           />
         </label>
