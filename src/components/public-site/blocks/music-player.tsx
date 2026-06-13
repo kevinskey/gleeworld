@@ -21,14 +21,14 @@ function Render({ config }: BlockRenderProps<Config>) {
   const tracks = config.tracks.filter((t) => t.url);
   if (tracks.length === 0) return null;
   return (
-    <section id="music" className="max-w-3xl mx-auto px-4 sm:px-6 py-14">
+    <section id="music" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
       {config.heading && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <Music className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
       )}
-      <div className="space-y-4">
+      <div className="space-y-4 max-w-3xl">
         {tracks.map((t, i) => (
           <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
             {(t.title || t.artist) && (

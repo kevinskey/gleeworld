@@ -18,6 +18,7 @@ import { alumniSpotlightBlock } from './blocks/alumni-spotlight';
 import { appointmentBookingBlock } from './blocks/appointment-booking';
 import { pressBlock } from './blocks/press';
 import { supportBlock } from './blocks/support';
+import { fanSignupBlock } from './blocks/fan-signup';
 
 export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [headerBlock.type]: headerBlock,
@@ -31,6 +32,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [staffBlock.type]: staffBlock,
   [pressBlock.type]: pressBlock,
   [supportBlock.type]: supportBlock,
+  [fanSignupBlock.type]: fanSignupBlock,
   [contactBlock.type]: contactBlock,
   [donationsBlock.type]: donationsBlock,
   [merchBlock.type]: merchBlock,

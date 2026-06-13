@@ -31,7 +31,6 @@ import {
   Trash2,
   Check,
   X,
-  ExternalLink,
   ChevronDown,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -422,18 +421,9 @@ export default function PublicPageEditor() {
         <div className="flex-1 min-w-[200px]">
           <h1 className="font-sans normal-case tracking-tight text-2xl font-bold">Public page</h1>
           <p className="text-sm text-muted-foreground">
-            {site.is_published ? (
-              <a
-                href={`/sites/${site.slug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-primary hover:underline"
-              >
-                Live at /sites/{site.slug} <ExternalLink className="w-3 h-3" />
-              </a>
-            ) : (
-              'Not published yet — only you can see this.'
-            )}
+            {site.is_published
+              ? 'Published — visitors see the latest version on your site.'
+              : 'Not published yet — only you can see this.'}
           </p>
         </div>
         <Badge variant={site.is_published ? 'default' : 'secondary'}>

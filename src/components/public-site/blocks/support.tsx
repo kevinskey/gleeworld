@@ -33,7 +33,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   if (!showCampaign && sponsors.length === 0) return null;
   const pct = Math.max(0, Math.min(100, config.campaign.progressPercent ?? 0));
   return (
-    <section id="support" className="max-w-5xl mx-auto px-4 sm:px-6 py-14">
+    <section id="support" className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
       {config.heading && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <HeartHandshake className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
