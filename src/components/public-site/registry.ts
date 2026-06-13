@@ -19,6 +19,7 @@ import { appointmentBookingBlock } from './blocks/appointment-booking';
 import { pressBlock } from './blocks/press';
 import { supportBlock } from './blocks/support';
 import { fanSignupBlock } from './blocks/fan-signup';
+import { liturgicalCalendarBlock } from './blocks/liturgical-calendar';
 
 export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [headerBlock.type]: headerBlock,
@@ -33,6 +34,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [pressBlock.type]: pressBlock,
   [supportBlock.type]: supportBlock,
   [fanSignupBlock.type]: fanSignupBlock,
+  [liturgicalCalendarBlock.type]: liturgicalCalendarBlock,
   [contactBlock.type]: contactBlock,
   [donationsBlock.type]: donationsBlock,
   [merchBlock.type]: merchBlock,
