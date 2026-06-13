@@ -151,7 +151,8 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
   const addBlock = async (type: string) => {
     const mod = getBlockModule(type);
     if (!mod) return;
-    const position = blocks.length;
+    // Avoid position collisions after deletes — use max+1 not blocks.length.
+    const position = blocks.length === 0 ? 0 : Math.max(...blocks.map((b) => b.position)) + 1;
     const { data, error } = await supabase
       .from(opts.blocksTable)
       .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true })

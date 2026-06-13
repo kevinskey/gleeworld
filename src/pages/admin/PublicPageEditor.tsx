@@ -295,7 +295,9 @@ export default function PublicPageEditor() {
   const addBlock = async (type: string) => {
     const mod = getBlockModule(type);
     if (!mod) return;
-    const position = blocks.length;
+    // Use max(existing position) + 1 instead of blocks.length so deletions +
+    // re-adds don't collide. Falls back to 0 when there are no blocks yet.
+    const position = blocks.length === 0 ? 0 : Math.max(...blocks.map((b) => b.position)) + 1;
     const { data, error } = await supabase
       .from('gw_site_blocks')
       .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true })
