@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import { ImageUploadField } from '../ImageUploadField';
+import { SignInDialog } from '@/components/auth/SignInDialog';
 import { FONT_OPTIONS, type BlockModule, type BlockEditorFormProps, type BlockRenderProps, type SiteTheme } from '../types';
 
 // Friendly names for the on-page anchor targets that ship as built-in blocks.
@@ -52,6 +53,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   // Header bar height = logo + 16px breathing room each side, with a sensible floor.
   const barHeight = Math.max(56, logoHeight + 16);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
   // Auto-close the mobile menu if the viewport grows past the sm breakpoint so
   // a re-resize doesn't leave a stale open panel.
   useEffect(() => {
@@ -77,14 +79,18 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         </a>
       ))}
       {ctx.memberSignIn && (
-        <a
-          href="/auth"
-          onClick={() => setMenuOpen(false)}
-          className="rounded-full px-3 py-1 whitespace-nowrap border opacity-90 hover:opacity-100 hover:bg-white/10 transition-opacity"
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            setMenuOpen(false);
+            setSignInOpen(true);
+          }}
+          className="rounded-full px-3 py-1 whitespace-nowrap border opacity-90 hover:opacity-100 hover:bg-white/10 transition-opacity text-sm"
           style={{ color: linkColor, borderColor: linkColor + '4d' }}
         >
           Sign in
-        </a>
+        </button>
       )}
     </>
   );
@@ -145,17 +151,27 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
               </a>
             ))}
             {ctx.memberSignIn && (
-              <a
-                href="/auth"
-                onClick={() => setMenuOpen(false)}
-                className="py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors border-t border-slate-200 mt-1 pt-3"
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMenuOpen(false);
+                  setSignInOpen(true);
+                }}
+                className="py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors border-t border-slate-200 mt-1 pt-3 text-left"
               >
                 Sign in
-              </a>
+              </button>
             )}
           </nav>
         </div>
       )}
+      <SignInDialog
+        open={signInOpen}
+        onOpenChange={setSignInOpen}
+        primaryColor={ctx.theme?.primaryColor}
+        primaryForeground={linkColor}
+      />
     </header>
   );
 }
