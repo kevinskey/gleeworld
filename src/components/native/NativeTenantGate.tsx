@@ -5,6 +5,11 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 const KEY = 'gw_native_tenant';
 
+const DEMO_SLUG = 'demo';
+// Public tap-to-explore account (also given to App Review) — not a secret.
+const DEMO_EMAIL = 'demo@gleeworld.org';
+const DEMO_PASSWORD = 'GleeDemo2026!';
+
 interface TenantOption {
   slug: string;
   name: string;
@@ -27,7 +32,9 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
     isNativeApp() && !(window as unknown as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant;
 
   const [tenants, setTenants] = useState<TenantOption[] | null>(null);
+  const [demo, setDemo] = useState<TenantOption | null>(null);
   const [error, setError] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   useEffect(() => {
     if (!needsPick) return;
@@ -41,13 +48,26 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
           setError(true);
           return;
         }
-        if (data.length === 1) {
-          selectTenant(data[0]);
+        const demoTenant = data.find(t => t.slug === DEMO_SLUG) ?? null;
+        const orgs = data.filter(t => t.slug !== DEMO_SLUG);
+        if (orgs.length === 1 && !demoTenant) {
+          selectTenant(orgs[0]);
           return;
         }
-        setTenants(data);
+        setDemo(demoTenant);
+        setTenants(orgs);
       });
   }, [needsPick]);
+
+  const tryDemo = async () => {
+    if (!demo || demoLoading) return;
+    setDemoLoading(true);
+    // Sign in first so the session is persisted before the tenant-select reload.
+    await supabase.auth
+      .signInWithPassword({ email: DEMO_EMAIL, password: DEMO_PASSWORD })
+      .catch(() => {});
+    selectTenant(demo);
+  };
 
   if (!needsPick) return <>{children}</>;
 
@@ -85,6 +105,22 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
                 {t.name}
               </button>
             ))}
+
+            {demo && (
+              <div className="pt-4 text-center">
+                <p className="text-sm text-slate-500 mb-2">Just exploring?</p>
+                <button
+                  onClick={tryDemo}
+                  disabled={demoLoading}
+                  className="w-full px-5 py-4 rounded-xl bg-slate-900 text-white font-medium disabled:opacity-60"
+                >
+                  {demoLoading ? 'Opening the demo…' : 'Try the demo choir'}
+                </button>
+                <p className="text-xs text-slate-400 mt-2">
+                  Explore GleeWorld with sample data — no account needed.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
