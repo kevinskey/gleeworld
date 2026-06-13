@@ -128,7 +128,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   // canonical base64-padding formula instead.
                   const padded = p + '='.repeat((4 - (p.length % 4)) % 4);
                   const claims = JSON.parse(atob(padded.replace(/-/g, '+').replace(/_/g, '/')));
-                  if (claims.tenant_slug && claims.tenant_slug !== expectedTenant) {
+                  // Platform owner (super-admin on the main tenant) is allowed
+                  // to authenticate on any tenant subdomain — they need to be
+                  // able to sign in to fix problems for individual tenants
+                  // without bouncing back to gleeworld.org. Everyone else is
+                  // signed out when their JWT's tenant doesn't match the
+                  // subdomain they landed on.
+                  const isPlatformOwner =
+                    claims.tenant_slug === 'main' &&
+                    (claims.is_super_admin === true || claims.role === 'super-admin' || claims.role === 'super_admin');
+                  if (claims.tenant_slug && claims.tenant_slug !== expectedTenant && !isPlatformOwner) {
                     console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Signing out.`);
                     await supabase.auth.signOut();
                     cleanupAuthState();
@@ -138,6 +147,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     const correctHost = claims.tenant_slug === 'main' ? 'gleeworld.org' : `${claims.tenant_slug}.gleeworld.org`;
                     window.location.href = `https://${correctHost}/auth`;
                     return;
+                  }
+                  if (isPlatformOwner && claims.tenant_slug !== expectedTenant) {
+                    console.info(`[auth] platform owner on ${expectedTenant} (JWT tenant=${claims.tenant_slug}) — staying signed in`);
                   }
                 } catch (e) {
                   console.warn('[auth] could not decode JWT for tenant check', e);

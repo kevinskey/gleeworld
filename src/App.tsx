@@ -200,6 +200,7 @@ const ReadMusic = lazy(() => import("./features/read-music/ReadMusic"));
 const PublicPageEditor = lazy(() => import("./pages/admin/PublicPageEditor"));
 const FanPageEditor = lazy(() => import("./pages/admin/FanPageEditor"));
 const FanPage = lazy(() => import("./pages/FanPage"));
+const PlatformTenantsPortal = lazy(() => import("./pages/admin/PlatformTenantsPortal"));
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
@@ -727,6 +728,17 @@ const App = () => {
                   <ProtectedRoute>
                     <UniversalLayout>
                       <FanPageEditor />
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* Platform owner's all-tenants portal */}
+              <Route
+                path="/admin/tenants"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <PlatformTenantsPortal />
                     </UniversalLayout>
                   </ProtectedRoute>
                 }
@@ -1745,12 +1757,14 @@ const App = () => {
                 } 
               />
               <Route 
-                path="/user-management" 
+                path="/user-management"
                 element={
                   <ProtectedRoute>
-                    <UserManagement />
+                    <UniversalLayout>
+                      <UserManagement />
+                    </UniversalLayout>
                   </ProtectedRoute>
-                } 
+                }
               />
                               {/* /amazon-shopping route removed with Amazon Affiliate module. */}
                               <Route

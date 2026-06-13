@@ -16,7 +16,7 @@ import { isNativeApp } from '@/lib/nativeTenant';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useCourseProducts, LEVEL_LABEL } from '@/hooks/useCourseStore';
 import { OnboardingChecklist } from './OnboardingChecklist';
-import { CreateTenantDialog } from '@/components/admin/CreateTenantDialog';
+import { Building2 } from 'lucide-react';
 
 interface ControlCenterProps {
   onModuleSelect: (moduleId: string) => void;
@@ -160,7 +160,12 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
             <Shield className="h-4 w-4 mr-2" />
             Permissions
           </Button>
-          {isPlatformAdmin && <CreateTenantDialog />}
+          {isPlatformAdmin && (
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/tenants')}>
+              <Building2 className="h-4 w-4 mr-2" />
+              All tenants
+            </Button>
+          )}
         </div>
       </div>
 

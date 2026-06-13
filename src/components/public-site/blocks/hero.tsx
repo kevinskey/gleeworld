@@ -71,6 +71,19 @@ function contrastText(bg: string): string {
   return yiq >= 150 ? '#1a1a1a' : '#ffffff';
 }
 
+// Turn a fixed px size into a fluid `clamp(min, vw-formula, max)` so the
+// hero text scales with the viewport instead of staying massive on phones
+// and tiny on 4K displays. The user's chosen size is treated as the
+// DESKTOP target; mobile floors at ~55% (with a 14px absolute floor so
+// nothing becomes illegible).
+function fluidPx(px: number): string {
+  const max = Math.max(12, Math.round(px));
+  const min = Math.max(14, Math.round(max * 0.55));
+  // Slope chosen so the size reaches `max` around a 1280px viewport.
+  const vw = (max / 12).toFixed(2);
+  return `clamp(${min}px, ${vw}vw, ${max}px)`;
+}
+
 function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const [slide, setSlide] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
@@ -229,7 +242,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
               className="normal-case font-bold mb-4 leading-tight drop-shadow"
               style={{
                 color: config.headlineColor || '#ffffff',
-                fontSize: `${config.headlineSize ?? 60}px`,
+                fontSize: fluidPx(config.headlineSize ?? 60),
               }}
             >
               {config.headline}
@@ -241,7 +254,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
               style={{
                 color: config.subheadlineColor || '#ffffff',
                 opacity: 0.9,
-                fontSize: `${config.subheadlineSize ?? 22}px`,
+                fontSize: fluidPx(config.subheadlineSize ?? 22),
               }}
             >
               {config.subheadline}
@@ -287,7 +300,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
                 style={{
                   backgroundColor: btn.color || '#ffffff',
                   color: contrastText(btn.color || '#ffffff'),
-                  fontSize: `${btn.size ?? 18}px`,
+                  fontSize: fluidPx(btn.size ?? 18),
                 }}
               >
                 <a
