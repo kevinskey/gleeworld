@@ -33,13 +33,20 @@ export function OnboardingChecklist() {
         supabase.from('gw_profiles').select('id', { count: 'exact', head: true }),
         supabase.from('gw_events').select('id', { count: 'exact', head: true }),
         supabase.from('gw_announcements').select('id', { count: 'exact', head: true }),
-        supabase.from('gw_public_sites').select('is_published').maybeSingle(),
+        // Pull is_published AND the header block's logoUrl from the snapshot —
+        // most tenants set their logo through the page builder (Header block)
+        // rather than the legacy site-setup, so we shouldn't ding them for an
+        // empty gw_branding_settings.logo_url.
+        supabase.from('gw_public_sites').select('is_published, published_blocks').maybeSingle(),
       ]);
+      const blocks = (site.data?.published_blocks as Array<{ block_type: string; config?: { logoUrl?: string } }> | null) ?? [];
+      const headerLogo = blocks.find((b) => b.block_type === 'header')?.config?.logoUrl ?? '';
       return {
         members: members.count ?? 0,
         events: events.count ?? 0,
         announcements: announcements.count ?? 0,
         sitePublished: !!site.data?.is_published,
+        headerLogo,
       };
     },
   });
@@ -51,7 +58,7 @@ export function OnboardingChecklist() {
       label: 'Brand your site',
       detail: 'Upload your logo and set your colors',
       to: '/admin/public-page',
-      done: !!branding.logo_url,
+      done: !!branding.logo_url || !!counts.headerLogo,
     },
     {
       label: 'Invite your members',

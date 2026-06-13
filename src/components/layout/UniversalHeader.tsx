@@ -52,8 +52,32 @@ export const UniversalHeader = ({
   const isMobile = useIsMobile();
   const location = useLocation();
   const { settings: branding } = useBrandingSettings();
+  // Fall back to the public site's Header block logo (configured in the page
+  // builder) when gw_branding_settings.logo_url is empty — most tenants
+  // upload their logo there now, not in legacy site-setup.
+  const { data: publicSite } = useQuery<{ blocks?: Array<{ block_type: string; config?: { logoUrl?: string; siteName?: string } }> } | null>({
+    queryKey: ['universal-header-public-site'],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_tenant_public_site');
+      if (error) return null;
+      return data as any;
+    },
+  });
+  const headerBlockLogo = publicSite?.blocks?.find((b) => b.block_type === 'header')?.config?.logoUrl;
+  const sitePrimary = (publicSite as any)?.theme?.primaryColor as string | undefined;
+  // YIQ contrast: pick black or white for foreground so the header text stays
+  // readable against whatever primary the tenant chose.
+  const headerFg = (() => {
+    const h = (sitePrimary || '').replace('#', '').trim();
+    if (h.length !== 6) return null;
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 >= 150 ? '#0f172a' : '#ffffff';
+  })();
   const siteName = branding.short_name || branding.org_name || 'GleeWorld';
-  const siteLogo = branding.logo_url || '/lovable-uploads/gleeworld-logo.png?v=6';
+  const siteLogo = branding.logo_url || headerBlockLogo || '/lovable-uploads/gleeworld-logo.png?v=6';
   const {
     userProfile
   } = useUserProfile(user);
@@ -242,7 +266,15 @@ export const UniversalHeader = ({
         className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none"
       >
         <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0">
-        <header ref={headerRef} style={{ paddingTop: 'var(--gw-safe-top)' }} className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative bg-[hsl(var(--brand-navy))] backdrop-blur-md border-b border-white/[0.08] text-white ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300 [&_button>svg]:text-white/85 [&_button:hover>svg]:text-white`}>
+        <header
+          ref={headerRef}
+          style={{
+            paddingTop: 'var(--gw-safe-top)',
+            background: sitePrimary || undefined,
+            color: headerFg || undefined,
+          }}
+          className={`w-full shadow-[0_4px_30px_-4px_rgba(0,0,0,0.3)] relative ${sitePrimary ? '' : 'bg-[hsl(var(--brand-navy))] text-white'} backdrop-blur-md border-b border-white/[0.08] ${user ? getRoleAccentColor() : 'border-b border-white/20'} [&_button:hover]:shadow-[0_0_12px_rgba(56,146,227,0.25)] [&_button]:transition-shadow [&_button]:duration-300 [&_button>svg]:opacity-85 [&_button:hover>svg]:opacity-100`}
+        >
           <div className="flex items-center justify-between w-full h-14 sm:h-16 md:h-18 px-2 sm:px-3 md:px-4 lg:px-6">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 min-w-0">
