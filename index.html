@@ -93,53 +93,22 @@
     <script src="/native-boot.js"></script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
+      // Service worker phase-out — we used to install one for offline caching,
+      // but it caused tenants to see stale builds (the "page won't load"
+      // reports). The web app no longer needs one (iOS uses native APN for
+      // pushes, not web-push), so we unregister any existing SW + delete every
+      // cache. /sw.js is now a stub that self-uninstalls too, so once both
+      // run there's nothing left.
       (function() {
-        // Skip service worker in Lovable preview environments to avoid 412/404 errors
-        const isLovablePreview = window.location.hostname.includes('lovableproject.com') || 
-                                  window.location.hostname.includes('lovable.app');
-        
-        if ('serviceWorker' in navigator && !isLovablePreview) {
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-              .then(registration => {
-                console.log('SW registered');
-
-                // Poll for a new SW every 10 minutes. The previous 60s cadence
-                // was 1,440 round-trips per day per session for no good reason.
-                setInterval(() => {
-                  registration.update().catch(() => {});
-                }, 600000);
-
-                // When a fresh worker installs and is waiting, hand off to the
-                // React layer via a custom event. The hook over there shows a
-                // sonner toast with a Reload button; clicking it posts
-                // SKIP_WAITING to the waiting worker (handled in sw.js) and
-                // then reloads. No auto-reload — users mid-form lose work.
-                function notifyUpdateReady() {
-                  if (registration.waiting && navigator.serviceWorker.controller) {
-                    window.dispatchEvent(new CustomEvent('gw-sw-update-ready'));
-                  }
-                }
-                if (registration.waiting && navigator.serviceWorker.controller) {
-                  notifyUpdateReady();
-                }
-                registration.addEventListener('updatefound', () => {
-                  const newWorker = registration.installing;
-                  if (!newWorker) return;
-                  newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed') {
-                      notifyUpdateReady();
-                    }
-                  });
-                });
-              })
-              .catch(err => {
-                // Gracefully handle registration failures (404, 412, etc.)
-                console.log('SW registration skipped:', err.message || err);
-              });
-          });
-        } else if (isLovablePreview) {
-          console.log('SW registration skipped in preview environment');
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(r => r.unregister().catch(() => {}));
+          }).catch(() => {});
+        }
+        if (window.caches) {
+          caches.keys().then(names => {
+            names.forEach(n => caches.delete(n).catch(() => {}));
+          }).catch(() => {});
         }
       })();
     </script>

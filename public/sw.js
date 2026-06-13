@@ -1,286 +1,63 @@
-// Service Worker for GleeWorld PWA
+// Service Worker — self-uninstall stub.
 //
-// CACHE_VERSION is replaced at build time by the bump-sw-version plugin in
-// vite.config.ts (substitutes the __GW_BUILD_VERSION__ placeholder with the
-// short git SHA). If you see the literal placeholder in production, the
-// build plugin didn't run — fix the build pipeline, don't edit this by hand.
+// We used to ship a full offline-first PWA service worker, but it caused
+// recurring "page won't load" reports from tenants stuck on stale caches.
+// For a SaaS app where every deploy is meant to be picked up immediately,
+// the cure was worse than the disease.
+//
+// This stub:
+//   1. Activates immediately on install (skipWaiting).
+//   2. Claims every client on activate (clients.claim).
+//   3. Wipes every cache the previous SW created.
+//   4. Unregisters itself — next reload, no SW at all.
+//   5. Tells every controlled tab to reload, so they immediately get fresh
+//      assets straight from the network.
+//
+// CACHE_VERSION is still bumped per commit by the bump-sw-version Vite plugin
+// so browsers re-fetch this stub when a new build deploys (cache-busts the
+// sw.js URL via ETag/Last-Modified). Each new deploy re-runs the uninstall.
+//
+// Push notifications: not handled here. The iOS Capacitor app uses native
+// APN (not web-push), so removing the SW doesn't affect mobile pushes.
 const CACHE_VERSION = '__GW_BUILD_VERSION__';
-const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
-const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
 
-// Static assets to cache on install
-const STATIC_ASSETS = [
-  '/',
-  '/manifest.json',
-  '/favicon.ico',
-  '/lovable-uploads/gleeworld-logo.png',
-  '/offline.html'
-];
-
-// Install event — cache static assets.
-// Intentionally NOT calling skipWaiting() here: we want the new SW to stay
-// in the "waiting" state until the user explicitly accepts the update via
-// the in-app toast (which posts {type:'SKIP_WAITING'} below). Auto-activating
-// would yank a fresh bundle into a tab mid-form and lose user input.
-self.addEventListener('install', (event) => {
-  console.log(`[SW] Installing ${CACHE_VERSION}…`);
-  event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => {
-        console.log('[SW] Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .catch((error) => {
-        console.error('[SW] Failed to cache static assets:', error);
-      })
-  );
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log(`[SW] Activating ${CACHE_VERSION}…`);
-  event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter((name) => {
-              // Delete any cache that doesn't match current version
-              return name.startsWith('gleeworld-') && !name.includes(CACHE_VERSION);
-            })
-            .map((name) => {
-              console.log('[SW] Deleting old cache:', name);
-              return caches.delete(name);
-            })
-        );
-      })
-      .then(() => {
-        console.log('[SW] Claiming clients');
-        return self.clients.claim();
-      })
-  );
-});
-
-// Fetch event - network first with cache fallback for HTML, network first for JS/CSS, cache for images/fonts
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip non-GET requests
-  if (request.method !== 'GET') return;
-
-  // Skip chrome-extension and other non-http(s) requests
-  if (!url.protocol.startsWith('http')) return;
-
-  // CRITICAL: Skip audio/video streaming requests - NEVER cache or intercept these
-  // This prevents PWA service worker from interfering with radio and notification playback
-  if (request.destination === 'audio' || request.destination === 'video') {
-    console.log('[SW] Skipping audio/video request:', url.href);
-    return;
-  }
-
-  // Skip Radio.co streaming URLs - these must go directly to network
-  if (url.hostname.includes('radio.co') || 
-      url.hostname.includes('streaming.radio.co') ||
-      url.hostname.includes('s2.radio.co') ||
-      url.hostname.includes('s3.radio.co') ||
-      url.hostname.includes('s4.radio.co') ||
-      url.hostname.includes('s5.radio.co')) {
-    console.log('[SW] Skipping radio stream request:', url.href);
-    return;
-  }
-
-  // Skip any URL with /listen path (audio streams)
-  if (url.pathname.includes('/listen')) {
-    console.log('[SW] Skipping stream URL:', url.href);
-    return;
-  }
-
-  // Skip notification-sounds bucket URLs (Supabase storage audio files)
-  if (url.pathname.includes('notification-sounds') || 
-      url.pathname.includes('/storage/') && (url.pathname.endsWith('.mp3') || url.pathname.endsWith('.wav') || url.pathname.endsWith('.ogg'))) {
-    console.log('[SW] Skipping notification sound request:', url.href);
-    return;
-  }
-
-  // Skip any audio file extensions
-  if (url.pathname.match(/\.(mp3|wav|ogg|m4a|aac|flac|webm)$/i)) {
-    console.log('[SW] Skipping audio file request:', url.href);
-    return;
-  }
-
-  // Skip Supabase API calls - always fetch from network
-  if (url.hostname.includes('supabase')) return;
-
-  // Skip external APIs
-  if (!url.hostname.includes('lovableproject.com') && 
-      !url.hostname.includes('localhost') &&
-      !url.hostname.includes('gleeworld')) return;
-
-  // IMPORTANT: avoid caching Vite dev/prebundle chunks (can cause React to be served stale)
-  // Example path in Lovable preview: /node_modules/.vite/deps/chunk-XXXX.js
-  if (url.pathname.includes('/node_modules/.vite/')) {
-    event.respondWith(fetch(request));
-    return;
-  }
-
-  // For navigation requests (HTML pages) - network first with cache fallback
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request)
-            .then((cachedResponse) => {
-              if (cachedResponse) return cachedResponse;
-              return caches.match('/offline.html') || caches.match('/');
-            });
-        })
-    );
-    return;
-  }
-
-  // JS/CSS: network-first (prevents stale React bundles causing invalid hook calls)
-  if (request.destination === 'script' || request.destination === 'style') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
-    return;
-  }
-
-  // Images/fonts: cache-first
-  if (request.destination === 'image' || request.destination === 'font') {
-    event.respondWith(
-      caches.match(request)
-        .then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-
-          return fetch(request)
-            .then((response) => {
-              if (response.ok) {
-                const responseClone = response.clone();
-                caches.open(DYNAMIC_CACHE).then((cache) => {
-                  cache.put(request, responseClone);
-                });
-              }
-              return response;
-            });
-        })
-    );
-    return;
-  }
-
-  // Default: network first with cache fallback
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok) {
-          const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then((cache) => {
-            cache.put(request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(() => caches.match(request))
-  );
-});
-
-// Push notification handling
-self.addEventListener('push', (event) => {
-  console.log('[SW] Push received:', event);
-  
-  let data = {
-    title: 'GleeWorld',
-    body: 'You have a new notification',
-    icon: '/lovable-uploads/gleeworld-logo.png',
-    badge: '/lovable-uploads/gleeworld-logo.png',
-    data: { url: '/' }
-  };
-
-  if (event.data) {
+  event.waitUntil((async () => {
     try {
-      const payload = event.data.json();
-      data = { ...data, ...payload };
+      // Delete every cache this SW (and prior versions) may have created.
+      const names = await caches.keys();
+      await Promise.all(names.map((n) => caches.delete(n)));
     } catch (e) {
-      data.body = event.data.text();
+      console.warn('[sw] cache cleanup failed', e);
     }
-  }
 
-  const options = {
-    body: data.body,
-    icon: data.icon,
-    badge: data.badge,
-    vibrate: [100, 50, 100],
-    data: data.data,
-    actions: [
-      { action: 'open', title: 'Open' },
-      { action: 'close', title: 'Dismiss' }
-    ],
-    tag: 'gleeworld-notification',
-    renotify: true
-  };
+    try {
+      // Claim all clients so this stub is in control briefly, then
+      // immediately tell each one to reload — they'll pick up the fresh
+      // bundle straight from the network with no SW interception.
+      await self.clients.claim();
+      const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const c of all) {
+        try { c.navigate(c.url); } catch { /* no-op */ }
+      }
+    } catch (e) {
+      console.warn('[sw] client claim/reload failed', e);
+    }
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+    try {
+      // Unregister so future navigations don't go through any SW at all.
+      await self.registration.unregister();
+      console.log('[sw] unregistered (was', CACHE_VERSION, ')');
+    } catch (e) {
+      console.warn('[sw] unregister failed', e);
+    }
+  })());
 });
 
-// Notification click handling
-self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked:', event);
-  event.notification.close();
-
-  if (event.action === 'close') return;
-
-  const urlToOpen = event.notification.data?.url || '/';
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Try to focus existing window
-        for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            client.navigate(urlToOpen);
-            return client.focus();
-          }
-        }
-        // Open new window if none exists
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      })
-  );
-});
-
-// Message handling from client
-self.addEventListener('message', (event) => {
-  console.log('[SW] Message received:', event.data);
-  
-  if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-  
-  if (event.data?.type === 'CLEAR_CACHE') {
-    caches.keys().then((names) => {
-      names.forEach((name) => caches.delete(name));
-    });
-  }
-});
+// Pass-through fetch: don't intercept anything. If a request hits this SW
+// in the brief window before unregister completes, just go to network.
+self.addEventListener('fetch', () => { /* no-op — let the browser handle it */ });
