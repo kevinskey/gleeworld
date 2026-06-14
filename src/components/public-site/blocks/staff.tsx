@@ -21,7 +21,20 @@ const schema = z.object({
 type Config = z.infer<typeof schema>;
 
 function Render({ config }: BlockRenderProps<Config>) {
-  const people = config.people.filter((p) => p.name);
+  // Accept any person with SOMETHING in any displayed field — the old
+  // name-only filter silently dropped entries where the user typed the
+  // person's name into the Title or Bio field by mistake (and ate their
+  // uploaded photo with it).
+  const people = config.people
+    .filter((p) => p.name || p.title || p.bio || p.photoUrl)
+    .map((p) => ({
+      ...p,
+      // If they didn't fill in name, fall back to title so the card has
+      // a primary label instead of vanishing.
+      displayName: p.name || p.title || 'Unnamed',
+      // Don't render the title underneath if we just used it as the name.
+      showTitle: !!(p.name && p.title),
+    }));
   if (people.length === 0) return null;
   return (
     <section id="staff" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
@@ -42,8 +55,8 @@ function Render({ config }: BlockRenderProps<Config>) {
                   <Users className="w-10 h-10 text-muted-foreground" />
                 </div>
               )}
-              <div className="font-semibold">{p.name}</div>
-              {p.title && (
+              <div className="font-semibold">{p.displayName}</div>
+              {p.showTitle && (
                 <div className="text-sm uppercase tracking-wide" style={{ color: 'var(--site-accent)' }}>
                   {p.title}
                 </div>
@@ -64,8 +77,8 @@ function Render({ config }: BlockRenderProps<Config>) {
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <div className="font-semibold">{p.name}</div>
-                {p.title && (
+                <div className="font-semibold">{p.displayName}</div>
+                {p.showTitle && (
                   <div className="text-xs uppercase tracking-wide" style={{ color: 'var(--site-accent)' }}>
                     {p.title}
                   </div>
@@ -131,18 +144,24 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
               onChange={(url) => update(i, { photoUrl: url })}
               buttonColor={theme?.primaryColor}
             />
-            <Input
-              value={p.name}
-              onChange={(e) => update(i, { name: e.target.value })}
-              placeholder="Name"
-              className="h-8 text-sm"
-            />
-            <Input
-              value={p.title}
-              onChange={(e) => update(i, { title: e.target.value })}
-              placeholder="Title (e.g. Artistic Director)"
-              className="h-8 text-sm"
-            />
+            <div>
+              <Label className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold">Name</Label>
+              <Input
+                value={p.name}
+                onChange={(e) => update(i, { name: e.target.value })}
+                placeholder='Person — e.g. "Dr. Jane Smith"'
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold">Role / Title</Label>
+              <Input
+                value={p.title}
+                onChange={(e) => update(i, { title: e.target.value })}
+                placeholder='Role — e.g. "Artistic Director"'
+                className="h-8 text-sm"
+              />
+            </div>
             <Textarea
               value={p.bio}
               onChange={(e) => update(i, { bio: e.target.value })}

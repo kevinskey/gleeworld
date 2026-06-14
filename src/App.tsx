@@ -201,6 +201,7 @@ const PublicPageEditor = lazy(() => import("./pages/admin/PublicPageEditor"));
 const FanPageEditor = lazy(() => import("./pages/admin/FanPageEditor"));
 const FanPage = lazy(() => import("./pages/FanPage"));
 const PlatformTenantsPortal = lazy(() => import("./pages/admin/PlatformTenantsPortal"));
+import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
@@ -366,6 +367,7 @@ const App = () => {
     <BrowserRouter>
       <ScrollToTop />
       <QueryClientProvider client={queryClient}>
+        <TenantThemeRoot />
         <NativeTenantGate>
         <AuthProvider>
           <ThemeProvider>

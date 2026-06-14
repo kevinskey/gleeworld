@@ -216,7 +216,7 @@ export const GleeAcademyModule = ({ user: _user, isFullPage = false }: ModulePro
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={() => setShowCreate(true)} className="bg-sky-600 hover:bg-sky-500 text-white">
+          <Button onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4 mr-1.5" /> Create Class
           </Button>
         )}
@@ -307,10 +307,10 @@ export const GleeAcademyModule = ({ user: _user, isFullPage = false }: ModulePro
               <button
                 key={t.label}
                 onClick={() => navigate(t.route)}
-                className="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl p-3 transition-colors text-center"
+                className="bg-card hover:bg-muted border border-border rounded-xl p-3 transition-colors text-center"
               >
                 <Icon className="w-5 h-5 text-sky-400 mx-auto mb-1.5" />
-                <div className="text-xs font-medium text-white">{t.label}</div>
+                <div className="text-xs font-medium text-card-foreground">{t.label}</div>
               </button>
             );
           })}
@@ -345,10 +345,10 @@ export const GleeAcademyModule = ({ user: _user, isFullPage = false }: ModulePro
 
 function StatCard({ label, value, loading }: { label: string; value: number; loading: boolean }) {
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-      <div className="text-xs text-slate-300 uppercase tracking-wide">{label}</div>
-      <div className="text-2xl md:text-3xl font-bold text-white mt-1">
-        {loading ? <Loader2 className="w-5 h-5 animate-spin text-slate-400" /> : value}
+    <div className="bg-card border border-border rounded-xl p-4">
+      <div className="text-xs text-muted-foreground uppercase tracking-wide">{label}</div>
+      <div className="text-2xl md:text-3xl font-bold text-card-foreground mt-1">
+        {loading ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : value}
       </div>
     </div>
   );
@@ -389,7 +389,7 @@ function ClassCard({
   onDelete?: () => void;
 }) {
   return (
-    <div className="relative bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors group">
+    <div className="relative bg-card hover:bg-muted border border-border rounded-xl transition-colors group">
       <button
         onClick={onOpen}
         className="w-full text-left p-5 flex flex-col"
@@ -397,16 +397,16 @@ function ClassCard({
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="text-xs font-mono text-sky-400">{course.course_code}</div>
           {role && (
-            <Badge className="bg-sky-600 text-white border-0 text-[10px]">
+            <Badge className="bg-primary text-primary-foreground border-0 text-[10px]">
               {role}
             </Badge>
           )}
         </div>
-        <div className="font-semibold text-white mb-1 line-clamp-2 pr-16">{course.title}</div>
+        <div className="font-semibold text-card-foreground mb-1 line-clamp-2 pr-16">{course.title}</div>
         {course.description && (
-          <div className="text-xs text-slate-300 line-clamp-2 mb-3">{course.description}</div>
+          <div className="text-xs text-muted-foreground line-clamp-2 mb-3">{course.description}</div>
         )}
-        <div className="mt-auto flex items-center justify-between text-[11px] text-slate-400">
+        <div className="mt-auto flex items-center justify-between text-[11px] text-muted-foreground">
           <span>{course.instructor_name || ''}</span>
           <span className="flex items-center gap-1">
             {fmtSemester(course.semester)}
@@ -419,7 +419,7 @@ function ClassCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-            className="p-1.5 rounded-md bg-slate-900/80 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-700"
+            className="p-1.5 rounded-md bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground border border-border"
             title="Edit class"
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -427,7 +427,7 @@ function ClassCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-            className="p-1.5 rounded-md bg-slate-900/80 hover:bg-red-900 text-slate-300 hover:text-white border border-slate-700"
+            className="p-1.5 rounded-md bg-muted/80 hover:bg-destructive/20 text-muted-foreground hover:text-destructive border border-border"
             title="Archive class"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -469,32 +469,32 @@ function EditClassDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
         <div>
-          <h3 className="text-lg font-semibold text-white">Edit Class</h3>
-          <p className="text-xs text-slate-400">Update the class details below.</p>
+          <h3 className="text-lg font-semibold text-card-foreground">Edit Class</h3>
+          <p className="text-xs text-muted-foreground">Update the class details below.</p>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-slate-300">Code</label>
-            <Input value={code} onChange={(e) => setCode(e.target.value)} className="bg-slate-800 border-slate-700 text-white" />
+            <label className="text-xs font-medium text-muted-foreground">Code</label>
+            <Input value={code} onChange={(e) => setCode(e.target.value)} className="bg-background border-input text-foreground" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300">Title</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-slate-800 border-slate-700 text-white" />
+            <label className="text-xs font-medium text-muted-foreground">Title</label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-background border-input text-foreground" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300">Description</label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} className="bg-slate-800 border-slate-700 text-white" />
+            <label className="text-xs font-medium text-muted-foreground">Description</label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} className="bg-background border-input text-foreground" />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300">Semester</label>
-            <Input value={semester} onChange={(e) => setSemester(e.target.value)} className="bg-slate-800 border-slate-700 text-white" />
+            <label className="text-xs font-medium text-muted-foreground">Semester</label>
+            <Input value={semester} onChange={(e) => setSemester(e.target.value)} className="bg-background border-input text-foreground" />
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose} className="text-slate-300 hover:bg-slate-800">Cancel</Button>
-          <Button onClick={submit} disabled={saving} className="bg-sky-600 hover:bg-sky-500 text-white">
+          <Button variant="ghost" onClick={onClose} className="text-muted-foreground hover:bg-muted">Cancel</Button>
+          <Button onClick={submit} disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
             Save
           </Button>
@@ -508,7 +508,7 @@ function Loading() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 h-36 animate-pulse" />
+        <div key={i} className="bg-muted/50 border border-border rounded-xl p-5 h-36 animate-pulse" />
       ))}
     </div>
   );
@@ -516,7 +516,7 @@ function Loading() {
 
 function EmptyHint({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-slate-800/40 border border-slate-700 border-dashed rounded-xl p-6 text-sm text-slate-300">
+    <div className="bg-muted/40 border border-border border-dashed rounded-xl p-6 text-sm text-muted-foreground">
       {children}
     </div>
   );
@@ -571,51 +571,51 @@ function CreateClassDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
         <div>
-          <h3 className="text-lg font-semibold text-white">Create Class</h3>
-          <p className="text-xs text-slate-400">Add a new class to Glee Academy.</p>
+          <h3 className="text-lg font-semibold text-card-foreground">Create Class</h3>
+          <p className="text-xs text-muted-foreground">Add a new class to Glee Academy.</p>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-slate-300">Code</label>
+            <label className="text-xs font-medium text-muted-foreground">Code</label>
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="e.g. MUS 240"
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+              className="bg-background border-input text-foreground"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300">Title</label>
+            <label className="text-xs font-medium text-muted-foreground">Title</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Advanced Choir"
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+              className="bg-background border-input text-foreground"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300">Description</label>
+            <label className="text-xs font-medium text-muted-foreground">Description</label>
             <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Short description"
-              className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+              className="bg-background border-input text-foreground"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300">Semester</label>
+            <label className="text-xs font-medium text-muted-foreground">Semester</label>
             <Input
               value={semester}
               onChange={(e) => setSemester(e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white"
+              className="bg-background border-input text-foreground"
             />
           </div>
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose} className="text-slate-300 hover:bg-slate-800">Cancel</Button>
-          <Button onClick={submit} disabled={saving} className="bg-sky-600 hover:bg-sky-500 text-white">
+          <Button variant="ghost" onClick={onClose} className="text-muted-foreground hover:bg-muted">Cancel</Button>
+          <Button onClick={submit} disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
             Create
           </Button>
