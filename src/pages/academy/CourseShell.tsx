@@ -181,7 +181,7 @@ export default function CourseShell() {
           {/* Quick action — Rehearsal tonight */}
           <button
             onClick={() => navigate(`/academy/${code}/rehearsal-today`)}
-            className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 border border-amber-500/40 text-sm font-semibold transition-colors"
+            className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-card hover:bg-accent hover:text-accent-foreground text-foreground border border-border text-sm font-semibold transition-colors"
           >
             <Zap className="w-4 h-4" />
             Rehearsal tonight
@@ -304,9 +304,13 @@ function OverviewTab({ course }: TabProps) {
 
 // ─── Modules ──────────────────────────────────────────────────────────────
 
-function ModulesTab({ course }: TabProps) {
+function ModulesTab({ course, canEdit }: TabProps) {
   const [modules, setModules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newWeek, setNewWeek] = useState<string>("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let c = false;
@@ -321,26 +325,97 @@ function ModulesTab({ course }: TabProps) {
     return () => { c = true; };
   }, [course.id]);
 
+  async function submit() {
+    if (!newTitle.trim()) return;
+    setSaving(true);
+    // module_id is a required text "code" — auto-generate a tenant-safe slug.
+    const slug = `mod-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    const week = newWeek ? Number(newWeek) : null;
+    const { data, error } = await supabase
+      .from("gw_course_modules")
+      .insert({
+        course_id: course.id,
+        module_id: slug,
+        title: newTitle.trim(),
+        week_number: Number.isFinite(week as number) ? week : null,
+        is_active: true,
+        is_locked: false,
+        display_order: modules.length,
+      })
+      .select("id, module_id, title, description, week_number, learning_objectives, is_locked")
+      .single();
+    setSaving(false);
+    if (error || !data) {
+      toast.error(`Couldn't add module: ${error?.message || "unknown error"}`);
+      return;
+    }
+    setModules((prev) => [...prev, data]);
+    setNewTitle("");
+    setNewWeek("");
+    setAddOpen(false);
+    toast.success(`Added "${data.title}"`);
+  }
+
   return (
-    <SectionCard title="Weekly modules" icon={<BookOpen className="w-4 h-4" />}>
+    <SectionCard
+      title="Weekly modules"
+      icon={<BookOpen className="w-4 h-4" />}
+      action={canEdit ? (
+        <Button size="sm" variant="outline" onClick={() => setAddOpen((v) => !v)}>
+          <Plus className="w-4 h-4 mr-1.5" />{addOpen ? "Cancel" : "New module"}
+        </Button>
+      ) : null}
+    >
+      {canEdit && addOpen && (
+        <div className="border border-border rounded-lg p-3 mb-3 space-y-2 bg-muted/40">
+          <div className="grid grid-cols-[1fr_120px] gap-2">
+            <Input
+              placeholder="Module title — e.g. Week 1: Introduction"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              className="h-9 text-sm"
+            />
+            <Input
+              type="number"
+              placeholder="Week #"
+              value={newWeek}
+              onChange={(e) => setNewWeek(e.target.value)}
+              className="h-9 text-sm"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="ghost" onClick={() => { setAddOpen(false); setNewTitle(""); setNewWeek(""); }}>Cancel</Button>
+            <Button size="sm" onClick={submit} disabled={saving || !newTitle.trim()}>
+              {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
+              Add module
+            </Button>
+          </div>
+        </div>
+      )}
       {loading ? <Loader /> : modules.length === 0 ? (
         <Empty>
           No modules yet.
-          <div className="mt-3"><Button size="sm" variant="outline"><Plus className="w-4 h-4 mr-1.5" />Add the first module</Button></div>
+          {canEdit && !addOpen && (
+            <div className="mt-3">
+              <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
+                <Plus className="w-4 h-4 mr-1.5" />Add the first module
+              </Button>
+            </div>
+          )}
         </Empty>
       ) : (
         <div className="space-y-2">
           {modules.map((m) => (
-            <div key={m.id} className="border border-slate-200 rounded-lg p-4 bg-white hover:shadow-sm transition-shadow">
+            <div key={m.id} className="border border-border rounded-lg p-4 bg-card hover:shadow-sm transition-shadow">
               <div className="flex items-baseline justify-between gap-2 mb-1">
-                <div className="font-semibold text-slate-900">
+                <div className="font-semibold text-card-foreground">
                   {m.week_number ? `Week ${m.week_number} · ` : ""}{m.title}
                 </div>
                 {m.is_locked && <Badge variant="outline" className="text-xs">Locked</Badge>}
               </div>
-              {m.description && <p className="text-sm text-slate-600">{m.description}</p>}
+              {m.description && <p className="text-sm text-muted-foreground">{m.description}</p>}
               {Array.isArray(m.learning_objectives) && m.learning_objectives.length > 0 && (
-                <ul className="mt-2 list-disc pl-5 text-xs text-slate-500 space-y-0.5">
+                <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground space-y-0.5">
                   {m.learning_objectives.slice(0, 3).map((o: string, i: number) => <li key={i}>{o}</li>)}
                 </ul>
               )}
@@ -357,6 +432,11 @@ function ModulesTab({ course }: TabProps) {
 function AssignmentsTab({ course, canEdit }: TabProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newPoints, setNewPoints] = useState("100");
+  const [newDue, setNewDue] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let c = false;
@@ -371,12 +451,74 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
     return () => { c = true; };
   }, [course.id]);
 
+  async function submit() {
+    if (!newTitle.trim()) return;
+    setSaving(true);
+    const { data, error } = await supabase
+      .from("gw_course_assignments")
+      .insert({
+        course_id: course.id,
+        title: newTitle.trim(),
+        points: Number(newPoints) || 0,
+        due_date: newDue ? new Date(newDue).toISOString() : null,
+        is_published: false,
+        display_order: items.length,
+      })
+      .select("id, title, description, due_date, points, is_published")
+      .single();
+    setSaving(false);
+    if (error || !data) {
+      toast.error(`Couldn't add assignment: ${error?.message || "unknown error"}`);
+      return;
+    }
+    setItems((prev) => [...prev, data].sort((a, b) => (a.due_date || "z").localeCompare(b.due_date || "z")));
+    setNewTitle(""); setNewPoints("100"); setNewDue("");
+    setAddOpen(false);
+    toast.success(`Added "${data.title}" (draft)`);
+  }
+
   return (
     <SectionCard
       title="Assignments"
       icon={<FileText className="w-4 h-4" />}
-      action={canEdit ? <Button size="sm" variant="outline"><Plus className="w-4 h-4 mr-1.5" />New</Button> : null}
+      action={canEdit ? (
+        <Button size="sm" variant="outline" onClick={() => setAddOpen((v) => !v)}>
+          <Plus className="w-4 h-4 mr-1.5" />{addOpen ? "Cancel" : "New"}
+        </Button>
+      ) : null}
     >
+      {canEdit && addOpen && (
+        <div className="border border-border rounded-lg p-3 mb-3 space-y-2 bg-muted/40">
+          <Input
+            placeholder="Assignment title"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="h-9 text-sm"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="number"
+              placeholder="Points"
+              value={newPoints}
+              onChange={(e) => setNewPoints(e.target.value)}
+              className="h-9 text-sm"
+            />
+            <Input
+              type="datetime-local"
+              value={newDue}
+              onChange={(e) => setNewDue(e.target.value)}
+              className="h-9 text-sm"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setAddOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={submit} disabled={saving || !newTitle.trim()}>
+              {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
+              Add assignment
+            </Button>
+          </div>
+        </div>
+      )}
       {loading ? <Loader /> : items.length === 0 ? (
         <Empty>No assignments yet.</Empty>
       ) : (
@@ -412,6 +554,11 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
 function QuizzesTab({ course, canEdit }: TabProps) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newPoints, setNewPoints] = useState("100");
+  const [newDuration, setNewDuration] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let c = false;
@@ -426,12 +573,74 @@ function QuizzesTab({ course, canEdit }: TabProps) {
     return () => { c = true; };
   }, [course.id]);
 
+  async function submit() {
+    if (!newTitle.trim()) return;
+    setSaving(true);
+    const { data, error } = await supabase
+      .from("gw_course_tests")
+      .insert({
+        course_id: course.id,
+        title: newTitle.trim(),
+        total_points: Number(newPoints) || 0,
+        duration_minutes: newDuration ? Number(newDuration) : null,
+        is_published: false,
+      })
+      .select("id, title, description, total_points, duration_minutes, available_from, available_until, is_published")
+      .single();
+    setSaving(false);
+    if (error || !data) {
+      toast.error(`Couldn't add quiz: ${error?.message || "unknown error"}`);
+      return;
+    }
+    setItems((prev) => [...prev, data]);
+    setNewTitle(""); setNewPoints("100"); setNewDuration("");
+    setAddOpen(false);
+    toast.success(`Added "${data.title}" (draft)`);
+  }
+
   return (
     <SectionCard
       title="Quizzes &amp; tests"
       icon={<ClipboardCheck className="w-4 h-4" />}
-      action={canEdit ? <Button size="sm" variant="outline"><Plus className="w-4 h-4 mr-1.5" />New</Button> : null}
+      action={canEdit ? (
+        <Button size="sm" variant="outline" onClick={() => setAddOpen((v) => !v)}>
+          <Plus className="w-4 h-4 mr-1.5" />{addOpen ? "Cancel" : "New"}
+        </Button>
+      ) : null}
     >
+      {canEdit && addOpen && (
+        <div className="border border-border rounded-lg p-3 mb-3 space-y-2 bg-muted/40">
+          <Input
+            placeholder="Quiz / test title"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="h-9 text-sm"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="number"
+              placeholder="Total points"
+              value={newPoints}
+              onChange={(e) => setNewPoints(e.target.value)}
+              className="h-9 text-sm"
+            />
+            <Input
+              type="number"
+              placeholder="Duration (min, optional)"
+              value={newDuration}
+              onChange={(e) => setNewDuration(e.target.value)}
+              className="h-9 text-sm"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setAddOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={submit} disabled={saving || !newTitle.trim()}>
+              {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
+              Add quiz
+            </Button>
+          </div>
+        </div>
+      )}
       {loading ? <Loader /> : items.length === 0 ? (
         <Empty>No quizzes or tests yet.</Empty>
       ) : (
@@ -456,8 +665,13 @@ function QuizzesTab({ course, canEdit }: TabProps) {
 // ─── Discussions ──────────────────────────────────────────────────────────
 
 function DiscussionsTab({ course, canEdit }: TabProps) {
+  const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let c = false;
@@ -475,12 +689,73 @@ function DiscussionsTab({ course, canEdit }: TabProps) {
     return () => { c = true; };
   }, [course.id]);
 
+  async function submit() {
+    if (!newTitle.trim() || !newContent.trim()) {
+      toast.error("Title and opening message are both required.");
+      return;
+    }
+    if (!user?.id) {
+      toast.error("Sign in to start a thread.");
+      return;
+    }
+    setSaving(true);
+    const { data, error } = await supabase
+      .from("gw_course_discussions")
+      .insert({
+        course_id: course.id,
+        title: newTitle.trim(),
+        content: newContent.trim(),
+        author_id: user.id,
+        is_pinned: false,
+        view_count: 0,
+      })
+      .select("id, title, content, author_id, is_pinned, view_count, created_at")
+      .single();
+    setSaving(false);
+    if (error || !data) {
+      toast.error(`Couldn't start thread: ${error?.message || "unknown error"}`);
+      return;
+    }
+    setItems((prev) => [data, ...prev]);
+    setNewTitle(""); setNewContent("");
+    setAddOpen(false);
+    toast.success(`Posted "${data.title}"`);
+  }
+
   return (
     <SectionCard
       title="Discussions"
       icon={<MessagesSquare className="w-4 h-4" />}
-      action={<Button size="sm" variant="outline"><Plus className="w-4 h-4 mr-1.5" />New thread</Button>}
+      action={
+        <Button size="sm" variant="outline" onClick={() => setAddOpen((v) => !v)}>
+          <Plus className="w-4 h-4 mr-1.5" />{addOpen ? "Cancel" : "New thread"}
+        </Button>
+      }
     >
+      {addOpen && (
+        <div className="border border-border rounded-lg p-3 mb-3 space-y-2 bg-muted/40">
+          <Input
+            placeholder="Thread title"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="h-9 text-sm"
+          />
+          <textarea
+            placeholder="Opening message…"
+            value={newContent}
+            onChange={(e) => setNewContent(e.target.value)}
+            rows={3}
+            className="w-full text-sm rounded-md border border-border bg-background px-3 py-2"
+          />
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setAddOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={submit} disabled={saving || !newTitle.trim() || !newContent.trim()}>
+              {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
+              Post thread
+            </Button>
+          </div>
+        </div>
+      )}
       {loading ? <Loader /> : items.length === 0 ? (
         <Empty>No discussions yet. Start the first thread.</Empty>
       ) : (

@@ -43,6 +43,28 @@ body.gw-tenant-themed {
     color: var(--site-accent, hsl(var(--primary))) !important;
   }
 
+  /* Amber / yellow / orange — same-family text-on-same-family-bg is the
+     visibility bug that motivated this layer ("Rehearsal tonight" button
+     gold-on-gold when the tenant accent is also gold). Map both the bg
+     and the text to legible tokens. */
+  .bg-amber-500, .bg-amber-600, .bg-amber-700,
+  .bg-yellow-500, .bg-yellow-600, .bg-yellow-700,
+  .bg-orange-500, .bg-orange-600, .bg-orange-700 {
+    background-color: var(--site-accent, hsl(var(--primary))) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+  .hover\:bg-amber-500:hover, .hover\:bg-amber-600:hover, .hover\:bg-amber-700:hover,
+  .hover\:bg-yellow-500:hover, .hover\:bg-yellow-600:hover, .hover\:bg-yellow-700:hover,
+  .hover\:bg-orange-500:hover, .hover\:bg-orange-600:hover, .hover\:bg-orange-700:hover {
+    background-color: var(--site-accent, hsl(var(--primary))) !important;
+    filter: brightness(1.08);
+  }
+  /* Note: deliberately NOT overriding standalone text-amber/yellow/orange-*.
+     Those carry semantic meaning ("warning") in places like banners and
+     callouts. The bg overrides above already force foreground color on
+     same-hue buttons so the visibility bug is fixed without flattening
+     legitimate warning text into accent color. */
+
   /* Borders that were going to be brand-accent */
   .border-sky-500, .border-sky-600,
   .border-blue-500, .border-blue-600 {
