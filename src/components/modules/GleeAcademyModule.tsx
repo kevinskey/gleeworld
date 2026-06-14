@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CourseLibrarySection } from '@/components/academy/CourseLibrarySection';
+import { CreateClassDialog } from '@/components/modules/CreateClassDialog';
 
 interface Course {
   id: string;
@@ -317,18 +318,24 @@ export const GleeAcademyModule = ({ user: _user, isFullPage = false }: ModulePro
         </div>
       </Section>
 
-      {showCreate && (
-        <CreateClassDialog
-          onClose={() => setShowCreate(false)}
-          onCreated={(newCourse) => {
-            setCourses((prev) => [newCourse, ...prev]);
-            setShowCreate(false);
-            navigate(classRoute(newCourse.course_code));
-          }}
-          instructorId={user?.id ?? null}
-          instructorName={(profile as any)?.full_name ?? null}
-        />
-      )}
+      <CreateClassDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        onCreated={async (newCourseId) => {
+          // Re-fetch the new course row so the local card list updates with
+          // its full shape (the dialog only returns the id).
+          const { data } = await supabase
+            .from('gw_courses')
+            .select('id, course_code, title, description, instructor_id, instructor_name, semester, is_active, start_date, end_date, meeting_patterns')
+            .eq('id', newCourseId)
+            .single();
+          if (data) {
+            setCourses((prev) => [data as Course, ...prev]);
+            navigate(classRoute((data as Course).course_code));
+          }
+        }}
+      />
+
 
       {editing && (
         <EditClassDialog
@@ -522,108 +529,6 @@ function EmptyHint({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── create class dialog ───────────────────────────────────────────────────
-
-function CreateClassDialog({
-  onClose, onCreated, instructorId, instructorName,
-}: {
-  onClose: () => void;
-  onCreated: (c: Course) => void;
-  instructorId: string | null;
-  instructorName: string | null;
-}) {
-  const [code, setCode] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [semester, setSemester] = useState(defaultSemester());
-  const [saving, setSaving] = useState(false);
-
-  async function submit() {
-    if (!code.trim() || !title.trim()) {
-      toast.error('Course code and title are required.');
-      return;
-    }
-    setSaving(true);
-    const { data, error } = await supabase
-      .from('gw_courses')
-      .insert({
-        course_code: code.trim().toUpperCase(),
-        code: code.trim().toUpperCase(),
-        title: title.trim(),
-        description: description.trim() || null,
-        semester,
-        instructor_id: instructorId,
-        instructor_name: instructorName,
-        is_active: true,
-      })
-      .select('id, course_code, title, description, instructor_id, instructor_name, semester, is_active, start_date, end_date, meeting_patterns')
-      .single();
-    setSaving(false);
-
-    if (error || !data) {
-      console.error('[GleeAcademy] create failed', error);
-      toast.error(`Couldn't create class: ${error?.message || 'unknown error'}`);
-      return;
-    }
-    toast.success(`Created ${data.course_code}`);
-    onCreated(data as Course);
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="bg-card border border-border rounded-2xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-        <div>
-          <h3 className="text-lg font-semibold text-card-foreground">Create Class</h3>
-          <p className="text-xs text-muted-foreground">Add a new class to Glee Academy.</p>
-        </div>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Code</label>
-            <Input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="e.g. MUS 240"
-              className="bg-background border-input text-foreground"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Title</label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Advanced Choir"
-              className="bg-background border-input text-foreground"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Description</label>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Short description"
-              className="bg-background border-input text-foreground"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Semester</label>
-            <Input
-              value={semester}
-              onChange={(e) => setSemester(e.target.value)}
-              className="bg-background border-input text-foreground"
-            />
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose} className="text-muted-foreground hover:bg-muted">Cancel</Button>
-          <Button onClick={submit} disabled={saving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Plus className="w-4 h-4 mr-1.5" />}
-            Create
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function defaultSemester(): string {
   const d = new Date();
