@@ -122,25 +122,14 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, []);
 
-  // Progress tracking interval. 1000 ms (was 500 ms) — every tick re-renders
-  // every consumer of currentTime (most notably the audio pill in the PDF
-  // viewer toolbar). Twice-a-second re-renders during normal playback were
-  // visibly jittery; 1 Hz still feels smooth on a seek slider.
-  useEffect(() => {
-    if (audioSource === 'youtube' && isPlaying) {
-      progressIntervalRef.current = window.setInterval(() => {
-        sendYouTubeCommand('getCurrentTime');
-      }, 1000);
-    } else {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-    }
-    return () => {
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    };
-  }, [audioSource, isPlaying, sendYouTubeCommand]);
+  // No progress polling. The only consumers of currentTime are the time
+  // label + time slider inside the pill, both gated on `hidden xs:flex`.
+  // `xs` is not a defined Tailwind breakpoint in this project, so those
+  // controls are always hidden — polling YouTube every second just to update
+  // invisible state was re-rendering the entire pill on a 1 Hz cadence and
+  // producing the visible sub-pixel shimmer the user kept calling "shaking."
+  // YouTube still emits onStateChange (Play/Pause/Ended) on its own, which
+  // is the only thing the rest of the UI actually reacts to.
 
   // Save volume
   useEffect(() => {
