@@ -81,9 +81,12 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
           } else if (state === 0) { // Ended
             setIsPlaying(false);
             setCurrentTime(0);
-          } else if (state === 3) { // Buffering
-            setIsLoading(true);
           }
+          // state === 3 (Buffering) intentionally NOT mapped to isLoading —
+          // YouTube emits buffering events frequently during normal playback
+          // and flipping the play-button icon to a spinner every time made
+          // the toolbar flicker. Initial load still shows the spinner via
+          // loadYouTube() -> onReady.
         }
         
         if (data.event === 'infoDelivery' && data.info) {
