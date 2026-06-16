@@ -66,8 +66,11 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
-  const [startOctave, setStartOctave] = useState<number>(4); // Default C4-B5
+  // startOctave is auto-derived to keep C4 at the center of the keyboard.
+  // For N octaves we want roughly N/2 octaves below C4 and N/2 above, so
+  // startOctave = 4 - floor(N/2). Default visible range: 2 octaves -> C3-B4.
   const [octaveCount, setOctaveCount] = useState<1 | 2 | 3>(2);
+  const startOctave = Math.max(0, 4 - Math.floor(octaveCount / 2));
   const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
   const [synthReady, setSynthReady] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
@@ -186,11 +189,14 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   }, []);
 
   const isDesktop = window.innerWidth >= 1024;
-  // Taller + thinner keys. Fixed white-key width so the keyboard always
-  // overflows the viewport at 2+ octaves and the scroll container kicks in
-  // for horizontal panning instead of squishing keys to fit.
+  // Taller keys. White keys grow to fill the viewport width — divides the
+  // available width by total white keys (octaveCount * 7) — with a 32 px
+  // floor so on very narrow screens or 3-octave view the overflow-x-auto
+  // container kicks in for horizontal panning instead of squishing fingers
+  // off the keys.
   const keyHeight = isExpanded ? (isDesktop ? 260 : 200) : (isDesktop ? 200 : 150);
-  const whiteKeyWidth = 32;
+  const viewportPx = typeof window !== 'undefined' ? window.innerWidth - 16 : 800;
+  const whiteKeyWidth = Math.max(32, Math.floor(viewportPx / (octaveCount * 7)));
 
   const pianoContent = (
     <div 
@@ -208,20 +214,9 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
         
         {/* Controls */}
         <div className="flex items-center gap-1 flex-1 overflow-x-auto">
-          <Select value={startOctave.toString()} onValueChange={v => setStartOctave(parseInt(v, 10))}>
-            <SelectTrigger className="w-16 h-7 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="z-[10001]">
-              <SelectItem value="2">C2</SelectItem>
-              <SelectItem value="3">C3</SelectItem>
-              <SelectItem value="4">C4</SelectItem>
-              <SelectItem value="5">C5</SelectItem>
-              <SelectItem value="6">C6</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <ToggleGroup 
+          {/* Octave start selector removed — startOctave is derived from
+              octaveCount so C4 stays centered automatically. */}
+          <ToggleGroup
             type="single" 
             value={octaveCount.toString()} 
             onValueChange={(val) => val && setOctaveCount(parseInt(val, 10) as 1 | 2 | 3)}
