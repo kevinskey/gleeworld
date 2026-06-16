@@ -110,16 +110,21 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Send command to YouTube iframe
+  // Send command to YouTube iframe. Also re-sends the "listening" handshake
+  // every time — the YouTube IFrame JS API ignores commands until that
+  // handshake has been received, and iframe.onload doesn't always fire
+  // reliably (especially first-render in WKWebView). Cheap to repeat; YouTube
+  // de-dupes on its side.
   const sendYouTubeCommand = useCallback((command: string, args?: any) => {
-    if (iframeRef.current?.contentWindow) {
-      const message = JSON.stringify({
-        event: 'command',
-        func: command,
-        args: args || []
-      });
-      iframeRef.current.contentWindow.postMessage(message, 'https://www.youtube.com');
-    }
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    try {
+      win.postMessage(JSON.stringify({ event: 'listening' }), 'https://www.youtube.com');
+      win.postMessage(
+        JSON.stringify({ event: 'command', func: command, args: args || [] }),
+        'https://www.youtube.com',
+      );
+    } catch { /* iframe might be cross-origin during init — silent retry next click */ }
   }, []);
 
   // No progress polling. The only consumers of currentTime are the time
@@ -170,12 +175,12 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       if (audioRef.current) {
         audioRef.current.src = url;
         audioRef.current.load();
-        audioRef.current.play();
+        // No auto-play. User taps Play to start.
       }
       setAudioSource('file');
       setAudioFileName(file.name);
       setYoutubeVideoId(null);
-      setIsPlaying(true);
+      setIsPlaying(false);
       setPlayerReady(true);
       setIsLoading(false);
       setIsActive(true);
@@ -187,12 +192,12 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     if (audioRef.current) {
       audioRef.current.src = url;
       audioRef.current.load();
-      audioRef.current.play();
+      // No auto-play. User taps Play to start.
     }
     setAudioSource('file');
     setAudioFileName(fileName || 'Audio');
     setYoutubeVideoId(null);
-    setIsPlaying(true);
+    setIsPlaying(false);
     setPlayerReady(true);
     setIsLoading(false);
     setIsActive(true);
@@ -347,7 +352,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
         >
           <iframe
             ref={iframeRef}
-            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&rel=0&origin=${window.location.origin}`}
+            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=0&controls=0&modestbranding=1&rel=0&origin=${window.location.origin}`}
             allow="autoplay; encrypted-media"
             onLoad={handleIframeLoad}
             style={{ width: '100%', height: '100%', border: 'none' }}
