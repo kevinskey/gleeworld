@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
 import { ScopeFilterChips } from '@/components/library/ScopeFilterChips';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const SetlistBuilder = lazy(() =>
   import('@/components/music-library/SetlistBuilder').then((m) => ({ default: m.SetlistBuilder })),
@@ -62,6 +63,8 @@ export default function MusicLibraryPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { active: scope, setActive: setScope, options, courses, applyFilter } = useScopeFilter();
+  const { canEditMusicLibrary } = useUserRole();
+  const canEdit = canEditMusicLibrary();
   const [topTab, setTopTab] = useState<TopTab>('scores');
   const [search, setSearch] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -125,7 +128,7 @@ export default function MusicLibraryPage() {
             Sheet music scores across your ensembles. Other media types live in the Media Library.
           </p>
         </div>
-        {topTab === 'scores' && (
+        {topTab === 'scores' && canEdit && (
           <Button onClick={() => setUploadOpen(true)}>
             <Upload className="w-4 h-4 mr-1.5" /> Add Score
           </Button>
@@ -200,6 +203,7 @@ export default function MusicLibraryPage() {
                   key={r.id}
                   row={r}
                   courseCode={r.course_id ? courseCodeById[r.course_id] ?? null : null}
+                  canEdit={canEdit}
                   onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
                   onAttachAudio={() => setAttachingAudio(r)}
                   onEdit={() => setEditing(r)}
@@ -319,10 +323,11 @@ export default function MusicLibraryPage() {
 }
 
 function ScoreCard({
-  row, courseCode, onAnnotate, onAttachAudio, onEdit,
+  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit,
 }: {
   row: ScoreRow;
   courseCode: string | null;
+  canEdit: boolean;
   onAnnotate: () => void;
   onAttachAudio: () => void;
   onEdit: () => void;
@@ -376,24 +381,28 @@ function ScoreCard({
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            aria-label="Edit score details"
-          >
-            <Pencil className="w-4 h-4" />
-          </Button>
+          {canEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              aria-label="Edit score details"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          )}
           {hasPdf && (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
-              >
-                <Headphones className="w-4 h-4 mr-1.5" />
-                {hasAudio ? 'Audio' : 'Attach audio'}
-              </Button>
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
+                >
+                  <Headphones className="w-4 h-4 mr-1.5" />
+                  {hasAudio ? 'Audio' : 'Attach audio'}
+                </Button>
+              )}
               <Button
                 variant="default"
                 size="sm"

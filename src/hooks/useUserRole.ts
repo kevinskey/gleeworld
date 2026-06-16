@@ -164,6 +164,18 @@ export const useUserRole = () => {
   const canDeleteUsers = (): boolean => isSuperAdmin();
   const canManageSystemSettings = (): boolean => isSuperAdmin();
 
+  // Music Library write capability — uploading scores, editing metadata
+  // (title/composer/voicing/copies/location), attaching audio. Students
+  // (and below) can still open + annotate scores; annotations are RLS-
+  // scoped to user_id so each student has their own personal markup.
+  const canEditMusicLibrary = (): boolean => {
+    if (!profile) return false;
+    if (isSuperAdmin() || isAdmin()) return true;
+    if (hasLibrarianAppRole) return true;
+    if (profile.role === 'librarian') return true;
+    return false;
+  };
+
   return {
     profile,
     loading,
@@ -189,5 +201,7 @@ export const useUserRole = () => {
     canManageUsers,
     canDeleteUsers,
     canManageSystemSettings,
+    canEditMusicLibrary,
+    hasLibrarianAppRole,
   };
 };
