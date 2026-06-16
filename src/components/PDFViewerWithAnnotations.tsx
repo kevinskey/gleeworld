@@ -45,17 +45,17 @@ import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
 import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import * as pdfjsLib from 'pdfjs-dist';
-// Vite's ?worker import emits a real Worker constructor with type:'module'
-// baked in — required because pdfjs-dist 5.x ships the worker as ESM (.mjs)
-// with import statements that a classic worker can't parse. Setting
-// workerSrc instead would create a classic worker that fails, then pdfjs
-// silently falls back to fetching a hardcoded cdnjs URL that may not exist
-// (the "Setting up fake worker failed" error users were seeing).
-//
-// `new PdfJsWorker()` produces a local module worker; the URL is bundled
-// into dist/assets and served same-origin by browsers and by Capacitor's
-// WKWebView alike.
-import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker';
+// `?worker&inline` bundles the pdfjs worker source directly into the main
+// JS bundle and runs it from an in-memory Blob URL. That sidesteps two
+// failure modes that have plagued the score viewer on iOS:
+//   1. Capacitor's WKWebView sometimes serves bundled .mjs assets with the
+//      wrong MIME (application/octet-stream), which blocks the browser from
+//      loading them as ES module workers.
+//   2. The "fake worker" fallback path in pdfjs hardcodes a cdnjs URL that
+//      may not exist or may be blocked by tenants' CSP / ad blockers.
+// Trade-off: main JS bundle gets ~1 MB heavier, but the score viewer works
+// reliably on iPhone, iPad TestFlight, Mac Safari, Chrome, Firefox.
+import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker&inline';
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfJsWorker();
 
 interface PDFViewerWithAnnotationsProps {
