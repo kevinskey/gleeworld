@@ -118,13 +118,15 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, []);
 
-  // Progress tracking interval
+  // Progress tracking interval. 1000 ms (was 500 ms) — every tick re-renders
+  // every consumer of currentTime (most notably the audio pill in the PDF
+  // viewer toolbar). Twice-a-second re-renders during normal playback were
+  // visibly jittery; 1 Hz still feels smooth on a seek slider.
   useEffect(() => {
     if (audioSource === 'youtube' && isPlaying) {
-      // Request current time periodically
       progressIntervalRef.current = window.setInterval(() => {
         sendYouTubeCommand('getCurrentTime');
-      }, 500);
+      }, 1000);
     } else {
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
