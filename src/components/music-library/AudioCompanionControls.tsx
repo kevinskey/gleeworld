@@ -109,12 +109,11 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
 
   return (
     <div className={cn(
-      // Fixed width on desktop (sm+) so the surrounding toolbar buttons
-      // (piano, palette) don't shift left/right as the slider's thumb /
-      // currentTime updates re-render this component. The backdrop-blur
-      // was also expensive and forced a full repaint of the PDF canvas
-      // behind the toolbar on every state update — dropping it.
-      "flex items-center gap-1.5 sm:gap-2 bg-card border border-border px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg rounded-lg z-50 sm:w-[560px] sm:flex-none",
+      // Auto-sized to content. The earlier 560px lock was added to defeat
+      // the per-second polling re-render shimmer; that poll is gone, so the
+      // pill width is naturally stable and the lock was just crowding the
+      // page-nav + palette buttons off the right side of the toolbar.
+      "flex items-center gap-1.5 sm:gap-2 bg-card border border-border px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg rounded-lg z-50",
       className
     )}>
       <input

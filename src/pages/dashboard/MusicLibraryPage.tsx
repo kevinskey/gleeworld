@@ -5,7 +5,7 @@
 // persist via gw_sheet_music_annotations and can be shared per existing
 // flows. The legacy /music-library two-pane viewer remains for deep links.
 
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +23,7 @@ import {
 import {
   Music, Upload, Search, Loader2, FileMusic, ListMusic,
   PencilLine, Headphones, Youtube, X, Pencil, Library as LibraryIcon,
+  Maximize2, Minimize2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -71,6 +72,18 @@ export default function MusicLibraryPage() {
   const [attachingAudio, setAttachingAudio] = useState<ScoreRow | null>(null);
   // Edit dialog state — librarian edit (title, composer, voicing, copies, location).
   const [editing, setEditing] = useState<ScoreRow | null>(null);
+  // Fullscreen toggle for the viewer dialog (max viewing area for annotation).
+  const viewerDialogRef = useRef<HTMLDivElement>(null);
+  const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
+  useEffect(() => {
+    const handler = () => setIsViewerFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+  const toggleViewerFullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else viewerDialogRef.current?.requestFullscreen().catch(() => {});
+  };
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
     queryKey: ['music-library-scores', scope],
@@ -253,13 +266,32 @@ export default function MusicLibraryPage() {
       {/* Annotation viewer — opens a near-fullscreen dialog wrapping the
           shared PDFViewerWithAnnotations. Annotations save into
           gw_sheet_music_annotations and persist across sessions. */}
-      <Dialog open={!!viewing} onOpenChange={(v) => !v && setViewing(null)}>
-        <DialogContent className="max-w-6xl h-[90vh] p-0 flex flex-col overflow-hidden">
-          <DialogHeader className="p-4 border-b border-border shrink-0">
+      <Dialog
+        open={!!viewing}
+        onOpenChange={(v) => {
+          if (!v && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+          if (!v) setViewing(null);
+        }}
+      >
+        <DialogContent
+          ref={viewerDialogRef}
+          className="max-w-6xl h-[90vh] p-0 flex flex-col overflow-hidden bg-background"
+        >
+          <DialogHeader className="p-4 border-b border-border shrink-0 flex-row items-center justify-between space-y-0">
             <DialogTitle className="flex items-center gap-2">
               <PencilLine className="w-4 h-4 text-primary" />
               {viewing?.title || 'Score'}
             </DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleViewerFullscreen}
+              className="h-8 w-8"
+              aria-label={isViewerFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              title={isViewerFullscreen ? 'Exit fullscreen' : 'Fullscreen (great on iPad)'}
+            >
+              {isViewerFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </Button>
           </DialogHeader>
           <div className="flex-1 min-h-0">
             {viewing && (

@@ -438,6 +438,41 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     }
   }, [startInAnnotationMode, annotationMode]);
 
+  // Scroll-to-advance: when the user has scrolled to the bottom of the current
+  // page and continues to scroll/swipe down, advance to the next page (and
+  // reset scroll to top). Reverse for prev. Critical on iPad where users
+  // naturally scroll down a tall score and expect continuation. Only fires
+  // when annotation mode is off (in annotation mode scroll = panning canvas).
+  useEffect(() => {
+    if (annotationMode) return;
+    const container = containerRef.current;
+    if (!container) return;
+    let lastFireAt = 0;
+    const FIRE_COOLDOWN = 600;
+
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) < 8) return;
+      const now = Date.now();
+      if (now - lastFireAt < FIRE_COOLDOWN) return;
+      const atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 2;
+      const atTop = container.scrollTop <= 1;
+      if (e.deltaY > 0 && atBottom && currentPage < (totalPages || 1)) {
+        e.preventDefault();
+        lastFireAt = now;
+        nextPage();
+        requestAnimationFrame(() => { container.scrollTop = 0; });
+      } else if (e.deltaY < 0 && atTop && currentPage > 1) {
+        e.preventDefault();
+        lastFireAt = now;
+        prevPage();
+        requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+      }
+    };
+
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => container.removeEventListener('wheel', onWheel);
+  }, [annotationMode, currentPage, totalPages, nextPage, prevPage]);
+
   // Auto-load associated audio when PDF opens
   useEffect(() => {
     if (audioData?.audio_url && !audioSource) {
