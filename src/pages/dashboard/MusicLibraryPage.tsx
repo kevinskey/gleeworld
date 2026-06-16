@@ -311,7 +311,11 @@ export default function MusicLibraryPage() {
                   <PencilLine className="w-4 h-4" />
                 </button>
               )}
-              {viewing?.title || 'Score'}
+              {/* Pull the title from the live `rows` query — if the user
+                  edits via the pencil, react-query refetches `rows` and
+                  this header updates instantly. Fall back to the
+                  snapshot captured at open time. */}
+              {(viewing && rows.find((r) => r.id === viewing.id)?.title) || viewing?.title || 'Score'}
             </DialogTitle>
             <Button
               variant="ghost"
@@ -336,7 +340,7 @@ export default function MusicLibraryPage() {
                 <PDFViewerWithAnnotations
                   pdfUrl={viewing.pdfUrl}
                   musicId={viewing.id}
-                  musicTitle={viewing.title}
+                  musicTitle={rows.find((r) => r.id === viewing.id)?.title || viewing.title}
                   startInAnnotationMode={false}
                   className="h-full"
                 />
