@@ -45,17 +45,18 @@ import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
 import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import * as pdfjsLib from 'pdfjs-dist';
-// Browsers + modern Safari: serve the worker as a same-origin file bundled
-// alongside the main JS. Capacitor's WKWebView (iOS native app), however,
-// often hands bundled .mjs out with application/octet-stream which blocks
-// ES-module worker loading — so when we detect Capacitor we point at the
-// jsDelivr CDN where the MIME is guaranteed text/javascript.
-import pdfWorkerLocalUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
-const isCapacitor = typeof window !== 'undefined' &&
-  (window as any).Capacitor?.isNativePlatform?.() === true;
-pdfjsLib.GlobalWorkerOptions.workerSrc = isCapacitor
-  ? `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
-  : pdfWorkerLocalUrl;
+// Vite's ?worker import emits a real Worker constructor with type:'module'
+// baked in — required because pdfjs-dist 5.x ships the worker as ESM (.mjs)
+// with import statements that a classic worker can't parse. Setting
+// workerSrc instead would create a classic worker that fails, then pdfjs
+// silently falls back to fetching a hardcoded cdnjs URL that may not exist
+// (the "Setting up fake worker failed" error users were seeing).
+//
+// `new PdfJsWorker()` produces a local module worker; the URL is bundled
+// into dist/assets and served same-origin by browsers and by Capacitor's
+// WKWebView alike.
+import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker';
+pdfjsLib.GlobalWorkerOptions.workerPort = new PdfJsWorker();
 
 interface PDFViewerWithAnnotationsProps {
   pdfUrl: string | null;
