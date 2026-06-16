@@ -26,6 +26,7 @@ interface AudioCompanionContextValue extends AudioCompanionState {
   setVolume: (vol: number) => void;
   toggleMute: () => void;
   stop: () => void;
+  stopPlayback: () => void;
   closeYouTube: () => void;
 }
 
@@ -227,6 +228,23 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, [audioSource, sendYouTubeCommand]);
 
+  // Stop = pause + rewind, without unloading the audio. YouTube's
+  // pauseVideo + seekTo(0) race can result in playback resuming — pause is
+  // applied, but the seek then triggers a state transition that auto-resumes
+  // from start. Re-send pauseVideo after the seek to defeat that.
+  const stopPlayback = useCallback(() => {
+    if (audioSource === 'youtube') {
+      sendYouTubeCommand('pauseVideo');
+      sendYouTubeCommand('seekTo', [0, true]);
+      window.setTimeout(() => sendYouTubeCommand('pauseVideo'), 100);
+    } else if (audioSource === 'file' && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }, [audioSource, sendYouTubeCommand]);
+
   const setVolume = useCallback((vol: number) => {
     setVolumeState(vol);
     setIsMuted(vol === 0);
@@ -326,6 +344,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
         setVolume,
         toggleMute,
         stop,
+        stopPlayback,
         closeYouTube,
       }}
     >
