@@ -11,7 +11,6 @@ import {
   Music,
   Youtube,
   Upload,
-  StopCircle,
   Square,
   Loader2,
   MoreVertical
@@ -91,11 +90,6 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
     closeYouTube();
     if (onClose) onClose();
     else hidePlayer();
-  };
-
-  const stopAndClear = () => {
-    stop();
-    setYoutubeUrl('');
   };
 
   const formatTime = (seconds: number) => {
@@ -270,10 +264,6 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
                   <Square className="h-4 w-4 mr-2" />
                   Stop
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={stopAndClear} className="touch-manipulation">
-                  <StopCircle className="h-4 w-4 mr-2" />
-                  Stop & Clear
-                </DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>
@@ -298,15 +288,6 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
               title="Stop"
             >
               <Square className="h-4 w-4 text-foreground fill-foreground" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={stopAndClear}
-              className="h-9 w-9 p-0 touch-manipulation"
-              title="Stop and clear"
-            >
-              <StopCircle className="h-4 w-4 text-foreground" />
             </Button>
           </>
         )}
