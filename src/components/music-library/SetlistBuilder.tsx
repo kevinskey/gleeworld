@@ -685,20 +685,140 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
       {/* Compact Header */}
       <div className="flex items-center justify-between gap-2 px-1">
         <span className="text-sm font-semibold text-foreground">My Setlists</span>
-        <Button 
-          onClick={() => {
-            console.log('SetlistBuilder: New Setlist button clicked');
-            setIsCreating(!isCreating);
-          }} 
-          className="h-7 px-2 gap-1"
+        <Button
+          onClick={() => setIsCreating(!isCreating)}
           disabled={createLoading}
-          variant={isCreating ? "secondary" : "outline"}
+          variant={isCreating ? "secondary" : "default"}
           size="sm"
+          className="gap-1"
         >
-          <Plus className="h-3.5 w-3.5" />
-          <span className="text-xs">New</span>
+          <Plus className="h-4 w-4" />
+          New
         </Button>
       </div>
+
+      {/* Create/Edit Setlist Form — render at the top when active so it's
+          immediately visible. Was previously below a scroll container and
+          users clicking "New" couldn't see the form appear. */}
+      {(isCreating || isEditing) && (
+        <Card>
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm">
+              {isEditing ? 'Edit Setlist' : 'New Setlist'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-xs">Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Concert Setlist"
+                disabled={createLoading}
+                className="h-8 text-sm"
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="venue" className="text-xs">Venue</Label>
+              <Input
+                id="venue"
+                value={formData.venue}
+                onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                placeholder="Concert Hall"
+                disabled={createLoading}
+                className="h-8 text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-xs">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Spring concert program..."
+                rows={2}
+                disabled={createLoading}
+                className="text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Performance Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal h-8 text-sm",
+                      !formData.performance_date && "text-muted-foreground"
+                    )}
+                    disabled={createLoading}
+                  >
+                    <CalendarIcon className="mr-2 h-3 w-3" />
+                    {formData.performance_date ? (
+                      format(formData.performance_date, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.performance_date}
+                    onSelect={(date) => setFormData({ ...formData, performance_date: date })}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_public"
+                checked={formData.is_public}
+                onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
+                className="rounded h-3 w-3"
+                disabled={createLoading}
+              />
+              <Label htmlFor="is_public" className="text-xs">
+                Make public
+              </Label>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIsCreating(false);
+                  setIsEditing(false);
+                  resetForm();
+                }}
+                disabled={createLoading}
+                className="h-7 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={isEditing ? updateSetlist : createSetlist}
+                disabled={createLoading || !formData.title.trim()}
+                className="h-7 text-xs"
+              >
+                <Save className="h-3 w-3 mr-1" />
+                {createLoading ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Mac-style Setlist List */}
       <div className="space-y-1 min-h-[calc(100vh-200px)] max-h-[calc(100vh-120px)] overflow-y-auto">
@@ -838,125 +958,6 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
         )}
       </div>
 
-      {/* Create/Edit Setlist Form */}
-      {(isCreating || isEditing) && (
-        <Card className="mt-2">
-          <CardHeader className="py-3">
-            <CardTitle className="text-sm">
-              {isEditing ? 'Edit Setlist' : 'New Setlist'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-xs">Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Concert Setlist"
-                disabled={createLoading}
-                className="h-8 text-sm"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="venue" className="text-xs">Venue</Label>
-              <Input
-                id="venue"
-                value={formData.venue}
-                onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                placeholder="Concert Hall"
-                disabled={createLoading}
-                className="h-8 text-sm"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-xs">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Spring concert program..."
-                rows={2}
-                disabled={createLoading}
-                className="text-sm"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs">Performance Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal h-8 text-sm",
-                      !formData.performance_date && "text-muted-foreground"
-                    )}
-                    disabled={createLoading}
-                  >
-                    <CalendarIcon className="mr-2 h-3 w-3" />
-                    {formData.performance_date ? (
-                      format(formData.performance_date, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.performance_date}
-                    onSelect={(date) => setFormData({ ...formData, performance_date: date })}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="is_public"
-                checked={formData.is_public}
-                onChange={(e) => setFormData({ ...formData, is_public: e.target.checked })}
-                className="rounded h-3 w-3"
-                disabled={createLoading}
-              />
-              <Label htmlFor="is_public" className="text-xs">
-                Make public
-              </Label>
-            </div>
-              
-            <div className="flex gap-2 pt-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => { 
-                  setIsCreating(false);
-                  setIsEditing(false);
-                  resetForm(); 
-                }}
-                disabled={createLoading}
-                className="h-7 text-xs"
-              >
-                Cancel
-              </Button>
-              <Button 
-                size="sm"
-                onClick={isEditing ? updateSetlist : createSetlist}
-                disabled={createLoading || !formData.title.trim()}
-                className="h-7 text-xs"
-              >
-                <Save className="h-3 w-3 mr-1" />
-                {createLoading ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
