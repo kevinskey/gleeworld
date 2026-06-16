@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense, ReactNode } from "react";
 import { AudioCompanionProvider } from "@/contexts/AudioCompanionContext";
+import { TenantFavicon } from "@/components/TenantFavicon";
 import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
 import { GraduatesRoute } from "@/components/routes/GraduatesRoute";
@@ -43,6 +44,24 @@ import RehearsalPlans from "./pages/admin/RehearsalPlans";
 import Prospects from "./pages/admin/Prospects";
 import PracticeLog from "./pages/PracticeLog";
 import AcademyHome from "./pages/academy/AcademyHome";
+import { AcademyShell } from "./components/academy/AcademyShell";
+import { AcademyComingSoon } from "./components/academy/AcademyComingSoon";
+const NewCoursePage = lazy(() => import("./pages/academy/NewCoursePage"));
+const TourSandbox = lazy(() => import("./sandbox/tour/TourSandbox"));
+const GradingQueuePage = lazy(() => import("./pages/academy/GradingQueuePage"));
+const CourseStorePage = lazy(() => import("./pages/academy/CourseStorePage"));
+const StudentGradesPage = lazy(() => import("./pages/academy/StudentGradesPage"));
+const ReportsPage = lazy(() => import("./pages/academy/ReportsPage"));
+const CourseAddonsPage = lazy(() => import("./pages/academy/CourseAddonsPage"));
+const CourseSettingsPage = lazy(() => import("./pages/academy/CourseSettingsPage"));
+const QuizQuestionsPage = lazy(() => import("./pages/academy/QuizQuestionsPage"));
+const QuizTakingPage = lazy(() => import("./pages/academy/QuizTakingPage"));
+const QuizAttemptsPage = lazy(() => import("./pages/academy/QuizAttemptsPage"));
+const QuizAttemptDetailPage = lazy(() => import("./pages/academy/QuizAttemptDetailPage"));
+const WorkspaceUsersPage = lazy(() => import("./pages/dashboard/WorkspaceUsersPage"));
+const WorkspaceSettingsPage = lazy(() => import("./pages/dashboard/WorkspaceSettingsPage"));
+const WorkspaceAnalyticsPage = lazy(() => import("./pages/dashboard/WorkspaceAnalyticsPage"));
+const DiscussionThreadPage = lazy(() => import("./pages/academy/DiscussionThreadPage"));
 import StudentOnboarding from "./pages/admin/StudentOnboarding";
 import JoinCourse from "./pages/JoinCourse";
 import EnrollLanding from "./pages/EnrollLanding";
@@ -125,6 +144,7 @@ import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Calendar from "./pages/Calendar";
+import { CalendarViews } from "./components/calendar/CalendarViews";
 // Note: Messenger is imported once at line 43 from pages/admin/Messenger (the merged
 // Communications hub). The old pages/Messenger.tsx is unused and should be deleted.
 
@@ -137,7 +157,13 @@ import OnboardingInfo from "./pages/OnboardingInfo";
 import MemberRegistration from "./pages/MemberRegistration";
 import ResetPassword from "./pages/ResetPassword";
 import MusicLibraryPage from "./pages/member/MusicLibraryPage";
+const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
+const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
 import SightReadingPage from "./pages/member/SightReadingPage";
+const ConcertTicketsPage = lazy(() => import("./pages/dashboard/ConcertTicketsPage"));
+const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
+const AuditionsModule = lazy(() => import("./components/modules/AuditionsModule").then(m => ({ default: m.AuditionsModule })));
+const PRHubModule = lazy(() => import("./components/modules/PRHubModule").then(m => ({ default: m.PRHubModule })));
 import MemberCalendarPage from "./pages/member/MemberCalendarPage";
 import AttendancePage from "./pages/member/AttendancePage";
 import WardrobePage from "./pages/member/WardrobePage";
@@ -201,6 +227,10 @@ const PublicPageEditor = lazy(() => import("./pages/admin/PublicPageEditor"));
 const FanPageEditor = lazy(() => import("./pages/admin/FanPageEditor"));
 const FanPage = lazy(() => import("./pages/FanPage"));
 const PlatformTenantsPortal = lazy(() => import("./pages/admin/PlatformTenantsPortal"));
+const CommandCenter = lazy(() => import("./pages/dashboard/CommandCenter"));
+const MusicToolkitPage = lazy(() => import("./pages/dashboard/MusicToolkitPage"));
+const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
+import { DashboardShell } from "./components/dashboard/DashboardShell";
 import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
 import MobileScoring from "./pages/MobileScoring";
@@ -380,6 +410,7 @@ const App = () => {
                   <ActiveMeetingProvider>
                   <AudioCompanionProvider>
                   <div>
+                  <TenantFavicon />
                   <Toaster />
                   <Sonner />
                   <NativePushBridge />
@@ -440,8 +471,11 @@ const App = () => {
                   <PublicRoute>
                     <AuthPage />
                   </PublicRoute>
-                } 
+                }
               />
+              {/* Sandbox: animated cursor + spotlight tour over a mock Command Center.
+                  Gated by ?key=preview inside the component itself. */}
+              <Route path="/tour-sandbox" element={<TourSandbox />} />
               <Route 
                 path="/auth/mus240" 
                 element={
@@ -585,13 +619,154 @@ const App = () => {
               <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
               
-              {/* /academy base — landing on the course selection grid */}
+              {/* /academy base — Academy environment dashboard (role-aware). */}
               <Route
                 path="/academy"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout showHeader={false}>
-                      <AcademyHome />
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><AcademyHome /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* Academy sub-routes — placeholders for the teacher tools. */}
+              <Route
+                path="/academy/grading"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><GradingQueuePage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/reports"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><ReportsPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/store"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><CourseStorePage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/grades"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><StudentGradesPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/new"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><NewCoursePage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/c/:code/addons"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><CourseAddonsPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/c/:code/settings"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><CourseSettingsPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/c/:code/test/:testId/questions"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><QuizQuestionsPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/c/:code/test/:testId/take"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><QuizTakingPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/c/:code/test/:testId/attempts"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><QuizAttemptsPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/academy/c/:code/test/:testId/attempts/:attemptId"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><QuizAttemptDetailPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/users"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><WorkspaceUsersPage /></DashboardShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/workspace"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><WorkspaceSettingsPage /></DashboardShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/analytics"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><WorkspaceAnalyticsPage /></DashboardShell>
                     </UniversalLayout>
                   </ProtectedRoute>
                 }
@@ -609,6 +784,16 @@ const App = () => {
               <Route path="/join/:code" element={<PublicRoute><JoinCourse /></PublicRoute>} />
               <Route path="/enroll" element={<PublicRoute><EnrollLanding /></PublicRoute>} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route
+                path="/academy/c/:code/discuss/:threadId"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <AcademyShell><DiscussionThreadPage /></AcademyShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Printable Syllabi Page - must be before wildcard route */}
               <Route
@@ -678,15 +863,9 @@ const App = () => {
               {/* Legacy course lounge redirect - now goes to dashboard */}
               <Route path="/course-lounge/:courseId" element={<Navigate to="/dashboard" replace />} />
               
-              {/* Book Appointment Page */}
-              <Route 
-                path="/book-appointment" 
-                element={
-                  <ProtectedRoute>
-                    <BookAppointmentPage />
-                  </ProtectedRoute>
-                } 
-              />
+              {/* Legacy booking page — now redirects into the dashboard shell so
+                  every link / bookmark in the wild lands on the redesigned UI. */}
+              <Route path="/book-appointment" element={<Navigate to="/dashboard/office-hours" replace />} />
               {/* Control Center alias */}
               <Route
                 path="/control-center"
@@ -830,8 +1009,8 @@ const App = () => {
                 path="/settings/modules"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout>
-                      <ModulesSettings />
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><ModulesSettings /></DashboardShell>
                     </UniversalLayout>
                   </ProtectedRoute>
                 }
@@ -1018,18 +1197,227 @@ const App = () => {
                     </ProtectedRoute>
                   } 
                 />
-                <Route 
-                  path="/dashboard" 
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <CommandCenter />
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* In-shell module routes — render each module's page inside
+                    the dashboard sidebar so navigation stays put. */}
+                <Route
+                  path="/dashboard/messenger"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><Messenger /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/calendar"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><CalendarViews /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/academy"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><AcademyHome /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/music-toolkit"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><MusicToolkitPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/music-library"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><NewMusicLibraryPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/sight-reading"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SightReadingPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/concert-tickets"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><ConcertTicketsPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/part-tracks"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <div className="max-w-5xl mx-auto px-6 py-6">
+                            <h1 className="text-3xl font-bold tracking-tight mb-6">Part Tracks</h1>
+                            <PartTracksModule />
+                          </div>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/auditions"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <div className="max-w-6xl mx-auto px-6 py-6">
+                            <AuditionsModule isFullPage />
+                          </div>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/librarian"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><LibrarianDashboardPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/pr-hub"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <div className="max-w-6xl mx-auto px-6 py-6">
+                            <PRHubModule isFullPage />
+                          </div>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/media-library"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><NewMediaLibraryPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/alumni"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><GraduatesPageView /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/finance"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><FinancialManagement /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/shop"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><Shop /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/feeds"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><FeedControl /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/office-hours"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><OfficeHoursPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/quick-cam"
+                  element={<Navigate to="/dashboard/quick-cam/glee-cam-pics" replace />}
+                />
+                <Route
+                  path="/dashboard/quick-cam/:categorySlug"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><GleeCamGallery /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/legacy-dashboard"
                   element={
                     <ProtectedRoute>
                       <UniversalLayout>
                         <UnifiedDashboard />
                       </UniversalLayout>
                     </ProtectedRoute>
-                   } 
-                 />
-                 <Route 
-                   path="/saved-feed" 
+                  }
+                />
+                 <Route
+                   path="/saved-feed"
                    element={
                      <ProtectedRoute>
                        <UniversalLayout>
@@ -1321,13 +1709,9 @@ const App = () => {
                     </ProtectedRoute>
                   } 
                 />
-                <Route 
-                  path="/calendar" 
-                  element={
-                    <ProtectedRoute>
-                      <Calendar />
-                    </ProtectedRoute>
-                  } 
+                <Route
+                  path="/calendar"
+                  element={<Navigate to="/dashboard/calendar" replace />}
                 />
                 <Route 
                   path="/messenger" 
