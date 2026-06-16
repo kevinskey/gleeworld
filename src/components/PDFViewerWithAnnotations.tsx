@@ -45,14 +45,15 @@ import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
 import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import * as pdfjsLib from 'pdfjs-dist';
-// Use Vite's ?url import (file-served worker) instead of ?worker (blob-URL
-// Worker instance). WKWebView under Capacitor (iOS native app) blocks blob:
-// worker URLs from capacitor://localhost origin, producing a white screen
-// when the PDF viewer mounts. ?url returns a same-origin file URL that the
-// browser loads as a normal classic worker — works on iOS WKWebView,
-// Safari, Chrome, and Firefox.
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+// pdfjs-dist 5.x ships the worker only as an ESM .mjs file. WKWebView under
+// Capacitor (iOS native app) often serves bundled .mjs assets with the wrong
+// MIME (application/octet-stream) which blocks ES-module worker loading and
+// leaves the score viewer hung. Load the worker from the jsDelivr CDN where
+// the MIME is guaranteed text/javascript and the URL is HTTPS — works in
+// the native app and in every browser, costs one network round-trip the
+// first time pdfjs initializes.
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 interface PDFViewerWithAnnotationsProps {
   pdfUrl: string | null;
