@@ -74,9 +74,11 @@ export const getSignedUrl = async (
   return null;
 };
 
-// Private buckets that require signed URLs.
+// Private buckets that require signed URLs. NOTE: sheet-music is publicly
+// readable in storage.buckets — listing it here would force an extra
+// createSignedUrl round-trip before pdfjs can start fetching, which was
+// noticeably delaying the in-library PDF viewer.
 const PRIVATE_BUCKETS = new Set([
-  'sheet-music',
   'w9-forms',
   'receipts',
   'contract-signatures',

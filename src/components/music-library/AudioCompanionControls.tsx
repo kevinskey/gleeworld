@@ -109,7 +109,12 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
 
   return (
     <div className={cn(
-      "flex items-center gap-1.5 sm:gap-2 bg-card/95 backdrop-blur border border-border px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg rounded-lg z-50",
+      // Fixed width on desktop (sm+) so the surrounding toolbar buttons
+      // (piano, palette) don't shift left/right as the slider's thumb /
+      // currentTime updates re-render this component. The backdrop-blur
+      // was also expensive and forced a full repaint of the PDF canvas
+      // behind the toolbar on every state update — dropping it.
+      "flex items-center gap-1.5 sm:gap-2 bg-card border border-border px-2 py-1.5 sm:px-3 sm:py-2 shadow-lg rounded-lg z-50 sm:w-[560px] sm:flex-none",
       className
     )}>
       <input
