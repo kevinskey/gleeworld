@@ -96,7 +96,11 @@ function Sidebar() {
   const tenantName = branding?.short_name || branding?.org_name || 'Your Site';
   const tenantLongName = branding?.org_name || branding?.short_name || 'Your Site';
   const { profile, canEditMusicLibrary } = useUserRole();
-  const userCanLibrarian = canEditMusicLibrary();
+  // Defensive: tolerate older useUserRole shapes that don't export this fn
+  // (avoids "canEditMusicLibrary is not a function" white-screening the shell).
+  const userCanLibrarian = typeof canEditMusicLibrary === 'function'
+    ? canEditMusicLibrary()
+    : !!(profile?.is_admin || profile?.is_super_admin);
   const location = useLocation();
   const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed);
 

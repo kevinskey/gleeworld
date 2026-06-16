@@ -76,16 +76,29 @@ export default function MusicLibraryPage() {
   // Edit dialog state — librarian edit (title, composer, voicing, copies, location).
   const [editing, setEditing] = useState<ScoreRow | null>(null);
   // Fullscreen toggle for the viewer dialog (max viewing area for annotation).
+  // Guarded for environments without the Fullscreen API (notably iOS
+  // WKWebView under Capacitor) — accessing `document.fullscreenElement` is
+  // fine but the request/exit methods don't exist there, so we feature-detect
+  // before calling and never throw on iOS native.
   const viewerDialogRef = useRef<HTMLDivElement>(null);
   const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
+  const fullscreenSupported = typeof document !== 'undefined'
+    && (document as any).fullscreenEnabled === true;
   useEffect(() => {
-    const handler = () => setIsViewerFullscreen(!!document.fullscreenElement);
+    if (!fullscreenSupported) return;
+    const handler = () => {
+      try { setIsViewerFullscreen(!!document.fullscreenElement); }
+      catch { /* no-op */ }
+    };
     document.addEventListener('fullscreenchange', handler);
     return () => document.removeEventListener('fullscreenchange', handler);
-  }, []);
+  }, [fullscreenSupported]);
   const toggleViewerFullscreen = () => {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else viewerDialogRef.current?.requestFullscreen().catch(() => {});
+    if (!fullscreenSupported) return;
+    try {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else viewerDialogRef.current?.requestFullscreen().catch(() => {});
+    } catch { /* no-op */ }
   };
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({

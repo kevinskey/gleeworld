@@ -14,21 +14,28 @@ export function TenantFavicon() {
 
   useEffect(() => {
     if (!logoUrl) return;
-    // Update both rel="icon" (browsers) and rel="apple-touch-icon" (iOS
-    // homescreen). Using setAttribute on existing links keeps the DOM stable;
-    // if a tenant has no link tags at all we add one.
-    const icons = document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]');
-    if (icons.length === 0) {
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      link.type = 'image/png';
-      document.head.appendChild(link);
-      icons[0] = link;
-    }
-    icons.forEach((l) => l.setAttribute('href', logoUrl));
+    try {
+      // Update both rel="icon" (browsers) and rel="apple-touch-icon" (iOS
+      // homescreen). NodeLists aren't writable so don't try to assign into
+      // them — either patch existing links in place, or append a new one.
+      const icons = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]'));
+      if (icons.length === 0) {
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.type = 'image/png';
+        link.href = logoUrl;
+        document.head.appendChild(link);
+      } else {
+        icons.forEach((l) => l.setAttribute('href', logoUrl));
+      }
 
-    const appleIcons = document.querySelectorAll<HTMLLinkElement>('link[rel="apple-touch-icon"]');
-    appleIcons.forEach((l) => l.setAttribute('href', logoUrl));
+      const appleIcons = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="apple-touch-icon"]'));
+      appleIcons.forEach((l) => l.setAttribute('href', logoUrl));
+    } catch (err) {
+      // Favicon swap is cosmetic — never let a quirky DOM API tear the page
+      // down (e.g. iOS WKWebView strictness on NodeList writes).
+      console.warn('[TenantFavicon] favicon update failed:', err);
+    }
   }, [logoUrl]);
 
   // Also keep the document title tenant-branded so a pinned tab shows the
