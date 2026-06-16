@@ -806,10 +806,23 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   }, [signedUrl]);
 
   // Helper: render a single page to an offscreen canvas (for caching)
+  // Cap the page cache so long scores don't blow memory. A scaled canvas is
+  // ~width*height*4 bytes (e.g. 1240x1750 at 1.5x ≈ 8.5 MB). 40 cached pages
+  // was ~340 MB of canvas memory alone, on top of pdfjs's per-page buffers,
+  // and crashed Chrome on long scores. 8 pages × ~8 MB ≈ 64 MB is plenty for
+  // smooth turns of the current page + a couple of neighbors.
+  const PAGE_CACHE_LIMIT = 8;
+
   const renderPageToOffscreen = useCallback(async (pageNum: number, renderScale: number): Promise<HTMLCanvasElement | null> => {
     if (!pdf || pageNum < 1 || pageNum > pdf.numPages) return null;
     const cacheKey = `${pageNum}-${renderScale}`;
-    if (pageCacheRef.current.has(cacheKey)) return pageCacheRef.current.get(cacheKey)!;
+    if (pageCacheRef.current.has(cacheKey)) {
+      // Re-insert to mark as most-recently-used (Map preserves insertion order).
+      const canvas = pageCacheRef.current.get(cacheKey)!;
+      pageCacheRef.current.delete(cacheKey);
+      pageCacheRef.current.set(cacheKey, canvas);
+      return canvas;
+    }
     if (preloadingRef.current.has(cacheKey)) return null; // already loading
     preloadingRef.current.add(cacheKey);
     try {
@@ -822,10 +835,14 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       if (!ctx) return null;
       await page.render({ canvasContext: ctx, viewport }).promise;
       pageCacheRef.current.set(cacheKey, offscreen);
-      // Evict old entries if cache too large
-      if (pageCacheRef.current.size > 40) {
-        const keys = Array.from(pageCacheRef.current.keys());
-        for (let i = 0; i < keys.length - 30; i++) pageCacheRef.current.delete(keys[i]);
+      // LRU eviction. Oldest entries (front of Map) drop first.
+      while (pageCacheRef.current.size > PAGE_CACHE_LIMIT) {
+        const oldest = pageCacheRef.current.keys().next().value;
+        if (oldest === undefined) break;
+        const oldCanvas = pageCacheRef.current.get(oldest);
+        pageCacheRef.current.delete(oldest);
+        // Help GC by zeroing the canvas dimensions.
+        if (oldCanvas) { oldCanvas.width = 0; oldCanvas.height = 0; }
       }
       return offscreen;
     } catch (err) {
@@ -836,33 +853,19 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     }
   }, [pdf]);
 
-  // Clear cache when pdf or scale changes
+  // Clear cache when pdf or scale changes. Zero canvas dimensions so the
+  // backing image data can be GC'd promptly instead of waiting on the Map
+  // entry to be reaped.
   useEffect(() => {
+    pageCacheRef.current.forEach((canvas) => { canvas.width = 0; canvas.height = 0; });
     pageCacheRef.current.clear();
     preloadingRef.current.clear();
   }, [pdf, scale]);
 
-  // Aggressively pre-render ALL pages after PDF loads for instant turns
-  useEffect(() => {
-    if (!pdf) return;
-    let cancelled = false;
-    const preloadAll = async () => {
-      const total = pdf.numPages;
-      // Batch 3 pages at a time to avoid overwhelming the renderer
-      for (let batch = 0; batch < Math.ceil(total / 3); batch++) {
-        if (cancelled) return;
-        const promises: Promise<any>[] = [];
-        for (let j = 0; j < 3; j++) {
-          const p = batch * 3 + j + 1;
-          if (p <= total) promises.push(renderPageToOffscreen(p, scale));
-        }
-        await Promise.allSettled(promises);
-      }
-    };
-    // Small delay so the current page renders first
-    const timer = setTimeout(preloadAll, 300);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [pdf, scale, renderPageToOffscreen]);
+  // No bulk preload. Earlier code pre-rendered every page in the score on a
+  // 300 ms timer, which combined with the 40-page cache blew Chrome's memory
+  // limit on long PDFs. Neighbor pages are preloaded on demand by the page-
+  // change effect below.
 
   // Render PDF page with caching — instant if pre-cached
   useEffect(() => {
@@ -894,16 +897,18 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         ctx.drawImage(offscreen, 0, 0);
       }
 
-      // Pre-load adjacent pages in the background for instant future turns
+      // Pre-load adjacent pages in the background for instant future turns.
+      // Keep this small — preloading too many pages on long scores piles up
+      // canvas memory until Chrome OOMs. 2 ahead + 1 behind covers typical
+      // page-turn behavior without bloating the cache.
       if (!cancelled) {
-        const PRELOAD = 5;
-        for (let i = 1; i <= PRELOAD; i++) {
+        for (let i = 1; i <= 2; i++) {
           if (currentPage + i <= (totalPages || pdf.numPages)) {
             renderPageToOffscreen(currentPage + i, scale);
           }
-          if (currentPage - i >= 1) {
-            renderPageToOffscreen(currentPage - i, scale);
-          }
+        }
+        if (currentPage - 1 >= 1) {
+          renderPageToOffscreen(currentPage - 1, scale);
         }
       }
     };
