@@ -185,13 +185,15 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         onClick={handlePlay}
         onTouchEnd={(e) => { e.preventDefault(); handlePlay(); }}
         onPointerDown={() => forceUnlockAudio()}
-        disabled={!audioSource || (audioSource === 'youtube' && !playerReady)}
+        disabled={!audioSource}
         className="h-6 w-6 p-0 touch-manipulation rounded-full bg-primary/10 hover:bg-primary/20"
-        title={isLoading ? "Loading..." : isPlaying ? "Pause" : "Play"}
+        title={isPlaying ? "Pause" : "Play"}
       >
-        {isLoading ? (
-          <Loader2 className="h-3 w-3 animate-spin text-foreground" />
-        ) : isPlaying ? (
+        {/* No spinner — a rotating Loader2 here read as "the toolbar is
+            shaking" when the iframe-loaded signal didn't arrive promptly.
+            If YouTube isn't ready yet, the play tap is a no-op and the
+            user can tap again once the embed initializes. */}
+        {isPlaying ? (
           <Pause className="h-3 w-3 text-foreground" />
         ) : (
           <Play className="h-3 w-3 text-foreground ml-0.5" />
