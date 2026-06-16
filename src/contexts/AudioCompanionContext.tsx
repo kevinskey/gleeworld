@@ -323,20 +323,20 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     >
       {children}
       
-      {/* Hidden YouTube player — kept mounted so audio plays via the iframe
-          JS API, but positioned offscreen with no visible footprint. Score
-          playback is audio-only by design (the play button on a score is a
-          listening companion, not a video viewer). */}
+      {/* Hidden YouTube player — kept mounted at NORMAL size (200x113) so the
+          iframe JS API actually initializes and emits onReady / infoDelivery
+          events (a 1x1 iframe never fires onReady, leaving the play button
+          stuck on the loading spinner). Positioned far offscreen so it has
+          no visible footprint. Score playback is audio-only by design. */}
       {youtubeVideoId && (
         <div
           data-floating-youtube-player
           style={{
             position: 'fixed',
-            left: '-9999px',
-            top: '-9999px',
-            width: '1px',
-            height: '1px',
-            opacity: 0,
+            left: '-10000px',
+            top: '0',
+            width: '200px',
+            height: '113px',
             pointerEvents: 'none',
             overflow: 'hidden',
           }}
