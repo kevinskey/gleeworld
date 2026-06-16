@@ -104,7 +104,10 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
       setError(null);
 
       try {
-        const isSupabaseStorage = pdfUrl.includes('.supabase.co/storage/v1/object/');
+        // Match both hosted (*.supabase.co) and self-hosted (supabase.gleeworld.org,
+        // future custom domains) supabase storage URLs so the stored URL gets
+        // re-signed each view instead of expiring after the original 1h.
+        const isSupabaseStorage = /\/storage\/v1\/object\//.test(pdfUrl);
         const isHttp = /^https?:\/\//.test(pdfUrl);
 
         if (isSupabaseStorage) {
