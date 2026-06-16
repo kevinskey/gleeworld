@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Music, Upload, Search, Loader2, FileMusic, ListMusic,
-  PencilLine, Headphones, Youtube, X,
+  PencilLine, Headphones, Youtube, X, Pencil, Library as LibraryIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -51,6 +51,8 @@ interface ScoreRow {
   pdf_url: string | null;
   audio_url: string | null;
   audio_title: string | null;
+  physical_copies_count: number | null;
+  physical_location: string | null;
   course_id: string | null;
   created_at: string | null;
 }
@@ -67,13 +69,15 @@ export default function MusicLibraryPage() {
   const [viewing, setViewing] = useState<{ id: string; title: string; pdfUrl: string } | null>(null);
   // Audio attach dialog state — opens the per-score "Attach audio" picker.
   const [attachingAudio, setAttachingAudio] = useState<ScoreRow | null>(null);
+  // Edit dialog state — librarian edit (title, composer, voicing, copies, location).
+  const [editing, setEditing] = useState<ScoreRow | null>(null);
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
     queryKey: ['music-library-scores', scope],
     queryFn: async () => {
       let q = supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, course_id, created_at')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at')
         .eq('is_archived', false)
         .order('title')
         .limit(200);
@@ -185,6 +189,7 @@ export default function MusicLibraryPage() {
                   courseCode={r.course_id ? courseCodeById[r.course_id] ?? null : null}
                   onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
                   onAttachAudio={() => setAttachingAudio(r)}
+                  onEdit={() => setEditing(r)}
                 />
               ))}
             </div>
@@ -236,6 +241,15 @@ export default function MusicLibraryPage() {
         }}
       />
 
+      <EditScoreDialog
+        score={editing}
+        onOpenChange={(open) => !open && setEditing(null)}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ['music-library-scores'] });
+          setEditing(null);
+        }}
+      />
+
       {/* Annotation viewer — opens a near-fullscreen dialog wrapping the
           shared PDFViewerWithAnnotations. Annotations save into
           gw_sheet_music_annotations and persist across sessions. */}
@@ -273,15 +287,17 @@ export default function MusicLibraryPage() {
 }
 
 function ScoreCard({
-  row, courseCode, onAnnotate, onAttachAudio,
+  row, courseCode, onAnnotate, onAttachAudio, onEdit,
 }: {
   row: ScoreRow;
   courseCode: string | null;
   onAnnotate: () => void;
   onAttachAudio: () => void;
+  onEdit: () => void;
 }) {
   const hasPdf = !!row.pdf_url;
   const hasAudio = !!row.audio_url;
+  const copies = row.physical_copies_count ?? 0;
   return (
     <Card
       className={`${SOFT_CARD} ${hasPdf ? 'cursor-pointer transition-colors hover:bg-accent/40' : ''}`}
@@ -319,29 +335,44 @@ function ScoreCard({
                   Audio
                 </Badge>
               )}
+              <Badge variant="outline" className="text-xs">
+                <LibraryIcon className="w-3 h-3 mr-1" />
+                {copies} {copies === 1 ? 'physical copy' : 'physical copies'}
+                {row.physical_location ? ` · ${row.physical_location}` : ''}
+              </Badge>
             </div>
           </div>
         </div>
-        {hasPdf && (
-          <div className="flex justify-end gap-2 mt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
-            >
-              <Headphones className="w-4 h-4 mr-1.5" />
-              {hasAudio ? 'Audio' : 'Attach audio'}
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
-            >
-              <PencilLine className="w-4 h-4 mr-1.5" />
-              Annotate
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-end gap-2 mt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            aria-label="Edit score details"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+          {hasPdf && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
+              >
+                <Headphones className="w-4 h-4 mr-1.5" />
+                {hasAudio ? 'Audio' : 'Attach audio'}
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
+              >
+                <PencilLine className="w-4 h-4 mr-1.5" />
+                Annotate
+              </Button>
+            </>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -360,6 +391,8 @@ function AddScoreDialog({
   const [title, setTitle] = useState('');
   const [composer, setComposer] = useState('');
   const [voicing, setVoicing] = useState('');
+  const [physicalCopies, setPhysicalCopies] = useState('');
+  const [physicalLocation, setPhysicalLocation] = useState('');
   const [destination, setDestination] = useState<string>('platform');
   const [submitting, setSubmitting] = useState(false);
 
@@ -378,11 +411,14 @@ function AddScoreDialog({
         pdfUrl = pub.publicUrl;
       }
 
+      const copies = parseInt(physicalCopies, 10);
       const { error: insertErr } = await supabase.from('gw_sheet_music').insert({
         title: title || file?.name || 'Untitled',
         composer: composer || null,
         voicing: voicing || null,
         pdf_url: pdfUrl,
+        physical_copies_count: Number.isFinite(copies) ? copies : 0,
+        physical_location: physicalLocation.trim() || null,
         course_id: destination === 'platform' ? null : destination,
         created_by: userId,
         is_archived: false,
@@ -391,7 +427,9 @@ function AddScoreDialog({
       if (insertErr) throw insertErr;
 
       toast.success('Score added.');
-      setFile(null); setTitle(''); setComposer(''); setVoicing(''); setDestination('platform');
+      setFile(null); setTitle(''); setComposer(''); setVoicing('');
+      setPhysicalCopies(''); setPhysicalLocation('');
+      setDestination('platform');
       onUploaded();
     } catch (e: any) {
       toast.error(e?.message || 'Add failed.');
@@ -430,6 +468,26 @@ function AddScoreDialog({
           <div>
             <Label className="text-sm">Voicing</Label>
             <Input value={voicing} onChange={(e) => setVoicing(e.target.value)} placeholder="SATB" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm">Physical copies</Label>
+              <Input
+                type="number"
+                min={0}
+                value={physicalCopies}
+                onChange={(e) => setPhysicalCopies(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Library location</Label>
+              <Input
+                value={physicalLocation}
+                onChange={(e) => setPhysicalLocation(e.target.value)}
+                placeholder="Folder B-12"
+              />
+            </div>
           </div>
           <div>
             <Label className="text-sm">Save to</Label>
@@ -648,6 +706,115 @@ function AttachAudioDialog({
               Save
             </Button>
           </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditScoreDialog({
+  score, onOpenChange, onSaved,
+}: {
+  score: ScoreRow | null;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const open = !!score;
+  const [title, setTitle] = useState('');
+  const [composer, setComposer] = useState('');
+  const [voicing, setVoicing] = useState('');
+  const [physicalCopies, setPhysicalCopies] = useState('');
+  const [physicalLocation, setPhysicalLocation] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (score) {
+      setTitle(score.title ?? '');
+      setComposer(score.composer ?? '');
+      setVoicing(score.voicing ?? '');
+      setPhysicalCopies(
+        score.physical_copies_count != null ? String(score.physical_copies_count) : '',
+      );
+      setPhysicalLocation(score.physical_location ?? '');
+    }
+  }, [score]);
+
+  async function handleSave() {
+    if (!score) return;
+    setSubmitting(true);
+    try {
+      const copies = parseInt(physicalCopies, 10);
+      const { error } = await supabase
+        .from('gw_sheet_music')
+        .update({
+          title: title.trim() || 'Untitled',
+          composer: composer.trim() || null,
+          voicing: voicing.trim() || null,
+          physical_copies_count: Number.isFinite(copies) ? copies : 0,
+          physical_location: physicalLocation.trim() || null,
+        })
+        .eq('id', score.id);
+      if (error) throw error;
+      toast.success('Score updated.');
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message || 'Update failed.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit score</DialogTitle>
+          <DialogDescription>
+            Update title, composer, voicing, and physical inventory for this score.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm">Title</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-sm">Composer</Label>
+            <Input value={composer} onChange={(e) => setComposer(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-sm">Voicing</Label>
+            <Input value={voicing} onChange={(e) => setVoicing(e.target.value)} placeholder="SATB" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm">Physical copies</Label>
+              <Input
+                type="number"
+                min={0}
+                value={physicalCopies}
+                onChange={(e) => setPhysicalCopies(e.target.value)}
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Library location</Label>
+              <Input
+                value={physicalLocation}
+                onChange={(e) => setPhysicalLocation(e.target.value)}
+                placeholder="Folder B-12"
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={submitting || !title.trim()}>
+            {submitting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Pencil className="w-4 h-4 mr-1.5" />}
+            Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
