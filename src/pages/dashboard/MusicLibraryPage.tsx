@@ -295,7 +295,7 @@ export default function MusicLibraryPage() {
           className="max-w-6xl h-[90vh] p-0 flex flex-col overflow-hidden bg-background"
         >
           <DialogHeader className="p-4 border-b border-border shrink-0 flex-row items-center justify-between space-y-0">
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
               {canEdit && (
                 <button
                   type="button"
@@ -304,18 +304,20 @@ export default function MusicLibraryPage() {
                     const row = rows.find((r) => r.id === viewing.id);
                     if (row) setEditing(row);
                   }}
-                  className="text-primary hover:opacity-70 transition-opacity"
+                  className="text-primary hover:opacity-70 transition-opacity shrink-0"
                   aria-label="Edit score details"
                   title="Edit title / metadata"
                 >
-                  <PencilLine className="w-4 h-4" />
+                  <PencilLine className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               )}
               {/* Pull the title from the live `rows` query — if the user
                   edits via the pencil, react-query refetches `rows` and
                   this header updates instantly. Fall back to the
                   snapshot captured at open time. */}
-              {(viewing && rows.find((r) => r.id === viewing.id)?.title) || viewing?.title || 'Score'}
+              <span className="truncate">
+                {(viewing && rows.find((r) => r.id === viewing.id)?.title) || viewing?.title || 'Score'}
+              </span>
             </DialogTitle>
             <Button
               variant="ghost"
