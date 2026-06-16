@@ -186,8 +186,11 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   }, []);
 
   const isDesktop = window.innerWidth >= 1024;
-  const keyHeight = isExpanded ? (isDesktop ? 220 : 140) : (isDesktop ? 160 : 100);
-  const whiteKeyWidth = Math.max(36, Math.floor((window.innerWidth - 32) / (octaveCount * 7)));
+  // Taller + thinner keys. Fixed white-key width so the keyboard always
+  // overflows the viewport at 2+ octaves and the scroll container kicks in
+  // for horizontal panning instead of squishing keys to fit.
+  const keyHeight = isExpanded ? (isDesktop ? 260 : 200) : (isDesktop ? 200 : 150);
+  const whiteKeyWidth = 32;
 
   const pianoContent = (
     <div 
