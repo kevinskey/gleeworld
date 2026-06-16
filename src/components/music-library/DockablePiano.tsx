@@ -66,10 +66,27 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
-  // startOctave is auto-derived to keep C4 at the center of the keyboard.
-  // For N octaves we want roughly N/2 octaves below C4 and N/2 above, so
-  // startOctave = 4 - floor(N/2). Default visible range: 2 octaves -> C3-B4.
-  const [octaveCount, setOctaveCount] = useState<1 | 2 | 3>(2);
+
+  // Track window width so we can auto-fit octaves on resize.
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024,
+  );
+  useEffect(() => {
+    const onResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
+  // Auto-fit: render as many octaves as the viewport can carry at a
+  // comfortable ~44 px white-key width. No more 1/2/3 toggle — phone shows
+  // ~1 octave, iPad ~3, desktop ~5, ultrawide more. startOctave centers C4
+  // automatically: for N octaves we put ~N/2 below C4 and ~N/2 above.
+  const TARGET_WHITE_KEY_PX = 44;
+  const octaveCount = Math.max(1, Math.floor((windowWidth - 16) / (TARGET_WHITE_KEY_PX * 7)));
   const startOctave = Math.max(0, 4 - Math.floor(octaveCount / 2));
   const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
   const [synthReady, setSynthReady] = useState(false);
@@ -195,12 +212,10 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   // container kicks in for horizontal panning instead of squishing fingers
   // off the keys.
   const keyHeight = isExpanded ? (isDesktop ? 260 : 200) : (isDesktop ? 200 : 150);
-  // Thinner keys so 3 octaves fit without horizontal scroll on a standard
-  // desktop browser window. Subtract the per-key gap (gap-0.5 = 2 px) from
-  // the divisor so the totals actually fit, and lower the floor from 32 to
-  // 22 so 3 octaves stay non-scrolling down to ~500 px wide windows.
-  const viewportPx = typeof window !== 'undefined' ? window.innerWidth - 16 : 800;
-  const whiteKeyWidth = Math.max(22, Math.floor(viewportPx / (octaveCount * 7)) - 2);
+  // White keys grow to fill the available width exactly. Subtract the 2 px
+  // per-key gap from the divisor so the rendered totals match the window.
+  const viewportPx = windowWidth - 16;
+  const whiteKeyWidth = Math.floor(viewportPx / (octaveCount * 7)) - 2;
 
   const pianoContent = (
     <div 
@@ -218,19 +233,9 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
         
         {/* Controls */}
         <div className="flex items-center gap-1 flex-1 overflow-x-auto">
-          {/* Octave start selector removed — startOctave is derived from
-              octaveCount so C4 stays centered automatically. */}
-          <ToggleGroup
-            type="single" 
-            value={octaveCount.toString()} 
-            onValueChange={(val) => val && setOctaveCount(parseInt(val, 10) as 1 | 2 | 3)}
-            className="h-7"
-          >
-            <ToggleGroupItem value="1" className="h-7 px-2 text-xs">1</ToggleGroupItem>
-            <ToggleGroupItem value="2" className="h-7 px-2 text-xs">2</ToggleGroupItem>
-            <ToggleGroupItem value="3" className="h-7 px-2 text-xs">3</ToggleGroupItem>
-          </ToggleGroup>
-          
+          {/* Octave controls removed — count is derived from window width so
+              the keyboard always fills the bottom and C4 stays centered. */}
+
           <Select value={selectedInstrument.toString()} onValueChange={v => setSelectedInstrument(parseInt(v, 10))}>
             <SelectTrigger className="w-24 h-7 text-xs">
               <SelectValue />
