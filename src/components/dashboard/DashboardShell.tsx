@@ -168,6 +168,7 @@ function Sidebar() {
       label: 'Library',
       items: [
         { to: '/dashboard/music-library', label: 'Music Library', icon: Music,  tourId: 'nav-music-library', tone: 'bg-rose-50 text-rose-600' },
+        ...(hasPartTracks   ? [{ to: '/dashboard/part-tracks',    label: 'Part Tracks',     icon: Mic,           tourId: 'nav-part-tracks',     tone: 'bg-indigo-50 text-indigo-600' }] : []),
         ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian',      label: 'Librarian',       icon: LibraryBig,    tourId: 'nav-librarian',       tone: 'bg-slate-50 text-slate-600' }] : []),
         { to: '/dashboard/media-library', label: 'Media Library', icon: Images, tourId: 'nav-media-library', tone: 'bg-orange-50 text-orange-600' },
       ],
@@ -177,7 +178,6 @@ function Sidebar() {
       items: [
         ...(hasSightReading ? [{ to: '/dashboard/sight-reading',  label: 'Sight Reading',   icon: Eye,           tourId: 'nav-sight-reading',   tone: 'bg-violet-50 text-violet-600' }] : []),
         ...(hasTickets      ? [{ to: '/dashboard/concert-tickets',label: 'Concert Tickets', icon: Ticket,        tourId: 'nav-concert-tickets', tone: 'bg-pink-50 text-pink-600' }] : []),
-        ...(hasPartTracks   ? [{ to: '/dashboard/part-tracks',    label: 'Part Tracks',     icon: Mic,           tourId: 'nav-part-tracks',     tone: 'bg-indigo-50 text-indigo-600' }] : []),
         ...(hasAuditions    ? [{ to: '/dashboard/auditions',      label: 'Auditions',       icon: ScanLine,      tourId: 'nav-auditions',       tone: 'bg-lime-50 text-lime-600' }] : []),
         ...(hasPrHub        ? [{ to: '/dashboard/pr-hub',         label: 'PR Hub',          icon: Megaphone,     tourId: 'nav-pr-hub',          tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
         ...(hasAlumni       ? [{ to: '/dashboard/alumni',         label: 'Alumni',          icon: GraduationCap, tourId: 'nav-alumni',          tone: 'bg-teal-50 text-teal-600' }] : []),
@@ -325,28 +325,51 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { hasAccess: hasMerch } = useModuleAccess('merch');
   const { hasAccess: hasFeeds } = useModuleAccess('feeds');
 
-  const items: Array<{ to: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string }> = [
-    { to: '/dashboard',              label: 'Command Center', icon: Home,           tone: 'bg-primary/10 text-primary' },
-    { to: '/dashboard/messenger',    label: 'Messenger',      icon: MessageSquare,  tone: 'bg-cyan-50 text-cyan-600' },
-    { to: '/dashboard/calendar',     label: 'Calendar',       icon: Calendar,       tone: 'bg-purple-50 text-purple-600' },
-    { to: '/dashboard/office-hours', label: 'Office Hours',   icon: CalendarClock,  tone: 'bg-emerald-50 text-emerald-600' },
-    { to: '/dashboard/academy',      label: 'Academy',        icon: GraduationCap,  tone: 'bg-primary text-primary-foreground' },
-    { to: '/dashboard/music-library',label: 'Music Library',  icon: Music,          tone: 'bg-rose-50 text-rose-600' },
-    ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian',      label: 'Librarian',       icon: LibraryBig,    tone: 'bg-slate-50 text-slate-600' }] : []),
-    { to: '/dashboard/media-library',label: 'Media Library',  icon: Images,         tone: 'bg-orange-50 text-orange-600' },
-    ...(hasSightReading ? [{ to: '/dashboard/sight-reading',  label: 'Sight Reading',   icon: Eye,           tone: 'bg-violet-50 text-violet-600' }] : []),
-    ...(hasTickets      ? [{ to: '/dashboard/concert-tickets',label: 'Concert Tickets', icon: Ticket,        tone: 'bg-pink-50 text-pink-600' }] : []),
-    ...(hasPartTracks   ? [{ to: '/dashboard/part-tracks',    label: 'Part Tracks',     icon: Mic,           tone: 'bg-indigo-50 text-indigo-600' }] : []),
-    ...(hasAuditions    ? [{ to: '/dashboard/auditions',      label: 'Auditions',       icon: ScanLine,      tone: 'bg-lime-50 text-lime-600' }] : []),
-    ...(hasPrHub        ? [{ to: '/dashboard/pr-hub',         label: 'PR Hub',          icon: Megaphone,     tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
-    ...(hasAlumni       ? [{ to: '/dashboard/alumni',         label: 'Alumni',          icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
-    ...(hasFinance      ? [{ to: '/dashboard/finance',        label: 'Finance',         icon: DollarSign,    tone: 'bg-emerald-50 text-emerald-600' }] : []),
-    ...(hasMerch        ? [{ to: '/dashboard/shop',           label: 'Store',           icon: ShoppingCart,  tone: 'bg-amber-50 text-amber-600' }] : []),
-    ...(hasFeeds        ? [{ to: '/dashboard/feeds',          label: 'Feeds',           icon: Newspaper,     tone: 'bg-blue-50 text-blue-600' }] : []),
-    { to: '/dashboard/users',     label: 'People',    icon: Users,       tone: 'bg-cyan-50 text-cyan-600' },
-    { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp,  tone: 'bg-purple-50 text-purple-600' },
-    ...(isTenantAdmin ? [{ to: '/settings/modules', label: 'Modules', icon: Boxes, tone: 'bg-primary/10 text-primary' }] : []),
-    { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,    tone: 'bg-muted text-muted-foreground' },
+  // Group by category to match the desktop sidebar layout. Section labels
+  // render above each block so phone/iOS users get the same mental model.
+  type Item = { to: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string };
+  const sections: Array<{ label: string; items: Item[] }> = [
+    {
+      label: 'Home',
+      items: [
+        { to: '/dashboard',              label: 'Command Center', icon: Home,           tone: 'bg-primary/10 text-primary' },
+        { to: '/dashboard/messenger',    label: 'Messenger',      icon: MessageSquare,  tone: 'bg-cyan-50 text-cyan-600' },
+        { to: '/dashboard/calendar',     label: 'Calendar',       icon: Calendar,       tone: 'bg-purple-50 text-purple-600' },
+        { to: '/dashboard/office-hours', label: 'Office Hours',   icon: CalendarClock,  tone: 'bg-emerald-50 text-emerald-600' },
+        { to: '/dashboard/academy',      label: 'Academy',        icon: GraduationCap,  tone: 'bg-primary text-primary-foreground' },
+      ],
+    },
+    {
+      label: 'Library',
+      items: [
+        { to: '/dashboard/music-library',label: 'Music Library',  icon: Music,          tone: 'bg-rose-50 text-rose-600' },
+        ...(hasPartTracks ? [{ to: '/dashboard/part-tracks',      label: 'Part Tracks',     icon: Mic,           tone: 'bg-indigo-50 text-indigo-600' }] : []),
+        ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian', label: 'Librarian', icon: LibraryBig, tone: 'bg-slate-50 text-slate-600' }] : []),
+        { to: '/dashboard/media-library',label: 'Media Library',  icon: Images,         tone: 'bg-orange-50 text-orange-600' },
+      ],
+    },
+    {
+      label: 'Add-ons',
+      items: [
+        ...(hasSightReading ? [{ to: '/dashboard/sight-reading',  label: 'Sight Reading',   icon: Eye,           tone: 'bg-violet-50 text-violet-600' }] : []),
+        ...(hasTickets      ? [{ to: '/dashboard/concert-tickets',label: 'Concert Tickets', icon: Ticket,        tone: 'bg-pink-50 text-pink-600' }] : []),
+        ...(hasAuditions    ? [{ to: '/dashboard/auditions',      label: 'Auditions',       icon: ScanLine,      tone: 'bg-lime-50 text-lime-600' }] : []),
+        ...(hasPrHub        ? [{ to: '/dashboard/pr-hub',         label: 'PR Hub',          icon: Megaphone,     tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
+        ...(hasAlumni       ? [{ to: '/dashboard/alumni',         label: 'Alumni',          icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
+        ...(hasFinance      ? [{ to: '/dashboard/finance',        label: 'Finance',         icon: DollarSign,    tone: 'bg-emerald-50 text-emerald-600' }] : []),
+        ...(hasMerch        ? [{ to: '/dashboard/shop',           label: 'Store',           icon: ShoppingCart,  tone: 'bg-amber-50 text-amber-600' }] : []),
+        ...(hasFeeds        ? [{ to: '/dashboard/feeds',          label: 'Feeds',           icon: Newspaper,     tone: 'bg-blue-50 text-blue-600' }] : []),
+      ],
+    },
+    {
+      label: 'Workspace',
+      items: [
+        { to: '/dashboard/users',     label: 'People',    icon: Users,       tone: 'bg-cyan-50 text-cyan-600' },
+        { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp,  tone: 'bg-purple-50 text-purple-600' },
+        ...(isTenantAdmin ? [{ to: '/settings/modules', label: 'Modules', icon: Boxes, tone: 'bg-primary/10 text-primary' }] : []),
+        { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,    tone: 'bg-muted text-muted-foreground' },
+      ],
+    },
   ];
 
   return (
@@ -361,22 +384,31 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         )}
         <span className="font-bold text-lg tracking-tight truncate">{tenantName}</span>
       </div>
-      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/dashboard'}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
-            }
-          >
-            <span className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${item.tone}`}>
-              <item.icon className="w-4 h-4" />
-            </span>
-            <span>{item.label}</span>
-          </NavLink>
+      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-3">
+        {sections.map((section) => (
+          section.items.length === 0 ? null : (
+            <div key={section.label} className="space-y-0.5">
+              <div className="px-3 py-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                {section.label}
+              </div>
+              {section.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/dashboard'}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
+                  }
+                >
+                  <span className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${item.tone}`}>
+                    <item.icon className="w-4 h-4" />
+                  </span>
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          )
         ))}
       </nav>
     </div>
