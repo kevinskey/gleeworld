@@ -264,7 +264,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
             {audioSource && (
               <>
                 <DropdownMenuItem 
-                  onClick={() => { if (isPlaying) { togglePlayPause(); seek(0); } }}
+                  onClick={() => { if (isPlaying) togglePlayPause(); seek(0); }}
                   className="touch-manipulation"
                 >
                   <Square className="h-4 w-4 mr-2" />
@@ -288,8 +288,10 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
               size="sm"
               variant="ghost"
               onClick={() => {
-                if (!isPlaying) return;
-                togglePlayPause();
+                // Stop = pause + rewind to start. Works whether we're
+                // currently playing or paused; was previously gated on
+                // isPlaying so paused → stop did nothing.
+                if (isPlaying) togglePlayPause();
                 seek(0);
               }}
               className="h-9 w-9 p-0 touch-manipulation"
