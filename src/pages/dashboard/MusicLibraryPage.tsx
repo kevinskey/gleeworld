@@ -296,7 +296,21 @@ export default function MusicLibraryPage() {
         >
           <DialogHeader className="p-4 border-b border-border shrink-0 flex-row items-center justify-between space-y-0">
             <DialogTitle className="flex items-center gap-2">
-              <PencilLine className="w-4 h-4 text-primary" />
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!viewing) return;
+                    const row = rows.find((r) => r.id === viewing.id);
+                    if (row) setEditing(row);
+                  }}
+                  className="text-primary hover:opacity-70 transition-opacity"
+                  aria-label="Edit score details"
+                  title="Edit title / metadata"
+                >
+                  <PencilLine className="w-4 h-4" />
+                </button>
+              )}
               {viewing?.title || 'Score'}
             </DialogTitle>
             <Button
