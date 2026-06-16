@@ -64,12 +64,15 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
     };
 
     const getSecureOrStandardUrl = async (bucket: string, path: string) => {
+      // getFileUrl returns getPublicUrl for public buckets and a freshly-signed
+      // URL for private ones. Both are directly fetchable by pdfjs — the
+      // blob-download fallback (supabase.storage.download) was failing on the
+      // self-hosted backend with "Failed to fetch" and added no real benefit
+      // outside of the ad-blocker workaround for hosted .supabase.co URLs.
+      const url = await getFileUrl(bucket, path);
+      if (url) return url;
       const secureUrl = await getSecureFileUrl(bucket, path);
-      if (secureUrl) {
-        return trackObjectUrl(secureUrl);
-      }
-
-      return await getFileUrl(bucket, path);
+      return secureUrl ? trackObjectUrl(secureUrl) : null;
     };
 
     const extractBucketAndPath = (storageUrl: string) => {
