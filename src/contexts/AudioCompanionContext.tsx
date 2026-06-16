@@ -60,7 +60,11 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   // Handle YouTube iframe postMessage events
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== 'https://www.youtube.com') return;
+      // Accept both regular and nocookie YouTube origins.
+      if (
+        event.origin !== 'https://www.youtube.com' &&
+        event.origin !== 'https://www.youtube-nocookie.com'
+      ) return;
       
       try {
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
@@ -160,6 +164,14 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       setIsPlaying(false);
       setCurrentTime(0);
       setDuration(0);
+      // Watchdog: clear the loading spinner after 2s even if iframe.onload
+      // never fires (cross-origin timing, ad blocker, React handler attached
+      // after load). The play button becomes interactive — actual playback
+      // success/failure surfaces via subsequent state events.
+      window.setTimeout(() => {
+        setIsLoading(false);
+        setPlayerReady(true);
+      }, 2000);
     }
   }, []);
 
