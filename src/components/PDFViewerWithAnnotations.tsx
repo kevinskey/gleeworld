@@ -45,10 +45,14 @@ import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
 import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import * as pdfjsLib from 'pdfjs-dist';
-import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker';
-
-// Configure PDF.js worker locally (Vite + ESM)
-pdfjsLib.GlobalWorkerOptions.workerPort = new PdfJsWorker();
+// Use Vite's ?url import (file-served worker) instead of ?worker (blob-URL
+// Worker instance). WKWebView under Capacitor (iOS native app) blocks blob:
+// worker URLs from capacitor://localhost origin, producing a white screen
+// when the PDF viewer mounts. ?url returns a same-origin file URL that the
+// browser loads as a normal classic worker — works on iOS WKWebView,
+// Safari, Chrome, and Firefox.
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 interface PDFViewerWithAnnotationsProps {
   pdfUrl: string | null;
