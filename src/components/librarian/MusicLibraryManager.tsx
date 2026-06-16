@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface MusicItem {
   id: string;
@@ -136,8 +137,6 @@ export const MusicLibraryManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this music item?')) return;
-
     try {
       const { error } = await supabase
         .from('gw_sheet_music')
@@ -317,14 +316,16 @@ export const MusicLibraryManager = () => {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(item.id)}
-                            className="h-9 w-9 p-0 touch-target text-destructive hover:text-destructive"
+                          <ConfirmDeleteButton
+                            confirmKey="delete-music-item"
+                            title="Delete this score?"
+                            description="The PDF and any linked annotations will be removed."
+                            onConfirm={() => handleDelete(item.id)}
+                            ariaLabel="Delete score"
+                            className="h-9 w-9 p-0 inline-flex items-center justify-center rounded-md text-destructive hover:bg-muted touch-target"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </ConfirmDeleteButton>
                         </div>
                       </div>
                       
@@ -464,13 +465,16 @@ export const MusicLibraryManager = () => {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(item.id)}
+                          <ConfirmDeleteButton
+                            confirmKey="delete-music-item"
+                            title="Delete this score?"
+                            description="The PDF and any linked annotations will be removed."
+                            onConfirm={() => handleDelete(item.id)}
+                            ariaLabel="Delete score"
+                            className="h-9 w-9 p-0 inline-flex items-center justify-center rounded-md text-destructive hover:bg-muted"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </ConfirmDeleteButton>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -637,16 +641,6 @@ export const MusicLibraryManager = () => {
                   value={formData.pdf_url || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, pdf_url: e.target.value }))}
                   placeholder="Enter PDF URL"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="audio_url">YouTube Play-Along URL</Label>
-                <Input
-                  id="audio_url"
-                  value={formData.audio_url || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, audio_url: e.target.value }))}
-                  placeholder="e.g., https://youtu.be/xxxxx"
                 />
               </div>
 
