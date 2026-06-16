@@ -789,8 +789,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         setTotalPages(doc.numPages);
         setError(null);
       } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('PDFViewerWithAnnotations: load failed', err);
         toast.error('Failed to load PDF');
-        setError('Failed to load PDF');
+        setError(`PDF load failed: ${msg.slice(0, 160)}`);
       } finally {
         setIsLoading(false);
       }
@@ -1011,7 +1013,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving || !musicId}
-                className="h-6 px-1 text-[10px] sm:h-8 sm:px-2 sm:text-xs"
+                className="h-6 px-1 text-xs sm:h-8 sm:px-2 sm:text-xs"
               >
                 {isSaving ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -1110,7 +1112,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant="outline"
                 size="sm"
                 onClick={handleResetZoom}
-                className="h-6 px-1 text-[10px] sm:h-8 sm:px-2 sm:text-xs"
+                className="h-6 px-1 text-xs sm:h-8 sm:px-2 sm:text-xs"
                 title="Reset zoom"
               >
                 {Math.round(zoomLevel * 100)}%
@@ -1195,14 +1197,20 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Top toolbar when NOT in annotation mode - hidden on mobile (moved to bottom bar) */}
           {!annotationMode && !isInMobileViewer && (
-            <div 
-              className="absolute left-1/2 -translate-x-1/2 z-30 top-2"
+            <div
+              // Full-width wrapper + flex justify-center. Previously this used
+              // `left-1/2 -translate-x-1/2`, but when the audio companion's
+              // currentTime/slider state updated, the pill's width changed by
+              // sub-pixel amounts which moved the translate origin and made
+              // the whole toolbar shake. With a non-transformed wrapper the
+              // pill grows/shrinks symmetrically around the center.
+              className="absolute inset-x-0 z-30 top-2 flex justify-center pointer-events-none"
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-1 bg-background/95 backdrop-blur-md border border-border shadow-lg rounded-full px-2 py-1">
+              <div className="pointer-events-auto flex items-center gap-1 bg-background/95 backdrop-blur-md border border-border shadow-lg rounded-full px-2 py-1">
                 {/* Zoom Controls */}
                 <Button
                   size="sm"
@@ -1219,7 +1227,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   type="button"
                   onClick={handleScaleReset}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleReset(); }}
-                  className="text-[10px] font-medium tabular-nums min-w-[32px] text-center touch-manipulation"
+                  className="text-xs font-medium tabular-nums min-w-[32px] text-center touch-manipulation"
                   aria-label="Fit to width"
                   title="Fit to width"
                 >
@@ -1465,7 +1473,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
-                <span className="text-[10px] tabular-nums font-medium min-w-[36px] text-center">
+                <span className="text-xs tabular-nums font-medium min-w-[36px] text-center">
                   {currentPage} / {totalPages || (pdf?.numPages ?? 0) || 1}
                 </span>
                 <Button 
