@@ -126,7 +126,16 @@ export const LibrarianDashboard = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate(homePath)}
+              onClick={() => {
+                // Browser-history back so we land on whatever page the
+                // librarian was opened from (e.g. /control-center?module=…)
+                // instead of hard-jumping to /control-center via homePath.
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate(homePath);
+                }
+              }}
               className="h-9 w-9 p-0 shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
