@@ -320,32 +320,32 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     >
       {children}
       
-      {/* Small visible YouTube player - positioned in corner for playback */}
+      {/* Hidden YouTube player — kept mounted so audio plays via the iframe
+          JS API, but positioned offscreen with no visible footprint. Score
+          playback is audio-only by design (the play button on a score is a
+          listening companion, not a video viewer). */}
       {youtubeVideoId && (
         <div
+          data-floating-youtube-player
           style={{
             position: 'fixed',
-            bottom: '60px',
-            right: '16px',
-            width: '200px',
-            height: '113px',
-            zIndex: 9999,
-            borderRadius: '8px',
+            left: '-9999px',
+            top: '-9999px',
+            width: '1px',
+            height: '1px',
+            opacity: 0,
+            pointerEvents: 'none',
             overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
           }}
+          aria-hidden="true"
         >
           <iframe
             ref={iframeRef}
-            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&controls=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
+            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&controls=0&modestbranding=1&rel=0&origin=${window.location.origin}`}
             allow="autoplay; encrypted-media"
             onLoad={handleIframeLoad}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-            }}
-            title="YouTube Player"
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            title="YouTube Audio Player"
           />
         </div>
       )}

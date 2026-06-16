@@ -5,7 +5,7 @@
 // persist via gw_sheet_music_annotations and can be shared per existing
 // flows. The legacy /music-library two-pane viewer remains for deep links.
 
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Music, Upload, Search, Loader2, FileMusic, ListMusic,
-  PencilLine,
+  PencilLine, Headphones, Youtube, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -49,6 +49,8 @@ interface ScoreRow {
   voicing: string | null;
   difficulty_level: string | null;
   pdf_url: string | null;
+  audio_url: string | null;
+  audio_title: string | null;
   course_id: string | null;
   created_at: string | null;
 }
@@ -63,13 +65,15 @@ export default function MusicLibraryPage() {
   // Annotation viewer state — when set, opens a full-screen dialog with the
   // annotated PDF viewer so the user can mark up the score.
   const [viewing, setViewing] = useState<{ id: string; title: string; pdfUrl: string } | null>(null);
+  // Audio attach dialog state — opens the per-score "Attach audio" picker.
+  const [attachingAudio, setAttachingAudio] = useState<ScoreRow | null>(null);
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
     queryKey: ['music-library-scores', scope],
     queryFn: async () => {
       let q = supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, course_id, created_at')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, course_id, created_at')
         .eq('is_archived', false)
         .order('title')
         .limit(200);
@@ -180,6 +184,7 @@ export default function MusicLibraryPage() {
                   row={r}
                   courseCode={r.course_id ? courseCodeById[r.course_id] ?? null : null}
                   onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
+                  onAttachAudio={() => setAttachingAudio(r)}
                 />
               ))}
             </div>
@@ -221,6 +226,16 @@ export default function MusicLibraryPage() {
         }}
       />
 
+      <AttachAudioDialog
+        score={attachingAudio}
+        userId={user?.id ?? null}
+        onOpenChange={(open) => !open && setAttachingAudio(null)}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ['music-library-scores'] });
+          setAttachingAudio(null);
+        }}
+      />
+
       {/* Annotation viewer — opens a near-fullscreen dialog wrapping the
           shared PDFViewerWithAnnotations. Annotations save into
           gw_sheet_music_annotations and persist across sessions. */}
@@ -258,9 +273,15 @@ export default function MusicLibraryPage() {
 }
 
 function ScoreCard({
-  row, courseCode, onAnnotate,
-}: { row: ScoreRow; courseCode: string | null; onAnnotate: () => void }) {
+  row, courseCode, onAnnotate, onAttachAudio,
+}: {
+  row: ScoreRow;
+  courseCode: string | null;
+  onAnnotate: () => void;
+  onAttachAudio: () => void;
+}) {
   const hasPdf = !!row.pdf_url;
+  const hasAudio = !!row.audio_url;
   return (
     <Card
       className={`${SOFT_CARD} ${hasPdf ? 'cursor-pointer transition-colors hover:bg-accent/40' : ''}`}
@@ -292,11 +313,25 @@ function ScoreCard({
               ) : (
                 <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">Platform</Badge>
               )}
+              {hasAudio && (
+                <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">
+                  <Headphones className="w-3 h-3 mr-1" />
+                  Audio
+                </Badge>
+              )}
             </div>
           </div>
         </div>
         {hasPdf && (
-          <div className="flex justify-end mt-3">
+          <div className="flex justify-end gap-2 mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
+            >
+              <Headphones className="w-4 h-4 mr-1.5" />
+              {hasAudio ? 'Audio' : 'Attach audio'}
+            </Button>
             <Button
               variant="default"
               size="sm"
@@ -421,6 +456,198 @@ function AddScoreDialog({
             {submitting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Upload className="w-4 h-4 mr-1.5" />}
             Add Score
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AttachAudioDialog({
+  score, userId, onOpenChange, onSaved,
+}: {
+  score: ScoreRow | null;
+  userId: string | null;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const open = !!score;
+  const [tab, setTab] = useState<'file' | 'youtube'>('file');
+  const [file, setFile] = useState<File | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [title, setTitle] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Reset form whenever a new score is opened.
+  useEffect(() => {
+    if (score) {
+      const initialTitle = score.audio_title ?? '';
+      const isYouTubeUrl = !!score.audio_url && /youtu(be\.com|\.be)/i.test(score.audio_url);
+      setTab(isYouTubeUrl ? 'youtube' : 'file');
+      setYoutubeUrl(isYouTubeUrl ? (score.audio_url ?? '') : '');
+      setFile(null);
+      setTitle(initialTitle);
+    }
+  }, [score]);
+
+  async function handleSave() {
+    if (!score || !userId) return;
+    setSubmitting(true);
+    try {
+      let audioUrl: string | null = null;
+      let audioTitle = title.trim();
+
+      if (tab === 'file') {
+        if (!file) {
+          toast.error('Pick an MP3 first.');
+          setSubmitting(false);
+          return;
+        }
+        const ext = file.name.split('.').pop() || 'mp3';
+        const path = `audio/${score.id}/${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('sheet-music')
+          .upload(path, file, { contentType: file.type, upsert: true });
+        if (uploadErr) throw uploadErr;
+        audioUrl = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
+        if (!audioTitle) audioTitle = file.name.replace(/\.[^.]+$/, '');
+      } else {
+        const url = youtubeUrl.trim();
+        if (!url) {
+          toast.error('Paste a YouTube URL first.');
+          setSubmitting(false);
+          return;
+        }
+        if (!/youtu(be\.com|\.be)/i.test(url)) {
+          toast.error('That doesn\u2019t look like a YouTube URL.');
+          setSubmitting(false);
+          return;
+        }
+        audioUrl = url;
+        if (!audioTitle) audioTitle = 'YouTube audio';
+      }
+
+      const { error } = await supabase
+        .from('gw_sheet_music')
+        .update({ audio_url: audioUrl, audio_title: audioTitle })
+        .eq('id', score.id);
+      if (error) throw error;
+
+      toast.success('Audio attached.');
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to attach audio.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleRemove() {
+    if (!score) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('gw_sheet_music')
+        .update({ audio_url: null, audio_title: null })
+        .eq('id', score.id);
+      if (error) throw error;
+      toast.success('Audio removed.');
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to remove audio.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Attach audio</DialogTitle>
+          <DialogDescription>
+            Upload an MP3 or paste a YouTube URL. The score's play button will load this automatically.
+            {score?.audio_url && ' YouTube videos play audio only — the player is hidden.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex gap-2 border-b border-border">
+          <button
+            type="button"
+            onClick={() => setTab('file')}
+            className={
+              tab === 'file'
+                ? 'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
+                : 'inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground'
+            }
+          >
+            <Upload className="w-4 h-4" /> MP3
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('youtube')}
+            className={
+              tab === 'youtube'
+                ? 'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
+                : 'inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground'
+            }
+          >
+            <Youtube className="w-4 h-4" /> YouTube
+          </button>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          {tab === 'file' ? (
+            <div>
+              <Label className="text-sm">MP3 file</Label>
+              <Input
+                type="file"
+                accept="audio/mpeg,audio/mp3,audio/wav,audio/aac,audio/*"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="cursor-pointer"
+              />
+            </div>
+          ) : (
+            <div>
+              <Label className="text-sm">YouTube URL</Label>
+              <Input
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Video stays hidden during playback — only the audio plays.
+              </p>
+            </div>
+          )}
+
+          <div>
+            <Label className="text-sm">Display title (optional)</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Reference recording"
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="flex-row items-center justify-between sm:justify-between gap-2">
+          <div>
+            {score?.audio_url && (
+              <Button variant="ghost" size="sm" onClick={handleRemove} disabled={submitting}>
+                <X className="w-4 h-4 mr-1" /> Remove
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={submitting}>
+              {submitting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Headphones className="w-4 h-4 mr-1.5" />}
+              Save
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
