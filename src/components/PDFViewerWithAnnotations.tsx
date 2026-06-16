@@ -490,14 +490,24 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     };
   }, [annotationMode]);
 
-  // Cleanup audio when component unmounts
+  // Cleanup audio when the component truly unmounts. The previous version
+  // depended on [stopAudio, closeYouTube] — but `stopAudio` from the audio
+  // context re-creates itself whenever `audioSource` changes. So this
+  // cleanup was firing every time loadYouTube set audioSource='youtube',
+  // calling stopAudio() (which resets audioSource to null), which then
+  // re-triggered the auto-load effect to call loadYouTube again — an
+  // infinite loop that hammered the iframe and made the stop / play
+  // buttons blink. Capture latest refs and run cleanup ONCE on unmount.
+  const stopAudioRef = useRef(stopAudio);
+  const closeYouTubeRef = useRef(closeYouTube);
+  useEffect(() => { stopAudioRef.current = stopAudio; }, [stopAudio]);
+  useEffect(() => { closeYouTubeRef.current = closeYouTube; }, [closeYouTube]);
   useEffect(() => {
     return () => {
-      // Stop any audio/YouTube playback when the PDF viewer closes
-      stopAudio();
-      closeYouTube();
+      stopAudioRef.current();
+      closeYouTubeRef.current();
     };
-  }, [stopAudio, closeYouTube]);
+  }, []);
 
   // Handle iframe load
   const handleIframeLoad = () => {
