@@ -195,8 +195,12 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   // container kicks in for horizontal panning instead of squishing fingers
   // off the keys.
   const keyHeight = isExpanded ? (isDesktop ? 260 : 200) : (isDesktop ? 200 : 150);
+  // Thinner keys so 3 octaves fit without horizontal scroll on a standard
+  // desktop browser window. Subtract the per-key gap (gap-0.5 = 2 px) from
+  // the divisor so the totals actually fit, and lower the floor from 32 to
+  // 22 so 3 octaves stay non-scrolling down to ~500 px wide windows.
   const viewportPx = typeof window !== 'undefined' ? window.innerWidth - 16 : 800;
-  const whiteKeyWidth = Math.max(32, Math.floor(viewportPx / (octaveCount * 7)));
+  const whiteKeyWidth = Math.max(22, Math.floor(viewportPx / (octaveCount * 7)) - 2);
 
   const pianoContent = (
     <div 
