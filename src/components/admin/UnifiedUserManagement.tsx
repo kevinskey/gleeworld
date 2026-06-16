@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, GraduationCap, FolderOpen, Star, ArrowUpDown, ArrowUp, ArrowDown, Pencil } from "lucide-react";
+import { Search, UserCog, Shield, Crown, User, UserCheck, UserX, Mail, Calendar, MoreHorizontal, RefreshCw, UserPlus, Users, Settings, KeyRound, Trash2, GraduationCap, FolderOpen, Star, ArrowUpDown, ArrowUp, ArrowDown, Pencil, BookOpen, ClipboardList, Bus, Headphones as HeadphonesIcon } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -71,10 +71,23 @@ const getRoleIcon = (role?: string) => {
 const StatPill = ({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) => (
   <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-card border border-border">
     <Icon className="h-3 w-3 text-muted-foreground" />
-    <span className="text-[11px] text-muted-foreground">{label}</span>
+    <span className="text-sm text-muted-foreground">{label}</span>
     <span className="text-xs font-bold text-foreground">{value}</span>
   </div>
 );
+
+// Delegatable app-role capabilities. Tenant admins can grant these to any
+// user in their tenant (RLS on app_roles + gw_profiles tenant isolation
+// keeps this scoped). Excludes admin/super_admin — those still go through
+// the gw_profiles.role change so the primary-role badge stays accurate.
+const GRANTABLE_APP_ROLES: Array<{ key: string; label: string; icon: React.ElementType; description: string }> = [
+  { key: 'librarian',       label: 'Librarian',       icon: BookOpen,        description: 'Upload + manage music library scores' },
+  { key: 'secretary',       label: 'Secretary',       icon: ClipboardList,   description: 'Roster + attendance + comms' },
+  { key: 'tour_manager',    label: 'Tour Manager',    icon: Bus,             description: 'Tours, hotels, rooming, logistics' },
+  { key: 'instructor',      label: 'Instructor',      icon: GraduationCap,   description: 'Manage classes + assignments' },
+  { key: 'ta',              label: 'Teaching Assist.',icon: GraduationCap,   description: 'Grade + assist instructor' },
+  { key: 'wardrobe_manager',label: 'Wardrobe Mgr',    icon: HeadphonesIcon,  description: 'Wardrobe inventory + assignments' },
+];
 
 export const UnifiedUserManagement = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -92,10 +105,67 @@ export const UnifiedUserManagement = () => {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('');
+  // Map user_id -> Set of active app_roles for that user. Drives the toggle
+  // state in the per-user dropdown.
+  const [userAppRoles, setUserAppRoles] = useState<Record<string, Set<string>>>({});
   const { toast } = useToast();
   const { autoEnrollUser, enrolling } = useAutoEnrollUser();
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(); fetchAllAppRoles(); }, []);
+
+  const fetchAllAppRoles = async () => {
+    const { data, error } = await supabase
+      .from('app_roles')
+      .select('user_id, role, is_active')
+      .eq('is_active', true);
+    if (error) {
+      console.error('Failed to load app_roles:', error);
+      return;
+    }
+    const m: Record<string, Set<string>> = {};
+    (data ?? []).forEach((r: any) => {
+      if (!m[r.user_id]) m[r.user_id] = new Set<string>();
+      m[r.user_id].add(r.role);
+    });
+    setUserAppRoles(m);
+  };
+
+  const toggleAppRole = async (userId: string, roleKey: string) => {
+    const current = userAppRoles[userId] || new Set<string>();
+    const isActive = current.has(roleKey);
+    try {
+      if (isActive) {
+        const { error } = await supabase
+          .from('app_roles')
+          .update({ is_active: false })
+          .eq('user_id', userId)
+          .eq('role', roleKey);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('app_roles')
+          .upsert(
+            { user_id: userId, role: roleKey, is_active: true },
+            { onConflict: 'user_id,role' },
+          );
+        if (error) throw error;
+      }
+      setUserAppRoles((prev) => {
+        const next = { ...prev };
+        const set = new Set(next[userId] || []);
+        if (isActive) set.delete(roleKey);
+        else set.add(roleKey);
+        next[userId] = set;
+        return next;
+      });
+      toast({
+        title: isActive ? 'Role removed' : 'Role granted',
+        description: `${roleKey.replace('_', ' ')} ${isActive ? 'removed from' : 'granted to'} user.`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Update failed', description: e?.message || 'Unknown error', variant: 'destructive' });
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -254,7 +324,7 @@ export const UnifiedUserManagement = () => {
         <div className="flex items-center gap-2 min-w-0">
           <Shield className="h-4 w-4 text-primary shrink-0" />
           <h1 className="text-base font-bold text-foreground truncate">Users</h1>
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">{userStats.total} · {userStats.verified} verified</span>
         </div>
         <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading} className="gap-1 shrink-0 h-7 text-xs">
           <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
@@ -331,7 +401,7 @@ export const UnifiedUserManagement = () => {
             </div>
           </div>
 
-          <p className="text-[11px] text-muted-foreground">{filteredUsers.length} of {users.length}</p>
+          <p className="text-sm text-muted-foreground">{filteredUsers.length} of {users.length}</p>
 
           {/* Mobile card list */}
           <div className="sm:hidden space-y-2">
@@ -344,7 +414,7 @@ export const UnifiedUserManagement = () => {
                   <p className="text-sm font-medium truncate text-foreground">{user.full_name || 'No name'}</p>
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
-                <div className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${getRoleBadgeColor(user.role)}`}>
+                <div className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-xs font-medium shrink-0 ${getRoleBadgeColor(user.role)}`}>
                   {getRoleIcon(user.role)}
                   <span className="ml-1">{user.role || 'guest'}</span>
                 </div>
@@ -376,6 +446,22 @@ export const UnifiedUserManagement = () => {
                         {getRoleIcon(r)}<span className="ml-1.5 capitalize">{r.replace('-', ' ')}</span>
                       </DropdownMenuItem>
                     ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs">App Roles</DropdownMenuLabel>
+                    {GRANTABLE_APP_ROLES.map(({ key, label, icon: Icon }) => {
+                      const has = userAppRoles[user.user_id!]?.has(key) ?? false;
+                      return (
+                        <DropdownMenuItem
+                          key={key}
+                          onClick={(e) => { e.preventDefault(); toggleAppRole(user.user_id!, key); }}
+                          className="text-xs"
+                        >
+                          <Icon className="h-3.5 w-3.5 mr-2 text-primary" />
+                          <span className="flex-1">{label}</span>
+                          {has && <UserCheck className="h-3.5 w-3.5 text-green-600" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -387,19 +473,19 @@ export const UnifiedUserManagement = () => {
             <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow className="bg-muted hover:bg-muted border-border">
-                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[40%] uppercase tracking-wide" onClick={() => toggleSort('name')}>
+                  <TableHead style={{ color: '#334155' }} className="text-sm font-semibold h-8 cursor-pointer select-none w-[40%] uppercase tracking-wide" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">User<SortIcon field="name" /></span>
                   </TableHead>
-                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[20%] uppercase tracking-wide" onClick={() => toggleSort('role')}>
+                  <TableHead style={{ color: '#334155' }} className="text-sm font-semibold h-8 cursor-pointer select-none w-[20%] uppercase tracking-wide" onClick={() => toggleSort('role')}>
                     <span className="inline-flex items-center">Role<SortIcon field="role" /></span>
                   </TableHead>
-                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('status')}>
+                  <TableHead style={{ color: '#334155' }} className="text-sm font-semibold h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status<SortIcon field="status" /></span>
                   </TableHead>
-                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('joined')}>
+                  <TableHead style={{ color: '#334155' }} className="text-sm font-semibold h-8 cursor-pointer select-none w-[15%] uppercase tracking-wide" onClick={() => toggleSort('joined')}>
                     <span className="inline-flex items-center">Joined<SortIcon field="joined" /></span>
                   </TableHead>
-                  <TableHead style={{ color: '#334155' }} className="text-[11px] font-semibold h-8 text-right w-[10%] uppercase tracking-wide">Actions</TableHead>
+                  <TableHead style={{ color: '#334155' }} className="text-sm font-semibold h-8 text-right w-[10%] uppercase tracking-wide">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -407,7 +493,7 @@ export const UnifiedUserManagement = () => {
                   <TableRow key={user.id} className="h-9 hover:bg-muted/40 border-border">
                     <TableCell className="py-1.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium text-primary shrink-0">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary shrink-0">
                           {user.avatar_url ? (
                             <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover" />
                           ) : (
@@ -416,34 +502,34 @@ export const UnifiedUserManagement = () => {
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-medium truncate text-foreground leading-tight">{user.full_name || 'No name'}</p>
-                          <p className="text-[11px] text-muted-foreground truncate leading-tight">{user.email}</p>
+                          <p className="text-sm text-muted-foreground truncate leading-tight">{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-1.5">
-                      <div className={`inline-flex items-center rounded-md border px-1.5 py-0 h-4 text-[10px] font-medium ${getRoleBadgeColor(user.role)}`}>
+                      <div className={`inline-flex items-center rounded-md border px-1.5 py-0 h-4 text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
                         {getRoleIcon(user.role)}
                         <span className="ml-1">{user.role || 'guest'}</span>
                       </div>
                       {user.is_exec_board && (
-                        <div className="inline-flex items-center ml-1 rounded-md border px-1.5 py-0 h-4 text-[10px] font-medium text-blue-700 border-blue-300 bg-blue-50">
+                        <div className="inline-flex items-center ml-1 rounded-md border px-1.5 py-0 h-4 text-xs font-medium text-blue-700 border-blue-300 bg-blue-50">
                           {user.exec_board_role || 'Exec'}
                         </div>
                       )}
                     </TableCell>
                     <TableCell className="py-1.5">
                       {user.verified ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-green-700">
+                        <span className="inline-flex items-center gap-1 text-sm text-green-700">
                           <UserCheck className="h-3 w-3" /> Verified
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-amber-700">
+                        <span className="inline-flex items-center gap-1 text-sm text-amber-700">
                           <Calendar className="h-3 w-3" /> Pending
                         </span>
                       )}
                     </TableCell>
                     <TableCell className="py-1.5">
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-sm text-muted-foreground">
                         {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
                       </span>
                     </TableCell>
@@ -477,6 +563,22 @@ export const UnifiedUserManagement = () => {
                               {getRoleIcon(r)}<span className="ml-1.5 capitalize">{r.replace('-', ' ')}</span>
                             </DropdownMenuItem>
                           ))}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-xs">App Roles</DropdownMenuLabel>
+                          {GRANTABLE_APP_ROLES.map(({ key, label, icon: Icon }) => {
+                            const has = userAppRoles[user.user_id!]?.has(key) ?? false;
+                            return (
+                              <DropdownMenuItem
+                                key={key}
+                                onClick={(e) => { e.preventDefault(); toggleAppRole(user.user_id!, key); }}
+                                className="text-xs"
+                              >
+                                <Icon className="h-3.5 w-3.5 mr-2 text-primary" />
+                                <span className="flex-1">{label}</span>
+                                {has && <UserCheck className="h-3.5 w-3.5 text-green-600" />}
+                              </DropdownMenuItem>
+                            );
+                          })}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
