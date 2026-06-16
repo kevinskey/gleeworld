@@ -54,6 +54,8 @@ interface MusicItem {
   updated_at?: string;
 }
 
+interface AudioOption { id: string; title: string; file_url: string; }
+
 export const MusicLibraryManager = () => {
   const [items, setItems] = useState<MusicItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,11 +64,53 @@ export const MusicLibraryManager = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<MusicItem | null>(null);
   const [formData, setFormData] = useState<Partial<MusicItem>>({});
+  const [audioOptions, setAudioOptions] = useState<AudioOption[]>([]);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchItems();
+    fetchAudioOptions();
   }, []);
+
+  const fetchAudioOptions = async () => {
+    const { data, error } = await supabase
+      .from('gw_media_library')
+      .select('id, title, file_url, file_type')
+      .ilike('file_type', 'audio%')
+      .order('title', { ascending: true })
+      .limit(500);
+    if (error) {
+      console.error('Failed to load media-library audio options:', error);
+      return;
+    }
+    setAudioOptions((data ?? []).map((r: any) => ({ id: r.id, title: r.title, file_url: r.file_url })));
+  };
+
+  const handleAudioUpload = async (file: File) => {
+    if (!editingItem && !formData.title) {
+      toast({ title: 'Add a title first', variant: 'destructive' });
+      return;
+    }
+    setUploadingAudio(true);
+    try {
+      const id = editingItem?.id || 'new';
+      const ext = file.name.split('.').pop() || 'mp3';
+      const path = `audio/${id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('sheet-music')
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+      const url = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
+      const audioTitle = file.name.replace(/\.[^.]+$/, '');
+      setFormData((prev) => ({ ...prev, audio_url: url, audio_title: audioTitle }));
+      toast({ title: 'Audio uploaded', description: 'Save the score to attach it.' });
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: e?.message || 'Unknown error', variant: 'destructive' });
+    } finally {
+      setUploadingAudio(false);
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -644,17 +688,90 @@ export const MusicLibraryManager = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="audio_url">YouTube Play-Along URL</Label>
-                <Input
-                  id="audio_url"
-                  value={formData.audio_url || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, audio_url: e.target.value }))}
-                  placeholder="e.g., https://youtube.com/watch?v=..."
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Auto-loads in PDF viewer's audio companion
+              <div className="space-y-3 border border-border rounded-md p-3">
+                <Label>Play-Along Audio</Label>
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Auto-loads in the PDF viewer's audio companion. Pick one source:
                 </p>
+
+                <div>
+                  <Label htmlFor="audio_picker" className="text-xs">From Media Library</Label>
+                  <Select
+                    value={
+                      audioOptions.find((o) => o.file_url === formData.audio_url)?.id ?? 'none'
+                    }
+                    onValueChange={(val) => {
+                      if (val === 'none') {
+                        setFormData((prev) => ({ ...prev, audio_url: '', audio_title: '' }));
+                        return;
+                      }
+                      const opt = audioOptions.find((o) => o.id === val);
+                      if (opt) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          audio_url: opt.file_url,
+                          audio_title: opt.title,
+                        }));
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="audio_picker">
+                      <SelectValue placeholder="Choose existing audio…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {audioOptions.map((o) => (
+                        <SelectItem key={o.id} value={o.id}>{o.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="audio_upload" className="text-xs">Upload MP3</Label>
+                  <Input
+                    id="audio_upload"
+                    type="file"
+                    accept="audio/mpeg,audio/mp3,audio/wav,audio/aac,audio/*"
+                    disabled={uploadingAudio}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleAudioUpload(f);
+                      e.target.value = '';
+                    }}
+                    className="cursor-pointer"
+                  />
+                  {uploadingAudio && (
+                    <p className="text-xs text-muted-foreground mt-1">Uploading…</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="audio_url" className="text-xs">Or YouTube URL</Label>
+                  <Input
+                    id="audio_url"
+                    value={formData.audio_url || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, audio_url: e.target.value }))}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
+
+                {formData.audio_url && (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 rounded px-2 py-1">
+                    <span className="truncate">
+                      Currently: <span className="font-medium">{formData.audio_title || 'audio'}</span>
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2"
+                      onClick={() => setFormData((prev) => ({ ...prev, audio_url: '', audio_title: '' }))}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
