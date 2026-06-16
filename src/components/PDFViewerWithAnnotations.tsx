@@ -45,15 +45,17 @@ import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
 import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import * as pdfjsLib from 'pdfjs-dist';
-// pdfjs-dist 5.x ships the worker only as an ESM .mjs file. WKWebView under
-// Capacitor (iOS native app) often serves bundled .mjs assets with the wrong
-// MIME (application/octet-stream) which blocks ES-module worker loading and
-// leaves the score viewer hung. Load the worker from the jsDelivr CDN where
-// the MIME is guaranteed text/javascript and the URL is HTTPS — works in
-// the native app and in every browser, costs one network round-trip the
-// first time pdfjs initializes.
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// Browsers + modern Safari: serve the worker as a same-origin file bundled
+// alongside the main JS. Capacitor's WKWebView (iOS native app), however,
+// often hands bundled .mjs out with application/octet-stream which blocks
+// ES-module worker loading — so when we detect Capacitor we point at the
+// jsDelivr CDN where the MIME is guaranteed text/javascript.
+import pdfWorkerLocalUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
+const isCapacitor = typeof window !== 'undefined' &&
+  (window as any).Capacitor?.isNativePlatform?.() === true;
+pdfjsLib.GlobalWorkerOptions.workerSrc = isCapacitor
+  ? `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`
+  : pdfWorkerLocalUrl;
 
 interface PDFViewerWithAnnotationsProps {
   pdfUrl: string | null;
