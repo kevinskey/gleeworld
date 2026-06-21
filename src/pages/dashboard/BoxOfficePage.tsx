@@ -62,6 +62,11 @@ export default function BoxOfficePage() {
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { data: stripe, isLoading: stripeLoading } = useTenantStripeStatus();
   const [connecting, setConnecting] = useState(false);
+  // Once Stripe is fully set up the Payments card is just a status pill —
+  // collapse it by default so the page leads with Events. Declared up
+  // here with the other hooks because the early-return branches below
+  // would otherwise change hook count across renders (React #310).
+  const [paymentsExpanded, setPaymentsExpanded] = useState(false);
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
@@ -143,9 +148,6 @@ export default function BoxOfficePage() {
 
   const connected = !!stripe?.stripe_account_id;
   const ready = connected && stripe?.stripe_charges_enabled;
-  // Once Stripe is fully set up the Payments card is just a status pill —
-  // collapse it by default so the page leads with Events.
-  const [paymentsExpanded, setPaymentsExpanded] = useState(false);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
