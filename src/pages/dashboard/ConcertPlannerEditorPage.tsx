@@ -247,6 +247,19 @@ export default function ConcertPlannerEditorPage() {
         {/* Sidebar — editor only */}
         {viewMode === 'editor' && (
           <aside className="no-print lg:col-span-4 space-y-4">
+            {/* Always-visible "Add piece" — the one buried on the timeline
+                card scrolls out of view once a few pieces exist, so the
+                most common action gets a dedicated sidebar button too. */}
+            <section className="rounded-xl border border-border bg-card p-4 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-xs uppercase tracking-wider font-semibold">Repertoire</div>
+                <div className="text-[11px] text-muted-foreground">{pieces.length} piece{pieces.length === 1 ? '' : 's'} on the program</div>
+              </div>
+              <Button size="sm" onClick={() => addPiece.mutate({})}>
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add piece
+              </Button>
+            </section>
+
             {/* Approval gate */}
             <section className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center gap-2 text-amber-700 mb-2">
@@ -372,6 +385,16 @@ export default function ConcertPlannerEditorPage() {
                 publicUrl={publicUrl}
               />
             ))}
+          {/* End-of-stack Add piece — the same action that's on the
+              timeline card + sidebar, but landed exactly where the eye
+              ends up after editing the last piece-detail card. */}
+          {viewMode === 'editor' && (
+            <div className="no-print flex justify-center pt-2">
+              <Button variant="outline" size="sm" onClick={() => addPiece.mutate({})}>
+                <Plus className="w-4 h-4 mr-1" /> Add another piece
+              </Button>
+            </div>
+          )}
         </section>
       </main>
 
