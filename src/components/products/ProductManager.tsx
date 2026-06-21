@@ -23,6 +23,19 @@ interface SizeVariant {
   stock_quantity: number;
 }
 
+// Editable row in the Variants matrix. option1 = size axis, option2 =
+// color axis (we cap at two axes because that covers ~all music merch
+// without overengineering — gw_product_variants still has option3 if a
+// later phase needs e.g. material).
+interface VariantRow {
+  id?: string;            // gw_product_variants.id when persisted; undefined for newly built rows
+  size: string;
+  color: string;
+  sku: string;
+  price: number;          // 0 → fall through to product price at checkout
+  stock_quantity: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -37,6 +50,10 @@ interface Product {
   stock_quantity: number;
   manage_stock: boolean;
   weight: number;
+  weight_oz?: number;
+  length_in?: number;
+  width_in?: number;
+  height_in?: number;
   tags: string[];
   created_at: string;
   category?: {
@@ -67,7 +84,6 @@ export const ProductManager = () => {
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [seeding, setSeeding] = useState(false);
   const {
     uploadProductImage,
     deleteProductImage,
@@ -85,27 +101,30 @@ export const ProductManager = () => {
       const {
         data,
         error
-      } = await supabase.from('products').select(`
+      } = await supabase.from('gw_products').select(`
           *,
-          category:product_categories(name),
-          images:product_images(*)
+          category:gw_product_categories(name),
+          images:gw_product_images(*)
         `).order('created_at', {
         ascending: false
       });
       if (error) throw error;
 
-      // Fetch size variants for all products
+      // Fetch size variants for all products. gw_product_variants
+      // uses generic option1/option2/option3 (Shopify-style) so we treat
+      // option1 as the size axis here.
       const productIds = (data || []).map(p => p.id);
       let variantMap: Record<string, SizeVariant[]> = {};
       if (productIds.length > 0) {
         const { data: variants } = await supabase
-          .from('product_variants')
-          .select('product_id, size, stock_quantity')
+          .from('gw_product_variants')
+          .select('product_id, option1, inventory_quantity')
           .in('product_id', productIds);
         if (variants) {
-          variants.forEach(v => {
+          variants.forEach((v: any) => {
+            if (!v.option1) return;
             if (!variantMap[v.product_id]) variantMap[v.product_id] = [];
-            variantMap[v.product_id].push({ size: v.size, stock_quantity: v.stock_quantity ?? 0 });
+            variantMap[v.product_id].push({ size: v.option1, stock_quantity: v.inventory_quantity ?? 0 });
           });
         }
       }
@@ -133,7 +152,7 @@ export const ProductManager = () => {
       const {
         data,
         error
-      } = await supabase.from('product_categories').select('*').eq('is_active', true).order('sort_order');
+      } = await supabase.from('gw_product_categories').select('*').eq('is_active', true).order('sort_order');
       if (error) throw error;
       setCategories(data || []);
     } catch (error: any) {
@@ -152,7 +171,7 @@ export const ProductManager = () => {
       // Add image to database
       const {
         error
-      } = await supabase.from('product_images').insert({
+      } = await supabase.from('gw_product_images').insert({
         product_id: productId,
         image_url: imageUrl,
         alt_text: file.name,
@@ -170,105 +189,11 @@ export const ProductManager = () => {
       }
     }
   };
-  // One-click seed of the six demo products from the public Shop fallback,
-  // so the empty backend goes from "nothing here" to "six editable rows
-  // already on your storefront" in one tap. Idempotent-ish: it just
-  // inserts six rows; running it twice gives you twelve rows. We keep it
-  // simple because deduplication would require an SKU constraint that may
-  // not exist in every tenant's schema.
-  const SAMPLE_PRODUCTS = [
-    { name: 'Concert T-Shirt',          description: 'Soft cotton tee with the season logo.',                price: 25, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', categorySlug: 'apparel' },
-    { name: 'Tour Hoodie',              description: 'Heavyweight hoodie with embroidered crest.',          price: 55, image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400', categorySlug: 'apparel' },
-    { name: 'Canvas Tote',              description: 'Sturdy tote for rehearsals and concerts.',            price: 18, image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=400', categorySlug: 'accessories' },
-    { name: 'Enamel Crest Pin',         description: 'Hard-enamel pin for backpacks and lapels.',           price: 8,  image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=400', categorySlug: 'accessories' },
-    { name: 'Sheet Music: Season Anthem', description: "PDF download of this season's featured anthem.",    price: 6,  image: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400', categorySlug: 'digital' },
-    { name: 'Ensemble Mug',             description: 'Ceramic mug — perfect for warm-ups before rehearsal.',price: 14, image: 'https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=400', categorySlug: 'accessories' },
-  ];
-
-  const seedSampleProducts = async () => {
-    setSeeding(true);
-    try {
-      // Resolve category ids by slug — create the three categories on the
-      // fly if the tenant hasn't set them up yet, so seeding works on a
-      // blank store.
-      const wanted = ['apparel', 'accessories', 'digital'];
-      const { data: existing, error: catErr } = await supabase
-        .from('product_categories')
-        .select('id, slug')
-        .in('slug', wanted);
-      if (catErr) throw catErr;
-      const slugToId: Record<string, string> = {};
-      (existing || []).forEach((c: any) => { slugToId[c.slug] = c.id; });
-      const missing = wanted.filter((s) => !slugToId[s]);
-      if (missing.length > 0) {
-        const newRows = missing.map((slug) => ({
-          slug,
-          name: slug.charAt(0).toUpperCase() + slug.slice(1),
-          is_active: true,
-        }));
-        const { data: created, error: createErr } = await supabase
-          .from('product_categories')
-          .insert(newRows)
-          .select('id, slug');
-        if (createErr) throw createErr;
-        (created || []).forEach((c: any) => { slugToId[c.slug] = c.id; });
-      }
-
-      const productRows = SAMPLE_PRODUCTS.map((p) => ({
-        name: p.name,
-        description: p.description,
-        price: p.price,
-        is_active: true,
-        is_featured: false,
-        stock_quantity: 50,
-        manage_stock: true,
-        category_id: slugToId[p.categorySlug] || null,
-        tags: [p.categorySlug],
-      }));
-      const { data: createdProducts, error: prodErr } = await supabase
-        .from('products')
-        .insert(productRows)
-        .select('id, name');
-      if (prodErr) throw prodErr;
-
-      // Attach the demo Unsplash image to each new row so the storefront
-      // has something to render right away.
-      const imageRows = (createdProducts || []).map((p: any, i: number) => ({
-        product_id: p.id,
-        image_url: SAMPLE_PRODUCTS[i].image,
-        alt_text: SAMPLE_PRODUCTS[i].name,
-        is_primary: true,
-        sort_order: 0,
-      }));
-      if (imageRows.length > 0) {
-        const { error: imgErr } = await supabase
-          .from('product_images')
-          .insert(imageRows);
-        if (imgErr) console.warn('[seed] image insert failed', imgErr);
-      }
-
-      toast({
-        title: 'Seeded',
-        description: `Added ${createdProducts?.length ?? 0} sample products. Edit any of them or open the public store to see them live.`,
-      });
-      fetchProducts();
-      fetchCategories();
-    } catch (err: any) {
-      toast({
-        title: 'Could not seed sample products',
-        description: err?.message || String(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   const handleDeleteProduct = async (productId: string, productName: string) => {
     try {
       const {
         error
-      } = await supabase.from('products').delete().eq('id', productId);
+      } = await supabase.from('gw_products').delete().eq('id', productId);
       if (error) throw error;
       toast({
         title: "Success",
@@ -287,7 +212,7 @@ export const ProductManager = () => {
     try {
       const {
         error
-      } = await supabase.from('products').update({
+      } = await supabase.from('gw_products').update({
         is_featured: !currentFeatured
       }).eq('id', productId);
       if (error) throw error;
@@ -456,23 +381,11 @@ export const ProductManager = () => {
       </div>
 
       {filteredProducts.length === 0 && <Card>
-          <CardContent className="p-8 text-center space-y-4">
-            <p className="text-muted-foreground">No products found</p>
-            {products.length === 0 && (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Start fast by seeding the six demo products from the
-                  public storefront. You can edit them right after.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={seedSampleProducts}
-                  disabled={seeding}
-                >
-                  {seeding ? 'Seeding…' : 'Seed sample products'}
-                </Button>
-              </div>
-            )}
+          <CardContent className="p-8 text-center space-y-2">
+            <p className="text-muted-foreground">No products yet</p>
+            <p className="text-sm text-muted-foreground">
+              Click <strong>Add New Product</strong> above to build your storefront.
+            </p>
           </CardContent>
         </Card>}
     </div>;
@@ -502,12 +415,52 @@ const ProductForm: React.FC<ProductFormProps> = ({
     stock_quantity: product?.stock_quantity || 0,
     manage_stock: product?.manage_stock ?? true,
     weight: product?.weight || 0,
+    weight_oz: product?.weight_oz || 0,
+    length_in: product?.length_in || 0,
+    width_in: product?.width_in || 0,
+    height_in: product?.height_in || 0,
     tags: product?.tags?.join(', ') || '',
-    sizes: product?.sizes || [] as string[],
-    sizeQuantities: Object.fromEntries(
-      (product?.sizeVariants || []).map(v => [v.size, v.stock_quantity])
-    ) as Record<string, number>
   });
+
+  // Variant matrix lives in its own state (not on formData) so the
+  // generator + per-row editors can mutate it cheaply without re-rendering
+  // every form field. Seeded from the existing sizeVariants when editing
+  // a product that only had a single (size) axis.
+  const seedRows: VariantRow[] = (product?.sizeVariants || []).map(v => ({
+    size: v.size,
+    color: '',
+    sku: '',
+    price: 0,
+    stock_quantity: v.stock_quantity,
+  }));
+  const [sizesText, setSizesText] = useState((product?.sizes || []).join(', '));
+  const [colorsText, setColorsText] = useState('');
+  const [variantRows, setVariantRows] = useState<VariantRow[]>(seedRows);
+
+  const generateMatrix = () => {
+    const sizes = sizesText.split(',').map(s => s.trim()).filter(Boolean);
+    const colors = colorsText.split(',').map(c => c.trim()).filter(Boolean);
+    // Always produce at least one row per axis, even if the other axis
+    // is blank — that way "Sizes only" stores still work.
+    const sizeAxis = sizes.length > 0 ? sizes : [''];
+    const colorAxis = colors.length > 0 ? colors : [''];
+    const rows: VariantRow[] = [];
+    sizeAxis.forEach(size => {
+      colorAxis.forEach(color => {
+        // Preserve existing rows that match this size+color combo so the
+        // admin doesn't lose their inline edits when re-generating.
+        const existing = variantRows.find(r => r.size === size && r.color === color);
+        rows.push(existing ?? {
+          size,
+          color,
+          sku: '',
+          price: 0,
+          stock_quantity: 0,
+        });
+      });
+    });
+    setVariantRows(rows);
+  };
   const [saving, setSaving] = useState(false);
   const {
     toast
@@ -520,11 +473,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
     e.preventDefault();
     setSaving(true);
     try {
-      const { sizes, sizeQuantities, ...rest } = formData;
-      const productData = {
-        ...rest,
-        tags: rest.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        created_by: product ? undefined : (await supabase.auth.getUser()).data.user?.id
+      const productData: Record<string, any> = {
+        ...formData,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       };
 
       // Remove empty SKU to avoid unique constraint violations
@@ -535,26 +486,41 @@ const ProductForm: React.FC<ProductFormProps> = ({
       let productId = product?.id;
 
       if (product) {
-        const { error } = await supabase.from('products').update(productData).eq('id', product.id);
+        const { error } = await supabase.from('gw_products').update(productData).eq('id', product.id);
         if (error) throw error;
       } else {
-        const { data: newProduct, error } = await supabase.from('products').insert(productData).select('id').single();
+        const { data: newProduct, error } = await supabase.from('gw_products').insert(productData).select('id').single();
         if (error) throw error;
         productId = newProduct.id;
       }
 
-      // Sync size variants
+      // Sync variant matrix — gw_product_variants stores size on option1
+      // and color on option2 (generic option1/2/3 follow Shopify's
+      // convention). We blow away existing rows and re-insert because the
+      // matrix is small (S/M/L × Black/White = 6 rows typical) and the
+      // alternative is a fiddly diff.
       if (productId) {
-        await supabase.from('product_variants').delete().eq('product_id', productId);
-        if (sizes.length > 0) {
-          const variantRows = sizes.map(size => ({
-            product_id: productId!,
-            title: `${rest.name} - ${size}`,
-            size,
-            price: rest.price,
-            stock_quantity: sizeQuantities[size] ?? 0,
-          }));
-          const { error: variantError } = await supabase.from('product_variants').insert(variantRows);
+        await supabase.from('gw_product_variants').delete().eq('product_id', productId);
+        const rowsToInsert = variantRows
+          .filter(r => r.size || r.color) // skip the all-empty placeholder row
+          .map(r => {
+            const titleParts = [r.size, r.color].filter(Boolean);
+            return {
+              product_id: productId!,
+              title: titleParts.length > 0
+                ? `${formData.name} - ${titleParts.join(' / ')}`
+                : formData.name,
+              option1: r.size || null,
+              option2: r.color || null,
+              price: r.price > 0 ? r.price : formData.price,
+              inventory_quantity: r.stock_quantity ?? 0,
+              sku: r.sku?.trim() || null,
+            };
+          });
+        if (rowsToInsert.length > 0) {
+          const { error: variantError } = await supabase
+            .from('gw_product_variants')
+            .insert(rowsToInsert);
           if (variantError) console.error('Error saving variants:', variantError);
         }
       }
@@ -576,9 +542,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
   return <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 text-xs sm:text-sm">
+        <TabsList className="grid w-full grid-cols-4 text-xs sm:text-sm">
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="pricing">Pricing & Stock</TabsTrigger>
+          <TabsTrigger value="variants">Variants</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
         </TabsList>
 
@@ -661,52 +628,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         </TabsContent>
 
         <TabsContent value="pricing" className="space-y-4">
-          {/* Size Variants */}
-          <div>
-           <Label className="mb-2 block">Available Sizes & Quantities</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {AVAILABLE_SIZES.map(size => {
-                const isChecked = formData.sizes.includes(size);
-                return (
-                  <div key={size} className="flex items-center gap-2 p-2 rounded-md border border-border bg-muted/30">
-                    <Checkbox
-                      id={`size-${size}`}
-                      checked={isChecked}
-                      onCheckedChange={(checked) => {
-                        setFormData(prev => ({
-                          ...prev,
-                          sizes: checked
-                            ? [...prev.sizes, size]
-                            : prev.sizes.filter(s => s !== size),
-                          sizeQuantities: checked
-                            ? { ...prev.sizeQuantities, [size]: prev.sizeQuantities[size] ?? 0 }
-                            : (() => { const { [size]: _, ...rest } = prev.sizeQuantities; return rest; })()
-                        }));
-                      }}
-                    />
-                    <Label htmlFor={`size-${size}`} className="text-sm cursor-pointer min-w-[2rem]">{size}</Label>
-                    {isChecked && (
-                      <Input
-                        type="number"
-                        min="0"
-                        inputMode="numeric"
-                        placeholder="Qty"
-                        className="flex-1 h-8 text-sm"
-                        value={formData.sizeQuantities[size] ?? 0}
-                        onChange={(e) => {
-                          setFormData(prev => ({
-                            ...prev,
-                            sizeQuantities: { ...prev.sizeQuantities, [size]: parseInt(e.target.value) || 0 }
-                          }));
-                        }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="price">Regular Price ($) *</Label>
@@ -733,20 +654,121 @@ const ProductForm: React.FC<ProductFormProps> = ({
           </div>
 
           {formData.manage_stock && <div>
-              <Label htmlFor="stock_quantity">Stock Quantity</Label>
+              <Label htmlFor="stock_quantity">Stock Quantity (base — variants override)</Label>
               <Input id="stock_quantity" type="number" value={formData.stock_quantity} onChange={e => setFormData({
             ...formData,
             stock_quantity: parseInt(e.target.value) || 0
           })} />
             </div>}
 
-          <div>
-            <Label htmlFor="weight">Weight (lbs)</Label>
-            <Input id="weight" type="number" step="0.01" value={formData.weight} onChange={e => setFormData({
-            ...formData,
-            weight: parseFloat(e.target.value) || 0
-          })} />
+          {/* Shipping dimensions — needed for EasyPost rate quotes at
+              checkout. Weight in oz + dims in inches matches what every
+              US carrier expects. */}
+          <div className="pt-2 border-t">
+            <Label className="block mb-2 text-sm font-semibold">Shipping dimensions (for live rate quotes)</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <Label htmlFor="weight_oz" className="text-xs">Weight (oz)</Label>
+                <Input id="weight_oz" type="number" step="0.1" value={formData.weight_oz} onChange={e => setFormData({ ...formData, weight_oz: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <Label htmlFor="length_in" className="text-xs">Length (in)</Label>
+                <Input id="length_in" type="number" step="0.1" value={formData.length_in} onChange={e => setFormData({ ...formData, length_in: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <Label htmlFor="width_in" className="text-xs">Width (in)</Label>
+                <Input id="width_in" type="number" step="0.1" value={formData.width_in} onChange={e => setFormData({ ...formData, width_in: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <Label htmlFor="height_in" className="text-xs">Height (in)</Label>
+                <Input id="height_in" type="number" step="0.1" value={formData.height_in} onChange={e => setFormData({ ...formData, height_in: parseFloat(e.target.value) || 0 })} />
+              </div>
+            </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="variants" className="space-y-4">
+          <div className="space-y-1">
+            <Label className="text-sm font-semibold">Build a variant matrix</Label>
+            <p className="text-xs text-muted-foreground">
+              Enter the sizes and colors you carry. Click <strong>Generate matrix</strong> to
+              create one variant per combination, then edit price, SKU, and stock per row.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="sizes_text" className="text-xs">Sizes (comma separated)</Label>
+              <Input id="sizes_text" placeholder="S, M, L, XL, 2XL" value={sizesText} onChange={e => setSizesText(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="colors_text" className="text-xs">Colors (comma separated)</Label>
+              <Input id="colors_text" placeholder="Black, White, Heather Grey" value={colorsText} onChange={e => setColorsText(e.target.value)} />
+            </div>
+          </div>
+          <Button type="button" variant="outline" size="sm" onClick={generateMatrix}>
+            Generate matrix
+          </Button>
+
+          {variantRows.length > 0 && (
+            <div className="border rounded-md overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs uppercase">
+                  <tr>
+                    <th className="text-left p-2">Size</th>
+                    <th className="text-left p-2">Color</th>
+                    <th className="text-left p-2">SKU</th>
+                    <th className="text-left p-2 w-24">Price ($)</th>
+                    <th className="text-left p-2 w-20">Stock</th>
+                    <th className="w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {variantRows.map((row, idx) => (
+                    <tr key={idx} className="border-t">
+                      <td className="p-1">
+                        <Input className="h-8" value={row.size} onChange={e => {
+                          const next = [...variantRows]; next[idx] = { ...row, size: e.target.value }; setVariantRows(next);
+                        }} />
+                      </td>
+                      <td className="p-1">
+                        <Input className="h-8" value={row.color} onChange={e => {
+                          const next = [...variantRows]; next[idx] = { ...row, color: e.target.value }; setVariantRows(next);
+                        }} />
+                      </td>
+                      <td className="p-1">
+                        <Input className="h-8" placeholder="optional" value={row.sku} onChange={e => {
+                          const next = [...variantRows]; next[idx] = { ...row, sku: e.target.value }; setVariantRows(next);
+                        }} />
+                      </td>
+                      <td className="p-1">
+                        <Input className="h-8" type="number" step="0.01" placeholder={String(formData.price || 0)} value={row.price || ''} onChange={e => {
+                          const next = [...variantRows]; next[idx] = { ...row, price: parseFloat(e.target.value) || 0 }; setVariantRows(next);
+                        }} />
+                      </td>
+                      <td className="p-1">
+                        <Input className="h-8" type="number" min="0" value={row.stock_quantity} onChange={e => {
+                          const next = [...variantRows]; next[idx] = { ...row, stock_quantity: parseInt(e.target.value) || 0 }; setVariantRows(next);
+                        }} />
+                      </td>
+                      <td className="p-1 text-center">
+                        <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setVariantRows(variantRows.filter((_, i) => i !== idx))}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="p-2 bg-muted/30 border-t">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setVariantRows([...variantRows, { size: '', color: '', sku: '', price: 0, stock_quantity: 0 }])}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Add row
+                </Button>
+                <span className="ml-2 text-xs text-muted-foreground">
+                  Leave a Price blank to fall through to the base product price.
+                </span>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="images" className="space-y-4">
@@ -757,7 +779,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     <img src={image.image_url} alt={image.alt_text} className="w-full aspect-square object-cover rounded border" />
                     <Button variant="destructive" size="sm" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={async () => {
                 if (await deleteProductImage(image.image_url)) {
-                  await supabase.from('product_images').delete().eq('id', image.id);
+                  await supabase.from('gw_product_images').delete().eq('id', image.id);
                   onSave(); // Refresh
                 }
               }}>

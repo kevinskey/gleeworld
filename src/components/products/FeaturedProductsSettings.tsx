@@ -97,7 +97,7 @@ export const FeaturedProductsSettings = () => {
     try {
       // Fetch categories with product counts
       const { data: categoriesData, error: catError } = await supabase
-        .from('product_categories')
+        .from('gw_product_categories')
         .select('id, name')
         .order('name');
 
@@ -105,7 +105,7 @@ export const FeaturedProductsSettings = () => {
 
       // Get product counts per category
       const { data: productsData } = await supabase
-        .from('products')
+        .from('gw_products')
         .select('category_id')
         .eq('is_active', true);
 

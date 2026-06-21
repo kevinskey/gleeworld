@@ -11,11 +11,12 @@ import { TaxManager } from '@/components/products/TaxManager';
 import { InventoryManager } from '@/components/products/InventoryManager';
 import { ReportsManager } from '@/components/products/ReportsManager';
 import { StoreSettingsManager } from '@/components/products/StoreSettingsManager';
+import { ShippingSettings } from '@/components/products/ShippingSettings';
 import { SubscriptionsManager } from '@/components/products/SubscriptionsManager';
 import { OrderDetailDrawer } from '@/components/products/OrderDetailDrawer';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store, ExternalLink } from 'lucide-react';
+import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store, ExternalLink, Plane } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Feature flag for subscriptions
@@ -40,6 +41,10 @@ const tabs = [{
   value: 'shipping',
   label: 'Shipping',
   icon: Truck
+}, {
+  value: 'shipping-easypost',
+  label: 'EasyPost',
+  icon: Plane
 }, {
   value: 'payments',
   label: 'Payments',
@@ -153,6 +158,10 @@ export const ProductManagement = () => {
 
             <TabsContent value="shipping" className="m-0">
               <ShippingManager />
+            </TabsContent>
+
+            <TabsContent value="shipping-easypost" className="m-0">
+              <ShippingSettings />
             </TabsContent>
 
             <TabsContent value="payments" className="m-0">

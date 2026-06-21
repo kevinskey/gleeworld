@@ -18,6 +18,14 @@ const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
 };
+interface ProductVariant {
+  id: string;
+  size: string | null;   // option1
+  color: string | null;  // option2
+  sku: string | null;
+  price: number;
+  inventory_quantity: number;
+}
 interface Product {
   id: string;
   title: string;
@@ -29,80 +37,16 @@ interface Product {
   tags: string[];
   requires_shipping: boolean;
   weight?: number;
+  weight_oz?: number;
+  length_in?: number;
+  width_in?: number;
+  height_in?: number;
+  variants?: ProductVariant[];
 }
 interface CartItem {
   product: Product;
   quantity: number;
 }
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: 'mock-tee',
-    title: 'Concert T-Shirt',
-    description: 'Soft cotton tee with the season logo.',
-    price: 25,
-    product_type: 'apparel',
-    images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400'],
-    inventory_quantity: 50,
-    tags: ['shirt'],
-    requires_shipping: true,
-  },
-  {
-    id: 'mock-hoodie',
-    title: 'Tour Hoodie',
-    description: 'Heavyweight hoodie with embroidered crest.',
-    price: 55,
-    product_type: 'apparel',
-    images: ['https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400'],
-    inventory_quantity: 30,
-    tags: ['hoodie'],
-    requires_shipping: true,
-  },
-  {
-    id: 'mock-tote',
-    title: 'Canvas Tote',
-    description: 'Sturdy tote for rehearsals and concerts.',
-    price: 18,
-    product_type: 'accessories',
-    images: ['https://images.unsplash.com/photo-1544816155-12df9643f363?w=400'],
-    inventory_quantity: 80,
-    tags: ['bag'],
-    requires_shipping: true,
-  },
-  {
-    id: 'mock-pin',
-    title: 'Enamel Crest Pin',
-    description: 'Hard-enamel pin for backpacks and lapels.',
-    price: 8,
-    product_type: 'accessories',
-    images: ['https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=400'],
-    inventory_quantity: 120,
-    tags: ['pin'],
-    requires_shipping: true,
-  },
-  {
-    id: 'mock-anthem',
-    title: 'Sheet Music: Season Anthem',
-    description: 'PDF download of this season\'s featured anthem.',
-    price: 6,
-    product_type: 'digital',
-    images: ['https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400'],
-    inventory_quantity: 999,
-    tags: ['pdf'],
-    requires_shipping: false,
-  },
-  {
-    id: 'mock-mug',
-    title: 'Ensemble Mug',
-    description: 'Ceramic mug — perfect for warm-ups before rehearsal.',
-    price: 14,
-    product_type: 'accessories',
-    images: ['https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=400'],
-    inventory_quantity: 60,
-    tags: ['mug'],
-    requires_shipping: true,
-  },
-];
-
 const CATEGORIES = [{
   value: "all",
   label: "All",
@@ -149,71 +93,104 @@ export const Shop = () => {
   }>({});
   const [loading, setLoading] = useState(true);
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
+  // Per-card variant picker state. Keys are productId; values are the
+  // user's currently-picked size/color tuple. We resolve those to a
+  // concrete variant id at add-to-cart time.
+  const [pickedSize, setPickedSize] = useState<Record<string, string>>({});
+  const [pickedColor, setPickedColor] = useState<Record<string, string>>({});
+
+  const resolveVariantId = (product: Product): string | null => {
+    if (!product.variants || product.variants.length === 0) return null;
+    const size = pickedSize[product.id] || '';
+    const color = pickedColor[product.id] || '';
+    const sizes = Array.from(new Set(product.variants.map(v => v.size).filter(Boolean) as string[]));
+    const colors = Array.from(new Set(product.variants.map(v => v.color).filter(Boolean) as string[]));
+    if (sizes.length > 0 && !size) return null;
+    if (colors.length > 0 && !color) return null;
+    return product.variants.find(v =>
+      (v.size ?? '') === size && (v.color ?? '') === color
+    )?.id ?? null;
+  };
   useEffect(() => {
     loadProducts();
     loadCartFromStorage();
   }, []);
   const loadProducts = async () => {
-    // Source priority: the admin's `products` table (ProductManager
-    // reads/writes it) → legacy `gw_products` → built-in MOCK fallback.
-    // That way whatever the admin curates from the Store backend is what
-    // shoppers actually see, and tenants with neither table populated
-    // still get a non-empty boutique to demo from.
+    // Single canonical source: gw_products joined with gw_product_images
+    // + gw_product_categories. Whatever the admin curates from the Store
+    // backend is what shoppers see. Empty store stays empty — no mock
+    // fallback (the admin can build their catalogue from the backend).
     try {
-      const { data: adminRows, error: adminErr } = await supabase
-        .from('products')
+      const { data, error } = await supabase
+        .from('gw_products')
         .select(`
-          id, name, description, short_description, price, sale_price,
-          stock_quantity, tags, is_active,
-          category:product_categories(name, slug),
-          images:product_images(image_url, is_primary, sort_order)
+          id, title, name, description, short_description, price, sale_price,
+          product_type, inventory_quantity, stock_quantity, tags, images,
+          requires_shipping, is_active, weight_oz, length_in, width_in, height_in,
+          category:gw_product_categories(name, slug),
+          gallery:gw_product_images(image_url, is_primary, sort_order),
+          variants:gw_product_variants(id, option1, option2, sku, price, inventory_quantity)
         `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
+      if (error) throw error;
 
-      if (!adminErr && adminRows && adminRows.length > 0) {
-        const mapped: Product[] = adminRows.map((r: any) => {
-          const imgs = (r.images || [])
-            .slice()
-            .sort((a: any, b: any) => (b.is_primary === a.is_primary ? (a.sort_order ?? 0) - (b.sort_order ?? 0) : (b.is_primary ? 1 : -1)))
-            .map((i: any) => i.image_url)
-            .filter(Boolean);
-          const categorySlug = (r.category?.slug || '').toLowerCase();
-          const productType = categorySlug.includes('apparel') || categorySlug.includes('shirt') || categorySlug.includes('hoodie')
+      const mapped: Product[] = (data || []).map((r: any) => {
+        // Prefer the structured gw_product_images gallery; fall back to
+        // the legacy text[] images column on gw_products.
+        const galleryImgs = (r.gallery || [])
+          .slice()
+          .sort((a: any, b: any) =>
+            b.is_primary === a.is_primary
+              ? (a.sort_order ?? 0) - (b.sort_order ?? 0)
+              : (b.is_primary ? 1 : -1)
+          )
+          .map((i: any) => i.image_url)
+          .filter(Boolean);
+        const imgs = galleryImgs.length > 0 ? galleryImgs : (r.images || []);
+
+        // Map admin's category to one of the storefront filter buckets.
+        const categorySlug = (r.category?.slug || '').toLowerCase();
+        const productType = r.product_type
+          || (categorySlug.includes('apparel') || categorySlug.includes('shirt') || categorySlug.includes('hoodie')
             ? 'apparel'
             : categorySlug.includes('digital') || categorySlug.includes('music') || categorySlug.includes('pdf')
               ? 'digital'
-              : 'accessories';
-          return {
-            id: r.id,
-            title: r.name,
-            description: r.description || r.short_description || '',
-            price: Number(r.sale_price ?? r.price ?? 0),
-            product_type: productType,
-            images: imgs.length > 0 ? imgs : ['https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=400'],
-            inventory_quantity: r.stock_quantity ?? 0,
-            tags: r.tags || [],
-            requires_shipping: productType !== 'digital',
-          };
-        });
-        setProducts(mapped);
-        setFilteredProducts(mapped);
-        return;
-      }
+              : 'accessories');
 
-      const { data, error } = await supabase
-        .from('gw_products')
-        .select('*')
-        .eq('is_active', true)
-        .order('title');
-      if (error) throw error;
-      const list = data && data.length > 0 ? (data as Product[]) : MOCK_PRODUCTS;
-      setProducts(list);
-      setFilteredProducts(list);
+        const variants: ProductVariant[] = (r.variants || []).map((v: any) => ({
+          id: v.id,
+          size: v.option1,
+          color: v.option2,
+          sku: v.sku,
+          price: Number(v.price ?? r.price ?? 0),
+          inventory_quantity: v.inventory_quantity ?? 0,
+        }));
+
+        return {
+          id: r.id,
+          title: r.name || r.title || '',
+          description: r.description || r.short_description || '',
+          price: Number(r.sale_price ?? r.price ?? 0),
+          product_type: productType,
+          images: imgs.length > 0 ? imgs : [],
+          inventory_quantity: r.stock_quantity ?? r.inventory_quantity ?? 0,
+          tags: r.tags || [],
+          requires_shipping: r.requires_shipping ?? (productType !== 'digital'),
+          weight_oz: r.weight_oz ?? undefined,
+          length_in: r.length_in ?? undefined,
+          width_in: r.width_in ?? undefined,
+          height_in: r.height_in ?? undefined,
+          variants,
+        };
+      });
+
+      setProducts(mapped);
+      setFilteredProducts(mapped);
     } catch (error) {
       console.error('Error loading products:', error);
-      setProducts(MOCK_PRODUCTS);
-      setFilteredProducts(MOCK_PRODUCTS);
+      setProducts([]);
+      setFilteredProducts([]);
     } finally {
       setLoading(false);
     }
@@ -239,11 +216,32 @@ export const Shop = () => {
     }
     setFilteredProducts(filtered);
   }, [products, selectedCategory, searchQuery]);
-  const addToCart = (productId: string) => {
+  // Cart key format: "productId|variantId" (variantId blank for products
+  // with no variants). Encoding both pieces in one string keeps the
+  // existing { [key]: quantity } shape intact while letting us round-trip
+  // the variant selection to checkout.
+  const cartKey = (productId: string, variantId?: string | null) => `${productId}|${variantId || ''}`;
+  const parseCartKey = (key: string): { productId: string; variantId: string | null } => {
+    const [productId, variantId] = key.split('|');
+    return { productId, variantId: variantId || null };
+  };
+  const findVariant = (product: Product, variantId: string | null) =>
+    variantId ? product.variants?.find(v => v.id === variantId) ?? null : null;
+  const lineQuantityAvailable = (product: Product, variantId: string | null) => {
+    const v = findVariant(product, variantId);
+    return v ? v.inventory_quantity : product.inventory_quantity;
+  };
+  const lineUnitPrice = (product: Product, variantId: string | null) => {
+    const v = findVariant(product, variantId);
+    return v && v.price > 0 ? v.price : product.price;
+  };
+
+  const addToCart = (productId: string, variantId: string | null = null) => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
-    const currentQuantity = cartItems[productId] || 0;
-    if (currentQuantity >= product.inventory_quantity) {
+    const key = cartKey(productId, variantId);
+    const currentQuantity = cartItems[key] || 0;
+    if (currentQuantity >= lineQuantityAvailable(product, variantId)) {
       toast({
         title: "Out of Stock",
         description: "This item is currently out of stock.",
@@ -253,23 +251,28 @@ export const Shop = () => {
     }
     const newCart = {
       ...cartItems,
-      [productId]: currentQuantity + 1
+      [key]: currentQuantity + 1
     };
     setCartItems(newCart);
     saveCartToStorage(newCart);
+    const variant = findVariant(product, variantId);
+    const variantLabel = variant
+      ? [variant.size, variant.color].filter(Boolean).join(' / ')
+      : '';
     toast({
       title: "Added to Cart",
-      description: `${product.title} added to your cart.`
+      description: `${product.title}${variantLabel ? ` (${variantLabel})` : ''} added to your cart.`
     });
   };
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = (productId: string, variantId: string | null = null) => {
+    const key = cartKey(productId, variantId);
     const newCart = {
       ...cartItems
     };
-    if (newCart[productId] > 1) {
-      newCart[productId]--;
+    if (newCart[key] > 1) {
+      newCart[key]--;
     } else {
-      delete newCart[productId];
+      delete newCart[key];
     }
     setCartItems(newCart);
     saveCartToStorage(newCart);
@@ -278,13 +281,15 @@ export const Shop = () => {
     return Object.values(cartItems).reduce((sum, quantity) => sum + quantity, 0);
   };
   const getTotalPrice = () => {
-    return Object.entries(cartItems).reduce((total, [productId, quantity]) => {
+    return Object.entries(cartItems).reduce((total, [key, quantity]) => {
+      const { productId, variantId } = parseCartKey(key);
       const product = products.find(p => p.id === productId);
-      return total + (product ? product.price * quantity : 0);
+      return total + (product ? lineUnitPrice(product, variantId) * quantity : 0);
     }, 0);
   };
   const getCartItems = (): CartItem[] => {
-    return Object.entries(cartItems).map(([productId, quantity]) => {
+    return Object.entries(cartItems).map(([key, quantity]) => {
+      const { productId } = parseCartKey(key);
       const product = products.find(p => p.id === productId);
       return {
         product: product!,
@@ -465,29 +470,41 @@ export const Shop = () => {
                       </button>
 
                       {/* Quick Add Button */}
-                      {!cartItems[product.id] ? <button onClick={e => {
-                  e.stopPropagation();
-                  addToCart(product.id);
-                }} className="absolute bottom-4 left-4 right-4 py-3 bg-primary rounded-lg font-medium text-primary-foreground opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-primary/90 shadow-lg flex items-center justify-center gap-2">
-                          <Plus className="h-4 w-4" />
-                          Add to Cart
-                        </button> : <div className="absolute bottom-4 left-4 right-4 py-2 bg-primary rounded-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
-                          <div className="flex items-center justify-between px-4">
-                            <button onClick={e => {
-                      e.stopPropagation();
-                      removeFromCart(product.id);
-                    }} className="w-8 h-8 rounded-full bg-primary/80 hover:bg-primary/70 flex items-center justify-center transition-colors">
-                              <Minus className="h-4 w-4 text-primary-foreground" />
-                            </button>
-                            <span className="font-medium text-primary-foreground">{cartItems[product.id]}</span>
-                            <button onClick={e => {
-                      e.stopPropagation();
-                      addToCart(product.id);
-                    }} className="w-8 h-8 rounded-full bg-card hover:bg-muted flex items-center justify-center transition-colors">
-                              <Plus className="h-4 w-4 text-foreground" />
-                            </button>
+                      {(() => {
+                        const resolvedVariantId = resolveVariantId(product);
+                        const lineKey = cartKey(product.id, resolvedVariantId);
+                        const inCart = cartItems[lineKey] || 0;
+                        const needsVariantPick = (product.variants && product.variants.length > 0) && !resolvedVariantId;
+                        return inCart === 0 ? (
+                          <button
+                            disabled={needsVariantPick}
+                            onClick={e => {
+                              e.stopPropagation();
+                              if (!needsVariantPick) addToCart(product.id, resolvedVariantId);
+                            }}
+                            className={`absolute bottom-4 left-4 right-4 py-3 rounded-lg font-medium opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
+                              needsVariantPick
+                                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                            }`}
+                          >
+                            <Plus className="h-4 w-4" />
+                            {needsVariantPick ? 'Pick options below' : 'Add to Cart'}
+                          </button>
+                        ) : (
+                          <div className="absolute bottom-4 left-4 right-4 py-2 bg-primary rounded-lg opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+                            <div className="flex items-center justify-between px-4">
+                              <button onClick={e => { e.stopPropagation(); removeFromCart(product.id, resolvedVariantId); }} className="w-8 h-8 rounded-full bg-primary/80 hover:bg-primary/70 flex items-center justify-center transition-colors">
+                                <Minus className="h-4 w-4 text-primary-foreground" />
+                              </button>
+                              <span className="font-medium text-primary-foreground">{inCart}</span>
+                              <button onClick={e => { e.stopPropagation(); addToCart(product.id, resolvedVariantId); }} className="w-8 h-8 rounded-full bg-card hover:bg-muted flex items-center justify-center transition-colors">
+                                <Plus className="h-4 w-4 text-foreground" />
+                              </button>
+                            </div>
                           </div>
-                        </div>}
+                        );
+                      })()}
 
                       {/* Category Badge */}
                       <Badge className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm text-foreground border-0 text-xs font-medium">
@@ -504,6 +521,50 @@ export const Shop = () => {
                       <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                         {product.description}
                       </p>
+
+                      {/* Variant pickers — only show when the product
+                          actually has variants. Size + Color are
+                          rendered as compact pill-style buttons. */}
+                      {product.variants && product.variants.length > 0 && (() => {
+                        const sizes = Array.from(new Set(product.variants.map(v => v.size).filter(Boolean) as string[]));
+                        const colors = Array.from(new Set(product.variants.map(v => v.color).filter(Boolean) as string[]));
+                        return (
+                          <div className="space-y-2 mb-3">
+                            {sizes.length > 0 && (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs text-muted-foreground w-12">Size</span>
+                                {sizes.map(s => (
+                                  <button
+                                    key={s}
+                                    onClick={(e) => { e.stopPropagation(); setPickedSize(prev => ({ ...prev, [product.id]: s })); }}
+                                    className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${
+                                      pickedSize[product.id] === s
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-background text-foreground border-border hover:border-primary/60'
+                                    }`}
+                                  >{s}</button>
+                                ))}
+                              </div>
+                            )}
+                            {colors.length > 0 && (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs text-muted-foreground w-12">Color</span>
+                                {colors.map(c => (
+                                  <button
+                                    key={c}
+                                    onClick={(e) => { e.stopPropagation(); setPickedColor(prev => ({ ...prev, [product.id]: c })); }}
+                                    className={`px-2 py-0.5 rounded border text-xs font-medium transition-colors ${
+                                      pickedColor[product.id] === c
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-background text-foreground border-border hover:border-primary/60'
+                                    }`}
+                                  >{c}</button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-semibold text-foreground">

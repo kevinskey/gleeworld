@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface Category {
   id: string;
@@ -37,7 +38,7 @@ export const CategoryManager = () => {
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
-        .from('product_categories')
+        .from('gw_product_categories')
         .select('*')
         .order('sort_order');
 
@@ -57,7 +58,7 @@ export const CategoryManager = () => {
   const deleteCategory = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('product_categories')
+        .from('gw_product_categories')
         .delete()
         .eq('id', id);
 
@@ -169,17 +170,16 @@ export const CategoryManager = () => {
                           />
                         </DialogContent>
                       </Dialog>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this category?')) {
-                            deleteCategory(category.id);
-                          }
-                        }}
+                      <ConfirmDeleteButton
+                        confirmKey="delete-product-category"
+                        title="Delete this category?"
+                        description="Products in this category will be uncategorized."
+                        onConfirm={() => deleteCategory(category.id)}
+                        ariaLabel="Delete category"
+                        className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 w-9 hover:bg-muted"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -239,14 +239,14 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSave, onCancel 
     try {
       if (category) {
         const { error } = await supabase
-          .from('product_categories')
+          .from('gw_product_categories')
           .update(formData)
           .eq('id', category.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('product_categories')
+          .from('gw_product_categories')
           .insert(formData);
 
         if (error) throw error;
