@@ -24,6 +24,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>GleeWorld uses Apple Music to play backing tracks during sight-singing and rehearsals.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>GleeWorld uses the camera for video meetings and profile photos.</string>
 	<key>NSMicrophoneUsageDescription</key>

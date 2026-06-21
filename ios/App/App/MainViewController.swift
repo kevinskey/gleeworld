@@ -1,0 +1,21 @@
+// MainViewController
+//
+// Subclasses Capacitor's bridge view controller so we can explicitly
+// register the three local plugins (AudioSessionConfig, NativeMusicKit,
+// RecordingLiveActivity). The `CAPBridgedPlugin` protocol is supposed
+// to drive auto-discovery via `objc_getClassList`, but in this app's
+// release-style build the linker dead-strips the classes because
+// nothing else references them — so JS calls fall through to the "not
+// implemented on ios" stub. Registering explicitly bypasses that.
+
+import UIKit
+import Capacitor
+
+class MainViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(AudioSessionConfigPlugin())
+        bridge?.registerPluginInstance(NativeMusicKitPlugin())
+        // RecordingLiveActivityPlugin disabled — needs widget extension's
+        // GleeWorldRecordingAttributes type that's not in the main target.
+    }
+}

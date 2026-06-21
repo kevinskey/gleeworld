@@ -1,6 +1,7 @@
 import UIKit
 import UserNotifications
 import Capacitor
+import AVFoundation
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -8,7 +9,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Configure the app's audio session for Playback. Without this the
+        // WKWebView inherits the default Ambient category, which silences
+        // Web Audio (Metronome / Pitch Pipe / Piano) whenever the device's
+        // ring/silent switch is set to silent. Playback + mixWithOthers
+        // lets us produce sound even on silent, while still ducking under
+        // a phone call or other priority audio.
+        do {
+            try AVAudioSession.sharedInstance().setCategory(
+                .playback,
+                mode: .default,
+                options: [.mixWithOthers]
+            )
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            NSLog("AudioSession config failed: \(error.localizedDescription)")
+        }
         return true
     }
 
