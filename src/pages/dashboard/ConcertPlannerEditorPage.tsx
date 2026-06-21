@@ -426,8 +426,10 @@ function ProgramCardView(p: CardViewProps) {
 
   return (
     <div className={`relative group program-card ${theme.card} ${hiddenStyle}`}>
+      {/* Control bar — a real top header inside the card so it never
+          overlaps content. Only visible in editor mode. */}
       {viewMode === 'editor' && (
-        <div className="no-print absolute -top-3 right-4 flex items-center gap-1 bg-card border border-border rounded-full shadow px-2 py-1 text-xs opacity-60 group-hover:opacity-100 transition-opacity">
+        <div className="no-print flex items-center justify-end gap-1 mb-3 -mt-2 -mr-2 text-xs">
           <button onClick={() => p.onMoveCard('up')} disabled={p.index === 0} className="p-1 hover:bg-muted rounded disabled:opacity-30" aria-label="Move up">
             <ChevronUp className="w-3.5 h-3.5" />
           </button>
@@ -439,7 +441,7 @@ function ProgramCardView(p: CardViewProps) {
           </button>
           <button
             onClick={() => toast.message('Regen coming soon', { description: 'AI rewrite for this card will live here.' })}
-            className="p-1 hover:bg-amber-50 rounded text-amber-700 flex items-center gap-0.5 text-[10px] font-semibold"
+            className="px-2 py-1 hover:bg-amber-50 rounded text-amber-700 flex items-center gap-1 text-[10px] font-semibold"
           >
             <Sparkles className="w-3 h-3" /> Regen
           </button>
@@ -585,26 +587,33 @@ function ProgramCardView(p: CardViewProps) {
             </div>
             <div className="md:col-span-7 text-xs">
               {viewMode === 'editor' ? (
-                <div className="space-y-2">
-                  <Textarea
-                    rows={4}
-                    value={piece.program_notes ?? ''}
-                    onChange={(e) => p.onUpdatePiece(piece.id, { program_notes: e.target.value })}
-                    placeholder="Program notes (history, analysis, dedications…)"
-                    className="text-xs"
-                  />
-                  <div className="flex justify-end no-print">
-                    <Button variant="ghost" size="sm" onClick={() => p.onDeletePiece(piece.id)} className="text-rose-600 hover:text-rose-700">
-                      <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete piece
-                    </Button>
-                  </div>
-                </div>
+                <Textarea
+                  rows={4}
+                  value={piece.program_notes ?? ''}
+                  onChange={(e) => p.onUpdatePiece(piece.id, { program_notes: e.target.value })}
+                  placeholder="Program notes (history, analysis, dedications…)"
+                  className="text-xs"
+                />
               ) : (
                 <p className="leading-relaxed italic text-muted-foreground">
                   "{piece.program_notes || 'No program notes provided.'}"
                 </p>
               )}
             </div>
+            {/* Card-wide footer for the delete action so it doesn't
+                compete with the notes textarea or the control bar. */}
+            {viewMode === 'editor' && (
+              <div className="md:col-span-12 flex justify-end no-print pt-2 border-t border-border/60 mt-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => p.onDeletePiece(piece.id)}
+                  className="text-rose-600 hover:text-rose-700"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete piece
+                </Button>
+              </div>
+            )}
           </div>
         );
       })()}
