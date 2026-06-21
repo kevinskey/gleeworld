@@ -252,9 +252,40 @@ export function SchedulingAndSelfiePage() {
         </div>
       </div>
 
+      {/* T-shirt size — collected up-front so the production team can pre-order
+          ensemble shirts for the accepted cohort without a follow-up survey. */}
+      <div className="space-y-4">
+        <h3 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900 border-b pb-2">T-Shirt Size</h3>
+        <FormField
+          control={form.control}
+          name="tshirtSize"
+          render={({ field }) => (
+            <FormItem className="max-w-xs">
+              <FormLabel>Size *</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value ?? ''}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select size" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="S">S</SelectItem>
+                  <SelectItem value="M">M</SelectItem>
+                  <SelectItem value="L">L</SelectItem>
+                  <SelectItem value="XL">XL</SelectItem>
+                  <SelectItem value="XXL">XXL</SelectItem>
+                  <SelectItem value="XXXL">XXXL</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
       {/* Selfie Section */}
       <div className="space-y-6">
-        <h3 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900 border-b pb-2">Selfie Photo</h3>
+        <h3 className="text-lg md:text-xl lg:text-2xl font-semibold text-gray-900 border-b pb-2">Photo</h3>
         
         <div className="flex flex-col items-center space-y-4">
           {capturedImage ? (

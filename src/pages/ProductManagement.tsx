@@ -15,7 +15,8 @@ import { SubscriptionsManager } from '@/components/products/SubscriptionsManager
 import { OrderDetailDrawer } from '@/components/products/OrderDetailDrawer';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store } from 'lucide-react';
+import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Feature flag for subscriptions
 const FEATURE_SUBSCRIPTIONS_ENABLED = false;
@@ -79,14 +80,21 @@ export const ProductManagement = () => {
       {/* Header */}
       <div className="bg-[#150d26] text-white">
         <div className="container mx-auto px-6 py-6 max-w-7xl">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg">
-              <Store className="w-6 h-6" />
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 rounded-lg">
+                <Store className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-primary-foreground">Merch Store Management</h1>
+                <p className="text-sm text-primary-foreground pt-[15px]">Manage products, orders, and customers</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-primary-foreground">Merch Store Management</h1>
-              <p className="text-sm text-primary-foreground pt-[15px]">Manage products, orders, and customers</p>
-            </div>
+            <Button asChild variant="secondary" size="sm" className="shrink-0">
+              <a href="/shop" target="_blank" rel="noreferrer">
+                View public store <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+              </a>
+            </Button>
           </div>
         </div>
       </div>

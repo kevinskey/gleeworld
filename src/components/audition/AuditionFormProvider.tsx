@@ -18,20 +18,34 @@ const auditionSchema = z.object({
     .min(10, "Phone number must be at least 10 digits")
     .regex(/^[\+]?[1-9][\d]{0,2}[\s\-\.]?[\(]?[\d]{1,3}[\)]?[\s\-\.]?[\d]{3,4}[\s\-\.]?[\d]{3,4}$/, "Please enter a valid phone number"),
   
+  // Audition section — what they're auditioning for. Drives downstream
+  // conditional fields (instrument-years only matters for instrumental).
+  sectionType: z.enum(['vocal', 'instrumental'], {
+    required_error: 'Please choose vocal or instrumental',
+  }),
+
   // Musical background
   sangInMiddleSchool: z.boolean().nullable().default(null),
   sangInHighSchool: z.boolean().nullable().default(null),
   highSchoolYears: z.string().optional(),
   playsInstrument: z.boolean().nullable().default(null),
   instrumentDetails: z.string().optional(),
+  yearsInstrumentExperience: z.number().int().min(0).nullable().optional(),
   isSoloist: z.boolean().nullable().default(null),
   soloistRating: z.string().optional(),
   highSchoolSection: z.string().optional(),
-  
+
   // Music skills
   readsMusic: z.boolean().nullable().default(null),
+  canDance: z.boolean().nullable().default(null),
   interestedInVoiceLessons: z.boolean().nullable().default(null),
   interestedInMusicFundamentals: z.boolean().nullable().default(null),
+
+  // Merch — included on the form so admins can pre-order shirts based on the
+  // accepted cohort without a follow-up survey.
+  tshirtSize: z.enum(['S', 'M', 'L', 'XL', 'XXL', 'XXXL'], {
+    required_error: 'Please pick a t-shirt size',
+  }),
   
   // Leadership and personality
   personalityDescription: z.string().min(50, "Please describe your personality (minimum 50 words)").refine((val) => {
@@ -104,8 +118,10 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
       sangInMiddleSchool: null,
       sangInHighSchool: null,
       playsInstrument: null,
+      yearsInstrumentExperience: null,
       isSoloist: null,
       readsMusic: null,
+      canDance: null,
       interestedInVoiceLessons: null,
       interestedInMusicFundamentals: null,
       interestedInLeadership: null,
@@ -146,9 +162,12 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
         if (!user) {
           return !!(values.firstName && values.lastName && values.phone);
         }
-        return true; // Musical background - all optional
+        // Musical background — sectionType is the only hard requirement.
+        return !!values.sectionType;
       case 3: // Musical Background or Music Skills
-        return true; // All fields are optional or conditional
+        // For new users this is musical background; require sectionType.
+        if (!user) return !!values.sectionType;
+        return true;
       case 4: // Music Skills or Personal Info
         if (!user) {
           return true; // Music skills for new users
@@ -172,16 +191,16 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
           const wordCount = personalityText ? personalityText.split(/\s+/).filter(word => word.length > 0).length : 0;
           return !!(values.personalityDescription && wordCount >= 50);
         }
-        // Debug logging for final page
+        // Final page for existing users: must have slot + photo + tshirt.
         console.log('Final page validation:', {
           auditionDate: values.auditionDate,
           auditionTime: values.auditionTime,
           capturedImage,
-          canSubmit: !!(values.auditionDate && values.auditionTime && capturedImage)
+          tshirtSize: values.tshirtSize,
         });
-        return !!(values.auditionDate && values.auditionTime && capturedImage);
+        return !!(values.auditionDate && values.auditionTime && capturedImage && values.tshirtSize);
       case 6: // Selfie & Scheduling (for new users only)
-        return !!(values.auditionDate && values.auditionTime && capturedImage);
+        return !!(values.auditionDate && values.auditionTime && capturedImage && values.tshirtSize);
       default:
         return false;
     }

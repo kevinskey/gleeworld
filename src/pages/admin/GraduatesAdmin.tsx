@@ -24,7 +24,8 @@ import {
   Video,
   Image,
   Star,
-  Calendar
+  Calendar,
+  ExternalLink
 } from "lucide-react";
 import { NewsletterManager } from "@/components/graduates/NewsletterManager";
 import { InterviewManager } from "@/components/graduates/InterviewManager";
@@ -326,6 +327,13 @@ export default function GraduatesAdmin() {
           <p className="text-xl text-muted-foreground">
             Manage graduates content, verification, and community features
           </p>
+          <div className="flex justify-center">
+            <Button asChild variant="outline" size="sm">
+              <a href="/graduates" target="_blank" rel="noreferrer">
+                View public page <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+              </a>
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

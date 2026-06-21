@@ -9,12 +9,39 @@ import { useAuditionForm } from "../AuditionFormProvider";
 export function MusicalBackgroundPage() {
   const { form } = useAuditionForm();
 
+  const sectionType = form.watch('sectionType');
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Musical Background</h2>
         <p className="text-gray-600 mt-2">Share your musical experience with us</p>
       </div>
+
+      <FormField
+        control={form.control}
+        name="sectionType"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>What are you auditioning for? *</FormLabel>
+            <RadioGroup
+              value={field.value ?? ''}
+              onValueChange={field.onChange}
+              className="flex flex-col sm:flex-row gap-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="vocal" id="section-vocal" />
+                <Label htmlFor="section-vocal">Vocal</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="instrumental" id="section-instrumental" />
+                <Label htmlFor="section-instrumental">Instrumental</Label>
+              </div>
+            </RadioGroup>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <FormField
         control={form.control}
@@ -130,20 +157,45 @@ export function MusicalBackgroundPage() {
         )}
       />
 
-      {form.watch("playsInstrument") && (
-        <FormField
-          control={form.control}
-          name="instrumentDetails"
-          render={({ field }) => (
-            <FormItem className="ml-6">
-              <FormLabel>What instrument(s)?</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Piano, Guitar, Violin" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      {(form.watch("playsInstrument") || sectionType === 'instrumental') && (
+        <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="instrumentDetails"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>What instrument(s)?</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Piano, Guitar, Violin" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="yearsInstrumentExperience"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Years of experience on instrument(s)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={field.value ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      field.onChange(v === '' ? null : Number.parseInt(v, 10));
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       )}
 
       <FormField

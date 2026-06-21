@@ -40,6 +40,30 @@ export function MusicSkillsPage() {
 
       <FormField
         control={form.control}
+        name="canDance"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Can you dance?</FormLabel>
+            <RadioGroup
+              value={field.value === true ? "yes" : field.value === false ? "no" : ""}
+              onValueChange={(value) => field.onChange(value === "yes")}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="can-dance-yes" />
+                <Label htmlFor="can-dance-yes">Yes</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="no" id="can-dance-no" />
+                <Label htmlFor="can-dance-no">No</Label>
+              </div>
+            </RadioGroup>
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="interestedInVoiceLessons"
         render={({ field }) => (
           <FormItem>

@@ -126,12 +126,21 @@ function AuditionFormContent() {
         previous_choir_experience: data.sangInHighSchool ? 'High School Choir' : 'No previous experience',
         voice_part_preference: voicePartCode,
         years_of_vocal_training: data.isSoloist ? 1 : 0,
-        instruments_played: data.playsInstrument && data.instrumentDetails ? [data.instrumentDetails] : [],
+        instruments_played: (data.playsInstrument || data.sectionType === 'instrumental') && data.instrumentDetails
+          ? [data.instrumentDetails]
+          : [],
         music_theory_background: data.readsMusic ? 'Basic' : 'None',
         why_glee_club: data.personalityDescription,
         vocal_goals: data.additionalInfo || 'General vocal improvement',
         audition_time_slot: timeParsed.toISOString(),
-        status: 'submitted'
+        status: 'submitted',
+        // Audition form extensions (20260621230000_audition_extended_fields):
+        section_type: data.sectionType ?? null,
+        years_instrument_experience: typeof data.yearsInstrumentExperience === 'number'
+          ? data.yearsInstrumentExperience
+          : null,
+        can_dance: typeof data.canDance === 'boolean' ? data.canDance : null,
+        tshirt_size: data.tshirtSize ?? null,
       };
 
       // Only include sight_reading_level if it matches allowed values

@@ -1,5 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from 'date-fns';
+
+const SOFT_CARD = 'border-0 rounded-2xl bg-card';
+const SOFT_CARD_STYLE: React.CSSProperties = {
+  boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
+};
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,6 +97,11 @@ interface AuditionApplication {
   interested_in_leadership: boolean;
   additional_info?: string;
   selfie_url?: string;
+  // Extended audition form fields (20260621230000_audition_extended_fields).
+  section_type?: 'vocal' | 'instrumental' | null;
+  years_instrument_experience?: number | null;
+  can_dance?: boolean | null;
+  tshirt_size?: 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'XXXL' | null;
   // Computed properties for display
   full_name?: string;
   application_date?: string;
@@ -301,7 +311,11 @@ export const AuditionsManagement = () => {
           instruments_played,
           prepared_pieces,
           notes,
-          profile_image_url
+          profile_image_url,
+          section_type,
+          years_instrument_experience,
+          can_dance,
+          tshirt_size
         `)
         .order('created_at', { ascending: false });
 
@@ -739,9 +753,9 @@ export const AuditionsManagement = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Clean Admin Header */}
-      <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+      {/* Header */}
+      <div className={SOFT_CARD + ' p-6'} style={SOFT_CARD_STYLE}>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
@@ -749,10 +763,10 @@ export const AuditionsManagement = () => {
                 <Music className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-semibold text-foreground">
+                <h1 className="text-3xl font-bold tracking-tight">
                   Auditions Management
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mt-1">
                   Manage audition sessions, applications, and evaluations
                 </p>
               </div>
@@ -771,6 +785,11 @@ export const AuditionsManagement = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <Button asChild variant="outline" size="sm" className="shrink-0">
+              <a href="/auditions" target="_blank" rel="noreferrer">
+                View public page
+              </a>
+            </Button>
             <Select value={selectedSession} onValueChange={setSelectedSession}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filter by session" />
@@ -839,7 +858,7 @@ export const AuditionsManagement = () => {
 
         <TabsContent value="overview" className="space-y-6 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border border-border bg-card">
+            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-sm font-medium text-foreground">Active Sessions</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -852,7 +871,7 @@ export const AuditionsManagement = () => {
               </CardContent>
             </Card>
 
-            <Card className="border border-border bg-card">
+            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-sm font-medium text-foreground">Total Applications</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -865,7 +884,7 @@ export const AuditionsManagement = () => {
               </CardContent>
             </Card>
 
-            <Card className="border border-border bg-card">
+            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-sm font-medium text-foreground">Evaluated</CardTitle>
                 <Star className="h-4 w-4 text-muted-foreground" />
@@ -878,7 +897,7 @@ export const AuditionsManagement = () => {
               </CardContent>
             </Card>
 
-            <Card className="border border-border bg-card">
+            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-sm font-medium text-foreground">Acceptance Rate</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -896,7 +915,7 @@ export const AuditionsManagement = () => {
             </Card>
           </div>
 
-          <Card className="border border-border bg-card">
+          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold text-foreground">Recent Applications</CardTitle>
               <CardDescription className="text-muted-foreground">Latest audition applications submitted</CardDescription>
@@ -917,10 +936,25 @@ export const AuditionsManagement = () => {
                         <p className="text-xs text-muted-foreground truncate">{application.email}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+                      {application.section_type && (
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {application.section_type}
+                        </Badge>
+                      )}
                       {application.voice_part_preference && (
                         <Badge variant="outline" className={`text-xs ${getVoicePartColor(application.voice_part_preference)}`}>
                           {application.voice_part_preference}
+                        </Badge>
+                      )}
+                      {application.tshirt_size && (
+                        <Badge variant="outline" className="text-xs">
+                          {application.tshirt_size}
+                        </Badge>
+                      )}
+                      {application.can_dance && (
+                        <Badge variant="outline" className="text-xs">
+                          Dances
                         </Badge>
                       )}
                       <Badge variant="outline" className={`text-xs ${getStatusColor(application.status)}`}>
@@ -1523,126 +1557,126 @@ export const AuditionsManagement = () => {
 
         <TabsContent value="analytics" className="space-y-6 mt-8">
           {/* Musical Experience Overview - Top Priority Stats */}
-          <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-emerald-900 flex items-center gap-2">
-                <Music className="h-6 w-6 text-emerald-700" />
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Music className="h-6 w-6 text-primary" />
                 Musical Experience & Skills Overview
               </CardTitle>
-              <CardDescription className="text-emerald-700">
+              <CardDescription className="text-sm text-muted-foreground">
                 Key insights into applicant musical backgrounds and experience levels
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm font-medium text-blue-700">Musical Experience</p>
-                        <p className="text-3xl font-bold text-blue-900">
-                          {applications.length > 0 
+                        <p className="text-sm font-medium text-muted-foreground">Musical Experience</p>
+                        <p className="text-3xl font-bold text-foreground">
+                          {applications.length > 0
                             ? Math.round((applications.filter(a => a.sang_in_high_school || a.sang_in_middle_school).length / applications.length) * 100)
                             : 0
                           }%
                         </p>
-                        <p className="text-xs text-blue-600 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {applications.filter(a => a.sang_in_high_school || a.sang_in_middle_school).length} of {applications.length} have choir experience
                         </p>
                       </div>
-                      <div className="h-12 w-12 bg-blue-200 rounded-full flex items-center justify-center">
-                        <Music className="h-6 w-6 text-blue-700" />
+                      <div className="h-12 w-12 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                        <Music className="h-6 w-6" />
                       </div>
                     </div>
-                    <Progress 
-                      value={applications.length > 0 
-                        ? (applications.filter(a => a.sang_in_high_school || a.sang_in_middle_school).length / applications.length) * 100 
-                        : 0} 
-                      className="h-2" 
+                    <Progress
+                      value={applications.length > 0
+                        ? (applications.filter(a => a.sang_in_high_school || a.sang_in_middle_school).length / applications.length) * 100
+                        : 0}
+                      className="h-2"
                     />
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm font-medium text-purple-700">Music Literacy</p>
-                        <p className="text-3xl font-bold text-purple-900">
-                          {applications.length > 0 
+                        <p className="text-sm font-medium text-muted-foreground">Music Literacy</p>
+                        <p className="text-3xl font-bold text-foreground">
+                          {applications.length > 0
                             ? Math.round((applications.filter(a => a.reads_music).length / applications.length) * 100)
                             : 0
                           }%
                         </p>
-                        <p className="text-xs text-purple-600 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {applications.filter(a => a.reads_music).length} of {applications.length} can read music notation
                         </p>
                       </div>
-                      <div className="h-12 w-12 bg-purple-200 rounded-full flex items-center justify-center">
-                        <GraduationCap className="h-6 w-6 text-purple-700" />
+                      <div className="h-12 w-12 bg-violet-50 text-violet-600 rounded-full flex items-center justify-center">
+                        <GraduationCap className="h-6 w-6" />
                       </div>
                     </div>
-                    <Progress 
-                      value={applications.length > 0 
-                        ? (applications.filter(a => a.reads_music).length / applications.length) * 100 
-                        : 0} 
-                      className="h-2" 
+                    <Progress
+                      value={applications.length > 0
+                        ? (applications.filter(a => a.reads_music).length / applications.length) * 100
+                        : 0}
+                      className="h-2"
                     />
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+                <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm font-medium text-amber-700">Leadership Interest</p>
-                        <p className="text-3xl font-bold text-amber-900">
-                          {applications.length > 0 
+                        <p className="text-sm font-medium text-muted-foreground">Leadership Interest</p>
+                        <p className="text-3xl font-bold text-foreground">
+                          {applications.length > 0
                             ? Math.round((applications.filter(a => a.interested_in_leadership).length / applications.length) * 100)
                             : 0
                           }%
                         </p>
-                        <p className="text-xs text-amber-600 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {applications.filter(a => a.interested_in_leadership).length} of {applications.length} interested in leadership roles
                         </p>
                       </div>
-                      <div className="h-12 w-12 bg-amber-200 rounded-full flex items-center justify-center">
-                        <Shield className="h-6 w-6 text-amber-700" />
+                      <div className="h-12 w-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center">
+                        <Shield className="h-6 w-6" />
                       </div>
                     </div>
-                    <Progress 
-                      value={applications.length > 0 
-                        ? (applications.filter(a => a.interested_in_leadership).length / applications.length) * 100 
-                        : 0} 
-                      className="h-2" 
+                    <Progress
+                      value={applications.length > 0
+                        ? (applications.filter(a => a.interested_in_leadership).length / applications.length) * 100
+                        : 0}
+                      className="h-2"
                     />
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm font-medium text-green-700">Voice Part Experience</p>
-                        <p className="text-3xl font-bold text-green-900">
-                          {applications.length > 0 
+                        <p className="text-sm font-medium text-muted-foreground">Voice Part Experience</p>
+                        <p className="text-3xl font-bold text-foreground">
+                          {applications.length > 0
                             ? Math.round((applications.filter(a => a.high_school_section).length / applications.length) * 100)
                             : 0
                           }%
                         </p>
-                        <p className="text-xs text-green-600 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {applications.filter(a => a.high_school_section).length} of {applications.length} have section experience
                         </p>
                       </div>
-                      <div className="h-12 w-12 bg-green-200 rounded-full flex items-center justify-center">
-                        <Users className="h-6 w-6 text-green-700" />
+                      <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6" />
                       </div>
                     </div>
-                    <Progress 
-                      value={applications.length > 0 
-                        ? (applications.filter(a => a.high_school_section).length / applications.length) * 100 
-                        : 0} 
-                      className="h-2" 
+                    <Progress
+                      value={applications.length > 0
+                        ? (applications.filter(a => a.high_school_section).length / applications.length) * 100
+                        : 0}
+                      className="h-2"
                     />
                   </CardContent>
                 </Card>
@@ -1766,103 +1800,103 @@ export const AuditionsManagement = () => {
             </CardContent>
           </Card>
 
-          {/* Enhanced Analytics Dashboard */}
-          <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
+          {/* Analytics Dashboard */}
+          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
                 <TrendingUp className="h-6 w-6 text-primary" />
                 Cumulative Audition Scores Dashboard
               </CardTitle>
-              <CardDescription className="text-muted-foreground">
+              <CardDescription className="text-sm text-muted-foreground">
                 Real-time audition performance metrics and scoring analytics
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               {/* Key Performance Indicators */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-blue-700">Total Evaluations</p>
-                        <p className="text-3xl font-bold text-blue-900">
+                        <p className="text-sm font-medium text-muted-foreground">Total Evaluations</p>
+                        <p className="text-3xl font-bold text-foreground">
                           {analytics.reduce((sum, app) => sum + app.evaluation_count, 0)}
                         </p>
-                        <p className="text-xs text-blue-600 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {analytics.length > 0 ? Math.round((analytics.reduce((sum, app) => sum + app.evaluation_count, 0) / analytics.length)) : 0} avg per applicant
                         </p>
                       </div>
-                      <div className="h-12 w-12 bg-blue-200 rounded-full flex items-center justify-center">
-                        <BarChart3 className="h-6 w-6 text-blue-700" />
+                      <div className="h-12 w-12 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                        <BarChart3 className="h-6 w-6" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-green-700">Overall Average</p>
-                        <p className="text-3xl font-bold text-green-900">
-                          {analytics.length > 0 
+                        <p className="text-sm font-medium text-muted-foreground">Overall Average</p>
+                        <p className="text-3xl font-bold text-foreground">
+                          {analytics.length > 0
                             ? (analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.length).toFixed(1)
                             : '0.0'
                           }
                         </p>
-                        <p className="text-xs text-green-600 mt-1">
-                          {analytics.length > 0 
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {analytics.length > 0
                             ? Math.round((analytics.reduce((sum, app) => sum + (app.avg_overall_score || 0), 0) / analytics.length) * 10) + '%'
                             : '0%'
                           } performance score
                         </p>
                       </div>
-                      <div className="h-12 w-12 bg-green-200 rounded-full flex items-center justify-center">
-                        <TrendingUp className="h-6 w-6 text-green-700" />
+                      <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
+                        <TrendingUp className="h-6 w-6" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-purple-700">Acceptance Rate</p>
-                        <p className="text-3xl font-bold text-purple-900">
-                          {analytics.length > 0 
+                        <p className="text-sm font-medium text-muted-foreground">Acceptance Rate</p>
+                        <p className="text-3xl font-bold text-foreground">
+                          {analytics.length > 0
                             ? Math.round((analytics.filter(app => app.status === 'accepted').length / analytics.length) * 100)
                             : 0
                           }%
                         </p>
-                        <p className="text-xs text-purple-600 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {analytics.filter(app => app.status === 'accepted').length} of {analytics.length} applicants
                         </p>
                       </div>
-                      <div className="h-12 w-12 bg-purple-200 rounded-full flex items-center justify-center">
-                        <Users className="h-6 w-6 text-purple-700" />
+                      <div className="h-12 w-12 bg-violet-50 text-violet-600 rounded-full flex items-center justify-center">
+                        <Users className="h-6 w-6" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+                <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-orange-700">Pending Reviews</p>
-                        <p className="text-3xl font-bold text-orange-900">
+                        <p className="text-sm font-medium text-muted-foreground">Pending Reviews</p>
+                        <p className="text-3xl font-bold text-foreground">
                           {analytics.filter(app => app.status === 'pending').length}
                         </p>
-                        <p className="text-xs text-orange-600 mt-1">
-                          {analytics.length > 0 
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {analytics.length > 0
                             ? Math.round((analytics.filter(app => app.status === 'pending').length / analytics.length) * 100)
                             : 0
                           }% awaiting decision
                         </p>
                       </div>
-                      <div className="h-12 w-12 bg-orange-200 rounded-full flex items-center justify-center">
-                        <Clock className="h-6 w-6 text-orange-700" />
+                      <div className="h-12 w-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center">
+                        <Clock className="h-6 w-6" />
                       </div>
                     </div>
                   </CardContent>

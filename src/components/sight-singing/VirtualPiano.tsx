@@ -82,10 +82,16 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const isFullScreen = !!onClose;
   
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
-  const [volume, setVolume] = useState([0.4]);
+  // Default 0.85 (was 0.4) so the keyboard is audible on iOS WKWebView,
+  // which runs Web Audio noticeably quieter than the device's media
+  // volume would suggest.
+  const [volume, setVolume] = useState([0.85]);
   const [isMuted, setIsMuted] = useState(false);
   const [startOctave, setStartOctave] = useState<number>(3); // Default starts at C3-B4 (shows A4)
-  const [octaveView, setOctaveView] = useState<1 | 2 | 3>(2); // How many octaves to show at once
+  // 1 octave visible by default so each white key lands near real-piano
+  // width (~88px) for comfortable iPad touch play. User can switch to 2 or
+  // 3 via the dropdown when they need more range.
+  const [octaveView, setOctaveView] = useState<1 | 2 | 3>(1);
   const [pianoSize, setPianoSize] = useState({
     width: 900,
     height: 600
@@ -560,7 +566,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                   : isMobile 
                     ? "h-[50vh]" // Portrait mobile: half screen
                     : "h-[384px] md:h-[480px]" // Desktop
-                : "h-[180px] sm:h-[240px]"
+                : "h-[260px] sm:h-[340px]"
             }`}>
               {whiteKeys.map((key, index) => {
               const keyName = `${key.note}${key.octave}`;
@@ -575,14 +581,13 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 background: isActive 
                   ? 'linear-gradient(to bottom, #bfdbfe 0%, #dbeafe 10%, #eff6ff 50%, #dbeafe 100%)'
                   : 'linear-gradient(to bottom, #ffffff 0%, #f8f8f8 60%, #e8e8e8 90%, #d8d8d8 100%)',
-                transform: isActive ? 'translateY(3px) scale(1.02)' : 'translateY(0) scale(1)',
                 borderLeft: '1px solid rgba(0,0,0,0.08)',
                 borderRight: '1px solid rgba(0,0,0,0.15)',
                 borderBottom: isActive ? '2px solid #3b82f6' : '4px solid #c0c0c0',
                 // pan-x lets a horizontal drag scroll the keyboard; preventDefault on
                 // pointerdown would cancel WebKit's scroll gesture, so don't call it
                 touchAction: 'pan-x',
-              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
+              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-xs sm:text-sm font-semibold select-none ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
               onPointerDown={() => {
                 playNote(keyName, key.frequency);
               }}
@@ -626,7 +631,6 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                   borderLeft: '1px solid #3a3a3a',
                   borderRight: '1px solid #0a0a0a',
                   borderBottom: isActive ? '2px solid #60a5fa' : '3px solid #0a0a0a',
-                  transform: isActive ? 'translateY(2px) scale(1.05)' : 'translateY(0) scale(1)',
                 }}
                 onPointerDown={() => {
                   playNote(keyName, key.frequency);

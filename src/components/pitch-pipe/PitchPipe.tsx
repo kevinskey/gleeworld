@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
+import { getSharedAudioContext, setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 
 interface PitchPipeProps {
   className?: string;
@@ -26,7 +26,12 @@ const chromaticNotes = [
 
 export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const [isPlaying, setIsPlaying] = useState<string | null>(null);
-  const [volume, setVolume] = useState([0.4]);
+  // Slider 0–1 mapped 1:1 to master gain. Default 1.0 because iOS
+  // WKWebView clamps Web Audio output a fair bit below the device max;
+  // anything quieter than this gets drowned by a room of voices.
+  // A DynamicsCompressor in the audio chain keeps the harmonic sum
+  // from clipping at full gain.
+  const [volume, setVolume] = useState([1.0]);
   const [isMuted, setIsMuted] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const oscillatorsRef = useRef<OscillatorNode[]>([]);
@@ -38,37 +43,36 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
     return cleanup;
   }, []);
 
-  const initAudioContext = useCallback(async () => {
-    try {
-      forceUnlockAudio();
-      const ctx = await unlockAudioContext();
-      audioContextRef.current = ctx;
-      return ctx;
-    } catch (error) {
-      console.error('Failed to initialize AudioContext:', error);
-      return null;
-    }
-  }, []);
-
-  // Create flute-like sound using multiple oscillators
-  const startTone = useCallback(async (frequency: number, note: string) => {
-    forceUnlockAudio();
-    
-    const audioContext = await initAudioContext();
-    if (!audioContext || audioContext.state !== 'running') {
-      console.warn('AudioContext not available or not running');
-      return;
-    }
+  // Create flute-like sound using multiple oscillators.
+  //
+  // SYNCHRONOUS on purpose: on iOS WKWebView, Web Audio only emits sound
+  // when oscillator.start() runs inside the same user-gesture frame as the
+  // touch. An earlier `await initAudioContext()` here pushed the .start()
+  // out of that frame, so the pitch pipe was silent on iPhone.
+  const startTone = useCallback((frequency: number, note: string) => {
+    forceUnlockAudio();              // fires ctx.resume() + silent buffer in-frame
+    const audioContext = getSharedAudioContext();
+    audioContextRef.current = audioContext;
 
     // Stop any existing tone
     stopTone();
 
     const masterGain = audioContext.createGain();
-    masterGain.connect(audioContext.destination);
-    
+    // Compressor catches the harmonic-sum peaks (fundamental 1.0 + 2nd 0.3
+    // + 3rd 0.1 → ~1.4) so we can run masterGain at full 1.0 without
+    // hearing iOS soft-clip distort the tone.
+    const compressor = audioContext.createDynamicsCompressor();
+    compressor.threshold.value = -8;
+    compressor.knee.value = 6;
+    compressor.ratio.value = 6;
+    compressor.attack.value = 0.005;
+    compressor.release.value = 0.1;
+    masterGain.connect(compressor);
+    compressor.connect(audioContext.destination);
+
     const currentVolume = isMuted ? 0 : volume[0];
     masterGain.gain.setValueAtTime(0, audioContext.currentTime);
-    masterGain.gain.linearRampToValueAtTime(currentVolume * 0.5, audioContext.currentTime + 0.08);
+    masterGain.gain.linearRampToValueAtTime(currentVolume, audioContext.currentTime + 0.08);
 
     // Flute-like timbre: fundamental + soft harmonics
     const harmonics = [
@@ -107,7 +111,7 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
     oscillatorsRef.current = oscillators;
     gainNodeRef.current = masterGain;
     setIsPlaying(note);
-  }, [volume, isMuted, initAudioContext]);
+  }, [volume, isMuted]);
 
   const stopTone = useCallback(() => {
     if (gainNodeRef.current && audioContextRef.current) {
@@ -144,7 +148,7 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const toggleMute = () => {
     setIsMuted(!isMuted);
     if (gainNodeRef.current && audioContextRef.current) {
-      const newVolume = !isMuted ? 0 : volume[0] * 0.5;
+      const newVolume = !isMuted ? 0 : volume[0];
       gainNodeRef.current.gain.setValueAtTime(newVolume, audioContextRef.current.currentTime);
     }
   };
@@ -152,7 +156,7 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
     if (gainNodeRef.current && audioContextRef.current && !isMuted) {
-      gainNodeRef.current.gain.setValueAtTime(newVolume[0] * 0.5, audioContextRef.current.currentTime);
+      gainNodeRef.current.gain.setValueAtTime(newVolume[0], audioContextRef.current.currentTime);
     }
   };
 
@@ -196,8 +200,8 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
             boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.6), 0 1px 2px rgba(255,255,255,0.1)',
           }}
         >
-          <div className="text-[11px] text-gray-400 font-medium tracking-wider">CHROMATIC</div>
-          <div className="text-[11px] text-gray-400 font-medium tracking-wider mb-1">PITCH PIPE</div>
+          <div className="text-sm font-medium tracking-wider" style={{ color: 'rgba(255,255,255,0.7)' }}>CHROMATIC</div>
+          <div className="text-sm font-medium tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>PITCH PIPE</div>
           
           {/* Volume control in center */}
           <div className="flex items-center gap-1">
@@ -254,22 +258,22 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
               <span
                 className={`font-bold transition-all duration-75 ${
                   note.isSharp ? 'text-sm' : 'text-2xl'
-                } ${
-                  isActive 
-                    ? 'text-amber-400 scale-125 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' 
-                    : 'text-gray-200 hover:text-white'
-                }`}
+                } ${isActive ? 'scale-125' : ''}`}
                 style={{
-                  textShadow: isActive 
-                    ? '0 0 10px rgba(251,191,36,0.8)' 
-                    : '0 1px 2px rgba(0,0,0,0.8)',
+                  color: isActive ? '#fbbf24' : '#ffffff',
+                  textShadow: isActive
+                    ? '0 0 10px rgba(251,191,36,0.8)'
+                    : '0 1px 3px rgba(0,0,0,0.9)',
                 }}
               >
                 {note.display}
               </span>
               {/* Show octave number for C notes */}
               {isC && (
-                <span className={`text-[10px] -mt-1 ${isActive ? 'text-amber-400' : 'text-gray-400'}`}>
+                <span
+                  className="text-xs -mt-1"
+                  style={{ color: isActive ? '#fbbf24' : 'rgba(255,255,255,0.75)' }}
+                >
                   {note.note === 'C4' ? '4' : '5'}
                 </span>
               )}
