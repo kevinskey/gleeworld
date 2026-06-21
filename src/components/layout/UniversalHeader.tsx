@@ -440,11 +440,6 @@ export const UniversalHeader = ({
                       <GraduationCap className="mr-2 h-4 w-4" />
                       Graduates
                     </DropdownMenuItem>
-                    {hasExecBoardPerms && <DropdownMenuItem onClick={() => navigate('/control-center')} className="cursor-pointer">
-                        <Crown className="mr-2 h-4 w-4" />
-                        Control Center
-                      </DropdownMenuItem>}
-                    
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Public Pages</DropdownMenuLabel>
                     
@@ -522,7 +517,7 @@ export const UniversalHeader = ({
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
-                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'graduate' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
+                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'graduate' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
                             {getRoleBadgeLabel()}
                           </span>}
                       </div>

@@ -158,10 +158,21 @@ import MemberRegistration from "./pages/MemberRegistration";
 import ResetPassword from "./pages/ResetPassword";
 import MusicLibraryPage from "./pages/member/MusicLibraryPage";
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
+const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
+const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
 import SightReadingPage from "./pages/member/SightReadingPage";
-const ConcertTicketsPage = lazy(() => import("./pages/dashboard/ConcertTicketsPage"));
+const BoxOfficePage = lazy(() => import("./pages/dashboard/BoxOfficePage"));
+const BoxOfficeEventPage = lazy(() => import("./pages/dashboard/BoxOfficeEventPage"));
+const BoxOfficeCheckinPage = lazy(() => import("./pages/dashboard/BoxOfficeCheckinPage"));
+const BoxOfficeWillCallPage = lazy(() => import("./pages/dashboard/BoxOfficeWillCallPage"));
+const ConcertTicketsPublicPage = lazy(() => import("./pages/public/ConcertTicketsPublicPage"));
+const TicketsOrderPage = lazy(() => import("./pages/public/TicketsOrderPage"));
+const BoxOfficeIndexPage = lazy(() => import("./pages/public/BoxOfficeIndexPage"));
 const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
+const PartTracksLandingPage = lazy(() => import("./pages/dashboard/PartTracksLandingPage"));
+const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
+const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const AuditionsModule = lazy(() => import("./components/modules/AuditionsModule").then(m => ({ default: m.AuditionsModule })));
 const PRHubModule = lazy(() => import("./components/modules/PRHubModule").then(m => ({ default: m.PRHubModule })));
 import MemberCalendarPage from "./pages/member/MemberCalendarPage";
@@ -866,16 +877,12 @@ const App = () => {
               {/* Legacy booking page — now redirects into the dashboard shell so
                   every link / bookmark in the wild lands on the redesigned UI. */}
               <Route path="/book-appointment" element={<Navigate to="/dashboard/office-hours" replace />} />
-              {/* Control Center alias */}
+              {/* Control Center retired — every tenant uses the Command
+                  Center at /dashboard now. Redirect preserves bookmarks
+                  and any in-app links the cleanup hasn't reached yet. */}
               <Route
                 path="/control-center"
-                element={
-                  <ProtectedRoute>
-                    <UniversalLayout>
-                      <UnifiedDashboard />
-                    </UniversalLayout>
-                  </ProtectedRoute>
-                }
+                element={<Navigate to="/dashboard" replace />}
               />
               {/* Read Music — practice studio (add-on module) */}
               <Route
@@ -1260,6 +1267,36 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="/dashboard/music-tools"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><MusicToolsPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/viewer"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><ViewerPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/viewer/:scoreId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><ViewerPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/dashboard/sight-reading"
                   element={
                     <ProtectedRoute>
@@ -1270,11 +1307,41 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/concert-tickets"
+                  path="/dashboard/box-office"
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><ConcertTicketsPage /></DashboardShell>
+                        <DashboardShell><BoxOfficePage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/box-office/event/:id"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><BoxOfficeEventPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/box-office/event/:id/checkin"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><BoxOfficeCheckinPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/box-office/event/:id/willcall"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><BoxOfficeWillCallPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
@@ -1285,10 +1352,43 @@ const App = () => {
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
-                          <div className="max-w-5xl mx-auto px-6 py-6">
-                            <h1 className="text-3xl font-bold tracking-tight mb-6">Part Tracks</h1>
-                            <PartTracksModule />
-                          </div>
+                          <PartTracksLandingPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/part-tracks/:projectId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <PartTracksLandingPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/concert-planner"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ConcertPlannerPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/concert-planner/:id"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ConcertPlannerEditorPage />
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
@@ -1534,12 +1634,12 @@ const App = () => {
                 } 
               />
               <Route
-                path="/profile" 
+                path="/profile"
                 element={
                   <ProtectedRoute>
-                    <Profile />
+                    <UniversalLayout><Profile /></UniversalLayout>
                   </ProtectedRoute>
-                } 
+                }
                 />
                 <Route
                   path="/timesheet" 
@@ -1722,12 +1822,44 @@ const App = () => {
                   } 
                 />
                 <Route
-                  path="/public-calendar" 
+                  path="/public-calendar"
                   element={
                     <PublicRoute>
                       <PublicCalendar />
                     </PublicRoute>
-                  } 
+                  }
+                />
+                <Route
+                  path="/concert-tickets/:slug"
+                  element={
+                    <PublicRoute>
+                      <ConcertTicketsPublicPage />
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/box-office"
+                  element={
+                    <PublicRoute>
+                      <BoxOfficeIndexPage />
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/concert-tickets"
+                  element={
+                    <PublicRoute>
+                      <BoxOfficeIndexPage />
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/tickets/:token"
+                  element={
+                    <PublicRoute>
+                      <TicketsOrderPage />
+                    </PublicRoute>
+                  }
                 />
                 <Route 
                   path="/children-go-rap-audition" 

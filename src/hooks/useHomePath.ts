@@ -1,13 +1,6 @@
-import { useUserRole } from '@/hooks/useUserRole';
-
-// Admins land on /control-center; everyone else on /dashboard.
+// Every role lands on /dashboard now — the Command Center is the single
+// admin + member entry point. The previous admin-only /control-center
+// view was retired (route still redirects here).
 export function useHomePath(): string {
-  const { profile } = useUserRole();
-  const isAdmin = !!(
-    profile?.is_admin ||
-    profile?.is_super_admin ||
-    profile?.role === 'admin' ||
-    profile?.role === 'super-admin'
-  );
-  return isAdmin ? '/control-center' : '/dashboard';
+  return '/dashboard';
 }
