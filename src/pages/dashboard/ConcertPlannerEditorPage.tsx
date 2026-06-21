@@ -253,10 +253,11 @@ export default function ConcertPlannerEditorPage() {
         )}
       </header>
 
-      <main className="max-w-[1600px] mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Sidebar — editor only */}
+      <main className="max-w-[1800px] mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Sidebar — editor only. Narrower (3 of 12 cols on lg+) so the
+            card stack has more horizontal room for inline editing. */}
         {viewMode === 'editor' && (
-          <aside className="no-print lg:col-span-4 space-y-4">
+          <aside className="no-print lg:col-span-3 space-y-4">
             {/* Always-visible "Add piece" — the one buried on the timeline
                 card scrolls out of view once a few pieces exist, so the
                 most common action gets a dedicated sidebar button too. */}
@@ -369,7 +370,11 @@ export default function ConcertPlannerEditorPage() {
         )}
 
         {/* Card stack */}
-        <section className={`${viewMode === 'editor' ? 'lg:col-span-8' : 'lg:col-span-12'} ${formatStyles} space-y-6 w-full`}>
+        {/* In editor mode we ignore the print-format max-width so inputs
+            can use the full column width — the formatStyles constraint
+            (e.g. letter = max-w-4xl) is for showing how it'll print and
+            kicks back in for audience view. */}
+        <section className={`${viewMode === 'editor' ? 'lg:col-span-9' : `lg:col-span-12 ${formatStyles}`} space-y-6 w-full`}>
           {cards
             .filter((c) => viewMode === 'editor' || c.visible)
             .map((card, idx, arr) => (
@@ -552,7 +557,7 @@ function ProgramCardView(p: CardViewProps) {
                   }
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2 text-left text-xs">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-left text-xs">
                 <FieldInline label="Venue" value={header.venue} onChange={(v) => onHeaderChange((h: any) => ({ ...h, venue: v }))} />
                 <FieldInline label="Conductor" value={header.conductor} onChange={(v) => onHeaderChange((h: any) => ({ ...h, conductor: v }))} />
                 <FieldInline label="Accompanist" value={header.accompanist} onChange={(v) => onHeaderChange((h: any) => ({ ...h, accompanist: v }))} />
@@ -930,63 +935,16 @@ function PieceDetailEditor({
   const setField = <K extends keyof typeof local>(k: K, v: (typeof local)[K]) =>
     setLocal((prev) => ({ ...prev, [k]: v }));
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-      <div className="md:col-span-5 border-l-2 border-border pl-3">
-        <span className={themeAccent}>Performance notes</span>
-        {viewMode === 'editor' ? (
-          <div className="space-y-2 mt-1">
-            <div className="relative">
-              <Input
-                value={local.title}
-                onChange={(e) => setField('title', e.target.value)}
-                placeholder="Title"
-                className="text-base font-bold pr-10"
-              />
-              <SpeechInputButton
-                label="Dictate piece title"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 no-print"
-                onTranscript={(text) => setField('title', text)}
-              />
-            </div>
-            <Input
-              value={local.composer}
-              onChange={(e) => setField('composer', e.target.value)}
-              placeholder="Composer"
-              className="text-sm"
-            />
-            <Input
-              value={local.arranger}
-              onChange={(e) => setField('arranger', e.target.value)}
-              placeholder="Arranger (if applicable)"
-              className="text-sm"
-            />
-            <Input
-              type="number"
-              value={local.duration_seconds}
-              onChange={(e) => setField('duration_seconds', e.target.value)}
-              placeholder="Duration (seconds)"
-              className="text-sm"
-            />
-            <select
-              value={local.rights_status}
-              onChange={(e) => setField('rights_status', e.target.value as RightsStatus)}
-              className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm"
-            >
-              <option value="unknown">Rights: Unknown</option>
-              <option value="public_domain">Rights: Public Domain</option>
-              <option value="licensed">Rights: Licensed</option>
-            </select>
-            {local.rights_status === 'licensed' && (
-              <Input
-                value={local.copyright_info}
-                onChange={(e) => setField('copyright_info', e.target.value)}
-                placeholder="Publisher / copyright line"
-                className="text-sm"
-              />
-            )}
-          </div>
-        ) : (
+  // Audience mode stays the two-column split (notes-on-the-right looks
+  // like a real printed program). Editor mode goes full-width with a
+  // dense 12-col metadata grid up top + the notes textarea spanning
+  // the whole width below — minimises vertical scroll once the piece
+  // is expanded.
+  if (viewMode !== 'editor') {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+        <div className="md:col-span-5 border-l-2 border-border pl-3">
+          <span className={themeAccent}>Performance notes</span>
           <div className="mt-1">
             <h4 className="text-lg font-bold leading-tight">{piece.title || 'Untitled work'}</h4>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -994,46 +952,126 @@ function PieceDetailEditor({
               {piece.arranger && ` · arr. ${piece.arranger}`}
             </p>
           </div>
-        )}
-      </div>
-      <div className="md:col-span-7 text-sm">
-        {viewMode === 'editor' ? (
-          <div className="relative">
-            <Textarea
-              rows={6}
-              value={local.program_notes}
-              onChange={(e) => setField('program_notes', e.target.value)}
-              placeholder="Program notes (history, analysis, dedications…)"
-              className="text-sm pr-10"
-            />
-            <SpeechInputButton
-              label="Dictate program notes (appends)"
-              className="absolute right-1 top-1 h-7 w-7 no-print"
-              onTranscript={(text) => {
-                // Textareas APPEND so multiple dictation passes build up.
-                const sep = local.program_notes && !local.program_notes.endsWith(' ') ? ' ' : '';
-                setField('program_notes', `${local.program_notes}${sep}${text}`);
-              }}
-            />
-          </div>
-        ) : (
+        </div>
+        <div className="md:col-span-7 text-sm">
           <p className="leading-relaxed italic text-muted-foreground">
             "{piece.program_notes || 'No program notes provided.'}"
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <span className={themeAccent}>Performance notes</span>
+
+      {/* Row 1 — Title (wide) + Composer + Arranger */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-start">
+        <div className="md:col-span-6 relative">
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Title</label>
+          <Input
+            value={local.title}
+            onChange={(e) => setField('title', e.target.value)}
+            placeholder="Title"
+            className="text-base font-bold pr-9"
+          />
+          <SpeechInputButton
+            label="Dictate piece title"
+            className="absolute right-1 top-[26px] h-7 w-7 no-print"
+            onTranscript={(text) => setField('title', text)}
+          />
+        </div>
+        <div className="md:col-span-3">
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Composer</label>
+          <Input
+            value={local.composer}
+            onChange={(e) => setField('composer', e.target.value)}
+            placeholder="Composer"
+            className="text-sm"
+          />
+        </div>
+        <div className="md:col-span-3">
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Arranger</label>
+          <Input
+            value={local.arranger}
+            onChange={(e) => setField('arranger', e.target.value)}
+            placeholder="If applicable"
+            className="text-sm"
+          />
+        </div>
+      </div>
+
+      {/* Row 2 — Duration + Rights + Copyright (only when licensed) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-start">
+        <div className="md:col-span-3">
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Duration (sec)</label>
+          <Input
+            type="number"
+            value={local.duration_seconds}
+            onChange={(e) => setField('duration_seconds', e.target.value)}
+            placeholder="e.g. 240"
+            className="text-sm"
+          />
+        </div>
+        <div className={local.rights_status === 'licensed' ? 'md:col-span-3' : 'md:col-span-9'}>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Rights</label>
+          <select
+            value={local.rights_status}
+            onChange={(e) => setField('rights_status', e.target.value as RightsStatus)}
+            className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm h-9"
+          >
+            <option value="unknown">Unknown</option>
+            <option value="public_domain">Public Domain</option>
+            <option value="licensed">Licensed</option>
+          </select>
+        </div>
+        {local.rights_status === 'licensed' && (
+          <div className="md:col-span-6">
+            <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Publisher / copyright</label>
+            <Input
+              value={local.copyright_info}
+              onChange={(e) => setField('copyright_info', e.target.value)}
+              placeholder="Publisher / copyright line"
+              className="text-sm"
+            />
+          </div>
         )}
       </div>
-      {viewMode === 'editor' && (
-        <div className="md:col-span-12 flex justify-end no-print pt-2 border-t border-border/60 mt-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onDelete}
-            className="text-rose-600 hover:text-rose-700"
-          >
-            <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete piece
-          </Button>
+
+      {/* Row 3 — Program notes textarea spans full width */}
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Program notes</label>
+        <div className="relative">
+          <Textarea
+            rows={4}
+            value={local.program_notes}
+            onChange={(e) => setField('program_notes', e.target.value)}
+            placeholder="History, analysis, dedications…"
+            className="text-sm pr-10"
+          />
+          <SpeechInputButton
+            label="Dictate program notes (appends)"
+            className="absolute right-1 top-1 h-7 w-7 no-print"
+            onTranscript={(text) => {
+              const sep = local.program_notes && !local.program_notes.endsWith(' ') ? ' ' : '';
+              setField('program_notes', `${local.program_notes}${sep}${text}`);
+            }}
+          />
         </div>
-      )}
+      </div>
+
+      {/* Footer — delete */}
+      <div className="flex justify-end no-print pt-2 border-t border-border/60">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDelete}
+          className="text-rose-600 hover:text-rose-700"
+        >
+          <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete piece
+        </Button>
+      </div>
     </div>
   );
 }
