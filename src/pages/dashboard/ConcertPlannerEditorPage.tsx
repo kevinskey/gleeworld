@@ -527,94 +527,13 @@ function ProgramCardView(p: CardViewProps) {
         const piece = pieces.find((x) => x.id === card.pieceId);
         if (!piece) return null;
         return (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-            <div className="md:col-span-5 border-l-2 border-border pl-3">
-              <span className={theme.accent}>Performance notes</span>
-              {viewMode === 'editor' ? (
-                <div className="space-y-2 mt-1">
-                  <BufferedTitleInput
-                    value={piece.title}
-                    onCommit={(v) => p.onUpdatePiece(piece.id, { title: v })}
-                    placeholder="Title"
-                    className="text-base font-bold"
-                  />
-                  <Input
-                    value={piece.composer ?? ''}
-                    onChange={(e) => p.onUpdatePiece(piece.id, { composer: e.target.value })}
-                    placeholder="Composer"
-                    className="text-xs"
-                  />
-                  <Input
-                    value={piece.arranger ?? ''}
-                    onChange={(e) => p.onUpdatePiece(piece.id, { arranger: e.target.value })}
-                    placeholder="Arranger (if applicable)"
-                    className="text-xs"
-                  />
-                  <Input
-                    type="number"
-                    value={piece.duration_seconds ?? ''}
-                    onChange={(e) => p.onUpdatePiece(piece.id, { duration_seconds: e.target.value ? Number(e.target.value) : null })}
-                    placeholder="Duration (seconds)"
-                    className="text-xs"
-                  />
-                  <select
-                    value={piece.rights_status ?? 'unknown'}
-                    onChange={(e) => p.onUpdatePiece(piece.id, { rights_status: e.target.value as RightsStatus })}
-                    className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs"
-                  >
-                    <option value="unknown">Rights: Unknown</option>
-                    <option value="public_domain">Rights: Public Domain</option>
-                    <option value="licensed">Rights: Licensed</option>
-                  </select>
-                  {piece.rights_status === 'licensed' && (
-                    <Input
-                      value={piece.copyright_info ?? ''}
-                      onChange={(e) => p.onUpdatePiece(piece.id, { copyright_info: e.target.value })}
-                      placeholder="Publisher / copyright line"
-                      className="text-xs"
-                    />
-                  )}
-                </div>
-              ) : (
-                <div className="mt-1">
-                  <h4 className="text-lg font-bold leading-tight">{piece.title || 'Untitled work'}</h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {piece.composer || 'Composer pending'}
-                    {piece.arranger && ` · arr. ${piece.arranger}`}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="md:col-span-7 text-xs">
-              {viewMode === 'editor' ? (
-                <Textarea
-                  rows={4}
-                  value={piece.program_notes ?? ''}
-                  onChange={(e) => p.onUpdatePiece(piece.id, { program_notes: e.target.value })}
-                  placeholder="Program notes (history, analysis, dedications…)"
-                  className="text-xs"
-                />
-              ) : (
-                <p className="leading-relaxed italic text-muted-foreground">
-                  "{piece.program_notes || 'No program notes provided.'}"
-                </p>
-              )}
-            </div>
-            {/* Card-wide footer for the delete action so it doesn't
-                compete with the notes textarea or the control bar. */}
-            {viewMode === 'editor' && (
-              <div className="md:col-span-12 flex justify-end no-print pt-2 border-t border-border/60 mt-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => p.onDeletePiece(piece.id)}
-                  className="text-rose-600 hover:text-rose-700"
-                >
-                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete piece
-                </Button>
-              </div>
-            )}
-          </div>
+          <PieceDetailEditor
+            piece={piece}
+            viewMode={viewMode}
+            themeAccent={theme.accent}
+            onCommit={(patch) => p.onUpdatePiece(piece.id, patch)}
+            onDelete={() => p.onDeletePiece(piece.id)}
+          />
         );
       })()}
 
@@ -665,56 +584,171 @@ function ProgramCardView(p: CardViewProps) {
   );
 }
 
-// Title-field buffer.
+// Piece-detail editor.
 //
-// The DB constraint `CHECK (length(trim(title)) > 0)` rejects updates
-// that clear the title to empty, which would normally flash the input
-// back to its old value mid-typing. We buffer locally so the user can
-// type through an empty state, and only push to the DB once the value
-// has a non-empty trim. On blur we either commit (non-empty) or revert
-// the local buffer (empty → restore the last persisted value).
-function BufferedTitleInput({
-  value, onCommit, placeholder, className,
+// One self-contained local buffer for every editable field on a piece.
+// Typing only mutates local state — no DB write per keystroke, no
+// refetch flicker, no caret jump. A single useEffect debounces dirty
+// fields and pushes the patch after 700ms of quiet. The title field
+// has the extra constraint that it can't be persisted empty (DB CHECK),
+// so we filter it out of the patch when blank — local stays blank so
+// the buyer can keep typing.
+function PieceDetailEditor({
+  piece, viewMode, themeAccent, onCommit, onDelete,
 }: {
-  value: string;
-  onCommit: (v: string) => void;
-  placeholder?: string;
-  className?: string;
+  piece: {
+    id: string; title: string;
+    composer: string | null; arranger: string | null;
+    duration_seconds: number | null;
+    rights_status: RightsStatus | null;
+    copyright_info: string | null;
+    program_notes: string | null;
+  };
+  viewMode: 'editor' | 'audience';
+  themeAccent: string;
+  onCommit: (patch: any) => void;
+  onDelete: () => void;
 }) {
-  const [local, setLocal] = useState(value);
-  const lastPropRef = useRef(value);
-  const debounceRef = useRef<number | null>(null);
+  const [local, setLocal] = useState({
+    title: piece.title,
+    composer: piece.composer ?? '',
+    arranger: piece.arranger ?? '',
+    duration_seconds: piece.duration_seconds != null ? String(piece.duration_seconds) : '',
+    rights_status: (piece.rights_status ?? 'unknown') as RightsStatus,
+    copyright_info: piece.copyright_info ?? '',
+    program_notes: piece.program_notes ?? '',
+  });
 
-  // Resync from upstream only when the local buffer matches the
-  // previous upstream value (i.e. we haven't started editing yet) —
-  // prevents the cursor from jumping mid-type.
+  // Resync local from the canonical piece only when local hasn't been
+  // edited (i.e. local matches what we last saw from upstream). This
+  // keeps a sibling's refetch from clobbering an in-progress edit.
+  const lastPieceRef = useRef(piece);
   useEffect(() => {
-    if (local === lastPropRef.current) setLocal(value);
-    lastPropRef.current = value;
-  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+    const last = lastPieceRef.current;
+    setLocal((prev) => ({
+      title: prev.title === (last.title ?? '') ? piece.title : prev.title,
+      composer: prev.composer === (last.composer ?? '') ? (piece.composer ?? '') : prev.composer,
+      arranger: prev.arranger === (last.arranger ?? '') ? (piece.arranger ?? '') : prev.arranger,
+      duration_seconds: prev.duration_seconds === (last.duration_seconds != null ? String(last.duration_seconds) : '')
+        ? (piece.duration_seconds != null ? String(piece.duration_seconds) : '')
+        : prev.duration_seconds,
+      rights_status: prev.rights_status === (last.rights_status ?? 'unknown') ? (piece.rights_status ?? 'unknown') : prev.rights_status,
+      copyright_info: prev.copyright_info === (last.copyright_info ?? '') ? (piece.copyright_info ?? '') : prev.copyright_info,
+      program_notes: prev.program_notes === (last.program_notes ?? '') ? (piece.program_notes ?? '') : prev.program_notes,
+    }));
+    lastPieceRef.current = piece;
+  }, [piece]);
+
+  // Debounced commit — only sends fields that differ from the canonical
+  // piece, and refuses to send an empty title (the DB rejects it).
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const patch: Record<string, unknown> = {};
+      if (local.title !== piece.title && local.title.trim().length > 0) patch.title = local.title;
+      if (local.composer !== (piece.composer ?? '')) patch.composer = local.composer || null;
+      if (local.arranger !== (piece.arranger ?? '')) patch.arranger = local.arranger || null;
+      const currentDur = piece.duration_seconds != null ? String(piece.duration_seconds) : '';
+      if (local.duration_seconds !== currentDur) {
+        patch.duration_seconds = local.duration_seconds.trim() === '' ? null : Number(local.duration_seconds);
+      }
+      if (local.rights_status !== (piece.rights_status ?? 'unknown')) patch.rights_status = local.rights_status;
+      if (local.copyright_info !== (piece.copyright_info ?? '')) patch.copyright_info = local.copyright_info || null;
+      if (local.program_notes !== (piece.program_notes ?? '')) patch.program_notes = local.program_notes || null;
+      if (Object.keys(patch).length > 0) onCommit(patch);
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [local]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const setField = <K extends keyof typeof local>(k: K, v: (typeof local)[K]) =>
+    setLocal((prev) => ({ ...prev, [k]: v }));
 
   return (
-    <Input
-      value={local}
-      placeholder={placeholder}
-      className={className}
-      onChange={(e) => {
-        const next = e.target.value;
-        setLocal(next);
-        if (debounceRef.current) window.clearTimeout(debounceRef.current);
-        if (next.trim().length > 0) {
-          debounceRef.current = window.setTimeout(() => onCommit(next), 500);
-        }
-      }}
-      onBlur={() => {
-        if (debounceRef.current) window.clearTimeout(debounceRef.current);
-        if (local.trim().length > 0 && local !== value) {
-          onCommit(local);
-        } else if (local.trim().length === 0) {
-          setLocal(value); // revert empty back to persisted
-        }
-      }}
-    />
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+      <div className="md:col-span-5 border-l-2 border-border pl-3">
+        <span className={themeAccent}>Performance notes</span>
+        {viewMode === 'editor' ? (
+          <div className="space-y-2 mt-1">
+            <Input
+              value={local.title}
+              onChange={(e) => setField('title', e.target.value)}
+              placeholder="Title"
+              className="text-base font-bold"
+            />
+            <Input
+              value={local.composer}
+              onChange={(e) => setField('composer', e.target.value)}
+              placeholder="Composer"
+              className="text-sm"
+            />
+            <Input
+              value={local.arranger}
+              onChange={(e) => setField('arranger', e.target.value)}
+              placeholder="Arranger (if applicable)"
+              className="text-sm"
+            />
+            <Input
+              type="number"
+              value={local.duration_seconds}
+              onChange={(e) => setField('duration_seconds', e.target.value)}
+              placeholder="Duration (seconds)"
+              className="text-sm"
+            />
+            <select
+              value={local.rights_status}
+              onChange={(e) => setField('rights_status', e.target.value as RightsStatus)}
+              className="w-full bg-background border border-border rounded px-2 py-1.5 text-sm"
+            >
+              <option value="unknown">Rights: Unknown</option>
+              <option value="public_domain">Rights: Public Domain</option>
+              <option value="licensed">Rights: Licensed</option>
+            </select>
+            {local.rights_status === 'licensed' && (
+              <Input
+                value={local.copyright_info}
+                onChange={(e) => setField('copyright_info', e.target.value)}
+                placeholder="Publisher / copyright line"
+                className="text-sm"
+              />
+            )}
+          </div>
+        ) : (
+          <div className="mt-1">
+            <h4 className="text-lg font-bold leading-tight">{piece.title || 'Untitled work'}</h4>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {piece.composer || 'Composer pending'}
+              {piece.arranger && ` · arr. ${piece.arranger}`}
+            </p>
+          </div>
+        )}
+      </div>
+      <div className="md:col-span-7 text-sm">
+        {viewMode === 'editor' ? (
+          <Textarea
+            rows={6}
+            value={local.program_notes}
+            onChange={(e) => setField('program_notes', e.target.value)}
+            placeholder="Program notes (history, analysis, dedications…)"
+            className="text-sm"
+          />
+        ) : (
+          <p className="leading-relaxed italic text-muted-foreground">
+            "{piece.program_notes || 'No program notes provided.'}"
+          </p>
+        )}
+      </div>
+      {viewMode === 'editor' && (
+        <div className="md:col-span-12 flex justify-end no-print pt-2 border-t border-border/60 mt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="text-rose-600 hover:text-rose-700"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete piece
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
 
