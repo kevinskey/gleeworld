@@ -46,6 +46,10 @@ interface Product {
 interface CartItem {
   product: Product;
   quantity: number;
+  variant_id?: string | null;
+  variant_size?: string | null;
+  variant_color?: string | null;
+  unit_price: number;
 }
 const CATEGORIES = [{
   value: "all",
@@ -289,11 +293,16 @@ export const Shop = () => {
   };
   const getCartItems = (): CartItem[] => {
     return Object.entries(cartItems).map(([key, quantity]) => {
-      const { productId } = parseCartKey(key);
+      const { productId, variantId } = parseCartKey(key);
       const product = products.find(p => p.id === productId);
+      const variant = product ? findVariant(product, variantId) : null;
       return {
         product: product!,
-        quantity
+        quantity,
+        variant_id: variantId,
+        variant_size: variant?.size ?? null,
+        variant_color: variant?.color ?? null,
+        unit_price: product ? lineUnitPrice(product, variantId) : 0,
       };
     }).filter(item => item.product);
   };

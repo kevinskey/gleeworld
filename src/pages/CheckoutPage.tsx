@@ -32,14 +32,18 @@ interface CartItem {
     images: string[];
   };
   quantity: number;
+  variant_id?: string | null;
+  variant_size?: string | null;
+  variant_color?: string | null;
+  unit_price?: number;
 }
 
 interface ShippingOption {
-  id: string;
-  name: string;
-  price: number;
-  estimatedDays: number;
-  description: string;
+  id: string;             // EasyPost rate id
+  name: string;           // "USPS Priority"
+  price: number;          // dollars
+  estimatedDays: number;  // 1..N
+  description: string;    // free-form (carrier + service)
 }
 
 interface CheckoutForm {
@@ -72,6 +76,8 @@ export const CheckoutPage = () => {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [selectedShipping, setSelectedShipping] = useState<string>("");
   const [shippingCost, setShippingCost] = useState(0);
+  const [easypostShipmentId, setEasypostShipmentId] = useState<string | null>(null);
+  const [shippingError, setShippingError] = useState<string | null>(null);
   const [tax, setTax] = useState(0);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -103,48 +109,99 @@ export const CheckoutPage = () => {
       navigate('/shop');
       return;
     }
-    
+
     setCartItems(state.cartItems);
     setSubtotal(state.totalAmount);
-    calculateShipping(state.cartItems, state.totalAmount);
+    // No auto-fetch: the buyer needs to fill out their shipping address
+    // first. They click "Get shipping rates" once the address is complete.
   }, [location.state, navigate]);
 
-  const calculateShipping = async (items: CartItem[], subtotalAmount: number) => {
+  const tenantSlug = (typeof window !== 'undefined'
+    && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || '';
+
+  const shippingAddressComplete = () => {
+    const a = form.sameAsBilling ? {
+      street1: form.address1, city: form.city, state: form.state, zip: form.postalCode,
+    } : {
+      street1: form.shippingAddress1, city: form.shippingCity, state: form.shippingState, zip: form.shippingPostalCode,
+    };
+    return !!(form.firstName && form.lastName && a.street1 && a.city && a.state && a.zip);
+  };
+
+  const getEasyPostRates = async () => {
+    if (!shippingAddressComplete()) {
+      setShippingError('Fill out the full shipping address first.');
+      return;
+    }
+    setShippingError(null);
+    setLoading(true);
+    setShippingOptions([]);
+    setSelectedShipping('');
+    setShippingCost(0);
+    setEasypostShipmentId(null);
     try {
-      setLoading(true);
-      
-      const shippingItems = items.map(item => ({
-        weight: item.product.weight || 0.5,
-        requiresShipping: item.product.requires_shipping,
-        quantity: item.quantity
-      }));
+      const to = form.sameAsBilling ? {
+        name: `${form.firstName} ${form.lastName}`,
+        street1: form.address1, street2: form.address2,
+        city: form.city, state: form.state, zip: form.postalCode, country: form.country,
+        email: form.email,
+      } : {
+        name: `${form.firstName} ${form.lastName}`,
+        street1: form.shippingAddress1, street2: form.shippingAddress2,
+        city: form.shippingCity, state: form.shippingState, zip: form.shippingPostalCode, country: form.shippingCountry,
+        email: form.email,
+      };
+      const items = cartItems
+        .filter(i => i.product.requires_shipping !== false)
+        .map(i => ({ product_id: i.product.id, variant_id: i.variant_id ?? null, quantity: i.quantity }));
 
-      const { data, error } = await supabase.functions.invoke('calculate-shipping', {
-        body: {
-          items: shippingItems,
-          destination: {
-            country: form.country,
-            state: form.state,
-            postalCode: form.postalCode
-          },
-          subtotal: subtotalAmount
-        }
-      });
-
-      if (error) throw error;
-      
-      setShippingOptions(data.shippingOptions || []);
-      if (data.shippingOptions?.length > 0) {
-        setSelectedShipping(data.shippingOptions[0].id);
-        setShippingCost(data.shippingOptions[0].price);
+      // Digital-only cart: no shipping needed.
+      if (items.length === 0) {
+        setShippingOptions([{ id: 'digital-only', name: 'Digital delivery', price: 0, estimatedDays: 0, description: 'Email link after payment' }]);
+        setSelectedShipping('digital-only');
+        setShippingCost(0);
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error calculating shipping:', error);
-      toast({
-        title: "Shipping Error",
-        description: "Unable to calculate shipping rates. Please try again.",
-        variant: "destructive"
+
+      const { data, error } = await supabase.functions.invoke('easypost-rates', {
+        body: { items, to },
+        headers: tenantSlug ? { 'x-tenant-slug': tenantSlug } : {},
       });
+
+      if (error) throw new Error(error.message || 'easypost-rates failed');
+      if (data?.error) throw new Error(data.message || data.error);
+
+      type EasyPostRate = {
+        id: string; carrier: string; service: string;
+        rate_cents: number; delivery_days: number | null;
+      };
+      const rates: EasyPostRate[] = data?.rates ?? [];
+      if (rates.length === 0) {
+        setShippingError('No shipping rates returned for this address.');
+        return;
+      }
+
+      const mapped: ShippingOption[] = rates
+        .slice()
+        .sort((a, b) => a.rate_cents - b.rate_cents)
+        .map(r => ({
+          id: r.id,
+          name: `${r.carrier} ${r.service}`,
+          price: r.rate_cents / 100,
+          estimatedDays: r.delivery_days ?? 0,
+          description: `${r.carrier} · ${r.service}`,
+        }));
+
+      setShippingOptions(mapped);
+      setEasypostShipmentId(data.shipment_id ?? null);
+      // Pre-select the cheapest by default.
+      setSelectedShipping(mapped[0].id);
+      setShippingCost(mapped[0].price);
+    } catch (e: any) {
+      const msg = e?.message || 'Unable to get rates from EasyPost.';
+      setShippingError(msg);
+      toast({ title: 'Shipping rates unavailable', description: msg, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -243,15 +300,19 @@ export const CheckoutPage = () => {
 
   const handlePayment = async () => {
     if (!validateForm()) return;
-    
+
     setProcessingPayment(true);
-    
+
     try {
-      // Prepare cart items for Stripe checkout
+      // Prepare cart items for Stripe checkout — include variant info so
+      // the order items table can reference the picked size/color.
       const checkoutItems = cartItems.map(item => ({
         product_id: item.product.id,
-        title: item.product.title,
-        price: item.product.price,
+        variant_id: item.variant_id ?? null,
+        variant_size: item.variant_size ?? null,
+        variant_color: item.variant_color ?? null,
+        title: [item.product.title, item.variant_size, item.variant_color].filter(Boolean).join(' · '),
+        price: item.unit_price ?? item.product.price,
         quantity: item.quantity,
         requires_shipping: item.product.requires_shipping,
         image: item.product.images?.[0]
@@ -275,7 +336,9 @@ export const CheckoutPage = () => {
         country: form.shippingCountry
       };
 
-      // Call Stripe checkout edge function
+      // Call Stripe checkout edge function. We pass the EasyPost
+      // shipment + rate ids so the downstream label-buy step can target
+      // the exact rate the buyer picked — without re-rating the package.
       const { data, error: checkoutError } = await supabase.functions.invoke('shop-checkout', {
         body: {
           items: checkoutItems,
@@ -283,7 +346,10 @@ export const CheckoutPage = () => {
           customer_name: `${form.firstName} ${form.lastName}`,
           shipping_address: shippingAddress,
           shipping_cost: shippingCost,
-          tax_amount: tax
+          tax_amount: tax,
+          easypost_shipment_id: easypostShipmentId,
+          easypost_rate_id: selectedShipping,
+          shipping_carrier_service: shippingOptions.find(o => o.id === selectedShipping)?.name ?? null,
         }
       });
 
@@ -322,15 +388,20 @@ export const CheckoutPage = () => {
       return false;
     }
     
-    if (!selectedShipping && shippingOptions.length > 0) {
+    // Skip the rate check entirely when nothing in the cart needs to
+    // ship (digital-only orders).
+    const physicalItems = cartItems.some(i => i.product.requires_shipping !== false);
+    if (physicalItems && !selectedShipping) {
       toast({
-        title: "Shipping Required",
-        description: "Please select a shipping option.",
+        title: "Shipping rate required",
+        description: shippingOptions.length === 0
+          ? 'Click "Get shipping rates" above to pick a shipping option.'
+          : 'Please select a shipping option.',
         variant: "destructive"
       });
       return false;
     }
-    
+
     return true;
   };
 
@@ -474,47 +545,63 @@ export const CheckoutPage = () => {
               </CardContent>
             </Card>
 
-            {/* Shipping Options */}
-            {shippingOptions.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="h-5 w-5" />
-                    Shipping Options
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <p>Calculating shipping rates...</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {shippingOptions.map((option) => (
-                        <div
-                          key={option.id}
-                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                            selectedShipping === option.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                          }`}
-                          onClick={() => handleShippingChange(option.id)}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="font-medium">{option.name}</div>
-                              <div className="text-sm text-gray-600">{option.description}</div>
+            {/* Shipping Options — live rates from EasyPost. The buyer
+                clicks "Get rates" once the address is complete; we cache
+                the EasyPost shipment id so the admin can buy the label
+                against this same shipment after payment. */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="h-5 w-5" />
+                  Shipping
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex flex-wrap gap-2 items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={getEasyPostRates}
+                    disabled={loading || !shippingAddressComplete()}
+                  >
+                    {loading ? 'Getting rates…' : shippingOptions.length > 0 ? 'Refresh rates' : 'Get shipping rates'}
+                  </Button>
+                  {!shippingAddressComplete() && (
+                    <span className="text-xs text-muted-foreground">Fill out the full shipping address to see live rates.</span>
+                  )}
+                </div>
+                {shippingError && (
+                  <p className="text-sm text-destructive">{shippingError}</p>
+                )}
+                {shippingOptions.length > 0 && (
+                  <div className="space-y-2">
+                    {shippingOptions.map((option) => (
+                      <div
+                        key={option.id}
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                          selectedShipping === option.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                        }`}
+                        onClick={() => handleShippingChange(option.id)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium">{option.name}</div>
+                            {option.estimatedDays > 0 && (
                               <div className="text-sm text-gray-500">
-                                Estimated delivery: {option.estimatedDays} business days
+                                Estimated delivery: {option.estimatedDays} business day{option.estimatedDays !== 1 ? 's' : ''}
                               </div>
-                            </div>
-                            <div className="font-bold">
-                              {option.price === 0 ? 'FREE' : `$${option.price.toFixed(2)}`}
-                            </div>
+                            )}
+                          </div>
+                          <div className="font-bold">
+                            {option.price === 0 ? 'FREE' : `$${option.price.toFixed(2)}`}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Column - Order Summary */}
@@ -527,24 +614,35 @@ export const CheckoutPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Cart Items */}
+                {/* Cart Items — variant axes (size / color) get their
+                    own small line under the product title so the buyer
+                    can confirm they picked the right combination. */}
                 <div className="space-y-3">
-                  {cartItems.map((item) => (
-                    <div key={item.product.id} className="flex gap-3">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                        <img 
-                          src={item.product.images?.[0] || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400'} 
-                          alt={item.product.title}
-                          className="w-full h-full object-cover"
-                        />
+                  {cartItems.map((item, idx) => {
+                    const variantBits = [item.variant_size, item.variant_color]
+                      .filter(Boolean)
+                      .join(' / ');
+                    const linePrice = (item.unit_price ?? item.product.price) * item.quantity;
+                    return (
+                      <div key={`${item.product.id}-${item.variant_id ?? 'base'}-${idx}`} className="flex gap-3">
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+                          <img
+                            src={item.product.images?.[0]}
+                            alt={item.product.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{item.product.title}</div>
+                          {variantBits && (
+                            <div className="text-xs text-gray-500 mt-0.5">{variantBits}</div>
+                          )}
+                          <div className="text-sm text-gray-600">Qty: {item.quantity}</div>
+                          <div className="font-medium">${linePrice.toFixed(2)}</div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{item.product.title}</div>
-                        <div className="text-sm text-gray-600">Qty: {item.quantity}</div>
-                        <div className="font-medium">${(item.product.price * item.quantity).toFixed(2)}</div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <Separator />
@@ -570,14 +668,22 @@ export const CheckoutPage = () => {
                   </div>
                 </div>
 
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   size="lg"
                   onClick={handlePayment}
-                  disabled={processingPayment || loading}
+                  disabled={
+                    processingPayment
+                    || loading
+                    || (cartItems.some(i => i.product.requires_shipping !== false) && !selectedShipping)
+                  }
                 >
                   <Lock className="h-4 w-4 mr-2" />
-                  {processingPayment ? 'Processing...' : `Pay $${total.toFixed(2)}`}
+                  {processingPayment
+                    ? 'Processing…'
+                    : (cartItems.some(i => i.product.requires_shipping !== false) && !selectedShipping)
+                      ? 'Pick a shipping rate first'
+                      : `Pay $${total.toFixed(2)}`}
                 </Button>
                 
                 <div className="text-xs text-gray-500 text-center">
