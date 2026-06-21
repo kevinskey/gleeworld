@@ -11,7 +11,7 @@ import { useTenantModules } from '@/hooks/useModuleAccess';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-import { Shield, Database, Search, Eye, GraduationCap, Settings } from 'lucide-react';
+import { Shield, Database, Search, Eye, GraduationCap, Settings, Store } from 'lucide-react';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useCourseProducts, LEVEL_LABEL } from '@/hooks/useCourseStore';
@@ -152,6 +152,10 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
             <Settings className="h-4 w-4 mr-2" />
             Site setup
           </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/store')}>
+            <Store className="h-4 w-4 mr-2" />
+            Store
+          </Button>
           <Button variant="outline" size="sm" onClick={() => navigate('/admin/database')}>
             <Database className="h-4 w-4 mr-2" />
             Database
@@ -205,9 +209,9 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-semibold text-foreground truncate">{m.title}</span>
-                      {m.isNew && <Badge variant="secondary" className="text-[10px] px-1 py-0">NEW</Badge>}
+                      {m.isNew && <Badge variant="secondary" className="text-xs px-1 py-0">NEW</Badge>}
                     </div>
-                    <p className="text-[11px] text-muted-foreground line-clamp-1">{m.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-1">{m.description}</p>
                   </div>
                 </button>
               );
@@ -237,12 +241,12 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-sm font-semibold text-foreground truncate">{m.title}</span>
                         {isSubscribed && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0 border-emerald-500 text-emerald-700">
+                          <Badge variant="outline" className="text-xs px-1 py-0 border-emerald-500 text-emerald-700">
                             <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" /> Active
                           </Badge>
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{m.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{m.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-2">
@@ -283,7 +287,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
                 <GraduationCap className="h-4 w-4 mt-0.5 text-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-sm font-semibold text-foreground">{p.name}</span>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                  <p className="text-sm text-muted-foreground mt-0.5">
                     {LEVEL_LABEL[p.level ?? ''] ?? p.level}
                   </p>
                 </div>
