@@ -48,6 +48,9 @@ export default function ConcertPlannerEditorPage() {
   const [hasApproval, setHasApproval] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  // Regen dialog state — kept at the page level so the dialog can be a
+  // single instance rather than one per card.
+  const [regenCard, setRegenCard] = useState<ProgramCard | null>(null);
 
   // Snapshot fields the admin types into so we don't fire a DB write per
   // keystroke. Push to DB on blur or 800ms after the last edit.
@@ -358,11 +361,30 @@ export default function ConcertPlannerEditorPage() {
                 onReorderPieces={(ids) => reorderPieces.mutate(ids)}
                 onMoveCard={(dir) => moveCard(card.id, dir)}
                 onToggleVisible={() => toggleVisible(card.id)}
+                onOpenRegen={() => setRegenCard(card)}
                 publicUrl={publicUrl}
               />
             ))}
         </section>
       </main>
+
+      {/* Regen — AI rewrite of a single card. Currently supports
+          piece-detail (program_notes) + hero-cover (subtitle). */}
+      <RegenDialog
+        card={regenCard}
+        program={program}
+        pieces={pieces}
+        onClose={() => setRegenCard(null)}
+        onAcceptPieceNotes={(pieceId, suggestion) => {
+          updatePiece.mutate({ pieceId, patch: { program_notes: suggestion } });
+          setRegenCard(null);
+        }}
+        onAcceptSubtitle={(suggestion) => {
+          updateProgram.mutate({ subtitle: suggestion } as any);
+          setHeader((h) => ({ ...h, subtitle: suggestion }));
+          setRegenCard(null);
+        }}
+      />
 
       {/* Publish success modal */}
       <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
@@ -414,6 +436,7 @@ interface CardViewProps {
   onReorderPieces: (ids: string[]) => void;
   onMoveCard: (dir: 'up' | 'down') => void;
   onToggleVisible: () => void;
+  onOpenRegen: () => void;
   publicUrl: string | null;
 }
 
@@ -439,12 +462,15 @@ function ProgramCardView(p: CardViewProps) {
           <button onClick={p.onToggleVisible} className="p-1 hover:bg-muted rounded" aria-label="Toggle visibility">
             {card.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5 text-rose-500" />}
           </button>
-          <button
-            onClick={() => toast.message('Regen coming soon', { description: 'AI rewrite for this card will live here.' })}
-            className="px-2 py-1 hover:bg-amber-50 rounded text-amber-700 flex items-center gap-1 text-[10px] font-semibold"
-          >
-            <Sparkles className="w-3 h-3" /> Regen
-          </button>
+          {(card.kind === 'piece-detail' || card.kind === 'hero-cover') && (
+            <button
+              onClick={p.onOpenRegen}
+              className="px-2 py-1 hover:bg-amber-50 rounded text-amber-700 flex items-center gap-1 text-[10px] font-semibold"
+              aria-label="Regenerate this card with AI"
+            >
+              <Sparkles className="w-3 h-3" /> Regen
+            </button>
+          )}
         </div>
       )}
 
@@ -581,6 +607,144 @@ function ProgramCardView(p: CardViewProps) {
         </div>
       )}
     </div>
+  );
+}
+
+// Regen dialog — calls concert-card-regen edge function and lets the
+// admin preview / edit / accept the AI suggestion. Supports two card
+// kinds: piece-detail (rewrites program_notes) + hero-cover (rewrites
+// program subtitle).
+function RegenDialog({
+  card, program, pieces, onClose, onAcceptPieceNotes, onAcceptSubtitle,
+}: {
+  card: ProgramCard | null;
+  program: NonNullable<ReturnType<typeof useConcertProgram>['program']>;
+  pieces: ReturnType<typeof useConcertProgram>['pieces'];
+  onClose: () => void;
+  onAcceptPieceNotes: (pieceId: string, suggestion: string) => void;
+  onAcceptSubtitle: (suggestion: string) => void;
+}) {
+  type Tone = 'concise' | 'scholarly' | 'warm';
+  const [tone, setTone] = useState<Tone>('warm');
+  const [busy, setBusy] = useState(false);
+  const [suggestion, setSuggestion] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset state whenever the dialog opens against a different card.
+  useEffect(() => {
+    if (card) {
+      setSuggestion('');
+      setError(null);
+      setTone('warm');
+    }
+  }, [card?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!card) return null;
+
+  const piece = card.kind === 'piece-detail'
+    ? pieces.find((p) => p.id === card.pieceId)
+    : null;
+
+  const runRegen = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('concert-card-regen', {
+        body: {
+          card_kind: card.kind,
+          program_id: program.id,
+          piece_id: card.pieceId,
+          tone,
+        },
+      });
+      if (fnErr) throw new Error(fnErr.message || 'Edge function failed');
+      if (data?.error) throw new Error(data.message || data.error);
+      const text = String(data?.suggestion ?? '').trim();
+      if (!text) throw new Error('AI returned no text');
+      setSuggestion(text);
+    } catch (e: any) {
+      setError(e?.message ?? 'Regen failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const accept = () => {
+    const final = suggestion.trim();
+    if (!final) return;
+    if (card.kind === 'piece-detail' && piece) {
+      onAcceptPieceNotes(piece.id, final);
+    } else if (card.kind === 'hero-cover') {
+      onAcceptSubtitle(final);
+    }
+  };
+
+  const title = card.kind === 'piece-detail'
+    ? `Regen — ${piece?.title || 'piece'} notes`
+    : 'Regen — concert subtitle';
+  const currentText = card.kind === 'piece-detail'
+    ? (piece?.program_notes ?? '')
+    : (program.subtitle ?? '');
+
+  return (
+    <Dialog open={!!card} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-600" /> {title}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-1">
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Tone</Label>
+            <div className="mt-1 flex gap-1.5">
+              {(['concise', 'warm', 'scholarly'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTone(t)}
+                  className={`px-3 py-1 rounded-full border text-xs font-medium transition-colors ${
+                    tone === t ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-border hover:border-primary/60'
+                  }`}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Current</Label>
+            <div className="mt-1 p-3 rounded border border-border bg-muted/40 text-sm whitespace-pre-wrap min-h-[3rem]">
+              {currentText || <span className="text-muted-foreground italic">(empty)</span>}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Suggested</Label>
+              <Button size="sm" variant="outline" onClick={runRegen} disabled={busy}>
+                {busy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1" />}
+                {suggestion ? 'Regenerate' : 'Generate'}
+              </Button>
+            </div>
+            <Textarea
+              rows={card.kind === 'hero-cover' ? 2 : 6}
+              value={suggestion}
+              onChange={(e) => setSuggestion(e.target.value)}
+              placeholder={busy ? 'Generating…' : 'Click Generate to draft a suggestion.'}
+              className="mt-1 text-sm"
+            />
+            {error && <p className="text-xs text-rose-600 mt-1">{error}</p>}
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={accept} disabled={!suggestion.trim() || busy}>
+            <Check className="w-4 h-4 mr-1" /> Accept
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
