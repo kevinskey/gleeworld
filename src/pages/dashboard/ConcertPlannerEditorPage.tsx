@@ -55,6 +55,16 @@ export default function ConcertPlannerEditorPage() {
   // Regen dialog state — kept at the page level so the dialog can be a
   // single instance rather than one per card.
   const [regenCard, setRegenCard] = useState<ProgramCard | null>(null);
+  // Piece-detail cards default to COLLAPSED in editor mode so the page
+  // doesn't grow into a multi-screen scroll once a program has 5+ pieces.
+  // We track which piece ids are expanded; tap a card to expand/collapse.
+  // Audience view ignores this entirely (always shows the full content).
+  const [expandedPieces, setExpandedPieces] = useState<Set<string>>(new Set());
+  const toggleExpanded = (pieceId: string) => setExpandedPieces((prev) => {
+    const next = new Set(prev);
+    if (next.has(pieceId)) next.delete(pieceId); else next.add(pieceId);
+    return next;
+  });
 
   // Snapshot fields the admin types into so we don't fire a DB write per
   // keystroke. Push to DB on blur or 800ms after the last edit.
@@ -382,6 +392,8 @@ export default function ConcertPlannerEditorPage() {
                 onMoveCard={(dir) => moveCard(card.id, dir)}
                 onToggleVisible={() => toggleVisible(card.id)}
                 onOpenRegen={() => setRegenCard(card)}
+                pieceExpanded={card.pieceId ? expandedPieces.has(card.pieceId) : false}
+                onTogglePieceExpanded={() => card.pieceId && toggleExpanded(card.pieceId)}
                 publicUrl={publicUrl}
               />
             ))}
@@ -467,6 +479,8 @@ interface CardViewProps {
   onMoveCard: (dir: 'up' | 'down') => void;
   onToggleVisible: () => void;
   onOpenRegen: () => void;
+  pieceExpanded: boolean;
+  onTogglePieceExpanded: () => void;
   publicUrl: string | null;
 }
 
@@ -482,8 +496,15 @@ function ProgramCardView(p: CardViewProps) {
   const cardStyle: React.CSSProperties | undefined =
     card.kind === 'hero-cover' ? theme.heroBg : theme.body;
 
+  // Collapsed piece-detail cards get tighter padding so the stack reads
+  // like a list rather than a stack of full-size cards.
+  const collapsedPiece = card.kind === 'piece-detail'
+    && viewMode === 'editor'
+    && !p.pieceExpanded;
+  const compactClasses = collapsedPiece ? '!p-3' : '';
+
   return (
-    <div className={`relative group program-card ${theme.card} ${hiddenStyle}`} style={cardStyle}>
+    <div className={`relative group program-card ${theme.card} ${compactClasses} ${hiddenStyle}`} style={cardStyle}>
       {/* Control bar — a real top header inside the card so it never
           overlaps content. Only visible in editor mode. */}
       {viewMode === 'editor' && (
@@ -597,14 +618,52 @@ function ProgramCardView(p: CardViewProps) {
       {card.kind === 'piece-detail' && (() => {
         const piece = pieces.find((x) => x.id === card.pieceId);
         if (!piece) return null;
+        // In editor mode, default to a collapsed compact row so the
+        // page stays scannable. Audience mode always shows the full
+        // notes — that's what the public program needs.
+        if (viewMode === 'editor' && !p.pieceExpanded) {
+          return (
+            <button
+              type="button"
+              onClick={p.onTogglePieceExpanded}
+              className="w-full flex items-center justify-between gap-3 text-left"
+            >
+              <div className="flex items-start gap-3 min-w-0">
+                <ChevronDown className="w-4 h-4 text-muted-foreground -rotate-90 mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">{piece.title || 'Untitled piece'}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {piece.composer || 'Composer pending'}
+                    {piece.arranger && ` · arr. ${piece.arranger}`}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
+                {piece.duration_seconds ? <span className="font-mono tabular-nums">{formatDuration(piece.duration_seconds)}</span> : null}
+                <span className="text-[10px] uppercase tracking-wider opacity-70">Tap to edit</span>
+              </div>
+            </button>
+          );
+        }
         return (
-          <PieceDetailEditor
-            piece={piece}
-            viewMode={viewMode}
-            themeAccent={theme.accent}
-            onCommit={(patch) => p.onUpdatePiece(piece.id, patch)}
-            onDelete={() => p.onDeletePiece(piece.id)}
-          />
+          <div>
+            {viewMode === 'editor' && (
+              <button
+                type="button"
+                onClick={p.onTogglePieceExpanded}
+                className="no-print mb-2 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <ChevronUp className="w-3.5 h-3.5" /> Collapse
+              </button>
+            )}
+            <PieceDetailEditor
+              piece={piece}
+              viewMode={viewMode}
+              themeAccent={theme.accent}
+              onCommit={(patch) => p.onUpdatePiece(piece.id, patch)}
+              onDelete={() => p.onDeletePiece(piece.id)}
+            />
+          </div>
         );
       })()}
 
