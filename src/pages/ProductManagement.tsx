@@ -91,7 +91,9 @@ export const ProductManagement = () => {
               </div>
             </div>
             <Button asChild variant="secondary" size="sm" className="shrink-0">
-              <a href="/shop" target="_blank" rel="noreferrer">
+              {/* ?from=admin tells Shop to render a "Back to Store admin"
+                  pill so the curator can hop right back here. */}
+              <a href="/shop?from=admin" target="_blank" rel="noreferrer">
                 View public store <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
               </a>
             </Button>

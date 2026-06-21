@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Upload, Trash2, Edit, Eye, Star } from 'lucide-react';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;
 
@@ -66,6 +67,7 @@ export const ProductManager = () => {
   const [isCreateMode, setIsCreateMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [seeding, setSeeding] = useState(false);
   const {
     uploadProductImage,
     deleteProductImage,
@@ -168,10 +170,101 @@ export const ProductManager = () => {
       }
     }
   };
-  const handleDeleteProduct = async (productId: string, productName: string) => {
-    if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
-      return;
+  // One-click seed of the six demo products from the public Shop fallback,
+  // so the empty backend goes from "nothing here" to "six editable rows
+  // already on your storefront" in one tap. Idempotent-ish: it just
+  // inserts six rows; running it twice gives you twelve rows. We keep it
+  // simple because deduplication would require an SKU constraint that may
+  // not exist in every tenant's schema.
+  const SAMPLE_PRODUCTS = [
+    { name: 'Concert T-Shirt',          description: 'Soft cotton tee with the season logo.',                price: 25, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', categorySlug: 'apparel' },
+    { name: 'Tour Hoodie',              description: 'Heavyweight hoodie with embroidered crest.',          price: 55, image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400', categorySlug: 'apparel' },
+    { name: 'Canvas Tote',              description: 'Sturdy tote for rehearsals and concerts.',            price: 18, image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=400', categorySlug: 'accessories' },
+    { name: 'Enamel Crest Pin',         description: 'Hard-enamel pin for backpacks and lapels.',           price: 8,  image: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=400', categorySlug: 'accessories' },
+    { name: 'Sheet Music: Season Anthem', description: "PDF download of this season's featured anthem.",    price: 6,  image: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=400', categorySlug: 'digital' },
+    { name: 'Ensemble Mug',             description: 'Ceramic mug — perfect for warm-ups before rehearsal.',price: 14, image: 'https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=400', categorySlug: 'accessories' },
+  ];
+
+  const seedSampleProducts = async () => {
+    setSeeding(true);
+    try {
+      // Resolve category ids by slug — create the three categories on the
+      // fly if the tenant hasn't set them up yet, so seeding works on a
+      // blank store.
+      const wanted = ['apparel', 'accessories', 'digital'];
+      const { data: existing, error: catErr } = await supabase
+        .from('product_categories')
+        .select('id, slug')
+        .in('slug', wanted);
+      if (catErr) throw catErr;
+      const slugToId: Record<string, string> = {};
+      (existing || []).forEach((c: any) => { slugToId[c.slug] = c.id; });
+      const missing = wanted.filter((s) => !slugToId[s]);
+      if (missing.length > 0) {
+        const newRows = missing.map((slug) => ({
+          slug,
+          name: slug.charAt(0).toUpperCase() + slug.slice(1),
+          is_active: true,
+        }));
+        const { data: created, error: createErr } = await supabase
+          .from('product_categories')
+          .insert(newRows)
+          .select('id, slug');
+        if (createErr) throw createErr;
+        (created || []).forEach((c: any) => { slugToId[c.slug] = c.id; });
+      }
+
+      const productRows = SAMPLE_PRODUCTS.map((p) => ({
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        is_active: true,
+        is_featured: false,
+        stock_quantity: 50,
+        manage_stock: true,
+        category_id: slugToId[p.categorySlug] || null,
+        tags: [p.categorySlug],
+      }));
+      const { data: createdProducts, error: prodErr } = await supabase
+        .from('products')
+        .insert(productRows)
+        .select('id, name');
+      if (prodErr) throw prodErr;
+
+      // Attach the demo Unsplash image to each new row so the storefront
+      // has something to render right away.
+      const imageRows = (createdProducts || []).map((p: any, i: number) => ({
+        product_id: p.id,
+        image_url: SAMPLE_PRODUCTS[i].image,
+        alt_text: SAMPLE_PRODUCTS[i].name,
+        is_primary: true,
+        sort_order: 0,
+      }));
+      if (imageRows.length > 0) {
+        const { error: imgErr } = await supabase
+          .from('product_images')
+          .insert(imageRows);
+        if (imgErr) console.warn('[seed] image insert failed', imgErr);
+      }
+
+      toast({
+        title: 'Seeded',
+        description: `Added ${createdProducts?.length ?? 0} sample products. Edit any of them or open the public store to see them live.`,
+      });
+      fetchProducts();
+      fetchCategories();
+    } catch (err: any) {
+      toast({
+        title: 'Could not seed sample products',
+        description: err?.message || String(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setSeeding(false);
     }
+  };
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
     try {
       const {
         error
@@ -333,9 +426,16 @@ export const ProductManager = () => {
                     }} onCancel={() => {}} />
                       </DialogContent>
                     </Dialog>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteProduct(product.id, product.name)} title="Delete Product">
+                    <ConfirmDeleteButton
+                      confirmKey="delete-product"
+                      title={`Delete "${product.name}"?`}
+                      description="This action cannot be undone."
+                      onConfirm={() => handleDeleteProduct(product.id, product.name)}
+                      ariaLabel="Delete product"
+                      className="inline-flex items-center justify-center rounded-md text-sm h-9 px-3 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
                       <Trash2 className="w-4 h-4" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
@@ -356,8 +456,23 @@ export const ProductManager = () => {
       </div>
 
       {filteredProducts.length === 0 && <Card>
-          <CardContent className="p-8 text-center">
+          <CardContent className="p-8 text-center space-y-4">
             <p className="text-muted-foreground">No products found</p>
+            {products.length === 0 && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Start fast by seeding the six demo products from the
+                  public storefront. You can edit them right after.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={seedSampleProducts}
+                  disabled={seeding}
+                >
+                  {seeding ? 'Seeding…' : 'Seed sample products'}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>}
     </div>;
