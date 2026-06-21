@@ -173,6 +173,7 @@ const PartTracksModule = lazy(() => import("./components/modules/PartTracksModul
 const PartTracksLandingPage = lazy(() => import("./pages/dashboard/PartTracksLandingPage"));
 const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
+const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
 const AuditionsModule = lazy(() => import("./components/modules/AuditionsModule").then(m => ({ default: m.AuditionsModule })));
 const PRHubModule = lazy(() => import("./components/modules/PRHubModule").then(m => ({ default: m.PRHubModule })));
 import MemberCalendarPage from "./pages/member/MemberCalendarPage";
@@ -1392,6 +1393,16 @@ const App = () => {
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
+                  }
+                />
+                {/* Anonymous public program — gated server-side by the
+                    anon RLS policy that requires published_at IS NOT NULL. */}
+                <Route
+                  path="/program/:slug"
+                  element={
+                    <PublicRoute>
+                      <PublicConcertProgramPage />
+                    </PublicRoute>
                   }
                 />
                 <Route
