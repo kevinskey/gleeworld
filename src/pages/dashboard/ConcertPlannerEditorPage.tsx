@@ -10,7 +10,7 @@
 // explicit human approval checkbox AND a fresh slug. The publish modal
 // hands the admin a QR + copyable public URL.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, ChevronUp, ChevronDown, Eye, EyeOff, Edit3, Sparkles,
@@ -532,9 +532,9 @@ function ProgramCardView(p: CardViewProps) {
               <span className={theme.accent}>Performance notes</span>
               {viewMode === 'editor' ? (
                 <div className="space-y-2 mt-1">
-                  <Input
+                  <BufferedTitleInput
                     value={piece.title}
-                    onChange={(e) => p.onUpdatePiece(piece.id, { title: e.target.value })}
+                    onCommit={(v) => p.onUpdatePiece(piece.id, { title: v })}
                     placeholder="Title"
                     className="text-base font-bold"
                   />
@@ -662,6 +662,59 @@ function ProgramCardView(p: CardViewProps) {
         </div>
       )}
     </div>
+  );
+}
+
+// Title-field buffer.
+//
+// The DB constraint `CHECK (length(trim(title)) > 0)` rejects updates
+// that clear the title to empty, which would normally flash the input
+// back to its old value mid-typing. We buffer locally so the user can
+// type through an empty state, and only push to the DB once the value
+// has a non-empty trim. On blur we either commit (non-empty) or revert
+// the local buffer (empty → restore the last persisted value).
+function BufferedTitleInput({
+  value, onCommit, placeholder, className,
+}: {
+  value: string;
+  onCommit: (v: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [local, setLocal] = useState(value);
+  const lastPropRef = useRef(value);
+  const debounceRef = useRef<number | null>(null);
+
+  // Resync from upstream only when the local buffer matches the
+  // previous upstream value (i.e. we haven't started editing yet) —
+  // prevents the cursor from jumping mid-type.
+  useEffect(() => {
+    if (local === lastPropRef.current) setLocal(value);
+    lastPropRef.current = value;
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <Input
+      value={local}
+      placeholder={placeholder}
+      className={className}
+      onChange={(e) => {
+        const next = e.target.value;
+        setLocal(next);
+        if (debounceRef.current) window.clearTimeout(debounceRef.current);
+        if (next.trim().length > 0) {
+          debounceRef.current = window.setTimeout(() => onCommit(next), 500);
+        }
+      }}
+      onBlur={() => {
+        if (debounceRef.current) window.clearTimeout(debounceRef.current);
+        if (local.trim().length > 0 && local !== value) {
+          onCommit(local);
+        } else if (local.trim().length === 0) {
+          setLocal(value); // revert empty back to persisted
+        }
+      }}
+    />
   );
 }
 
