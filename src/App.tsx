@@ -1467,7 +1467,10 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><Shop /></DashboardShell>
+                        {/* Sidebar "Store" entry → the editable backend
+                            (Products, Categories, Inventory, Orders, etc).
+                            The public-facing /shop has its own route. */}
+                        <DashboardShell><ProductManagement /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
