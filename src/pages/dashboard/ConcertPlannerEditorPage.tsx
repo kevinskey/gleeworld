@@ -28,12 +28,16 @@ import { useConcertProgram } from '@/hooks/useConcertPrograms';
 import {
   transformProgramToCards,
   validateProgram,
+  themeStyles,
+  printFormatStyles,
+  THEME_OPTIONS,
   type ProgramCard,
   type VisualTheme,
   type PrintFormat,
   type RightsStatus,
 } from '@/lib/concertPlanner';
 import { RosterEditor } from '@/components/concertPlanner/RosterEditor';
+import { SpeechInputButton } from '@/components/concertPlanner/SpeechInputButton';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function ConcertPlannerEditorPage() {
@@ -182,7 +186,7 @@ export default function ConcertPlannerEditorPage() {
     );
   }
 
-  const theme = themeClasses(program.theme);
+  const theme = themeStyles(program.theme);
   const formatStyles = printFormatStyles(program.print_format);
   const publicUrl = program.published_slug
     ? `${window.location.origin}/program/${program.published_slug}`
@@ -275,10 +279,13 @@ export default function ConcertPlannerEditorPage() {
                   onChange={(e) => updateProgram.mutate({ theme: e.target.value as VisualTheme })}
                   className="w-full mt-1 bg-background border border-border rounded px-2 py-1.5 text-xs"
                 >
-                  <option value="classic-concert">Classic Concert</option>
-                  <option value="modern-show">Modern Show</option>
-                  <option value="chamber-minimalist">Chamber Minimalist</option>
+                  {THEME_OPTIONS.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
                 </select>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {THEME_OPTIONS.find((t) => t.value === program.theme)?.sub}
+                </p>
               </div>
               <div>
                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Print format</Label>
@@ -424,7 +431,7 @@ interface CardViewProps {
   index: number;
   last: boolean;
   viewMode: 'editor' | 'audience';
-  theme: ReturnType<typeof themeClasses>;
+  theme: ReturnType<typeof themeStyles>;
   program: NonNullable<ReturnType<typeof useConcertProgram>['program']>;
   pieces: ReturnType<typeof useConcertProgram>['pieces'];
   roster: ReturnType<typeof useConcertProgram>['roster'];
@@ -447,8 +454,13 @@ function ProgramCardView(p: CardViewProps) {
   // a hidden one); audience view drops hidden cards entirely.
   const hiddenStyle = !card.visible && viewMode === 'editor' ? 'opacity-50 border-dashed' : '';
 
+  // Hero gets the theme's heroBg gradient; everything else uses the
+  // body font when one is configured.
+  const cardStyle: React.CSSProperties | undefined =
+    card.kind === 'hero-cover' ? theme.heroBg : theme.body;
+
   return (
-    <div className={`relative group program-card ${theme.card} ${hiddenStyle}`}>
+    <div className={`relative group program-card ${theme.card} ${hiddenStyle}`} style={cardStyle}>
       {/* Control bar — a real top header inside the card so it never
           overlaps content. Only visible in editor mode. */}
       {viewMode === 'editor' && (
@@ -479,13 +491,23 @@ function ProgramCardView(p: CardViewProps) {
           <span className={theme.accent}>Concert Program</span>
           {viewMode === 'editor' ? (
             <div className="space-y-3 max-w-xl mx-auto mt-2">
-              <input
-                type="text"
-                value={header.title}
-                onChange={(e) => onHeaderChange((h: any) => ({ ...h, title: e.target.value }))}
-                className="w-full text-center text-2xl font-bold bg-transparent border-b border-dashed border-border focus:outline-none focus:border-primary"
-                placeholder="Concert title"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={header.title}
+                  onChange={(e) => onHeaderChange((h: any) => ({ ...h, title: e.target.value }))}
+                  className="w-full text-center text-3xl bg-transparent border-b border-dashed border-current/30 focus:outline-none focus:border-primary pr-10"
+                  style={theme.heroTitle}
+                  placeholder="Concert title"
+                />
+                <SpeechInputButton
+                  label="Dictate concert title"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 no-print"
+                  onTranscript={(text) =>
+                    onHeaderChange((h: any) => ({ ...h, title: text }))
+                  }
+                />
+              </div>
               <div className="grid grid-cols-2 gap-2 text-left text-xs">
                 <FieldInline label="Venue" value={header.venue} onChange={(v) => onHeaderChange((h: any) => ({ ...h, venue: v }))} />
                 <FieldInline label="Conductor" value={header.conductor} onChange={(v) => onHeaderChange((h: any) => ({ ...h, conductor: v }))} />
@@ -497,8 +519,8 @@ function ProgramCardView(p: CardViewProps) {
             </div>
           ) : (
             <div className="space-y-2 mt-2">
-              <h2 className="text-3xl font-bold tracking-tight">{program.title || 'Untitled program'}</h2>
-              {program.subtitle && <p className="text-base text-muted-foreground">{program.subtitle}</p>}
+              <h2 className="text-3xl tracking-tight" style={theme.heroTitle}>{program.title || 'Untitled program'}</h2>
+              {program.subtitle && <p className="text-base italic opacity-80">{program.subtitle}</p>}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-border text-xs text-muted-foreground">
                 {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}
                 {program.conductor && <div><strong>Conductor:</strong> {program.conductor}</div>}
@@ -832,12 +854,19 @@ function PieceDetailEditor({
         <span className={themeAccent}>Performance notes</span>
         {viewMode === 'editor' ? (
           <div className="space-y-2 mt-1">
-            <Input
-              value={local.title}
-              onChange={(e) => setField('title', e.target.value)}
-              placeholder="Title"
-              className="text-base font-bold"
-            />
+            <div className="relative">
+              <Input
+                value={local.title}
+                onChange={(e) => setField('title', e.target.value)}
+                placeholder="Title"
+                className="text-base font-bold pr-10"
+              />
+              <SpeechInputButton
+                label="Dictate piece title"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 no-print"
+                onTranscript={(text) => setField('title', text)}
+              />
+            </div>
             <Input
               value={local.composer}
               onChange={(e) => setField('composer', e.target.value)}
@@ -887,13 +916,24 @@ function PieceDetailEditor({
       </div>
       <div className="md:col-span-7 text-sm">
         {viewMode === 'editor' ? (
-          <Textarea
-            rows={6}
-            value={local.program_notes}
-            onChange={(e) => setField('program_notes', e.target.value)}
-            placeholder="Program notes (history, analysis, dedications…)"
-            className="text-sm"
-          />
+          <div className="relative">
+            <Textarea
+              rows={6}
+              value={local.program_notes}
+              onChange={(e) => setField('program_notes', e.target.value)}
+              placeholder="Program notes (history, analysis, dedications…)"
+              className="text-sm pr-10"
+            />
+            <SpeechInputButton
+              label="Dictate program notes (appends)"
+              className="absolute right-1 top-1 h-7 w-7 no-print"
+              onTranscript={(text) => {
+                // Textareas APPEND so multiple dictation passes build up.
+                const sep = local.program_notes && !local.program_notes.endsWith(' ') ? ' ' : '';
+                setField('program_notes', `${local.program_notes}${sep}${text}`);
+              }}
+            />
+          </div>
         ) : (
           <p className="leading-relaxed italic text-muted-foreground">
             "{piece.program_notes || 'No program notes provided.'}"
@@ -933,40 +973,6 @@ function FieldInline({ label, value, onChange, type = 'text' }: {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
-
-function themeClasses(theme: VisualTheme) {
-  switch (theme) {
-    case 'modern-show':
-      return {
-        container: 'bg-zinc-950 text-zinc-100',
-        card: 'bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl p-6',
-        accent: 'text-cyan-400 font-mono tracking-wider text-[10px] uppercase block mb-1',
-      };
-    case 'chamber-minimalist':
-      return {
-        container: 'bg-stone-50 text-stone-900',
-        card: 'bg-white border border-stone-200 rounded-xl shadow-sm p-6',
-        accent: 'text-stone-500 uppercase font-bold text-[10px] tracking-widest block mb-1',
-      };
-    case 'classic-concert':
-    default:
-      return {
-        container: 'bg-slate-50 text-slate-900',
-        card: 'bg-white border-t-4 border-t-amber-700 border-x border-b border-slate-200 rounded-xl shadow-sm p-6',
-        accent: 'text-amber-700 font-semibold tracking-wide uppercase text-[10px] block mb-1',
-      };
-  }
-}
-
-function printFormatStyles(format: PrintFormat) {
-  switch (format) {
-    case 'half-fold': return 'max-w-xl mx-auto';
-    case 'trifold':   return 'max-w-6xl mx-auto';
-    case 'qr-lobby':  return 'max-w-md mx-auto text-center';
-    case 'letter-portrait':
-    default:          return 'max-w-4xl mx-auto';
-  }
-}
 
 function formatDuration(seconds: number) {
   const m = Math.floor(seconds / 60);

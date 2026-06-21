@@ -14,8 +14,9 @@ import { Loader2, ArrowLeft, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   transformProgramToCards,
+  themeStyles,
+  printFormatStyles,
   type ConcertProgram, type ConcertPiece, type RosterSection,
-  type VisualTheme, type PrintFormat,
 } from '@/lib/concertPlanner';
 
 export default function PublicConcertProgramPage() {
@@ -96,7 +97,7 @@ export default function PublicConcertProgramPage() {
   const { program, pieces, roster } = data;
   const cards = transformProgramToCards(program, pieces, roster);
   const visibleCards = cards.filter((c) => c.visible);
-  const theme = themeClasses(program.theme);
+  const theme = themeStyles(program.theme);
   const formatStyles = printFormatStyles(program.print_format);
   const publicUrl = `${window.location.origin}/program/${program.published_slug}`;
 
@@ -114,10 +115,10 @@ export default function PublicConcertProgramPage() {
         {visibleCards.map((card) => {
           if (card.kind === 'hero-cover') {
             return (
-              <div key={card.id} className={`${theme.card} program-card text-center`}>
+              <div key={card.id} className={`${theme.card} program-card text-center`} style={theme.heroBg}>
                 <span className={theme.accent}>Concert Program</span>
-                <h1 className="text-3xl font-bold tracking-tight mt-1">{program.title}</h1>
-                {program.subtitle && <p className="text-base text-muted-foreground mt-1">{program.subtitle}</p>}
+                <h1 className="text-4xl tracking-tight mt-1" style={theme.heroTitle}>{program.title}</h1>
+                {program.subtitle && <p className="text-base italic opacity-80 mt-1">{program.subtitle}</p>}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4 border-t border-border mt-4 text-xs text-muted-foreground">
                   {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}
                   {program.conductor && <div><strong>Conductor:</strong> {program.conductor}</div>}
@@ -233,42 +234,6 @@ export default function PublicConcertProgramPage() {
       </main>
     </div>
   );
-}
-
-// ── Helpers (mirror the editor's helpers) ─────────────────────────
-
-function themeClasses(theme: VisualTheme) {
-  switch (theme) {
-    case 'modern-show':
-      return {
-        container: 'bg-zinc-950 text-zinc-100',
-        card: 'bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl p-6',
-        accent: 'text-cyan-400 font-mono tracking-wider text-[10px] uppercase block mb-1',
-      };
-    case 'chamber-minimalist':
-      return {
-        container: 'bg-stone-50 text-stone-900',
-        card: 'bg-white border border-stone-200 rounded-xl shadow-sm p-6',
-        accent: 'text-stone-500 uppercase font-bold text-[10px] tracking-widest block mb-1',
-      };
-    case 'classic-concert':
-    default:
-      return {
-        container: 'bg-slate-50 text-slate-900',
-        card: 'bg-white border-t-4 border-t-amber-700 border-x border-b border-slate-200 rounded-xl shadow-sm p-6',
-        accent: 'text-amber-700 font-semibold tracking-wide uppercase text-[10px] block mb-1',
-      };
-  }
-}
-
-function printFormatStyles(format: PrintFormat) {
-  switch (format) {
-    case 'half-fold': return 'max-w-xl';
-    case 'trifold':   return 'max-w-6xl';
-    case 'qr-lobby':  return 'max-w-md text-center';
-    case 'letter-portrait':
-    default:          return 'max-w-4xl';
-  }
 }
 
 function formatDuration(seconds: number) {

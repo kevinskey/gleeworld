@@ -5,3 +5,4 @@
 export * from './types';
 export * from './cards';
 export * from './validate';
+export * from './themes';

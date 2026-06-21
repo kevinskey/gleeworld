@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useConcertProgram } from '@/hooks/useConcertPrograms';
+import { SpeechInputButton } from './SpeechInputButton';
 
 interface RosterEditorProps {
   concert: ReturnType<typeof useConcertProgram>;
@@ -128,6 +129,11 @@ function RosterSectionRow({
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
           placeholder="Add member…"
           className="text-[11px] h-7"
+        />
+        <SpeechInputButton
+          label={`Dictate member name for ${sectionName}`}
+          className="h-7 w-7"
+          onTranscript={(text) => onAddMember(text)}
         />
         <Button size="sm" variant="ghost" onClick={submit} disabled={!pending.trim()} className="h-7 px-2">
           <Plus className="w-3 h-3" />

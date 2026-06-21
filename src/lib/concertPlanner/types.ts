@@ -5,7 +5,18 @@
 
 export type RightsStatus = 'public_domain' | 'licensed' | 'unknown';
 
-export type VisualTheme = 'classic-concert' | 'modern-show' | 'chamber-minimalist';
+// 8 hand-curated themes — each a typography + palette + hero backdrop
+// bundle. Look + feel defined in themeClasses() in the editor + public
+// renderer.
+export type VisualTheme =
+  | 'classic-concert'
+  | 'modern-show'
+  | 'chamber-minimalist'
+  | 'cathedral'
+  | 'sunset-recital'
+  | 'jazz-club'
+  | 'spring-pastoral'
+  | 'black-tie';
 
 export type PrintFormat = 'letter-portrait' | 'half-fold' | 'trifold' | 'qr-lobby';
 
