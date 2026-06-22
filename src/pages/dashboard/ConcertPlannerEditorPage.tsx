@@ -658,7 +658,7 @@ function ProgramCardView(p: CardViewProps) {
                   type="text"
                   value={header.title}
                   onChange={(e) => onHeaderChange((h: any) => ({ ...h, title: e.target.value }))}
-                  className="w-full text-center text-3xl bg-transparent border-b border-dashed border-current/30 focus:outline-none focus:border-primary pr-10"
+                  className="w-full text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl break-words bg-transparent border-b border-dashed border-current/30 focus:outline-none focus:border-primary pr-10"
                   style={theme.heroTitle}
                   placeholder="Concert title"
                 />
@@ -681,7 +681,7 @@ function ProgramCardView(p: CardViewProps) {
             </div>
           ) : (
             <div className="space-y-2 mt-2">
-              <h2 className="text-3xl tracking-tight" style={theme.heroTitle}>{program.title || 'Untitled program'}</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight break-words leading-[1.05]" style={theme.heroTitle}>{program.title || 'Untitled program'}</h2>
               {program.subtitle && <p className="text-base italic opacity-80">{program.subtitle}</p>}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-border text-xs text-muted-foreground">
                 {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}

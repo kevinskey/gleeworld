@@ -117,7 +117,7 @@ export default function PublicConcertProgramPage() {
             return (
               <div key={card.id} className={`${theme.card} program-card text-center`} style={theme.heroBg}>
                 <span className={theme.accent}>Concert Program</span>
-                <h1 className="text-4xl tracking-tight mt-1" style={theme.heroTitle}>{program.title}</h1>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight mt-1 break-words leading-[1.05]" style={theme.heroTitle}>{program.title}</h1>
                 {program.subtitle && <p className="text-base italic opacity-80 mt-1">{program.subtitle}</p>}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4 border-t border-border mt-4 text-xs text-muted-foreground">
                   {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}
