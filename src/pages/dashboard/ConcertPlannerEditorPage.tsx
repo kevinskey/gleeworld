@@ -15,7 +15,7 @@ import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, ChevronUp, ChevronDown, Eye, EyeOff, Edit3, Sparkles,
   ShieldCheck, Layers, FileText, Printer, Share2, Loader2, Check, AlertTriangle,
-  XCircle, QrCode, Plus, Trash2, Music,
+  XCircle, QrCode, Plus, Trash2, Music, Palette, MoreVertical, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -65,6 +65,13 @@ export default function ConcertPlannerEditorPage() {
     if (next.has(pieceId)) next.delete(pieceId); else next.add(pieceId);
     return next;
   });
+
+  // Gamma-style single-card focus. Editor shows ONE card at a time and
+  // a thumbnail rail on the left lets the user jump between cards.
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  // Theme picker + validation badge modals.
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [validationOpen, setValidationOpen] = useState(false);
 
   // Snapshot fields the admin types into so we don't fire a DB write per
   // keystroke. Push to DB on blur or 800ms after the last edit.
@@ -116,6 +123,15 @@ export default function ConcertPlannerEditorPage() {
     () => transformProgramToCards(program, pieces, roster),
     [program, pieces, roster],
   );
+
+  // Keep activeCardIndex in range as cards mutate (pieces added/removed,
+  // visibility flipped, etc). Without this, deleting the last piece while
+  // it's the active card would leave activeCardIndex pointing past the end.
+  useEffect(() => {
+    if (activeCardIndex >= cards.length && cards.length > 0) {
+      setActiveCardIndex(cards.length - 1);
+    }
+  }, [cards.length, activeCardIndex]);
   const validation = useMemo(
     () => validateProgram(program, pieces, roster),
     [program, pieces, roster],
@@ -203,7 +219,7 @@ export default function ConcertPlannerEditorPage() {
     : null;
 
   return (
-    <div className={`min-h-screen ${theme.container} transition-colors`}>
+    <div className={`min-h-screen ${theme.container} transition-colors flex flex-col`}>
       {/* Print CSS — one card per page, no editor chrome. */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
@@ -213,17 +229,22 @@ export default function ConcertPlannerEditorPage() {
         }
       ` }} />
 
-      {/* Top bar */}
-      <header className="no-print bg-card border-b border-border sticky top-0 z-30 px-4 py-2.5 flex items-center gap-2 flex-wrap">
-        <Button asChild variant="ghost" size="sm">
+      {/* Gamma-style top bar: back, title, view toggle, Theme, Print, Agent, Publish. */}
+      <header className="no-print bg-card/95 backdrop-blur border-b border-border sticky top-0 z-30 px-3 py-2 flex items-center gap-2 flex-wrap">
+        <Button asChild variant="ghost" size="sm" className="px-2">
           <Link to="/dashboard/concert-planner">
-            <ArrowLeft className="w-4 h-4 mr-1" /> All programs
+            <ArrowLeft className="w-4 h-4" />
           </Link>
         </Button>
-        <div className="text-sm font-semibold truncate flex-1 min-w-0">
-          {header.title || 'Untitled program'}
-        </div>
-        <div className="bg-muted rounded-lg p-1 flex">
+        <input
+          type="text"
+          value={header.title}
+          onChange={(e) => setHeader((h) => ({ ...h, title: e.target.value }))}
+          className="text-sm font-semibold bg-transparent border border-transparent hover:border-border focus:border-primary focus:outline-none px-2 py-1 rounded min-w-0 flex-1 max-w-sm"
+          placeholder="Untitled program"
+        />
+        <div className="flex-1" />
+        <div className="bg-muted rounded-lg p-0.5 flex no-print">
           <button
             onClick={() => setViewMode('editor')}
             className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${viewMode === 'editor' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
@@ -233,9 +254,22 @@ export default function ConcertPlannerEditorPage() {
             className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${viewMode === 'audience' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
           ><Eye className="w-3 h-3" /> Audience</button>
         </div>
-        <Button variant="outline" size="sm" onClick={() => window.print()}>
+        <Button variant="ghost" size="sm" onClick={() => setThemeOpen(true)}>
+          <Palette className="w-4 h-4 mr-1" /> Theme
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => window.print()}>
           <Printer className="w-4 h-4 mr-1" /> Print
         </Button>
+        {cards[activeCardIndex] && (cards[activeCardIndex].kind === 'piece-detail' || cards[activeCardIndex].kind === 'hero-cover') && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setRegenCard(cards[activeCardIndex])}
+            className="border-amber-300 text-amber-700 hover:bg-amber-50"
+          >
+            <Sparkles className="w-4 h-4 mr-1" /> Agent
+          </Button>
+        )}
         {program.published_at ? (
           <Button variant="outline" size="sm" onClick={handleUnpublish}>
             Unpublish
@@ -253,166 +287,109 @@ export default function ConcertPlannerEditorPage() {
         )}
       </header>
 
-      <main className="max-w-[1800px] mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Sidebar — editor only. Narrower (3 of 12 cols on lg+) so the
-            card stack has more horizontal room for inline editing. */}
-        {viewMode === 'editor' && (
-          <aside className="no-print lg:col-span-3 space-y-4">
-            {/* Always-visible "Add piece" — the one buried on the timeline
-                card scrolls out of view once a few pieces exist, so the
-                most common action gets a dedicated sidebar button too. */}
-            <section className="rounded-xl border border-border bg-card p-4 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className="text-xs uppercase tracking-wider font-semibold">Repertoire</div>
-                <div className="text-[11px] text-muted-foreground">{pieces.length} piece{pieces.length === 1 ? '' : 's'} on the program</div>
-              </div>
-              <Button size="sm" onClick={() => addPiece.mutate({})}>
-                <Plus className="w-3.5 h-3.5 mr-1" /> Add piece
-              </Button>
-            </section>
-
-            {/* Approval gate */}
-            <section className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 text-amber-700 mb-2">
-                <ShieldCheck className="w-4 h-4" />
-                <h3 className="font-semibold text-xs uppercase tracking-wide">Publish approval</h3>
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Publishing posts this program to a public URL. Confirm that the rights, credits, and rosters are accurate.
-              </p>
-              <label className="flex items-start gap-2 cursor-pointer text-xs">
-                <input
-                  type="checkbox"
-                  checked={hasApproval}
-                  onChange={(e) => setHasApproval(e.target.checked)}
-                  className="mt-0.5"
+      <main className="flex-1 flex min-h-[calc(100vh-3.25rem)]">
+        {/* AUDIENCE: scroll the full card stack the way the printed
+            program reads. EDITOR: single-card focus with a thumbnail
+            rail on the left. */}
+        {viewMode === 'audience' ? (
+          <section className={`${formatStyles} mx-auto space-y-6 w-full p-6`}>
+            {cards
+              .filter((c) => c.visible)
+              .map((card, idx, arr) => (
+                <ProgramCardView
+                  key={card.id}
+                  card={card}
+                  index={idx}
+                  last={idx === arr.length - 1}
+                  viewMode={viewMode}
+                  theme={theme}
+                  program={program}
+                  pieces={pieces}
+                  roster={roster}
+                  header={header}
+                  onHeaderChange={setHeader}
+                  onAddPiece={() => addPiece.mutate({})}
+                  onUpdatePiece={(pieceId, patch) => updatePiece.mutate({ pieceId, patch })}
+                  onDeletePiece={(pieceId) => deletePiece.mutate(pieceId)}
+                  onReorderPieces={(ids) => reorderPieces.mutate(ids)}
+                  onMoveCard={(dir) => moveCard(card.id, dir)}
+                  onToggleVisible={() => toggleVisible(card.id)}
+                  onOpenRegen={() => setRegenCard(card)}
+                  pieceExpanded
+                  onTogglePieceExpanded={() => {}}
+                  publicUrl={publicUrl}
                 />
-                <span>I've reviewed every piece's composer, arranger, and rights status, and the roster matches who's actually performing.</span>
-              </label>
-            </section>
+              ))}
+          </section>
+        ) : (
+          <>
+            <CardNavigator
+              cards={cards}
+              activeIndex={activeCardIndex}
+              onSelect={setActiveCardIndex}
+              pieceCount={pieces.length}
+              onAddPiece={() => addPiece.mutate({})}
+              theme={theme}
+            />
+            <section className="flex-1 overflow-auto px-4 py-6 lg:px-8 lg:py-8">
+              <div className="max-w-5xl mx-auto">
+                {cards[activeCardIndex] ? (
+                  <ProgramCardView
+                    key={cards[activeCardIndex].id}
+                    card={cards[activeCardIndex]}
+                    index={activeCardIndex}
+                    last={activeCardIndex === cards.length - 1}
+                    viewMode="editor"
+                    theme={theme}
+                    program={program}
+                    pieces={pieces}
+                    roster={roster}
+                    header={header}
+                    onHeaderChange={setHeader}
+                    onAddPiece={() => addPiece.mutate({})}
+                    onUpdatePiece={(pieceId, patch) => updatePiece.mutate({ pieceId, patch })}
+                    onDeletePiece={(pieceId) => deletePiece.mutate(pieceId)}
+                    onReorderPieces={(ids) => reorderPieces.mutate(ids)}
+                    onMoveCard={(dir) => moveCard(cards[activeCardIndex].id, dir)}
+                    onToggleVisible={() => toggleVisible(cards[activeCardIndex].id)}
+                    onOpenRegen={() => setRegenCard(cards[activeCardIndex])}
+                    pieceExpanded
+                    onTogglePieceExpanded={() => {}}
+                    publicUrl={publicUrl}
+                  />
+                ) : null}
 
-            {/* Theme + format */}
-            <section className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <h3 className="font-semibold text-xs uppercase tracking-wide flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5" /> Style
-              </h3>
-              <div>
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Theme</Label>
-                <select
-                  value={program.theme}
-                  onChange={(e) => updateProgram.mutate({ theme: e.target.value as VisualTheme })}
-                  className="w-full mt-1 bg-background border border-border rounded px-2 py-1.5 text-xs"
-                >
-                  {THEME_OPTIONS.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {THEME_OPTIONS.find((t) => t.value === program.theme)?.sub}
-                </p>
-              </div>
-              <div>
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Print format</Label>
-                <select
-                  value={program.print_format}
-                  onChange={(e) => updateProgram.mutate({ print_format: e.target.value as PrintFormat })}
-                  className="w-full mt-1 bg-background border border-border rounded px-2 py-1.5 text-xs"
-                >
-                  <option value="letter-portrait">Letter (portrait)</option>
-                  <option value="half-fold">Half-fold booklet</option>
-                  <option value="trifold">Trifold brochure</option>
-                  <option value="qr-lobby">QR lobby flyer</option>
-                </select>
-              </div>
-              <div>
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Target length (minutes)</Label>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  value={header.target_length_minutes}
-                  onChange={(e) => setHeader((h) => ({ ...h, target_length_minutes: e.target.value }))}
-                  className="mt-1 text-xs"
-                  placeholder="e.g. 45"
-                />
-              </div>
-            </section>
-
-            {/* Validation */}
-            <section className="rounded-xl border border-border bg-card p-4">
-              <h3 className="font-semibold text-xs uppercase tracking-wide flex items-center gap-1.5 mb-3">
-                <FileText className="w-3.5 h-3.5" /> Validation
-              </h3>
-              <div className="space-y-1.5 max-h-[320px] overflow-y-auto pr-1">
-                {validation.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`p-2 rounded border text-[11px] flex items-start gap-2 ${
-                      item.level === 'required' ? 'bg-rose-50 border-rose-100 text-rose-900'
-                      : item.level === 'warning' ? 'bg-amber-50 border-amber-100 text-amber-900'
-                      : 'bg-emerald-50 border-emerald-100 text-emerald-900'
-                    }`}
+                {/* Page nav at bottom of single-card view */}
+                <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground no-print">
+                  <button
+                    onClick={() => setActiveCardIndex(Math.max(0, activeCardIndex - 1))}
+                    disabled={activeCardIndex === 0}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded hover:bg-muted disabled:opacity-30"
                   >
-                    {item.level === 'required' && <XCircle className="w-3.5 h-3.5 mt-0.5 text-rose-600 shrink-0" />}
-                    {item.level === 'warning' && <AlertTriangle className="w-3.5 h-3.5 mt-0.5 text-amber-600 shrink-0" />}
-                    {item.level === 'ready' && <Check className="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0" />}
-                    <div>
-                      <div className="text-[9px] uppercase font-semibold opacity-70">{item.category} · {item.level}</div>
-                      <div className="mt-0.5">{item.message}</div>
-                    </div>
-                  </div>
-                ))}
+                    <ChevronUp className="w-3.5 h-3.5 -rotate-90" /> Previous
+                  </button>
+                  <span className="font-mono tabular-nums">{activeCardIndex + 1} / {cards.length}</span>
+                  <button
+                    onClick={() => setActiveCardIndex(Math.min(cards.length - 1, activeCardIndex + 1))}
+                    disabled={activeCardIndex >= cards.length - 1}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded hover:bg-muted disabled:opacity-30"
+                  >
+                    Next <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+                  </button>
+                </div>
               </div>
             </section>
 
-            {/* Roster */}
-            <RosterEditor concert={concert} />
-          </aside>
+            {/* Floating validation badge — bottom-left of the editor canvas. */}
+            <ValidationBadge
+              validation={validation}
+              open={validationOpen}
+              onToggle={() => setValidationOpen((o) => !o)}
+              hasApproval={hasApproval}
+              onApprovalChange={setHasApproval}
+            />
+          </>
         )}
-
-        {/* Card stack */}
-        {/* In editor mode we ignore the print-format max-width so inputs
-            can use the full column width — the formatStyles constraint
-            (e.g. letter = max-w-4xl) is for showing how it'll print and
-            kicks back in for audience view. */}
-        <section className={`${viewMode === 'editor' ? 'lg:col-span-9' : `lg:col-span-12 ${formatStyles}`} space-y-6 w-full`}>
-          {cards
-            .filter((c) => viewMode === 'editor' || c.visible)
-            .map((card, idx, arr) => (
-              <ProgramCardView
-                key={card.id}
-                card={card}
-                index={idx}
-                last={idx === arr.length - 1}
-                viewMode={viewMode}
-                theme={theme}
-                program={program}
-                pieces={pieces}
-                roster={roster}
-                header={header}
-                onHeaderChange={setHeader}
-                onAddPiece={() => addPiece.mutate({})}
-                onUpdatePiece={(pieceId, patch) => updatePiece.mutate({ pieceId, patch })}
-                onDeletePiece={(pieceId) => deletePiece.mutate(pieceId)}
-                onReorderPieces={(ids) => reorderPieces.mutate(ids)}
-                onMoveCard={(dir) => moveCard(card.id, dir)}
-                onToggleVisible={() => toggleVisible(card.id)}
-                onOpenRegen={() => setRegenCard(card)}
-                pieceExpanded={card.pieceId ? expandedPieces.has(card.pieceId) : false}
-                onTogglePieceExpanded={() => card.pieceId && toggleExpanded(card.pieceId)}
-                publicUrl={publicUrl}
-              />
-            ))}
-          {/* End-of-stack Add piece — the same action that's on the
-              timeline card + sidebar, but landed exactly where the eye
-              ends up after editing the last piece-detail card. */}
-          {viewMode === 'editor' && (
-            <div className="no-print flex justify-center pt-2">
-              <Button variant="outline" size="sm" onClick={() => addPiece.mutate({})}>
-                <Plus className="w-4 h-4 mr-1" /> Add another piece
-              </Button>
-            </div>
-          )}
-        </section>
       </main>
 
       {/* Regen — AI rewrite of a single card. Currently supports
@@ -432,6 +409,68 @@ export default function ConcertPlannerEditorPage() {
           setRegenCard(null);
         }}
       />
+
+      {/* Theme picker modal — opened from the top bar's Theme button.
+          Replaces the old sidebar Style section. Also bundles the
+          print-format + roster shortcuts so settings live in one place. */}
+      <Dialog open={themeOpen} onOpenChange={setThemeOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Palette className="w-4 h-4" /> Theme &amp; layout
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 pt-2">
+            <div>
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 block">Theme</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {THEME_OPTIONS.map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => updateProgram.mutate({ theme: t.value })}
+                    className={`text-left p-3 rounded-lg border transition-all ${program.theme === t.value ? 'border-primary bg-primary/5 ring-2 ring-primary/30' : 'border-border hover:border-primary/40'}`}
+                  >
+                    <div className="text-sm font-semibold">{t.label}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{t.sub}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Print format</Label>
+                <select
+                  value={program.print_format}
+                  onChange={(e) => updateProgram.mutate({ print_format: e.target.value as PrintFormat })}
+                  className="w-full mt-1 bg-background border border-border rounded px-2 py-1.5 text-sm"
+                >
+                  <option value="letter-portrait">Letter (portrait)</option>
+                  <option value="half-fold">Half-fold booklet</option>
+                  <option value="trifold">Trifold brochure</option>
+                  <option value="qr-lobby">QR lobby flyer</option>
+                </select>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Target length (minutes)</Label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  value={header.target_length_minutes}
+                  onChange={(e) => setHeader((h) => ({ ...h, target_length_minutes: e.target.value }))}
+                  className="mt-1 text-sm"
+                  placeholder="e.g. 45"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 block">Ensemble roster</Label>
+              <RosterEditor concert={concert} />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Publish success modal */}
       <Dialog open={publishOpen} onOpenChange={setPublishOpen}>
@@ -716,6 +755,161 @@ function ProgramCardView(p: CardViewProps) {
         </div>
       )}
     </div>
+  );
+}
+
+// Gamma-style thumbnail rail. Click any card to jump straight to it
+// in the main canvas. Numbered, with a short label per card kind so
+// the user can tell which is which without rendering full previews.
+function CardNavigator({
+  cards, activeIndex, onSelect, pieceCount, onAddPiece, theme,
+}: {
+  cards: ProgramCard[];
+  activeIndex: number;
+  onSelect: (i: number) => void;
+  pieceCount: number;
+  onAddPiece: () => void;
+  theme: ReturnType<typeof themeStyles>;
+}) {
+  return (
+    <aside className="no-print w-52 shrink-0 border-r border-border bg-muted/30 flex flex-col">
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+          {cards.length} card{cards.length === 1 ? '' : 's'}
+        </span>
+        <button
+          onClick={onAddPiece}
+          className="p-1 rounded hover:bg-card text-muted-foreground hover:text-foreground"
+          aria-label="Add piece"
+          title="Add piece"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+        {cards.map((c, i) => {
+          const isActive = i === activeIndex;
+          const label = cardLabel(c);
+          return (
+            <button
+              key={c.id}
+              onClick={() => onSelect(i)}
+              className={`w-full text-left rounded-md border transition-all ${
+                isActive
+                  ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm'
+                  : 'border-transparent hover:border-border hover:bg-card/60'
+              } ${!c.visible ? 'opacity-50' : ''}`}
+            >
+              <div className="flex items-start gap-2 p-2">
+                <span className="text-[10px] font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
+                  <div className="text-xs font-semibold leading-tight truncate">{label.title}</div>
+                </div>
+                {!c.visible && <EyeOff className="w-3 h-3 text-muted-foreground mt-0.5 shrink-0" />}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      <div className="p-2 border-t border-border">
+        <Button size="sm" variant="outline" onClick={onAddPiece} className="w-full">
+          <Plus className="w-3.5 h-3.5 mr-1" /> Add piece
+        </Button>
+        <div className="mt-1.5 text-[10px] text-center text-muted-foreground">
+          {pieceCount} piece{pieceCount === 1 ? '' : 's'} on the program
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function cardLabel(c: ProgramCard): { kind: string; title: string } {
+  switch (c.kind) {
+    case 'hero-cover':       return { kind: 'Cover', title: c.title };
+    case 'timeline-program': return { kind: 'Program', title: 'Order of pieces' };
+    case 'piece-detail':     return { kind: 'Piece', title: c.title };
+    case 'grid-roster':      return { kind: 'Ensemble', title: 'Performers' };
+    case 'rights-footer':    return { kind: 'Rights', title: 'Credits' };
+    case 'qr-access':        return { kind: 'Share', title: 'Public link' };
+    default:                 return { kind: 'Card', title: c.title };
+  }
+}
+
+// Validation badge — floating bottom-left button that summarises issues
+// and expands into a popover with the full validation list + approval
+// checkbox. Stays out of the way until the user wants to publish.
+function ValidationBadge({
+  validation, open, onToggle, hasApproval, onApprovalChange,
+}: {
+  validation: { items: { id: string; category: string; level: 'ready' | 'warning' | 'required'; message: string }[]; hasRequiredFixes: boolean; hasWarnings: boolean };
+  open: boolean;
+  onToggle: () => void;
+  hasApproval: boolean;
+  onApprovalChange: (v: boolean) => void;
+}) {
+  const requiredCount = validation.items.filter((i) => i.level === 'required').length;
+  const warnCount = validation.items.filter((i) => i.level === 'warning').length;
+  const badgeColor = requiredCount > 0
+    ? 'bg-rose-600 text-white'
+    : warnCount > 0 ? 'bg-amber-500 text-white'
+    : 'bg-emerald-600 text-white';
+  const badgeLabel = requiredCount > 0
+    ? `${requiredCount} required`
+    : warnCount > 0 ? `${warnCount} warning${warnCount === 1 ? '' : 's'}`
+    : 'Ready to publish';
+
+  return (
+    <>
+      <button
+        onClick={onToggle}
+        className={`no-print fixed bottom-4 left-4 z-20 ${badgeColor} rounded-full pl-2.5 pr-3 py-1.5 text-xs font-semibold shadow-lg flex items-center gap-1.5 hover:scale-105 transition-transform`}
+      >
+        {requiredCount > 0 ? <XCircle className="w-3.5 h-3.5" /> : warnCount > 0 ? <AlertTriangle className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+        {badgeLabel}
+      </button>
+      {open && (
+        <div className="no-print fixed bottom-16 left-4 z-30 w-96 max-h-[60vh] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+            <h3 className="font-semibold text-xs uppercase tracking-wide flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5" /> Validation
+            </h3>
+            <button onClick={onToggle} className="p-1 hover:bg-muted rounded">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+            {validation.items.map((item) => (
+              <div
+                key={item.id}
+                className={`p-2 rounded border text-[11px] flex items-start gap-2 ${
+                  item.level === 'required' ? 'bg-rose-50 border-rose-100 text-rose-900'
+                  : item.level === 'warning' ? 'bg-amber-50 border-amber-100 text-amber-900'
+                  : 'bg-emerald-50 border-emerald-100 text-emerald-900'
+                }`}
+              >
+                {item.level === 'required' && <XCircle className="w-3.5 h-3.5 mt-0.5 text-rose-600 shrink-0" />}
+                {item.level === 'warning' && <AlertTriangle className="w-3.5 h-3.5 mt-0.5 text-amber-600 shrink-0" />}
+                {item.level === 'ready' && <Check className="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0" />}
+                <div>
+                  <div className="text-[9px] uppercase font-semibold opacity-70">{item.category} · {item.level}</div>
+                  <div className="mt-0.5">{item.message}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <label className="px-3 py-2 border-t border-border flex items-start gap-2 cursor-pointer text-xs bg-muted/30">
+            <input
+              type="checkbox"
+              checked={hasApproval}
+              onChange={(e) => onApprovalChange(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>I've reviewed every piece's composer, arranger, rights status, and the roster.</span>
+          </label>
+        </div>
+      )}
+    </>
   );
 }
 
