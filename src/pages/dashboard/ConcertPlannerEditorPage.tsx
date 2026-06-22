@@ -15,7 +15,7 @@ import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, ChevronUp, ChevronDown, Eye, EyeOff, Edit3, Sparkles,
   ShieldCheck, Layers, FileText, Printer, Share2, Loader2, Check, AlertTriangle,
-  XCircle, QrCode, Plus, Trash2, Music, Palette, MoreVertical, X,
+  XCircle, QrCode, Plus, Trash2, Music, Palette, MoreVertical, X, GripVertical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -959,29 +959,22 @@ function SortablePieceRow({
   return (
     <div
       ref={setNodeRef}
-      role="button"
-      tabIndex={0}
+      // dnd-kit listeners + a11y attrs go on the WHOLE row so any pointer
+      // start anywhere on the card begins the drag tracking. Activation
+      // constraint (distance 6 px in the parent sensor config) means a
+      // tap that doesn't move = onClick fires → onSelect. A drag with
+      // pointer movement reorders.
+      {...attributes}
+      {...listeners}
       onClick={onSelect}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`group w-full text-left rounded-md border transition-all touch-none ${
+      className={`group w-full text-left rounded-md border transition-all touch-none select-none ${
         isActive ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm' : 'border-transparent hover:border-border hover:bg-card/60'
-      } ${!visible ? 'opacity-50' : ''} ${isDragging ? 'opacity-50 shadow-lg z-10 relative bg-card' : ''} cursor-pointer`}
+      } ${!visible ? 'opacity-50' : ''} ${isDragging ? 'opacity-60 shadow-lg z-10 relative bg-card cursor-grabbing' : 'cursor-grab'}`}
     >
-      <div className="flex items-start gap-2 p-2.5">
-        {/* Drag handle — pointer/touch listeners attach only here so
-            tapping the body still selects the card. */}
-        <button
-          type="button"
-          {...attributes}
-          {...listeners}
-          onClick={(e) => e.stopPropagation()}
-          className="p-1 -m-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-grab active:cursor-grabbing shrink-0 touch-none"
-          aria-label="Drag to reorder piece"
-          title="Drag to reorder"
-        >
-          <MoreVertical className="w-3.5 h-3.5" />
-        </button>
+      <div className="flex items-start gap-2.5 p-2.5">
+        <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-muted-foreground mt-0.5 shrink-0" />
         <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
         <div className="min-w-0 flex-1">
           <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
@@ -1031,6 +1024,11 @@ function VisibilityToggle({ visible, onToggle }: { visible: boolean; onToggle: (
   return (
     <button
       type="button"
+      // Stop pointerdown bubbling so the row-level dnd-kit listeners
+      // don't start tracking a drag when the user is aiming at this
+      // toggle. Without this the eye click sometimes registered as a
+      // tiny drag, suppressing the toggle.
+      onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => { e.stopPropagation(); onToggle(); }}
       className={`p-1 -m-1 rounded hover:bg-muted shrink-0 ${visible ? 'opacity-0 group-hover:opacity-60 hover:!opacity-100' : 'opacity-80 hover:opacity-100'}`}
       aria-label={visible ? 'Hide from audience' : 'Show in audience'}
