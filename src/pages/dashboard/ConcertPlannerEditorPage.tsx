@@ -416,7 +416,11 @@ export default function ConcertPlannerEditorPage() {
             )}
 
             <section className="flex-1 min-w-0 overflow-auto px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-8">
-              <div className="max-w-5xl mx-auto">
+              {/* Drop the lg max-w cap. The rail + canvas already split
+                  the viewport; squeezing the card further left a wide
+                  empty band on md+iPad-Pro screens. The card just
+                  fills whatever the canvas gives it. */}
+              <div className="w-full">
                 {cards[activeCardIndex] ? (
                   <ProgramCardView
                     key={cards[activeCardIndex].id}
@@ -662,14 +666,14 @@ function ProgramCardView(p: CardViewProps) {
         <div className="text-center py-4">
           <span className={theme.accent}>Concert Program</span>
           {viewMode === 'editor' ? (
-            <div className="space-y-3 max-w-xl mx-auto mt-2">
+            <div className="space-y-3 max-w-3xl mx-auto mt-2">
               <div className="relative">
                 <input
                   type="text"
                   value={header.title}
                   onChange={(e) => onHeaderChange((h: any) => ({ ...h, title: e.target.value }))}
-                  className="w-full text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl break-words bg-transparent border-b border-dashed border-current/30 focus:outline-none focus:border-primary pr-10"
-                  style={theme.heroTitle}
+                  className="w-full text-center break-words bg-transparent border-b border-dashed border-current/30 focus:outline-none focus:border-primary pr-10"
+                  style={{ ...theme.heroTitle, fontSize: 'clamp(1.5rem, 4.5vw, 3rem)', lineHeight: 1.05 }}
                   placeholder="Concert title"
                 />
                 <SpeechInputButton
@@ -691,7 +695,7 @@ function ProgramCardView(p: CardViewProps) {
             </div>
           ) : (
             <div className="space-y-2 mt-2">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight break-words leading-[1.05]" style={theme.heroTitle}>{program.title || 'Untitled program'}</h2>
+              <h2 className="tracking-tight break-words" style={{ ...theme.heroTitle, fontSize: 'clamp(1.75rem, 5vw, 3.5rem)', lineHeight: 1.05 }}>{program.title || 'Untitled program'}</h2>
               {program.subtitle && <p className="text-base italic opacity-80">{program.subtitle}</p>}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-current/20 text-sm opacity-80">
                 {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}

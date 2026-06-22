@@ -117,7 +117,7 @@ export default function PublicConcertProgramPage() {
             return (
               <div key={card.id} className={`${theme.card} program-card text-center`} style={theme.heroBg}>
                 <span className={theme.accent}>Concert Program</span>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight mt-1 break-words leading-[1.05]" style={theme.heroTitle}>{program.title}</h1>
+                <h1 className="tracking-tight mt-1 break-words" style={{ ...theme.heroTitle, fontSize: 'clamp(2rem, 6vw, 4.5rem)', lineHeight: 1.05 }}>{program.title}</h1>
                 {program.subtitle && <p className="text-base italic opacity-80 mt-1">{program.subtitle}</p>}
                 {/* Inherit the hero's theme color via opacity-80 so the
                     metadata reads cleanly on both light and dark hero
