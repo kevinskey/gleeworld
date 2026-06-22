@@ -306,7 +306,7 @@ export const PartTracksModule: React.FC = () => {
               </SelectContent>
             </Select>
             {pieces.length === 0 && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Add a piece in Music Library first.
               </p>
             )}

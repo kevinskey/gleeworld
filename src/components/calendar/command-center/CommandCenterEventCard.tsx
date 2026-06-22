@@ -124,6 +124,12 @@ export const CommandCenterEventCard = ({
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
+      // Tell Google first — once the row is gone we can't read its
+      // google_event_id anymore. push-event reads it via service role so
+      // this happens before the local DELETE.
+      const { pushEventToGoogle } = await import('@/hooks/useGoogleConnection');
+      await pushEventToGoogle(event.id, 'delete');
+
       const { error } = await supabase
         .from('gw_events')
         .delete()
@@ -156,15 +162,15 @@ export const CommandCenterEventCard = ({
   const textColor = getContrastTextColor(categoryColor);
 
   const cardContent = compact ? (
-    // Compact view for monthly grid
+    // Compact view for monthly grid — pastel chip
     <div
       onClick={handleCardClick}
-      className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:opacity-90 transition-all shadow-sm"
-      style={{ backgroundColor: categoryColor, color: textColor }}
+      className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:brightness-95 transition-all"
+      style={{ backgroundColor: `${categoryColor}1F`, borderLeft: `3px solid ${categoryColor}` }}
     >
-      <Icon className="h-3 w-3 flex-shrink-0" />
-      <span className="text-xs font-medium truncate flex-1">{event.title}</span>
-      <span className="text-[10px] opacity-80 flex-shrink-0">{startTime}</span>
+      <Icon className="h-3 w-3 flex-shrink-0" style={{ color: categoryColor }} />
+      <span className="text-xs font-medium truncate flex-1 text-foreground">{event.title}</span>
+      <span className="text-xs flex-shrink-0 font-semibold" style={{ color: categoryColor }}>{startTime}</span>
     </div>
   ) : (
     // Full view for agenda/run sheet
@@ -179,15 +185,15 @@ export const CommandCenterEventCard = ({
           className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
           style={{ backgroundColor: categoryColor }}
         >
-          <Icon className="h-4 w-4 text-white" />
+          <Icon className="h-4 w-4 text-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-[#003366] transition-colors">
+          <h4 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-foreground transition-colors">
             {event.title}
           </h4>
           {event.gw_calendars?.name && (
             <span 
-              className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-white"
+              className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium text-foreground"
               style={{ backgroundColor: categoryColor }}
             >
               {event.gw_calendars.name}
@@ -199,7 +205,7 @@ export const CommandCenterEventCard = ({
       {/* Details strip */}
       <div className="px-3 pb-3 space-y-1.5">
         <div className="flex items-center gap-2 text-slate-600">
-          <Clock className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+          <Clock className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
           <span className="text-xs font-medium">
             {startTime}
             {event.end_date && ` - ${format(new Date(event.end_date), 'h:mm a')}`}
@@ -207,7 +213,7 @@ export const CommandCenterEventCard = ({
         </div>
         {event.location && (
           <div className="flex items-center gap-2 text-slate-600">
-            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
             <span className="text-xs truncate">{event.location}</span>
           </div>
         )}

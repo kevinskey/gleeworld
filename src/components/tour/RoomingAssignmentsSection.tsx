@@ -270,10 +270,10 @@ export const RoomingAssignmentsSection = () => {
                 <div className="flex items-center gap-3 text-xs">
                   {hasRooms ? (
                     <>
-                      <Badge variant={isFull ? "default" : "secondary"} className="text-[11px] gap-1">
+                      <Badge variant={isFull ? "default" : "secondary"} className="text-sm gap-1">
                         <Bed className="h-3 w-3" /> {stats.roomCount} rooms
                       </Badge>
-                      <Badge variant="outline" className="text-[11px] gap-1">
+                      <Badge variant="outline" className="text-sm gap-1">
                         <Users className="h-3 w-3" /> {stats.occupants}/{stats.capacity}
                       </Badge>
                       {isFull && (
@@ -281,7 +281,7 @@ export const RoomingAssignmentsSection = () => {
                       )}
                     </>
                   ) : (
-                    <Badge variant="outline" className="text-[11px] gap-1 text-destructive border-destructive/30">
+                    <Badge variant="outline" className="text-sm gap-1 text-destructive border-destructive/30">
                       <AlertCircle className="h-3 w-3" /> No rooms yet
                     </Badge>
                   )}
@@ -376,7 +376,7 @@ export const RoomingAssignmentsSection = () => {
                       <div className="flex items-center gap-2">
                         <Bed className="h-4 w-4 text-primary" />
                         <span className="font-semibold text-sm text-foreground">Room {room.room_number}</span>
-                        <Badge variant="outline" className="text-[10px] capitalize h-5">{room.room_type}</Badge>
+                        <Badge variant="outline" className="text-xs capitalize h-5">{room.room_type}</Badge>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className={`text-xs font-medium ${isFull ? 'text-primary' : 'text-muted-foreground'}`}>
@@ -397,7 +397,7 @@ export const RoomingAssignmentsSection = () => {
                         <div key={occ.id} className="flex items-center gap-2 p-1.5 rounded-lg bg-muted/30">
                           <Avatar className="h-7 w-7">
                             <AvatarImage src={occ.profile?.avatar_url || undefined} />
-                            <AvatarFallback className="text-[10px] bg-primary/10">
+                            <AvatarFallback className="text-xs bg-primary/10">
                               {(occ.profile?.full_name || "??").split(" ").map((n) => n[0]).join("")}
                             </AvatarFallback>
                           </Avatar>
@@ -405,7 +405,7 @@ export const RoomingAssignmentsSection = () => {
                             <p className="text-sm font-medium truncate text-foreground">
                               {occ.profile?.full_name || "Unknown"}
                             </p>
-                            <p className="text-[11px] text-muted-foreground">{occ.profile?.voice_part || "—"}</p>
+                            <p className="text-sm text-muted-foreground">{occ.profile?.voice_part || "—"}</p>
                           </div>
                           <Button
                             variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
@@ -427,7 +427,7 @@ export const RoomingAssignmentsSection = () => {
                       ))}
 
                       {room.notes && (
-                        <p className="text-[11px] text-muted-foreground pt-1 border-t border-dashed">{room.notes}</p>
+                        <p className="text-sm text-muted-foreground pt-1 border-t border-dashed">{room.notes}</p>
                       )}
                     </CardContent>
                   </Card>
@@ -444,7 +444,7 @@ export const RoomingAssignmentsSection = () => {
               <div className="px-3 py-2 border-b bg-muted/50">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-foreground">Unassigned Members</span>
-                  <Badge variant="secondary" className="text-[11px]">{unassignedMembers.length}</Badge>
+                  <Badge variant="secondary" className="text-sm">{unassignedMembers.length}</Badge>
                 </div>
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -467,13 +467,13 @@ export const RoomingAssignmentsSection = () => {
                       <div key={m.user_id} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-muted/50 group">
                         <Avatar className="h-7 w-7">
                           <AvatarImage src={m.avatar_url || undefined} />
-                          <AvatarFallback className="text-[10px] bg-primary/10">
+                          <AvatarFallback className="text-xs bg-primary/10">
                             {(m.full_name || "??").split(" ").map((n) => n[0]).join("")}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate text-foreground">{m.full_name || "Unknown"}</p>
-                          <p className="text-[11px] text-muted-foreground">{m.voice_part || "—"}</p>
+                          <p className="text-sm text-muted-foreground">{m.voice_part || "—"}</p>
                         </div>
                         {/* Quick-assign dropdown */}
                         {availableRooms.length > 0 && (

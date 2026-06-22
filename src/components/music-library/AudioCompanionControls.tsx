@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { searchAppleMusic, type AppleMusicSongHit, type AppleMusicAlbumHit } from '@/lib/musicKit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -16,7 +17,9 @@ import {
   MoreVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
+import { useAudioCompanion, PLAYBACK_RATES } from '@/contexts/AudioCompanionContext';
+import { useSheetMusicTracks, type AudioTrack } from '@/hooks/useSheetMusicTracks';
+import { Check, ChevronDown } from 'lucide-react';
 import { forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 import {
   Popover,
@@ -33,9 +36,13 @@ import {
 interface AudioCompanionControlsProps {
   onClose?: () => void;
   className?: string;
+  /** When provided, the pill shows a track-switcher icon listing every
+   *  audio track bound to this score so a performer can swap between
+   *  Rehearsal / Accompaniment / Reference without leaving the viewer. */
+  musicId?: string;
 }
 
-export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ onClose, className }) => {
+export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ onClose, className, musicId }) => {
   const {
     audioSource,
     isPlaying,
@@ -48,6 +55,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
     audioFileName,
     loadYouTube,
     loadFile,
+    loadUrl,
     togglePlayPause,
     seek,
     setVolume,
@@ -56,7 +64,36 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
     stopPlayback,
     hidePlayer,
     closeYouTube,
+    playbackRate,
+    setPlaybackRate,
+    appleMusicNeedsAuth,
+    appleMusicAuthError,
+    authorizeAppleMusic,
+    appleMusicArtworkUrl,
+    loadAppleMusic,
   } = useAudioCompanion();
+
+  // Tracks bound to this score. Only render the switcher when there are
+  // 2+ so single-binding scores keep the simple icon.
+  const { tracks } = useSheetMusicTracks(musicId);
+
+  // Dispatch a track. Keeps the audio companion context as the only place
+  // that actually mutates playback state.
+  const playTrack = async (t: AudioTrack) => {
+    forceUnlockAudio();
+    if (t.kind === 'apple_music' && t.apple_music_id) {
+      await loadAppleMusic({
+        id: t.apple_music_id,
+        storefront: t.apple_music_storefront ?? 'us',
+        title: t.apple_music_title ?? t.label ?? 'Apple Music',
+        artworkUrl: t.apple_music_artwork_url ?? null,
+      });
+    } else if (t.audio_url) {
+      const url = t.audio_url;
+      if (url.includes('youtube.com') || url.includes('youtu.be')) loadYouTube(url);
+      else loadUrl(url, t.audio_title || t.label || 'Audio');
+    }
+  };
 
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [showSourcePicker, setShowSourcePicker] = useState(false);
@@ -130,6 +167,10 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
           >
           {audioSource === 'youtube' ? (
               <Youtube className="h-3 w-3 text-red-500" />
+            ) : audioSource === 'apple_music' ? (
+              appleMusicArtworkUrl
+                ? <img src={appleMusicArtworkUrl} alt="" className="h-4 w-4 rounded" />
+                : <Music className="h-3 w-3 text-pink-500" />
             ) : audioSource === 'file' ? (
               <Music className="h-3 w-3 text-foreground" />
             ) : (
@@ -137,41 +178,78 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-72 p-3" align="start">
-          <div className="space-y-3">
-            <div className="text-sm font-medium">Select Audio Source</div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Paste YouTube URL..."
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleYouTubeSubmit()}
-                className="flex-1 h-8 text-sm"
-              />
-              <Button
-                size="sm"
-                onClick={handleYouTubeSubmit}
-                disabled={!youtubeUrl}
-                className="h-8 px-2"
-              >
-                <Youtube className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">or</span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="h-7 text-xs"
-              >
-                <Upload className="h-3 w-3 mr-1" />
-                Upload Audio
-              </Button>
-            </div>
-          </div>
+        <PopoverContent className="w-80 p-3" align="start">
+          <AudioSourcePickerBody
+            youtubeUrl={youtubeUrl}
+            setYoutubeUrl={setYoutubeUrl}
+            onYouTubeSubmit={handleYouTubeSubmit}
+            onUploadClick={() => fileInputRef.current?.click()}
+            onPickAppleMusicSong={async (hit) => {
+              await loadAppleMusic({
+                id: hit.id,
+                kind: 'song',
+                storefront: hit.storefront,
+                title: `${hit.title} · ${hit.artist}`,
+                artworkUrl: hit.artworkUrl,
+              });
+            }}
+            onPickAppleMusicAlbum={async (hit) => {
+              await loadAppleMusic({
+                id: hit.id,
+                kind: 'album',
+                storefront: hit.storefront,
+                title: `${hit.title} · ${hit.artist} (album)`,
+                artworkUrl: hit.artworkUrl,
+              });
+            }}
+          />
         </PopoverContent>
       </Popover>
+
+      {/* Track switcher — only when the score has 2+ bound tracks. */}
+      {musicId && tracks.length > 1 && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-5 px-1 text-[10px] touch-manipulation"
+              title="Switch track"
+            >
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-1" align="start">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 py-1">
+              Audio tracks
+            </div>
+            {tracks.map((t) => {
+              const isCurrent =
+                (t.kind === 'apple_music' && audioSource === 'apple_music' && audioFileName === (t.apple_music_title ?? t.label)) ||
+                (t.kind !== 'apple_music' && audioFileName === t.label);
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => playTrack(t)}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40 rounded text-xs"
+                >
+                  {t.kind === 'apple_music' ? (
+                    <Music className="h-3 w-3 text-pink-500" />
+                  ) : t.kind === 'youtube' ? (
+                    <Youtube className="h-3 w-3 text-red-500" />
+                  ) : (
+                    <Music className="h-3 w-3 text-muted-foreground" />
+                  )}
+                  <span className="flex-1 truncate">{t.label}</span>
+                  {t.is_default && <span className="text-[9px] uppercase text-muted-foreground">default</span>}
+                  {isCurrent && <Check className="h-3 w-3 text-primary" />}
+                </button>
+              );
+            })}
+          </PopoverContent>
+        </Popover>
+      )}
 
       <Button
         size="sm"
@@ -258,20 +336,29 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
             </DropdownMenuItem>
             {audioSource && (
               <>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => stopPlayback()}
                   className="touch-manipulation"
                 >
                   <Square className="h-4 w-4 mr-2" />
                   Stop
                 </DropdownMenuItem>
+                {PLAYBACK_RATES.map((r) => (
+                  <DropdownMenuItem
+                    key={r}
+                    onClick={() => setPlaybackRate(r)}
+                    className={cn('touch-manipulation tabular-nums', r === playbackRate && 'font-semibold text-primary')}
+                  >
+                    {r}× speed
+                  </DropdownMenuItem>
+                ))}
               </>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Desktop: Stop buttons */}
+      {/* Desktop: Stop + Speed */}
       <div className="hidden sm:flex items-center gap-1">
         {audioSource && (
           <>
@@ -284,13 +371,60 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
             >
               <Square className="h-4 w-4 text-foreground fill-foreground" />
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 px-2 text-xs tabular-nums"
+                  title="Playback speed"
+                >
+                  {playbackRate === 1 ? '1×' : `${playbackRate}×`}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {PLAYBACK_RATES.map((r) => (
+                  <DropdownMenuItem
+                    key={r}
+                    onClick={() => setPlaybackRate(r)}
+                    className={cn('tabular-nums', r === playbackRate && 'font-semibold text-primary')}
+                  >
+                    {r}× {r < 1 ? '(slow)' : r > 1 ? '(fast)' : '(normal)'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         )}
       </div>
 
+      {/* Apple Music subscription / sign-in prompt. The button calls
+          authorize() SYNCHRONOUSLY from the click so MusicKit's popup
+          opens inside the user gesture and isn't blocked. The tooltip
+          surfaces the specific failure reason (no subscription, popup
+          blocked, cancelled, etc.). */}
+      {audioSource === 'apple_music' && appleMusicNeedsAuth && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => { void authorizeAppleMusic(); }}
+          className="h-7 px-2 text-xs"
+          title={appleMusicAuthError ?? 'Sign in with your Apple ID to stream this track'}
+        >
+          {appleMusicAuthError && appleMusicAuthError.toLowerCase().includes('subscription')
+            ? 'Apple Music subscription required'
+            : 'Sign in to Apple Music'}
+        </Button>
+      )}
+
       {/* Source label - Desktop only */}
       {audioSource === 'youtube' && (
         <span className="text-xs text-red-500 font-medium hidden lg:inline">YouTube</span>
+      )}
+      {audioSource === 'apple_music' && audioFileName && (
+        <span className="text-xs text-pink-600 truncate max-w-[120px] hidden lg:inline" title={audioFileName}>
+          {audioFileName}
+        </span>
       )}
       {audioSource === 'file' && audioFileName && (
         <span className="text-xs text-muted-foreground truncate max-w-[80px] hidden lg:inline" title={audioFileName}>
@@ -312,3 +446,181 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
     </div>
   );
 };
+
+// Source picker body — Apple Music search (songs + albums toggle),
+// YouTube URL paste, and File upload all stacked in one popover.
+function AudioSourcePickerBody({
+  youtubeUrl,
+  setYoutubeUrl,
+  onYouTubeSubmit,
+  onUploadClick,
+  onPickAppleMusicSong,
+  onPickAppleMusicAlbum,
+}: {
+  youtubeUrl: string;
+  setYoutubeUrl: (v: string) => void;
+  onYouTubeSubmit: () => void;
+  onUploadClick: () => void;
+  onPickAppleMusicSong: (hit: AppleMusicSongHit) => Promise<void> | void;
+  onPickAppleMusicAlbum: (hit: AppleMusicAlbumHit) => Promise<void> | void;
+}) {
+  const [query, setQuery] = useState('');
+  const [songs, setSongs] = useState<AppleMusicSongHit[]>([]);
+  const [albums, setAlbums] = useState<AppleMusicAlbumHit[]>([]);
+  const [tab, setTab] = useState<'songs' | 'albums'>('songs');
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!query.trim()) { setSongs([]); setAlbums([]); setSearchError(null); return; }
+    const handle = window.setTimeout(async () => {
+      setSearching(true);
+      setSearchError(null);
+      try {
+        const { songs: s, albums: a } = await searchAppleMusic(query, 'us');
+        setSongs(s);
+        setAlbums(a);
+      } catch (err: any) {
+        setSearchError(err?.message ?? 'Search failed');
+        setSongs([]);
+        setAlbums([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [query]);
+
+  const clearResults = () => { setQuery(''); setSongs([]); setAlbums([]); };
+
+  return (
+    <div className="space-y-3">
+      <div className="text-sm font-medium">Select Audio Source</div>
+
+      {/* Apple Music search */}
+      <div className="space-y-1.5">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <Music className="h-3 w-3 text-pink-500" /> Apple Music
+        </div>
+        <Input
+          placeholder="Search Apple Music…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="h-8 text-sm"
+        />
+
+        {/* Songs / Albums tabs — only render when we have a query so they
+            don't take up empty space in the popover. */}
+        {query.trim().length > 0 && (
+          <div className="inline-flex rounded-md border border-border p-0.5 text-[11px] bg-muted/30">
+            <button
+              type="button"
+              onClick={() => setTab('songs')}
+              className={cn(
+                'px-2 py-0.5 rounded-sm transition-colors',
+                tab === 'songs' ? 'bg-background font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              Songs{songs.length > 0 ? ` (${songs.length})` : ''}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('albums')}
+              className={cn(
+                'px-2 py-0.5 rounded-sm transition-colors',
+                tab === 'albums' ? 'bg-background font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              Albums{albums.length > 0 ? ` (${albums.length})` : ''}
+            </button>
+          </div>
+        )}
+
+        {searching && (
+          <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" /> Searching…
+          </div>
+        )}
+        {searchError && (
+          <div className="text-[11px] text-rose-500">{searchError}</div>
+        )}
+
+        {tab === 'songs' && songs.length > 0 && (
+          <div className="max-h-48 overflow-y-auto rounded border border-border divide-y divide-border">
+            {songs.map((hit) => (
+              <button
+                key={hit.id}
+                type="button"
+                onClick={() => { void onPickAppleMusicSong(hit); clearResults(); }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40"
+              >
+                {hit.artworkUrl
+                  ? <img src={hit.artworkUrl} alt="" className="w-8 h-8 rounded shrink-0" />
+                  : <Music className="w-6 h-6 text-pink-500 shrink-0" />}
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium truncate">{hit.title}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">{hit.artist}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {tab === 'albums' && albums.length > 0 && (
+          <div className="max-h-48 overflow-y-auto rounded border border-border divide-y divide-border">
+            {albums.map((hit) => (
+              <button
+                key={hit.id}
+                type="button"
+                onClick={() => { void onPickAppleMusicAlbum(hit); clearResults(); }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40"
+              >
+                {hit.artworkUrl
+                  ? <img src={hit.artworkUrl} alt="" className="w-8 h-8 rounded shrink-0" />
+                  : <Music className="w-6 h-6 text-pink-500 shrink-0" />}
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium truncate">{hit.title}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">
+                    {hit.artist}{hit.trackCount ? ` · ${hit.trackCount} tracks` : ''}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {!searching && query.trim().length > 0 && tab === 'songs' && songs.length === 0 && !searchError && (
+          <div className="text-[11px] text-muted-foreground italic">No songs match.</div>
+        )}
+        {!searching && query.trim().length > 0 && tab === 'albums' && albums.length === 0 && !searchError && (
+          <div className="text-[11px] text-muted-foreground italic">No albums match.</div>
+        )}
+      </div>
+
+      {/* YouTube URL */}
+      <div className="space-y-1.5 border-t border-border pt-3">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <Youtube className="h-3 w-3 text-rose-500" /> YouTube
+        </div>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Paste YouTube URL…"
+            value={youtubeUrl}
+            onChange={(e) => setYoutubeUrl(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && onYouTubeSubmit()}
+            className="flex-1 h-8 text-sm"
+          />
+          <Button size="sm" onClick={onYouTubeSubmit} disabled={!youtubeUrl} className="h-8 px-2">
+            <Youtube className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* File upload */}
+      <div className="flex items-center gap-2 border-t border-border pt-3">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">File</span>
+        <Button size="sm" variant="outline" onClick={onUploadClick} className="h-7 text-xs">
+          <Upload className="h-3 w-3 mr-1" /> Upload Audio
+        </Button>
+      </div>
+    </div>
+  );
+}

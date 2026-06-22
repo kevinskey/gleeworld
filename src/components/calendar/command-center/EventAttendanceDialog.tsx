@@ -151,7 +151,7 @@ export const EventAttendanceDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
         {/* Navy header */}
-        <div className="bg-[#003366] text-white px-5 py-4">
+        <div className="bg-card border-b border-border  text-foreground px-5 py-4">
           <DialogHeader>
             <DialogTitle className="text-white text-lg font-bold flex items-center gap-2">
               <ClipboardCheck className="h-5 w-5" />
@@ -160,8 +160,8 @@ export const EventAttendanceDialog = ({
           </DialogHeader>
           {event && (
             <div className="mt-2 space-y-1">
-              <p className="text-sm font-medium text-white/90">{event.title}</p>
-              <div className="flex items-center gap-3 text-xs text-white/70">
+              <p className="text-sm font-medium text-foreground">{event.title}</p>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   {format(new Date(event.start_date), "MMM d, yyyy · h:mm a")}
@@ -183,9 +183,9 @@ export const EventAttendanceDialog = ({
           </div>
         ) : attendees.length === 0 ? (
           <div className="text-center py-12 px-4">
-            <Users className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 font-medium text-sm">No attendance recorded</p>
-            <p className="text-slate-400 text-xs mt-1">
+            <Users className="h-10 w-10 text-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground font-medium text-sm">No attendance recorded</p>
+            <p className="text-muted-foreground text-xs mt-1">
               Use QR check-in or manual entry to record attendance
             </p>
           </div>
@@ -221,7 +221,7 @@ export const EventAttendanceDialog = ({
               >
                 {stats.late} Late
               </Badge>
-              <span className="ml-auto text-xs text-slate-400">
+              <span className="ml-auto text-xs text-muted-foreground">
                 {attendees.length} total
               </span>
             </div>
@@ -238,7 +238,7 @@ export const EventAttendanceDialog = ({
                           {a.display_name}
                         </p>
                         {a.check_in_time && (
-                          <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Clock className="h-3 w-3" />
                             {format(new Date(a.check_in_time), "h:mm a")}
                           </p>
@@ -246,7 +246,7 @@ export const EventAttendanceDialog = ({
                       </div>
                       <Badge
                         variant="outline"
-                        className="text-[11px] font-semibold border-0 flex-shrink-0"
+                        className="text-sm font-semibold border-0 flex-shrink-0"
                         style={{ color: sc.color, backgroundColor: sc.bg }}
                       >
                         {sc.label}

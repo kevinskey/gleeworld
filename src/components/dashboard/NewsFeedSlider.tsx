@@ -98,11 +98,11 @@ export const NewsFeedSlider: React.FC = () => {
                   <div className="p-3">
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <span className="text-sm">{item.sourceIcon}</span>
-                      <span className="text-[11px] text-white/50 font-medium">{item.source}</span>
+                      <span className="text-sm text-white/50 font-medium">{item.source}</span>
                       {item.pubDate && (
                         <>
                           <span className="text-white/30">·</span>
-                          <span className="text-[11px] text-white/40">{formatTimeAgo(item.pubDate)}</span>
+                          <span className="text-sm text-white/40">{formatTimeAgo(item.pubDate)}</span>
                         </>
                       )}
                       <ExternalLink className="h-3 w-3 text-white/30 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -111,7 +111,7 @@ export const NewsFeedSlider: React.FC = () => {
                       {item.title}
                     </h3>
                     {item.description && (
-                      <p className="text-[11px] text-white/40 mt-1 line-clamp-1">{item.description}</p>
+                      <p className="text-sm text-white/40 mt-1 line-clamp-1">{item.description}</p>
                     )}
                     <FeedCardActions
                       isLiked={isLiked(item.link)}

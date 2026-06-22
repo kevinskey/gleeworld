@@ -256,7 +256,7 @@ export default function BookAppointmentPage() {
                   ].map(stat => (
                     <div key={stat.label}>
                       <div className={cn("text-lg sm:text-xl font-bold", stat.color)}>{stat.value}</div>
-                      <div className="text-[10px] sm:text-[11px] uppercase tracking-wider text-muted-foreground mt-0.5">{stat.label}</div>
+                      <div className="text-xs sm:text-sm uppercase tracking-wider text-muted-foreground mt-0.5">{stat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -281,7 +281,7 @@ export default function BookAppointmentPage() {
                     <div className={cn("h-7 w-7 rounded-full flex items-center justify-center", item.bg)}>
                       <item.icon className={cn("h-3.5 w-3.5", item.fg)} />
                     </div>
-                    <span className="text-[10px] font-medium text-foreground">{item.label}</span>
+                    <span className="text-xs font-medium text-foreground">{item.label}</span>
                   </Wrapper>
                 );
               })}
@@ -328,7 +328,7 @@ export default function BookAppointmentPage() {
                           <SelectItem key={type.id} value={type.id} className="py-2.5 text-sm text-popover-foreground">
                             <div className="flex items-center gap-2">
                               <span>{type.name}</span>
-                              <Badge variant="secondary" className="text-[10px]">{type.duration} min</Badge>
+                              <Badge variant="secondary" className="text-xs">{type.duration} min</Badge>
                             </div>
                           </SelectItem>
                         ))}
@@ -447,7 +447,7 @@ export default function BookAppointmentPage() {
                         className="h-10 sm:h-12 pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground text-sm sm:text-base"
                       />
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Required for appointment confirmations via SMS</p>
+                    <p className="text-xs text-muted-foreground">Required for appointment confirmations via SMS</p>
                   </div>
 
                   {/* Notes */}
@@ -505,21 +505,21 @@ export default function BookAppointmentPage() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   {getStatusBadge(apt.status)}
-                                  <span className="text-[11px] text-muted-foreground">
+                                  <span className="text-sm text-muted-foreground">
                                     {format(new Date(apt.appointment_date), 'MMM d, yyyy')}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] mt-1.5 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-sm mt-1.5 text-muted-foreground">
                                   <span className="flex items-center gap-1">
                                     <Clock className="h-3 w-3" /> {apt.start_time}
                                   </span>
                                   <span>{apt.duration_minutes} min</span>
                                 </div>
                                 {apt.special_requests && (
-                                  <p className="mt-1.5 text-[11px] text-muted-foreground line-clamp-2">{apt.special_requests}</p>
+                                  <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">{apt.special_requests}</p>
                                 )}
                                 {apt.notes && (
-                                  <div className="mt-1.5 p-2 rounded-lg bg-muted/50 text-[11px]">
+                                  <div className="mt-1.5 p-2 rounded-lg bg-muted/50 text-sm">
                                     <strong className="text-muted-foreground">Notes:</strong>
                                     <p className="mt-0.5 text-foreground">{apt.notes}</p>
                                   </div>
@@ -555,7 +555,7 @@ export default function BookAppointmentPage() {
                           <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", item.bg)}>
                             <item.icon className={cn("h-4 w-4", item.fg)} />
                           </div>
-                          <span className="text-[11px] font-medium text-foreground">{item.label}</span>
+                          <span className="text-sm font-medium text-foreground">{item.label}</span>
                         </Wrapper>
                       );
                     })}
@@ -589,7 +589,7 @@ export default function BookAppointmentPage() {
                           className="bg-background border-border text-foreground placeholder:text-muted-foreground text-sm sm:text-base"
                         />
                       </div>
-                      <div className="bg-muted rounded-lg p-2.5 text-[11px] flex items-center gap-2">
+                      <div className="bg-muted rounded-lg p-2.5 text-sm flex items-center gap-2">
                         <User className="h-3 w-3 text-muted-foreground" />
                         <span className="text-muted-foreground">
                           From: <strong className="text-foreground">{profile?.full_name || user?.email}</strong>

@@ -5,7 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Camera, FileText, Plus } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Upload, Camera, FileText, Plus, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +41,10 @@ export const PDFImportManager = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importMethod, setImportMethod] = useState<'file' | 'scan'>('file');
   const [showScanner, setShowScanner] = useState(false);
+  // Open the copyright disclaimer on mount. Required acknowledgment
+  // each time the librarian enters the PDF Import view so they're
+  // reminded what they're certifying before they upload anything.
+  const [disclaimerOpen, setDisclaimerOpen] = useState(true);
   
   const [form, setForm] = useState<PDFImportForm>({
     title: '',
@@ -160,6 +168,29 @@ export const PDFImportManager = () => {
 
   return (
     <div className="space-y-6">
+      <AlertDialog open={disclaimerOpen} onOpenChange={setDisclaimerOpen}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Copyright notice
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm leading-relaxed text-foreground/90">
+              By uploading content to GleeWorld, you certify that you own the content or have
+              obtained all necessary licenses and permissions to use and distribute it. You are
+              responsible for complying with all copyright laws and publisher licensing
+              requirements. GleeWorld serves as a content management platform and does not
+              grant or transfer copyright permissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setDisclaimerOpen(false)}>
+              I understand
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Bulk Upload Section */}
       <BulkPDFUploader />
 

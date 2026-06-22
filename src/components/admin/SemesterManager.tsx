@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Plus, Archive, CheckCircle, Trash2, Edit, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 export const SemesterManager: React.FC = () => {
   const { semesters, activeSemester, loading, createSemester, setActiveSemesterById, archiveSemester, deleteSemester, refetch } = useSemesters();
@@ -77,7 +78,6 @@ export const SemesterManager: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this semester? This cannot be undone.')) return;
     try {
       await deleteSemester(id);
       toast({ title: 'Semester deleted' });
@@ -282,14 +282,16 @@ export const SemesterManager: React.FC = () => {
                         Archive
                       </Button>
                     )}
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleDelete(semester.id)}
-                      className="text-destructive hover:text-destructive"
+                    <ConfirmDeleteButton
+                      confirmKey="delete-semester"
+                      title="Delete this semester?"
+                      description="This cannot be undone. Courses scheduled in this semester remain."
+                      onConfirm={() => handleDelete(semester.id)}
+                      ariaLabel="Delete semester"
+                      className="inline-flex items-center justify-center rounded-md h-9 w-9 text-destructive hover:text-destructive hover:bg-muted"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </CardContent>
               </Card>

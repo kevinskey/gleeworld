@@ -143,7 +143,7 @@ const CollapsibleDateGroup = ({
                             </span>
                           )}
                           {event.end_time && (
-                            <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">
+                            <span className="text-xs sm:text-xs text-muted-foreground shrink-0">
                               – {formatTime12(event.end_time)}
                             </span>
                           )}
@@ -152,7 +152,7 @@ const CollapsibleDateGroup = ({
                         {/* Badges row */}
                         <div className="flex items-center gap-1 mt-1 flex-wrap">
                           {event.target_group !== 'all' && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            <Badge variant="outline" className="text-xs px-1.5 py-0">
                               <Users className="h-2.5 w-2.5 mr-0.5" />
                               {targetLabel}
                             </Badge>

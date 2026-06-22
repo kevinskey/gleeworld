@@ -98,7 +98,7 @@ export function ImageUploadField({
           </div>
         )}
         {imgError && previewSrc && (
-          <p className="text-[11px] text-amber-700 max-w-[180px]">
+          <p className="text-sm text-amber-700 max-w-[180px]">
             Couldn&apos;t load the saved image. Try uploading it again.
           </p>
         )}

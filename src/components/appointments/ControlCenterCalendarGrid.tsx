@@ -124,7 +124,7 @@ export const ControlCenterCalendarGrid: React.FC = () => {
               </span>
 
               {/* Description */}
-              <span className="text-white/70 text-[11px] sm:text-xs leading-tight line-clamp-2">
+              <span className="text-white/70 text-sm sm:text-xs leading-tight line-clamp-2">
                 {card.description}
               </span>
 

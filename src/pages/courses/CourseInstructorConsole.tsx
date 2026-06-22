@@ -240,7 +240,7 @@ export const CourseInstructorConsole = () => {
                 <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden h-9 w-9 p-0 hover:bg-muted/60 flex-shrink-0" style={{ color: '#0F172A' }}>
                   <Menu className="h-5 w-5" />
                 </Button>
-                <Badge className="bg-primary text-white border-0 font-semibold text-[11px] sm:text-xs tracking-wide flex-shrink-0 px-2 py-0.5">
+                <Badge className="bg-primary text-white border-0 font-semibold text-sm sm:text-xs tracking-wide flex-shrink-0 px-2 py-0.5">
                   <GraduationCap className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
                   <span className="hidden sm:inline">Instructor Console</span>
                   <span className="sm:hidden">Instructor</span>

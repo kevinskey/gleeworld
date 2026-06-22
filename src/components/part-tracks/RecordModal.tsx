@@ -476,7 +476,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
                     <Label className="text-xs">
                       Output (click + preview)
                       {!audioCtxSupportsSinkId && !audioElSupportsSinkId && (
-                        <span className="ml-1 text-[10px] text-amber-700">(Safari uses system default)</span>
+                        <span className="ml-1 text-xs text-amber-700">(Safari uses system default)</span>
                       )}
                     </Label>
                     <select
@@ -494,7 +494,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
                     </select>
                   </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Plug in USB-C headphones, then pick them from both menus — the click goes to your ears and your voice (not the click) gets recorded.
                 </p>
               </div>
@@ -523,7 +523,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ open, onClose, onSave,
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {monitorTracks.map(t => (
-                          <span key={t.id} className="text-[11px] px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">
+                          <span key={t.id} className="text-sm px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">
                             {t.voice_part}
                           </span>
                         ))}

@@ -81,19 +81,19 @@ export function CourseLibrarySection({ isSuperAdmin = false }: { isSuperAdmin?: 
             return (
               <div key={t.id} className="bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col">
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <Badge className="bg-sky-600 text-white border-0 text-[10px]">
+                  <Badge className="bg-sky-600 text-white border-0 text-xs">
                     {t.level ? (LEVEL_LABEL[t.level] ?? t.level) : 'Course'}
                   </Badge>
                   {isAdopted ? (
-                    <Badge className="bg-emerald-600 text-white border-0 text-[10px]">
+                    <Badge className="bg-emerald-600 text-white border-0 text-xs">
                       <Check className="w-3 h-3 mr-0.5" /> Adopted
                     </Badge>
                   ) : isOwned ? (
-                    <Badge className="bg-emerald-600 text-white border-0 text-[10px]">Owned</Badge>
+                    <Badge className="bg-emerald-600 text-white border-0 text-xs">Owned</Badge>
                   ) : null}
                 </div>
                 <div className="font-semibold text-white mb-1 line-clamp-2">{t.title}</div>
-                <div className="text-[11px] text-slate-400 mb-2">
+                <div className="text-sm text-slate-400 mb-2">
                   {t.unit_count} units · {t.lesson_count} lessons{t.grades ? ` · Grades ${t.grades}` : ''}
                 </div>
                 {t.description && (

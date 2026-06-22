@@ -145,7 +145,7 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
               buttonColor={theme?.primaryColor}
             />
             <div>
-              <Label className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold">Name</Label>
+              <Label className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Name</Label>
               <Input
                 value={p.name}
                 onChange={(e) => update(i, { name: e.target.value })}
@@ -154,7 +154,7 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
               />
             </div>
             <div>
-              <Label className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold">Role / Title</Label>
+              <Label className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Role / Title</Label>
               <Input
                 value={p.title}
                 onChange={(e) => update(i, { title: e.target.value })}

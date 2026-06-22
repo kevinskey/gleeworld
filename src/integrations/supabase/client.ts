@@ -11,6 +11,8 @@ declare global {
     __TENANT_CONFIG__?: {
       tenant?: string;
       org?: string;
+      shortName?: string;
+      logoUrl?: string;
       supabaseUrl?: string;
       supabaseAnonKey?: string;
       database?: string;

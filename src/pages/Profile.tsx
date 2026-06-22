@@ -15,7 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -501,7 +500,11 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
         .from('user-files')
         .getPublicUrl(filePath);
 
-      const success = await updateAvatarUrl(data.publicUrl);
+      // Cache-buster: avatar paths are stable per user (`<user_id>.jpg`), so
+      // a fresh upload to the same path otherwise gets shadowed by the
+      // browser's cached copy and the new picture never appears.
+      const cacheBusted = `${data.publicUrl}?v=${Date.now()}`;
+      const success = await updateAvatarUrl(cacheBusted);
       
       if (success) {
         setIsCropDialogOpen(false);
@@ -565,27 +568,24 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
 
   if (!user) {
     return (
-      <UniversalLayout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <p>Please sign in to view your profile.</p>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p>Please sign in to view your profile.</p>
         </div>
-      </UniversalLayout>
+      </div>
     );
   }
 
   return (
-    <UniversalLayout>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="bg-card border-b border-border px-4 py-4 md:px-6">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
                 My Profile
               </h1>
-              <p className="text-muted-foreground">Manage your personal information and preferences</p>
+              <p className="text-sm text-muted-foreground mt-1">Manage your personal information and preferences</p>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm text-foreground hidden sm:inline">{displayName}</span>
@@ -629,17 +629,19 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
                             {getInitials()}
                           </AvatarFallback>
                         </Avatar>
-                        {isEditing && (
-                          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 transition-colors">
-                            <input
-                              type="file"
-                              accept="image/*,.heic,.heif"
-                              onChange={handleAvatarUpload}
-                              className="absolute inset-0 opacity-0 cursor-pointer"
-                            />
-                            <Camera className="h-6 w-6 text-white" />
-                          </div>
-                        )}
+                        {/* Avatar upload is always available — hover reveals the
+                            camera overlay. Previously gated behind isEditing, which
+                            confused users who clicked the avatar expecting upload. */}
+                        <div className="absolute inset-0 rounded-full flex items-center justify-center cursor-pointer bg-black/0 hover:bg-black/50 transition-colors group">
+                          <input
+                            type="file"
+                            accept="image/*,.heic,.heif"
+                            onChange={handleAvatarUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            aria-label="Upload avatar"
+                          />
+                          <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </div>
                       
                       {/* Name */}
@@ -1021,7 +1023,6 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
           userEmail={user?.email || ""}
         />
       </div>
-    </UniversalLayout>
   );
 };
 

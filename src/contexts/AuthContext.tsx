@@ -211,6 +211,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             localStorage.removeItem(key);
           }
         });
+        // On the native app, also drop the cached tenant so the user lands
+        // on the org picker instead of being silently kept in their last
+        // tenant's branding.
+        localStorage.removeItem('gw_native_tenant');
       } catch (e) {
         console.warn('Failed to clear localStorage:', e);
       }

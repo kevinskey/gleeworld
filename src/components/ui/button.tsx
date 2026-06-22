@@ -38,13 +38,17 @@ const buttonVariants = cva(
         warning:
           "bg-warning text-warning-foreground shadow-button hover:bg-warning/90",
       },
+      // iPad (md: 768–1023) is a touch device and needs the full 44pt
+      // target. The "shrink to compact" sizing only kicks in at lg: so
+      // mouse-driven desktops can pack denser UIs while iPad portrait,
+      // landscape, and phones all stay 44pt-safe.
       size: {
-        default: "h-10 px-4 py-2 min-h-[44px] md:min-h-[40px]",
-        sm: "h-9 px-3 text-xs min-h-[44px] md:min-h-[36px]",
-        lg: "h-11 px-8 text-base min-h-[48px] md:min-h-[44px]",
+        default: "h-10 px-4 py-2 min-h-[44px] lg:min-h-[40px]",
+        sm: "h-9 px-3 text-xs min-h-[44px] lg:min-h-[36px]",
+        lg: "h-11 px-8 text-base min-h-[48px] lg:min-h-[44px]",
         xl: "h-12 px-10 text-base font-semibold min-h-[52px]",
-        icon: "h-10 w-10 min-h-[44px] min-w-[44px] md:min-h-[40px] md:min-w-[40px]",
-        "icon-sm": "h-9 w-9 min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px]",
+        icon: "h-10 w-10 min-h-[44px] min-w-[44px] lg:min-h-[40px] lg:min-w-[40px]",
+        "icon-sm": "h-9 w-9 min-h-[44px] min-w-[44px] lg:min-h-[36px] lg:min-w-[36px]",
         "icon-lg": "h-12 w-12 min-h-[48px] min-w-[48px]",
       },
     },

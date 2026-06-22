@@ -11,7 +11,7 @@ export const OfficeHoursBooking = ({ selectedDate }: OfficeHoursBookingProps) =>
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate('/book-appointment');
+    navigate('/dashboard/office-hours');
   };
 
   return (

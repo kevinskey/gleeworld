@@ -16,10 +16,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import * as pdfjsLib from 'pdfjs-dist';
+import { PDF_WORKER_READY } from '@/lib/pdfWorker';
+void PDF_WORKER_READY;
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
-
-// Set up PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface AnnotationCanvasProps {
   backgroundImageUrl?: string;

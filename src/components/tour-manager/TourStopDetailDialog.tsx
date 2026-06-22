@@ -57,7 +57,7 @@ const DetailRow = ({ icon: Icon, label, value }: { icon: React.ElementType; labe
     <div className="flex items-start gap-2 py-1">
       <Icon className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
       <div>
-        <p className="text-[10px] uppercase font-medium text-muted-foreground">{label}</p>
+        <p className="text-xs uppercase font-medium text-muted-foreground">{label}</p>
         <p className="text-sm text-foreground">{value}</p>
       </div>
     </div>
@@ -183,7 +183,7 @@ export const TourStopDetailDialog = ({ stop, open, onOpenChange, onEdit, busComp
                     {totalDriverHours.toFixed(1)}h / {MAX_DRIVER_HOURS}h DOT limit
                   </span>
                   <Badge variant={driverStatus === 'over' ? 'destructive' : driverStatus === 'warning' ? 'outline' : 'default'}
-                    className="text-[10px]">
+                    className="text-xs">
                     {driverStatus === 'over' ? 'OVER LIMIT' : driverStatus === 'warning' ? 'Near Limit' : 'Available'}
                   </Badge>
                 </div>
@@ -198,12 +198,12 @@ export const TourStopDetailDialog = ({ stop, open, onOpenChange, onEdit, busComp
                     style={{ width: `${Math.min(driverUtilization, 100)}%` }}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-2 mt-2 text-[10px] text-muted-foreground">
+                <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-muted-foreground">
                   <div>Previous driving: {(stop.driver_hours_before || 0).toFixed(1)}h</div>
                   <div>This leg: {(stop.travel_duration_hours || 0).toFixed(1)}h</div>
                 </div>
                 {driverStatus === 'over' && (
-                  <p className="text-[10px] text-destructive mt-2 font-medium">
+                  <p className="text-xs text-destructive mt-2 font-medium">
                     ⚠️ Driver exceeds DOT {MAX_DRIVER_HOURS}-hour limit. A replacement driver or rest stop is required.
                   </p>
                 )}

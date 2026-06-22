@@ -21,6 +21,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface VideoSession {
   id: string;
@@ -169,11 +170,7 @@ export const MobileVideoInterface = ({ onJoinSession }: MobileVideoInterfaceProp
     }
   };
 
-  const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
-    e.stopPropagation();
-    
-    if (!confirm('Delete this session permanently?')) return;
-
+  const handleDeleteSession = async (sessionId: string) => {
     const { error } = await supabase
       .from('gw_video_sessions')
       .delete()
@@ -336,14 +333,16 @@ export const MobileVideoInterface = ({ onJoinSession }: MobileVideoInterfaceProp
                           {session.participant_count}
                         </Badge>
                         {user && session.host_user_id === user.id && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 rounded-full text-destructive hover:bg-destructive/10"
-                            onClick={(e) => handleDeleteSession(e, session.id)}
+                          <ConfirmDeleteButton
+                            confirmKey="delete-video-session"
+                            title="Delete this session?"
+                            description="The session record will be permanently removed."
+                            onConfirm={() => handleDeleteSession(session.id)}
+                            ariaLabel="Delete session"
+                            className="inline-flex items-center justify-center h-7 w-7 rounded-full text-destructive hover:bg-destructive/10"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          </ConfirmDeleteButton>
                         )}
                       </div>
                     </div>

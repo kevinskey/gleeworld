@@ -17,7 +17,7 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://cdn.gpteng.co https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://meet.gleeworld.org https://conducting.gleeworld.org https://readmusic.gleeworld.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' https://*.supabase.co https://supabase.gleeworld.org https://*.digitaloceanspaces.com blob: https://*.jit.si https://*.8x8.vc https://meet.gleeworld.org; connect-src 'self' *.sentry.io https://api.squareup.com https://app.squareup.com https://squareup.com https://api.squareup.com/v1/cdp/batch https://ecosystem-header.squarecdn.com *.squarecloudservices.com https://cdn.cookielaw.org/ https://*.onetrust.com/ https://browser-intake-datadoghq.com/ https://www.google.com https://www.gstatic.com https://*.supabase.co wss://*.supabase.co https://supabase.gleeworld.org wss://supabase.gleeworld.org https://*.digitaloceanspaces.com https://*.stripe.com https://meet.jit.si https://*.jit.si wss://meet.jit.si wss://*.jit.si https://8x8.vc https://*.8x8.vc wss://8x8.vc wss://*.8x8.vc https://meet.gleeworld.org wss://meet.gleeworld.org; frame-src 'self' https://js.stripe.com https://www.google.com https://docs.google.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://meet.gleeworld.org https://conducting.gleeworld.org https://readmusic.gleeworld.org;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://cdn.gpteng.co https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://gleeworld.org https://*.gleeworld.org https://js-cdn.music.apple.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' https://*.supabase.co https://supabase.gleeworld.org https://*.digitaloceanspaces.com blob: https://*.jit.si https://*.8x8.vc https://meet.gleeworld.org https://tonejs.github.io https://*.apple.com https://*.mzstatic.com; connect-src 'self' https://gleeworld.org https://*.gleeworld.org wss://*.gleeworld.org *.sentry.io https://api.squareup.com https://app.squareup.com https://squareup.com https://api.squareup.com/v1/cdp/batch https://ecosystem-header.squarecdn.com *.squarecloudservices.com https://cdn.cookielaw.org/ https://*.onetrust.com/ https://browser-intake-datadoghq.com/ https://www.google.com https://www.gstatic.com https://*.supabase.co wss://*.supabase.co https://supabase.gleeworld.org wss://supabase.gleeworld.org https://*.digitaloceanspaces.com https://*.stripe.com https://meet.jit.si https://*.jit.si wss://meet.jit.si wss://*.jit.si https://8x8.vc https://*.8x8.vc wss://8x8.vc wss://*.8x8.vc https://meet.gleeworld.org wss://meet.gleeworld.org https://tonejs.github.io https://api.music.apple.com https://amp-api.music.apple.com https://amp-api-edge.music.apple.com https://*.music.apple.com https://*.apple.com https://*.mzstatic.com https://play.itunes.apple.com https://buy.itunes.apple.com https://cdn.jsdelivr.net https://storage.googleapis.com; frame-src 'self' https://js.stripe.com https://www.google.com https://docs.google.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://meet.gleeworld.org https://conducting.gleeworld.org https://readmusic.gleeworld.org https://*.apple.com https://buy.itunes.apple.com;" />
     
     <!-- Favicon and PWA icons -->
     <link rel="icon" type="image/png" href="/lovable-uploads/gleeworld-logo-192.png">
@@ -83,7 +83,64 @@
   </head>
 
   <body>
+    <!-- Pre-React boot screen. Painted immediately by the browser before
+         any JS runs so the user sees brand + spinner instead of a long
+         white screen while the 3MB+ gzipped React bundle parses on a
+         phone. Cleared the moment React mounts into #root. -->
+    <style>
+      #gw-boot-splash {
+        position: fixed; inset: 0; display: flex; align-items: center;
+        justify-content: center; flex-direction: column; gap: 16px;
+        background: #150d26; color: #f6e9c8; z-index: 1;
+        font: 14px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      #gw-boot-splash img { width: 84px; height: 84px; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+      #gw-boot-splash .gw-boot-ring {
+        width: 36px; height: 36px; border-radius: 50%;
+        border: 3px solid rgba(246,233,200,0.18);
+        border-top-color: #22d3ee;
+        animation: gw-boot-spin 0.9s linear infinite;
+      }
+      @keyframes gw-boot-spin { to { transform: rotate(360deg); } }
+      /* Once React mounts, #root has children → hide the splash. */
+      #root:not(:empty) ~ #gw-boot-splash { display: none; }
+    </style>
     <div id="root"></div>
+    <div id="gw-boot-splash" aria-hidden="true">
+      <img src="/lovable-uploads/gleeworld-logo-192.png" alt="" />
+      <div class="gw-boot-ring"></div>
+    </div>
+    <!-- Boot watchdog: catches errors that fire BEFORE the React bundle
+         can install its own handlers, and renders a fallback message if
+         no React tree mounts within 8 seconds. Without this a module-load
+         failure on WKWebView is just a permanent white screen. -->
+    <script>
+      (function () {
+        function paint(msg) {
+          try {
+            var el = document.getElementById('root');
+            if (!el || el.childElementCount) return;
+            el.innerHTML =
+              '<pre style="padding:24px;font:14px/1.5 -apple-system,monospace;color:#fca5a5;background:#0b1220;height:100vh;margin:0;overflow:auto;white-space:pre-wrap;word-break:break-word;">' +
+              String(msg).replace(/</g, '&lt;') + '</pre>';
+          } catch (_) {}
+        }
+        window.addEventListener('error', function (e) {
+          var src = e.filename || e.target && e.target.src || '';
+          paint('Boot error: ' + (e.message || e.type) + (src ? ' (' + src + ')' : '') + '\n\n' + ((e.error && e.error.stack) || ''));
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e.reason || {};
+          paint('Unhandled rejection: ' + (r.message || r) + '\n\n' + (r.stack || ''));
+        });
+        setTimeout(function () {
+          var el = document.getElementById('root');
+          if (el && !el.childElementCount) {
+            paint('React did not mount within 20s.\n\nlocation=' + location.href + '\nUA=' + navigator.userAgent + '\n__TENANT_CONFIG__=' + JSON.stringify((window).__TENANT_CONFIG__ || null));
+          }
+        }, 20000);
+      })();
+    </script>
     <!-- Tenant bootstrap: per-subdomain nginx serves this file with
          window.__TENANT_CONFIG__ = { supabaseUrl, supabaseAnonKey, ... } so
          the same static build can power many tenants. Default (main domain)

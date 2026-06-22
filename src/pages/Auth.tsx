@@ -8,12 +8,14 @@ import { AuthTabs } from "@/components/auth/AuthTabs";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 import { useBrandingSettings } from "@/hooks/useBrandingSettings";
+import { tenantAuthGradient } from "@/lib/tenantGradient";
 
 const Auth = () => {
   const { user, loading, isPasswordRecovery } = useAuth();
   const { profile, loading: profileLoading, isAdmin } = useUserRole();
   const { settings: branding } = useBrandingSettings();
   const siteName = branding.short_name || branding.org_name || 'GleeWorld';
+  const tenantBackground = { background: tenantAuthGradient(branding.primary_color) };
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isRecovery, setIsRecovery] = useState(() => {
@@ -77,11 +79,8 @@ const Auth = () => {
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
-        style={{
-          background:
-            'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)',
-        }}
+        className="flex items-center justify-center"
+        style={{ ...tenantBackground, minHeight: '100dvh' }}
       >
         <LoadingSpinner size="lg" text="Loading..." className="text-white" />
       </div>
@@ -92,11 +91,8 @@ const Auth = () => {
   if (user && !isReset) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center"
-        style={{
-          background:
-            'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)',
-        }}
+        className="flex items-center justify-center"
+        style={{ ...tenantBackground, minHeight: '100dvh' }}
       >
         <LoadingSpinner size="lg" text="Redirecting..." className="text-white" />
       </div>

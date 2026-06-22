@@ -98,7 +98,7 @@ const SortableFavoriteItem = ({
         </h4>
 
         {/* Description */}
-        <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">
+        <p className="text-xs sm:text-xs text-muted-foreground leading-tight line-clamp-2">
           {module.description}
         </p>
       </div>
@@ -178,7 +178,7 @@ export const FavoritesCard = ({
               <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
               <Heart className="h-5 w-5 !text-red-500" />
               My Fav Apps
-                <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
+                <span className="text-xs md:text-xs font-normal !text-white/70 ml-2 uppercase">
                   scroll to choose your fav!
                 </span>
                 <ChevronDown className={cn(
@@ -211,7 +211,7 @@ export const FavoritesCard = ({
             <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
               <Heart className="h-5 w-5 !text-red-500 fill-current" />
               My Fav Apps
-              <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
+              <span className="text-xs md:text-xs font-normal !text-white/70 ml-2 uppercase">
                 drag to reorder
               </span>
               <ChevronDown className={cn(

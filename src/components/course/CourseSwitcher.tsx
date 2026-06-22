@@ -94,7 +94,7 @@ export const CourseSwitcher: React.FC<CourseSwitcherProps> = ({
             {currentCourse.title}
           </p>
           {!isCompact && currentCourse.instructor?.name && (
-            <p className="text-[10px] mt-0.5 xl:mt-1 text-primary-foreground/80 xl:text-sm">
+            <p className="text-xs mt-0.5 xl:mt-1 text-primary-foreground/80 xl:text-sm">
               {currentCourse.instructor.name}
             </p>
           )}

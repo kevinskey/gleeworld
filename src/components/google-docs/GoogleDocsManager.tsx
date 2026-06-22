@@ -19,6 +19,7 @@ import {
   Users
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 const DOCUMENT_TYPES = [
   { value: 'general', label: 'General Document' },
@@ -59,9 +60,7 @@ export const GoogleDocsManager = () => {
   };
 
   const handleDeleteDocument = async (documentId: string) => {
-    if (confirm('Are you sure you want to delete this document?')) {
-      await deleteDocument(documentId);
-    }
+    await deleteDocument(documentId);
   };
 
   const getTypeColor = (type: string) => {
@@ -270,15 +269,16 @@ export const GoogleDocsManager = () => {
                         <Share2 className="h-4 w-4" />
                       </Button>
                       
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleDeleteDocument(doc.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        title="Delete document"
+                      <ConfirmDeleteButton
+                        confirmKey="delete-google-doc"
+                        title="Delete this document?"
+                        description="The document record is removed from GleeWorld; the file in Google Drive is unaffected."
+                        onConfirm={() => handleDeleteDocument(doc.id)}
+                        ariaLabel="Delete document"
+                        className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </div>
                   </CardContent>
                 </Card>

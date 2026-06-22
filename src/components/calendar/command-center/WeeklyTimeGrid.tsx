@@ -150,9 +150,9 @@ export const WeeklyTimeGrid = ({
       {/* Day Headers - sticky */}
       <div className="flex flex-shrink-0 border-b border-slate-300">
         {/* Time gutter */}
-        <div className="w-14 flex-shrink-0 bg-[#003366] border-r border-[#002244]" />
+        <div className="w-14 flex-shrink-0 bg-card border-b border-border border-r border-border" />
         {/* Day columns */}
-        <div className="flex-1 grid grid-cols-7 bg-[#003366] text-white">
+        <div className="flex-1 grid grid-cols-7 bg-card border-b border-border text-foreground">
           {days.map((day, idx) => {
             const isToday = isSameDay(day, new Date());
             const isSelected = isSameDay(day, selectedDate);
@@ -161,9 +161,9 @@ export const WeeklyTimeGrid = ({
                 key={idx}
                 onClick={() => onDateSelect(day)}
                 className={cn(
-                  "py-2 text-center cursor-pointer transition-colors border-r border-[#002244] last:border-r-0",
-                  isToday && "bg-[#004488]",
-                  isSelected && "bg-[#B8860B]"
+                  "py-2 text-center cursor-pointer transition-colors border-r border-border last:border-r-0",
+                  isToday && "bg-primary/10",
+                  isSelected && "bg-primary"
                 )}
               >
                 <div className="text-xs font-medium opacity-80">
@@ -189,7 +189,7 @@ export const WeeklyTimeGrid = ({
             {HOURS.map(hour => (
               <div
                 key={hour}
-                className="absolute w-full text-right pr-2 text-[11px] font-medium text-slate-500"
+                className="absolute w-full text-right pr-2 text-sm font-medium text-muted-foreground"
                 style={{ top: (hour - 7) * HOUR_HEIGHT - 7 }}
               >
                 {hour === 0 ? '12 AM' : hour <= 12 ? `${hour} AM` : `${hour - 12} PM`}
@@ -257,9 +257,9 @@ export const WeeklyTimeGrid = ({
                   )}
                   onClick={() => onDateSelect(day)}
                 >
-                  {/* Events */}
+                  {/* Events — pastel chips: colored time on top, dark title,
+                      muted location, accent left-border in the category color */}
                   {laid.map(({ event, top, height, color, col, totalCols }) => {
-                    const textColor = getContrastTextColor(color);
                     const widthPercent = 90 / totalCols;
                     const leftPercent = 4 + col * widthPercent;
                     const startTime = format(new Date(event.start_date), 'h:mm a');
@@ -269,29 +269,30 @@ export const WeeklyTimeGrid = ({
                     return (
                       <div
                         key={event.id}
-                        className="absolute rounded-md shadow-sm cursor-pointer hover:shadow-md hover:brightness-95 transition-all overflow-hidden z-10 border border-white/20"
+                        className="absolute rounded-lg cursor-pointer hover:brightness-95 transition-all overflow-hidden z-10"
                         style={{
                           top: top + 1,
                           height: Math.max(height - 2, 20),
                           left: `${leftPercent}%`,
                           width: `${widthPercent}%`,
-                          backgroundColor: color,
-                          color: textColor,
+                          backgroundColor: `${color}1F`,
+                          borderLeft: `3px solid ${color}`,
                         }}
-                        title={`${event.title}\n${startTime}`}
+                        title={`${event.title}\n${startTime}${event.location ? '\n' + event.location : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (canEdit) {
-                            setEditingEvent(event);
-                          } else {
-                            setSelectedEvent(event);
-                          }
+                          if (canEdit) setEditingEvent(event); else setSelectedEvent(event);
                         }}
                       >
-                        <div className={cn("px-1.5 py-0.5 h-full flex", isShort ? "items-center gap-1" : "flex-col")}>
-                          <span className="text-[10px] font-semibold truncate leading-tight">{event.title}</span>
-                          {!isShort && (
-                            <span className="text-[9px] opacity-80 leading-tight">{startTime}</span>
+                        <div className={cn("px-2 py-1 h-full flex", isShort ? "items-center gap-1.5" : "flex-col")}>
+                          <span className="text-xs font-semibold leading-tight" style={{ color }}>{startTime}</span>
+                          <span className="text-sm font-semibold leading-tight truncate text-foreground">
+                            {event.title}
+                          </span>
+                          {!isShort && event.location && (
+                            <span className="text-xs truncate leading-tight text-muted-foreground mt-0.5">
+                              {event.location}
+                            </span>
                           )}
                         </div>
                       </div>

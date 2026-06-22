@@ -232,12 +232,12 @@ export const DirectMessaging = () => {
                   <div key={msg.id} className={`flex gap-2 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
                     <Avatar className="h-7 w-7 flex-shrink-0">
                       <AvatarImage src={msg.sender_avatar} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                     <div className={`flex-1 max-w-[75%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                      <span className="text-[10px] text-muted-foreground px-1">
+                      <span className="text-xs text-muted-foreground px-1">
                         {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                       </span>
                       <Card className={`px-3 py-2 ${
@@ -282,7 +282,7 @@ export const DirectMessaging = () => {
               <Send className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1 text-center">Press Enter to send</p>
+          <p className="text-xs text-muted-foreground mt-1 text-center">Press Enter to send</p>
         </div>
       </div>
     );
@@ -349,7 +349,7 @@ export const DirectMessaging = () => {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(convo.last_message_at), { addSuffix: true })}
                       </p>
                     </div>

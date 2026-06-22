@@ -549,7 +549,7 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
                     <QrCode className="h-5 w-5 text-primary" />
                     Quick QR Check-In
                     {session && isToday(parseISO(session.session_date)) && (
-                      <Badge variant="default" className="text-[10px] h-5">LIVE</Badge>
+                      <Badge variant="default" className="text-xs h-5">LIVE</Badge>
                     )}
                   </CardTitle>
                   <div className="flex items-center gap-2">

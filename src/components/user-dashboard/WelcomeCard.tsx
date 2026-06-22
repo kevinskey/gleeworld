@@ -81,7 +81,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
       {/* Role badge positioned at bottom right */}
       <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 z-20">
         <div className="bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 sm:px-3 sm:py-1.5 border border-white/20">
-          <p className="text-white text-[10px] sm:text-xs md:text-sm font-medium drop-shadow">
+          <p className="text-white text-xs sm:text-xs md:text-sm font-medium drop-shadow">
             {getUserTitle()} • Class of {profile?.class_year || 'Unknown'}
           </p>
         </div>

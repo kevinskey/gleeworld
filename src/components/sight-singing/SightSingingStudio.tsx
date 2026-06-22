@@ -50,6 +50,8 @@ const NOTE_FREQUENCIES: { [key: string]: number } = {
 };
 
 export interface ExerciseParameters {
+  /** Difficulty level (1–5). Drives range, max step, allowed durations. */
+  level?: 1 | 2 | 3 | 4 | 5;
   key: { tonic: string; mode: string };
   time: { num: number; den: 1|2|4|8|16 };
   numMeasures: number;
@@ -509,6 +511,17 @@ export const SightSingingStudio: React.FC = () => {
           title: "Exercise Generated",
           description: "Your sight-singing exercise is ready!",
         });
+        // Log a "generated" entry to the practice activity feed so the
+        // user can see what they've been working on. Local-only —
+        // doesn't touch the database.
+        try {
+          const { logSightReadingActivity } = await import('@/pages/member/SightReadingPage');
+          const lvl = (enhancedParams as any).level ?? 1;
+          logSightReadingActivity({
+            kind: 'generated',
+            label: `${enhancedParams.key.tonic} ${enhancedParams.key.mode} · Level ${lvl} · ${enhancedParams.time.num}/${enhancedParams.time.den} · ${enhancedParams.numMeasures} measures`,
+          });
+        } catch { /* ignore — non-essential */ }
       } else {
         console.error('❌ Generation failed:', data);
         throw new Error(data.message || 'Generation failed');
@@ -908,8 +921,25 @@ export const SightSingingStudio: React.FC = () => {
               <div className="space-y-3 sm:space-y-4">
                 {/* Score Display with Reset Button */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <h2 className="text-lg sm:text-xl font-semibold">Generated Exercise</h2>
-                  <Button 
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <h2 className="text-lg sm:text-xl font-semibold">Generated Exercise</h2>
+                    {parameters?.key && (
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        {parameters.key.tonic} {parameters.key.mode} · {parameters.time.num}/{parameters.time.den}
+                        {(() => {
+                          // Show the actual key-signature in parens so the
+                          // singer can verify the rendered staff matches.
+                          const FIFTHS_MAJOR: Record<string, number> = { C:0, G:1, D:2, A:3, E:4, B:5, "F#":6, "C#":7, F:-1, Bb:-2, Eb:-3, Ab:-4, Db:-5, Gb:-6, Cb:-7 };
+                          const FIFTHS_MINOR: Record<string, number> = { A:0, E:1, B:2, "F#":3, "C#":4, "G#":5, "D#":6, "A#":7, D:-1, G:-2, C:-3, F:-4, Bb:-5, Eb:-6, Ab:-7 };
+                          const f = (parameters.key.mode === 'major' ? FIFTHS_MAJOR : FIFTHS_MINOR)[parameters.key.tonic] ?? 0;
+                          if (f === 0) return ' · no sharps or flats';
+                          const n = Math.abs(f);
+                          return ` · ${n} ${f > 0 ? 'sharp' : 'flat'}${n > 1 ? 's' : ''}`;
+                        })()}
+                      </span>
+                    )}
+                  </div>
+                  <Button
                     onClick={handleReset}
                     variant="outline"
                     size="sm"
@@ -1047,11 +1077,11 @@ export const SightSingingStudio: React.FC = () => {
                 
                 {/* Parameter Form - Main Area */}
                 <div className="lg:col-span-3">
-                  <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🎵 Score Generator</h3>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Configure your sight-reading exercise parameters and generate a new score to practice with.
-                    </p>
+                  <div className="mb-3 px-3 py-2 bg-blue-50 dark:bg-blue-950/20 rounded-md border border-blue-200 dark:border-blue-800">
+                    <div className="font-semibold text-foreground text-sm">🎵 Score Generator</div>
+                    <div className="text-xs text-foreground mt-0.5">
+                      Configure parameters and generate a new score to practice.
+                    </div>
                   </div>
                   
                   <ParameterForm 

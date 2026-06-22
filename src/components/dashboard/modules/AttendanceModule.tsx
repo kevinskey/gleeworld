@@ -172,7 +172,7 @@ export const AttendanceModule = () => {
                 <SelectItem key={c.id} value={c.id}>
                   <span className="flex items-center gap-2">
                     {c.title}
-                    {c.course_code && <Badge variant="secondary" className="text-[10px]">{c.course_code}</Badge>}
+                    {c.course_code && <Badge variant="secondary" className="text-xs">{c.course_code}</Badge>}
                   </span>
                 </SelectItem>
               ))}
@@ -279,7 +279,7 @@ const AttendanceRow = ({ student, status, onStatusChange }: { student: any; stat
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{student.full_name || 'Unknown'}</p>
         {student.voice_part && (
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{student.voice_part}</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">{student.voice_part}</p>
         )}
       </div>
       

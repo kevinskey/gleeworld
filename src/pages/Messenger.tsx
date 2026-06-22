@@ -878,7 +878,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
           <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
             <ShieldAlert className="h-8 w-8 text-destructive" />
           </div>
-          <h1 className="text-2xl font-bold">Messenger Access Restricted</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Messenger Access Restricted</h1>
           <p className="text-muted-foreground">{noAccessReason}</p>
           <Button asChild className="mt-4">
             <a href="mailto:admin@gleeworld.org">Contact Admin</a>
@@ -1093,7 +1093,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                     <div className="flex items-center gap-2 min-w-0">
                                       <FileIcon className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                                       <span className="truncate text-xs font-medium text-foreground">{file.name}</span>
-                                      <span className="text-[11px] text-muted-foreground flex-shrink-0">{(file.size / (1024 * 1024)).toFixed(1)}MB</span>
+                                      <span className="text-sm text-muted-foreground flex-shrink-0">{(file.size / (1024 * 1024)).toFixed(1)}MB</span>
                                     </div>
                                     <button onClick={() => removeEmailAttachment(index)} className="hover:bg-muted rounded-full p-0.5 flex-shrink-0">
                                       <X className="h-3 w-3 text-muted-foreground" />
@@ -1238,7 +1238,7 @@ const Messenger: React.FC<MessengerProps> = ({ embedded = false, courseIdProp, c
                                 <div key={`${attachment.name}-${attachment.lastModified}-${index}`} className="flex items-center justify-between gap-2 rounded-md border border-border bg-background px-2.5 py-2">
                                   <div className="min-w-0">
                                     <p className="truncate text-xs font-medium text-foreground">{attachment.name}</p>
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground">
                                       {(attachment.size / (1024 * 1024)).toFixed(2)} MB
                                     </p>
                                   </div>

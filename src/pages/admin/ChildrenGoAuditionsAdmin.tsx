@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { format } from "date-fns";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface Audition {
   id: string;
@@ -76,8 +77,6 @@ export default function ChildrenGoAuditionsAdmin() {
   };
 
   const handleDelete = async (id: string, videoPath: string) => {
-    if (!confirm('Are you sure you want to delete this audition?')) return;
-
     try {
       // Delete video from storage
       const { error: storageError } = await supabase.storage
@@ -196,14 +195,17 @@ export default function ChildrenGoAuditionsAdmin() {
                         </>
                       )}
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(audition.id, audition.video_path)}
+                    <ConfirmDeleteButton
+                      confirmKey="delete-audition"
+                      title="Delete this audition?"
+                      description="The video and submission record will be removed."
+                      onConfirm={() => handleDelete(audition.id, audition.video_path)}
+                      ariaLabel="Delete audition"
+                      className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       <Trash2 className="h-4 w-4 mr-1" />
                       Delete
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </CardContent>
               </Card>

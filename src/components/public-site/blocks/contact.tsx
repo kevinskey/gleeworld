@@ -137,7 +137,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
         </div>
       </div>
       <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
-        <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500">Social media</div>
+        <div className="text-xs uppercase tracking-wide font-semibold text-slate-500">Social media</div>
         <p className="text-xs text-slate-500">
           Paste a full URL <em>or</em> just the username — we&apos;ll link it to the right place.
         </p>

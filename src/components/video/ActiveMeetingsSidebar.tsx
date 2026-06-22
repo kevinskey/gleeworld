@@ -46,7 +46,7 @@ export const ActiveMeetingsSidebar: React.FC = () => {
               <p className="text-xs text-muted-foreground">
                 No active meetings
               </p>
-              <p className="text-[10px] text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Start or join a meeting to see it here
               </p>
             </div>
@@ -67,7 +67,7 @@ export const ActiveMeetingsSidebar: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-xs truncate">{displayName}</p>
-                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Users className="h-3 w-3" />
                         <span>{meeting.participants.length} in session</span>
                       </div>

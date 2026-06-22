@@ -7,7 +7,7 @@ import { useCalendars, CalendarInfo } from "@/hooks/useCalendars";
 import { useUserCalendarAccess, isEventVisibleToUser } from "@/hooks/useUserCalendarAccess";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile, useIsTabletOrNarrower } from "@/hooks/use-mobile";
 import { useCurrentProvider, useProviderAvailability, ProviderAvailability } from "@/hooks/useServiceProviders";
 import { CommandCenterHeader } from "./CommandCenterHeader";
 import { CommandCenterFilterRail } from "./CommandCenterFilterRail";
@@ -20,6 +20,11 @@ import { CreateEventDialog } from "../CreateEventDialog";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SuperAdminControlPanel } from "./SuperAdminControlPanel";
+import { CalendarSettingsDialog } from "./CalendarSettingsDialog";
+import { useEventCategories } from "@/hooks/useEventCategories";
+import { useGoogleEvents } from "@/hooks/useGoogleEvents";
+import { CalendarRightSidebar } from "./CalendarRightSidebar";
+import { CalendarLegend } from "./CalendarLegend";
 
 // Eastern Time helpers
 const isSameDayET = (date1: Date, date2: Date): boolean => {
@@ -31,8 +36,8 @@ const isSameDayET = (date1: Date, date2: Date): boolean => {
          d1.getDate() === d2.getDate();
 };
 
-export type ViewMode = 'month' | 'week' | 'agenda';
-export type CategoryFilter = 'glee' | 'courses' | 'liturgy' | 'performances' | 'leadership' | 'tour' | 'personal' | 'academic';
+export type ViewMode = 'day' | 'week' | 'month' | 'agenda';
+export type CategoryFilter = 'glee' | 'courses' | 'liturgy' | 'performances' | 'leadership' | 'tour' | 'personal' | 'academic' | 'personal_google';
 
 export interface CategoryConfig {
   id: CategoryFilter;
@@ -41,19 +46,29 @@ export interface CategoryConfig {
   icon: string;
 }
 
+// Palette aligned with the Command Center dashboard tints:
+//   cyan / orange / amber / purple / rose / teal / emerald / slate (-600).
 export const CATEGORY_CONFIGS: CategoryConfig[] = [
-  { id: 'glee', label: 'Glee Club', color: '#003366', icon: 'music' },
-  { id: 'courses', label: 'Courses', color: '#B8860B', icon: 'book-open' },
-  { id: 'academic', label: 'Assignments & Tests', color: '#F59E0B', icon: 'clipboard' },
-  { id: 'liturgy', label: 'Liturgy', color: '#6B4C9A', icon: 'church' },
-  { id: 'performances', label: 'Performances', color: '#8B0000', icon: 'mic' },
-  { id: 'leadership', label: 'Leadership', color: '#2F4F4F', icon: 'users' },
-  { id: 'tour', label: 'Tour', color: '#4B9CD3', icon: 'plane' },
-  { id: 'personal', label: 'Personal', color: '#708090', icon: 'user' },
+  { id: 'glee',         label: 'Glee Club',           color: '#0891b2', icon: 'music' },
+  { id: 'courses',      label: 'Courses',             color: '#ea580c', icon: 'book-open' },
+  { id: 'academic',     label: 'Assignments & Tests', color: '#d97706', icon: 'clipboard' },
+  { id: 'liturgy',      label: 'Liturgy',             color: '#9333ea', icon: 'church' },
+  { id: 'performances', label: 'Performances',        color: '#e11d48', icon: 'mic' },
+  { id: 'leadership',   label: 'Leadership',          color: '#0d9488', icon: 'users' },
+  { id: 'tour',         label: 'Tour',                color: '#059669', icon: 'plane' },
+  { id: 'personal',     label: 'Personal',            color: '#475569', icon: 'user' },
+  // Google-pulled personal events — slate, distinct from the tenant
+  // palette so they read as "from outside" at a glance.
+  { id: 'personal_google', label: 'My Google events',  color: '#64748b', icon: 'user' },
 ];
 
-// Map event types and calendar names to categories
+// Map event types and calendar names to categories. If the event has an
+// explicit `category` slug stored (from the picker in CreateEventDialog),
+// trust that. Otherwise fall back to the keyword heuristic so legacy events
+// (created before the picker existed) still get colored.
 const getCategoryForEvent = (event: GleeWorldEvent): CategoryFilter => {
+  if (event.category) return event.category as CategoryFilter;
+
   // Check source first for academic items
   if (event.source === 'assignment' || event.source === 'test') {
     return 'academic';
@@ -95,19 +110,138 @@ const getCategoryForEvent = (event: GleeWorldEvent): CategoryFilter => {
 export const CommandCenterCalendar = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  // iPad / narrow-laptop viewports (≤1439px) can't fit the calendar's
+  // three-column layout, so we hide the right detail sidebar and start
+  // the left filter rail collapsed. The user can still expand the rail
+  // by tapping its chevron.
+  const isNarrow = useIsTabletOrNarrower();
   const [viewMode, setViewMode] = useState<ViewMode>(isMobile ? 'agenda' : 'month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeCategoryFilters, setActiveCategoryFilters] = useState<CategoryFilter[]>([
-    'glee', 'courses', 'academic', 'liturgy', 'performances', 'leadership', 'tour', 'personal'
+    'glee', 'courses', 'academic', 'liturgy', 'performances', 'leadership', 'tour', 'personal', 'personal_google'
   ]);
   const [activeCalendarFilters, setActiveCalendarFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateEvent, setShowCreateEvent] = useState(false);
-  const [isFilterRailCollapsed, setIsFilterRailCollapsed] = useState(isMobile);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'calendars' | 'categories'>('calendars');
+  const [isFilterRailCollapsed, setIsFilterRailCollapsed] = useState(isMobile || isNarrow);
 
-  const { events, loading, fetchEvents } = useGleeWorldEvents();
+  // Resizable columns — persisted per-user via localStorage. Tight clamps so
+  // the layout can't be dragged into unusable territory.
+  const [filterRailWidth, setFilterRailWidth] = useState<number>(() => {
+    const saved = typeof window !== 'undefined' ? Number(localStorage.getItem('cal-filter-rail-w')) : 0;
+    return saved >= 180 && saved <= 400 ? saved : 224;
+  });
+  const [rightPanelWidth, setRightPanelWidth] = useState<number>(() => {
+    const saved = typeof window !== 'undefined' ? Number(localStorage.getItem('cal-right-panel-w')) : 0;
+    return saved >= 280 && saved <= 640 ? saved : 384;
+  });
+
+  function startRailResize(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const target = e.currentTarget;
+    const startX = e.clientX;
+    const startW = filterRailWidth;
+    target.setPointerCapture(e.pointerId);
+    const move = (ev: PointerEvent) => {
+      const next = Math.min(Math.max(startW + ev.clientX - startX, 180), 400);
+      setFilterRailWidth(next);
+    };
+    const up = () => {
+      target.removeEventListener('pointermove', move);
+      target.removeEventListener('pointerup', up);
+      setFilterRailWidth((w) => { localStorage.setItem('cal-filter-rail-w', String(Math.round(w))); return w; });
+    };
+    target.addEventListener('pointermove', move);
+    target.addEventListener('pointerup', up);
+  }
+
+  function startRightResize(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const target = e.currentTarget;
+    const startX = e.clientX;
+    const startW = rightPanelWidth;
+    target.setPointerCapture(e.pointerId);
+    const move = (ev: PointerEvent) => {
+      // Drag LEFT widens the right panel, drag RIGHT shrinks it.
+      const next = Math.min(Math.max(startW - (ev.clientX - startX), 280), 640);
+      setRightPanelWidth(next);
+    };
+    const up = () => {
+      target.removeEventListener('pointermove', move);
+      target.removeEventListener('pointerup', up);
+      setRightPanelWidth((w) => { localStorage.setItem('cal-right-panel-w', String(Math.round(w))); return w; });
+    };
+    target.addEventListener('pointermove', move);
+    target.addEventListener('pointerup', up);
+  }
+
+  const { events: rawEvents, loading, fetchEvents } = useGleeWorldEvents();
+  const { data: googleRows = [] } = useGoogleEvents();
+
+  // Merge the caller's personal Google events into the events stream so they
+  // show on the grid. Two protections:
+  //   1. RLS in gw_google_events guarantees `useGoogleEvents()` ONLY returns
+  //      rows where user_id = auth.uid() — other tenant members see their
+  //      own, never yours.
+  //   2. We dedup against gw_events.google_event_id so events pushed FROM
+  //      GleeWorld TO Google (Phase 2.5) don't appear twice.
+  const events = useMemo<GleeWorldEvent[]>(() => {
+    const pushedIds = new Set(
+      rawEvents.map((e: any) => e.google_event_id).filter(Boolean)
+    );
+    const synthetic = googleRows
+      .filter((g) => !pushedIds.has(g.google_event_id))
+      .map<GleeWorldEvent>((g) => ({
+        id: 'gcal-' + g.id,
+        title: g.title || '(Google event)',
+        description: g.description,
+        event_type: 'personal_google',
+        category: 'personal_google',
+        start_date: g.start_at,
+        end_date: g.end_at,
+        location: g.location,
+        venue_name: null,
+        address: null,
+        max_attendees: null,
+        registration_required: false,
+        is_public: false,
+        status: g.status,
+        calendar_id: 'google',
+        course_id: null,
+        created_by: null,
+        created_at: null,
+        updated_at: null,
+        // Carry a marker so the rest of the UI knows this row is read-only
+        // and external — edit/delete dialogs check this.
+        source: 'google' as any,
+      } as any));
+    return [...rawEvents, ...synthetic];
+  }, [rawEvents, googleRows]);
   const { data: calendars, isLoading: calendarsLoading } = useCalendars();
+  const { data: dbCategories = [] } = useEventCategories();
+
+  // Filter rail reads from the tenant's actual category list. Deletes / adds
+  // in the Settings dialog reflect here immediately via the shared query
+  // cache. CATEGORY_CONFIGS stays only as a color/icon fallback for legacy
+  // events whose slug isn't in the DB anymore.
+  const liveCategories: CategoryConfig[] = [
+    ...dbCategories.map((c) => ({
+      id: c.slug as CategoryFilter,
+      label: c.label,
+      color: c.color,
+      icon: c.icon,
+    })),
+    // Synthetic toggle so the user can hide their personal Google overlay.
+    // Only shown when they actually have Google events imported — other
+    // tenant members never see this entry because RLS gates the underlying
+    // data per-user.
+    ...(googleRows.length > 0
+      ? [{ id: 'personal_google' as CategoryFilter, label: 'My Google events', color: '#64748b', icon: 'user' }]
+      : []),
+  ];
   const calendarAccess = useUserCalendarAccess();
   const { user } = useAuth();
   const { isAdmin, isExecutiveBoard, isSuperAdmin, loading: roleLoading } = useUserRole();
@@ -198,15 +332,30 @@ export const CommandCenterCalendar = () => {
     return (
       <div className="flex items-center justify-center h-full bg-slate-100">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 border-4 border-[#003366] border-t-transparent rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-600 font-medium">Loading Command Center...</p>
         </div>
       </div>
     );
   }
 
+  // Color resolver for the right sidebar's event dots — uses each event's
+  // mapped category color so the rail matches what's painted on the grid.
+  const colorForEvent = (e: GleeWorldEvent) => {
+    const cat = getCategoryForEvent(e);
+    const cfg = CATEGORY_CONFIGS.find((c) => c.id === cat);
+    return cfg?.color || '#94a3b8';
+  };
+
   return (
-    <div className="flex flex-col h-full bg-slate-100 overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      {/* Page header — title only, compact */}
+      <div className="px-6 pt-3 pb-2">
+        <h1 className="font-sans normal-case font-bold leading-none text-xl tracking-tight">
+          Calendar
+        </h1>
+      </div>
+
       {/* Header */}
       <CommandCenterHeader
         currentDate={currentDate}
@@ -216,26 +365,44 @@ export const CommandCenterCalendar = () => {
         onNavigateDay={navigateDay}
         onToday={goToToday}
         onAddEvent={() => setShowCreateEvent(true)}
+        onOpenSettings={canManageEvents ? () => { setSettingsTab('calendars'); setShowSettings(true); } : undefined}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        canManageEvents={canManageEvents}
+        canManageEvents={true /* Add-Event is always available; settings is still admin-only */}
         isMobile={isMobile}
+        categories={liveCategories}
+        activeCategoryFilters={activeCategoryFilters}
+        onToggleCategoryFilter={toggleCategoryFilter}
       />
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left Filter Rail - Hidden on mobile */}
         {!isMobile && (
-          <CommandCenterFilterRail
-            categories={CATEGORY_CONFIGS}
-            calendars={calendars || []}
-            activeCategoryFilters={activeCategoryFilters}
-            activeCalendarFilters={activeCalendarFilters}
-            onToggleCategoryFilter={toggleCategoryFilter}
-            onToggleCalendarFilter={toggleCalendarFilter}
-            isCollapsed={isFilterRailCollapsed}
-            onToggleCollapse={() => setIsFilterRailCollapsed(!isFilterRailCollapsed)}
-          />
+          <>
+            <CommandCenterFilterRail
+              categories={liveCategories}
+              calendars={calendars || []}
+              activeCategoryFilters={activeCategoryFilters}
+              activeCalendarFilters={activeCalendarFilters}
+              onToggleCategoryFilter={toggleCategoryFilter}
+              onToggleCalendarFilter={toggleCalendarFilter}
+              isCollapsed={isFilterRailCollapsed}
+              onToggleCollapse={() => setIsFilterRailCollapsed(!isFilterRailCollapsed)}
+              width={isFilterRailCollapsed ? undefined : filterRailWidth}
+              onAddCategory={canManageEvents ? () => { setSettingsTab('categories'); setShowSettings(true); } : undefined}
+              onAddCalendar={canManageEvents ? () => { setSettingsTab('calendars');  setShowSettings(true); } : undefined}
+            />
+            {!isFilterRailCollapsed && (
+              <div
+                onPointerDown={startRailResize}
+                className="w-1.5 -mx-0.5 shrink-0 cursor-col-resize touch-none flex items-stretch justify-center group z-10"
+                title="Drag to resize"
+              >
+                <div className="w-px bg-border group-hover:w-1 group-hover:bg-primary/50 transition-all" />
+              </div>
+            )}
+          </>
         )}
 
         {/* Center Content */}
@@ -251,20 +418,8 @@ export const CommandCenterCalendar = () => {
                 getCategoryForEvent={getCategoryForEvent}
                 categoryConfigs={CATEGORY_CONFIGS}
               />
-            ) : viewMode === 'agenda' || isMobile ? (
+            ) : viewMode === 'agenda' || viewMode === 'day' || isMobile ? (
               <>
-                {/* Mobile Book Office Hours Button */}
-                {isMobile && (
-                  <div className="mb-3">
-                    <Button
-                      onClick={() => navigate('/book-appointment')}
-                      className="w-full h-12 text-base font-bold bg-[#150d26] hover:bg-[#002a52] text-white rounded-xl shadow-md gap-2"
-                    >
-                      <CalendarDays className="h-5 w-5" />
-                      Book Office Hours
-                    </Button>
-                  </div>
-                )}
                 <AgendaView
                   events={filteredEvents}
                   selectedDate={selectedDate}
@@ -306,46 +461,57 @@ export const CommandCenterCalendar = () => {
             )}
           </div>
 
-          {/* Daily Run Sheet - Right panel on desktop, bottom on tablet */}
-          {!isMobile && (
-            <div className="lg:w-96 xl:w-[420px] flex-shrink-0 border-l border-slate-300 bg-white flex flex-col">
-              {/* Book Office Hours Button */}
-              <div className="p-4 border-b border-slate-200">
-                <Button
-                  onClick={() => navigate('/book-appointment')}
-                  className="w-full h-14 text-lg font-bold bg-[#150d26] hover:bg-[#002a52] text-white rounded-xl shadow-md gap-2"
-                >
-                  <CalendarDays className="h-5 w-5" />
-                  Book Office Hours
-                </Button>
-              </div>
-
-              {/* Super Admin Control Panel */}
-              {!roleLoading && isSuperAdmin() && (
-                <SuperAdminControlPanel />
-              )}
-              <DailyRunSheet
-                selectedDate={selectedDate}
-                events={selectedDateEvents}
-                getCategoryForEvent={getCategoryForEvent}
-                categoryConfigs={CATEGORY_CONFIGS}
-                onEventDeleted={fetchEvents}
-              />
+          {/* Resize handle between main grid and right panel — only when
+              the right detail panel is actually visible (true desktop). */}
+          {!isMobile && !isNarrow && (
+            <div
+              onPointerDown={startRightResize}
+              className="w-1.5 -mx-0.5 shrink-0 cursor-col-resize touch-none flex items-stretch justify-center group z-10"
+              title="Drag to resize"
+            >
+              <div className="w-px bg-border group-hover:w-1 group-hover:bg-primary/50 transition-all" />
             </div>
+          )}
+
+          {/* Right detail sidebar — hidden on iPad and narrow laptops so
+              the calendar grid actually has breathing room. Users on
+              narrow viewports get the day detail inline (in the Agenda
+              tab or via a date tap). */}
+          {!isMobile && !isNarrow && (
+            <CalendarRightSidebar
+              currentMonth={currentDate}
+              selectedDate={selectedDate}
+              onMonthChange={setCurrentDate}
+              onDateSelect={setSelectedDate}
+              events={selectedDateEvents}
+              calendars={calendars || []}
+              activeCalendarFilters={activeCalendarFilters}
+              onToggleCalendarFilter={toggleCalendarFilter}
+              onAddCalendar={canManageEvents ? () => { setSettingsTab('calendars'); setShowSettings(true); } : undefined}
+              onManageCalendars={canManageEvents ? () => { setSettingsTab('calendars'); setShowSettings(true); } : undefined}
+              getEventColor={colorForEvent}
+              width={rightPanelWidth}
+            />
           )}
         </div>
       </div>
 
+      {/* Bottom legend bar — shared icon key for event types */}
+      {!isMobile && <CalendarLegend />}
+
       {/* Create Event Dialog */}
-      <CreateEventDialog 
+      <CreateEventDialog
         open={showCreateEvent}
         onOpenChange={setShowCreateEvent}
         onEventCreated={() => {
           setShowCreateEvent(false);
           fetchEvents();
-        }} 
-        initialDate={selectedDate} 
+        }}
+        initialDate={selectedDate}
       />
+
+      {/* Calendar Settings (Categories + Calendars CRUD) */}
+      <CalendarSettingsDialog open={showSettings} onOpenChange={setShowSettings} initialTab={settingsTab} />
     </div>
   );
 };

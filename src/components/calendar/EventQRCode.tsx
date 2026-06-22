@@ -391,7 +391,7 @@ export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCod
             This QR code links to the secure attendance system with PIN backup.
           </p>
           {encodedUrl && (
-            <p className="text-[10px] text-muted-foreground text-center break-all px-2 max-h-12 overflow-auto">
+            <p className="text-xs text-muted-foreground text-center break-all px-2 max-h-12 overflow-auto">
               Debug URL: {encodedUrl.substring(0, 80)}...
             </p>
           )}

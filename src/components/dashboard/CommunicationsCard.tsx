@@ -80,7 +80,7 @@ export const CommunicationsCard = ({
             <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
               <Radio className="h-5 w-5 !text-white" />
               Communications
-              <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
+              <span className="text-xs md:text-xs font-normal !text-white/70 ml-2 uppercase">
                 stay connected!
               </span>
               <ChevronDown className={cn(
@@ -121,7 +121,7 @@ export const CommunicationsCard = ({
                       </h4>
 
                       {/* Description */}
-                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">
+                      <p className="text-xs sm:text-xs text-muted-foreground leading-tight line-clamp-2">
                         {module.description}
                       </p>
                     </div>

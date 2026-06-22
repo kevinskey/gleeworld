@@ -230,7 +230,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
                     <p className="text-xs font-medium text-white truncate max-w-[80px] sm:max-w-[120px] lg:max-w-[200px]">
                       {currentTrack?.track_data?.title || 'Music Player'}
                     </p>
-                    <p className="text-[10px] text-white/50 hidden sm:block">
+                    <p className="text-xs text-white/50 hidden sm:block">
                       {tracks.length} tracks
                     </p>
                   </div>
@@ -320,7 +320,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
             </div>
 
             {/* Time */}
-            <span className="text-[10px] text-white/50 hidden sm:inline">
+            <span className="text-xs text-white/50 hidden sm:inline">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 
@@ -338,7 +338,7 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
               <DropdownMenuTrigger asChild>
               <Button
                   variant="ghost"
-                  className="h-6 min-h-0 text-[10px] text-white hover:text-white/80 gap-0.5 px-2"
+                  className="h-6 min-h-0 text-xs text-white hover:text-white/80 gap-0.5 px-2"
               >
                   <span className="hidden sm:inline">{playlists.length} playlists</span>
                   <ChevronDown className="h-3 w-3" />

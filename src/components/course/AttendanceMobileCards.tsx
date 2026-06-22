@@ -143,7 +143,7 @@ export const AttendanceMobileCards: React.FC<AttendanceMobileCardsProps> = ({
                           }
                           disabled={!isInstructor}
                         >
-                          <span className="text-[10px] text-muted-foreground leading-tight">
+                          <span className="text-xs text-muted-foreground leading-tight">
                             {format(dateObj, 'M/d')}
                           </span>
                           <span

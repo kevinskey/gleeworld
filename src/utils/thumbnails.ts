@@ -79,11 +79,8 @@ export const generateVideoThumbnail = (file: File, maxSize: number = 150): Promi
 // Generate thumbnail for PDF files using PDF.js
 export const generatePDFThumbnail = async (file: File, maxSize: number = 150): Promise<string> => {
   try {
-    // Dynamically import PDF.js
     const pdfjsLib = await import('pdfjs-dist');
-    
-    // Set worker source
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    await import('@/lib/pdfWorker');
     
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

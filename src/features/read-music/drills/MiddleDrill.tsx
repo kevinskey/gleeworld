@@ -169,7 +169,7 @@ function Tile({ label, value, accent }: { label: string; value: string | number;
     "text-foreground";
   return (
     <div className="rounded-md border border-border bg-card px-3 py-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className={`text-xl font-bold ${accentClass}`}>{value}</div>
     </div>
   );

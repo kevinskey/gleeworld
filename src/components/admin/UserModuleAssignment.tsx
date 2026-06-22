@@ -189,10 +189,10 @@ const AssignModulesDialog = ({
                           <Label htmlFor={`module-${module.id}`} className="text-sm font-medium cursor-pointer block truncate">
                             {module.title}
                           </Label>
-                          <p className="text-[10px] text-muted-foreground truncate">{module.description}</p>
+                          <p className="text-xs text-muted-foreground truncate">{module.description}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[10px] shrink-0 hidden sm:inline-flex">
+                      <Badge variant="outline" className="text-xs shrink-0 hidden sm:inline-flex">
                         {module.category}
                       </Badge>
                     </div>

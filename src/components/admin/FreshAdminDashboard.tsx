@@ -154,7 +154,7 @@ export const FreshAdminDashboard = () => {
                         <module.icon className="h-7 w-7 text-primary" />
                       </div>
                     </div>
-                    <span className="text-[10px] sm:text-sm font-medium text-foreground leading-tight text-center break-words w-full px-0.5 line-clamp-2">{module.name}</span>
+                    <span className="text-xs sm:text-sm font-medium text-foreground leading-tight text-center break-words w-full px-0.5 line-clamp-2">{module.name}</span>
                   </CardContent>
                 </Card>
               ))}

@@ -204,7 +204,7 @@ export const MonthlyCalendar = ({
                         >
                           <div
                             onClick={(e) => handleEventClick(event, e)}
-                            className="text-[10px] px-1.5 py-0.5 rounded font-medium truncate cursor-pointer hover:opacity-80 transition-opacity text-white shadow-sm"
+                            className="text-xs px-1.5 py-0.5 rounded font-medium truncate cursor-pointer hover:opacity-80 transition-opacity text-white shadow-sm"
                             style={{ backgroundColor: calendarColor }}
                             title={event.title}
                           >
@@ -214,7 +214,7 @@ export const MonthlyCalendar = ({
                       );
                     })}
                     {dayEvents.length > 2 && (
-                      <span className="text-[10px] text-slate-500 font-medium pl-0.5">
+                      <span className="text-xs text-slate-500 font-medium pl-0.5">
                         +{dayEvents.length - 2}
                       </span>
                     )}

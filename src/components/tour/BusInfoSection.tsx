@@ -176,7 +176,7 @@ export const BusInfoSection = () => {
                   <CardTitle className="text-base flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-primary" />
                     {bus.company_name}
-                    <Badge variant="secondary" className="ml-auto text-[10px]">Active</Badge>
+                    <Badge variant="secondary" className="ml-auto text-xs">Active</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
@@ -292,7 +292,7 @@ export const BusInfoSection = () => {
               {tourData.cities.map((city, i) => (
                 <div key={i} className="flex items-start gap-3 p-2.5 rounded-md bg-muted/40 border border-border/50">
                   <div className="flex flex-col items-center">
-                    <Badge variant="secondary" className="text-[10px] w-6 h-6 flex items-center justify-center rounded-full p-0">
+                    <Badge variant="secondary" className="text-xs w-6 h-6 flex items-center justify-center rounded-full p-0">
                       {i + 1}
                     </Badge>
                     {i < tourData.cities.length - 1 && <div className="w-px h-4 bg-border mt-1" />}

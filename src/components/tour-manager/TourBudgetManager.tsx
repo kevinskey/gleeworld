@@ -248,11 +248,11 @@ export const TourBudgetManager = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 text-[10px]"><CheckCircle className="h-3 w-3 mr-1" />Paid</Badge>;
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 text-xs"><CheckCircle className="h-3 w-3 mr-1" />Paid</Badge>;
       case 'confirmed':
-        return <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 text-[10px]"><Clock className="h-3 w-3 mr-1" />Confirmed</Badge>;
+        return <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 text-xs"><Clock className="h-3 w-3 mr-1" />Confirmed</Badge>;
       default:
-        return <Badge variant="secondary" className="text-[10px]"><AlertCircle className="h-3 w-3 mr-1" />Planned</Badge>;
+        return <Badge variant="secondary" className="text-xs"><AlertCircle className="h-3 w-3 mr-1" />Planned</Badge>;
     }
   };
 
@@ -411,19 +411,19 @@ export const TourBudgetManager = () => {
       {/* Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
         <div className="rounded-lg bg-muted/40 p-2.5 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Revenue</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Revenue</p>
           <p className="text-sm font-bold text-green-500 mt-0.5">{formatCurrency(summary.total_revenue)}</p>
         </div>
         <div className="rounded-lg bg-muted/40 p-2.5 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Estimated</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Estimated</p>
           <p className="text-sm font-bold text-blue-500 mt-0.5">{formatCurrency(summary.total_estimated)}</p>
         </div>
         <div className="rounded-lg bg-muted/40 p-2.5 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Actual</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Actual</p>
           <p className="text-sm font-bold text-red-500 mt-0.5">{formatCurrency(summary.total_actual)}</p>
         </div>
         <div className="rounded-lg bg-muted/40 p-2.5 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Balance</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Balance</p>
           <p className={`text-sm font-bold mt-0.5 ${summary.net_balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
             {formatCurrency(summary.net_balance)}
           </p>
@@ -479,7 +479,7 @@ export const TourBudgetManager = () => {
                               </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <Progress value={percentage} className="h-1.5 flex-1" />
-                                <span className="text-[10px] text-muted-foreground w-10 text-right">{percentage.toFixed(0)}%</span>
+                                <span className="text-xs text-muted-foreground w-10 text-right">{percentage.toFixed(0)}%</span>
                               </div>
                             </div>
                           </div>
@@ -489,7 +489,7 @@ export const TourBudgetManager = () => {
                         <div className="border-t">
                           <Table>
                             <TableHeader>
-                              <TableRow className="text-[11px]">
+                              <TableRow className="text-sm">
                                 <TableHead className="pl-4">Description</TableHead>
                                 <TableHead className="text-right w-20">Qty</TableHead>
                                 <TableHead className="text-right w-24">Unit Cost</TableHead>
@@ -505,7 +505,7 @@ export const TourBudgetManager = () => {
                                   <TableCell className="pl-4 font-medium">
                                     <div>
                                       <span>{item.description}</span>
-                                      {item.notes && <p className="text-[10px] text-muted-foreground mt-0.5">{item.notes}</p>}
+                                      {item.notes && <p className="text-xs text-muted-foreground mt-0.5">{item.notes}</p>}
                                     </div>
                                   </TableCell>
                                   <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
@@ -565,11 +565,11 @@ export const TourBudgetManager = () => {
                   <span className="font-semibold text-sm">Grand Total ({budgetItems.length} items)</span>
                   <div className="flex items-center gap-6 text-sm">
                     <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground">Estimated</p>
+                      <p className="text-xs text-muted-foreground">Estimated</p>
                       <p className="font-bold">{formatCurrency(summary.total_estimated)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-muted-foreground">Actual</p>
+                      <p className="text-xs text-muted-foreground">Actual</p>
                       <p className="font-bold">{summary.total_actual > 0 ? formatCurrency(summary.total_actual) : '—'}</p>
                     </div>
                   </div>

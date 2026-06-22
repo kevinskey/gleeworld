@@ -248,7 +248,7 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                 isToday && "bg-primary/10"
               )}
             >
-              <div className="text-[10px] uppercase font-medium text-muted-foreground tracking-wider">
+              <div className="text-xs uppercase font-medium text-muted-foreground tracking-wider">
                 {format(day, 'EEE')}
               </div>
               <div className={cn(
@@ -276,7 +276,7 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
             {hours.map(hour => (
               <div
                 key={hour}
-                className="absolute right-2 text-[10px] text-muted-foreground -translate-y-1/2 select-none"
+                className="absolute right-2 text-xs text-muted-foreground -translate-y-1/2 select-none"
                 style={{ top: (hour - START_HOUR) * HOUR_HEIGHT }}
               >
                 {format(new Date(2000, 0, 1, hour), 'h a')}
@@ -363,7 +363,7 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                       >
                         {isShort ? (
                           <div className="flex items-center gap-1 h-full">
-                            <span className="text-[10px] font-semibold truncate leading-none">
+                            <span className="text-xs font-semibold truncate leading-none">
                               {event.title}
                             </span>
                             <span className="text-[9px] opacity-80 shrink-0">
@@ -372,10 +372,10 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                           </div>
                         ) : (
                           <>
-                            <div className="text-[11px] font-semibold truncate leading-tight">
+                            <div className="text-sm font-semibold truncate leading-tight">
                               {event.title}
                             </div>
-                            <div className="text-[10px] opacity-80 leading-tight">
+                            <div className="text-xs opacity-80 leading-tight">
                               {format(startDate, 'h:mm a')}
                               {event.end_date && ` – ${format(new Date(event.end_date), 'h:mm a')}`}
                             </div>

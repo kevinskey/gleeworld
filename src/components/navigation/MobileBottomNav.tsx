@@ -49,15 +49,18 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   return (
     <>
       {/* Bottom Navigation Bar */}
-      <nav 
+      <nav
         className={cn(
           "fixed bottom-0 left-0 right-0 z-[99999] bg-background border-t border-border shadow-2xl",
           "pointer-events-auto",
           className
         )}
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        // max() ensures we always have at least 12px of breathing room at
+        // the bottom — devices without a home indicator (env returns 0)
+        // were rendering the nav flush against the screen edge.
+        style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
       >
-        <div className="flex items-center justify-evenly w-full h-10 px-4 bg-background">
+        <div className="flex items-center justify-evenly w-full h-14 px-4 bg-background">
           {/* Musical Toolkit */}
           <div className="flex items-center justify-center w-10 h-10 text-foreground">
             <MusicalToolkit className="!p-0 [&_svg]:!h-6 [&_svg]:!w-6" />

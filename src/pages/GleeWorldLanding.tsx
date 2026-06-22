@@ -1,5 +1,7 @@
-import React from "react";
+import React, { createContext, useContext, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { InquiryDialog } from "@/components/landing/InquiryDialog";
+import { DemoCredsPopup } from "@/components/landing/DemoCredsPopup";
 import { Link } from "react-router-dom";
 import { getDefaultEventImage } from "@/constants/images";
 import { Button } from "@/components/ui/button";
@@ -512,6 +514,11 @@ const MAILTO_BUY =
   'mailto:kevin@gleeworld.org?subject=GleeWorld%20for%20my%20group&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20set%20up%20GleeWorld%20for%20my%20group.%0A%0AName%20of%20organization%3A%20%0ASize%20%28approx%20members%29%3A%20%0APreferred%20subdomain%3A%20%0AHow%20did%20you%20find%20us%3F%20%0A%0AThanks%21';
 const MAILTO_DEMO = 'mailto:kevin@gleeworld.org?subject=GleeWorld%20demo%20request';
 
+// "Get started" buttons across the marketing site open a single shared
+// inquiry dialog (rather than mailto:) so we capture submissions server-side.
+const InquiryContext = createContext<{ open: () => void }>({ open: () => {} });
+const useInquiry = () => useContext(InquiryContext);
+
 // Music-themed imagery — candid / objects / from-behind shots so no one is
 // looking directly into the camera.
 const IMG = {
@@ -525,63 +532,69 @@ const IMG = {
 };
 
 function MarketingSite() {
+  const [inquiryOpen, setInquiryOpen] = useState(false);
   return (
-    <div className="w-full w-full bg-white text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-      <AppleNav />
-      <AppleHero />
-      <AppleVideo />
-      <AppleProductBig />
-      <AppleAudienceGrid />
-      <AppleFeatureRow
-        eyebrow="Glee Academy"
-        title="The LMS built for music."
-        body="Run classes the way you actually teach them. Roster, syllabus, attendance, assignments, gradebook — under one roof."
-        mockup={<GradebookMockup />}
-        pastel="#fef3c7"
-        imageLeft={false}
-      />
-      <AppleFeatureRow
-        eyebrow="Attendance"
-        title="Rehearsals on autopilot."
-        body="Recurring schedules. QR check-in. Excuse requests with one-tap approve. Policies that grade themselves."
-        mockup={<AttendanceMockup />}
-        pastel="#dbeafe"
-        imageLeft={true}
-      />
-      <AppleFeatureRow
-        eyebrow="Calendar"
-        title="Every rehearsal, every concert."
-        body="Recurring events, sectionals, performances — all in one view your singers can sync to their phones."
-        mockup={<CalendarMockup />}
-        pastel="#ede9fe"
-        imageLeft={false}
-      />
-      <AppleFeatureRow
-        eyebrow="Communications"
-        title="One inbox for your ensemble."
-        body="Class-scoped email, push, and announcements. Stop asking people to check four different apps."
-        mockup={<CommsMockup />}
-        pastel="#fce7f3"
-        imageLeft={true}
-      />
-      <AppleFeatureRow
-        eyebrow="Music Library"
-        title="Your whole repertoire in one place."
-        body="PDF previews, recordings, setlists. Tag by voicing, season, or programme. Searchable in one click."
-        mockup={<MusicLibraryMockup />}
-        pastel="#d1fae5"
-        imageLeft={false}
-      />
-      <AppleHowItWorks />
-      <ApplePricing />
-      <AppleTrustStrip />
-      <AppleFinalCTA />
-      <AppleFooter />
-    </div>
+    <InquiryContext.Provider value={{ open: () => setInquiryOpen(true) }}>
+      <div className="w-full w-full bg-white text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+        <AppleNav />
+        <AppleHero />
+        <AppleVideo />
+        <AppleProductBig />
+        <AppleAudienceGrid />
+        <AppleFeatureRow
+          eyebrow="Glee Academy"
+          title="The LMS built for music."
+          body="Run classes the way you actually teach them. Roster, syllabus, attendance, assignments, gradebook — under one roof."
+          mockup={<GradebookMockup />}
+          pastel="#fef3c7"
+          imageLeft={false}
+        />
+        <AppleFeatureRow
+          eyebrow="Attendance"
+          title="Rehearsals on autopilot."
+          body="Recurring schedules. QR check-in. Excuse requests with one-tap approve. Policies that grade themselves."
+          mockup={<AttendanceMockup />}
+          pastel="#dbeafe"
+          imageLeft={true}
+        />
+        <AppleFeatureRow
+          eyebrow="Calendar"
+          title="Every rehearsal, every concert."
+          body="Recurring events, sectionals, performances — all in one view your singers can sync to their phones."
+          mockup={<CalendarMockup />}
+          pastel="#ede9fe"
+          imageLeft={false}
+        />
+        <AppleFeatureRow
+          eyebrow="Communications"
+          title="One inbox for your ensemble."
+          body="Class-scoped email, push, and announcements. Stop asking people to check four different apps."
+          mockup={<CommsMockup />}
+          pastel="#fce7f3"
+          imageLeft={true}
+        />
+        <AppleFeatureRow
+          eyebrow="Music Library"
+          title="Your whole repertoire in one place."
+          body="PDF previews, recordings, setlists. Tag by voicing, season, or programme. Searchable in one click."
+          mockup={<MusicLibraryMockup />}
+          pastel="#d1fae5"
+          imageLeft={false}
+        />
+        <AppleHowItWorks />
+        <ApplePricing />
+        <AppleTrustStrip />
+        <AppleFinalCTA />
+        <AppleFooter />
+        <InquiryDialog open={inquiryOpen} onClose={() => setInquiryOpen(false)} />
+        <DemoCredsPopup />
+      </div>
+    </InquiryContext.Provider>
   );
 }
 
 function AppleNav() {
+  const { open: openInquiry } = useInquiry();
   return (
     <header
       className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 shadow-sm"
@@ -616,13 +629,14 @@ function AppleNav() {
           <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
           <a href={MAILTO_DEMO} className="hover:text-slate-900 transition-colors">Demo</a>
           <a href="/auth" className="hover:text-slate-900 transition-colors">Sign in</a>
-          <a
-            href={MAILTO_BUY}
-            className="inline-flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white transition-colors hover:scale-[1.02]"
+          <button
+            type="button"
+            onClick={openInquiry}
+            className="inline-flex items-center rounded-full px-5 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
             style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
           >
             Get started
-          </a>
+          </button>
         </nav>
         {/* Mobile sign-in (nav is hidden on phones) */}
         <a href="/auth" className="sm:hidden text-sm font-semibold text-slate-700 hover:text-slate-900">Sign in</a>
@@ -636,6 +650,7 @@ function AppleHero() {
   // controlled by the admin's Hero Manager — not a hardcoded image.
   const { data: slides = [] } = useUniversalHeroSlides("homepage_hero");
   const slide = slides[0];
+  const { open: openInquiry } = useInquiry();
 
   return (
     <section className="relative bg-[#0a0518] w-full">
@@ -670,16 +685,19 @@ function AppleHero() {
       {/* CTA strip — sits BELOW the hero image, not overlaying it */}
       <div className="px-6 py-8 sm:py-12 bg-[#0a0518]">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3 justify-center items-center">
-          <a
-            href={MAILTO_BUY}
+          <button
+            type="button"
+            onClick={openInquiry}
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold text-white transition-transform hover:scale-[1.03] shadow-2xl"
             style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
           >
             Get started
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </button>
           <a
-            href={MAILTO_DEMO}
+            href="https://demo.gleeworld.org"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold transition-colors backdrop-blur-sm"
             style={{ color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.10)' }}
           >
@@ -700,7 +718,7 @@ function BrowserFrame({ children }: { children: React.ReactNode }) {
         <div className="w-3 h-3 rounded-full bg-red-400" />
         <div className="w-3 h-3 rounded-full bg-amber-400" />
         <div className="w-3 h-3 rounded-full bg-green-400" />
-        <div className="ml-3 px-3 py-0.5 text-[10px] text-slate-500 bg-white rounded border border-slate-200 font-mono">
+        <div className="ml-3 px-3 py-0.5 text-xs text-slate-500 bg-white rounded border border-slate-200 font-mono">
           eastside.gleeworld.org
         </div>
       </div>
@@ -736,7 +754,7 @@ function DashboardMockup() {
           { label: 'Attendance', val: '94%', color: '#d1fae5' },
         ].map((s) => (
           <div key={s.label} className="rounded-xl p-3" style={{ backgroundColor: s.color }}>
-            <div className="text-[10px] uppercase tracking-wider text-slate-600 font-semibold mb-1">{s.label}</div>
+            <div className="text-xs uppercase tracking-wider text-slate-600 font-semibold mb-1">{s.label}</div>
             <div className="text-xl font-bold text-slate-900">{s.val}</div>
           </div>
         ))}
@@ -777,13 +795,13 @@ function GradebookMockup() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="font-bold text-slate-900">Gradebook</div>
-          <div className="text-[10px] sm:text-xs text-slate-500">MUS 240 · Fall 2026</div>
+          <div className="text-xs sm:text-xs text-slate-500">MUS 240 · Fall 2026</div>
         </div>
-        <div className="text-[10px] sm:text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-700 font-semibold">Class avg 92%</div>
+        <div className="text-xs sm:text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-700 font-semibold">Class avg 92%</div>
       </div>
       <table className="w-full">
         <thead>
-          <tr className="text-[10px] sm:text-xs text-slate-500 border-b border-slate-200">
+          <tr className="text-xs sm:text-xs text-slate-500 border-b border-slate-200">
             <th className="text-left font-medium py-2">Student</th>
             <th className="text-center font-medium">W1</th>
             <th className="text-center font-medium">W2</th>
@@ -832,7 +850,7 @@ function AttendanceMockup() {
     <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="font-bold text-slate-900">Attendance · Week of Sep 14</div>
-        <div className="flex gap-2 text-[10px]">
+        <div className="flex gap-2 text-xs">
           <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#10b981' }} />Present</span>
           <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#0ea5e9' }} />Excused</span>
           <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#f59e0b' }} />Late</span>
@@ -841,7 +859,7 @@ function AttendanceMockup() {
       <div className="grid gap-1.5" style={{ gridTemplateColumns: 'minmax(7rem,1fr) repeat(5, 2rem)' }}>
         <div />
         {dates.map((d) => (
-          <div key={d} className="text-center text-[10px] font-semibold text-slate-500">{d}</div>
+          <div key={d} className="text-center text-xs font-semibold text-slate-500">{d}</div>
         ))}
         {students.map((s, i) => (
           <React.Fragment key={s}>
@@ -849,7 +867,7 @@ function AttendanceMockup() {
             {grid[i].map((c, j) => (
               <div
                 key={j}
-                className="rounded text-white text-[10px] font-bold flex items-center justify-center"
+                className="rounded text-white text-xs font-bold flex items-center justify-center"
                 style={{ backgroundColor: color(c), aspectRatio: '1/1' }}
               >
                 {c}
@@ -873,7 +891,7 @@ function CalendarMockup() {
     <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="font-bold text-slate-900">Upcoming · September</div>
-        <div className="text-[10px] text-slate-500">4 events</div>
+        <div className="text-xs text-slate-500">4 events</div>
       </div>
       <div className="space-y-2">
         {events.map((e) => (
@@ -881,7 +899,7 @@ function CalendarMockup() {
             <div className="w-1.5 self-stretch rounded-full" style={{ backgroundColor: e.color }} />
             <div className="flex-1">
               <div className="font-semibold text-slate-900">{e.name}</div>
-              <div className="text-[10px] sm:text-xs text-slate-500">{e.day} · {e.t}</div>
+              <div className="text-xs sm:text-xs text-slate-500">{e.day} · {e.t}</div>
             </div>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
@@ -896,7 +914,7 @@ function CommsMockup() {
     <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm space-y-3">
       <div className="flex items-center justify-between">
         <div className="font-bold text-slate-900">Announcements</div>
-        <div className="text-[10px] text-slate-500">3 unread</div>
+        <div className="text-xs text-slate-500">3 unread</div>
       </div>
       {[
         { who: 'Dr. Hayes', when: '2h', msg: 'Rehearsal Friday moved to 6:30 PM — please confirm in the calendar.', tag: 'All choir' },
@@ -908,8 +926,8 @@ function CommsMockup() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-slate-900">{m.who}</span>
-              <span className="text-[10px] text-slate-500">· {m.when}</span>
-              <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-sky-50 text-sky-700 font-semibold">{m.tag}</span>
+              <span className="text-xs text-slate-500">· {m.when}</span>
+              <span className="text-[9px] sm:text-xs px-1.5 py-0.5 rounded-full bg-sky-50 text-sky-700 font-semibold">{m.tag}</span>
             </div>
             <p className="text-slate-700 leading-snug">{m.msg}</p>
           </div>
@@ -931,7 +949,7 @@ function MusicLibraryMockup() {
     <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="font-bold text-slate-900">Music Library</div>
-        <div className="text-[10px] text-slate-500">62 pieces</div>
+        <div className="text-xs text-slate-500">62 pieces</div>
       </div>
       <div className="space-y-1.5">
         {tracks.map((t, i) => (
@@ -941,9 +959,9 @@ function MusicLibraryMockup() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-slate-900 truncate">{t.title}</div>
-              <div className="text-[10px] text-slate-500 truncate">{t.composer}</div>
+              <div className="text-xs text-slate-500 truncate">{t.composer}</div>
             </div>
-            <div className="text-[10px] sm:text-xs text-slate-400 font-mono">{t.dur}</div>
+            <div className="text-xs sm:text-xs text-slate-400 font-mono">{t.dur}</div>
           </div>
         ))}
       </div>
@@ -1116,6 +1134,7 @@ function AppleTrustStrip() {
 }
 
 function AppleFinalCTA() {
+  const { open: openInquiry } = useInquiry();
   return (
     <section className="py-16 sm:py-24 md:py-32 bg-white">
       <div className="max-w-4xl mx-auto px-6 text-center">
@@ -1126,17 +1145,18 @@ function AppleFinalCTA() {
           Ready to begin?
         </h2>
         <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-xl mx-auto mb-10 leading-relaxed">
-          Send one email. We'll have your site live by tomorrow.
+          Tell us about your group. We'll have your site live by tomorrow.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a
-            href={MAILTO_BUY}
-            className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white"
+          <button
+            type="button"
+            onClick={openInquiry}
+            className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white transition-transform hover:scale-[1.02]"
             style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
           >
             Get started
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </button>
           <a
             href={MAILTO_DEMO}
             className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold"

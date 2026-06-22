@@ -397,7 +397,7 @@ export const PointOfSale = () => {
                 Ship to customer
               </span>
               {item.shipToCustomer && (
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                <Badge variant="secondary" className="text-xs px-1.5 py-0">
                   Ships later
                 </Badge>
               )}
@@ -521,7 +521,7 @@ export const PointOfSale = () => {
           </>
         )}
       </Button>
-      <p className="text-[10px] text-center text-muted-foreground">
+      <p className="text-xs text-center text-muted-foreground">
         {terminal.connectionStatus === 'connected'
           ? 'Tap "Charge on Reader" for card/tap payments'
           : 'Customer pays via QR code or link'}
@@ -694,7 +694,7 @@ export const PointOfSale = () => {
                           ${product.price.toFixed(2)}
                         </p>
                         {product.inventory_quantity !== null && (
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {product.inventory_quantity} left
                           </p>
                         )}

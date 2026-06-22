@@ -105,7 +105,7 @@ interface Campaign {
   created_at: string;
 }
 
-export function NewsletterStudio({ onClose }: { onClose: () => void }) {
+export function NewsletterStudio({ onClose, inline = false }: { onClose: () => void; inline?: boolean }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [filter, setFilter] = useState<StatusFilter>('all');
@@ -165,8 +165,12 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 sm:p-4">
-      <div className="w-full max-w-6xl h-full sm:h-[88vh] bg-white text-gray-900 rounded-none sm:rounded-xl shadow-xl flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0">
+    <div className={inline
+      ? "w-full h-full flex"
+      : "fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 sm:p-4"}>
+      <div className={inline
+        ? "w-full h-full bg-card text-foreground flex flex-col overflow-hidden"
+        : "w-full max-w-6xl h-full sm:h-[88vh] bg-white text-gray-900 rounded-none sm:rounded-xl shadow-xl flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0"}>
         {/* Title bar */}
         <div className="border-b px-4 py-3 flex items-center justify-between bg-white">
           <h2 className="font-semibold flex items-center gap-2"><Newspaper className="w-5 h-5" /> Newsletters</h2>
@@ -224,7 +228,7 @@ export function NewsletterStudio({ onClose }: { onClose: () => void }) {
                       <StatusBadge status={c.status} />
                     </div>
                     <div className="text-xs text-muted-foreground truncate">{c.subject || '(no subject)'}</div>
-                    <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2 mt-0.5">
                       <span className="inline-flex items-center gap-1">
                         <Users className="w-3 h-3" />
                         {GROUPS.find((g) => g.value === c.target_audience)?.label || 'Students only'}
@@ -284,7 +288,7 @@ function StatusBadge({ status }: { status: string }) {
     template: <LayoutTemplate className="w-3 h-3" />,
   };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${styles[status] || 'bg-gray-100 text-gray-700'}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium capitalize ${styles[status] || 'bg-gray-100 text-gray-700'}`}>
       {icons[status]} {status}
     </span>
   );
@@ -644,7 +648,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                     key={h.name}
                     type="button"
                     onClick={() => setIntro(h.intro)}
-                    className="text-[11px] px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
+                    className="text-sm px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
                   >
                     {h.name}
                   </button>
@@ -690,7 +694,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                     key={f.name}
                     type="button"
                     onClick={() => setFooter(f.footer)}
-                    className="text-[11px] px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
+                    className="text-sm px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
                   >
                     {f.name}
                   </button>

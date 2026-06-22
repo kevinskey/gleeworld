@@ -93,7 +93,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       {isFirstInGroup && !isOwnMessage && (
         <Avatar className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 mt-0.5 sm:mt-1">
           <AvatarImage src={message.user_profile?.avatar_url} />
-          <AvatarFallback className="text-[10px] sm:text-xs bg-primary/10 text-primary">
+          <AvatarFallback className="text-xs sm:text-xs bg-primary/10 text-primary">
             {userInitials}
           </AvatarFallback>
         </Avatar>
@@ -110,7 +110,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <span className="text-xs sm:text-sm font-medium text-foreground truncate">
               {userName}
             </span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0">
+            <span className="text-xs sm:text-xs text-muted-foreground flex-shrink-0">
               {formatMessageTime(message.created_at)}
             </span>
           </div>
@@ -119,7 +119,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {/* Reply indicator */}
         {message.reply_to && (
           <div className={cn(
-            "mb-1 sm:mb-2 text-[10px] sm:text-xs p-1.5 sm:p-2 rounded-lg bg-muted/50 max-w-[200px] sm:max-w-xs border-l-2 border-primary",
+            "mb-1 sm:mb-2 text-xs sm:text-xs p-1.5 sm:p-2 rounded-lg bg-muted/50 max-w-[200px] sm:max-w-xs border-l-2 border-primary",
             isOwnMessage && "text-right border-r-2 border-l-0"
           )}>
             <div className="font-medium text-primary truncate">
@@ -160,7 +160,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium truncate">{message.file_name}</p>
               {message.file_size && (
-                <p className="text-[10px] opacity-70">
+                <p className="text-xs opacity-70">
                   {message.file_size < 1024 * 1024
                     ? `${(message.file_size / 1024).toFixed(1)} KB`
                     : `${(message.file_size / (1024 * 1024)).toFixed(1)} MB`}
@@ -195,7 +195,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             
             {/* Timestamp for own messages */}
             {isOwnMessage && isLastInGroup && (
-              <div className="text-[10px] sm:text-xs text-white/70 mt-0.5 sm:mt-1 text-right">
+              <div className="text-xs sm:text-xs text-white/70 mt-0.5 sm:mt-1 text-right">
                 {formatMessageTime(message.created_at)}
               </div>
             )}

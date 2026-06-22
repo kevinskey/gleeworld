@@ -333,7 +333,7 @@ const RiserSpotCell = ({
           'relative group rounded-md border border-primary/30 bg-primary/5 p-1.5 min-h-[52px] flex flex-col items-center justify-center text-center cursor-default'
         )}
       >
-        <span className="text-[10px] font-medium leading-tight line-clamp-2">
+        <span className="text-xs font-medium leading-tight line-clamp-2">
           {spot.memberName}
         </span>
         <button
@@ -383,7 +383,7 @@ const RiserSpotCell = ({
               >
                 <span>{m.full_name}</span>
                 {m.voice_part && (
-                  <span className="text-[10px] text-muted-foreground">{m.voice_part}</span>
+                  <span className="text-xs text-muted-foreground">{m.voice_part}</span>
                 )}
               </button>
             ))

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import { 
   extractYouTubeVideoId, 
   getYouTubeThumbnail, 
@@ -334,10 +335,6 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
 
   // Delete channel and its videos
   const deleteChannel = async (channelId: string, channelName: string) => {
-    if (!confirm(`Delete "${channelName}" and all its videos? This cannot be undone.`)) {
-      return;
-    }
-    
     try {
       // First delete all videos from this channel
       const { error: videosError } = await supabase
@@ -821,15 +818,16 @@ export const CourseVideoLibrary: React.FC<CourseVideoLibraryProps> = ({
                         <ExternalLink className="h-4 w-4" />
                       </a>
                       {isInstructor && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => deleteChannel(channel.id, channel.channel_name)}
-                          title="Delete channel"
+                        <ConfirmDeleteButton
+                          confirmKey="delete-video-channel"
+                          title={`Delete "${channel.channel_name}"?`}
+                          description="The channel and all of its videos will be removed. This cannot be undone."
+                          onConfirm={() => deleteChannel(channel.id, channel.channel_name)}
+                          ariaLabel="Delete channel"
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-md text-destructive hover:text-destructive hover:bg-muted"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </ConfirmDeleteButton>
                       )}
                     </div>
                   </div>

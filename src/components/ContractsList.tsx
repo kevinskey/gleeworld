@@ -80,27 +80,24 @@ export const ContractsList = ({
     handleFilterChange
   } = useContractFiltering(contracts);
   const handleDeleteContract = async (contractId: string) => {
-    if (confirm("Are you sure you want to delete this contract?")) {
-      await onDeleteContract(contractId);
-      setSelectedContracts(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(contractId);
-        return newSet;
-      });
-    }
+    await onDeleteContract(contractId);
+    setSelectedContracts(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(contractId);
+      return newSet;
+    });
   };
   const handleDeleteSelected = async () => {
     if (selectedContracts.size === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedContracts.size} selected contract(s)?`)) {
-      for (const contractId of selectedContracts) {
-        await onDeleteContract(contractId);
-      }
-      setSelectedContracts(new Set());
-      toast({
-        title: "Success",
-        description: `${selectedContracts.size} contract(s) deleted successfully`
-      });
+    for (const contractId of selectedContracts) {
+      await onDeleteContract(contractId);
     }
+    const count = selectedContracts.size;
+    setSelectedContracts(new Set());
+    toast({
+      title: "Success",
+      description: `${count} contract(s) deleted successfully`
+    });
   };
   const handleSelectAll = (checked: boolean) => {
     if (checked) {

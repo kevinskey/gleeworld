@@ -564,7 +564,7 @@ export default function PublicPageEditor() {
                       if (items.length === 0) return null;
                       return (
                         <div key={key} className="space-y-2">
-                          <div className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+                          <div className="text-xs uppercase tracking-wide font-semibold text-muted-foreground">
                             {label}
                           </div>
                           {items.map((mod) => {
@@ -596,7 +596,7 @@ export default function PublicPageEditor() {
                                   </div>
                                   <p className="text-xs text-muted-foreground">{mod.description}</p>
                                   {mod.poweredBy && (
-                                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70 mt-1">
+                                    <p className="text-xs uppercase tracking-wide text-muted-foreground/70 mt-1">
                                       Powered by {mod.poweredBy}
                                     </p>
                                   )}

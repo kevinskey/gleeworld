@@ -173,7 +173,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
         </div>
       </div>
       <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
-        <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500">Fields to collect</div>
+        <div className="text-xs uppercase tracking-wide font-semibold text-slate-500">Fields to collect</div>
         <label className="flex items-center gap-2 text-sm cursor-pointer">
           <Checkbox checked={config.showName} onCheckedChange={(v) => set({ showName: v === true })} />
           <span>Ask for name</span>
@@ -182,7 +182,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
           <Checkbox checked={config.showCity} onCheckedChange={(v) => set({ showCity: v === true })} />
           <span>Ask for city</span>
         </label>
-        <p className="text-[11px] text-slate-500 mt-1">Email is always required.</p>
+        <p className="text-sm text-slate-500 mt-1">Email is always required.</p>
       </div>
       <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
         <label className="flex items-center gap-2 text-sm cursor-pointer">

@@ -87,7 +87,7 @@ export const OfficeHoursCard: React.FC = () => {
 
         <Button
           className="w-full"
-          onClick={() => navigate('/book-appointment')}
+          onClick={() => navigate('/dashboard/office-hours')}
         >
           {upcomingAppointment ? 'Manage Appointment' : 'Book Appointment'}
         </Button>

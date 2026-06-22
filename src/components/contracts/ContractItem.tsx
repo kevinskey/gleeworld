@@ -14,6 +14,7 @@ import { useContractRecipientProfile } from "@/hooks/useContractRecipientProfile
 import { isAdmin } from "@/constants/permissions";
 import { formatContractDisplayName } from "@/lib/contract-utils";
 import type { Contract } from "@/hooks/useContracts";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface ContractItemProps {
   contract: Contract;
@@ -284,15 +285,16 @@ export const ContractItem = ({
           )}
           
           {userIsAdmin && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => onDelete(contract.id)}
-              className="border-red-300 text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-              title="Delete Contract"
+            <ConfirmDeleteButton
+              confirmKey="delete-contract"
+              title="Delete this contract?"
+              description="The contract record will be removed for everyone."
+              onConfirm={() => onDelete(contract.id)}
+              ariaLabel="Delete contract"
+              className="inline-flex items-center justify-center rounded-md border border-red-300 text-red-700 hover:bg-red-50 h-8 w-8 p-0"
             >
               <Trash2 className="h-3 w-3" />
-            </Button>
+            </ConfirmDeleteButton>
           )}
         </div>
       </div>

@@ -410,7 +410,7 @@ export const TourRollCallSection: React.FC = () => {
                       <div className="min-w-0">
                         <p className="font-medium truncate text-foreground text-xs">{member.full_name || 'Unknown'}</p>
                         {isPresent && response && (
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {format(new Date(response.checked_in_at), 'h:mm a')}
                           </p>
                         )}

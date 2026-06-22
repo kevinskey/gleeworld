@@ -210,7 +210,7 @@ export default function PlatformTenantsPortal() {
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mt-1"
+                    className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mt-1"
                   >
                     {url} <ExternalLink className="w-3 h-3" />
                   </a>

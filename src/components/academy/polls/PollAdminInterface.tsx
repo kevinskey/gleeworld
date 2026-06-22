@@ -8,6 +8,7 @@ import { Plus, Play, Square, Trash2, Edit, BarChart3, RefreshCw, Radio, Users } 
 import { AcademyPoll, PollQuestion } from './AcademyPollSystem';
 import { PollEditor } from './PollEditor';
 import { PollResults } from './PollResults';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface PollAdminInterfaceProps {
   polls: AcademyPoll[];
@@ -187,14 +188,16 @@ export const PollAdminInterface: React.FC<PollAdminInterfaceProps> = ({
                         </>
                       )}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDeletePoll(poll.id)}
-                      className="text-destructive hover:text-destructive"
+                    <ConfirmDeleteButton
+                      confirmKey="delete-academy-poll"
+                      title="Delete this poll?"
+                      description="The poll and any responses will be permanently removed."
+                      onConfirm={() => onDeletePoll(poll.id)}
+                      ariaLabel="Delete poll"
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-md text-destructive hover:text-destructive hover:bg-muted"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </div>
               ))}

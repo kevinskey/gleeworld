@@ -243,7 +243,7 @@ export const FinderFileGrid = ({
                       <div className={cn("w-full h-full flex flex-col items-center justify-center gap-2", getIconColor(extendedType))}>
                         <Icon className="h-12 w-12" />
                         {extendedType !== 'other' && (
-                          <span className="text-[10px] font-medium uppercase tracking-wide opacity-70">
+                          <span className="text-xs font-medium uppercase tracking-wide opacity-70">
                             {extendedType}
                           </span>
                         )}

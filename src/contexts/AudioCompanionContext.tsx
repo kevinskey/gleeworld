@@ -3,7 +3,7 @@ import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 
 interface AudioCompanionState {
   isActive: boolean;
-  audioSource: 'youtube' | 'file' | null;
+  audioSource: 'youtube' | 'file' | 'apple_music' | null;
   youtubeVideoId: string | null;
   isPlaying: boolean;
   isLoading: boolean;
@@ -13,6 +13,10 @@ interface AudioCompanionState {
   volume: number;
   isMuted: boolean;
   audioFileName: string | null;
+  playbackRate: number;
+  appleMusicNeedsAuth: boolean;
+  appleMusicAuthError: string | null;
+  appleMusicArtworkUrl: string | null;
 }
 
 interface AudioCompanionContextValue extends AudioCompanionState {
@@ -21,6 +25,8 @@ interface AudioCompanionContextValue extends AudioCompanionState {
   loadYouTube: (url: string) => void;
   loadFile: (file: File) => void;
   loadUrl: (url: string, fileName?: string) => void;
+  loadAppleMusic: (input: { id: string; kind?: 'song' | 'album'; storefront?: string; title?: string; artworkUrl?: string | null }) => Promise<void>;
+  authorizeAppleMusic: () => Promise<boolean>;
   togglePlayPause: () => void;
   seek: (time: number) => void;
   setVolume: (vol: number) => void;
@@ -28,7 +34,12 @@ interface AudioCompanionContextValue extends AudioCompanionState {
   stop: () => void;
   stopPlayback: () => void;
   closeYouTube: () => void;
+  setPlaybackRate: (rate: number) => void;
 }
+
+// Rates supported by both HTMLAudioElement (pitch-preserving on modern
+// browsers) and the YouTube IFrame API.
+export const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5] as const;
 
 const AudioCompanionContext = createContext<AudioCompanionContextValue | null>(null);
 
@@ -53,6 +64,12 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   });
   const [isMuted, setIsMuted] = useState(false);
   const [audioFileName, setAudioFileName] = useState<string | null>(null);
+  const [playbackRate, setPlaybackRateState] = useState(1);
+  const [appleMusicNeedsAuth, setAppleMusicNeedsAuth] = useState(false);
+  const [appleMusicAuthError, setAppleMusicAuthError] = useState<string | null>(null);
+  const [appleMusicArtworkUrl, setAppleMusicArtworkUrl] = useState<string | null>(null);
+  const appleMusicInstanceRef = useRef<any>(null);
+  const appleMusicProgressRef = useRef<number | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -215,6 +232,31 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     } else if (audioSource === 'file' && audioRef.current) {
       if (isPlaying) audioRef.current.pause();
       else audioRef.current.play();
+    } else if (audioSource === 'apple_music') {
+      const kit = appleMusicInstanceRef.current;
+      if (!kit) return;
+      (async () => {
+        // Subscription / sign-in is enforced on first play. If the user
+        // isn't authorized yet, fire the flow once; subsequent plays go
+        // straight through.
+        if (!kit.musicUserToken) {
+          const { authorizeAppleMusic: authFn } = await import('@/lib/musicKit');
+          const result = await authFn();
+          if (!result.ok) {
+            setAppleMusicNeedsAuth(true);
+            setAppleMusicAuthError(result.message ?? 'Sign-in failed.');
+            return;
+          }
+          setAppleMusicNeedsAuth(false);
+          setAppleMusicAuthError(null);
+        }
+        try {
+          if (isPlaying) await kit.pause();
+          else await kit.play();
+        } catch (err) {
+          console.error('[AudioContext] apple music play/pause failed', err);
+        }
+      })();
     }
   }, [audioSource, isPlaying, sendYouTubeCommand]);
 
@@ -224,6 +266,9 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       setCurrentTime(time);
     } else if (audioSource === 'file' && audioRef.current) {
       audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    } else if (audioSource === 'apple_music' && appleMusicInstanceRef.current) {
+      appleMusicInstanceRef.current.seekToTime?.(time);
       setCurrentTime(time);
     }
   }, [audioSource, sendYouTubeCommand]);
@@ -240,6 +285,11 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     } else if (audioSource === 'file' && audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+    } else if (audioSource === 'apple_music' && appleMusicInstanceRef.current) {
+      const kit = appleMusicInstanceRef.current;
+      (async () => {
+        try { await kit.pause(); await kit.seekToTime?.(0); } catch {}
+      })();
     }
     setIsPlaying(false);
     setCurrentTime(0);
@@ -254,6 +304,8 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       else sendYouTubeCommand('unMute');
     } else if (audioSource === 'file' && audioRef.current) {
       audioRef.current.volume = vol;
+    } else if (audioSource === 'apple_music' && appleMusicInstanceRef.current) {
+      appleMusicInstanceRef.current.volume = vol;
     }
   }, [audioSource, sendYouTubeCommand]);
 
@@ -274,16 +326,158 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     } else if (audioSource === 'file' && audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+    } else if (audioSource === 'apple_music' && appleMusicInstanceRef.current) {
+      const kit = appleMusicInstanceRef.current;
+      (async () => { try { await kit.stop(); } catch {} })();
+      if (appleMusicProgressRef.current) {
+        window.clearInterval(appleMusicProgressRef.current);
+        appleMusicProgressRef.current = null;
+      }
     }
     setAudioSource(null);
     setYoutubeVideoId(null);
     setAudioFileName(null);
+    setAppleMusicArtworkUrl(null);
+    setAppleMusicNeedsAuth(false);
     setIsPlaying(false);
     setIsLoading(false);
     setPlayerReady(false);
     setCurrentTime(0);
     setDuration(0);
   }, [audioSource, sendYouTubeCommand]);
+
+  // Apple Music integration. The MusicKit instance is lazily fetched from
+  // src/lib/musicKit on first load. Playback uses setQueue + play; we also
+  // attach a 500ms progress poller for the seek slider since MusicKit
+  // doesn't emit timeupdate events for arbitrary listeners.
+  const attachAppleMusicListeners = useCallback((kit: any) => {
+    const onPlaybackState = () => {
+      const s = kit.player?.playbackState ?? kit.playbackState;
+      // MusicKit states: none=0, loading=1, playing=2, paused=3, stopped=4, ended=5
+      setIsPlaying(s === 2);
+    };
+    const onTime = () => {
+      const t = kit.player?.currentPlaybackTime ?? kit.currentPlaybackTime ?? 0;
+      const d = kit.player?.currentPlaybackDuration ?? kit.currentPlaybackDuration ?? 0;
+      if (typeof t === 'number') setCurrentTime(t);
+      if (typeof d === 'number') setDuration(d);
+    };
+    // v3 API uses kit.addEventListener.
+    try {
+      kit.addEventListener?.('playbackStateDidChange', onPlaybackState);
+      kit.addEventListener?.('playbackTimeDidChange', onTime);
+    } catch { /* older API noop */ }
+    if (appleMusicProgressRef.current) window.clearInterval(appleMusicProgressRef.current);
+    appleMusicProgressRef.current = window.setInterval(onTime, 500);
+  }, []);
+
+  const loadAppleMusic = useCallback(async (input: { id: string; kind?: 'song' | 'album'; storefront?: string; title?: string; artworkUrl?: string | null }) => {
+    setIsLoading(true);
+    setAppleMusicAuthError(null);
+
+    // Set the UI source immediately so the user sees the artwork + title
+    // (and the "Sign in to Apple Music" button if auth ends up being
+    // required). Without this, every auth/queue failure leaves audioSource
+    // null and nothing visible changes.
+    setAudioSource('apple_music');
+    setAudioFileName(input.title ?? 'Apple Music');
+    setAppleMusicArtworkUrl(input.artworkUrl ?? null);
+    setYoutubeVideoId(null);
+    setIsPlaying(false);
+    setIsActive(true);
+
+    try {
+      const { getMusicKit } = await import('@/lib/musicKit');
+      const kit = await getMusicKit();
+      appleMusicInstanceRef.current = kit;
+      attachAppleMusicListeners(kit);
+
+      // If the user isn't signed in, DON'T fire authorize() automatically
+      // here — by now we're many async ticks past the user's click and
+      // Safari/WKWebView blocks the popup. Surface the explicit "Sign in
+      // to Apple Music" button instead; that button calls authorize()
+      // synchronously inside its own click handler so the popup works.
+      if (!kit.musicUserToken) {
+        setAppleMusicNeedsAuth(true);
+        setAppleMusicAuthError('Sign in to Apple Music to play this track.');
+        setPlayerReady(false);
+        return;
+      }
+      setAppleMusicNeedsAuth(false);
+
+      // Queue a single song or an entire album based on the user's pick.
+      if (input.kind === 'album') {
+        await kit.setQueue({ album: input.id });
+      } else {
+        await kit.setQueue({ song: input.id });
+      }
+      setPlayerReady(true);
+
+      try {
+        await kit.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.warn('[AudioContext] apple music auto-play blocked', err);
+      }
+    } catch (err: any) {
+      console.error('[AudioContext] loadAppleMusic failed', err);
+      setAppleMusicNeedsAuth(true);
+      setAppleMusicAuthError(err?.message ?? 'Failed to load Apple Music track.');
+      setPlayerReady(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [attachAppleMusicListeners]);
+
+  // Called from the explicit "Sign in to Apple Music" button — this MUST
+  // run synchronously inside the button's click so MusicKit's popup
+  // doesn't get blocked. Returns true on success.
+  const authorizeAppleMusic = useCallback(async () => {
+    setAppleMusicAuthError(null);
+    try {
+      const { authorizeAppleMusic: authFn } = await import('@/lib/musicKit');
+      const result = await authFn();
+      if (result.ok) {
+        setAppleMusicNeedsAuth(false);
+        return true;
+      }
+      setAppleMusicNeedsAuth(true);
+      setAppleMusicAuthError(result.message ?? 'Sign-in failed.');
+      return false;
+    } catch (err: any) {
+      setAppleMusicNeedsAuth(true);
+      setAppleMusicAuthError(err?.message ?? 'Sign-in failed.');
+      return false;
+    }
+  }, []);
+
+  // Half-speed practice / 1.5× preview. HTMLAudioElement preserves pitch by
+  // default in Chrome/Safari/Firefox; YouTube does its own pitch correction.
+  const setPlaybackRate = useCallback((rate: number) => {
+    setPlaybackRateState(rate);
+    if (audioRef.current) {
+      try { (audioRef.current as any).preservesPitch = true; } catch {}
+      audioRef.current.playbackRate = rate;
+    }
+    if (audioSource === 'youtube') {
+      sendYouTubeCommand('setPlaybackRate', [rate]);
+    }
+    if (audioSource === 'apple_music' && appleMusicInstanceRef.current) {
+      try { appleMusicInstanceRef.current.playbackRate = rate; } catch {}
+    }
+  }, [audioSource, sendYouTubeCommand]);
+
+  // Re-apply the current rate when a new source loads so the user's choice
+  // persists across track changes (e.g. switching from one MP3 to another).
+  useEffect(() => {
+    if (audioSource === 'youtube' && playerReady) {
+      sendYouTubeCommand('setPlaybackRate', [playbackRate]);
+    }
+    if (audioSource === 'file' && audioRef.current) {
+      try { (audioRef.current as any).preservesPitch = true; } catch {}
+      audioRef.current.playbackRate = playbackRate;
+    }
+  }, [audioSource, playerReady, playbackRate, sendYouTubeCommand]);
 
   const closeYouTube = useCallback(() => {
     setYoutubeVideoId(null);
@@ -334,11 +528,17 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
         volume,
         isMuted,
         audioFileName,
+        playbackRate,
+        appleMusicNeedsAuth,
+        appleMusicAuthError,
+        appleMusicArtworkUrl,
         showPlayer,
         hidePlayer,
         loadYouTube,
         loadFile,
         loadUrl,
+        loadAppleMusic,
+        authorizeAppleMusic,
         togglePlayPause,
         seek,
         setVolume,
@@ -346,6 +546,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
         stop,
         stopPlayback,
         closeYouTube,
+        setPlaybackRate,
       }}
     >
       {children}

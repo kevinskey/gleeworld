@@ -157,11 +157,11 @@ export const AdminConflictApproval: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Approved</Badge>;
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs"><CheckCircle2 className="h-3 w-3 mr-1" />Approved</Badge>;
       case 'denied':
-        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 text-[10px]"><XCircle className="h-3 w-3 mr-1" />Denied</Badge>;
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 text-xs"><XCircle className="h-3 w-3 mr-1" />Denied</Badge>;
       default:
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-[10px]"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
     }
   };
 
@@ -175,7 +175,7 @@ export const AdminConflictApproval: React.FC = () => {
                 <ShieldCheck className="h-4 w-4 text-primary" />
                 Conflict Excuse Approvals
                 {statusCounts.pending > 0 && (
-                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                  <Badge variant="destructive" className="text-xs px-1.5 py-0">
                     {statusCounts.pending}
                   </Badge>
                 )}
@@ -193,7 +193,7 @@ export const AdminConflictApproval: React.FC = () => {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-colors capitalize",
+                  "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors capitalize",
                   filter === f
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"
@@ -223,13 +223,13 @@ export const AdminConflictApproval: React.FC = () => {
                       <p className="text-xs font-medium">
                         {req.conflict_course_code ? `${req.conflict_course_code} — ` : ''}{req.conflict_course_name}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {req.conflict_days?.join(', ')} · {req.conflict_start_time?.slice(0, 5)}–{req.conflict_end_time?.slice(0, 5)} · {req.excuse_type === 'full' ? 'Full' : 'Partial'} excuse
                       </p>
                       {req.reason && (
-                        <p className="text-[10px] text-muted-foreground mt-1 italic">"{req.reason}"</p>
+                        <p className="text-xs text-muted-foreground mt-1 italic">"{req.reason}"</p>
                       )}
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Submitted {format(new Date(req.created_at), 'MMM d, yyyy')}
                       </p>
                     </div>
@@ -239,7 +239,7 @@ export const AdminConflictApproval: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-[10px] h-6 px-2"
+                          className="text-xs h-6 px-2"
                           onClick={() => {
                             setReviewingRequest(req);
                             setReviewNotes('');
@@ -251,7 +251,7 @@ export const AdminConflictApproval: React.FC = () => {
                     </div>
                   </div>
                   {req.review_notes && (
-                    <div className="text-[10px] p-2 rounded bg-muted border border-border/50">
+                    <div className="text-xs p-2 rounded bg-muted border border-border/50">
                       <span className="font-medium">Review note:</span> {req.review_notes}
                     </div>
                   )}
@@ -293,11 +293,11 @@ export const AdminConflictApproval: React.FC = () => {
                   <p className="text-xs text-muted-foreground italic mt-1">"{reviewingRequest.reason}"</p>
                 )}
                 {reviewingRequest.student_phone ? (
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                     <Send className="h-3 w-3" /> SMS will be sent to {reviewingRequest.student_phone}
                   </p>
                 ) : (
-                  <p className="text-[10px] text-orange-600 flex items-center gap-1 mt-1">
+                  <p className="text-xs text-orange-600 flex items-center gap-1 mt-1">
                     <AlertTriangle className="h-3 w-3" /> No phone on file — no SMS will be sent
                   </p>
                 )}

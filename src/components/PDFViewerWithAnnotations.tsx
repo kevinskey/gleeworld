@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import { Viewer, Worker, ScrollMode } from '@react-pdf-viewer/core';
 
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -40,23 +40,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 import { useSheetMusicAnnotations } from '@/hooks/useSheetMusicAnnotations';
+import { useAnnotationLayers } from '@/hooks/useAnnotationLayers';
 import { useSheetMusicAudio } from '@/hooks/useSheetMusicAudio';
+import { useSheetMusicTracks } from '@/hooks/useSheetMusicTracks';
 import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
 import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
+import { BookmarksMenu } from '@/components/music-library/BookmarksMenu';
+import { STAMP_CATEGORIES } from '@/lib/smuflStamps';
 import * as pdfjsLib from 'pdfjs-dist';
-// `?worker&inline` bundles the pdfjs worker source directly into the main
-// JS bundle and runs it from an in-memory Blob URL. That sidesteps two
-// failure modes that have plagued the score viewer on iOS:
-//   1. Capacitor's WKWebView sometimes serves bundled .mjs assets with the
-//      wrong MIME (application/octet-stream), which blocks the browser from
-//      loading them as ES module workers.
-//   2. The "fake worker" fallback path in pdfjs hardcodes a cdnjs URL that
-//      may not exist or may be blocked by tenants' CSP / ad blockers.
-// Trade-off: main JS bundle gets ~1 MB heavier, but the score viewer works
-// reliably on iPhone, iPad TestFlight, Mac Safari, Chrome, Firefox.
-import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker&inline';
-pdfjsLib.GlobalWorkerOptions.workerPort = new PdfJsWorker();
+// Value-import (not side-effect) so Vite cannot tree-shake the worker setup.
+import { PDF_WORKER_READY } from '@/lib/pdfWorker';
+void PDF_WORKER_READY;
 
 interface PDFViewerWithAnnotationsProps {
   pdfUrl: string | null;
@@ -68,31 +63,88 @@ interface PDFViewerWithAnnotationsProps {
   isInMobileViewer?: boolean;
   /** Optional extra toolbar actions (rendered inside the auto-hiding toolbar on mobile) */
   toolbarActions?: React.ReactNode;
+  /** When true, suppresses the viewer's own top toolbar + bottom pagination
+   *  pill so a parent shell (e.g. the Viewer module's tap-to-reveal chrome)
+   *  can own those affordances and drive them via the ref. */
+  chromeless?: boolean;
+  /** Fires whenever the page index or page count changes. Used by the
+   *  Viewer module's bottom seek bar to mirror the current location. */
+  onPageChange?: (page: number, totalPages: number) => void;
 }
-interface PDFViewerHandle {
+export interface PDFViewerHandle {
   promptToSaveIfDirty: () => Promise<boolean>;
   toggleToolbar: () => void;
+  nextPage: () => void;
+  prevPage: () => void;
+  goToPage: (page: number) => void;
+  openAudioCompanion: () => void;
+  toggleAudioCompanion: () => void;
+  togglePiano: () => void;
+  isAudioCompanionOpen: () => boolean;
+  isPianoOpen: () => boolean;
+  enterAnnotationMode: () => void;
+  /** Returns the current annotation tool state for a parent chrome shell
+   *  that wants to render its own toolbar (see ViewerReader). */
+  exitAnnotationMode: () => void;
+  /** Renders a single PDF page to a small data URL for thumbnails. Returns
+   *  null until the document is loaded. */
+  renderThumbnail: (pageNum: number, scale?: number) => Promise<string | null>;
+  /** Annotation control surface for an external chrome. */
+  setAnnotationTool: (tool: 'select' | 'draw' | 'erase' | 'stamp') => void;
+  setAnnotationColor: (color: string) => void;
+  setAnnotationStamp: (stamp: string, font?: string) => void;
+  setAlwaysOnPencil: (v: boolean) => void;
+  getAlwaysOnPencil: () => boolean;
+  /** Annotation layer controls — drive a layers panel in the parent shell. */
+  getLayers: () => Array<{ id: string; name: string; color: string; is_visible: boolean }>;
+  getCurrentLayerId: () => string | null;
+  setCurrentLayerId: (id: string | null) => void;
+  addLayer: (name: string, color?: string) => Promise<{ id: string } | null>;
+  toggleLayer: (id: string, visible: boolean) => void;
+  deleteLayerById: (id: string) => void;
+  saveAnnotations: () => Promise<boolean>;
+  undoAnnotation: () => void;
+  clearAnnotations: () => void;
+  getAnnotationState: () => {
+    tool: 'select' | 'draw' | 'erase' | 'stamp';
+    color: string;
+    stamp: string;
+    hasUnsaved: boolean;
+    pathsCount: number;
+  };
 }
 
-export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWithAnnotationsProps>(({ 
-  pdfUrl, 
-  musicId, 
+export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWithAnnotationsProps>(({
+  pdfUrl,
+  musicId,
   musicTitle,
   className = "",
   startInAnnotationMode = false,
   isInMobileViewer = false,
   toolbarActions,
+  chromeless = false,
+  onPageChange,
 }: PDFViewerWithAnnotationsProps, ref) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
-  const { 
-    annotations, 
-    loading: annotationsLoading, 
-    saveAnnotation, 
-    fetchAnnotations 
+  const {
+    annotations,
+    loading: annotationsLoading,
+    saveAnnotation,
+    fetchAnnotations
   } = useSheetMusicAnnotations(musicId);
+  // Annotation layers: each annotation can belong to a layer (Fingerings,
+  // Bowing, Conductor notes…). Hidden layers don't render. New strokes
+  // are saved under `currentLayerId` if set.
+  const { layers: annotationLayers, addLayer, toggleLayerVisible, deleteLayer } = useAnnotationLayers(musicId);
+  const [currentLayerId, setCurrentLayerId] = useState<string | null>(null);
+  const visibleLayerIds = useMemo(
+    () => new Set(annotationLayers.filter((l) => l.is_visible).map((l) => l.id)),
+    [annotationLayers],
+  );
   const { audioData } = useSheetMusicAudio(musicId);
-  const { loadUrl, loadYouTube, audioSource, stop: stopAudio, closeYouTube } = useAudioCompanion();
+  const { tracks: audioTracks, defaultTrack: defaultAudioTrack } = useSheetMusicTracks(musicId);
+  const { loadUrl, loadYouTube, loadAppleMusic, audioSource, stop: stopAudio, closeYouTube } = useAudioCompanion();
   
   // Initialize the default layout plugin
 const scrollModePluginInstance = scrollModePlugin();
@@ -101,7 +153,29 @@ const scrollModePluginInstance = scrollModePlugin();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [activeTool, setActiveTool] = useState<"select" | "draw" | "erase">("select");
+  const [activeTool, setActiveTool] = useState<"select" | "draw" | "erase" | "stamp">("select");
+  // Currently armed stamp glyph. Picking a stamp also sets activeTool=stamp;
+  // the next click on the page deposits it. Italic dynamics + plain music
+  // symbols cover the most-used marks without needing a SMuFL font on device.
+  const [selectedStamp, setSelectedStamp] = useState<string>('𝑓');
+  // Font family for stamps. Bravura is a SMuFL music font — used for the
+  // expanded ~400 symbol palette. Italic serif stays for plain dynamics.
+  const [selectedStampFont, setSelectedStampFont] = useState<string>('serif');
+  // Always-on Apple Pencil: when true, pen input on the score surface
+  // immediately enters annotation/draw mode without a manual toggle.
+  // Persisted to localStorage so a Pencil user only flips it once.
+  const [alwaysOnPencil, setAlwaysOnPencilState] = useState<boolean>(() => {
+    try { return localStorage.getItem('gw-always-on-pencil') === '1'; } catch { return false; }
+  });
+  // Pencil hover preview — Apple Pencil 2/3 emits pointermove with no
+  // buttons pressed when the stylus is within a few mm of the screen.
+  // We render a small brush-size circle that tracks the hover so the
+  // user knows where their next stroke will land before they touch down.
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number; size: number } | null>(null);
+  const setAlwaysOnPencil = useCallback((v: boolean) => {
+    setAlwaysOnPencilState(v);
+    try { localStorage.setItem('gw-always-on-pencil', v ? '1' : '0'); } catch {}
+  }, []);
   const [brushSize, setBrushSize] = useState([3]);
   const [brushColor, setBrushColor] = useState("#ff0000");
   const [isLoading, setIsLoading] = useState(true);
@@ -157,17 +231,20 @@ const scrollModePluginInstance = scrollModePlugin();
     });
   }, [hasAnnotations]);
   
-  useImperativeHandle(ref, () => ({
-    promptToSaveIfDirty,
-    toggleToolbar: toggleMobileControls,
-  }));
+  // Imperative handle exposing the controls a parent shell (the Viewer
+  // module) needs to drive the reader from its own chrome. Placed below
+  // all the dependent callbacks (nextPage/prevPage/goToPage) — see the
+  // useImperativeHandle call later in the body.
   
   // PDF-specific state
   const [pdf, setPdf] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  // Fit-to-width by default on touch/small screens (canvas CSS width = scale * 100%)
-  const fitWidthScale = isInMobileViewer || (typeof window !== 'undefined' && window.innerWidth < 768) ? 1 : 1.2;
+  // Fit-to-width by default on touch/small screens (canvas CSS width = scale * 100%).
+  // chromeless = the dedicated reader, which always wants the page filling the
+  // viewport edge-to-edge — scaling above 1 makes the score overflow the iPad
+  // width and forces horizontal scroll.
+  const fitWidthScale = isInMobileViewer || chromeless || (typeof window !== 'undefined' && window.innerWidth < 768) ? 1 : 1.2;
   const [scale, setScale] = useState(fitWidthScale);
   const [zoomLevel, setZoomLevel] = useState(1); // Zoom level for annotation mode
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
@@ -233,6 +310,148 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     }
   }, [currentPage, isLoading, goToPage]);
 
+  // Bubble page changes up to a parent shell (Viewer module's bottom seek
+  // bar reads these to render the "page X / N" indicator).
+  useEffect(() => {
+    if (onPageChange) onPageChange(currentPage, totalPages || (pdf?.numPages ?? 0) || 1);
+  }, [currentPage, totalPages, pdf, onPageChange]);
+
+  // Always-on Apple Pencil. When enabled, the first stylus contact on the
+  // score surface flips us into annotation/draw mode so the very next
+  // stroke is captured by the drawing canvas. We don't try to replay the
+  // initial pointer — practically the first contact is "wake up" and the
+  // user keeps drawing without lifting. Finger input still pages.
+  useEffect(() => {
+    if (!alwaysOnPencil) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'pen') return;
+      if (annotationMode) return;
+      setError(null);
+      setAnnotationMode(true);
+      setActiveTool('draw');
+    };
+    container.addEventListener('pointerdown', onPointerDown);
+    return () => container.removeEventListener('pointerdown', onPointerDown);
+  }, [alwaysOnPencil, annotationMode]);
+
+  // Apple Pencil hover indicator. We track pointermove events where the
+  // pen is hovering (no buttons pressed) and stash the page-relative
+  // coords + brush size into hoverPos. The DOM dot is rendered absolutely
+  // inside the score surface.
+  useEffect(() => {
+    if (!annotationMode) { setHoverPos(null); return; }
+    const container = containerRef.current;
+    if (!container) return;
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'pen') return;
+      if (e.buttons !== 0) { setHoverPos(null); return; } // mid-stroke
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const size = activeTool === 'erase' ? brushSize[0] * 2 : brushSize[0];
+      setHoverPos({ x, y, size });
+    };
+    const onLeave = () => setHoverPos(null);
+    container.addEventListener('pointermove', onMove);
+    container.addEventListener('pointerleave', onLeave);
+    container.addEventListener('pointerdown', onLeave);
+    return () => {
+      container.removeEventListener('pointermove', onMove);
+      container.removeEventListener('pointerleave', onLeave);
+      container.removeEventListener('pointerdown', onLeave);
+    };
+  }, [annotationMode, brushSize, activeTool]);
+
+  // Auto-enable always-on Pencil the first time we see a stylus on this
+  // device. Marked in localStorage so the user only sees the courtesy
+  // toast once. The pen contact itself still has to live through the
+  // current page — but next stroke onward the user has the iPad-paper
+  // experience without a manual settings detour.
+  useEffect(() => {
+    if (alwaysOnPencil) return;
+    let seen = false;
+    try { seen = localStorage.getItem('gw-pencil-detected') === '1'; } catch {}
+    if (seen) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'pen') return;
+      try { localStorage.setItem('gw-pencil-detected', '1'); } catch {}
+      setAlwaysOnPencil(true);
+      toast.success('Apple Pencil detected — always-on annotation enabled.', { duration: 4500 });
+    };
+    container.addEventListener('pointerdown', onPointerDown, { once: true });
+    return () => container.removeEventListener('pointerdown', onPointerDown);
+  }, [alwaysOnPencil, setAlwaysOnPencil]);
+
+  // Refs so the imperative handle can reach state-dependent callbacks
+  // (renderPageToOffscreen, handleSave, handleUndo, handleClear) that are
+  // declared further down the file. We avoid the TDZ trap by reading them
+  // through .current at call time.
+  const renderPageToOffscreenRef = useRef<((page: number, scale: number) => Promise<HTMLCanvasElement | null>) | null>(null);
+  const handleSaveRef = useRef<(() => Promise<void>) | null>(null);
+  const handleUndoRef = useRef<(() => void) | null>(null);
+  const handleClearRef = useRef<(() => void) | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    promptToSaveIfDirty,
+    toggleToolbar: toggleMobileControls,
+    nextPage,
+    prevPage,
+    goToPage,
+    openAudioCompanion: () => setShowAudioCompanion(true),
+    toggleAudioCompanion: () => setShowAudioCompanion((v) => !v),
+    togglePiano: () => setShowPiano((v) => !v),
+    isAudioCompanionOpen: () => showAudioCompanion,
+    isPianoOpen: () => showPiano,
+    enterAnnotationMode: () => { setError(null); setAnnotationMode(true); },
+    exitAnnotationMode: () => setAnnotationMode(false),
+    renderThumbnail: async (pageNum, scale = 0.25) => {
+      const fn = renderPageToOffscreenRef.current;
+      if (!fn) return null;
+      const canvas = await fn(pageNum, scale);
+      if (!canvas) return null;
+      try { return canvas.toDataURL('image/png'); } catch { return null; }
+    },
+    setAnnotationTool: (tool) => setActiveTool(tool),
+    setAnnotationColor: (color) => setBrushColor(color),
+    setAnnotationStamp: (stamp, font) => {
+      setSelectedStamp(stamp);
+      if (font) setSelectedStampFont(font);
+    },
+    setAlwaysOnPencil,
+    getAlwaysOnPencil: () => alwaysOnPencil,
+    getLayers: () => annotationLayers.map((l) => ({ id: l.id, name: l.name, color: l.color, is_visible: l.is_visible })),
+    getCurrentLayerId: () => currentLayerId,
+    setCurrentLayerId: (id) => setCurrentLayerId(id),
+    addLayer: async (name, color) => {
+      try { const l = await addLayer.mutateAsync({ name, color }); return { id: l.id }; }
+      catch { return null; }
+    },
+    toggleLayer: (id, visible) => toggleLayerVisible.mutate({ id, visible }),
+    deleteLayerById: (id) => deleteLayer.mutate(id),
+    saveAnnotations: async () => {
+      const fn = handleSaveRef.current;
+      if (!fn) return false;
+      try { await fn(); return true; } catch { return false; }
+    },
+    undoAnnotation: () => handleUndoRef.current?.(),
+    clearAnnotations: () => handleClearRef.current?.(),
+    getAnnotationState: () => ({
+      tool: activeTool,
+      color: brushColor,
+      stamp: selectedStamp,
+      hasUnsaved: hasAnnotations,
+      pathsCount: paths.length,
+    }),
+  }), [
+    promptToSaveIfDirty, toggleMobileControls, nextPage, prevPage, goToPage,
+    activeTool, brushColor, selectedStamp, hasAnnotations, paths.length,
+    alwaysOnPencil, annotationLayers, currentLayerId, addLayer, toggleLayerVisible, deleteLayer,
+  ]);
+
   // Zoom controls for annotation mode (anchored at viewport center)
   const setFocalToCenter = useCallback(() => {
     const container = containerRef.current;
@@ -271,6 +490,26 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const handleScaleReset = useCallback(() => {
     setScale(fitWidthScale);
   }, [fitWidthScale]);
+
+  // Desktop trackpad / mouse-wheel pinch. Browsers fire `wheel` events with
+  // ctrlKey=true for pinch gestures on macOS trackpads and for Ctrl+wheel on
+  // every desktop. We bind a non-passive native listener (React's onWheel is
+  // passive by default, which would let the page zoom instead) and translate
+  // deltaY into a smooth scale change.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return; // not a pinch — let normal scroll through
+      e.preventDefault();
+      // deltaY is negative when pinching apart (zoom in), positive when
+      // pinching together (zoom out). Step proportional to wheel magnitude.
+      const step = Math.exp(-e.deltaY / 200);
+      setScale((prev) => Math.max(0.5, Math.min(3, prev * step)));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
 
   // Pinch-to-zoom handler for annotation mode
   const handleAnnotationPinchStart = useCallback((e: React.TouchEvent) => {
@@ -481,19 +720,59 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     return () => container.removeEventListener('wheel', onWheel);
   }, [annotationMode, currentPage, totalPages, nextPage, prevPage]);
 
-  // Auto-load associated audio when PDF opens
+  // Auto-load associated audio when PDF opens.
+  //
+  // Resolution order: the new gw_sheet_music_audio_tracks table's default
+  // row, then the legacy gw_sheet_music.audio_url / apple_music_id
+  // columns. Tracks rows backfill the legacy columns on insert so this
+  // ordering is a transitional safety net; the tracks query is the
+  // forward path.
   useEffect(() => {
-    if (audioData?.audio_url && !audioSource) {
-      const url = audioData.audio_url;
-      // Check if it's a YouTube URL
-      if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        loadYouTube(url);
-      } else {
-        loadUrl(url, audioData.audio_title || musicTitle || 'Audio');
+    if (audioSource) return;
+
+    // Tracks path: pick the default row (or the only row if there's just
+    // one) and dispatch by its kind.
+    const track = defaultAudioTrack;
+    if (track) {
+      if (track.kind === 'apple_music' && track.apple_music_id) {
+        loadAppleMusic({
+          id: track.apple_music_id,
+          storefront: track.apple_music_storefront ?? 'us',
+          title: track.apple_music_title ?? track.label ?? musicTitle ?? 'Apple Music',
+          artworkUrl: track.apple_music_artwork_url ?? null,
+        });
+        setShowAudioCompanion(true);
+        return;
       }
+      if (track.audio_url) {
+        const url = track.audio_url;
+        if (url.includes('youtube.com') || url.includes('youtu.be')) loadYouTube(url);
+        else loadUrl(url, track.audio_title || track.label || musicTitle || 'Audio');
+        setShowAudioCompanion(true);
+        return;
+      }
+    }
+
+    // Legacy fallback for scores that haven't been re-saved through the
+    // tracks-aware dialog yet.
+    if (!audioData) return;
+    if (audioData.apple_music_id) {
+      loadAppleMusic({
+        id: audioData.apple_music_id,
+        storefront: audioData.apple_music_storefront ?? 'us',
+        title: audioData.apple_music_title ?? audioData.audio_title ?? musicTitle ?? 'Apple Music',
+        artworkUrl: audioData.apple_music_artwork_url ?? null,
+      });
+      setShowAudioCompanion(true);
+      return;
+    }
+    if (audioData.audio_url) {
+      const url = audioData.audio_url;
+      if (url.includes('youtube.com') || url.includes('youtu.be')) loadYouTube(url);
+      else loadUrl(url, audioData.audio_title || musicTitle || 'Audio');
       setShowAudioCompanion(true);
     }
-  }, [audioData, audioSource, loadUrl, loadYouTube, musicTitle]);
+  }, [audioData, defaultAudioTrack, audioSource, loadUrl, loadYouTube, loadAppleMusic, musicTitle]);
 
   // Toggle global annotation mode to hide/show the app header
   useEffect(() => {
@@ -612,6 +891,20 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     const annotationsToRedraw = pathsToRedraw || paths;
     
     annotationsToRedraw.forEach(path => {
+      // Stamps render as a glyph centered on (x, y). Italic serif gives
+      // dynamics (p / mf / ff) the conventional musical look.
+      if (path.tool === 'stamp' && path.stamp) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = path.color;
+        // Bravura is the SMuFL music font; serif is for italic dynamics.
+        const font = path.font === 'bravura' ? 'Bravura' : 'serif';
+        const style = font === 'Bravura' ? '' : 'italic 700 ';
+        ctx.font = `${style}${path.size}px ${font === 'Bravura' ? '"Bravura"' : 'Georgia, "Times New Roman", serif'}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(path.stamp, path.x, path.y);
+        return;
+      }
       if (path.points && path.points.length > 1) {
         // Set compositing mode for eraser to actually erase pixels
         if (path.tool === 'erase') {
@@ -619,21 +912,21 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         } else {
           ctx.globalCompositeOperation = 'source-over';
         }
-        
+
         ctx.strokeStyle = path.color;
         ctx.lineWidth = path.size;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        
+
         ctx.beginPath();
         ctx.moveTo(path.points[0].x, path.points[0].y);
-        
+
         for (let i = 1; i < path.points.length; i++) {
           ctx.lineTo(path.points[i].x, path.points[i].y);
         }
-        
+
         ctx.stroke();
-        
+
         // Reset to default compositing
         ctx.globalCompositeOperation = 'source-over';
       }
@@ -667,18 +960,40 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!annotationMode || activeTool === "select") return;
-    
+
     e.preventDefault();
-    setIsDrawing(true);
     const pos = getEventPos(e);
-    
+
+    // Stamps are one-shot: a single tap drops the glyph; no drag tracking.
+    if (activeTool === 'stamp') {
+      // Larger stamp on bigger pages — scale relative to the canvas height
+      // so a stamp on a small thumbnail vs a full A4 looks proportional.
+      const canvas = drawingCanvasRef.current;
+      const baseSize = canvas ? Math.max(28, Math.round(canvas.height * 0.04)) : 36;
+      const stampPath = {
+        stamp: selectedStamp,
+        font: selectedStampFont,
+        x: pos.x,
+        y: pos.y,
+        color: brushColor,
+        size: baseSize,
+        tool: 'stamp' as const,
+      };
+      const newPaths = [...paths, stampPath];
+      setPaths(newPaths);
+      setHasAnnotations(true);
+      redrawAnnotations(newPaths);
+      return;
+    }
+
+    setIsDrawing(true);
     const newPath = {
       points: [pos],
       color: brushColor, // Always use brush color, erasing handled by compositing mode
       size: activeTool === "erase" ? brushSize[0] * 2 : brushSize[0],
       tool: activeTool
     };
-    
+
     setCurrentPath(newPath);
   };
 
@@ -752,7 +1067,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         currentPage,
         'drawing',
         annotationData,
-        positionData
+        positionData,
+        currentLayerId,
       );
       
       if (!savedAnnotation) {
@@ -778,6 +1094,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     }
   };
 
+  // Publish the imperative refs once the underlying handlers are in scope.
+  // (We declare these handlers after useImperativeHandle to avoid a TDZ
+  // issue, then sync the refs here so the handle can dispatch to them.)
+  useEffect(() => { handleSaveRef.current = handleSave; });
+  useEffect(() => { handleUndoRef.current = handleUndo; });
+  useEffect(() => { handleClearRef.current = handleClear; });
+
   // Load saved annotations when page changes
   useEffect(() => {
     if (musicId && annotationMode) {
@@ -792,9 +1115,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     const pageAnnotations = annotations.filter(ann => ann.page_number === currentPage);
     if (pageAnnotations.length === 0) return;
 
-    // Load and render saved annotations
+    // Load and render saved annotations, honoring layer visibility.
+    // An annotation row is rendered when (a) it has no layer (ungrouped),
+    // or (b) its layer is currently toggled visible. We never delete on
+    // hide — strokes return when the layer is re-enabled.
     const loadedPaths = pageAnnotations
       .filter(ann => ann.annotation_type === 'drawing')
+      .filter(ann => !ann.annotation_layer_id || visibleLayerIds.has(ann.annotation_layer_id))
       .flatMap(ann => {
         const data = ann.annotation_data as any;
         return data?.paths || [];
@@ -807,34 +1134,67 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     }
   }, [annotations, currentPage, annotationMode]);
 
-  // Load PDF document once
+  // Load PDF document once.
+  // iOS WKWebView (Capacitor) was getting stuck on the URL-driven primary
+  // path — pdfjs internal Range requests against signed DO Spaces URLs hang
+  // silently because the CORS preflight doesn't expose Content-Range. The
+  // fix is to fetch the whole ArrayBuffer first on native, then hand pdfjs
+  // a `data:` payload that needs no Range requests.
   useEffect(() => {
     if (!signedUrl) return;
 
     let cancelled = false;
+    const abortController = new AbortController();
+
+    const isNative = (() => {
+      try {
+        // @ts-ignore — Capacitor injects window.Capacitor on native
+        return !!(window as any).Capacitor?.isNativePlatform?.();
+      } catch { return false; }
+    })();
 
     const loadPdfDoc = async () => {
       try {
         setIsLoading(true);
+        console.log('[PDFViewer] loadPdfDoc start — signedUrl:', signedUrl, 'isNative:', isNative);
 
-        let doc;
-        try {
-          doc = await pdfjsLib.getDocument({ 
-            url: signedUrl,
-            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
-            cMapPacked: true,
-            disableAutoFetch: false,
-            disableStream: false
-          }).promise;
-        } catch (primaryErr) {
-          const resp = await fetch(signedUrl);
+        const fetchAsArrayBuffer = async () => {
+          console.log('[PDFViewer] fetchAsArrayBuffer start');
+          const resp = await fetch(signedUrl, { signal: abortController.signal });
           if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
           const ab = await resp.arrayBuffer();
-          doc = await pdfjsLib.getDocument({ 
-            data: ab,
-            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
-            cMapPacked: true
-          }).promise;
+          console.log('[PDFViewer] fetchAsArrayBuffer ok — bytes:', ab.byteLength);
+          return ab;
+        };
+
+        const buildOpts = (src: { url?: string; data?: ArrayBuffer }) => ({
+          ...src,
+          // Skip remote cMaps fetch on native — cdn.jsdelivr.net can be blocked
+          // and the missing-cMaps warning is harmless for the music PDFs we render.
+          ...(isNative ? {} : { cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/', cMapPacked: true }),
+          // Force whole-file fetch on native so we never depend on Range
+          // requests that DO Spaces signed URLs don't expose to WKWebView.
+          ...(isNative ? { disableAutoFetch: true, disableStream: true, disableRange: true } : {}),
+        });
+
+        let doc;
+        if (isNative) {
+          const ab = await fetchAsArrayBuffer();
+          console.log('[PDFViewer] getDocument(data) start');
+          doc = await pdfjsLib.getDocument(buildOpts({ data: ab })).promise;
+          console.log('[PDFViewer] getDocument(data) resolved — pages:', doc.numPages);
+        } else {
+          try {
+            console.log('[PDFViewer] getDocument(url) start');
+            doc = await pdfjsLib.getDocument(buildOpts({ url: signedUrl })).promise;
+            console.log('[PDFViewer] getDocument(url) resolved — pages:', doc.numPages);
+          } catch (primaryErr) {
+            console.warn('[PDFViewer] getDocument(url) failed, falling back to ArrayBuffer', primaryErr);
+            const ab = await fetchAsArrayBuffer();
+            console.log('[PDFViewer] getDocument(data) start (fallback)');
+            doc = await pdfjsLib.getDocument(buildOpts({ data: ab })).promise;
+            console.log('[PDFViewer] getDocument(data) resolved (fallback) — pages:', doc.numPages);
+          }
         }
 
         if (cancelled) return;
@@ -842,12 +1202,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         setTotalPages(doc.numPages);
         setError(null);
       } catch (err) {
+        if (cancelled) return;
         const msg = err instanceof Error ? err.message : String(err);
         console.error('PDFViewerWithAnnotations: load failed', err);
         toast.error('Failed to load PDF');
         setError(`PDF load failed: ${msg.slice(0, 160)}`);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
@@ -855,6 +1216,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
     return () => {
       cancelled = true;
+      abortController.abort();
     };
   }, [signedUrl]);
 
@@ -868,7 +1230,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   const renderPageToOffscreen = useCallback(async (pageNum: number, renderScale: number): Promise<HTMLCanvasElement | null> => {
     if (!pdf || pageNum < 1 || pageNum > pdf.numPages) return null;
-    const cacheKey = `${pageNum}-${renderScale}`;
+    // Hi-DPI: multiply the render scale by the device pixel ratio so a
+    // Retina iPad gets a 2x backing buffer at the same CSS size. Cap at
+    // 3x so 3x devices don't quintuple the memory footprint. Cache by
+    // the FINAL scale so different DPRs don't collide.
+    const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 3) : 1;
+    const effectiveScale = renderScale * dpr;
+    const cacheKey = `${pageNum}-${effectiveScale}`;
     if (pageCacheRef.current.has(cacheKey)) {
       // Re-insert to mark as most-recently-used (Map preserves insertion order).
       const canvas = pageCacheRef.current.get(cacheKey)!;
@@ -880,7 +1248,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     preloadingRef.current.add(cacheKey);
     try {
       const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: renderScale });
+      const viewport = page.getViewport({ scale: effectiveScale });
       const offscreen = document.createElement('canvas');
       offscreen.width = viewport.width;
       offscreen.height = viewport.height;
@@ -905,6 +1273,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       preloadingRef.current.delete(cacheKey);
     }
   }, [pdf]);
+
+  // Expose renderPageToOffscreen through the imperative handle's ref so the
+  // thumbnail strip in the Viewer's chrome can request page previews.
+  useEffect(() => { renderPageToOffscreenRef.current = renderPageToOffscreen; }, [renderPageToOffscreen]);
 
   // Clear cache when pdf or scale changes. Zero canvas dimensions so the
   // backing image data can be GC'd promptly instead of waiting on the Map
@@ -948,6 +1320,74 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         canvasRef.current.width = offscreen.width;
         canvasRef.current.height = offscreen.height;
         ctx.drawImage(offscreen, 0, 0);
+      }
+
+      // Auto-trim PDF top whitespace in chromeless mode (Viewer reader).
+      // Scan the rendered canvas for the first non-white row, then scroll
+      // every scrollable ancestor so that row sits at most 100px from the
+      // top edge. Scrolling JUST containerRef wasn't enough — the canvas
+      // has multiple overflow:auto ancestors and the outer one was what
+      // actually contained the slack, so the inner scrollTop had nothing
+      // to do.
+      if (!cancelled && chromeless) {
+        // Defer one frame so layout settles after the canvas resize.
+        requestAnimationFrame(() => {
+          try {
+            const cv = canvasRef.current;
+            if (!cv) return;
+            const ctx = cv.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return;
+            const sampleH = Math.min(cv.height, Math.floor(cv.height * 0.4));
+            const stripW = Math.min(cv.width, 320);
+            const stripX = Math.floor((cv.width - stripW) / 2);
+            const { data } = ctx.getImageData(stripX, 0, stripW, sampleH);
+            const NEAR_WHITE = 235;
+            const DENSITY_THRESHOLD = 0.004;
+            let firstContentRow = -1;
+            for (let y = 0; y < sampleH; y++) {
+              let dark = 0;
+              const off = y * stripW * 4;
+              for (let x = 0; x < stripW; x++) {
+                const i = off + x * 4;
+                if (data[i] < NEAR_WHITE && data[i + 1] < NEAR_WHITE && data[i + 2] < NEAR_WHITE) dark++;
+              }
+              if (dark / stripW > DENSITY_THRESHOLD) { firstContentRow = y; break; }
+            }
+            if (firstContentRow <= 0) return;
+
+            const cvRect = cv.getBoundingClientRect();
+            const displayScale = cvRect.width / cv.width;
+            // Position of the first content row in viewport coordinates.
+            const contentTopViewport = cvRect.top + firstContentRow * displayScale;
+
+            const MAX_TOP_GAP = 50; // px
+
+            // Walk every scrollable ancestor and scroll each until the
+            // canvas's content row lands within MAX_TOP_GAP of its top.
+            // We iterate top-down so the outer-most scrollable absorbs
+            // the bulk of the gap first.
+            const scrollables: HTMLElement[] = [];
+            let node: HTMLElement | null = cv.parentElement;
+            while (node) {
+              const style = getComputedStyle(node);
+              if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && node.scrollHeight > node.clientHeight) {
+                scrollables.push(node);
+              }
+              node = node.parentElement;
+            }
+            // Outer-most first.
+            scrollables.reverse();
+            for (const el of scrollables) {
+              const elRect = el.getBoundingClientRect();
+              const cur = cv.getBoundingClientRect();
+              const currentGap = (cur.top + firstContentRow * displayScale) - elRect.top;
+              if (currentGap <= MAX_TOP_GAP) break;
+              const delta = currentGap - MAX_TOP_GAP;
+              const maxScroll = el.scrollHeight - el.clientHeight - el.scrollTop;
+              el.scrollTop += Math.min(delta, maxScroll);
+            }
+          } catch { /* tainted canvas / read failure — ignore */ }
+        });
       }
 
       // Pre-load adjacent pages in the background for instant future turns.
@@ -1062,8 +1502,20 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   return (
     <Card className={cn("w-full h-full flex flex-col border-0 rounded-none overflow-hidden", className)}>
-      {/* Annotation Toolbar */}
-        {annotationMode && (
+      {/* Persistent audio companion bar — when the viewer is in chromeless
+          mode (Viewer reader on iPad / desktop), the regular centered
+          toolbar isn't rendered, so the audio companion would never show
+          up. Surface it as a dedicated top bar that's visible whenever
+          the user has opened audio. Pinned just under the score's own
+          top chrome so a conductor always sees the transport. */}
+      {/* Audio companion strip removed here — the chromeless host
+          (ViewerReader) now mounts AudioCompanionControls inline in its
+          title bar so the conductor sees title + transport on one row.
+          Keeping this block here would double-render the controls. */}
+
+      {/* Annotation Toolbar — suppressed when chromeless so the parent
+          shell (e.g. ViewerReader) can render its own. */}
+        {annotationMode && !chromeless && (
           <div className="flex flex-wrap items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-muted/50 rounded-t-lg border-b">
             {/* Save Button */}
             {hasAnnotations && (
@@ -1107,6 +1559,54 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               >
                 <Eraser className="h-3 w-3" />
               </Button>
+              {/* Stamp palette — pick a glyph, then tap the page to drop it.
+                  Categories come from src/lib/smuflStamps.ts (Bravura). */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant={activeTool === "stamp" ? "default" : "outline"}
+                    size="sm"
+                    className="h-6 w-auto px-1.5 sm:h-8 sm:px-2"
+                    title="Stamp musical symbol"
+                  >
+                    <span
+                      className="text-sm font-bold leading-none"
+                      style={{ fontFamily: selectedStampFont === 'bravura' ? '"Bravura"' : 'Georgia, serif', fontStyle: selectedStampFont === 'bravura' ? 'normal' : 'italic' }}
+                    >
+                      {selectedStamp}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="p-2 max-h-96 overflow-y-auto w-[320px]">
+                  {STAMP_CATEGORIES.map((cat) => (
+                    <div key={cat.name} className="mb-2">
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground px-1 pb-1 sticky top-0 bg-popover">
+                        {cat.name}
+                      </div>
+                      <div className="grid grid-cols-8 gap-0.5">
+                        {cat.glyphs.map((g, i) => {
+                          const selected = selectedStamp === g.glyph && selectedStampFont === g.font && activeTool === 'stamp';
+                          return (
+                            <button
+                              key={`${g.glyph}-${i}`}
+                              type="button"
+                              onClick={() => { setSelectedStamp(g.glyph); setSelectedStampFont(g.font); setActiveTool('stamp'); }}
+                              title={g.label}
+                              className={cn(
+                                'h-8 w-8 flex items-center justify-center rounded hover:bg-accent text-lg leading-none',
+                                selected && 'bg-accent ring-1 ring-primary',
+                              )}
+                              style={{ fontFamily: g.font === 'bravura' ? '"Bravura"' : 'Georgia, serif', fontStyle: g.font === 'bravura' ? 'normal' : 'italic' }}
+                            >
+                              {g.glyph}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Color Dropdown */}
@@ -1190,7 +1690,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             {/* Audio Companion in annotation mode - hidden on mobile */}
             <div className="hidden sm:flex items-center border-l pl-1.5 sm:pl-2 ml-1">
               {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
               ) : (
                 <Button
                   variant="outline"
@@ -1253,8 +1753,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           )}
 
-          {/* Top toolbar when NOT in annotation mode - hidden on mobile (moved to bottom bar) */}
-          {!annotationMode && !isInMobileViewer && (
+          {/* Top toolbar — suppressed when the Viewer module's shell owns
+              chrome (chromeless=true). Otherwise visible on desktop and
+              non-mobile-viewer contexts. */}
+          {!annotationMode && !isInMobileViewer && !chromeless && (
             <div
               // Full-width wrapper + flex justify-center. Previously this used
               // `left-1/2 -translate-x-1/2`, but when the audio companion's
@@ -1276,10 +1778,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={handleScaleZoomOut}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleZoomOut(); }}
                   disabled={scale <= 0.5}
-                  className="h-7 w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
                   aria-label="Zoom out"
                 >
-                  <ZoomOut className="h-3.5 w-3.5" />
+                  <ZoomOut className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
                 </Button>
                 <button
                   type="button"
@@ -1297,17 +1799,17 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={handleScaleZoomIn}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleZoomIn(); }}
                   disabled={scale >= 3}
-                  className="h-7 w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
                   aria-label="Zoom in"
                 >
-                  <ZoomIn className="h-3.5 w-3.5" />
+                  <ZoomIn className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
                 </Button>
 
                 <div className="w-px h-4 bg-border mx-0.5" />
                 
                 {/* Audio Companion */}
                 {showAudioCompanion ? (
-                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
+                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
                 ) : (
                   <Button
                     size="sm"
@@ -1315,9 +1817,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     onClick={() => setShowAudioCompanion(true)}
                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowAudioCompanion(true); }}
                     aria-label="Listen along with audio"
-                    className="h-7 w-7 p-0 touch-manipulation rounded-full"
+                    className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
                   >
-                    <Music className="h-3.5 w-3.5" />
+                    <Music className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
                   </Button>
                 )}
                 
@@ -1330,7 +1832,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   aria-label={showPiano ? "Hide piano" : "Show piano"}
                   className={`h-7 w-7 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-secondary' : ''}`}
                 >
-                  <Piano className="h-3.5 w-3.5" />
+                  <Piano className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
                 </Button>
                 
                 {/* Annotate Button */}
@@ -1340,9 +1842,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={() => { setError(null); setAnnotationMode(true); }}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setError(null); setAnnotationMode(true); }}
                   aria-label="Enable annotations"
-                  className="h-7 w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
                 >
-                  <Palette className="h-3.5 w-3.5" />
+                  <Palette className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
                 </Button>
 
                 {/* Extra toolbar actions (e.g. Crop/Close on mobile) */}
@@ -1413,16 +1915,32 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {annotationMode && (
             <div 
               className="w-full overflow-auto flex-1" 
-              style={{ 
+              style={{
                 WebkitOverflowScrolling: 'touch',
                 touchAction: 'pan-x pan-y'
-              } as React.CSSProperties} 
+              } as React.CSSProperties}
               ref={containerRef}
               onTouchStart={handleAnnotationPinchStart}
               onTouchMove={handleAnnotationPinchMove}
               onTouchEnd={handleAnnotationPinchEnd}
             >
-              <div 
+              {/* Apple Pencil hover preview. Pinned to the scroll container
+                  so it tracks pointer coords regardless of zoom/scroll. */}
+              {hoverPos && (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute z-40 rounded-full border-2"
+                  style={{
+                    left: hoverPos.x - hoverPos.size / 2,
+                    top: hoverPos.y - hoverPos.size / 2,
+                    width: hoverPos.size,
+                    height: hoverPos.size,
+                    borderColor: brushColor,
+                    backgroundColor: `${brushColor}22`,
+                  }}
+                />
+              )}
+              <div
                 className="relative origin-top-left"
                 style={{ 
                   transform: `scale(${zoomLevel})`,
@@ -1511,10 +2029,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </>
           ) : null}
 
-          {/* Page navigation - positioned at top-right, hidden on mobile (moved to bottom bar) */}
-          {signedUrl && totalPages > 1 && !isInMobileViewer && (
-             <div 
-              className="absolute right-2 z-30 top-2"
+          {/* Page navigation — bottom-right corner. Previously top-right,
+              but it collided with the centered audio companion pill once
+              the speed selector pushed that pill wider. Bottom-right keeps
+              it well out of the top toolbar's growing footprint and reads
+              like a normal page indicator. Hidden on mobile (mobile uses
+              a dedicated bottom control bar). */}
+          {signedUrl && totalPages > 1 && !isInMobileViewer && !chromeless && (
+             <div
+              className="absolute right-2 z-30 bottom-2"
               style={{ touchAction: 'none' } as React.CSSProperties}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
@@ -1625,7 +2148,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             {/* Right: Tools */}
             <div className="flex items-center gap-1">
               {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
               ) : (
                 <Button
                   size="sm"
@@ -1658,6 +2181,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               >
                 <Palette className="h-4 w-4" />
               </Button>
+              {musicId && (
+                <BookmarksMenu
+                  sheetMusicId={musicId}
+                  currentPage={currentPage}
+                  onJumpToPage={goToPage}
+                />
+              )}
               {/* Extra toolbar actions (e.g. Crop/Close) */}
               {toolbarActions}
             </div>

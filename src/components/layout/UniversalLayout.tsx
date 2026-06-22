@@ -7,6 +7,15 @@ import { PublicHeader } from "./PublicHeader";
 import { UniversalFooter } from "./UniversalFooter";
 import { PageContainer } from "./PageContainer";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
+
+// Tenant subdomains should never see UniversalHeader (it's the gleeworld.org
+// marketing/platform-owner chrome). Detect the bootstrap tenant once at
+// module load and use it to swap in DashboardShell instead.
+const BOOT_TENANT = typeof window !== 'undefined'
+  ? (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant
+  : undefined;
+const IS_TENANT_DOMAIN = !!BOOT_TENANT && BOOT_TENANT !== 'main';
 
 // Mix two hex colors to produce a soft tinted shell — light primary fades to
 // the cream default, dark primaries lift toward a near-white that still keeps
@@ -101,7 +110,19 @@ export const UniversalLayout = ({
 
   // Use PublicHeader for public, fan, graduates, academy, and calendar pages
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/graduates', '/glee-academy', '/public-calendar'];
-  const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname) || location.pathname.startsWith('/glee-academy');
+  const shouldUsePublicHeader =
+    usePublicHeaderPaths.includes(location.pathname) ||
+    location.pathname.startsWith('/glee-academy') ||
+    location.pathname.startsWith('/concert-tickets') ||
+    location.pathname.startsWith('/tickets/') ||
+    location.pathname.startsWith('/box-office');
+
+  // Tenants never see UniversalHeader — that's the platform marketing chrome.
+  // Render DashboardShell instead, which gives them the same admin topbar +
+  // sidebar they see on Command Center.
+  if (IS_TENANT_DOMAIN && showHeader && !shouldUsePublicHeader) {
+    return <DashboardShell>{children}</DashboardShell>;
+  }
 
   return <div
     className="flex flex-col min-h-screen w-full"

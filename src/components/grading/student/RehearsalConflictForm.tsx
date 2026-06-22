@@ -154,11 +154,11 @@ export const RehearsalConflictForm: React.FC<RehearsalConflictFormProps> = ({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Approved</Badge>;
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs"><CheckCircle2 className="h-3 w-3 mr-1" />Approved</Badge>;
       case 'denied':
-        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 text-[10px]"><XCircle className="h-3 w-3 mr-1" />Denied</Badge>;
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 text-xs"><XCircle className="h-3 w-3 mr-1" />Denied</Badge>;
       default:
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-[10px]"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
     }
   };
 
@@ -318,14 +318,14 @@ export const RehearsalConflictForm: React.FC<RehearsalConflictFormProps> = ({
                       : `${req.conflict_course_code ? `${req.conflict_course_code} — ` : ''}${req.conflict_course_name}`
                     }
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {req.absence_date 
                       ? `${req.excuse_type === 'full' ? 'Full' : 'Partial'} excuse`
                       : `${req.conflict_days?.join(', ')} · ${req.conflict_start_time?.slice(0, 5)}–${req.conflict_end_time?.slice(0, 5)} · ${req.excuse_type === 'full' ? 'Full' : 'Partial'} excuse`
                     }
                   </p>
                   {req.review_notes && (
-                    <p className="text-[10px] text-muted-foreground mt-1 italic">"{req.review_notes}"</p>
+                    <p className="text-xs text-muted-foreground mt-1 italic">"{req.review_notes}"</p>
                   )}
                 </div>
                 <div className="shrink-0 ml-2">

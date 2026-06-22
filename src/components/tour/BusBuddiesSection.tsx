@@ -144,7 +144,7 @@ export const BusBuddiesSection = () => {
                 <SeatCell seat={seatB} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatA} onTogglePurpose={toggleSeatPurpose} />
                 {/* Aisle + row number */}
                 <div className="flex items-center justify-center">
-                  <span className="text-[10px] text-muted-foreground font-mono">{row}</span>
+                  <span className="text-xs text-muted-foreground font-mono">{row}</span>
                 </div>
                 <SeatCell seat={seatC} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatD} onTogglePurpose={toggleSeatPurpose} />
                 <SeatCell seat={seatD} activeSeat={activeSeat} setActiveSeat={setActiveSeat} availableMembers={availableMembers} onAssign={handleAssign} onClear={clearSeat} doubleMode={doubleMode} adjacentSeat={seatC} onTogglePurpose={toggleSeatPurpose} />
@@ -319,7 +319,7 @@ const SeatCell = ({ seat, activeSeat, setActiveSeat, availableMembers, onAssign,
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate text-foreground">{m.full_name}</p>
-                    {m.voice_part && <p className="text-[10px] text-muted-foreground">{m.voice_part}</p>}
+                    {m.voice_part && <p className="text-xs text-muted-foreground">{m.voice_part}</p>}
                   </div>
                 </button>
               ))}

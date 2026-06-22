@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 type ProjectRole = 'research_lead' | 'content_developer' | 'technical_lead' | 'project_manager' | 'researcher_analyst' | 'writer_editor' | 'designer_developer' | 'coordinator_presenter';
 
@@ -291,8 +292,6 @@ export default function GroupDetail() {
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
-
     try {
       const { error } = await supabase
         .from('mus240_group_notes')
@@ -310,8 +309,6 @@ export default function GroupDetail() {
   };
 
   const handleDeleteLink = async (linkId: string) => {
-    if (!confirm('Are you sure you want to delete this link?')) return;
-
     try {
       const { error } = await supabase
         .from('mus240_group_links')
@@ -329,8 +326,6 @@ export default function GroupDetail() {
   };
 
   const handleDeleteSandbox = async (sandboxId: string) => {
-    if (!confirm('Are you sure you want to delete this sandbox?')) return;
-
     try {
       const { error } = await supabase
         .from('mus240_group_sandboxes')
@@ -535,14 +530,16 @@ export default function GroupDetail() {
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-medium text-slate-900">{note.title}</h4>
                               {(note.created_by === user?.id || isGroupLeader) && (
-                                <Button
-                                  onClick={() => handleDeleteNote(note.id)}
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-red-600 hover:text-red-700 h-auto p-1"
+                                <ConfirmDeleteButton
+                                  confirmKey="delete-group-note"
+                                  title="Delete this note?"
+                                  description="The note will be removed for the whole group."
+                                  onConfirm={() => handleDeleteNote(note.id)}
+                                  ariaLabel="Delete note"
+                                  className="inline-flex items-center justify-center rounded-md text-red-600 hover:text-red-700 hover:bg-muted h-auto p-1"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </ConfirmDeleteButton>
                               )}
                             </div>
                             <p className="text-slate-600 text-sm mb-2">{note.content}</p>
@@ -599,14 +596,16 @@ export default function GroupDetail() {
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                               {(link.created_by === user?.id || isGroupLeader) && (
-                                <Button
-                                  onClick={() => handleDeleteLink(link.id)}
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-red-600 hover:text-red-700 h-auto p-1"
+                                <ConfirmDeleteButton
+                                  confirmKey="delete-group-link"
+                                  title="Delete this link?"
+                                  description="The link will be removed from the group's collection."
+                                  onConfirm={() => handleDeleteLink(link.id)}
+                                  ariaLabel="Delete link"
+                                  className="inline-flex items-center justify-center rounded-md text-red-600 hover:text-red-700 hover:bg-muted h-auto p-1"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </ConfirmDeleteButton>
                               )}
                             </div>
                             {link.description && (
@@ -665,14 +664,16 @@ export default function GroupDetail() {
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                               {(sandbox.created_by === user?.id || isGroupLeader) && (
-                                <Button
-                                  onClick={() => handleDeleteSandbox(sandbox.id)}
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-red-600 hover:text-red-700 h-auto p-1"
+                                <ConfirmDeleteButton
+                                  confirmKey="delete-group-sandbox"
+                                  title="Delete this sandbox?"
+                                  description="The sandbox entry will be removed from the group."
+                                  onConfirm={() => handleDeleteSandbox(sandbox.id)}
+                                  ariaLabel="Delete sandbox"
+                                  className="inline-flex items-center justify-center rounded-md text-red-600 hover:text-red-700 hover:bg-muted h-auto p-1"
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </ConfirmDeleteButton>
                               )}
                             </div>
                             <p className="text-slate-600 text-sm mb-2">{sandbox.description}</p>

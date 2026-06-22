@@ -20,6 +20,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useCourseGroups, useCourseGroupMembers, type CourseGroup } from '@/hooks/useCourseGroups';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Trash2, Users, Crown, UserPlus, ChevronRight, ArrowLeft } from 'lucide-react';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 const GROUP_TYPES = [
   { value: 'sectional', label: 'Sectional' },
@@ -134,18 +135,16 @@ export const CourseGroups = ({ courseId, courseName }: CourseGroupsProps) => {
                 </div>
                 {canManage && (
                   <div className="mt-3 flex justify-end">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(`Delete group "${g.name}"?`)) {
-                          deleteGroup(g.id);
-                        }
-                      }}
+                    <ConfirmDeleteButton
+                      confirmKey="delete-course-group"
+                      title={`Delete group "${g.name}"?`}
+                      description="All memberships in this group will be removed."
+                      onConfirm={() => deleteGroup(g.id)}
+                      ariaLabel="Delete group"
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-muted"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 )}
               </CardContent>
@@ -417,17 +416,17 @@ const CourseGroupDetail = ({ group, canManage, onBack }: CourseGroupDetailProps)
                       >
                         {m.role === 'leader' ? 'Demote' : 'Make Leader'}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          if (confirm(`Remove ${m.full_name || m.email} from group?`)) {
-                            removeMember(m.id);
-                          }
-                        }}
+                      <ConfirmDeleteButton
+                        confirmKey="remove-group-member"
+                        title={`Remove ${m.full_name || m.email}?`}
+                        description="The member will be removed from this group."
+                        onConfirm={() => removeMember(m.id)}
+                        confirmLabel="Remove"
+                        ariaLabel="Remove member"
+                        className="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-muted"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </div>
                   )}
                 </div>

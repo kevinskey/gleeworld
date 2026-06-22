@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useEventCategories } from "@/hooks/useEventCategories";
+import { pushEventToGoogle } from "@/hooks/useGoogleConnection";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,10 +64,12 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   const [profileId, setProfileId] = useState<string | null>(null);
   const [isAdminLike, setIsAdminLike] = useState(false);
   const [calendars, setCalendars] = useState<{id: string; name: string; color: string}[]>([]);
+  const { data: categoryOptions = [] } = useEventCategories();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     event_type: 'performance',
+    category: '',
     calendar_id: '',
     start_date: '',
     end_date: '',
@@ -127,6 +131,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         title: event.title || '',
         description: event.description || '',
         event_type: event.event_type || 'performance',
+        category: (event as any).category || '',
         calendar_id: event.calendar_id || '',
         start_date: formatDateForInput(event.start_date),
         end_date: event.end_date ? formatDateForInput(event.end_date) : '',
@@ -272,6 +277,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         title: formData.title,
         description: formData.description || null,
         event_type: formData.event_type,
+        category: formData.category || null,
         calendar_id: formData.calendar_id || null,
         start_date: formData.start_date ? new Date(formData.start_date + ':00').toISOString() : null,
         end_date: formData.end_date ? new Date(formData.end_date + ':00').toISOString() : null,
@@ -349,6 +355,9 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
           .eq('id', event.id);
 
         if (error) throw error;
+
+        // Mirror the edit to Google (no-op if user isn't write-connected).
+        pushEventToGoogle(event.id, 'update');
 
         toast({
           title: "Success",
@@ -538,6 +547,29 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                     </SelectContent>
                   </Select>
                 </div>
+
+                {categoryOptions.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Category</Label>
+                    <Select
+                      value={formData.category || '__none__'}
+                      onValueChange={(v) => setFormData(prev => ({ ...prev, category: v === '__none__' ? '' : v }))}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">No category</SelectItem>
+                        {categoryOptions.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.slug}>
+                            <span className="inline-flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: cat.color }} />
+                              {cat.label}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="calendar_id" className="text-sm font-medium">Calendar</Label>

@@ -124,12 +124,31 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
       
       if (!context) return;
 
-      // Set canvas size to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      // Draw video frame to canvas
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Crop the captured frame to a US-Letter aspect ratio (8.5 × 11)
+      // centered in the camera view. The overlay above showed the
+      // librarian where to put the paper; cropping here makes the
+      // saved page actually match what they framed.
+      const LETTER_RATIO = 8.5 / 11;
+      const srcW = video.videoWidth;
+      const srcH = video.videoHeight;
+      const srcRatio = srcW / srcH;
+      let cropW: number, cropH: number, cropX: number, cropY: number;
+      if (srcRatio > LETTER_RATIO) {
+        // Source is wider than letter — crop the sides.
+        cropH = srcH;
+        cropW = Math.round(srcH * LETTER_RATIO);
+        cropX = Math.round((srcW - cropW) / 2);
+        cropY = 0;
+      } else {
+        // Source is taller than letter — crop top/bottom.
+        cropW = srcW;
+        cropH = Math.round(srcW / LETTER_RATIO);
+        cropX = 0;
+        cropY = Math.round((srcH - cropH) / 2);
+      }
+      canvas.width = cropW;
+      canvas.height = cropH;
+      context.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
       
       // Apply basic image enhancement
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -253,8 +272,9 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
         description: "Creating PDF from captured pages...",
       });
       
-      // Create PDF with captured pages
-      const pdf = new jsPDF();
+      // Create PDF with captured pages — explicitly US Letter so the
+      // output prints at 8.5 × 11 instead of jsPDF's A4 default.
+      const pdf = new jsPDF({ unit: 'in', format: 'letter', orientation: 'portrait' });
       
       for (let i = 0; i < capturedPages.length; i++) {
         const page = capturedPages[i];
@@ -277,16 +297,19 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
             
-            // Calculate aspect ratio and fit to page
+            // Calculate aspect ratio and fit to page. Units are INCHES
+            // now (jsPDF letter format), so margins are in inches too —
+            // 0.25" on each side leaves ~½" of breathing room overall.
+            const MARGIN = 0.25;
             const imgAspectRatio = img.width / img.height;
             const pageAspectRatio = pageWidth / pageHeight;
-            
+
             let imgWidth, imgHeight;
             if (imgAspectRatio > pageAspectRatio) {
-              imgWidth = pageWidth - 20; // 10mm margin on each side
+              imgWidth = pageWidth - MARGIN * 2;
               imgHeight = imgWidth / imgAspectRatio;
             } else {
-              imgHeight = pageHeight - 20; // 10mm margin on top/bottom
+              imgHeight = pageHeight - MARGIN * 2;
               imgWidth = imgHeight * imgAspectRatio;
             }
             
@@ -418,10 +441,13 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
-          {/* Camera Panel */}
+          {/* Camera Panel. Centers a US-Letter-shaped (8.5×11 portrait)
+              viewport in the panel so the librarian sees the camera
+              feed literally in the shape of the paper they're scanning.
+              `object-cover` on the video crops the live stream into the
+              letter window — what they see is what gets captured. */}
           <div className="flex-1 flex flex-col bg-black min-h-0">
-            {/* Camera View */}
-            <div className="flex-1 relative bg-gray-900 min-h-[250px] md:min-h-[400px]">
+            <div className="flex-1 relative bg-gray-900 min-h-[250px] md:min-h-[400px] flex items-center justify-center p-3 md:p-4">
               {!isScanning && (
                 <div className="absolute inset-0 flex items-center justify-center text-white">
                   <div className="text-center">
@@ -430,34 +456,44 @@ export const DocumentScanner = ({ onClose, onComplete }: DocumentScannerProps) =
                   </div>
                 </div>
               )}
-              
+
               {isScanning && (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                  style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
-                />
-              )}
-              
-              {/* Scanning Guide Overlay */}
-              {isCameraReady && (
-                <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
-                  <div className="border-2 border-primary/70 border-dashed rounded-lg w-full max-w-sm h-3/4 max-h-80 flex items-center justify-center relative">
-                    <div className="text-white text-center">
-                      <div className="flex justify-center mb-2">
-                        <Crop className="h-6 w-6 md:h-8 md:w-8" />
+                <div
+                  className="relative rounded-lg overflow-hidden ring-2 ring-primary/70 shadow-2xl bg-black"
+                  style={{
+                    aspectRatio: '8.5 / 11',
+                    // Largest letter-shaped rectangle that fits the panel,
+                    // accounting for the 0.75–1rem padding above.
+                    height: 'min(100%, calc(100vw * 11 / 8.5))',
+                    maxHeight: '100%',
+                    maxWidth: '100%',
+                  }}
+                >
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover"
+                    style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
+                  />
+                  {isCameraReady && (
+                    <>
+                      <div className="absolute top-2 left-2 text-[10px] font-mono uppercase tracking-wider text-white bg-black/50 rounded px-1.5 py-0.5">
+                        8.5 × 11
                       </div>
-                      <p className="text-xs md:text-sm max-w-xs">
-                        Position document within the frame for best results
-                      </p>
-                    </div>
-                  </div>
+                      {/* Corner brackets so the framing is unmistakable. */}
+                      <div className="pointer-events-none absolute inset-3">
+                        <span className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary rounded-tl-md" />
+                        <span className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary rounded-tr-md" />
+                        <span className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary rounded-bl-md" />
+                        <span className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary rounded-br-md" />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
-              
+
               <canvas ref={canvasRef} className="hidden" />
             </div>
             

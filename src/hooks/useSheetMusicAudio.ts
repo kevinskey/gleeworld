@@ -5,6 +5,11 @@ import { toast } from 'sonner';
 interface SheetMusicAudio {
   audio_url: string | null;
   audio_title: string | null;
+  apple_music_id: string | null;
+  apple_music_storefront: string | null;
+  apple_music_title: string | null;
+  apple_music_artist: string | null;
+  apple_music_artwork_url: string | null;
 }
 
 export const useSheetMusicAudio = (musicId: string | undefined) => {
@@ -18,7 +23,7 @@ export const useSheetMusicAudio = (musicId: string | undefined) => {
     try {
       const { data, error } = await supabase
         .from('gw_sheet_music')
-        .select('audio_url, audio_title')
+        .select('audio_url, audio_title, apple_music_id, apple_music_storefront, apple_music_title, apple_music_artist, apple_music_artwork_url')
         .eq('id', musicId)
         .single();
 

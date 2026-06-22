@@ -554,7 +554,7 @@ const SortableStopCard: React.FC<{
                 {stop.city_name}{stop.state_code ? `, ${stop.state_code}` : ''}
               </span>
               {index === stops.length - 1 && stop.city_name.toLowerCase().includes('atlanta') && (
-                <Badge variant="secondary" className="text-[10px]">Returning</Badge>
+                <Badge variant="secondary" className="text-xs">Returning</Badge>
               )}
             </div>
             {/* Inline distance/time */}
@@ -573,13 +573,13 @@ const SortableStopCard: React.FC<{
 
           {/* Inline DOT warning */}
           {compliance.exceedsLimit && (
-            <Badge variant="destructive" className="text-[10px] gap-1 shrink-0">
+            <Badge variant="destructive" className="text-xs gap-1 shrink-0">
               <AlertTriangle className="h-3 w-3" />
               {compliance.driveHours.toFixed(1)}h
             </Badge>
           )}
           {compliance.needsMandatoryBreak && !compliance.exceedsLimit && compliance.driveHours > 0 && (
-            <Badge variant="secondary" className="text-[10px] gap-1 shrink-0">
+            <Badge variant="secondary" className="text-xs gap-1 shrink-0">
               <Info className="h-3 w-3" />
               {compliance.driveHours.toFixed(1)}h
             </Badge>
@@ -587,14 +587,14 @@ const SortableStopCard: React.FC<{
 
           {/* Route analysis indicator */}
           {segAnalysis && !compliance.exceedsLimit && (
-            <Badge variant="outline" className="text-[10px] px-1 shrink-0 gap-0.5 text-primary border-primary/30">
+            <Badge variant="outline" className="text-xs px-1 shrink-0 gap-0.5 text-primary border-primary/30">
               <Route className="h-2.5 w-2.5" /> ✓
             </Badge>
           )}
 
           {/* Meal suggestions indicator */}
           {aiData?.suggestions && aiData.suggestions.length > 0 && (
-            <Badge variant="outline" className="text-[10px] px-1 shrink-0 gap-0.5">
+            <Badge variant="outline" className="text-xs px-1 shrink-0 gap-0.5">
               <Utensils className="h-2.5 w-2.5" /> {aiData.suggestions.length}
             </Badge>
           )}
@@ -658,7 +658,7 @@ const SortableStopCard: React.FC<{
                         <div>
                           <p className="text-xs font-medium">${segAnalysis.toll_estimate} Tolls</p>
                           {segAnalysis.toll_details && (
-                            <p className="text-[10px] text-muted-foreground">{segAnalysis.toll_details}</p>
+                            <p className="text-xs text-muted-foreground">{segAnalysis.toll_details}</p>
                           )}
                         </div>
                       </div>
@@ -668,7 +668,7 @@ const SortableStopCard: React.FC<{
                         <Fuel className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                         <div>
                           <p className="text-xs font-medium">${segAnalysis.fuel_estimate} Fuel</p>
-                          <p className="text-[10px] text-muted-foreground">~6 MPG charter bus</p>
+                          <p className="text-xs text-muted-foreground">~6 MPG charter bus</p>
                         </div>
                       </div>
                     )}
@@ -684,7 +684,7 @@ const SortableStopCard: React.FC<{
                         {segAnalysis.parking_options.map((p: any, pi: number) => (
                           <div key={pi} className="text-xs text-muted-foreground">
                             <span className="font-medium text-foreground">{p.name}</span>
-                            <span className="text-[10px]"> ({p.type})</span>
+                            <span className="text-xs"> ({p.type})</span>
                             {p.notes && <span> — {p.notes}</span>}
                           </div>
                         ))}
@@ -819,7 +819,7 @@ const SortableStopCard: React.FC<{
                             {s.city} · {s.distance_from_origin_miles} mi from {stops[index - 1].city_name} · {s.drive_time_from_origin}
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-[10px] shrink-0">{s.cost_per_person}/pp</Badge>
+                        <Badge variant="outline" className="text-xs shrink-0">{s.cost_per_person}/pp</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">{s.cuisine} · {s.reason}</p>
                     </div>

@@ -168,7 +168,7 @@ function UnitSection({
           <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Unit {index + 1}</div>
+          <div className="text-sm uppercase tracking-wide text-muted-foreground">Unit {index + 1}</div>
           <div className="font-semibold text-foreground">{unit.title}</div>
         </div>
         <span className="text-xs text-muted-foreground shrink-0">{unit.gw_academy_lessons.length} lessons</span>
@@ -327,7 +327,7 @@ function LessonRow({
         >
           <span className="text-xs font-mono text-muted-foreground w-6 shrink-0">{index + 1}.</span>
           <span className="text-sm font-medium text-foreground flex-1 min-w-0">{lesson.title}</span>
-          <span className="flex items-center gap-2 text-[11px] text-muted-foreground shrink-0">
+          <span className="flex items-center gap-2 text-sm text-muted-foreground shrink-0">
             {listening.length > 0 && (
               <span className="flex items-center gap-0.5"><Headphones className="w-3 h-3" />{listening.length}</span>
             )}
@@ -466,7 +466,7 @@ function LessonRow({
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Exercises</div>
               <div className="flex flex-wrap gap-1.5">
                 {lesson.gw_academy_exercises.map((ex) => (
-                  <Badge key={ex.id} variant="outline" className="text-[10px]">
+                  <Badge key={ex.id} variant="outline" className="text-xs">
                     {ex.type.replace(/_/g, ' ')}
                   </Badge>
                 ))}

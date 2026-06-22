@@ -187,7 +187,7 @@ export const ScheduleConflictAnalysis: React.FC = () => {
                       )}
                       style={{ width: max > 0 ? `${Math.max((count / max) * 100, count > 0 ? 15 : 0)}%` : '0%' }}
                     >
-                      {count > 0 && <span className="text-[10px] font-bold text-white">{count}</span>}
+                      {count > 0 && <span className="text-xs font-bold text-white">{count}</span>}
                     </div>
                   </div>
                 </div>

@@ -64,6 +64,13 @@ export default function ConcertPlannerEditorPage() {
   // Regen dialog state — kept at the page level so the dialog can be a
   // single instance rather than one per card.
   const [regenCard, setRegenCard] = useState<ProgramCard | null>(null);
+  // Live-draft buffer for piece editors. PieceDetailEditor debounces DB
+  // writes by 700ms, so a user who types a title/composer and immediately
+  // clicks "Regen" would otherwise hit the edge function before the
+  // patch lands. The editor writes its current draft here on every
+  // keystroke; RegenDialog reads it and forwards as overrides so the AI
+  // prompt always has the freshest title + composer.
+  const pieceDraftsRef = useRef<Map<string, { title: string; composer: string; arranger: string }>>(new Map());
   // Piece-detail cards default to COLLAPSED in editor mode so the page
   // doesn't grow into a multi-screen scroll once a program has 5+ pieces.
   // We track which piece ids are expanded; tap a card to expand/collapse.
@@ -92,6 +99,20 @@ export default function ConcertPlannerEditorPage() {
   // Hide it by default and let the top bar's "Cards" button slide it
   // in as a temporary drawer.
   const [mobileRailOpen, setMobileRailOpen] = useState(false);
+
+  // iPad portrait (md but < lg) can't afford a full 240–480px rail next to
+  // the canvas. Clamp to a compact column there; restore the user's saved
+  // width on true desktop (lg+).
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window === 'undefined' ? true : window.matchMedia('(min-width: 1024px)').matches,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+  const effectiveRailWidth = isDesktop ? railResize.width : 210;
 
   // Snapshot fields the admin types into so we don't fire a DB write per
   // keystroke. Push to DB on blur or 800ms after the last edit.
@@ -245,7 +266,8 @@ export default function ConcertPlannerEditorPage() {
         @media print {
           .no-print { display: none !important; }
           body, .min-h-screen { background: white !important; color: black !important; }
-          .program-card { page-break-after: always; break-inside: avoid; border: none !important; box-shadow: none !important; padding: 2rem 0 !important; }
+          .program-card { break-inside: avoid; border: none !important; box-shadow: none !important; padding: 0.5rem 0 !important; margin: 0 !important; }
+          main { gap: 0.75rem !important; }
         }
       ` }} />
 
@@ -262,7 +284,7 @@ export default function ConcertPlannerEditorPage() {
             variant="ghost"
             size="sm"
             onClick={() => setMobileRailOpen(true)}
-            className="px-2 lg:hidden"
+            className="px-2 md:hidden"
             aria-label="Open card list"
           >
             <Layers className="w-4 h-4" />
@@ -350,13 +372,14 @@ export default function ConcertPlannerEditorPage() {
                   pieceExpanded
                   onTogglePieceExpanded={() => {}}
                   publicUrl={publicUrl}
+                  pieceDraftsRef={pieceDraftsRef}
                 />
               ))}
           </section>
         ) : (
           <>
-            {/* Desktop rail — visible at lg+ as a flex sibling. */}
-            <div className="hidden lg:flex shrink-0">
+            {/* Tablet+ rail — visible at md+ (iPad portrait) as a flex sibling. */}
+            <div className="hidden md:flex shrink-0">
               <CardNavigator
                 cards={cards}
                 activeIndex={activeCardIndex}
@@ -370,19 +393,22 @@ export default function ConcertPlannerEditorPage() {
                   } as any);
                 }}
                 pieces={pieces}
-                width={railResize.width}
+                width={effectiveRailWidth}
+                compact={!isDesktop}
                 onToggleVisible={toggleVisible}
               />
-              <div
-                {...railResize.handleProps}
-                className="no-print w-1 cursor-col-resize bg-border/40 hover:bg-primary/40 active:bg-primary/60 transition-colors shrink-0"
-                aria-label="Resize card rail"
-              />
+              {isDesktop && (
+                <div
+                  {...railResize.handleProps}
+                  className="no-print w-1 cursor-col-resize bg-border/40 hover:bg-primary/40 active:bg-primary/60 transition-colors shrink-0"
+                  aria-label="Resize card rail"
+                />
+              )}
             </div>
 
             {/* Phone rail — slides in from the left, tap backdrop to close. */}
             {mobileRailOpen && (
-              <div className="lg:hidden fixed inset-0 z-40 flex">
+              <div className="md:hidden fixed inset-0 z-40 flex">
                 <div className="relative bg-card shadow-2xl flex">
                   <CardNavigator
                     cards={cards}
@@ -444,6 +470,7 @@ export default function ConcertPlannerEditorPage() {
                     pieceExpanded
                     onTogglePieceExpanded={() => {}}
                     publicUrl={publicUrl}
+                    pieceDraftsRef={pieceDraftsRef}
                   />
                 ) : null}
 
@@ -486,6 +513,8 @@ export default function ConcertPlannerEditorPage() {
         card={regenCard}
         program={program}
         pieces={pieces}
+        header={header}
+        pieceDraftsRef={pieceDraftsRef}
         onClose={() => setRegenCard(null)}
         onAcceptPieceNotes={(pieceId, suggestion) => {
           updatePiece.mutate({ pieceId, patch: { program_notes: suggestion } });
@@ -614,6 +643,7 @@ interface CardViewProps {
   pieceExpanded: boolean;
   onTogglePieceExpanded: () => void;
   publicUrl: string | null;
+  pieceDraftsRef: React.MutableRefObject<Map<string, { title: string; composer: string; arranger: string }>>;
 }
 
 function ProgramCardView(p: CardViewProps) {
@@ -673,45 +703,41 @@ function ProgramCardView(p: CardViewProps) {
           <span className="uppercase font-bold text-[10px] tracking-[0.24em] block mb-1 opacity-80">Concert Program</span>
           {viewMode === 'editor' ? (
             <div className="space-y-3 max-w-3xl mx-auto mt-2">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={header.title}
-                  onChange={(e) => onHeaderChange((h: any) => ({ ...h, title: e.target.value }))}
-                  className="w-full text-center break-words bg-transparent border-b border-dashed border-current/30 focus:outline-none focus:border-primary pr-10"
-                  style={{ ...theme.heroTitle, fontSize: 'clamp(1.5rem, 4.5vw, 3rem)', lineHeight: 1.05 }}
-                  placeholder="Concert title"
-                />
-                <SpeechInputButton
-                  label="Dictate concert title"
-                  className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 no-print"
-                  onTranscript={(text) =>
-                    onHeaderChange((h: any) => ({ ...h, title: text }))
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-left text-xs">
-                <FieldInline label="Venue" value={header.venue} onChange={(v) => onHeaderChange((h: any) => ({ ...h, venue: v }))} />
-                <FieldInline label="Conductor" value={header.conductor} onChange={(v) => onHeaderChange((h: any) => ({ ...h, conductor: v }))} />
-                <FieldInline label="Accompanist" value={header.accompanist} onChange={(v) => onHeaderChange((h: any) => ({ ...h, accompanist: v }))} />
-                <FieldInline label="Date" type="date" value={header.event_date} onChange={(v) => onHeaderChange((h: any) => ({ ...h, event_date: v }))} />
-                <FieldInline label="Call time" type="time" value={header.call_time} onChange={(v) => onHeaderChange((h: any) => ({ ...h, call_time: v }))} />
-                <FieldInline label="Performer group" value={header.performer_group} onChange={(v) => onHeaderChange((h: any) => ({ ...h, performer_group: v }))} />
+              <input
+                type="text"
+                value={header.title}
+                onChange={(e) => onHeaderChange((h: any) => ({ ...h, title: e.target.value }))}
+                className="w-full text-center break-words bg-transparent border-b border-dashed border-current/30 focus:outline-none focus:border-primary"
+                style={{ ...theme.heroTitle, fontSize: 'clamp(1.25rem, 3.2vw, 2.5rem)', lineHeight: 1.05 }}
+                placeholder="Concert title"
+              />
+              <div className="space-y-2 text-xs">
+                <FieldInline label="Conductor" centered value={header.conductor} onChange={(v) => onHeaderChange((h: any) => ({ ...h, conductor: v }))} />
+                <FieldInline label="Accompanist" centered value={header.accompanist} onChange={(v) => onHeaderChange((h: any) => ({ ...h, accompanist: v }))} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-left">
+                  <FieldInline label="Venue" value={header.venue} onChange={(v) => onHeaderChange((h: any) => ({ ...h, venue: v }))} />
+                  <FieldInline label="Date" type="date" value={header.event_date} onChange={(v) => onHeaderChange((h: any) => ({ ...h, event_date: v }))} />
+                  <FieldInline label="Performer group" value={header.performer_group} onChange={(v) => onHeaderChange((h: any) => ({ ...h, performer_group: v }))} />
+                </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-2 mt-2">
-              <h2 className="tracking-tight break-words" style={{ ...theme.heroTitle, fontSize: 'clamp(1.75rem, 5vw, 3.5rem)', lineHeight: 1.05 }}>{program.title || 'Untitled program'}</h2>
-              {program.subtitle && <p className="text-base italic opacity-80">{program.subtitle}</p>}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-current/20 text-sm opacity-80">
-                {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}
-                {program.conductor && <div><strong>Conductor:</strong> {program.conductor}</div>}
-                {program.accompanist && <div><strong>Accompanist:</strong> {program.accompanist}</div>}
-              </div>
-              {program.event_date && (
-                <div className="text-sm opacity-70 pt-1">
-                  {new Date(program.event_date).toLocaleDateString(undefined, { dateStyle: 'long' })}
-                  {program.call_time && ` · Call ${program.call_time}`}
+            <div className="flex flex-col items-center space-y-2 mt-2 text-center">
+              <h2 className="tracking-tight break-words text-center" style={{ ...theme.heroTitle, fontSize: 'clamp(1.5rem, 3.6vw, 3rem)', lineHeight: 1.05 }}>{program.title || 'Untitled program'}</h2>
+              {program.subtitle && <p className="text-base italic opacity-80 text-center">{program.subtitle}</p>}
+              {program.conductor && (
+                <p className="text-lg opacity-90 mt-3 text-center">{program.conductor}, Conductor</p>
+              )}
+              {program.accompanist && (
+                <p className="text-xs opacity-80 text-center">{program.accompanist}, accompanist</p>
+              )}
+              {(program.venue || program.event_date) && (
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 pt-3 border-t border-current/20 text-sm opacity-80 mt-3">
+                  {program.venue && <span>{program.venue}</span>}
+                  {program.venue && program.event_date && <span className="opacity-60">·</span>}
+                  {program.event_date && (
+                    <span>{new Date(program.event_date).toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
+                  )}
                 </div>
               )}
             </div>
@@ -721,25 +747,22 @@ function ProgramCardView(p: CardViewProps) {
 
       {card.kind === 'timeline-program' && (
         <div>
-          <h3 className={theme.accent}>{card.title}</h3>
+          {(() => { const { color: _heroColor, ...heroFont } = theme.heroTitle as any; return (
+            <h3 className="text-center font-bold tracking-tight" style={{ ...heroFont, fontSize: 'clamp(1.5rem, 3vw, 2.25rem)' }}>{card.title}</h3>
+          ); })()}
           <div className="space-y-2 mt-4">
             {pieces.length === 0 ? (
-              <div className="text-xs text-muted-foreground italic">No pieces yet.</div>
+              <div className="text-xs italic opacity-60">No pieces yet.</div>
             ) : pieces.slice().sort((a, b) => a.sort_order - b.sort_order).map((piece, i) => (
-              <div key={piece.id} className="flex items-start justify-between border-b border-border/50 pb-2 text-sm">
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <span className="font-mono text-muted-foreground/60 font-bold tabular-nums">{String(i + 1).padStart(2, '0')}</span>
-                  <div className="min-w-0">
-                    <div className="font-semibold truncate">{piece.title || 'Untitled work'}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {piece.composer || 'Composer pending'}
-                      {piece.arranger && ` · arr. ${piece.arranger}`}
-                    </div>
-                  </div>
+              <div key={piece.id} className="flex items-center justify-between gap-3 pb-2 text-sm" style={{ borderBottomWidth: '1px', borderBottomStyle: 'solid', borderBottomColor: 'rgba(127,127,127,0.18)' }}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-mono font-bold tabular-nums opacity-50">{String(i + 1).padStart(2, '0')}</span>
+                  <div className="font-semibold truncate">{piece.title || 'Untitled work'}</div>
                 </div>
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">
-                  {piece.duration_seconds ? formatDuration(piece.duration_seconds) : '—'}
-                </span>
+                <div className="text-xs opacity-70 text-right whitespace-nowrap shrink-0">
+                  {piece.composer || 'Composer pending'}
+                  {piece.arranger && ` · arr. ${piece.arranger}`}
+                </div>
               </div>
             ))}
           </div>
@@ -800,6 +823,7 @@ function ProgramCardView(p: CardViewProps) {
               themeAccent={theme.accent}
               onCommit={(patch) => p.onUpdatePiece(piece.id, patch)}
               onDelete={() => p.onDeletePiece(piece.id)}
+              pieceDraftsRef={p.pieceDraftsRef}
             />
           </div>
         );
@@ -828,9 +852,9 @@ function ProgramCardView(p: CardViewProps) {
       )}
 
       {card.kind === 'rights-footer' && (
-        <div className="text-[11px] flex flex-col md:flex-row items-start md:items-center justify-between gap-2 border-t border-border pt-3 text-muted-foreground">
+        <div className="text-[11px] flex flex-col md:flex-row items-start md:items-center justify-between gap-2 pt-3 opacity-80" style={{ borderTopWidth: '1px', borderTopStyle: 'solid', borderTopColor: 'rgba(127,127,127,0.25)' }}>
           <div className="flex items-center gap-1.5">
-            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            <Check className="w-3.5 h-3.5 text-emerald-500" />
             <span>All works credited per their composer + licensing status above.</span>
           </div>
           <div className="italic">"Texts and music used by permission. All rights reserved."</div>
@@ -839,10 +863,10 @@ function ProgramCardView(p: CardViewProps) {
 
       {card.kind === 'qr-access' && (
         <div className="text-center py-4">
-          <div className="max-w-xs mx-auto p-3 bg-card border border-border rounded-xl flex flex-col items-center">
+          <div className="max-w-xs mx-auto p-3 rounded-xl flex flex-col items-center" style={{ background: 'rgba(127,127,127,0.08)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(127,127,127,0.25)' }}>
             <QrPlaceholder url={p.publicUrl ?? ''} />
             <p className="text-xs font-semibold mt-2">Digital program</p>
-            <p className="text-[10px] text-muted-foreground font-mono mt-0.5 break-all">
+            <p className="text-[10px] font-mono mt-0.5 break-all opacity-70">
               {p.publicUrl ?? '(publish to generate a public URL)'}
             </p>
           </div>
@@ -857,7 +881,7 @@ function ProgramCardView(p: CardViewProps) {
 // reorder repertoire by drag-and-drop; non-piece cards (cover, program,
 // roster, rights, share) are fixed in position by the transform layer.
 function CardNavigator({
-  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, onReorderCards, pieces, width, onToggleVisible,
+  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, onReorderCards, pieces, width, onToggleVisible, compact = false,
 }: {
   cards: ProgramCard[];
   activeIndex: number;
@@ -869,6 +893,8 @@ function CardNavigator({
   pieces: { id: string; sort_order: number }[];
   width: number;
   onToggleVisible: (cardId: string) => void;
+  /** iPad-portrait squeeze: drop kind label + grip to fit a 180px column. */
+  compact?: boolean;
 }) {
   // Touch + mouse drag via @dnd-kit. The old HTML5 drag API doesn't
   // fire touchstart/touchmove on iOS Safari, which left iPad users
@@ -949,6 +975,7 @@ function CardNavigator({
               label={cardLabel(c)}
               isActive={i === activeIndex}
               visible={c.visible}
+              compact={compact}
               onSelect={() => onSelect(i)}
               onToggleVisible={() => onToggleVisible(c.id)}
             />
@@ -968,6 +995,7 @@ function CardNavigator({
                       label={cardLabel(c)}
                       isActive={i === activeIndex}
                       visible={c.visible}
+                      compact={compact}
                       onSelect={() => onSelect(i)}
                       onToggleVisible={() => onToggleVisible(c.id)}
                     />
@@ -986,6 +1014,7 @@ function CardNavigator({
               label={cardLabel(c)}
               isActive={i === activeIndex}
               visible={c.visible}
+              compact={compact}
               onSelect={() => onSelect(i)}
               onToggleVisible={() => onToggleVisible(c.id)}
             />
@@ -1007,7 +1036,7 @@ function CardNavigator({
 // Sortable wrapper for piece-detail rows. The drag handle lives on a
 // dedicated grip icon so the rest of the row stays clickable for select.
 function SortableCardRow({
-  cardId, index, label, isActive, visible, onSelect, onToggleVisible,
+  cardId, index, label, isActive, visible, onSelect, onToggleVisible, compact = false,
 }: {
   cardId: string;
   index: number;
@@ -1016,6 +1045,7 @@ function SortableCardRow({
   visible: boolean;
   onSelect: () => void;
   onToggleVisible: () => void;
+  compact?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cardId });
   return (
@@ -1035,12 +1065,12 @@ function SortableCardRow({
         isActive ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm' : 'border-transparent hover:border-border hover:bg-card/60'
       } ${!visible ? 'opacity-50' : ''} ${isDragging ? 'opacity-60 shadow-lg z-10 relative bg-card cursor-grabbing' : 'cursor-grab'}`}
     >
-      <div className="flex items-start gap-2.5 p-2.5">
-        <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-muted-foreground mt-0.5 shrink-0" />
-        <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
+      <div className={`flex items-center gap-2 ${compact ? 'p-2' : 'items-start gap-2.5 p-2.5'}`}>
+        {!compact && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-muted-foreground mt-0.5 shrink-0" />}
+        <span className={`font-mono font-bold text-muted-foreground tabular-nums shrink-0 ${compact ? 'text-[11px] w-3' : 'text-xs w-4'}`}>{index}</span>
         <div className="min-w-0 flex-1">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
-          <div className="text-sm font-semibold leading-tight truncate">{label.title}</div>
+          {!compact && <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>}
+          <div className={`font-semibold leading-tight truncate ${compact ? 'text-[13px]' : 'text-[13px]'}`}>{label.title}</div>
         </div>
         <VisibilityToggle visible={visible} onToggle={onToggleVisible} />
       </div>
@@ -1051,7 +1081,7 @@ function SortableCardRow({
 // Anchored Cover/Ensemble/Rights/Share rows — same visual shape as the
 // sortable rows but no drag handle and no listeners.
 function AnchoredCardRow({
-  index, label, isActive, visible, onSelect, onToggleVisible,
+  index, label, isActive, visible, onSelect, onToggleVisible, compact = false,
 }: {
   index: number;
   label: { kind: string; title: string };
@@ -1059,6 +1089,7 @@ function AnchoredCardRow({
   visible: boolean;
   onSelect: () => void;
   onToggleVisible: () => void;
+  compact?: boolean;
 }) {
   return (
     <div
@@ -1070,11 +1101,11 @@ function AnchoredCardRow({
         isActive ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm' : 'border-transparent hover:border-border hover:bg-card/60'
       } ${!visible ? 'opacity-50' : ''}`}
     >
-      <div className="flex items-start gap-2.5 p-2.5 pl-[1.6rem]">
-        <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
+      <div className={`flex gap-2 ${compact ? 'items-center p-2' : 'items-start gap-2.5 p-2.5 pl-[1.6rem]'}`}>
+        <span className={`font-mono font-bold text-muted-foreground tabular-nums shrink-0 ${compact ? 'text-[11px] w-3' : 'text-xs w-4'}`}>{index}</span>
         <div className="min-w-0 flex-1">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
-          <div className="text-sm font-semibold leading-tight truncate">{label.title}</div>
+          {!compact && <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>}
+          <div className={`font-semibold leading-tight truncate ${compact ? 'text-[13px]' : 'text-[13px]'}`}>{label.title}</div>
         </div>
         <VisibilityToggle visible={visible} onToggle={onToggleVisible} />
       </div>
@@ -1195,11 +1226,13 @@ function ValidationBadge({
 // kinds: piece-detail (rewrites program_notes) + hero-cover (rewrites
 // program subtitle).
 function RegenDialog({
-  card, program, pieces, onClose, onAcceptPieceNotes, onAcceptSubtitle,
+  card, program, pieces, header, pieceDraftsRef, onClose, onAcceptPieceNotes, onAcceptSubtitle,
 }: {
   card: ProgramCard | null;
   program: NonNullable<ReturnType<typeof useConcertProgram>['program']>;
   pieces: ReturnType<typeof useConcertProgram>['pieces'];
+  header: any;
+  pieceDraftsRef: React.MutableRefObject<Map<string, { title: string; composer: string; arranger: string }>>;
   onClose: () => void;
   onAcceptPieceNotes: (pieceId: string, suggestion: string) => void;
   onAcceptSubtitle: (suggestion: string) => void;
@@ -1229,12 +1262,22 @@ function RegenDialog({
     setBusy(true);
     setError(null);
     try {
+      // Pull the freshest user-typed values so the AI prompt always has
+      // the latest title/composer/arranger (or hero header fields), even
+      // if the piece editor's 700ms debounce hasn't fired yet.
+      const draft = card.pieceId ? pieceDraftsRef.current.get(card.pieceId) : undefined;
+      const overrides = card.kind === 'piece-detail' && draft
+        ? { title: draft.title, composer: draft.composer, arranger: draft.arranger }
+        : card.kind === 'hero-cover'
+          ? { title: header?.title ?? '', subtitle: header?.subtitle ?? '', venue: header?.venue ?? '', conductor: header?.conductor ?? '', performer_group: header?.performer_group ?? '' }
+          : undefined;
       const { data, error: fnErr } = await supabase.functions.invoke('concert-card-regen', {
         body: {
           card_kind: card.kind,
           program_id: program.id,
           piece_id: card.pieceId,
           tone,
+          overrides,
         },
       });
       if (fnErr) throw new Error(fnErr.message || 'Edge function failed');
@@ -1338,7 +1381,7 @@ function RegenDialog({
 // so we filter it out of the patch when blank — local stays blank so
 // the buyer can keep typing.
 function PieceDetailEditor({
-  piece, viewMode, themeAccent, onCommit, onDelete,
+  piece, viewMode, themeAccent, onCommit, onDelete, pieceDraftsRef,
 }: {
   piece: {
     id: string; title: string;
@@ -1352,6 +1395,7 @@ function PieceDetailEditor({
   themeAccent: string;
   onCommit: (patch: any) => void;
   onDelete: () => void;
+  pieceDraftsRef: React.MutableRefObject<Map<string, { title: string; composer: string; arranger: string }>>;
 }) {
   const [local, setLocal] = useState({
     title: piece.title,
@@ -1382,6 +1426,17 @@ function PieceDetailEditor({
     }));
     lastPieceRef.current = piece;
   }, [piece]);
+
+  // Mirror the live draft into the page-level ref so Regen always has
+  // the freshest title/composer/arranger, even before the debounce
+  // commits them to the DB.
+  useEffect(() => {
+    pieceDraftsRef.current.set(piece.id, {
+      title: local.title,
+      composer: local.composer,
+      arranger: local.arranger,
+    });
+  }, [piece.id, local.title, local.composer, local.arranger, pieceDraftsRef]);
 
   // Debounced commit — only sends fields that differ from the canonical
   // piece, and refuses to send an empty title (the DB rejects it).
@@ -1547,21 +1602,21 @@ function PieceDetailEditor({
   );
 }
 
-function FieldInline({ label, value, onChange, type = 'text' }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string;
+function FieldInline({ label, value, onChange, type = 'text', centered = false }: {
+  label: string; value: string; onChange: (v: string) => void; type?: string; centered?: boolean;
 }) {
   // Inline `color: inherit` forces both label + input to pick up the
   // hero card's theme foreground (cream / white / dark depending on the
   // theme), beating the browser's UA stylesheet on input + Tailwind's
   // dark text-muted-foreground default on the outer container.
   return (
-    <label className="block" style={{ color: 'inherit' }}>
+    <label className={`block ${centered ? 'text-center' : ''}`} style={{ color: 'inherit' }}>
       <span className="text-[10px] uppercase font-bold tracking-wider opacity-70" style={{ color: 'inherit' }}>{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-0.5 bg-white/10 backdrop-blur border border-current/30 rounded px-1.5 py-1 text-sm placeholder-current/50 focus:outline-none focus:border-current/70"
+        className={`w-full mt-0.5 bg-white/10 backdrop-blur border border-current/30 rounded px-1.5 py-1 text-sm placeholder-current/50 focus:outline-none focus:border-current/70 ${centered ? 'text-center' : ''}`}
         style={{ color: 'inherit', colorScheme: 'dark light' }}
       />
     </label>

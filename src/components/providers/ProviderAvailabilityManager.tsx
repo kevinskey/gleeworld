@@ -15,8 +15,9 @@ import {
   useProviderAvailability, 
   useUpdateProviderAvailability, 
   useDeleteProviderAvailability,
-  ProviderAvailability 
+  ProviderAvailability
 } from '@/hooks/useServiceProviders';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface ProviderAvailabilityManagerProps {
   provider: ServiceProvider;
@@ -104,8 +105,6 @@ export const ProviderAvailabilityManager: React.FC<ProviderAvailabilityManagerPr
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this availability slot?')) return;
-
     try {
       await deleteMutation.mutateAsync(id);
       toast({
@@ -369,13 +368,16 @@ export const ProviderAvailabilityManager: React.FC<ProviderAvailabilityManagerPr
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(slot.id)}
+                        <ConfirmDeleteButton
+                          confirmKey="delete-availability-slot"
+                          title="Delete this availability slot?"
+                          description="Existing bookings are preserved; future availability is removed."
+                          onConfirm={() => handleDelete(slot.id)}
+                          ariaLabel="Delete slot"
+                          className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 w-9 hover:bg-muted"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </ConfirmDeleteButton>
                       </div>
                     </div>
                   ))}

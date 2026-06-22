@@ -29,6 +29,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
     }
   } = useForm<ExerciseParameters>({
     defaultValues: {
+      level: 1,
       key: {
         tonic: "C",
         mode: "major"
@@ -63,6 +64,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   });
 
   // Watch form values
+  const watchedLevel = watch('level') ?? 1;
   const watchedKey = watch('key');
   const watchedTime = watch('time');
   const watchedNumMeasures = watch('numMeasures');
@@ -73,8 +75,13 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   const watchedIntervalMotion = watch('intervalMotion');
   const watchedCadenceEvery = watch('cadenceEvery');
   const watchedBpm = watch('bpm');
-  const tonics = ["C", "D", "E", "F", "G", "A", "B", "Db", "Eb", "Gb", "Ab", "Bb"];
-  const modes = ["major", "minor", "natural minor", "harmonic minor", "melodic minor", "dorian", "phrygian", "lydian", "mixolydian", "aeolian", "locrian"];
+  const tonics = ["C", "G", "D", "A", "E", "B", "F#", "C#", "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"];
+  // Restricted to major + minor: the edge function only knows how to
+  // compute fifths for these two. The previously-listed church modes
+  // (dorian, phrygian, etc.) silently fell back to C major, so the
+  // generator emitted exercises with no key signature regardless of
+  // what the user picked.
+  const modes = ["major", "minor"];
   const timeSignatures = [{
     num: 2,
     den: 4
@@ -156,12 +163,60 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
   return <Card className="w-full">
       <CardContent className="p-2 sm:p-3 space-y-2 sm:space-y-3">
         <form className="space-y-2 sm:space-y-3">
+          {/* Difficulty level — drives the rule-based generator. Each
+              level is a fixed set of constraints (range, max melodic
+              step, allowed durations), so the result is deterministic
+              and pedagogically calibrated. */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium">Difficulty level</Label>
+            <div className="grid grid-cols-5 gap-1">
+              {[1, 2, 3, 4, 5].map((lvl) => {
+                const labels: Record<number, string> = {
+                  1: 'Beginner', 2: 'Easy', 3: 'Intermediate', 4: 'Advanced', 5: 'Expert',
+                };
+                const descriptions: Record<number, string> = {
+                  1: 'Octave range · stepwise only · ¼ + ½',
+                  2: 'Octave range · up to 3rd · adds ♪',
+                  3: '10th range · up to 5th · adds 𝅝',
+                  4: '12th range · up to 7th · adds ♬',
+                  5: 'Full range · any leap · all rhythms',
+                };
+                const active = watchedLevel === lvl;
+                return (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setValue('level', lvl as 1 | 2 | 3 | 4 | 5)}
+                    title={descriptions[lvl]}
+                    className={`h-12 rounded-md text-xs font-semibold flex flex-col items-center justify-center transition-colors ${
+                      active
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-muted text-foreground hover:bg-primary/15'
+                    }`}
+                  >
+                    <span className="text-base leading-tight">{lvl}</span>
+                    <span className={`text-[9px] uppercase tracking-wider leading-tight ${active ? '' : 'text-muted-foreground'}`}>
+                      {labels[lvl]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-muted-foreground italic leading-tight">
+              {watchedLevel === 1 && 'Beginner: octave range, stepwise motion only, quarter + half notes. Always starts and ends on tonic.'}
+              {watchedLevel === 2 && 'Easy: octave range, steps + occasional 3rds, adds eighth notes.'}
+              {watchedLevel === 3 && 'Intermediate: 10th range, leaps up to a 5th, adds whole notes.'}
+              {watchedLevel === 4 && 'Advanced: 12th range, leaps up to a 7th, adds sixteenth notes.'}
+              {watchedLevel === 5 && 'Expert: full range, any leap, all rhythm subdivisions.'}
+            </p>
+          </div>
+
           {/* Row 1: Key, Mode, Time, and Measures */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Key</Label>
+              <Label className="text-sm font-medium">Key</Label>
               <Select value={watchedKey.tonic} onValueChange={value => setValue('key.tonic', value)}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-11 !text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50 max-h-[200px] overflow-y-auto">
@@ -170,9 +225,9 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Mode</Label>
+              <Label className="text-sm font-medium">Mode</Label>
               <Select value={watchedKey.mode} onValueChange={value => setValue('key.mode', value as "major" | "minor")}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-11 !text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
@@ -183,7 +238,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Time</Label>
+              <Label className="text-sm font-medium">Time</Label>
               <Select value={`${watchedTime.num}/${watchedTime.den}`} onValueChange={value => {
               const [num, den] = value.split('/').map(Number);
               setValue('time', {
@@ -191,7 +246,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                 den: den as 1 | 2 | 4 | 8 | 16
               });
             }}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-11 !text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
@@ -202,9 +257,9 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Measures</Label>
+              <Label className="text-sm font-medium">Measures</Label>
               <Select value={watchedNumMeasures.toString()} onValueChange={value => setValue('numMeasures', parseInt(value))}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-11 !text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
@@ -217,7 +272,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           {/* Row 2: Parts and BPM */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Parts</Label>
+              <Label className="text-sm font-medium">Parts</Label>
               <Select value={
                 watchedParts?.length === 1 && watchedParts[0].role === "S" ? "S" :
                 watchedParts?.length === 1 && watchedParts[0].role === "A" ? "A" :
@@ -255,7 +310,7 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
                   }]);
                 }
               }}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-11 !text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
@@ -266,9 +321,9 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">BPM</Label>
+              <Label className="text-sm font-medium">BPM</Label>
               <Select value={watchedBpm.toString()} onValueChange={value => setValue('bpm', parseInt(value))}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-11 !text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
@@ -281,9 +336,9 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
           {/* Row 4: Cadence Every and Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Cadence Every</Label>
+              <Label className="text-sm font-medium">Cadence Every</Label>
               <Select value={watchedCadenceEvery.toString()} onValueChange={value => setValue('cadenceEvery', parseInt(value))}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-11 !text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
@@ -294,9 +349,9 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-medium">Cadence Type</Label>
+              <Label className="text-sm font-medium">Cadence Type</Label>
               <Select value={watch('cadenceType') || 'authentic'} onValueChange={value => setValue('cadenceType', value as 'authentic' | 'half' | 'plagal' | 'deceptive')}>
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-11 !text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-background border shadow-lg z-50">
@@ -308,80 +363,68 @@ export const ParameterForm: React.FC<ParameterFormProps> = ({
             </div>
           </div>
 
-          {/* Checkbox Options */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div className="flex items-center space-x-1">
-              <Checkbox id="allowDots" checked={watchedAllowDots} onCheckedChange={checked => setValue('allowDots', !!checked)} />
-              <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Checkbox id="enforceVoiceLeading" checked={watch('enforceVoiceLeading') ?? true} onCheckedChange={checked => setValue('enforceVoiceLeading', !!checked)} />
-              <Label htmlFor="enforceVoiceLeading" className="text-xs">Voice Leading</Label>
-            </div>
+          {/* Single user-controlled option left in this band.
+              `enforceVoiceLeading`, `requireResolution`, and
+              `strongBeatCadence` were removed 2026-06-19 — the new
+              rule-based generator always enforces them, so the toggles
+              were vestigial and crowded the form. They remain in
+              defaultValues so any stored exercises keep working. */}
+          <div className="flex items-center space-x-1">
+            <Checkbox id="allowDots" checked={watchedAllowDots} onCheckedChange={checked => setValue('allowDots', !!checked)} />
+            <Label htmlFor="allowDots" className="text-xs">Dotted Notes</Label>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div className="flex items-center space-x-1">
-              <Checkbox id="requireResolution" checked={watch('requireResolution') ?? true} onCheckedChange={checked => setValue('requireResolution', !!checked)} />
-              <Label htmlFor="requireResolution" className="text-xs">Resolve Tendencies</Label>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Checkbox id="strongBeatCadence" checked={watch('strongBeatCadence') ?? true} onCheckedChange={checked => setValue('strongBeatCadence', !!checked)} />
-              <Label htmlFor="strongBeatCadence" className="text-xs">Strong Beat Cadence</Label>
-            </div>
-          </div>
-
-          {/* Note Values Selection */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium">Note Values</Label>
-            <div className="flex flex-wrap gap-1 p-2">
-              {durations.map(duration => {
-                return (
-                  <Badge 
-                    key={duration} 
-                    variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"} 
-                    className="cursor-pointer text-xs px-2 py-1 h-10 w-10 flex items-center justify-center" 
+          {/* Note Values / Rest Values / Motion Types — three groups
+              on one row at any width above phone portrait. The form
+              lives in a sidebar on tablet/desktop, so the previous
+              `lg:` breakpoint (1024px) never actually triggered. */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Note Values</Label>
+              <div className="flex flex-wrap gap-1">
+                {durations.map((duration) => (
+                  <Badge
+                    key={duration}
+                    variant={watchedAllowedDur?.includes(duration as any) ? "default" : "outline"}
+                    className="cursor-pointer px-1.5 py-1 h-11 w-11 flex items-center justify-center overflow-hidden"
                     onClick={() => handleDurationToggle(duration)}
                   >
-                    <MusicalNotation 
-                      symbol={getNoteSymbol(duration)} 
-                      className="text-sm"
-                    />
+                    <MusicalNotation symbol={getNoteSymbol(duration)} className="text-base leading-none" />
                   </Badge>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Rest Values Selection */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium">Rest Values</Label>
-            <div className="flex flex-wrap gap-1 p-2">
-              {durations.map(restType => {
-                return (
-                  <Badge 
-                    key={`rest-${restType}`} 
-                    variant={watchedAllowedRests?.includes(restType as any) ? "default" : "outline"} 
-                    className="cursor-pointer text-xs px-2 py-1 h-10 w-10 flex items-center justify-center" 
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Rest Values</Label>
+              <div className="flex flex-wrap gap-1">
+                {durations.map((restType) => (
+                  <Badge
+                    key={`rest-${restType}`}
+                    variant={watchedAllowedRests?.includes(restType as any) ? "default" : "outline"}
+                    className="cursor-pointer px-1.5 py-1 h-11 w-11 flex items-center justify-center overflow-hidden"
                     onClick={() => handleRestToggle(restType)}
                   >
-                    <MusicalNotation 
-                      symbol={getRestSymbol(restType)} 
-                      className="text-sm"
-                    />
+                    <MusicalNotation symbol={getRestSymbol(restType)} className="text-base leading-none" />
                   </Badge>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Motion Selection */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium">Motion Types</Label>
-            <div className="flex flex-wrap gap-1">
-              {motions.map(motion => <Badge key={motion} variant={watchedIntervalMotion?.includes(motion as any) ? "default" : "outline"} className="cursor-pointer text-xs px-2 py-1 h-6" onClick={() => handleMotionToggle(motion)}>
-                  {motion.charAt(0).toUpperCase() + motion.slice(1)}
-                </Badge>)}
+            <div className="space-y-1">
+              <Label className="text-sm font-medium">Motion Types</Label>
+              <div className="flex flex-wrap gap-1">
+                {motions.map((motion) => (
+                  <Badge
+                    key={motion}
+                    variant={watchedIntervalMotion?.includes(motion as any) ? "default" : "outline"}
+                    className="cursor-pointer text-xs px-2 py-1 h-9 flex items-center"
+                    onClick={() => handleMotionToggle(motion)}
+                  >
+                    {motion.charAt(0).toUpperCase() + motion.slice(1)}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
         </form>

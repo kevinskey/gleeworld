@@ -15,6 +15,8 @@ import { staffBlock } from './blocks/staff';
 import { ensemblesBlock } from './blocks/ensembles';
 import { concertTicketsBlock } from './blocks/concert-tickets';
 import { alumniSpotlightBlock } from './blocks/alumni-spotlight';
+import { spotlightBlock } from './blocks/spotlight';
+import { scholarshipBlock } from './blocks/scholarship';
 import { appointmentBookingBlock } from './blocks/appointment-booking';
 import { pressBlock } from './blocks/press';
 import { supportBlock } from './blocks/support';
@@ -40,6 +42,8 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [merchBlock.type]: merchBlock,
   [concertTicketsBlock.type]: concertTicketsBlock,
   [alumniSpotlightBlock.type]: alumniSpotlightBlock,
+  [spotlightBlock.type]: spotlightBlock,
+  [scholarshipBlock.type]: scholarshipBlock,
   [appointmentBookingBlock.type]: appointmentBookingBlock,
   // Back-compat: `video-gallery` was the original key for the Videos block.
   // Map it to the same module so stored configs continue to render.

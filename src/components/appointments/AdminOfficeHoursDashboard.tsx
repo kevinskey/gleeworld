@@ -27,8 +27,6 @@ import {
 import { format, isToday, isFuture, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import underwaterBg from '@/assets/underwater-bg.jpg';
 import { OfficeHoursAssistant } from './OfficeHoursAssistant';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
@@ -202,12 +200,12 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, React.ReactNode> = {
-      confirmed: <Badge className="bg-green-500 text-white border-green-600 text-[10px]"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Confirmed</Badge>,
-      cancelled: <Badge variant="destructive" className="text-[10px]"><XCircle className="h-2.5 w-2.5 mr-0.5" />Cancelled</Badge>,
-      pending: <Badge className="bg-amber-500 text-white border-amber-600 text-[10px]"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pending</Badge>,
-      completed: <Badge className="bg-blue-600 text-white border-blue-700 text-[10px]"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Completed</Badge>,
+      confirmed: <Badge className="bg-green-500 text-white border-green-600 text-xs"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Confirmed</Badge>,
+      cancelled: <Badge variant="destructive" className="text-xs"><XCircle className="h-2.5 w-2.5 mr-0.5" />Cancelled</Badge>,
+      pending: <Badge className="bg-amber-500 text-white border-amber-600 text-xs"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pending</Badge>,
+      completed: <Badge className="bg-blue-600 text-white border-blue-700 text-xs"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Completed</Badge>,
     };
-    return badges[status] || <Badge variant="outline" className="text-[10px]">{status}</Badge>;
+    return badges[status] || <Badge variant="outline" className="text-xs">{status}</Badge>;
   };
 
   const sectionTabs: { key: DashboardSection; label: string; icon: React.ElementType }[] = [
@@ -219,85 +217,25 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
   ];
 
   return (
-    <UniversalLayout>
-      {/* Underwater Background */}
-      <div className="relative min-h-screen">
-        <div 
-          className="fixed inset-0 z-0" 
-          style={{ 
-            top: 'var(--gw-header-h, 4rem)',
-          }}
-        >
-          <div 
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `url(${underwaterBg})`,
-              backgroundSize: '200% 200%',
-              backgroundPosition: 'center',
-              animation: 'underwaterPan 240s linear infinite',
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#001a33]/40 via-transparent to-[#001a33]/60" />
-          {/* Animated light rays */}
-          <div className="absolute inset-0 opacity-20" style={{
-            background: 'repeating-linear-gradient(105deg, transparent, transparent 40px, rgba(255,255,255,0.03) 40px, rgba(255,255,255,0.03) 80px)',
-            animation: 'underwaterRays 8s ease-in-out infinite alternate',
-          }} />
-          {/* Bubble particles */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute rounded-full bg-white/10 border border-white/20"
-                style={{
-                  width: `${4 + Math.random() * 8}px`,
-                  height: `${4 + Math.random() * 8}px`,
-                  left: `${5 + Math.random() * 90}%`,
-                  bottom: `-${10 + Math.random() * 20}px`,
-                  animation: `bubbleRise ${8 + Math.random() * 12}s linear infinite`,
-                  animationDelay: `${Math.random() * 10}s`,
-                }}
-              />
-            ))}
+    <div className="rounded-2xl overflow-hidden bg-slate-900">
+      {/* Content Layer */}
+      <div className="relative">
+        {/* Header */}
+        <div className="w-full py-3 sm:py-5 bg-slate-800/80 border-b border-white/5">
+          <div className="px-3 sm:px-6 flex flex-col items-center">
+            <h2 className="text-center tracking-wide text-white text-lg sm:text-2xl font-bold">
+              Instructor Control Center
+            </h2>
+            <p className="text-center text-white/60 text-sm sm:text-xs mt-0.5">
+              {pendingAppointments.length > 0 && (
+                <span className="text-amber-300 font-semibold">{pendingAppointments.length} pending • </span>
+              )}
+              {todayAppointments.length} today • {allAppointments.length} total
+            </p>
           </div>
         </div>
 
-        {/* CSS Animations */}
-        <style>{`
-           @keyframes underwaterPan {
-            0% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          @keyframes underwaterRays {
-            0% { transform: translateX(-20px) skewX(-2deg); opacity: 0.15; }
-            100% { transform: translateX(20px) skewX(2deg); opacity: 0.25; }
-          }
-          @keyframes bubbleRise {
-            0% { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
-            10% { opacity: 0.6; }
-            90% { opacity: 0.3; }
-            100% { transform: translateY(-100vh) translateX(${Math.random() > 0.5 ? '' : '-'}30px) scale(1); opacity: 0; }
-          }
-        `}</style>
-
-        {/* Content Layer */}
-        <div className="relative z-10">
-          {/* Header */}
-          <div className="w-full py-3 sm:py-6" style={{ backgroundColor: 'rgba(0, 54, 102, 0.85)', backdropFilter: 'blur(8px)' }}>
-            <div className="px-3 sm:px-8 flex flex-col items-center">
-              <h1 className="text-center tracking-wide text-white text-xl sm:text-4xl font-bold font-['Bebas_Neue']">
-                CONTROL CENTER
-              </h1>
-              <p className="text-center text-white/70 text-[11px] sm:text-sm mt-0.5">
-                {pendingAppointments.length > 0 && (
-                  <span className="text-amber-300 font-semibold">{pendingAppointments.length} pending • </span>
-                )}
-                {todayAppointments.length} today • {allAppointments.length} total
-              </p>
-            </div>
-          </div>
-
-          <div className="w-full px-2 sm:px-6 md:px-8 py-2 sm:py-6">
+        <div className="w-full px-2 sm:px-4 md:px-6 py-3 sm:py-5">
             {/* Control Center Top-Level Tabs */}
             <div className="flex gap-0.5 mb-3 bg-white/10 backdrop-blur-md rounded-lg p-0.5 border border-white/10">
               {([
@@ -332,7 +270,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
               key={tab.key}
               onClick={() => setActiveSection(tab.key)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-1 py-2 text-[11px] sm:text-xs font-semibold rounded-md transition-colors",
+                "flex-1 flex items-center justify-center gap-1 py-2 text-sm sm:text-xs font-semibold rounded-md transition-colors",
                 activeSection === tab.key
                   ? "bg-white/20 text-white shadow-sm backdrop-blur-sm"
                   : "text-white/60 hover:text-white hover:bg-white/10"
@@ -358,7 +296,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                 <Card key={stat.label} className="border-white/10 bg-white/10 backdrop-blur-md">
                   <CardContent className="p-2 sm:p-3 text-center">
                     <div className={cn("text-xl sm:text-2xl font-bold", stat.color)}>{stat.value}</div>
-                    <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-white/50">{stat.label}</div>
+                    <div className="text-[9px] sm:text-xs uppercase tracking-wider text-white/50">{stat.label}</div>
                   </CardContent>
                 </Card>
               ))}
@@ -375,7 +313,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                   key={tab.key}
                   onClick={() => setAdminTab(tab.key)}
                   className={cn(
-                    "flex-1 py-1.5 text-[11px] sm:text-xs font-semibold rounded-md transition-colors",
+                    "flex-1 py-1.5 text-sm sm:text-xs font-semibold rounded-md transition-colors",
                     adminTab === tab.key ? "bg-white/20 text-white shadow-sm" : "text-white/50 hover:text-white"
                   )}
                 >
@@ -408,7 +346,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                               <span className="font-semibold text-xs text-white truncate">{apt.client_name || 'Unknown'}</span>
                               {getStatusBadge(apt.status)}
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] text-white/60">
+                            <div className="flex items-center gap-2 text-xs text-white/60">
                               <span className="flex items-center gap-0.5">
                                 <CalendarIcon className="h-2.5 w-2.5" />
                                 {format(new Date(apt.appointment_date), 'MMM d')}
@@ -416,12 +354,12 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                               {apt.start_time && <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{apt.start_time}</span>}
                               {apt.duration_minutes && <span>{apt.duration_minutes}m</span>}
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] text-white/60 mt-0.5">
+                            <div className="flex items-center gap-2 text-xs text-white/60 mt-0.5">
                               {apt.client_email && <span className="flex items-center gap-0.5"><Mail className="h-2.5 w-2.5" />{apt.client_email}</span>}
                               {apt.client_phone && <span className="flex items-center gap-0.5"><Phone className="h-2.5 w-2.5" />{apt.client_phone}</span>}
                             </div>
                             {apt.notes && (
-                              <p className="mt-1 text-[10px] text-white/50 line-clamp-1 bg-white/5 rounded px-1.5 py-0.5">{apt.notes}</p>
+                              <p className="mt-1 text-xs text-white/50 line-clamp-1 bg-white/5 rounded px-1.5 py-0.5">{apt.notes}</p>
                             )}
                           </div>
                         </div>
@@ -430,11 +368,11 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                         <div className="flex gap-1 mt-2 flex-wrap">
                           {apt.status === 'pending' && (
                             <>
-                              <Button size="sm" className="h-7 text-[10px] px-2 bg-green-600 hover:bg-green-700 text-white"
+                              <Button size="sm" className="h-7 text-xs px-2 bg-green-600 hover:bg-green-700 text-white"
                                 onClick={() => setActionDialog({ type: 'approve', appointment: apt })}>
                                 <ThumbsUp className="h-3 w-3 mr-0.5" />Approve
                               </Button>
-                              <Button size="sm" variant="destructive" className="h-7 text-[10px] px-2"
+                              <Button size="sm" variant="destructive" className="h-7 text-xs px-2"
                                 onClick={() => setActionDialog({ type: 'deny', appointment: apt })}>
                                 <ThumbsDown className="h-3 w-3 mr-0.5" />Deny
                               </Button>
@@ -442,18 +380,18 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                           )}
                           {(apt.status === 'confirmed' || apt.status === 'pending') && (
                             <>
-                              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2"
+                              <Button size="sm" variant="outline" className="h-7 text-xs px-2"
                                 onClick={() => setActionDialog({ type: 'reschedule', appointment: apt })}>
                                 <RefreshCw className="h-3 w-3 mr-0.5" />Reschedule
                               </Button>
-                              <Button size="sm" variant="outline" className="h-7 text-[10px] px-2 text-destructive border-destructive/30"
+                              <Button size="sm" variant="outline" className="h-7 text-xs px-2 text-destructive border-destructive/30"
                                 onClick={() => setActionDialog({ type: 'cancel', appointment: apt })}>
                                 <Ban className="h-3 w-3 mr-0.5" />Cancel
                               </Button>
                             </>
                           )}
                           {apt.client_phone && (
-                            <Button size="sm" variant="outline" className="h-7 text-[10px] px-2"
+                            <Button size="sm" variant="outline" className="h-7 text-xs px-2"
                               onClick={() => setActionDialog({ type: 'sms', appointment: apt })}>
                               <MessageSquare className="h-3 w-3 mr-0.5" />SMS
                             </Button>
@@ -474,7 +412,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
             <Card className="border-white/10 bg-white/10 backdrop-blur-md">
               <CardHeader className="p-3 pb-2">
                 <CardTitle className="text-sm font-semibold text-white">Quick SMS</CardTitle>
-                <CardDescription className="text-[11px] text-white/50">Send SMS to any student by phone number</CardDescription>
+                <CardDescription className="text-sm text-white/50">Send SMS to any student by phone number</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0 space-y-2">
                 <Input placeholder="Phone number" id="quick-sms-phone" className="h-9 text-sm bg-white/10 border-white/20 text-white placeholder:text-white/40" />
@@ -512,14 +450,14 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-xs font-semibold text-white">{apt.client_name}</p>
-                            <p className="text-[10px] text-white/60">{format(new Date(apt.appointment_date), 'MMM d')} • {apt.start_time}</p>
+                            <p className="text-xs text-white/60">{format(new Date(apt.appointment_date), 'MMM d')} • {apt.start_time}</p>
                           </div>
                           <div className="flex gap-1">
-                            <Button size="sm" className="h-6 text-[10px] px-1.5 bg-green-600 hover:bg-green-700 text-white"
+                            <Button size="sm" className="h-6 text-xs px-1.5 bg-green-600 hover:bg-green-700 text-white"
                               onClick={() => setActionDialog({ type: 'approve', appointment: apt })}>
                               <ThumbsUp className="h-2.5 w-2.5" />
                             </Button>
-                            <Button size="sm" variant="destructive" className="h-6 text-[10px] px-1.5"
+                            <Button size="sm" variant="destructive" className="h-6 text-xs px-1.5"
                               onClick={() => setActionDialog({ type: 'deny', appointment: apt })}>
                               <ThumbsDown className="h-2.5 w-2.5" />
                             </Button>
@@ -540,7 +478,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
             <Card className="border-white/10 bg-white/10 backdrop-blur-md">
               <CardHeader className="p-3 pb-2">
                 <CardTitle className="text-sm font-semibold text-white">Weekly Schedule</CardTitle>
-                <CardDescription className="text-[11px] text-white/50">Set your recurring office hours for each day</CardDescription>
+                <CardDescription className="text-sm text-white/50">Set your recurring office hours for each day</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0">
                 <AvailabilityManager />
@@ -553,7 +491,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                   <CalendarPlus className="h-4 w-4 text-green-400" />
                   Date Overrides
                 </CardTitle>
-                <CardDescription className="text-[11px] text-white/50">Add or block availability for specific dates</CardDescription>
+                <CardDescription className="text-sm text-white/50">Add or block availability for specific dates</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0">
                 <DateOverrideManager />
@@ -577,7 +515,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                 <CardTitle className="text-sm font-semibold text-white flex items-center gap-1.5">
                   <Globe className="h-4 w-4 text-cyan-300" />Google Calendar Integration
                 </CardTitle>
-                <CardDescription className="text-[11px] text-white/50">Sync appointments with your Google Calendar</CardDescription>
+                <CardDescription className="text-sm text-white/50">Sync appointments with your Google Calendar</CardDescription>
               </CardHeader>
               <CardContent className="p-3 pt-0 space-y-3">
                 <div className="flex items-center justify-between p-2.5 rounded-lg border border-white/10">
@@ -585,7 +523,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                     <Wifi className={cn("h-4 w-4", gcalEnabled ? "text-green-400" : "text-white/40")} />
                     <div>
                       <p className="text-xs font-medium text-white">Auto-sync appointments</p>
-                      <p className="text-[10px] text-white/50">New appointments sync to Google Calendar</p>
+                      <p className="text-xs text-white/50">New appointments sync to Google Calendar</p>
                     </div>
                   </div>
                   <Switch checked={gcalEnabled} onCheckedChange={setGcalEnabled} />
@@ -596,8 +534,8 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                   Sync All Appointments Now
                 </Button>
 
-                <div className="p-2.5 rounded-lg bg-white/5 text-[10px] text-white/60 space-y-1">
-                  <p className="font-medium text-white text-[11px]">Configuration</p>
+                <div className="p-2.5 rounded-lg bg-white/5 text-xs text-white/60 space-y-1">
+                  <p className="font-medium text-white text-sm">Configuration</p>
                   <p>✅ Google Calendar API Key configured</p>
                   <p>✅ Google Calendar ID configured</p>
                   <p>✅ Service Account Key configured</p>
@@ -611,11 +549,11 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                 <CardTitle className="text-sm font-semibold text-white">SMS Settings</CardTitle>
               </CardHeader>
               <CardContent className="p-3 pt-0">
-                <div className="p-2.5 rounded-lg bg-white/5 text-[10px] text-white/60 space-y-1">
+                <div className="p-2.5 rounded-lg bg-white/5 text-xs text-white/60 space-y-1">
                   <p>✅ Twilio Account SID configured</p>
                   <p>✅ Twilio Auth Token configured</p>
                   <p>✅ Twilio Phone Number configured</p>
-                  <p className="text-white font-medium mt-2 text-[11px]">Auto-notifications enabled for:</p>
+                  <p className="text-white font-medium mt-2 text-sm">Auto-notifications enabled for:</p>
                   <p>• Appointment approval → SMS to student</p>
                   <p>• Appointment denial → SMS with reason</p>
                   <p>• Appointment cancellation → SMS alert</p>
@@ -707,7 +645,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Message to {actionDialog.appointment?.client_name}</Label>
                 <Textarea value={smsMessage} onChange={(e) => setSmsMessage(e.target.value)} placeholder="Type your message..." rows={4} className="text-sm" />
-                <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Phone className="h-2.5 w-2.5" />{actionDialog.appointment?.client_phone}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-2.5 w-2.5" />{actionDialog.appointment?.client_phone}</p>
               </div>
             ) : (
               <div className="space-y-1.5">
@@ -720,12 +658,12 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
             )}
 
             {actionDialog?.appointment?.client_phone && actionDialog?.type !== 'sms' && (
-              <p className="text-[10px] text-muted-foreground bg-muted/50 rounded p-1.5 flex items-center gap-1">
+              <p className="text-xs text-muted-foreground bg-muted/50 rounded p-1.5 flex items-center gap-1">
                 <Send className="h-2.5 w-2.5" />SMS notification will be sent to {actionDialog.appointment.client_phone}
               </p>
             )}
             {!actionDialog?.appointment?.client_phone && actionDialog?.type !== 'sms' && (
-              <p className="text-[10px] text-amber-500 bg-amber-500/10 rounded p-1.5 flex items-center gap-1">
+              <p className="text-xs text-amber-500 bg-amber-500/10 rounded p-1.5 flex items-center gap-1">
                 <AlertCircle className="h-2.5 w-2.5" />No phone number on file — no SMS will be sent
               </p>
             )}
@@ -740,12 +678,11 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>{/* end content layer */}
-      </div>{/* end relative wrapper */}
+        </div>{/* end relative wrapper */}
 
       {/* Aria AI Assistant */}
       <OfficeHoursAssistant appointments={allAppointments} />
-    </UniversalLayout>
+    </div>
   );
 };
 
@@ -823,13 +760,13 @@ const AvailabilityManager: React.FC = () => {
                 <TimeSelect
                   value={dayAvail.start_time}
                   onChange={(v) => updateTime(dayAvail.id, 'start_time', v)}
-                  className="[&_button]:h-7 [&_button]:text-[10px] [&_button]:w-[52px] [&_button]:bg-white [&_button]:!text-slate-900 [&_button]:border-slate-300"
+                  className="[&_button]:h-7 [&_button]:text-xs [&_button]:w-[52px] [&_button]:bg-white [&_button]:!text-slate-900 [&_button]:border-slate-300"
                 />
-                <span className="text-[10px] text-white/60">to</span>
+                <span className="text-xs text-white/60">to</span>
                 <TimeSelect
                   value={dayAvail.end_time}
                   onChange={(v) => updateTime(dayAvail.id, 'end_time', v)}
-                  className="[&_button]:h-7 [&_button]:text-[10px] [&_button]:w-[52px] [&_button]:bg-white [&_button]:!text-slate-900 [&_button]:border-slate-300"
+                  className="[&_button]:h-7 [&_button]:text-xs [&_button]:w-[52px] [&_button]:bg-white [&_button]:!text-slate-900 [&_button]:border-slate-300"
                 />
               </div>
             )}
@@ -917,10 +854,10 @@ const DateOverrideManager: React.FC = () => {
                 <div>
                   <p className="text-xs font-medium text-foreground">{format(new Date(ov.specific_date + 'T12:00:00'), 'EEE, MMM d, yyyy')}</p>
                   {ov.is_available && (
-                    <p className="text-[10px] text-muted-foreground">{ov.start_time} – {ov.end_time}</p>
+                    <p className="text-xs text-muted-foreground">{ov.start_time} – {ov.end_time}</p>
                   )}
                   {!ov.is_available && (
-                    <p className="text-[10px] text-destructive">Blocked — not available</p>
+                    <p className="text-xs text-destructive">Blocked — not available</p>
                   )}
                 </div>
               </div>
@@ -1094,7 +1031,7 @@ const ReminderManager: React.FC = () => {
         if (member.phone) {
           try {
             await supabase.functions.invoke('gw-send-sms', {
-              body: { to: member.phone, message: '📚 GleeWorld: Office hours are open this week! Book your slot now at GleeWorld.org/book-appointment' }
+              body: { to: member.phone, message: '📚 GleeWorld: Office hours are open this week! Book your slot now at GleeWorld.org/dashboard/office-hours' }
             });
             sent++;
           } catch { /* skip individual failures */ }
@@ -1120,7 +1057,7 @@ const ReminderManager: React.FC = () => {
             <Bell className="h-4 w-4 text-cyan-300" />
             Appointment Reminders
           </CardTitle>
-          <CardDescription className="text-[11px] text-white/50">Auto-remind you and students before appointments</CardDescription>
+          <CardDescription className="text-sm text-white/50">Auto-remind you and students before appointments</CardDescription>
         </CardHeader>
         <CardContent className="p-3 pt-0 space-y-1.5">
           {appointmentReminders.length === 0 ? (
@@ -1134,7 +1071,7 @@ const ReminderManager: React.FC = () => {
                     <p className="text-xs font-medium text-white">
                       {r.hours_before >= 24 ? `${r.hours_before / 24} day${r.hours_before >= 48 ? 's' : ''}` : `${r.hours_before} hour${r.hours_before > 1 ? 's' : ''}`} before
                     </p>
-                    <p className="text-[10px] text-white/50 line-clamp-1">{r.message_template}</p>
+                    <p className="text-xs text-white/50 line-clamp-1">{r.message_template}</p>
                     <div className="flex gap-1 mt-0.5">
                       {r.sms_enabled && <Badge variant="outline" className="text-[8px] h-4 px-1 border-white/20 text-white/60">SMS</Badge>}
                     </div>
@@ -1157,7 +1094,7 @@ const ReminderManager: React.FC = () => {
             <Send className="h-4 w-4 text-green-400" />
             Booking Nudge
           </CardTitle>
-          <CardDescription className="text-[11px] text-white/50">Prompt students to book office hours</CardDescription>
+          <CardDescription className="text-sm text-white/50">Prompt students to book office hours</CardDescription>
         </CardHeader>
         <CardContent className="p-3 pt-0 space-y-2">
           {bookPrompts.map((r: any) => (
@@ -1166,7 +1103,7 @@ const ReminderManager: React.FC = () => {
                 <Switch checked={r.is_active} onCheckedChange={() => toggleReminder(r.id, r.is_active)} />
                 <div>
                   <p className="text-xs font-medium text-white">Auto booking nudge</p>
-                  <p className="text-[10px] text-white/50 line-clamp-1">{r.message_template}</p>
+                  <p className="text-xs text-white/50 line-clamp-1">{r.message_template}</p>
                 </div>
               </div>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-white/40 hover:text-destructive"
@@ -1182,7 +1119,7 @@ const ReminderManager: React.FC = () => {
             <Send className="h-3.5 w-3.5 mr-1.5" />
             Send Booking Nudge to All Members Now
           </Button>
-          <p className="text-[10px] text-white/50 text-center">Sends SMS to all members with a phone number on file</p>
+          <p className="text-xs text-white/50 text-center">Sends SMS to all members with a phone number on file</p>
         </CardContent>
       </Card>
 

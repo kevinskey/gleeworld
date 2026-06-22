@@ -10,9 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { 
+import {
   Percent, Plus, Pencil, Trash2, Search, RefreshCw
 } from 'lucide-react';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import { format } from 'date-fns';
 
 interface DiscountCode {
@@ -115,8 +116,6 @@ export const DiscountsManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this discount code?')) return;
-
     try {
       const { error } = await supabase
         .from('gw_discount_codes')
@@ -354,13 +353,16 @@ export const DiscountsManager = () => {
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleDelete(discount.id)}
+                        <ConfirmDeleteButton
+                          confirmKey="delete-discount-code"
+                          title="Delete this discount code?"
+                          description="Customers will no longer be able to apply it at checkout."
+                          onConfirm={() => handleDelete(discount.id)}
+                          ariaLabel="Delete discount code"
+                          className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 w-9 hover:bg-muted"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </ConfirmDeleteButton>
                       </div>
                     </TableCell>
                   </TableRow>

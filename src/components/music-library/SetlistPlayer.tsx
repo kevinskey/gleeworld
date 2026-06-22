@@ -223,10 +223,7 @@ export const SetlistPlayer = ({ setlistId, onClose }: SetlistPlayerProps) => {
   };
 
   const deleteSetlist = async () => {
-    if (!confirm("Are you sure you want to delete this setlist? This action cannot be undone.")) {
-      return;
-    }
-
+    // TODO: replace with themed AlertDialog (DropdownMenuItem trigger, no button anchor)
     try {
       const { error } = await supabase
         .from('setlists')

@@ -770,7 +770,7 @@ export const TourDocumentsSection = () => {
                       </h3>
                     )}
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      <Badge variant="outline" className="text-xs px-1.5 py-0">
                         {getFileExtBadge(doc.file_type, doc.title)}
                       </Badge>
                       <span>{formatFileSize(doc.file_size)}</span>

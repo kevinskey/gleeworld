@@ -31,7 +31,7 @@ export function ReadMusicInlineModule() {
               onClick={() => navigate("/read-music/curriculum")}
               className="group rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-400 hover:shadow-md"
             >
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-sky-700">
+              <div className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-sky-700">
                 <GraduationCap className="h-3.5 w-3.5" /> New
               </div>
               <div className="mt-1 text-base font-bold text-slate-900">Full Theory Curriculum</div>
@@ -44,7 +44,7 @@ export function ReadMusicInlineModule() {
               onClick={() => navigate("/read-music/curriculum/sight-singing")}
               className="group rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-400 hover:shadow-md"
             >
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary">
+              <div className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wider text-primary">
                 <Mic className="h-3.5 w-3.5" /> Experimental
               </div>
               <div className="mt-1 text-base font-bold text-slate-900">Sight-Singing Lab</div>
@@ -63,7 +63,7 @@ export function ReadMusicInlineModule() {
               onClick={() => navigate(`/read-music/${level.slug}`)}
               className="group rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-sky-400 hover:shadow-md"
             >
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{level.ageRange}</div>
+              <div className="text-sm font-semibold uppercase tracking-wider text-slate-500">{level.ageRange}</div>
               <div className="mt-1 text-base font-bold text-slate-900">{level.title}</div>
               <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
                 {level.exercises.filter((e) => e.available).length} exercises

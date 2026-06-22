@@ -82,12 +82,12 @@ export const MobileMonthGrid = ({
   return (
     <div className="flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-auto">
       {/* Booking Button */}
-      <div className="bg-[#003366] flex-shrink-0 px-3 py-2">
+      <div className="bg-card border-b border-border flex-shrink-0 px-3 py-2">
         <OfficeHoursBooking />
       </div>
 
       {/* Day Headers */}
-      <div className="grid grid-cols-7 bg-[#003366] text-white flex-shrink-0">
+      <div className="grid grid-cols-7 bg-card border-b border-border  text-foreground flex-shrink-0">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
           <div key={idx} className="py-2 text-center text-xs font-bold tracking-wider">
             {day}
@@ -121,8 +121,8 @@ export const MobileMonthGrid = ({
             >
               <span className={cn(
                 "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold",
-                isToday && "bg-[#003366] text-white",
-                isSelected && !isToday && "bg-[#B8860B] text-white",
+                isToday && "bg-card border-b border-border text-foreground",
+                isSelected && !isToday && "bg-primary text-foreground",
                 !isToday && !isSelected && isCurrentMonth && "text-slate-800",
               )}>
                 {format(day, 'd')}
@@ -150,7 +150,7 @@ export const MobileMonthGrid = ({
           <h3 className="text-sm font-bold uppercase tracking-wide" style={{ color: '#003366' }}>
             {format(selectedDate, 'EEEE, MMMM d')}
           </h3>
-          <span className="text-xs font-medium text-slate-500">
+          <span className="text-xs font-medium text-muted-foreground">
             {selectedDayEvents.length} event{selectedDayEvents.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -158,7 +158,7 @@ export const MobileMonthGrid = ({
         <div className="p-2 space-y-1.5">
           {selectedDayEvents.length === 0 ? (
             <div className="text-center py-6">
-              <p className="text-sm text-slate-400">No events scheduled</p>
+              <p className="text-sm text-muted-foreground">No events scheduled</p>
             </div>
           ) : (
             selectedDayEvents.map((event) => {
@@ -181,12 +181,12 @@ export const MobileMonthGrid = ({
                       {event.title}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-slate-500 flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {format(new Date(event.start_date), 'h:mm a')}
                       </span>
                       {event.location && (
-                        <span className="text-xs text-slate-500 flex items-center gap-1 truncate">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
                           <MapPin className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{event.location}</span>
                         </span>

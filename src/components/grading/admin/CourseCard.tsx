@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface CourseCardProps {
   id: string;
@@ -86,7 +87,16 @@ export const CourseCard: React.FC<CourseCardProps> = ({
           <Button size="sm" onClick={onViewCourse}>View Course</Button>
           <Button size="sm" variant="outline" onClick={onOpenGradebook}>Gradebook</Button>
           <Button size="sm" variant="outline" onClick={onManageStudents}>Manage Students</Button>
-          <Button size="sm" variant="destructive" onClick={onDelete}>Delete</Button>
+          <ConfirmDeleteButton
+            confirmKey="delete-grading-course"
+            title="Delete this course?"
+            description="The course record will be removed. Existing grades remain in history."
+            onConfirm={onDelete}
+            ariaLabel="Delete course"
+            className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Delete
+          </ConfirmDeleteButton>
         </div>
       </CardContent>
     </Card>

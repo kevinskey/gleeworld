@@ -76,7 +76,7 @@ function promptForPiece(program: ProgramRow, piece: PieceRow, tone: Tone): strin
   }[tone];
 
   return [
-    `You are writing concert program notes for an ensemble's printed and published program.`,
+    `You are a music research assistant writing concert program notes for an ensemble's printed and published program. Treat this as a research task, not a generic blurb.`,
     ``,
     `Piece: ${piece.title}`,
     piece.composer ? `Composer: ${piece.composer}` : '',
@@ -86,9 +86,22 @@ function promptForPiece(program: ProgramRow, piece: PieceRow, tone: Tone): strin
     ``,
     `Existing notes (may be empty): ${piece.program_notes || '(none)'}`,
     ``,
-    toneLine,
+    `RESEARCH STEP (silent, do not output):`,
+    `Recall what you actually know about THIS specific work by THIS specific composer:`,
+    `  • Approximate year/period of composition`,
+    `  • Text source (Psalm, scripture, poem, libretto, folk tune) and language`,
+    `  • Original voicing/instrumentation and typical performing forces`,
+    `  • Form / structure (e.g. through-composed, motet, anthem, art song, spiritual)`,
+    `  • Historical or liturgical context, dedication, premiere, or notable performers`,
+    `  • Distinctive musical features (modal, polyphonic, syllabic, melismatic, etc.)`,
+    `If you are NOT confident about a specific fact, OMIT it. Do not invent dates, dedicatees, premiere details, or text sources.`,
+    `If you don't know this exact piece, anchor the notes in what you DO know — the composer's era, style, and typical output — and say what kind of work it appears to be.`,
     ``,
-    `Output ONLY the rewritten notes. No preamble, no labels, no quote marks. Avoid invented historical claims — keep it to what's safely true for this composer and piece.`,
+    `WRITING STEP (this is the output):`,
+    toneLine,
+    `Ground every statement in the research above. Prefer concrete musical detail over vague praise ("a soaring climax" is generic; "an unaccompanied a cappella opening that swells into eight-part divisi" is grounded).`,
+    ``,
+    `Output ONLY the program notes. No preamble, no labels, no quote marks, no headers, no "Program Notes:" prefix.`,
   ].filter(Boolean).join('\n');
 }
 
@@ -105,6 +118,9 @@ function promptForHero(program: ProgramRow, tone: Tone): string {
     program.conductor ? `Conductor: ${program.conductor}` : '',
     program.performer_group ? `Performed by: ${program.performer_group}` : '',
     program.event_date ? `Date: ${program.event_date}` : '',
+    ``,
+    `RESEARCH STEP (silent, do not output):`,
+    `Consider what the title "${program.title}" implies — season, theme, repertoire era, liturgical or secular context. Use that thematic understanding to shape the subtitle.`,
     ``,
     toneLine,
     ``,
@@ -144,7 +160,13 @@ Deno.serve(async (req) => {
   }
 
   // ── Body ───────────────────────────────────────────────────────
-  let body: { card_kind?: CardKind; program_id?: string; piece_id?: string; tone?: Tone };
+  let body: {
+    card_kind?: CardKind;
+    program_id?: string;
+    piece_id?: string;
+    tone?: Tone;
+    overrides?: Partial<PieceRow & ProgramRow>;
+  };
   try { body = await req.json(); } catch {
     return new Response(JSON.stringify({ error: 'invalid_json' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
@@ -152,6 +174,7 @@ Deno.serve(async (req) => {
   const programId = body.program_id;
   const pieceId = body.piece_id;
   const tone: Tone = body.tone ?? 'warm';
+  const overrides = body.overrides ?? {};
   if (!cardKind || !programId) {
     return new Response(JSON.stringify({ error: 'missing_params' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
@@ -169,7 +192,16 @@ Deno.serve(async (req) => {
     if (programs.length === 0) {
       return new Response(JSON.stringify({ error: 'program_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    const program = programs[0];
+    // Merge any client-supplied overrides so unsaved edits (the
+    // 700ms debounce in PieceDetailEditor) still reach the prompt.
+    const program: ProgramRow = {
+      ...programs[0],
+      title: overrides.title ?? programs[0].title,
+      subtitle: overrides.subtitle ?? programs[0].subtitle,
+      venue: overrides.venue ?? programs[0].venue,
+      conductor: overrides.conductor ?? programs[0].conductor,
+      performer_group: overrides.performer_group ?? programs[0].performer_group,
+    };
 
     if (cardKind === 'piece-detail') {
       const pieces = await authedGet<PieceRow>(
@@ -179,7 +211,13 @@ Deno.serve(async (req) => {
       if (pieces.length === 0) {
         return new Response(JSON.stringify({ error: 'piece_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-      prompt = promptForPiece(program, pieces[0], tone);
+      const piece: PieceRow = {
+        ...pieces[0],
+        title: overrides.title ?? pieces[0].title,
+        composer: overrides.composer ?? pieces[0].composer,
+        arranger: overrides.arranger ?? pieces[0].arranger,
+      };
+      prompt = promptForPiece(program, piece, tone);
     } else if (cardKind === 'hero-cover') {
       prompt = promptForHero(program, tone);
     } else {
@@ -205,8 +243,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 400,
-        temperature: 0.75,
+        max_tokens: 500,
+        temperature: 0.4,
       }),
     });
     if (!aiRes.ok) {

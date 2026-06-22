@@ -114,7 +114,7 @@ export const AdminControlsSection = ({
                   onClick={() => navigate(`/dashboard?module=${module.key.replace(/_/g, '-')}`)}
                 >
                   <IconComponent className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                  <span className="text-center leading-tight text-[10px] sm:text-xs md:text-sm">
+                  <span className="text-center leading-tight text-xs sm:text-xs md:text-sm">
                     {module.module.name}
                   </span>
                   {module.source === 'username' && (

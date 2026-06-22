@@ -152,7 +152,7 @@ export const RoleBasedModuleAssignment = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Select modules</span>
-            <Badge variant="secondary" className="text-[10px]">{selectedModules.length} selected</Badge>
+            <Badge variant="secondary" className="text-xs">{selectedModules.length} selected</Badge>
           </div>
 
           {loading ? (
@@ -176,7 +176,7 @@ export const RoleBasedModuleAssignment = () => {
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium truncate">{module.title}</p>
                           {module.description && (
-                            <p className="text-[10px] text-muted-foreground truncate">{module.description}</p>
+                            <p className="text-xs text-muted-foreground truncate">{module.description}</p>
                           )}
                         </div>
                       </label>

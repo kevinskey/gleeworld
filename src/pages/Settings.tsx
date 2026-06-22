@@ -134,11 +134,11 @@ export default function Settings() {
     <UniversalLayout>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <SettingsIcon className="h-8 w-8" />
             Settings
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-1">
             Manage your account preferences and privacy settings
           </p>
         </div>
@@ -301,7 +301,7 @@ export default function Settings() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <h3 className="text-sm font-medium">Notification Types</h3>
+                    <h3 className="text-lg font-semibold">Notification Types</h3>
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">

@@ -80,13 +80,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
         )}
       >
         {!isOutbound && message.sender_name && (
-          <div className="mb-0.5 text-[10px] font-semibold text-primary md:mb-1 md:text-xs">
+          <div className="mb-0.5 text-xs font-semibold text-primary md:mb-1 md:text-xs">
             {message.sender_name}
           </div>
         )}
 
         {shouldShowText && (
-          <div className="break-words text-[11px] leading-relaxed md:text-sm">
+          <div className="break-words text-sm leading-relaxed md:text-sm">
             {highlightMentions(messageText)}
           </div>
         )}

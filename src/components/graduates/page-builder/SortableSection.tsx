@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GripVertical, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface SortableSectionProps {
   section: any;
@@ -52,9 +53,16 @@ export const SortableSection = ({ section, onEdit, onDelete }: SortableSectionPr
               <Button size="sm" variant="outline" onClick={() => onEdit(section)}>
                 <Edit className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="outline" onClick={() => onDelete(section.id)}>
+              <ConfirmDeleteButton
+                confirmKey="delete-graduates-section"
+                title="Delete this section?"
+                description="The section will be removed from the graduates page."
+                onConfirm={() => onDelete(section.id)}
+                ariaLabel="Delete section"
+                className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 w-9 hover:bg-muted"
+              >
                 <Trash2 className="h-4 w-4" />
-              </Button>
+              </ConfirmDeleteButton>
             </div>
           </div>
         </CardHeader>

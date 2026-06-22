@@ -357,7 +357,7 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
             <div className="flex items-center gap-2 mb-3">
               <Book className="h-4 w-4 text-primary" />
               <span className="font-semibold text-sm">SCGC Handbook</span>
-              <Badge variant="secondary" className="text-[10px] ml-auto">2023-24</Badge>
+              <Badge variant="secondary" className="text-xs ml-auto">2023-24</Badge>
             </div>
             
             {/* View Toggle */}

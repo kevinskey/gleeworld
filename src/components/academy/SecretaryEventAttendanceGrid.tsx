@@ -411,7 +411,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
             <Users className="h-4 w-4 text-primary flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-lg font-bold">{students.length}</div>
-              <p className="text-[10px] text-muted-foreground truncate">Students</p>
+              <p className="text-xs text-muted-foreground truncate">Students</p>
             </div>
           </div>
         </Card>
@@ -420,7 +420,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
             <Calendar className="h-4 w-4 text-blue-500 flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-lg font-bold">{filteredSessions.length}</div>
-              <p className="text-[10px] text-muted-foreground truncate">Sessions</p>
+              <p className="text-xs text-muted-foreground truncate">Sessions</p>
             </div>
           </div>
         </Card>
@@ -431,7 +431,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
               <div className="text-lg font-bold">
                 {sessions.filter(s => s.event_type === 'rehearsal').length}
               </div>
-              <p className="text-[10px] text-muted-foreground truncate">Rehearsals</p>
+              <p className="text-xs text-muted-foreground truncate">Rehearsals</p>
             </div>
           </div>
         </Card>
@@ -442,7 +442,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
               <div className="text-lg font-bold">
                 {sessions.filter(s => s.event_type === 'performance').length}
               </div>
-              <p className="text-[10px] text-muted-foreground truncate">Performances</p>
+              <p className="text-xs text-muted-foreground truncate">Performances</p>
             </div>
           </div>
         </Card>
@@ -470,7 +470,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                     style={{ minWidth: `${140 + filteredSessions.length * 36 + 180}px` }}
                   >
                     {/* Sticky Student Name Column - narrower on mobile */}
-                    <div className="w-[120px] sm:w-[160px] min-w-[120px] sm:min-w-[160px] p-2 border-r bg-muted/50 sticky left-0 z-30 text-[11px] sm:text-xs">
+                    <div className="w-[120px] sm:w-[160px] min-w-[120px] sm:min-w-[160px] p-2 border-r bg-muted/50 sticky left-0 z-30 text-sm sm:text-xs">
                       Student
                     </div>
                     
@@ -479,7 +479,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                       <Tooltip key={session.id}>
                         <TooltipTrigger asChild>
                           <div 
-                            className={`w-9 min-w-9 p-1 text-center border-r text-[10px] cursor-help
+                            className={`w-9 min-w-9 p-1 text-center border-r text-xs cursor-help
                               ${session.event_type === 'performance' ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
                             `}
                           >
@@ -502,11 +502,11 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
 
                     {/* Totals Header - smaller on mobile */}
                     <div className="flex bg-muted sticky right-0 z-30 border-l-2 border-primary/20">
-                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-[10px] border-r" title="Present">P</div>
-                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-[10px] border-r" title="Absent">A</div>
-                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-[10px] border-r" title="Excused">E</div>
-                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-[10px] border-r" title="Late">L</div>
-                      <div className="w-10 sm:w-12 p-1 text-center text-[9px] sm:text-[10px]" title="Attendance Rate">Rate</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-xs border-r" title="Present">P</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-xs border-r" title="Absent">A</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-xs border-r" title="Excused">E</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-xs border-r" title="Late">L</div>
+                      <div className="w-10 sm:w-12 p-1 text-center text-[9px] sm:text-xs" title="Attendance Rate">Rate</div>
                     </div>
                   </div>
 
@@ -522,7 +522,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                         style={{ minWidth: `${140 + filteredSessions.length * 36 + 180}px` }}
                       >
                         {/* Sticky Student Name - narrower on mobile */}
-                        <div className={`w-[120px] sm:w-[160px] min-w-[120px] sm:min-w-[160px] p-1.5 sm:p-2 border-r font-medium truncate sticky left-0 z-10 text-[11px] sm:text-xs
+                        <div className={`w-[120px] sm:w-[160px] min-w-[120px] sm:min-w-[160px] p-1.5 sm:p-2 border-r font-medium truncate sticky left-0 z-10 text-sm sm:text-xs
                           ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}
                         `}>
                           {student.full_name}
@@ -547,19 +547,19 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
                         <div className={`flex sticky right-0 z-10 border-l-2 border-primary/20
                           ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}
                         `}>
-                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-green-600 border-r text-[10px] sm:text-xs">
+                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-green-600 border-r text-xs sm:text-xs">
                             {totals.present}
                           </div>
-                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-red-600 border-r text-[10px] sm:text-xs">
+                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-red-600 border-r text-xs sm:text-xs">
                             {totals.absent}
                           </div>
-                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-blue-600 border-r text-[10px] sm:text-xs">
+                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-blue-600 border-r text-xs sm:text-xs">
                             {totals.excused}
                           </div>
-                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-orange-600 border-r text-[10px] sm:text-xs">
+                          <div className="w-8 sm:w-10 p-1 text-center font-medium text-orange-600 border-r text-xs sm:text-xs">
                             {totals.late}
                           </div>
-                          <div className={`w-10 sm:w-12 p-1 text-center font-bold text-[10px] sm:text-xs
+                          <div className={`w-10 sm:w-12 p-1 text-center font-bold text-xs sm:text-xs
                             ${totals.attendance_rate >= 90 ? 'text-green-600' : 
                               totals.attendance_rate >= 75 ? 'text-yellow-600' : 'text-red-600'}
                           `}>
@@ -579,7 +579,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
       </Card>
 
       {/* Legend - Wraps on mobile */}
-      <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground flex-wrap">
+      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-xs text-muted-foreground flex-wrap">
         <span className="font-medium w-full sm:w-auto">Legend:</span>
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
           {STATUS_OPTIONS.slice(0, 4).map(opt => (
@@ -600,7 +600,7 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
             </span>
           ))}
           <span className="flex items-center gap-1">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-purple-100 dark:bg-purple-900/30 rounded flex items-center justify-center text-[8px] sm:text-[10px] font-bold">P</div>
+            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-purple-100 dark:bg-purple-900/30 rounded flex items-center justify-center text-[8px] sm:text-xs font-bold">P</div>
             <span className="hidden sm:inline">Performance</span>
             <span className="sm:hidden">Perf</span>
           </span>

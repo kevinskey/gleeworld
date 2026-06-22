@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, MoveUp, MoveDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface Announcement {
   id: string;
@@ -89,8 +90,6 @@ export const AnnouncementManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this announcement?")) return;
-
     const { error } = await supabase
       .from("alumnae_newsletter_announcements")
       .delete()
@@ -243,13 +242,16 @@ export const AnnouncementManager = () => {
                     >
                       <MoveDown className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => handleDelete(announcement.id)}
+                    <ConfirmDeleteButton
+                      confirmKey="delete-announcement"
+                      title="Delete this announcement?"
+                      description="The announcement will be removed from this newsletter."
+                      onConfirm={() => handleDelete(announcement.id)}
+                      ariaLabel="Delete announcement"
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </div>
               ))}

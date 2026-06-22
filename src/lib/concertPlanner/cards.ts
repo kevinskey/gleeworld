@@ -61,7 +61,7 @@ export function transformProgramToCards(
   const defaultCards: ProgramCard[] = [
     { id: HERO_ID, kind: 'hero-cover', title: program.title || 'Untitled program', visible: defaultVisible[HERO_ID] },
     { id: ROSTER_ID, kind: 'grid-roster', title: 'Ensemble', visible: defaultVisible[ROSTER_ID] },
-    { id: TIMELINE_ID, kind: 'timeline-program', title: 'Program order', visible: defaultVisible[TIMELINE_ID] },
+    { id: TIMELINE_ID, kind: 'timeline-program', title: 'Program', visible: defaultVisible[TIMELINE_ID] },
     ...pieces
       .slice()
       .sort((a, b) => a.sort_order - b.sort_order)

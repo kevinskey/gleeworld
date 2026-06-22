@@ -16,6 +16,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, isFuture, isPast } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUnifiedAssignments } from '@/hooks/useUnifiedAssignments';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 interface Assignment {
   id: string;
   title: string;
@@ -290,9 +291,7 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
     }
   };
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this assignment?')) {
-      deleteMutation.mutate(id);
-    }
+    deleteMutation.mutate(id);
   };
   // Filtered and sorted assignments
   const filteredAndSortedAssignments = useMemo(() => {
@@ -629,11 +628,11 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                   <span className="text-sm sm:text-base font-medium line-clamp-1" style={{ color: assignment.is_published ? '#0F172A' : '#64748B' }}>
                     {assignment.title}
                   </span>
-                  <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-[10px] sm:text-xs px-1.5 py-0">
+                  <Badge variant={getTypeBadgeColor(assignment.assignment_type)} className="text-xs sm:text-xs px-1.5 py-0">
                     {assignment.assignment_type || 'task'}
                   </Badge>
                   {!assignment.is_published && (
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/50 text-amber-600">Hidden</Badge>
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 border-amber-500/50 text-amber-600">Hidden</Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-xs sm:text-sm" style={{ color: '#64748B' }}>
@@ -656,9 +655,16 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(assignment)}>
                   <Edit className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(assignment.id)}>
+                <ConfirmDeleteButton
+                  confirmKey="delete-course-assignment"
+                  title="Delete this assignment?"
+                  description="Submissions and grades for this assignment will be removed."
+                  onConfirm={() => handleDelete(assignment.id)}
+                  ariaLabel="Delete assignment"
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-muted"
+                >
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                </Button>
+                </ConfirmDeleteButton>
               </div>
             </div>
 
@@ -715,9 +721,16 @@ export const CourseAssignmentManager: React.FC<CourseAssignmentManagerProps> = (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleDelete(assignment.id)}>
+                      <ConfirmDeleteButton
+                        confirmKey="delete-course-assignment"
+                        title="Delete this assignment?"
+                        description="Submissions and grades for this assignment will be removed."
+                        onConfirm={() => handleDelete(assignment.id)}
+                        ariaLabel="Delete assignment"
+                        className="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-muted"
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </TooltipTrigger>
                     <TooltipContent>Delete Assignment</TooltipContent>
                   </Tooltip>

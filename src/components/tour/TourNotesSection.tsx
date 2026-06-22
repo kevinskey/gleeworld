@@ -211,14 +211,14 @@ const NoteThread: React.FC<{
             replies.map(reply => (
               <div key={reply.id} className="flex gap-2 py-1.5">
                 <Avatar className="h-6 w-6 shrink-0 mt-0.5">
-                  <AvatarFallback className="text-[10px] bg-secondary text-secondary-foreground">
+                  <AvatarFallback className="text-xs bg-secondary text-secondary-foreground">
                     {getInitials(reply.author_name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-semibold">{reply.author_name}</span>
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                    <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                       <Clock className="h-2.5 w-2.5" />
                       {formatDateTime(reply.created_at)}
                     </span>
@@ -577,10 +577,10 @@ export const TourNotesSection: React.FC = () => {
                             {note.subject}
                           </h3>
                           {note.is_pinned && <Pin className="h-3 w-3 text-primary" />}
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0">
                             {CATEGORIES.find(c => c.value === note.category)?.label || note.category}
                           </Badge>
-                          <Badge className={`text-[10px] px-1.5 py-0 ${PRIORITY_COLORS[note.priority] || ''}`}>
+                          <Badge className={`text-xs px-1.5 py-0 ${PRIORITY_COLORS[note.priority] || ''}`}>
                             {note.priority}
                           </Badge>
                         </div>

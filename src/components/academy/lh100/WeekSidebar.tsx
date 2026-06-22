@@ -84,7 +84,7 @@ const WeekList: React.FC<{
                   {module.is_active && (
                     <Badge 
                       variant="secondary" 
-                      className={`text-[10px] px-1.5 py-0 ${
+                      className={`text-xs px-1.5 py-0 ${
                         isSelected 
                           ? 'bg-primary-foreground/20 text-primary-foreground' 
                           : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
@@ -93,7 +93,7 @@ const WeekList: React.FC<{
                       Active
                     </Badge>
                   )}
-                  <span className={`text-[10px] ${
+                  <span className={`text-xs ${
                     isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground'
                   }`}>
                     {module.completion_percentage || 0}%

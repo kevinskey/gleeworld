@@ -211,7 +211,7 @@ export const PlannerReadingsSection: React.FC<PlannerReadingsSectionProps> = ({
                           <p className="text-xs text-muted-foreground mt-1 italic">Not assigned</p>
                         )}
                       </div>
-                      <Badge variant="secondary" className="text-[10px]">
+                      <Badge variant="secondary" className="text-xs">
                         Variable
                       </Badge>
                     </div>
@@ -242,7 +242,7 @@ export const PlannerReadingsSection: React.FC<PlannerReadingsSectionProps> = ({
                           <p className="font-medium text-sm line-through">{part.name}</p>
                           <p className="text-xs text-muted-foreground">{part.latin}</p>
                         </div>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-xs">
                           Omitted
                         </Badge>
                       </div>
@@ -257,7 +257,7 @@ export const PlannerReadingsSection: React.FC<PlannerReadingsSectionProps> = ({
                         <p className="font-medium text-sm">{part.name}</p>
                         <p className="text-xs text-muted-foreground">{part.latin}</p>
                       </div>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" className="text-xs">
                         Fixed
                       </Badge>
                     </div>

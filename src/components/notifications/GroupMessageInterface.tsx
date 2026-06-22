@@ -175,8 +175,7 @@ export const GroupMessageInterface: React.FC = () => {
   };
 
   const handleDeleteGroup = async (groupId: string, groupName: string) => {
-    if (!confirm(`Are you sure you want to delete "${groupName}"?`)) return;
-    
+    // TODO: replace with themed AlertDialog (ConversationListItem context-menu delete, no button anchor)
     try {
       await deleteGroup(groupId);
       if (selectedConversationId === groupId) {
@@ -234,7 +233,7 @@ export const GroupMessageInterface: React.FC = () => {
   };
 
   const handleDeleteFolder = async (folderId: string, folderName: string) => {
-    if (!confirm(`Delete folder "${folderName}"? Groups will be moved to root.`)) return;
+    // TODO: replace with themed AlertDialog (context-menu delete, no button anchor)
     try {
       await deleteFolder(folderId);
       toast({ title: 'Folder Deleted', description: 'Folder has been removed.' });
@@ -349,7 +348,7 @@ export const GroupMessageInterface: React.FC = () => {
               </div>
               <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-white/20 h-6 px-2 text-[10px]">
+                  <Button size="sm" variant="ghost" className="text-primary-foreground hover:bg-white/20 h-6 px-2 text-xs">
                     <Plus className="h-3 w-3 mr-1" />
                     New
                   </Button>
@@ -436,7 +435,7 @@ export const GroupMessageInterface: React.FC = () => {
                   >
                     {conversation.name}
                     {conversation.unread_count > 0 && (
-                      <span className="ml-1.5 px-1.5 py-0.5 bg-destructive text-white rounded-full text-[10px]">
+                      <span className="ml-1.5 px-1.5 py-0.5 bg-destructive text-white rounded-full text-xs">
                         {conversation.unread_count}
                       </span>
                     )}
@@ -455,7 +454,7 @@ export const GroupMessageInterface: React.FC = () => {
                     <User className="h-3 w-3 inline mr-1" />
                     {conversation.other_user_name}
                     {conversation.unread_count > 0 && (
-                      <span className="ml-1.5 px-1.5 py-0.5 bg-destructive text-white rounded-full text-[10px]">
+                      <span className="ml-1.5 px-1.5 py-0.5 bg-destructive text-white rounded-full text-xs">
                         {conversation.unread_count}
                       </span>
                     )}
@@ -487,7 +486,7 @@ export const GroupMessageInterface: React.FC = () => {
                         <MessageSquare className="h-6 w-6 text-primary" />
                       </div>
                       <h3 className="text-sm font-medium text-foreground mb-1.5">No messages yet</h3>
-                      <p className="text-[11px] text-muted-foreground max-w-xs">
+                      <p className="text-sm text-muted-foreground max-w-xs">
                         {conversationType === 'group' 
                           ? `Start messaging ${(selectedConversation as any).name}`
                           : `Start messaging ${(selectedConversation as any).other_user_name}`
@@ -658,7 +657,7 @@ export const GroupMessageInterface: React.FC = () => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-xs truncate">{displayName}</p>
-                                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <Users className="h-3 w-3" />
                                     <span>{meeting.participants.length} in session</span>
                                   </div>
@@ -693,7 +692,7 @@ export const GroupMessageInterface: React.FC = () => {
                     <Button 
                       size="sm" 
                       variant="ghost" 
-                      className="h-5 px-1.5 text-[10px]"
+                      className="h-5 px-1.5 text-xs"
                       onClick={() => setNewFolderOpen(true)}
                     >
                       <FolderPlus className="h-3 w-3 mr-2" />
@@ -714,9 +713,8 @@ export const GroupMessageInterface: React.FC = () => {
                             onClick={() => toggleFolderCollapse(folder.id)}
                             onContextMenu={(e) => {
                               e.preventDefault();
-                              if (confirm(`Delete folder "${folder.name}"?`)) {
-                                handleDeleteFolder(folder.id, folder.name);
-                              }
+                              // TODO: replace with themed AlertDialog (context-menu confirm, no button anchor)
+                              handleDeleteFolder(folder.id, folder.name);
                             }}
                           >
                             {isCollapsed ? (
@@ -726,7 +724,7 @@ export const GroupMessageInterface: React.FC = () => {
                             )}
                             <Folder className="h-4 w-4" style={{ color: folder.color }} />
                             <span className="text-sm md:text-lg font-medium flex-1">{folder.name}</span>
-                            <span className="text-[10px] text-muted-foreground">{folderGroups.length}</span>
+                            <span className="text-xs text-muted-foreground">{folderGroups.length}</span>
                           </div>
                           {!isCollapsed && folderGroups.map(conversation => (
                             <DraggableGroup key={conversation.id} id={conversation.id}>

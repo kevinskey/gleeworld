@@ -1,13 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FileText, Loader2 } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
+import { PDF_WORKER_READY } from '@/lib/pdfWorker';
+void PDF_WORKER_READY;
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
-
-// One-time worker config (idempotent — same as FastPDFViewer).
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
 
 interface PDFThumbnailProps {
   pdfUrl: string;

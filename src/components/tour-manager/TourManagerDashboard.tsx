@@ -413,7 +413,7 @@ export const TourManagerDashboard = ({
           <div className="flex items-center h-14 px-2 min-w-max">
             {navItems.map(item => <button key={item.value} onClick={() => handleSectionChange(item.value)} className={cn("flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-primary bg-primary/10" : "text-muted-foreground")}>
                 <item.icon className="h-4 w-4" />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <span className="text-xs font-medium">{item.label}</span>
               </button>)}
           </div>
         </div>

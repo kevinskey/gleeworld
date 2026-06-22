@@ -3,6 +3,8 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import gleeWorldLogoCircle from "@/assets/glee-world-logo-circle.png";
+import { useBrandingSettings } from "@/hooks/useBrandingSettings";
+import { tenantAuthGradient } from "@/lib/tenantGradient";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -13,11 +15,14 @@ interface AuthLayoutProps {
 
 export const AuthLayout = ({ children, title, subtitle, theme = "default" }: AuthLayoutProps) => {
   const navigate = useNavigate();
+  const { settings: branding } = useBrandingSettings();
+  const tenantLogo = branding.logo_url || gleeWorldLogoCircle;
+  const siteName = branding.short_name || branding.org_name || "GleeWorld";
 
   // Different backgrounds and styling based on theme
   const themeConfig = {
     default: {
-      background: "linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)",
+      background: tenantAuthGradient(branding.primary_color),
       overlay: "bg-black/10",
       cardBg: "bg-white/15 backdrop-blur-xl",
       homeRoute: "/",
@@ -35,11 +40,21 @@ export const AuthLayout = ({ children, title, subtitle, theme = "default" }: Aut
 
   return (
     <div
-      className="min-h-screen w-full flex items-start md:items-center justify-center p-4 pt-16 md:pt-4 relative bg-cover bg-no-repeat bg-center md:bg-left-center"
-      style={{
-        background: config.background.startsWith("linear-gradient") ? config.background : `url(${config.background})`,
-      }}
+      className="w-full flex items-start md:items-center justify-center p-4 pt-16 md:pt-4 relative"
+      // 100dvh — iPad WKWebView used to ignore 100vh after safe-area
+      // insets, exposing the body solid color where the auth gradient
+      // should be.
+      style={{ minHeight: '100dvh' }}
     >
+      {/* Background layer pinned to the viewport so it never depends on
+          flex sizing or vh math. */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none bg-cover bg-no-repeat bg-center"
+        style={{
+          background: config.background.startsWith("linear-gradient") ? config.background : `url(${config.background})`,
+        }}
+        aria-hidden="true"
+      />
       <div className={`absolute inset-0 ${config.overlay}`} />
 
       {/* Back to Home Button */}
@@ -59,9 +74,9 @@ export const AuthLayout = ({ children, title, subtitle, theme = "default" }: Aut
         <div className="text-center space-y-4 relative z-10 p-6">
           <div className="flex justify-center">
             <img
-              src={gleeWorldLogoCircle}
-              alt="GleeWorld.org logo"
-              className="w-20 h-20 object-contain"
+              src={theme === "mus240" ? gleeWorldLogoCircle : tenantLogo}
+              alt={`${siteName} logo`}
+              className="w-20 h-20 object-contain rounded-full bg-white/5 p-1"
             />
           </div>
           <h1 className={`text-2xl font-bold drop-shadow-sm ${theme === "default" ? "text-white" : "text-foreground"}`}>

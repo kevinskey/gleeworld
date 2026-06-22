@@ -42,6 +42,11 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   server: { port: 8080, host: '::' },
+  // Vite's default worker format is IIFE, which can't load ES module workers
+  // like pdfjs 5's pdf.worker.mjs — the worker silently fails to initialize
+  // and pdfjs hangs on getDocument forever. Forcing 'es' fixes the score
+  // viewer on every platform (desktop browsers + Capacitor WKWebView).
+  worker: { format: 'es' },
   build: {
     outDir: 'dist',
     // Code-split only the heavy libs that aren't on the critical render path.

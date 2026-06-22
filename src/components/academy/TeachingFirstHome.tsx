@@ -626,7 +626,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </div>
           <div className="text-left min-w-0">
-            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">Grade</p>
+            <p className="text-xs sm:text-xs text-muted-foreground font-medium">Grade</p>
             <div className="flex items-baseline gap-1">
               <span className="text-lg sm:text-2xl font-bold text-foreground">{gradeLoading ? '--' : `${percentage}%`}</span>
               <span className="text-xs sm:text-sm font-semibold text-primary">{gradeLoading ? '' : letterGrade}</span>
@@ -641,7 +641,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">Present</p>
+            <p className="text-xs sm:text-xs text-muted-foreground font-medium">Present</p>
             <span className="text-lg sm:text-2xl font-bold text-foreground">{attendance.present}</span>
           </div>
         </div>
@@ -652,7 +652,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">Absent</p>
+            <p className="text-xs sm:text-xs text-muted-foreground font-medium">Absent</p>
             <span className="text-lg sm:text-2xl font-bold text-foreground">{attendance.absent}</span>
           </div>
         </div>
@@ -663,7 +663,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground font-medium">Late</p>
+            <p className="text-xs sm:text-xs text-muted-foreground font-medium">Late</p>
             <span className="text-lg sm:text-2xl font-bold text-foreground">{attendance.late}</span>
           </div>
         </div>
@@ -878,8 +878,8 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                   }}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm sm:text-base font-semibold text-foreground">{assignment.title}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5 mt-1 font-medium">
+                    <p className="text-base font-semibold text-foreground">{assignment.title}</p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1 font-medium">
                       <Calendar className="h-3.5 w-3.5 shrink-0" />
                       Due {format(new Date(assignment.due_date), 'MMM d, h:mm a')} · {assignment.points} pts
                     </p>
@@ -948,7 +948,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
               >
                 {/* Date Block */}
                 <div className="w-12 h-12 rounded-lg bg-muted flex flex-col items-center justify-center shrink-0">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase leading-none">
+                  <span className="text-xs font-bold text-muted-foreground uppercase leading-none">
                     {format(new Date(event.start_date), 'MMM')}
                   </span>
                   <span className="text-lg font-bold text-foreground leading-none mt-0.5">
@@ -957,13 +957,13 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                 </div>
                 {/* Event Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{event.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-base font-semibold text-foreground truncate">{event.title}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
                     {format(new Date(event.start_date), 'h:mm a')}
                     {event.location && ` · ${event.location}`}
                   </p>
                   {event.is_assignment && event.points && (
-                    <Badge variant="outline" className="text-[10px] mt-1.5 px-1.5 py-0 h-4">
+                    <Badge variant="outline" className="text-xs mt-1.5 px-1.5 py-0 h-4">
                       {event.points} pts
                     </Badge>
                   )}
@@ -981,7 +981,7 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
             <Collapsible>
               <CollapsibleTrigger className="w-full">
                 <div className="flex items-center justify-between hover:bg-muted/30 -mx-2 px-2 py-1 rounded-md transition-colors">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <h4 className="text-lg font-semibold flex items-center gap-2">
                     <History className="h-4 w-4 text-muted-foreground" />
                     Prior Modules
                     <Badge variant="secondary" className="text-xs ml-1">{priorModules.length}</Badge>
@@ -997,11 +997,11 @@ export const TeachingFirstHome: React.FC<TeachingFirstHomeProps> = ({ courseId, 
                     onClick={() => navigate(`/academy/${course.courseCode.toLowerCase().replace(' ', '-')}?tab=modules&week=${module.week_number}`)}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-base font-semibold truncate">
                         Week {module.week_number}: {module.title}
                       </p>
                       {module.end_date && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                           <Calendar className="h-3 w-3" />
                           Completed {format(new Date(module.end_date), 'MMM d')}
                         </p>

@@ -16,6 +16,7 @@ export interface Annotation {
     width?: number;
     height?: number;
   };
+  annotation_layer_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -57,7 +58,8 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
     pageNumber: number,
     type: Annotation['annotation_type'],
     annotationData: any,
-    positionData: Annotation['position_data']
+    positionData: Annotation['position_data'],
+    annotationLayerId?: string | null,
   ) => {
     if (!user?.id || !musicId) return null;
 
@@ -70,7 +72,8 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
           page_number: pageNumber,
           annotation_type: type,
           annotation_data: annotationData,
-          position_data: positionData
+          position_data: positionData,
+          annotation_layer_id: annotationLayerId ?? null,
         });
 
       if (error) throw error;

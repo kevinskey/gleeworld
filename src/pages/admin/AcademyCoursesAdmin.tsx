@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Plus, Pencil, Trash2, GraduationCap, Save, Music, BookOpen, Mic, Eye, Award, Users, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface AcademyCourse {
   id: string;
@@ -175,8 +176,6 @@ export default function AcademyCoursesAdmin() {
   };
 
   const handleDelete = async (courseId: string) => {
-    if (!confirm('Are you sure you want to delete this course?')) return;
-    
     try {
       const { error } = await supabase
         .from('glee_academy_courses')
@@ -305,9 +304,16 @@ export default function AcademyCoursesAdmin() {
                       <Pencil className="h-3 w-3 mr-1" />
                       Edit
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(course.id)}>
+                    <ConfirmDeleteButton
+                      confirmKey="delete-academy-course"
+                      title="Delete this course?"
+                      description="The course record will be removed. Enrollments remain in history."
+                      onConfirm={() => handleDelete(course.id)}
+                      ariaLabel="Delete course"
+                      className="inline-flex items-center justify-center rounded-md h-8 px-3 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
                       <Trash2 className="h-3 w-3" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </CardContent>
               </Card>

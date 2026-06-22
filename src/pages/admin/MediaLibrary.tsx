@@ -12,8 +12,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDropzone } from 'react-dropzone';
-import { Document as PdfDocument, Page as PdfPage, pdfjs } from 'react-pdf';
-(pdfjs as any).GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+import { Document as PdfDocument, Page as PdfPage } from 'react-pdf';
+import { PDF_WORKER_READY } from '@/lib/pdfWorker';
+void PDF_WORKER_READY;
 
 interface MediaItem {
   id: string;
@@ -700,14 +701,14 @@ const MediaLibrary = () => {
                       
                       {/* Title overlay */}
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 sm:p-2">
-                        <p className="text-[10px] sm:text-xs text-white truncate font-medium">
+                        <p className="text-xs sm:text-xs text-white truncate font-medium">
                           {m.title || m.original_filename || 'Untitled'}
                         </p>
                       </div>
                       
                       {/* Type badge */}
                       <div className="absolute top-1 right-1">
-                        <Badge variant="secondary" className="text-[8px] sm:text-[10px] px-1 py-0 h-4 bg-background/80">
+                        <Badge variant="secondary" className="text-[8px] sm:text-xs px-1 py-0 h-4 bg-background/80">
                           {(kind || 'file').toUpperCase()}
                         </Badge>
                       </div>

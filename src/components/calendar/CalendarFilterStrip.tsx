@@ -242,7 +242,7 @@ export const CalendarFilterStrip = ({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-1 text-[10px] text-muted-foreground animate-pulse">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
         Loading...
       </div>
     );
@@ -250,7 +250,7 @@ export const CalendarFilterStrip = ({
 
   if (!calendarControlsEnabled) {
     return (
-      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <Settings className="h-3 w-3" />
         <span className="truncate">Controls disabled</span>
       </div>
@@ -259,7 +259,7 @@ export const CalendarFilterStrip = ({
 
   if (calendars.length === 0) {
     return (
-      <div className="text-[10px] text-muted-foreground">
+      <div className="text-xs text-muted-foreground">
         No calendars
       </div>
     );

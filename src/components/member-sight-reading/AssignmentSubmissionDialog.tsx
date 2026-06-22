@@ -11,23 +11,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Music, 
-  FileText, 
-  Headphones, 
-  Download, 
-  Upload, 
-  Play, 
-  Pause,
+import {
+  Music,
+  FileText,
+  Headphones,
+  Download,
+  Upload,
+  Play,
   Calendar,
-  Clock
+  Clock,
+  Video,
+  Mic,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useAssignments } from '@/hooks/useAssignments';
 import { RecordingControls } from '../sight-singing/RecordingControls';
-import { ScoreDisplay } from '../sight-singing/ScoreDisplay';
+import { VideoRecordingControls } from '../sight-singing/VideoRecordingControls';
 import { useAudioRecorder } from '../sight-singing/hooks/useAudioRecorder';
+import { useVideoRecorder } from '../sight-singing/hooks/useVideoRecorder';
 
 interface AssignmentSubmissionDialogProps {
   assignment: any;
@@ -49,30 +51,49 @@ export const AssignmentSubmissionDialog: React.FC<AssignmentSubmissionDialogProp
 }) => {
   const [notes, setNotes] = useState('');
   const [activeTab, setActiveTab] = useState('assignment');
+  const [submissionMode, setSubmissionMode] = useState<'audio' | 'video'>('audio');
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   const { submitAssignment, getSubmissionForAssignment } = useAssignments();
-  
-  const { 
-    isRecording, 
-    recordingDuration, 
-    audioBlob, 
-    startRecording, 
-    stopRecording, 
-    clearRecording 
+
+  const {
+    isRecording,
+    recordingDuration,
+    audioBlob,
+    startRecording,
+    stopRecording,
+    clearRecording,
   } = useAudioRecorder();
+
+  // Video capture for assignments that accept (or require) a video
+  // submission. Reuses the same UX pattern as audio recording.
+  const {
+    isRecording: isRecordingVideo,
+    recordingDuration: videoDuration,
+    videoBlob,
+    previewUrl: videoPreviewUrl,
+    previewRef: videoPreviewRef,
+    startRecording: startVideoRecording,
+    stopRecording: stopVideoRecording,
+    clearRecording: clearVideoRecording,
+  } = useVideoRecorder();
 
   const handleSubmit = async () => {
     if (!assignment) return;
 
     try {
       setSubmitting(true);
-      
+
+      // Pick the active mode's blob; video takes priority if the student
+      // recorded both, since the assignment-author-chosen mode is what
+      // we'd ideally enforce here (phase 2 schema work).
+      const activeBlob = submissionMode === 'video' ? videoBlob : audioBlob;
+
       let recordingUrl = '';
-      if (audioBlob) {
-        // Here you would upload the audio blob to storage
-        // For now, we'll create a placeholder URL
-        recordingUrl = URL.createObjectURL(audioBlob);
+      if (activeBlob) {
+        // Phase-1 placeholder: store as a local blob URL. Storage upload
+        // happens in a follow-up (Supabase Storage bucket + signed URL).
+        recordingUrl = URL.createObjectURL(activeBlob);
       }
 
       await submitAssignment(assignment.id, {
@@ -88,6 +109,7 @@ export const AssignmentSubmissionDialog: React.FC<AssignmentSubmissionDialogProp
       onOpenChange(false);
       setNotes('');
       clearRecording();
+      clearVideoRecording();
     } catch (error) {
       toast({
         title: 'Submission Failed',
@@ -259,14 +281,53 @@ export const AssignmentSubmissionDialog: React.FC<AssignmentSubmissionDialogProp
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <RecordingControls
-                    isRecording={isRecording}
-                    duration={recordingDuration}
-                    hasRecording={!!audioBlob}
-                    onStartRecording={startRecording}
-                    onStopRecording={stopRecording}
-                    onClearRecording={clearRecording}
-                  />
+                  {/* Audio / Video selector */}
+                  <div className="inline-flex rounded-lg border border-border p-0.5 bg-muted/40">
+                    <button
+                      type="button"
+                      onClick={() => setSubmissionMode('audio')}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                        submissionMode === 'audio'
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Mic className="w-3.5 h-3.5" /> Audio
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSubmissionMode('video')}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                        submissionMode === 'video'
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Video className="w-3.5 h-3.5" /> Video
+                    </button>
+                  </div>
+
+                  {submissionMode === 'audio' ? (
+                    <RecordingControls
+                      isRecording={isRecording}
+                      duration={recordingDuration}
+                      hasRecording={!!audioBlob}
+                      onStartRecording={startRecording}
+                      onStopRecording={stopRecording}
+                      onClearRecording={clearRecording}
+                    />
+                  ) : (
+                    <VideoRecordingControls
+                      isRecording={isRecordingVideo}
+                      duration={videoDuration}
+                      hasRecording={!!videoBlob}
+                      previewUrl={videoPreviewUrl}
+                      previewRef={videoPreviewRef}
+                      onStartRecording={startVideoRecording}
+                      onStopRecording={stopVideoRecording}
+                      onClearRecording={clearVideoRecording}
+                    />
+                  )}
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Notes for Instructor (Optional)</label>
@@ -282,9 +343,9 @@ export const AssignmentSubmissionDialog: React.FC<AssignmentSubmissionDialogProp
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
                       Cancel
                     </Button>
-                    <Button 
-                      onClick={handleSubmit} 
-                      disabled={!audioBlob || submitting}
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={(submissionMode === 'audio' ? !audioBlob : !videoBlob) || submitting}
                       className="min-w-32"
                     >
                       {submitting ? (
@@ -292,7 +353,7 @@ export const AssignmentSubmissionDialog: React.FC<AssignmentSubmissionDialogProp
                       ) : (
                         <>
                           <Upload className="h-4 w-4 mr-2" />
-                          Submit Assignment
+                          Submit {submissionMode === 'video' ? 'Video' : 'Audio'}
                         </>
                       )}
                     </Button>

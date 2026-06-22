@@ -307,7 +307,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                       {dayAcademicEvents.slice(0, 1).map((event, idx) => (
                         <div
                           key={`academic-${idx}`}
-                          className="text-[10px] sm:text-xs lg:text-sm font-semibold truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 cursor-pointer hover:opacity-80 shadow-sm"
+                          className="text-xs sm:text-xs lg:text-sm font-semibold truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 cursor-pointer hover:opacity-80 shadow-sm"
                           onClick={(e) => { e.stopPropagation(); setSelectedAcademicEvent(event); }}
                         >
                           {event.title}
@@ -319,7 +319,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                           <div
                             key={event.id}
                             className={cn(
-                              "text-[10px] sm:text-xs lg:text-sm font-semibold truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg cursor-pointer hover:opacity-80 shadow-sm",
+                              "text-xs sm:text-xs lg:text-sm font-semibold truncate px-1.5 sm:px-2 lg:px-2.5 py-1 sm:py-1.5 lg:py-2 rounded-md lg:rounded-lg cursor-pointer hover:opacity-80 shadow-sm",
                               colors.bg, colors.text
                             )}
                             onClick={(e) => { e.stopPropagation(); setSelectedEvent(event); }}
@@ -329,7 +329,7 @@ export const CourseCalendarView: React.FC<CourseCalendarViewProps> = ({ courseId
                         );
                       })}
                       {totalEvents > maxEventsToShow && (
-                        <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground font-semibold px-1.5 sm:px-2">
+                        <div className="text-xs sm:text-xs lg:text-sm text-muted-foreground font-semibold px-1.5 sm:px-2">
                           +{totalEvents - maxEventsToShow} more
                         </div>
                       )}

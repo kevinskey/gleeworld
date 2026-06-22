@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ItemEditor } from './ItemEditor';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface SectionItemsManagerProps {
   sectionId: string;
@@ -63,8 +64,6 @@ export const SectionItemsManager = ({ sectionId }: SectionItemsManagerProps) => 
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!confirm('Delete this item?')) return;
-
     try {
       const { error } = await supabase
         .from('alumnae_section_items')
@@ -139,9 +138,16 @@ export const SectionItemsManager = ({ sectionId }: SectionItemsManagerProps) => 
                   <Button size="sm" variant="outline" onClick={() => handleEditItem(item)}>
                     <Edit className="h-3 w-3" />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDeleteItem(item.id)}>
+                  <ConfirmDeleteButton
+                    confirmKey="delete-section-item"
+                    title="Delete this item?"
+                    description="The item will be removed from this section."
+                    onConfirm={() => handleDeleteItem(item.id)}
+                    ariaLabel="Delete item"
+                    className="inline-flex items-center justify-center rounded-md border border-input bg-background h-8 w-8 hover:bg-muted"
+                  >
                     <Trash2 className="h-3 w-3" />
-                  </Button>
+                  </ConfirmDeleteButton>
                 </div>
               </div>
             ))}

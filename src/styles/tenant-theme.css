@@ -18,6 +18,42 @@
  * bg-card, bg-accent) and the corresponding override here can be removed.
  */
 
+/* Tiptap rich-text content (used in module resources). The editor renders
+   contenteditable HTML with no default styles — we add minimum prose
+   styling so headings, lists, links, and quotes look right both inside
+   the editor and when rendered as saved resource content. */
+.ProseMirror,
+.prose.prose-sm {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.ProseMirror h1, .prose h1 { font-size: 1.5rem; font-weight: 700; margin: 0.5em 0 0.3em; }
+.ProseMirror h2, .prose h2 { font-size: 1.25rem; font-weight: 700; margin: 0.5em 0 0.3em; }
+.ProseMirror h3, .prose h3 { font-size: 1.1rem; font-weight: 700; margin: 0.5em 0 0.3em; }
+.ProseMirror p, .prose p { margin: 0.4em 0; }
+.ProseMirror ul, .prose ul { list-style: disc; margin: 0.4em 0; padding-left: 1.5em; }
+.ProseMirror ol, .prose ol { list-style: decimal; margin: 0.4em 0; padding-left: 1.5em; }
+.ProseMirror blockquote, .prose blockquote {
+  border-left: 3px solid hsl(var(--border));
+  padding-left: 0.75em;
+  color: hsl(var(--muted-foreground));
+  margin: 0.5em 0;
+}
+.ProseMirror a, .prose a {
+  color: var(--site-accent, hsl(var(--primary)));
+  text-decoration: underline;
+}
+.ProseMirror strong, .prose strong { font-weight: 700; }
+.ProseMirror em, .prose em { font-style: italic; }
+/* Placeholder for empty editor */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
 body.gw-tenant-themed {
   /* ─── Primary accent buttons / pills / icons ─────────────────────── */
   /* Sky / blue palette is the most common "primary action" stand-in.

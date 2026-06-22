@@ -255,10 +255,10 @@ export function CouponManagerDialog({ open, onOpenChange }: CouponManagerDialogP
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <code className="text-sm font-bold tracking-wide">{coupon.code}</code>
-                        <Badge variant={coupon.is_active ? 'default' : 'secondary'} className="text-[10px]">
+                        <Badge variant={coupon.is_active ? 'default' : 'secondary'} className="text-xs">
                           {coupon.is_active ? 'Active' : 'Inactive'}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-xs">
                           {coupon.discount_type === 'percent'
                             ? `${coupon.discount_value}% off`
                             : `$${coupon.discount_value} off`}

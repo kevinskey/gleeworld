@@ -74,11 +74,11 @@ export const AgendaView = ({
   return (
     <div className="flex flex-col h-full bg-white text-slate-900 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Date Header with Swipe Navigation */}
-      <div className="bg-[#003366] text-white p-4 flex-shrink-0">
+      <div className="bg-card border-b border-border  text-foreground p-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => onNavigateDay('prev')}
-            className="h-10 w-10 rounded-lg flex items-center justify-center bg-white/10 hover:bg-white/20 transition-all"
+            className="h-10 w-10 rounded-lg flex items-center justify-center bg-muted hover:bg-muted transition-all"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -86,13 +86,13 @@ export const AgendaView = ({
             <h2 className="text-xl font-bold">
               {format(selectedDate, 'EEEE')}
             </h2>
-            <p className="text-sm text-white/70">
+            <p className="text-sm text-muted-foreground">
               {format(selectedDate, 'MMMM d, yyyy')}
             </p>
           </div>
           <button
             onClick={() => onNavigateDay('next')}
-            className="h-10 w-10 rounded-lg flex items-center justify-center bg-white/10 hover:bg-white/20 transition-all"
+            className="h-10 w-10 rounded-lg flex items-center justify-center bg-muted hover:bg-muted transition-all"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -112,11 +112,11 @@ export const AgendaView = ({
                 className={cn(
                   "flex flex-col items-center py-2 px-3 rounded-lg transition-all min-w-[44px]",
                   isSelected 
-                    ? "bg-[#B8860B] text-white" 
-                    : "bg-white/10 hover:bg-white/20"
+                    ? "bg-primary text-foreground" 
+                    : "bg-muted hover:bg-muted"
                 )}
               >
-                <span className="text-[10px] uppercase tracking-wider opacity-70">
+                <span className="text-xs uppercase tracking-wider opacity-70">
                   {format(day, 'EEE')}
                 </span>
                 <span className={cn(
@@ -132,7 +132,7 @@ export const AgendaView = ({
                         key={idx} 
                         className={cn(
                           "w-1 h-1 rounded-full",
-                          isSelected ? "bg-white/70" : "bg-[#B8860B]"
+                          isSelected ? "bg-white/70" : "bg-primary"
                         )} 
                       />
                     ))}
@@ -149,17 +149,17 @@ export const AgendaView = ({
         <div className="p-4 space-y-6">
           {/* Today's Events */}
           <div>
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               {isToday ? "Today's Schedule" : format(selectedDate, 'EEEE\'s Schedule')}
-              <span className="ml-auto text-slate-400 normal-case">
+              <span className="ml-auto text-muted-foreground normal-case">
                 {dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}
               </span>
             </h3>
             {dayEvents.length === 0 ? (
               <div className="text-center py-8 bg-slate-50 rounded-lg">
-                <Calendar className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-500 font-medium">No events scheduled</p>
+                <Calendar className="h-10 w-10 text-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground font-medium">No events scheduled</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -184,7 +184,7 @@ export const AgendaView = ({
           {/* Upcoming Events */}
           {upcomingEvents.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Coming Up
               </h3>
               <div className="space-y-2">
@@ -201,7 +201,7 @@ export const AgendaView = ({
                         <p className="text-sm font-medium text-slate-900 truncate">
                           {event.title}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                           {format(new Date(event.start_date), 'EEE, MMM d • h:mm a')}
                         </p>
                       </div>

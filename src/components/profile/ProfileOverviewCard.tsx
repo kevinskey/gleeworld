@@ -80,15 +80,19 @@ export const ProfileOverviewCard = ({
                 {getInitials()}
               </AvatarFallback>
             </Avatar>
-            {isEditing && onAvatarUpload && (
-              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 transition-colors">
+            {/* Avatar upload always available — hover reveals camera overlay.
+                Previously gated behind isEditing, which confused users who
+                clicked the avatar expecting an upload affordance. */}
+            {onAvatarUpload && (
+              <div className="absolute inset-0 rounded-full flex items-center justify-center cursor-pointer bg-black/0 hover:bg-black/50 transition-colors group">
                 <input
                   type="file"
                   accept="image/*,.heic,.heif"
                   onChange={onAvatarUpload}
                   className="absolute inset-0 opacity-0 cursor-pointer"
+                  aria-label="Upload avatar"
                 />
-                <Camera className="h-6 w-6 text-white" />
+                <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             )}
           </div>

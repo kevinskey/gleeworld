@@ -937,12 +937,12 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                     <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                       <span className="font-semibold text-sm truncate max-w-[180px] sm:max-w-none sm:text-xl">{module.title}</span>
                       {isCurrentWeek &&
-                      <Badge variant="outline" className="text-[10px] sm:text-xs border-primary text-primary shrink-0">
+                      <Badge variant="outline" className="text-xs sm:text-xs border-primary text-primary shrink-0">
                           Current
                         </Badge>
                       }
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-3 mt-1 text-[10px] sm:text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {format(new Date(module.start_date), 'MMM d')} - {format(new Date(module.end_date), 'MMM d')}
@@ -984,7 +984,7 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                     </div>
                   </div>
                   {/* Compact progress on mobile */}
-                  <span className="sm:hidden text-[10px] font-semibold text-muted-foreground shrink-0 mr-1">
+                  <span className="sm:hidden text-xs font-semibold text-muted-foreground shrink-0 mr-1">
                     {module.completion_percentage || 0}%
                   </span>
                 </div>
@@ -1079,7 +1079,7 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <span className="font-medium text-sm truncate">{resource.title}</span>
-                                        <Badge variant="outline" className="text-[10px] sm:text-xs capitalize shrink-0">
+                                        <Badge variant="outline" className="text-xs sm:text-xs capitalize shrink-0">
                                           {resource.type}
                                         </Badge>
                                       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useTourCourseId } from '@/components/tour-manager/TourCourseContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,6 +78,7 @@ const SortableStopItem: React.FC<{
 export const AIRoutePlanner = ({
   user
 }: AIRoutePlannerProps) => {
+  const tourCourseId = useTourCourseId();
   const [isCreating, setIsCreating] = useState(false);
   const [editingRoute, setEditingRoute] = useState<TourRoute | null>(null);
   const [originCity, setOriginCity] = useState('');
@@ -119,17 +121,14 @@ export const AIRoutePlanner = ({
     data: routes = [],
     isLoading
   } = useQuery({
-    queryKey: ['tour-routes'],
+    queryKey: ['tour-routes', tourCourseId],
     queryFn: async () => {
-      const {
-        data: tours,
-        error
-      } = await supabase.from('gw_tours').select(`
+      let q = supabase.from('gw_tours').select(`
           *,
           gw_tour_cities(*)
-        `).order('created_at', {
-        ascending: false
-      });
+        `).order('created_at', { ascending: false });
+      if (tourCourseId) q = q.eq('course_id', tourCourseId);
+      const { data: tours, error } = await q;
       if (error) throw error;
       return (tours || []).map(tour => {
         const sortedCities = (tour.gw_tour_cities || [])
@@ -198,10 +197,16 @@ export const AIRoutePlanner = ({
         description: routeData.description,
         status: 'planning',
         created_by: authData.user.id,
+        course_id: tourCourseId,
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0]
       }).select().single();
-      if (tourError) throw tourError;
+      if (tourError) {
+        if (tourError.message?.includes('course_id')) {
+          throw new Error('Open this Tour Manager from inside a course to create a new tour.');
+        }
+        throw tourError;
+      }
 
       // Add origin city + tour stops
       const allCities: any[] = [];

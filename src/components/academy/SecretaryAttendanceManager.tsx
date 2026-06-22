@@ -379,7 +379,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
             <Users className="h-4 w-4 text-primary flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-lg font-bold">{totalStudents}</div>
-              <p className="text-[10px] text-muted-foreground truncate">Active</p>
+              <p className="text-xs text-muted-foreground truncate">Active</p>
             </div>
           </div>
         </Card>
@@ -388,7 +388,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
             <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-lg font-bold text-red-600">{droppedStudents}</div>
-              <p className="text-[10px] text-muted-foreground truncate">Dropped</p>
+              <p className="text-xs text-muted-foreground truncate">Dropped</p>
             </div>
           </div>
         </Card>
@@ -397,7 +397,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
             <AlertTriangle className="h-4 w-4 text-yellow-500 flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-lg font-bold text-yellow-600">{studentsWithWarning}</div>
-              <p className="text-[10px] text-muted-foreground truncate">3+ Unexcused</p>
+              <p className="text-xs text-muted-foreground truncate">3+ Unexcused</p>
             </div>
           </div>
         </Card>
@@ -406,7 +406,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
             <Clock className="h-4 w-4 text-orange-500 flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-lg font-bold text-orange-600">{totalTardies}</div>
-              <p className="text-[10px] text-muted-foreground truncate">Tardies</p>
+              <p className="text-xs text-muted-foreground truncate">Tardies</p>
             </div>
           </div>
         </Card>
@@ -500,7 +500,7 @@ export const SecretaryAttendanceManager: React.FC<SecretaryAttendanceManagerProp
                       <select
                         value={record.is_dropped ? 'dropped' : 'active'}
                         onChange={(e) => updateCell(record.student_id, 'is_dropped', e.target.value === 'dropped')}
-                        className="h-7 text-[10px] border border-border rounded bg-background px-1"
+                        className="h-7 text-xs border border-border rounded bg-background px-1"
                       >
                         <option value="active">Active</option>
                         <option value="dropped">Dropped</option>

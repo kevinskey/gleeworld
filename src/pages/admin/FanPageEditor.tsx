@@ -306,7 +306,7 @@ export default function FanPageEditor() {
                     const label = key === 'core' ? 'Your essentials' : key === 'gleeworld' ? 'GleeWorld extras' : 'Add-ons';
                     return (
                       <div key={key} className="space-y-2">
-                        <div className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+                        <div className="text-xs uppercase tracking-wide font-semibold text-muted-foreground">
                           {label}
                         </div>
                         {items.map((mod) => {

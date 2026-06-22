@@ -245,7 +245,7 @@ function Render({ config }: BlockRenderProps<Config>) {
               return (
                 <li key={`${f.name}-${i}`} className="flex items-center gap-4 p-4">
                   <div className="text-center shrink-0 w-16">
-                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
                       {f.date.toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' })}
                     </div>
                     <div className="text-2xl font-bold tabular-nums leading-tight">
@@ -258,7 +258,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                       {formatDate(f.date)} · {f.movable ? 'movable' : 'fixed'}
                     </div>
                   </div>
-                  <span className={`text-[10px] uppercase tracking-wide px-2 py-1 rounded-full font-semibold ${c.chip}`}>
+                  <span className={`text-xs uppercase tracking-wide px-2 py-1 rounded-full font-semibold ${c.chip}`}>
                     {c.label}
                   </span>
                 </li>
@@ -319,7 +319,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
           />
         )}
       </div>
-      <p className="text-[11px] text-slate-500">
+      <p className="text-sm text-slate-500">
         Season + feast dates are computed automatically from Easter — no upkeep required.
       </p>
     </div>

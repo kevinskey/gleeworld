@@ -441,7 +441,7 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
       {/* Per-track volume sliders. Lets a singer dial in a balance — soft
           accompaniment, louder soprano they're learning, etc. */}
       <div className="space-y-1.5 rounded-md border bg-white/70 p-2.5">
-        <div className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+        <div className="text-xs uppercase tracking-wide font-semibold text-muted-foreground">
           Track levels
         </div>
         {playable.map(t => {
@@ -470,7 +470,7 @@ export const PartMixer = forwardRef<PartMixerHandle, PartMixerProps>(({ pieceTit
         })}
       </div>
 
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Tap a chip to mute / unmute that part. Pressing play plays every enabled part in sync. The "Unmute all" button brings every part back at once.
       </p>
     </div>

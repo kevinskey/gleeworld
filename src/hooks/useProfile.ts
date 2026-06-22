@@ -191,7 +191,10 @@ export const useProfile = () => {
         .from('user-files')
         .getPublicUrl(filePath);
 
-      const success = await updateProfile({ avatar_url: data.publicUrl });
+      // Cache-buster — avatar paths are stable per user, so the browser
+      // would otherwise keep showing the previously-cached image.
+      const cacheBusted = `${data.publicUrl}?v=${Date.now()}`;
+      const success = await updateProfile({ avatar_url: cacheBusted });
       
       if (success) {
         toast({

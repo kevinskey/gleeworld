@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, Music, Video, Image, Link2, Trash2, ExternalLink, Loader2 } from 'lucide-react';
 import { useLiturgicalMedia } from '@/hooks/useLiturgicalWeeks';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface PlannerMediaTabProps {
   weekId: string;
@@ -54,9 +55,7 @@ export const PlannerMediaTab: React.FC<PlannerMediaTabProps> = ({ weekId, isAdmi
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this media item?')) {
-      await deleteMedia(id);
-    }
+    await deleteMedia(id);
   };
 
   const openUrl = (url: string | null) => {
@@ -181,17 +180,16 @@ export const PlannerMediaTab: React.FC<PlannerMediaTabProps> = ({ weekId, isAdmi
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                       {isAdmin && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(item.id);
-                          }}
+                        <ConfirmDeleteButton
+                          confirmKey="delete-planner-media"
+                          title="Delete this media item?"
+                          description="The link will be removed from this week."
+                          onConfirm={() => handleDelete(item.id)}
+                          ariaLabel="Delete media"
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-md text-destructive hover:bg-muted"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </ConfirmDeleteButton>
                       )}
                     </div>
                   </div>

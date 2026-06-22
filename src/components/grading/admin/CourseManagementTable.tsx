@@ -73,8 +73,6 @@ export const CourseManagementTable: React.FC = () => {
   };
 
   const handleDeleteCourse = async (courseId: string) => {
-    if (!confirm('Are you sure you want to delete this course?')) return;
-
     try {
       const { error } = await supabase
         .from('gw_courses' as any)

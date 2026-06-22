@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { PRImage, usePRImages } from "@/hooks/usePRImages";
 import { toast } from "sonner";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 type SortField = 'uploaded_at' | 'taken_at' | 'file_size' | 'caption' | 'filename';
 type SortDirection = 'asc' | 'desc';
@@ -195,8 +196,6 @@ export const PRDataManager = () => {
 
   const handleBulkDelete = async () => {
     if (selectedRows.length === 0) return;
-    
-    if (!confirm(`Delete ${selectedRows.length} selected images?`)) return;
 
     try {
       for (const imageId of selectedRows) {
@@ -248,15 +247,17 @@ export const PRDataManager = () => {
               Export CSV
             </Button>
             {selectedRows.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="flex items-center gap-2"
+              <ConfirmDeleteButton
+                confirmKey="delete-pr-images"
+                title={`Delete ${selectedRows.length} image(s)?`}
+                description="The selected images will be permanently removed."
+                onConfirm={handleBulkDelete}
+                ariaLabel="Delete selected images"
+                className="inline-flex items-center justify-center gap-2 rounded-md h-9 px-3 text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete ({selectedRows.length})
-              </Button>
+              </ConfirmDeleteButton>
             )}
           </div>
         </div>

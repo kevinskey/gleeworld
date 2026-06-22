@@ -40,7 +40,16 @@ function VideoPlayer({ v }: { v: Config['videos'][number] }) {
     );
   }
   return (
-    <video src={v.url} controls preload="metadata" className="w-full rounded-xl shadow-md bg-black aspect-video object-contain" />
+    <video
+      src={v.url}
+      controls
+      playsInline
+      // @ts-expect-error legacy iOS WebKit attribute, still respected
+      webkit-playsinline="true"
+      preload="metadata"
+      crossOrigin="anonymous"
+      className="w-full rounded-xl shadow-md bg-black aspect-video object-contain"
+    />
   );
 }
 
@@ -144,7 +153,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
                 className="h-8 text-sm"
               />
             ) : (
-              v.url && <video src={v.url} controls preload="none" className="w-full rounded" />
+              v.url && <video src={v.url} controls playsInline preload="none" className="w-full rounded" />
             )}
           </div>
         ))}

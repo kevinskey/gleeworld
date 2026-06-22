@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast as sonnerToast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 type ActiveTab = "availability" | "services";
 type AvailMode = "weekly" | "specific";
@@ -112,7 +113,6 @@ const CompactAvailabilityPanel = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this slot?')) return;
     try {
       await deleteMutation.mutateAsync(id);
       toast({ title: "Deleted" });
@@ -144,14 +144,14 @@ const CompactAvailabilityPanel = () => {
       <div className="flex rounded-lg border border-slate-200 overflow-hidden">
         <button
           onClick={() => setAvailMode('weekly')}
-          className={cn("flex-1 text-xs font-medium py-1.5 transition-colors", availMode === 'weekly' ? "bg-[#003366] text-white" : "bg-white hover:bg-slate-50")}
+          className={cn("flex-1 text-xs font-medium py-1.5 transition-colors", availMode === 'weekly' ? "bg-card border-b border-border text-foreground" : "bg-white hover:bg-slate-50")}
           style={availMode !== 'weekly' ? { color: '#64748b' } : undefined}
         >
           <Clock className="h-3 w-3 inline mr-1" />Weekly
         </button>
         <button
           onClick={() => setAvailMode('specific')}
-          className={cn("flex-1 text-xs font-medium py-1.5 transition-colors", availMode === 'specific' ? "bg-[#003366] text-white" : "bg-white hover:bg-slate-50")}
+          className={cn("flex-1 text-xs font-medium py-1.5 transition-colors", availMode === 'specific' ? "bg-card border-b border-border text-foreground" : "bg-white hover:bg-slate-50")}
           style={availMode !== 'specific' ? { color: '#64748b' } : undefined}
         >
           <CalendarDays className="h-3 w-3 inline mr-1" />Specific Dates
@@ -231,7 +231,16 @@ const CompactAvailabilityPanel = () => {
                     </div>
                     <div className="flex gap-1">
                       <button onClick={() => handleEdit(slot)} className="p-1 rounded hover:bg-slate-100"><Edit2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
-                      <button onClick={() => handleDelete(slot.id)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                      <ConfirmDeleteButton
+                        confirmKey="delete-availability-slot"
+                        title="Delete this slot?"
+                        description="The availability window will be removed."
+                        onConfirm={() => handleDelete(slot.id)}
+                        ariaLabel="Delete slot"
+                        className="p-1 rounded hover:bg-slate-100"
+                      >
+                        <Trash2 className="h-3 w-3" style={{ color: '#64748b' }} />
+                      </ConfirmDeleteButton>
                     </div>
                   </div>
                 ))}
@@ -311,7 +320,6 @@ const CompactServicesPanel = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deactivate this service?')) return;
     await supabase.from('gw_appointment_services').update({ is_active: false }).eq('id', id);
     sonnerToast.success('Deactivated');
     fetchServices();
@@ -348,7 +356,7 @@ const CompactServicesPanel = () => {
                 <Label className="text-xs">Color</Label>
                 <div className="flex gap-1.5 mt-1">
                   {colors.map(c => (
-                    <button key={c} type="button" className={cn("w-6 h-6 rounded-full border-2", formData.color === c ? "border-slate-800" : "border-transparent")} style={{ backgroundColor: c }} onClick={() => setFormData({ ...formData, color: c })} />
+                    <button key={c} type="button" className={cn("w-6 h-6 rounded-full border-2", formData.color === c ? "border-border" : "border-transparent")} style={{ backgroundColor: c }} onClick={() => setFormData({ ...formData, color: c })} />
                   ))}
                 </div>
               </div>
@@ -373,13 +381,23 @@ const CompactServicesPanel = () => {
                   <span className="text-xs font-medium truncate" style={{ color: '#0f172a' }}>{s.name}</span>
                 </div>
                 <div className="flex flex-wrap gap-1 mt-1">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4"><Clock className="h-2.5 w-2.5 mr-0.5" />{s.default_duration_minutes}m</Badge>
-                  {s.price_display && <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">{s.price_display}</Badge>}
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4"><Clock className="h-2.5 w-2.5 mr-0.5" />{s.default_duration_minutes}m</Badge>
+                  {s.price_display && <Badge variant="outline" className="text-xs px-1.5 py-0 h-4">{s.price_display}</Badge>}
                 </div>
               </div>
               <div className="flex gap-0.5 flex-shrink-0">
                 <button onClick={() => handleEdit(s)} className="p-1 rounded hover:bg-slate-100"><Edit className="h-3 w-3" style={{ color: '#64748b' }} /></button>
-                <button onClick={() => handleDelete(s.id)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="h-3 w-3" style={{ color: '#64748b' }} /></button>
+                <ConfirmDeleteButton
+                  confirmKey="deactivate-appointment-service"
+                  title={`Deactivate "${s.name}"?`}
+                  description="Existing bookings remain; the service stops accepting new ones."
+                  onConfirm={() => handleDelete(s.id)}
+                  confirmLabel="Deactivate"
+                  ariaLabel="Deactivate service"
+                  className="p-1 rounded hover:bg-slate-100"
+                >
+                  <Trash2 className="h-3 w-3" style={{ color: '#64748b' }} />
+                </ConfirmDeleteButton>
               </div>
             </div>
           ))}
@@ -425,7 +443,7 @@ export const SuperAdminControlPanel = () => {
               className={cn(
                 "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
                 activeTab === "availability"
-                  ? "border-b-2 border-[#003366] bg-slate-50"
+                  ? "border-b-2 border-primary bg-slate-50"
                   : "hover:bg-slate-50"
               )}
               style={{ color: activeTab === "availability" ? '#003366' : '#64748b' }}
@@ -438,7 +456,7 @@ export const SuperAdminControlPanel = () => {
               className={cn(
                 "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
                 activeTab === "services"
-                  ? "border-b-2 border-[#003366] bg-slate-50"
+                  ? "border-b-2 border-primary bg-slate-50"
                   : "hover:bg-slate-50"
               )}
               style={{ color: activeTab === "services" ? '#003366' : '#64748b' }}

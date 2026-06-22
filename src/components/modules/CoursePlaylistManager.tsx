@@ -23,6 +23,7 @@ import {
   ListMusic
 } from 'lucide-react';
 import { PlaylistMediaManager } from './PlaylistMediaManager';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface Course {
   id: string;
@@ -196,8 +197,6 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   };
 
   const handleDelete = async (playlistId: string) => {
-    if (!confirm('Are you sure you want to delete this playlist?')) return;
-    
     try {
       const { error } = await supabase
         .from('gw_course_playlists')
@@ -468,14 +467,16 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(playlist.id)}
-                          className="text-destructive hover:text-destructive"
+                        <ConfirmDeleteButton
+                          confirmKey="delete-course-playlist"
+                          title="Delete this playlist?"
+                          description="The playlist and its track ordering will be removed."
+                          onConfirm={() => handleDelete(playlist.id)}
+                          ariaLabel="Delete playlist"
+                          className="inline-flex items-center justify-center h-9 w-9 rounded-md text-destructive hover:text-destructive hover:bg-muted"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </ConfirmDeleteButton>
                       </div>
                     </div>
                   </CardContent>

@@ -72,17 +72,31 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
   if (!needsPick) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-[hsl(40,10%,96%)] flex items-center justify-center p-6" style={{ paddingTop: 'calc(var(--gw-safe-top) + 1.5rem)' }}>
-      <div className="w-full max-w-sm">
+    <div
+      className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
+      style={{
+        // GleeWorld brand gradient — cyan→purple radial bloom on a deep
+        // navy base. Matches the logo colorway so the picker reads as
+        // branded rather than blank.
+        background:
+          'radial-gradient(ellipse at 30% 20%, hsl(187 80% 35% / 0.55) 0%, transparent 50%), ' +
+          'radial-gradient(ellipse at 75% 80%, hsl(271 75% 45% / 0.55) 0%, transparent 55%), ' +
+          'linear-gradient(135deg, hsl(220 60% 12%) 0%, hsl(265 50% 18%) 50%, hsl(290 45% 20%) 100%)',
+        paddingTop: 'calc(var(--gw-safe-top) + 1.5rem)',
+      }}
+    >
+      {/* Subtle vignette to keep edges legible */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)' }} />
+      <div className="w-full max-w-sm relative">
         <div className="text-center mb-8">
-          <img src="/lovable-uploads/gleeworld-logo.png" alt="GleeWorld" className="h-16 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-slate-900">Welcome to GleeWorld</h1>
-          <p className="text-slate-600 mt-2">Choose your organization to get started.</p>
+          <img src="/lovable-uploads/gleeworld-logo.png" alt="GleeWorld" className="h-16 mx-auto mb-4 drop-shadow-lg" />
+          <h1 className="text-2xl font-bold text-white drop-shadow-md">Welcome to GleeWorld</h1>
+          <p className="text-white/80 mt-2">Choose your organization to get started.</p>
         </div>
 
         {error ? (
           <div className="text-center">
-            <p className="text-slate-600 mb-4">Couldn't load organizations. Check your connection.</p>
+            <p className="text-white/80 mb-4">Couldn't load organizations. Check your connection.</p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-3 rounded-full bg-slate-900 text-white font-medium"
@@ -108,15 +122,15 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
 
             {demo && (
               <div className="pt-4 text-center">
-                <p className="text-sm text-slate-500 mb-2">Just exploring?</p>
+                <p className="text-sm text-white/70 mb-2">Just exploring?</p>
                 <button
                   onClick={tryDemo}
                   disabled={demoLoading}
-                  className="w-full px-5 py-4 rounded-xl bg-slate-900 text-white font-medium disabled:opacity-60"
+                  className="w-full px-5 py-4 rounded-xl bg-white text-slate-900 font-semibold disabled:opacity-60 shadow-lg"
                 >
                   {demoLoading ? 'Opening the demo…' : 'Try the demo choir'}
                 </button>
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-white/60 mt-2">
                   Explore GleeWorld with sample data — no account needed.
                 </p>
               </div>

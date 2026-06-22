@@ -186,7 +186,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
           <CardTitle className="flex items-center gap-2 text-foreground">
             <Camera className="h-5 w-5 text-primary" />
             {camTitle}
-            <span className="text-[10px] md:text-xs font-normal text-muted-foreground ml-2 uppercase">
+            <span className="text-xs md:text-xs font-normal text-muted-foreground ml-2 uppercase">
               no photos yet
             </span>
           </CardTitle>
@@ -205,7 +205,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Camera className="h-5 w-5 text-primary" />
           {camTitle}
-          <span className="text-[10px] md:text-xs font-normal text-muted-foreground ml-2 uppercase">
+          <span className="text-xs md:text-xs font-normal text-muted-foreground ml-2 uppercase">
             {isInCourseView ? 'course moments' : 'member moments'}
           </span>
           <button

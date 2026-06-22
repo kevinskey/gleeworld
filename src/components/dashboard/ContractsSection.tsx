@@ -102,7 +102,7 @@ export const ContractsSection = ({ onViewContract }: ContractsSectionProps) => {
                   <h4 className="font-medium text-foreground truncate text-xs sm:text-sm leading-tight">
                     {formatContractDisplayName(contract.title)}
                   </h4>
-                  <div className="flex flex-col gap-0.5 mt-0.5 text-[10px] sm:text-xs text-muted-foreground">
+                  <div className="flex flex-col gap-0.5 mt-0.5 text-xs sm:text-xs text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
                       <span>Created {new Date(contract.created_at).toLocaleDateString()}</span>

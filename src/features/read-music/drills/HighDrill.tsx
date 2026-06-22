@@ -187,7 +187,7 @@ export default function HighDrill({ clefs }: { clefs: Clef[] }) {
 function Stat({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
   return (
     <div className="rounded-md border border-border bg-card px-2 py-1">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className={`text-sm font-bold ${accent ? "text-[hsl(var(--brand-purple))]" : "text-foreground"}`}>{value}</div>
     </div>
   );

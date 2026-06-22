@@ -128,7 +128,7 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
       </div>
 
       <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
-        <div className="text-[10px] uppercase tracking-wide font-semibold text-slate-500">Campaign (optional)</div>
+        <div className="text-xs uppercase tracking-wide font-semibold text-slate-500">Campaign (optional)</div>
         <Input
           value={config.campaign.name}
           onChange={(e) => setCampaign({ name: e.target.value })}

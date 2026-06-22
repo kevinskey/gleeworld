@@ -220,7 +220,7 @@ export function CreateTenantDialog() {
                   />
                   <span className="text-sm text-muted-foreground">.gleeworld.org</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   3–60 chars, lowercase letters / numbers / hyphens.
                 </p>
               </div>

@@ -170,8 +170,6 @@ export const AcademyPollSystem: React.FC<AcademyPollSystemProps> = ({ courseId }
   };
 
   const deletePoll = async (pollId: string) => {
-    if (!confirm('Are you sure you want to delete this poll?')) return;
-
     try {
       const { error } = await supabase
         .from('gw_academy_polls')

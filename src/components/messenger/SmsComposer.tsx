@@ -26,7 +26,7 @@ interface Person {
   phone: string | null;
 }
 
-export function SmsComposer({ onClose }: { onClose: () => void }) {
+export function SmsComposer({ onClose, inline = false }: { onClose: () => void; inline?: boolean }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [group, setGroup] = useState<Group>('custom');
@@ -147,8 +147,12 @@ export function SmsComposer({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-0 sm:p-4 overflow-y-auto">
-      <Card className="w-full max-w-lg min-h-full sm:min-h-0 sm:my-4 bg-white text-gray-900 rounded-none sm:rounded-xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0">
+    <div className={inline
+      ? "w-full h-full overflow-y-auto p-4"
+      : "fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-0 sm:p-4 overflow-y-auto"}>
+      <Card className={inline
+        ? "w-full max-w-2xl mx-auto bg-card text-foreground"
+        : "w-full max-w-lg min-h-full sm:min-h-0 sm:my-4 bg-white text-gray-900 rounded-none sm:rounded-xl pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0"}>
         <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-white text-gray-900 z-10 border-b sm:rounded-t-xl">
           <CardTitle className="flex items-center gap-2 text-gray-900"><Smartphone className="w-5 h-5" /> Send a text</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close" className="text-gray-900 hover:bg-gray-100"><X className="w-4 h-4" /></Button>

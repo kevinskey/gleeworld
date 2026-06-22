@@ -246,7 +246,7 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
                     <div className={`flex-1 max-w-[75%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
                       <div className={`flex items-baseline gap-1.5 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
                         <span className="text-xs font-semibold">{senderName}</span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                         </span>
                       </div>
@@ -265,7 +265,7 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
                             <Badge 
                               key={tag} 
                               variant="secondary" 
-                              className="text-[10px] h-4 px-1.5"
+                              className="text-xs h-4 px-1.5"
                             >
                               {tag}
                             </Badge>
@@ -289,7 +289,7 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
               <Badge
                 key={tag}
                 variant={selectedTags.includes(tag) ? "default" : "outline"}
-                className="cursor-pointer text-[10px] h-6 md:h-5 whitespace-nowrap"
+                className="cursor-pointer text-xs h-6 md:h-5 whitespace-nowrap"
                 onClick={() => toggleTag(tag)}
               >
                 {tag}

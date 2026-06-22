@@ -182,7 +182,7 @@ export const FinderSidebar = ({
       <div className="flex-1 overflow-y-auto">
         {/* Favorites section */}
         <Collapsible open={favoritesOpen} onOpenChange={setFavoritesOpen}>
-          <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground">
+          <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground">
             {favoritesOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
             Favorites
           </CollapsibleTrigger>
@@ -193,7 +193,7 @@ export const FinderSidebar = ({
 
         {/* Locations section (All Files + Folders Tree) */}
         <Collapsible open={locationsOpen} onOpenChange={setLocationsOpen} className="border-t border-border/50">
-          <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground">
+          <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground">
             {locationsOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
             <span className="flex-1 text-left">Locations</span>
             {isAdmin && (
@@ -251,7 +251,7 @@ export const FinderSidebar = ({
 
         {/* Tags section */}
         <Collapsible open={tagsOpen} onOpenChange={setTagsOpen} className="border-t border-border/50">
-          <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground">
+          <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground">
             {tagsOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
             Tags
           </CollapsibleTrigger>

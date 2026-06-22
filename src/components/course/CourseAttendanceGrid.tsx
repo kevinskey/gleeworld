@@ -688,7 +688,7 @@ export const CourseAttendanceGrid: React.FC<CourseAttendanceGridProps> = ({
                         <Tooltip key={session.id}>
                           <TooltipTrigger asChild>
                             <div className="w-10 min-w-10 flex flex-col items-center justify-center border-r border-white/10 cursor-help">
-                              <span className="text-[11px] font-bold text-white leading-tight">
+                              <span className="text-sm font-bold text-white leading-tight">
                                 {format(toET(session.date), 'M/d')}
                               </span>
                               <span className="text-[9px] text-white/60 leading-tight">

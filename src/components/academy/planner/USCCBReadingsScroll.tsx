@@ -116,7 +116,7 @@ export const USCCBReadingsScroll: React.FC = () => {
                       )}
                       <Badge 
                         variant="secondary" 
-                        className={`text-[10px] px-1.5 py-0 ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : getSeasonColor(reading.liturgical_season)}`}
+                        className={`text-xs px-1.5 py-0 ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : getSeasonColor(reading.liturgical_season)}`}
                       >
                         {reading.liturgical_season || 'Ordinary'}
                       </Badge>

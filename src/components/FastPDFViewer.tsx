@@ -5,12 +5,8 @@ import { cn } from '@/lib/utils';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 import { usePDFPageCache } from '@/hooks/usePDFPageCache';
 import * as pdfjsLib from 'pdfjs-dist';
-
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
+import { PDF_WORKER_READY } from '@/lib/pdfWorker';
+void PDF_WORKER_READY;
 
 interface FastPDFViewerProps {
   pdfUrl: string | null;
@@ -114,7 +110,8 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         }
       } catch (err) {
         console.error('Error loading PDF:', err);
-        setError('Failed to load PDF document');
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(`PDF load failed: ${msg.slice(0, 160)}`);
       } finally {
         setIsLoading(false);
       }
@@ -355,7 +352,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
-              <span className="text-[10px] font-medium tabular-nums min-w-[40px] text-center">
+              <span className="text-xs font-medium tabular-nums min-w-[40px] text-center">
                 {currentPage} / {totalPages}
               </span>
               <Button 

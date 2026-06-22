@@ -202,7 +202,7 @@ export function ReaderSettingsDialog({
                       </p>
                     </div>
                     {reader.id === lastReaderId && (
-                      <Badge variant="secondary" className="text-[10px] shrink-0">
+                      <Badge variant="secondary" className="text-xs shrink-0">
                         Last used
                       </Badge>
                     )}

@@ -107,7 +107,9 @@ export default function PublicConcertProgramPage() {
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; }
-          .program-card { page-break-after: always; break-inside: avoid; border: none !important; box-shadow: none !important; padding: 2rem 0 !important; }
+          .program-card { break-inside: avoid; border: none !important; box-shadow: none !important; padding: 0.5rem 0 !important; margin: 0 !important; }
+          main { gap: 0.75rem !important; }
+          @page { margin: 0.6in; }
         }
       ` }} />
 
@@ -115,22 +117,26 @@ export default function PublicConcertProgramPage() {
         {visibleCards.map((card) => {
           if (card.kind === 'hero-cover') {
             return (
-              <div key={card.id} className={`${theme.card} program-card text-center`} style={theme.heroBg}>
+              <div key={card.id} className={`${theme.card} program-card flex flex-col items-center text-center`} style={theme.heroBg}>
                 <span className={theme.accent}>Concert Program</span>
-                <h1 className="tracking-tight mt-1 break-words" style={{ ...theme.heroTitle, fontSize: 'clamp(2rem, 6vw, 4.5rem)', lineHeight: 1.05 }}>{program.title}</h1>
-                {program.subtitle && <p className="text-base italic opacity-80 mt-1">{program.subtitle}</p>}
+                <h1 className="tracking-tight mt-1 break-words text-center" style={{ ...theme.heroTitle, fontSize: 'clamp(2rem, 6vw, 4.5rem)', lineHeight: 1.05 }}>{program.title}</h1>
+                {program.subtitle && <p className="text-base italic opacity-80 mt-1 text-center">{program.subtitle}</p>}
                 {/* Inherit the hero's theme color via opacity-80 so the
                     metadata reads cleanly on both light and dark hero
                     backdrops (Cathedral burgundy, Jazz Club navy, etc.). */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4 border-t border-current/20 mt-4 text-sm opacity-80">
-                  {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}
-                  {program.conductor && <div><strong>Conductor:</strong> {program.conductor}</div>}
-                  {program.accompanist && <div><strong>Accompanist:</strong> {program.accompanist}</div>}
-                </div>
-                {program.event_date && (
-                  <div className="text-sm opacity-70 pt-1 mt-2">
-                    {new Date(program.event_date).toLocaleDateString(undefined, { dateStyle: 'long' })}
-                    {program.call_time && ` · Call ${program.call_time}`}
+                {program.conductor && (
+                  <p className="text-xl opacity-90 mt-4 text-center">{program.conductor}, Conductor</p>
+                )}
+                {program.accompanist && (
+                  <p className="text-xs opacity-80 text-center">{program.accompanist}, accompanist</p>
+                )}
+                {(program.venue || program.event_date) && (
+                  <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 pt-4 border-t border-current/20 mt-4 text-sm opacity-80">
+                    {program.venue && <span>{program.venue}</span>}
+                    {program.venue && program.event_date && <span className="opacity-60">·</span>}
+                    {program.event_date && (
+                      <span>{new Date(program.event_date).toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -139,23 +145,20 @@ export default function PublicConcertProgramPage() {
           if (card.kind === 'timeline-program') {
             return (
               <div key={card.id} className={`${theme.card} program-card`}>
-                <h3 className={theme.accent}>{card.title}</h3>
+                {(() => { const { color: _heroColor, ...heroFont } = theme.heroTitle as any; return (
+                  <h3 className="text-center font-bold tracking-tight" style={{ ...heroFont, fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)' }}>{card.title}</h3>
+                ); })()}
                 <div className="space-y-2 mt-4">
                   {pieces.slice().sort((a, b) => a.sort_order - b.sort_order).map((piece, i) => (
-                    <div key={piece.id} className="flex items-start justify-between border-b border-border/50 pb-2 text-sm">
-                      <div className="flex items-start gap-3">
-                        <span className="font-mono text-muted-foreground/60 font-bold tabular-nums">{String(i + 1).padStart(2, '0')}</span>
-                        <div>
-                          <div className="font-semibold">{piece.title}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {piece.composer}
-                            {piece.arranger && ` · arr. ${piece.arranger}`}
-                          </div>
-                        </div>
+                    <div key={piece.id} className="flex items-center justify-between gap-3 pb-2 text-sm" style={{ borderBottomWidth: '1px', borderBottomStyle: 'solid', borderBottomColor: 'rgba(127,127,127,0.18)' }}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="font-mono font-bold tabular-nums opacity-50">{String(i + 1).padStart(2, '0')}</span>
+                        <div className="font-semibold truncate">{piece.title}</div>
                       </div>
-                      <span className="font-mono text-xs text-muted-foreground tabular-nums">
-                        {piece.duration_seconds ? formatDuration(piece.duration_seconds) : '—'}
-                      </span>
+                      <div className="text-xs opacity-70 text-right whitespace-nowrap shrink-0">
+                        {piece.composer}
+                        {piece.arranger && ` · arr. ${piece.arranger}`}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -203,15 +206,15 @@ export default function PublicConcertProgramPage() {
           if (card.kind === 'rights-footer') {
             return (
               <div key={card.id} className={`${theme.card} program-card`}>
-                <div className="text-[11px] flex flex-col md:flex-row items-start md:items-center justify-between gap-2 text-muted-foreground">
+                <div className="text-[11px] flex flex-col md:flex-row items-start md:items-center justify-between gap-2 opacity-85">
                   <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
                     <span>All works credited per composer + licensing.</span>
                   </div>
                   <div className="italic">"Texts and music used by permission. All rights reserved."</div>
                 </div>
                 {pieces.filter((p) => p.rights_status === 'licensed' && p.copyright_info).length > 0 && (
-                  <ul className="mt-2 text-[10px] text-muted-foreground space-y-0.5">
+                  <ul className="mt-2 text-[10px] space-y-0.5 opacity-75">
                     {pieces
                       .filter((p) => p.rights_status === 'licensed' && p.copyright_info)
                       .map((p) => (
@@ -228,7 +231,7 @@ export default function PublicConcertProgramPage() {
             return (
               <div key={card.id} className={`${theme.card} program-card text-center`}>
                 <p className="text-xs font-semibold">Share this program</p>
-                <p className="text-[10px] text-muted-foreground font-mono mt-0.5 break-all">{publicUrl}</p>
+                <p className="text-[10px] font-mono mt-0.5 break-all opacity-75">{publicUrl}</p>
               </div>
             );
           }

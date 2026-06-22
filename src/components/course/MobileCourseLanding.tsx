@@ -486,7 +486,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
                       <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                       <div className="text-right">
                         <p className="text-xs font-semibold text-green-700 dark:text-green-300">Present</p>
-                        <p className="text-[10px] text-green-600/70 dark:text-green-400/70">
+                        <p className="text-xs text-green-600/70 dark:text-green-400/70">
                           {format(new Date(myResponse.checked_in_at), 'h:mm a')}
                         </p>
                       </div>

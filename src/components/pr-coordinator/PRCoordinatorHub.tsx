@@ -28,6 +28,11 @@ import { SocialMediaManager } from './SocialMediaManager';
 import { PressReleaseManager } from './PressReleaseManager';
 import { supabase } from '@/integrations/supabase/client';
 
+const SOFT_CARD = 'border-0 rounded-2xl bg-card';
+const SOFT_CARD_STYLE: React.CSSProperties = {
+  boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
+};
+
 export const PRCoordinatorHub = () => {
   const {
     images,
@@ -159,15 +164,12 @@ export const PRCoordinatorHub = () => {
   };
 
   return (
-    <div className="space-y-8 p-6">
-      {/* Enhanced Header */}
+    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+      {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-foreground">Media Management</h1>
-            <Sparkles className="w-6 h-6 text-primary" />
-          </div>
-          <p className="text-muted-foreground text-lg">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Media Management</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Organize, manage, and distribute member photos for publicity campaigns
           </p>
         </div>
@@ -211,18 +213,18 @@ export const PRCoordinatorHub = () => {
         </div>
       </div>
 
-      {/* Enhanced Stats Cards */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-foreground">Total Images</CardTitle>
-              <Upload className="h-4 w-4 text-primary" />
+        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-base">Total Images</h2>
+              <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Upload className="h-4 w-4" />
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-primary">{images.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className="text-3xl font-bold text-foreground">{images.length}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               +{images.filter(img => {
                 const today = new Date();
                 const imgDate = new Date(img.created_at);
@@ -232,48 +234,48 @@ export const PRCoordinatorHub = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-foreground">Selected</CardTitle>
-              <Filter className="h-4 w-4 text-secondary" />
+        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-base">Selected</h2>
+              <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Filter className="h-4 w-4" />
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-secondary">{selectedImages.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className="text-3xl font-bold text-foreground">{selectedImages.length}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               {selectedImages.length > 0 ? 'Ready for bulk actions' : 'No selection'}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-foreground">Featured</CardTitle>
-              <Star className="h-4 w-4 text-accent" />
+        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-base">Featured</h2>
+              <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <Star className="h-4 w-4" />
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-accent">
+            <div className="text-3xl font-bold text-foreground">
               {images.filter(img => img.is_featured).length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Highlighted content
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-foreground">Available Tags</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
+        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-base">Available Tags</h2>
+              <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <TrendingUp className="h-4 w-4" />
+              </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-500">{tags.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <div className="text-3xl font-bold text-foreground">{tags.length}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               Organization tools
             </p>
           </CardContent>
@@ -357,9 +359,9 @@ export const PRCoordinatorHub = () => {
         </TabsList>
 
         <TabsContent value="gallery" className="space-y-6">
-          {/* Enhanced Filters and Controls */}
-          <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-            <CardContent className="p-4 md:p-6">
+          {/* Filters and Controls */}
+          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+            <CardContent className="p-6">
               <div className="space-y-4">
                 {/* Search and Tag Filters */}
                 <div className="flex flex-col xl:flex-row gap-4 items-start">
@@ -520,7 +522,7 @@ export const PRCoordinatorHub = () => {
           <TabsContent value="bulk">
             <div className="bg-card/30 backdrop-blur-sm rounded-lg border border-border/50 p-6 space-y-6">
               {/* Media Upload Section */}
-              <Card>
+              <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Upload className="h-5 w-5" />

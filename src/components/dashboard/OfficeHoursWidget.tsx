@@ -83,14 +83,14 @@ export const OfficeHoursWidget = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <Badge className="bg-emerald-600 text-white text-[10px] px-1.5"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Confirmed</Badge>;
+        return <Badge className="bg-emerald-600 text-white text-xs px-1.5"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Confirmed</Badge>;
       case 'cancelled':
-        return <Badge variant="destructive" className="text-[10px] px-1.5"><XCircle className="h-2.5 w-2.5 mr-0.5" />Cancelled</Badge>;
+        return <Badge variant="destructive" className="text-xs px-1.5"><XCircle className="h-2.5 w-2.5 mr-0.5" />Cancelled</Badge>;
       case 'pending':
       case 'pending_approval':
-        return <Badge className="bg-amber-500 text-white text-[10px] px-1.5"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pending</Badge>;
+        return <Badge className="bg-amber-500 text-white text-xs px-1.5"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pending</Badge>;
       default:
-        return <Badge variant="outline" className="text-[10px]">{status}</Badge>;
+        return <Badge variant="outline" className="text-xs">{status}</Badge>;
     }
   };
 
@@ -124,7 +124,7 @@ export const OfficeHoursWidget = () => {
             <CalendarDays className="h-4 w-4 text-white" />
             <CardTitle className="text-sm font-bold text-white">Office Hours</CardTitle>
             {pendingCount > 0 && (
-              <Badge className="bg-amber-500 text-white text-[10px] px-1.5 animate-pulse">
+              <Badge className="bg-amber-500 text-white text-xs px-1.5 animate-pulse">
                 {pendingCount} pending
               </Badge>
             )}
@@ -150,7 +150,7 @@ export const OfficeHoursWidget = () => {
               {todayAppts.length > 0 && (
                 <div>
                   <div className="px-3 py-1.5 bg-cyan-50 dark:bg-cyan-950/30 border-b">
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-400">
+                    <span className="text-sm font-bold uppercase tracking-wide text-cyan-700 dark:text-cyan-400">
                       Today ({todayAppts.length})
                     </span>
                   </div>
@@ -173,7 +173,7 @@ export const OfficeHoursWidget = () => {
               {upcomingAppts.length > 0 && (
                 <div>
                   <div className="px-3 py-1.5 bg-muted/50 border-b border-t">
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    <span className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
                       Upcoming ({upcomingAppts.length})
                     </span>
                   </div>
@@ -220,7 +220,7 @@ const AppointmentRow = ({ appt, getStatusBadge, formatTime, formatDate, onApprov
             <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
             <span className="text-sm font-medium truncate">{appt.client_name}</span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-0.5">
               <Clock className="h-2.5 w-2.5" />
               {formatDate(appt.appointment_date)} • {formatTime(appt.appointment_date)}
@@ -230,7 +230,7 @@ const AppointmentRow = ({ appt, getStatusBadge, formatTime, formatDate, onApprov
           {appt.notes && (
             <div className="mt-1 flex items-start gap-1">
               <MessageSquare className="h-2.5 w-2.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <span className="text-[11px] text-muted-foreground line-clamp-1">{appt.notes}</span>
+              <span className="text-sm text-muted-foreground line-clamp-1">{appt.notes}</span>
             </div>
           )}
         </div>
@@ -242,7 +242,7 @@ const AppointmentRow = ({ appt, getStatusBadge, formatTime, formatDate, onApprov
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 px-2 text-[10px] bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400"
+                className="h-6 px-2 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400"
                 onClick={onApprove}
                 disabled={isPending}
               >
@@ -252,7 +252,7 @@ const AppointmentRow = ({ appt, getStatusBadge, formatTime, formatDate, onApprov
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 px-2 text-[10px] bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
+                className="h-6 px-2 text-xs bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
                 onClick={onDeny}
                 disabled={isPending}
               >

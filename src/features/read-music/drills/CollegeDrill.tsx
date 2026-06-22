@@ -90,11 +90,11 @@ export default function CollegeDrill({ clefs }: { clefs: Clef[] }) {
         </div>
         <div className="flex gap-8 text-sm">
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-white/50">Personal Best</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-white/50">Personal Best</div>
             <div className="text-3xl font-bold">{best}</div>
           </div>
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-white/50">Daily Streak</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-white/50">Daily Streak</div>
             <div className="text-3xl font-bold text-[hsl(var(--brand-gold))]">🔥 {dailyStreak}</div>
           </div>
         </div>
@@ -226,7 +226,7 @@ function Tile({ label, value, accent }: { label: string; value: string | number;
     "text-white";
   return (
     <div className="rounded-md border border-white/15 bg-white/[0.03] px-2 py-1 backdrop-blur">
-      <div className="text-[10px] uppercase tracking-wide text-white/50">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-white/50">{label}</div>
       <div className={`text-base font-bold ${accentClass}`}>{value}</div>
     </div>
   );

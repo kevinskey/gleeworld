@@ -443,926 +443,193 @@ class SeededRandom {
   }
 }
 
+// ===========================================================================
+//  Rule-based sight-reading generator (replaces the AI / pattern fallback)
+//
+//  Mirrors the music21 algorithm: pick a difficulty level, lay out one
+//  measure at a time, fill it with notes whose durations sum exactly to
+//  the meter, choose each pitch by a stepwise (or small-leap) walk from
+//  the previous one, and force the final note onto the tonic. Result is
+//  mathematically valid, predictable, and pedagogically sound — no AI in
+//  the loop and no "applyVoiceLeadingRules" runtime surprises.
+// ===========================================================================
+
+interface LevelConfig {
+  /** Allowed scale degrees relative to tonic (positive = up, negative = down). */
+  rangeLow: number;
+  rangeHigh: number;
+  /** Largest melodic step allowed when picking the next note. 1 = stepwise. */
+  maxStep: number;
+  /** Note durations allowed in this level. Beat values assume den=4 meter. */
+  durations: Array<"whole" | "half" | "quarter" | "eighth" | "16th">;
+  /** Whether to allow rests in the body of the exercise. */
+  allowRests: boolean;
+}
+
+const LEVELS: Record<number, LevelConfig> = {
+  1: { rangeLow: 1, rangeHigh: 8,  maxStep: 1, durations: ["quarter", "half"],                       allowRests: false },
+  2: { rangeLow: 1, rangeHigh: 8,  maxStep: 2, durations: ["quarter", "half", "eighth"],             allowRests: false },
+  3: { rangeLow: 1, rangeHigh: 10, maxStep: 3, durations: ["quarter", "half", "eighth", "whole"],    allowRests: true  },
+  4: { rangeLow: -1, rangeHigh: 10, maxStep: 5, durations: ["quarter", "half", "eighth", "16th", "whole"], allowRests: true },
+  5: { rangeLow: -3, rangeHigh: 12, maxStep: 7, durations: ["quarter", "half", "eighth", "16th", "whole"], allowRests: true },
+};
+
+const BEATS_BY_DUR: Record<string, number> = {
+  whole: 4, half: 2, quarter: 1, eighth: 0.5, "16th": 0.25,
+};
+
+function buildNoteFromDegree(
+  key: { tonic: string; mode: "major" | "minor" },
+  degreeOffsetFromTonic: number, // 0 = tonic, can go negative / >7
+  baseOct: number,                // octave the tonic lives in (e.g. 4 = middle C)
+  durBase: string,
+  dots = 0,
+) {
+  // Defensive uppercase on the tonic letter so callers sending "g"
+  // (lower-case) don't silently miss in LETTERS.indexOf.
+  const tonicLetter = key.tonic.replace(/b|#/g, "")[0].toUpperCase();
+  const tonicIdx = LETTERS.indexOf(tonicLetter);
+  // Hoist the absolute index so we use the same value for the letter
+  // wrap AND the octave bump — keeps them in lock-step for negative
+  // offsets in non-C keys.
+  const absoluteDiatonicIdx = tonicIdx + degreeOffsetFromTonic;
+  const targetIdx = ((absoluteDiatonicIdx % 7) + 7) % 7;
+  const octBump = Math.floor(absoluteDiatonicIdx / 7);
+  const letter = LETTERS[targetIdx];
+  // Apply key signature accidentals (e.g. F# in G major).
+  const baseAlter = defaultAlterMap(key.tonic, key.mode)[letter] || 0;
+  return {
+    kind: "note",
+    pitch: { step: letter, alter: baseAlter, oct: baseOct + octBump },
+    dur: { base: durBase, dots },
+  };
+}
+
+function generateRuleBasedScore(
+  params: {
+    key: { tonic: string; mode: "major" | "minor" };
+    time: { num: number; den: 1 | 2 | 4 | 8 | 16 };
+    numMeasures: number;
+    level: number;
+  },
+  rng: SeededRandom,
+) {
+  const { key, time, numMeasures } = params;
+  const cfg = LEVELS[Math.max(1, Math.min(5, params.level))];
+  const beatsPerMeasure = time.num * (4 / time.den);
+  const baseOct = 4;
+
+  // Walk one scale-degree offset from tonic. 0 = tonic, 1 = supertonic, etc.
+  let currentDegreeOffset = 0;
+  const measures: any[][] = [];
+
+  for (let m = 0; m < numMeasures; m++) {
+    const measure: any[] = [];
+    let beatsLeft = beatsPerMeasure;
+    const isLastMeasure = m === numMeasures - 1;
+
+    while (beatsLeft > 0) {
+      // Pick a duration that fits the remaining beats. Last measure
+      // ends on a half-note (clean cadence per the algorithm spec).
+      const valid = cfg.durations.filter((d) => BEATS_BY_DUR[d] <= beatsLeft);
+      let durBase: string;
+      if (isLastMeasure && beatsLeft === 2 && valid.includes("half")) {
+        durBase = "half";
+      } else if (isLastMeasure && beatsLeft === beatsPerMeasure && valid.includes("half")) {
+        // Start the last measure with a half to leave room for a clean tonic.
+        durBase = "half";
+      } else {
+        durBase = rng.choice(valid);
+      }
+
+      // Pick the next scale-degree offset. Final note of the piece
+      // is force-anchored to the tonic; everything else walks
+      // stepwise (or by small leap) from the previous note inside
+      // the level's range.
+      let nextOffset: number;
+      if (isLastMeasure && beatsLeft === BEATS_BY_DUR[durBase]) {
+        // Final note → tonic. By config invariant, every level has
+        // rangeLow ≤ 1 ≤ rangeHigh, so 0 is always in range.
+        nextOffset = 0;
+      } else {
+        let step = rng.nextInt(-cfg.maxStep, cfg.maxStep);
+        // 65% of the time prefer stepwise (|step| <= 1) for singability.
+        if (Math.abs(step) > 1 && rng.next() < 0.65) {
+          step = rng.nextInt(-1, 1);
+        }
+        nextOffset = currentDegreeOffset + step;
+        // Reflect off the range edges so the walk never escapes the
+        // level's allowed pitch territory.
+        if (nextOffset > cfg.rangeHigh - 1) nextOffset = currentDegreeOffset - 1;
+        if (nextOffset < cfg.rangeLow - 1)  nextOffset = currentDegreeOffset + 1;
+      }
+
+      currentDegreeOffset = nextOffset;
+      measure.push(buildNoteFromDegree(key, nextOffset, baseOct, durBase));
+      beatsLeft -= BEATS_BY_DUR[durBase];
+
+      // Snap-correct floating point dust (eighth notes can leave 1e-16 stubs).
+      if (beatsLeft < 0.001) beatsLeft = 0;
+    }
+
+    measures.push(measure);
+  }
+
+  return {
+    key,
+    time,
+    numMeasures,
+    parts: [{
+      role: "S",
+      range: { min: "C4", max: "C6" },
+      measures,
+    }],
+  };
+}
+
+// ===========================================================================
+//  Edge function entry point
+// ===========================================================================
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  
-  const origin = req.headers.get("origin");
 
-  console.log("=== EDGE FUNCTION START ===");
-  
   try {
-    // 1) Parse request
-    console.log("Stage: parsing request");
-    const body = await req.json().catch((e) => {
-      console.error("JSON parse error:", e);
-      throw new Error("Invalid JSON in request body");
-    });
-    
-    // Extract requestId and randomSeed for diagnostics and seeding
-    const { requestId, randomSeed, ...params } = body as SightSingingParams & { requestId?: string; randomSeed?: number };
-    
-    console.log("Received requestId:", requestId);
-    console.log("Received randomSeed:", randomSeed);
-    console.log("Received params:", JSON.stringify(params, null, 2));
+    const body = await req.json().catch(() => { throw new Error("Invalid JSON body"); });
+    const { requestId, randomSeed, ...params } = body as any;
 
-    // 2) Check secrets
-    console.log("Stage: checking secrets");
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    console.log("OpenAI API Key available:", !!OPENAI_API_KEY);
-    
-    if (!OPENAI_API_KEY) {
-      console.log("❌ No OpenAI API key found, using seeded fallback generator");
-      
-      // Create seeded random generator for varied but reproducible results
-      const seedString = `${requestId || 'default'}-${randomSeed || Date.now()}`;
-      const rng = new SeededRandom(seedString);
-      console.log("Using seed for fallback:", seedString);
-      
-      // Simple fallback that generates varied exercises
-      const allowedDur = params.allowedDur ?? ["quarter"];
-      const numMeasures = params.numMeasures ?? 4;
-      const key = params.key ?? { tonic: "C", mode: "major" };
-      const time = params.time ?? { num: 4, den: 4 };
-      
-      console.log("Generating seeded fallback with durations:", allowedDur);
-      
-      // Define varied melodic patterns using scale degrees
-      const melodicPatterns = [
-        [1, 2, 3, 4], [4, 3, 2, 1], [1, 3, 5, 3], [5, 3, 1, 3],
-        [1, 2, 1, 3], [3, 4, 5, 4], [5, 4, 3, 2], [2, 3, 4, 5],
-        [1, 5, 4, 3], [3, 1, 2, 4], [4, 2, 1, 3], [5, 6, 7, 8],
-        [8, 7, 6, 5], [1, 1, 2, 2], [3, 3, 4, 4], [5, 5, 6, 6]
-      ];
-      
-      // Define rhythmic patterns for different time signatures
-      const rhythmicPatterns = {
-        "4/4": [
-          ["quarter", "quarter", "quarter", "quarter"],
-          ["half", "quarter", "quarter"],
-          ["quarter", "half", "quarter"],
-          ["quarter", "quarter", "half"]
-        ],
-        "3/4": [
-          ["quarter", "quarter", "quarter"],
-          ["half", "quarter"],
-          ["quarter", "half"]
-        ],
-        "2/4": [
-          ["quarter", "quarter"],
-          ["half"]
-        ]
-      };
-      
-      const timeKey = `${time.num}/${time.den}` as keyof typeof rhythmicPatterns;
-      const availableRhythms = rhythmicPatterns[timeKey] || rhythmicPatterns["4/4"];
-      
-      // Filter rhythmic patterns to only use allowed durations
-      const validRhythms = availableRhythms.filter(pattern => 
-        pattern.every(dur => allowedDur.includes(dur))
-      );
-      
-      const finalRhythms = validRhythms.length > 0 ? validRhythms : [Array(time.num).fill("quarter")];
-      
-      // Enhanced fallback generator that respects key signatures
-      console.log(`Generating fallback melody in ${key.tonic} ${key.mode}`);
-      
-      // Define melodic patterns that follow voice leading principles
-      const musicalMelodicPatterns = [
-        // Stepwise ascending patterns
-        [1, 2, 3, 2, 1],
-        [1, 2, 3, 4, 3, 2, 1],
-        [5, 4, 3, 2, 1],
-        
-        // Arpeggiated patterns (chord tones)
-        [1, 3, 5, 3, 1],
-        [1, 5, 3, 1],
-        [3, 1, 5, 3],
-        
-        // Cadential patterns
-        [5, 6, 7, 1], // Authentic cadence approach
-        [2, 7, 1], // Strong cadential motion
-        [4, 3, 2, 1], // Descending resolution
-        
-        // Melodic sequences
-        [1, 2, 3, 2, 3, 4, 3, 4, 5],
-        [5, 4, 3, 4, 3, 2, 3, 2, 1],
-        
-        // Balanced arch phrases
-        [1, 2, 4, 6, 5, 3, 2, 1],
-        [1, 3, 5, 6, 5, 4, 2, 1]
-      ];
-      
-      // Ensure final measure has proper cadence
-      const cadentialEndings = [
-        [7, 1], // Leading tone resolution
-        [2, 1], // Supertonic resolution  
-        [5, 1], // Dominant to tonic
-        [4, 3, 2, 1] // Stepwise descent to tonic
-      ];
-      
-      // Add partsReq definition for fallback
-      const partsReq = [{ role: "S", range: { min: "C4", max: "A5" } }];
-     
-     // Generate measures with proper voice leading
-     const measures = Array(numMeasures).fill(null).map((_, measureIndex) => {
-       let melodicPattern;
-       
-       // Use cadential ending for final measure
-       if (measureIndex === numMeasures - 1) {
-         melodicPattern = cadentialEndings[measureIndex % cadentialEndings.length];
-       } else {
-         melodicPattern = musicalMelodicPatterns[measureIndex % musicalMelodicPatterns.length];
-       }
-       
-       const rhythmicPattern = finalRhythms[measureIndex % finalRhythms.length];
-       
-       // Adjust octave based on melodic contour to stay in range  
-       const baseOctave = 4;
-       let currentOctave = baseOctave;
-       
-       return rhythmicPattern.map((dur, noteIndex) => {
-         const scaleDegree = melodicPattern[noteIndex % melodicPattern.length];
-         
-         // Smart octave management to keep melody in singable range
-         if (scaleDegree <= 2 && currentOctave > 4) currentOctave = 4;
-         if (scaleDegree >= 6 && currentOctave < 5) currentOctave = 5;
-         if (scaleDegree === 8) currentOctave = 5;
-         
-         return {
-           kind: "note",
-           dur: { base: dur, dots: 0 },
-           pitch: { 
-             degree: scaleDegree, 
-             oct: currentOctave, 
-             acc: 0 
-           }
-         };
-       });
-     });
-     
-     // Build proper JSON score with the specified key
-     const jsonScore = {
-       key: { tonic: key.tonic, mode: key.mode },
-       time,
-       numMeasures,
-       parts: [{
-         role: "S",
-         range: { min: partsReq[0].range.min, max: partsReq[0].range.max },
-         measures
-       }],
-       cadencePlan: [
-         { bar: Math.min(4, numMeasures), cadence: "HC" },
-         { bar: numMeasures, cadence: "PAC" }
-       ]
-     };
-      
-      // Generate MusicXML using the existing helper
-      const musicXML = toMusicXML(jsonScore, params.allowAccidentals || false);
-      
-      console.log("Seeded fallback generation complete");
-      return new Response(JSON.stringify({
-        success: true,
-        json: jsonScore,
-        musicXML,
-        message: "Generated using seeded fallback (no OpenAI key)",
-        source: "fallback-seeded",
-        requestId,
-        randomSeed
-      }), {status:200,headers:cors(origin)});
-    }
+    const seedString = `${requestId || "default"}-${randomSeed || Date.now()}`;
+    const rng = new SeededRandom(seedString);
 
-    // 3) Multi-measure MusicXML builder with OpenAI integration
-    console.log("Stage: generating multi-measure exercise");
-    const numMeasures = Math.max(1, Math.min(32, Number(params.numMeasures||4)));
-    const time = params.time ?? { num:4, den:4 };
-    const partsReq = (params.parts?.length ? params.parts : [{ role:"S", range:{min:"C4",max:"A5"} }]).slice(0,2);
-    const allowed = params.allowedDur ?? ["quarter","half"];
-    console.log("Generating", numMeasures, "measures with durations:", allowed);
+    const key = params.key ?? { tonic: "C", mode: "major" };
+    const time = params.time ?? { num: 4, den: 4 };
+    const numMeasures = params.numMeasures ?? 4;
+    const level = params.level ?? 1;
 
-    // Extract allowAccidentals parameter
-    const allowAccidentals = params.allowAccidentals ?? false;
-    console.log("Allow accidentals:", allowAccidentals);
+    console.log(`[generate] level=${level} key=${key.tonic} ${key.mode} time=${time.num}/${time.den} measures=${numMeasures}`);
 
-    // 1) Ask OpenAI for JSON score structure using scale degrees
-    let aiJson = null;
-    try {
-      const systemPrompt = `You are a professional music composition AI specializing in pedagogical sight-singing exercises. Create ONLY valid JSON responses.
+    const scoreJson = generateRuleBasedScore({ key, time, numMeasures, level }, rng);
+    const xml = toMusicXML(scoreJson, /* allowAccidentals */ false);
 
-CRITICAL: Your response must be ONLY a valid JSON object with no additional text, explanations, or markdown formatting.
-
-VOICE LEADING REQUIREMENTS:
-1. STEPWISE MOTION: Prioritize stepwise motion (70% steps, 20% skips, 10% leaps maximum)
-2. TENDENCY TONES: Always resolve tendency tones properly:
-   - Leading tone (7) must resolve to tonic (1)
-   - Subdominant (4) should resolve down to mediant (3) in most contexts
-   - Applied leading tones must resolve correctly
-3. SMOOTH VOICE LEADING: Avoid large leaps without preparation or resolution
-4. MELODIC CONTOUR: Create balanced arch-shaped phrases with clear direction
-
-CADENCE REQUIREMENTS:
-1. STRONG BEAT PLACEMENT: All cadences must occur on strong beats (beat 1 or 3 in 4/4)
-2. COMPLETE MEASURES: Always complete full measures unless specifically instructed otherwise
-3. CADENCE TYPES:
-   - Authentic Cadence: End with scale degrees 7-1 or 2-1 
-   - Half Cadence: End on scale degree 5
-   - Plagal Cadence: End with 4-1 motion
-   - Deceptive Cadence: Use 7-6 resolution instead of 7-1
-4. PHRASE BREATHING: Insert half cadences at phrase midpoints for musical breathing
-
-RHYTHMIC REQUIREMENTS:
-1. BEAT INTEGRITY: Never split measures incorrectly
-2. METRIC EMPHASIS: Place important melodic notes on strong beats
-3. COMPLETE MEASURES: Fill all beats in each measure completely
-
-FORBIDDEN:
-- Augmented or diminished intervals except in resolved contexts
-- Large leaps (>P5) without stepwise approach or resolution  
-- Tritones unless part of proper dominant function and resolution
-- Incomplete measures (unless specified in parameters)
-- Weak beat cadences
-- Unresolved tendency tones
-
-DURATIONS ALLOWED: ${allowed.join(", ")}
-${allowAccidentals ? '' : 'ACCIDENTALS: NEVER use acc values other than 0'}
-
-Parameters received:
-- Cadence Type: ${params.cadenceType || 'authentic'}
-- Enforce Voice Leading: ${params.enforceVoiceLeading ?? true}
-- Require Resolution: ${params.requireResolution ?? true}
-- Strong Beat Cadence: ${params.strongBeatCadence ?? true}
-- Stepwise Motion %: ${params.stepwiseMotionPercentage ?? 70}%
-
-Return ONLY this exact JSON structure:`;
-
-      const apiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-2025-04-14",
-          messages: [
-            {
-              role: "system",
-              content: systemPrompt
-            },
-             {
-               role: "user", 
-               content: `Create a ${numMeasures}-measure sight-singing melody in ${params.key?.tonic || 'C'} ${params.key?.mode || 'major'}, ${time.num}/${time.den} time.
-
-Return this exact JSON structure with your composition:
-{
-  "key": {"tonic": "${params.key?.tonic || 'C'}", "mode": "${params.key?.mode || 'major'}"},
-  "time": {"num": ${time.num}, "den": ${time.den}},
-  "numMeasures": ${numMeasures},
-  "parts": [{
-    "role": "S",
-    "range": {"min": "${partsReq[0].range.min}", "max": "${partsReq[0].range.max}"},
-    "measures": [
-      // Create ${numMeasures} measures here with proper voice leading and cadences
-    ]
-  }],
-  "cadencePlan": [{"bar": ${numMeasures}, "cadence": "PAC"}]
-}`
-             }
-          ],
-          max_completion_tokens: 1000
-        })
-      });
-      
-      if (apiResponse.ok) {
-        const aiResult = await apiResponse.json();
-        console.log("OpenAI response received successfully");
-         // Try to parse JSON from AI response
-         const content = aiResult.choices[0].message.content;
-         console.log("Raw AI response:", content.substring(0, 200));
-         
-         // Clean up common formatting issues in AI responses
-         let cleanContent = content
-           .replace(/```json/g, '')
-           .replace(/```/g, '')
-           .replace(/^[^{]*({.*})[^}]*$/s, '$1')
-           .trim();
-         
-         try {
-           aiJson = JSON.parse(cleanContent);
-           console.log("Successfully parsed AI JSON response");
-         } catch (parseError) {
-           console.log("JSON parse failed, trying to extract JSON object...");
-           const jsonMatch = content.match(/\{[\s\S]*\}/);
-           if (jsonMatch) {
-             try {
-               aiJson = JSON.parse(jsonMatch[0]);
-               console.log("Successfully extracted and parsed JSON from AI response");
-             } catch (e) {
-               console.log("Could not parse extracted JSON, using fallback");
-             }
-           } else {
-             console.log("No JSON object found in AI response, using fallback");
-           }
-         }
-      } else {
-        console.log("OpenAI API call failed, using fallback generation");
-      }
-    } catch (error) {
-      console.log("OpenAI API error, using fallback generation:", error.message);
-    }
-
-    // 2) Generate score JSON with proper measure count and validation
-    let scoreJson = aiJson;
-    
-    // IMPROVED: Convert OpenAI response to proper pitch objects with comprehensive logging
-    if (scoreJson && scoreJson.parts) {
-      console.log('=== NORMALIZING AI RESPONSE ===');
-      console.log('Raw scoreJson parts:', scoreJson.parts.length);
-      
-      for (let partIndex = 0; partIndex < scoreJson.parts.length; partIndex++) {
-        const part = scoreJson.parts[partIndex];
-        console.log(`Part ${partIndex} (${part.role || 'unknown'}):`, part.measures?.length || 0, 'measures');
-        
-        if (part.measures) {
-          for (let measureIndex = 0; measureIndex < part.measures.length; measureIndex++) {
-            const measure = part.measures[measureIndex];
-            const measureSteps = new Set();
-            const measureOctaves = new Set();
-            
-            console.log(`  Measure ${measureIndex + 1}: ${measure.length} notes`);
-            
-            for (let noteIndex = 0; noteIndex < measure.length; noteIndex++) {
-              const note = measure[noteIndex];
-              console.log(`    Note ${noteIndex} before:`, JSON.stringify(note));
-              
-              // Create a new note object to avoid reference issues
-              const newNote = { ...note };
-              
-              // Handle various pitch formats from OpenAI
-              if (note.step) {
-                // Format: {step: "F", octave: 4} or {step: "Ab", oct: 4}
-                let stepPart = note.step;
-                let alterPart = 0;
-                
-                // Handle embedded accidentals like "Ab", "F#"
-                if (stepPart.length > 1) {
-                  const accidental = stepPart.slice(1);
-                  stepPart = stepPart[0];
-                  alterPart = accidental === '#' ? 1 : accidental === 'b' ? -1 : 0;
-                }
-                
-                newNote.pitch = {
-                  step: stepPart,
-                  alter: note.acc !== undefined ? note.acc : alterPart,
-                  oct: note.oct || note.octave || 4
-                };
-                
-                // Clean up old properties
-                delete newNote.step;
-                delete newNote.octave;
-                delete newNote.acc;
-                
-              } else if (note.pitch) {
-                if (typeof note.pitch === 'string') {
-                  // Format: "F4", "Ab4", "C#5"
-                  const pitchMatch = note.pitch.match(/^([A-G])([b#]?)(\d+)$/);
-                  if (pitchMatch) {
-                    const [, step, accidental, octave] = pitchMatch;
-                    newNote.pitch = {
-                      step: step,
-                      alter: accidental === '#' ? 1 : accidental === 'b' ? -1 : 0,
-                      oct: parseInt(octave)
-                    };
-                  } else {
-                    console.log(`    Warning: Could not parse pitch string "${note.pitch}"`);
-                    newNote.pitch = { step: 'C', alter: 0, oct: 4 }; // Fallback
-                  }
-                } else if (typeof note.pitch === 'object') {
-                  // Handle object forms: {degree}, {step}, or canonical pitch
-                  const p: any = note.pitch as any;
-                  if (typeof p.degree === 'number') {
-                    newNote.pitch = {
-                      degree: p.degree,
-                      oct: p.oct || p.octave || 4,
-                      acc: p.acc ?? p.alter ?? 0,
-                    };
-                  } else if (typeof p.step === 'number') {
-                    // Some models put degree in step field
-                    newNote.pitch = {
-                      degree: p.step,
-                      oct: p.oct || p.octave || 4,
-                      acc: p.acc ?? p.alter ?? 0,
-                    };
-                  } else if (typeof p.step === 'string') {
-                    newNote.pitch = {
-                      step: p.step || 'C',
-                      alter: p.alter ?? p.acc ?? 0,
-                      oct: p.oct || p.octave || 4
-                    };
-                  } else {
-                    newNote.pitch = { step: 'C', alter: 0, oct: 4 };
-                  }
-                }
-              } else {
-                // No pitch info, use fallback
-                console.log(`    Warning: Note has no pitch info, using C4`);
-                newNote.pitch = { step: 'C', alter: 0, oct: 4 };
-              }
-              
-              // Ensure proper duration format
-              if (newNote.dur && typeof newNote.dur === 'string') {
-                newNote.dur = { base: newNote.dur, dots: 0 };
-              } else if (!newNote.dur) {
-                newNote.dur = { base: 'quarter', dots: 0 };
-              }
-              
-              // Ensure kind property
-              if (!newNote.kind) {
-                newNote.kind = 'note';
-              }
-              
-              // Track unique pitches in this measure
-              if (newNote.pitch) {
-                measureSteps.add(newNote.pitch.step);
-                measureOctaves.add(newNote.pitch.oct);
-              }
-              
-              console.log(`    Note ${noteIndex} after:`, JSON.stringify(newNote));
-              
-              // Replace the note in the measure
-              measure[noteIndex] = newNote;
-            }
-            
-            console.log(`  Measure ${measureIndex + 1} summary: ${measureSteps.size} unique steps [${Array.from(measureSteps).join(', ')}], ${measureOctaves.size} unique octaves [${Array.from(measureOctaves).join(', ')}]`);
-          }
-        }
-      }
-      console.log('=== NORMALIZATION COMPLETE ===');
-    }
-    if (!scoreJson || !Array.isArray(scoreJson?.parts)) {
-      // Fallback: synthesize varied measures using ALL selected durations
-      const durOptions = allowed.filter(d => ["whole","half","quarter","eighth","16th"].includes(d));
-      console.log("Using durations for generation:", durOptions);
-      
-      // Function to create notes that follow tonal harmony rules
-      const createMeasureNotes = (measureIndex: number, timeSignature: {num: number, den: number}) => {
-        console.log(`Creating measure ${measureIndex} notes, requestId: ${requestId}, randomSeed: ${randomSeed}`);
-        const measureTicks = barTicks(timeSignature.num, timeSignature.den as 1|2|4|8|16);
-        const notes = [];
-        let currentTicks = 0;
-        
-        // Enhanced tonal harmony controls from parameters
-        const maxInterval = params.maxInterval ?? 7; // Perfect 5th by default
-        const avoidedIntervals = [6]; // Avoid tritone by default
-        const stepwisePercentage = params.stepwiseMotionPercentage ?? 70;
-        const enforceVoiceLeading = params.enforceVoiceLeading ?? true;
-        const requireResolution = params.requireResolution ?? true;
-        const strongBeatCadence = params.strongBeatCadence ?? true;
-        const cadenceType = params.cadenceType ?? 'authentic';
-        const melodicRange = { min: 1, max: 8 };
-        
-        // Use interval motion preferences with enhanced control
-        const allowedMotion = params.intervalMotion || ["step", "skip"];
-        
-        // Enhanced melodic patterns that follow tonal harmony rules
-        const patterns = {
-          step: [
-            [1,2,3,2], [3,2,1,2], [1,2,1,3], [3,4,5,4], [5,4,3,4], // stepwise motion
-            [1,2,3,4], [4,3,2,1], [5,6,7,8], [8,7,6,5], // scales
-            [1,7,1,2], [3,2,3,4], [5,4,5,6] // neighbor tones
-          ],
-          skip: [
-            [1,3,5,3], [5,3,1,3], [1,3,2,4], [2,4,6,4], // thirds (consonant skips)
-            [1,5,3,1], [3,1,5,3], [5,1,3,5], // chord outlines
-            [1,3,5,8], [8,5,3,1], [3,5,8,5] // triad patterns
-          ],
-          leap: [
-            [1,5,1,4], [1,4,1,5], [5,1,4,3], // fourths and fifths (consonant leaps)
-            [1,6,5,4], [3,1,2,5], [5,3,6,5] // controlled larger intervals
-          ],
-          repeat: [
-            [1,1,2,2], [3,3,2,2], [5,5,4,4], [1,1,1,2], // repeated notes for stability
-            [3,3,3,4], [5,5,5,6], [2,2,1,1] // emphasis patterns
-          ]
-        };
-        
-        // Cadential patterns based on measure position and cadence type
-        const cadenceEvery = params.cadenceEvery ?? 4;
-        const isCadentialMeasure = (measureIndex + 1) % cadenceEvery === 0;
-        const isLastMeasure = measureIndex === (numMeasures - 1);
-        
-        // Define cadence-specific patterns based on cadenceType
-        const cadencePatterns = {
-          authentic: [
-            [7, 1], [2, 1], [5, 1], [4, 3, 2, 1] // Authentic cadence endings
-          ],
-          half: [
-            [1, 5], [2, 5], [4, 5], [6, 5] // Half cadence endings  
-          ],
-          plagal: [
-            [4, 1], [6, 4, 1] // Plagal cadence endings
-          ],
-          deceptive: [
-            [7, 6], [5, 6] // Deceptive cadence endings
-          ]
-        };
-        
-        // Create seeded random generator for this measure if we have seeds
-        const seedString = `${requestId || 'default'}-${randomSeed || Date.now()}-${measureIndex}`;
-        console.log(`Creating rng for measure ${measureIndex} with seed: ${seedString}`);
-        const rng = new SeededRandom(seedString);
-        
-        // Create educationally appropriate rhythmic patterns based on time signature
-        let rhythmicPattern: DurBase[] = [];
-        
-        if (timeSignature.den === 4) {
-          // Simple time - emphasize quarter note pulse
-          if (durOptions.includes("quarter")) {
-            if (timeSignature.num === 4) {
-              // 4/4 time - use patterns that show strong beats 1 and 3
-              const patterns4_4 = [
-                ["quarter", "quarter", "quarter", "quarter"],
-                ["half", "quarter", "quarter"],
-                ["quarter", "half", "quarter"],
-                ["quarter", "quarter", "half"],
-                ["quarter", "eighth", "eighth", "quarter", "quarter"],
-                ["eighth", "eighth", "quarter", "quarter", "quarter"]
-              ];
-              const availablePatterns = patterns4_4.filter(p => 
-                p.every(dur => durOptions.includes(dur as DurBase))
-              );
-              rhythmicPattern = (availablePatterns.length > 0 ? rng.choice(availablePatterns) : ["quarter", "quarter", "quarter", "quarter"]) as DurBase[];
-            } else if (timeSignature.num === 3) {
-              // 3/4 time - emphasize beat 1
-              const patterns3_4 = [
-                ["quarter", "quarter", "quarter"],
-                ["half", "quarter"],
-                ["quarter", "half"],
-                ["quarter", "eighth", "eighth", "quarter"],
-                ["eighth", "eighth", "quarter", "quarter"]
-              ];
-              const availablePatterns = patterns3_4.filter(p => 
-                p.every(dur => durOptions.includes(dur as DurBase))
-              );
-              rhythmicPattern = (availablePatterns.length > 0 ? rng.choice(availablePatterns) : ["quarter", "quarter", "quarter"]) as DurBase[];
-            }
-          }
-        } else if (timeSignature.den === 8) {
-          // Compound time - emphasize dotted quarter pulse
-          if (timeSignature.num === 6) {
-            // 6/8 time
-            const patterns6_8 = [
-              ["eighth", "eighth", "eighth", "eighth", "eighth", "eighth"],
-              ["quarter", "eighth", "quarter", "eighth"],
-              ["eighth", "quarter", "eighth", "quarter"]
-            ];
-            const availablePatterns = patterns6_8.filter(p => 
-              p.every(dur => durOptions.includes(dur as DurBase))
-            );
-            if (availablePatterns.length > 0) {
-              rhythmicPattern = rng.choice(availablePatterns) as DurBase[];
-            }
-          }
-        }
-        
-        // Fallback: fill measure with available durations if no pattern works
-        if (rhythmicPattern.length === 0) {
-          let noteIndex = 0;
-          while (currentTicks < measureTicks && noteIndex < 8) { // limit to prevent infinite loop
-            const remainingTicks = measureTicks - currentTicks;
-              const availableDurs = durOptions.filter(dur => {
-                const ticksNeeded = TICKS[dur as DurBase];
-                return ticksNeeded <= remainingTicks;
-              });
-              
-              if (availableDurs.length === 0) break;
-              
-              const selectedDur = rng.choice(availableDurs) as DurBase;
-              rhythmicPattern.push(selectedDur);
-            currentTicks += TICKS[selectedDur];
-            noteIndex++;
-          }
-        }
-        
-        if (isCadentialMeasure) {
-          // Use cadential patterns that lead to tonic
-          const cadenceTypes = params.cadenceTypes ?? ["authentic"];
-          const cadenceType = rng.choice(cadenceTypes);
-          
-          const cadentialPatterns = {
-            authentic: [[7,1], [2,1], [5,1], [4,3,2,1]], // Leading tone to tonic, V-I motion
-            half: [[2,3], [6,5], [4,5], [1,2,3,2]], // Motion to dominant
-            plagal: [[4,1], [6,5], [4,3,2,1]], // IV-I motion
-            deceptive: [[7,6], [2,6], [5,6,5,4]] // V-vi motion
-          };
-          
-          const pattern = cadentialPatterns[cadenceType as keyof typeof cadentialPatterns] || cadentialPatterns.authentic;
-          const selectedPattern = Array.isArray(pattern[0]) ? rng.choice(pattern) : pattern;
-          
-          // Ensure cadential pattern fits the melodic range
-          const adjustedPattern = selectedPattern.map(degree => {
-            if (degree > melodicRange.max) return degree - 7; // Drop octave
-            if (degree < melodicRange.min) return degree + 7; // Raise octave
-            return degree;
-          });
-          
-          return createNotesFromPattern(adjustedPattern, rhythmicPattern || ["quarter", "quarter", "quarter", "quarter"]);
-        }
-        
-        // Get available patterns based on selected motions and voice leading rules
-        const availablePatterns = allowedMotion.flatMap(motion => patterns[motion as keyof typeof patterns] || []);
-        let pattern = availablePatterns.length > 0 ? rng.choice(availablePatterns) : [1,2,3,4];
-        
-        // Apply voice leading and interval controls
-        if (enforceVoiceLeading) {
-          pattern = applyVoiceLeadingRules(pattern, measureIndex, maxInterval, avoidedIntervals, melodicRange);
-        }
-        
-        // Ensure stepwise motion percentage
-        if (stepwisePercentage > 0) {
-          pattern = enforceStepwiseMotion(pattern, stepwisePercentage, rng);
-        }
-        
-        // Generate notes using the rhythmic pattern and melodic pattern
-        currentTicks = 0;
-        for (let i = 0; i < rhythmicPattern.length && i < pattern.length; i++) {
-          const duration = rhythmicPattern[i];
-          const degree = pattern[i % pattern.length];
-          
-          // Smart octave placement for educational purposes
-          let octave = 4;
-          if (degree >= 8) {
-            octave = 5;
-          } else if (degree >= 1 && degree <= 7) {
-            octave = 4;
-          }
-          
-          // Add dotted notes based on allowDots parameter
-          let dots = 0;
-          const allowDots = params.allowDots ?? false;
-          if (allowDots && rng.next() < 0.3) { // 30% chance for dotted notes when enabled
-            dots = 1;
-          }
-          
-          notes.push({
-            kind: "note",
-            dur: { base: duration, dots: dots },
-            pitch: { degree: ((degree - 1) % 7) + 1, oct: octave, acc: 0 }
-          });
-          
-          currentTicks += TICKS[duration] * (dots > 0 ? 1.5 : 1); // Account for dotted duration
-        }
-        
-        // Fill any remaining time with rest if needed (for educational clarity)
-        if (currentTicks < measureTicks) {
-          const remainingTicks = measureTicks - currentTicks;
-          
-          // Try to use a single rest that fits exactly
-          const restOptions = Object.entries(TICKS)
-            .filter(([_, ticks]) => ticks === remainingTicks)
-            .map(([dur, _]) => dur as DurBase);
-          
-          if (restOptions.length > 0) {
-            notes.push({
-              kind: "rest",
-              dur: { base: restOptions[0], dots: 0 }
-            });
-          } else {
-            // Use multiple rests to fill the gap
-            let restTicks = remainingTicks;
-            while (restTicks > 0) {
-              const availableRests = Object.entries(TICKS)
-                .filter(([_, ticks]) => ticks <= restTicks)
-                .sort(([_, a], [__, b]) => b - a);
-              
-              if (availableRests.length === 0) break;
-              
-              const [restDur, restTickValue] = availableRests[0];
-              notes.push({
-                kind: "rest",
-                dur: { base: restDur as DurBase, dots: 0 }
-              });
-              restTicks -= restTickValue;
-            }
-          }
-        }
-        
-        return notes;
-      };
-      
-      // Helper function to create notes from melodic pattern and rhythmic pattern
-      const createNotesFromPattern = (melodicPattern: number[], rhythmicPattern: DurBase[]) => {
-        const notes = [];
-        let currentTicks = 0;
-        const measureTicks = barTicks(time.num, time.den as 1|2|4|8|16);
-        
-        for (let i = 0; i < rhythmicPattern.length && i < melodicPattern.length; i++) {
-          const duration = rhythmicPattern[i];
-          const degree = melodicPattern[i % melodicPattern.length];
-          
-          // Smart octave placement for educational purposes
-          let octave = 4;
-          if (degree >= 8) {
-            octave = 5;
-          } else if (degree >= 1 && degree <= 7) {
-            octave = 4;
-          }
-          
-          notes.push({
-            kind: "note",
-            dur: { base: duration, dots: 0 },
-            pitch: { degree: ((degree - 1) % 7) + 1, oct: octave, acc: 0 }
-          });
-          
-          currentTicks += TICKS[duration];
-        }
-        
-        // Fill any remaining time with rest if needed
-        if (currentTicks < measureTicks) {
-          const remainingTicks = measureTicks - currentTicks;
-          
-          const restOptions = Object.entries(TICKS)
-            .filter(([_, ticks]) => ticks === remainingTicks)
-            .map(([dur, _]) => dur as DurBase);
-          
-          if (restOptions.length > 0) {
-            notes.push({
-              kind: "rest",
-              dur: { base: restOptions[0], dots: 0 }
-            });
-          }
-        }
-        
-        return notes;
-      };
-      
-      // Helper function to apply voice leading rules
-      const applyVoiceLeadingRules = (pattern: number[], measureIndex: number, maxInterval: number, avoidedIntervals: number[], melodicRange: { min: number; max: number }) => {
-        const improvedPattern = [...pattern];
-        
-        for (let i = 1; i < improvedPattern.length; i++) {
-          const prevDegree = improvedPattern[i - 1];
-          const currentDegree = improvedPattern[i];
-          const interval = Math.abs(currentDegree - prevDegree);
-          
-          // Check if interval exceeds maximum allowed
-          if (interval > maxInterval) {
-            // Adjust to smaller interval
-            if (currentDegree > prevDegree) {
-              improvedPattern[i] = prevDegree + Math.min(maxInterval, 2); // Prefer step or small skip
-            } else {
-              improvedPattern[i] = prevDegree - Math.min(maxInterval, 2);
-            }
-          }
-          
-          // Avoid specific intervals (like tritones)
-          if (avoidedIntervals.includes(interval)) {
-            // Replace with consonant interval
-            const consonantIntervals = [1, 2, 3, 4, 5]; // unison, 2nd, 3rd, 4th, 5th
-            const replacement = consonantIntervals[Math.floor(rng.next() * consonantIntervals.length)];
-            
-            if (currentDegree > prevDegree) {
-              improvedPattern[i] = prevDegree + replacement;
-            } else {
-              improvedPattern[i] = prevDegree - replacement;
-            }
-          }
-          
-          // Ensure note stays within melodic range
-          if (improvedPattern[i] > melodicRange.max) {
-            improvedPattern[i] = melodicRange.max;
-          } else if (improvedPattern[i] < melodicRange.min) {
-            improvedPattern[i] = melodicRange.min;
-          }
-        }
-        
-        return improvedPattern;
-      };
-      
-      // Helper function to enforce stepwise motion percentage
-      const enforceStepwiseMotion = (pattern: number[], stepwisePercentage: number, rng: SeededRandom) => {
-        const improvedPattern = [...pattern];
-        const totalIntervals = improvedPattern.length - 1;
-        const requiredStepwise = Math.floor((totalIntervals * stepwisePercentage) / 100);
-        
-        let stepwiseCount = 0;
-        
-        // Count existing stepwise motion
-        for (let i = 1; i < improvedPattern.length; i++) {
-          const interval = Math.abs(improvedPattern[i] - improvedPattern[i - 1]);
-          if (interval <= 1) stepwiseCount++;
-        }
-        
-        // If we need more stepwise motion, convert some intervals
-        let conversionsNeeded = requiredStepwise - stepwiseCount;
-        
-        for (let i = 1; i < improvedPattern.length && conversionsNeeded > 0; i++) {
-          const interval = Math.abs(improvedPattern[i] - improvedPattern[i - 1]);
-          
-          if (interval > 1) {
-            // Convert to stepwise motion
-            if (improvedPattern[i] > improvedPattern[i - 1]) {
-              improvedPattern[i] = improvedPattern[i - 1] + 1;
-            } else {
-              improvedPattern[i] = improvedPattern[i - 1] - 1;
-            }
-            conversionsNeeded--;
-          }
-        }
-        
-        return improvedPattern;
-      };
-      
-      scoreJson = {
-        key: params.key ?? {tonic:"C", mode:"major"},
-        time, 
-        numMeasures,
-        parts: partsReq.map((pr:any)=>({
-          role: pr.role,
-          range: pr.range ?? {min:"C4",max:"A5"},
-          measures: Array.from({length:numMeasures}, (_, measureIndex) => 
-            createMeasureNotes(measureIndex, time)
-          )
-        }))
-      };
-    } else {
-      // Enforce measure count if AI gave us something
-      scoreJson.numMeasures = numMeasures;
-      for (const p of scoreJson.parts) {
-        if (!Array.isArray(p.measures)) p.measures = [];
-        while (p.measures.length < numMeasures) {
-          const last = p.measures[p.measures.length-1] ?? [];
-          p.measures.push(last.length ? last : [{kind:"rest", dur:{base:"whole",dots:0}}]);
-        }
-        if (p.measures.length > numMeasures) p.measures = p.measures.slice(0, numMeasures);
-      }
-    }
-
-    // 3) Validation step - check for diatonic compliance when accidentals are disabled
-    if (!allowAccidentals && scoreJson.parts) {
-      console.log("Validating diatonic compliance...");
-      let invalidFound = false;
-      
-      for (const part of scoreJson.parts) {
-        for (const measure of part.measures || []) {
-          for (const event of measure) {
-            if (event.kind === "note" && event.pitch) {
-              // If using degree notation, check acc field
-              if (event.pitch.degree && event.pitch.acc && event.pitch.acc !== 0) {
-                console.log("Invalid accidental found in degree notation, forcing to 0");
-                event.pitch.acc = 0;
-                invalidFound = true;
-              }
-              // If using step/alter notation, check against key
-              else if (event.pitch.step) {
-                const canonEvent = canonicalizeEvent(event, scoreJson.key, allowAccidentals);
-                if (!isDiatonicToKey(canonEvent.pitch.step, canonEvent.pitch.alter, scoreJson.key)) {
-                  console.log("Invalid step/alter found, correcting to key signature");
-                  event.pitch = canonEvent.pitch;
-                  invalidFound = true;
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      if (invalidFound) {
-        console.log("Corrected invalid notes to comply with key signature");
-      }
-    }
-
-    // 4) Build MusicXML from ALL measures using helper with allowAccidentals parameter
-    const xml = toMusicXML(scoreJson, allowAccidentals);
-
-    console.log("=== EDGE FUNCTION SUCCESS ===");
-    console.log("Generated", numMeasures, "measures successfully");
     return new Response(JSON.stringify({
       success: true,
       json: scoreJson,
       musicXML: xml,
-      message: `Generated ${numMeasures} measures successfully with OpenAI`,
-      source: aiJson ? "openai" : "fallback-seeded",
+      musicxml: xml, // legacy property the frontend also reads
+      exerciseId: `${seedString}`,
+      source: "rule-based-v2",
       requestId,
-      randomSeed
-    }), {status:200,headers:corsHeaders});
+      randomSeed,
+      message: `Generated ${numMeasures} measures (level ${level}) in ${key.tonic} ${key.mode}.`,
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-  } catch (error) {
-    console.error("=== EDGE FUNCTION ERROR ===");
-    console.error("Error name:", error.name);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-    console.error("Error details:", error);
-    
+  } catch (error: any) {
+    console.error("[generate] error", error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message,
       details: error.stack,
-      timestamp: new Date().toISOString()
-    }), {
-      status: 500,
-      headers: corsHeaders
-    });
+    }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

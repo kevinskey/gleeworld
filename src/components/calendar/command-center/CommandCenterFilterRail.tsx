@@ -1,4 +1,4 @@
-import { Music, BookOpen, Church, Mic, Users, Plane, User, ChevronLeft, ChevronRight, Check, Calendar, ClipboardList } from "lucide-react";
+import { Music, BookOpen, Church, Mic, Users, Plane, User, ChevronLeft, ChevronRight, Check, Calendar, ClipboardList, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
 import { CalendarInfo } from "@/hooks/useCalendars";
@@ -25,6 +25,9 @@ interface CommandCenterFilterRailProps {
   onToggleCalendarFilter: (calendarId: string) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  width?: number;
+  onAddCategory?: () => void;
+  onAddCalendar?: () => void;
 }
 
 export const CommandCenterFilterRail = ({
@@ -36,29 +39,33 @@ export const CommandCenterFilterRail = ({
   onToggleCalendarFilter,
   isCollapsed,
   onToggleCollapse,
+  width,
+  onAddCategory,
+  onAddCalendar,
 }: CommandCenterFilterRailProps) => {
   return (
-    <div 
+    <div
+      style={isCollapsed || width === undefined ? undefined : { width }}
       className={cn(
-        "flex-shrink-0 bg-slate-800 text-white flex flex-col transition-all duration-300 border-r border-slate-700",
-        isCollapsed ? "w-14" : "w-56"
+        "flex-shrink-0 bg-card text-white flex flex-col border-r border-border",
+        isCollapsed && "w-14 transition-all duration-300"
       )}
     >
       {/* Header */}
-      <div className="p-3 border-b border-slate-700 flex items-center justify-between">
+      <div className="p-3 border-b border-border flex items-center justify-between">
         {!isCollapsed && (
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
             Filters
           </h3>
         )}
         <button
           onClick={onToggleCollapse}
-          className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-slate-700 transition-colors"
+          className="h-7 w-7 rounded-md flex items-center justify-center hover:bg-muted transition-colors"
         >
           {isCollapsed ? (
-            <ChevronRight className="h-4 w-4 text-slate-400" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           ) : (
-            <ChevronLeft className="h-4 w-4 text-slate-400" />
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           )}
         </button>
       </div>
@@ -68,9 +75,20 @@ export const CommandCenterFilterRail = ({
         {/* Categories Section */}
         <div className="p-2">
           {!isCollapsed && (
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 py-2">
-              Categories
-            </h4>
+            <div className="flex items-center justify-between px-3 py-2">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Categories
+              </h4>
+              {onAddCategory && (
+                <button
+                  onClick={onAddCategory}
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted rounded p-1 transition-colors"
+                  title="Add a category"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           )}
           <div className="space-y-1">
             {categories.map(category => {
@@ -84,8 +102,8 @@ export const CommandCenterFilterRail = ({
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
                     isActive 
-                      ? "bg-slate-700" 
-                      : "opacity-50 hover:opacity-75 hover:bg-slate-700/50"
+                      ? "bg-muted" 
+                      : "opacity-50 hover:opacity-75 hover:bg-muted/50"
                   )}
                 >
                   {/* Color indicator */}
@@ -97,11 +115,11 @@ export const CommandCenterFilterRail = ({
                   </div>
 
                   {/* Icon */}
-                  <Icon className="h-4 w-4 flex-shrink-0 text-slate-300" />
+                  <Icon className="h-4 w-4 flex-shrink-0 text-foreground" />
 
                   {/* Label */}
                   {!isCollapsed && (
-                    <span className="text-sm font-medium text-slate-200 truncate flex-1 text-left">
+                    <span className="text-sm font-medium text-foreground truncate flex-1 text-left">
                       {category.label}
                     </span>
                   )}
@@ -111,15 +129,27 @@ export const CommandCenterFilterRail = ({
           </div>
         </div>
 
-        {/* Calendars Section */}
-        {calendars.length > 0 && (
+        {/* Calendars Section — always render the header so + button is reachable
+            even when the list is empty. */}
+        {(calendars.length > 0 || onAddCalendar) && (
           <>
-            <Separator className="bg-slate-700 my-2" />
+            <Separator className="bg-muted my-2" />
             <div className="p-2">
               {!isCollapsed && (
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 py-2">
-                  Calendars
-                </h4>
+                <div className="flex items-center justify-between px-3 py-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Calendars
+                  </h4>
+                  {onAddCalendar && (
+                    <button
+                      onClick={onAddCalendar}
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted rounded p-1 transition-colors"
+                      title="Add a calendar"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               )}
               <div className="space-y-1">
                 {calendars.map(calendar => {
@@ -132,8 +162,8 @@ export const CommandCenterFilterRail = ({
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
                         isActive 
-                          ? "bg-slate-700" 
-                          : "opacity-50 hover:opacity-75 hover:bg-slate-700/50"
+                          ? "bg-muted" 
+                          : "opacity-50 hover:opacity-75 hover:bg-muted/50"
                       )}
                     >
                       {/* Color indicator */}
@@ -145,11 +175,11 @@ export const CommandCenterFilterRail = ({
                       </div>
 
                       {/* Icon */}
-                      <Calendar className="h-4 w-4 flex-shrink-0 text-slate-300" />
+                      <Calendar className="h-4 w-4 flex-shrink-0 text-foreground" />
 
                       {/* Label */}
                       {!isCollapsed && (
-                        <span className="text-xs font-medium text-slate-200 truncate flex-1 text-left">
+                        <span className="text-xs font-medium text-foreground truncate flex-1 text-left">
                           {calendar.name}
                         </span>
                       )}
@@ -163,7 +193,7 @@ export const CommandCenterFilterRail = ({
       </div>
 
       {/* Quick Actions */}
-      <div className="p-3 border-t border-slate-700 space-y-2">
+      <div className="p-3 border-t border-border space-y-2">
         <button
           onClick={() => {
             categories.forEach(c => {
@@ -174,7 +204,7 @@ export const CommandCenterFilterRail = ({
             });
           }}
           className={cn(
-            "w-full py-2 rounded-lg text-xs font-medium bg-slate-700 hover:bg-slate-600 transition-colors",
+            "w-full py-2 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 transition-colors",
             isCollapsed && "px-1"
           )}
         >
@@ -186,7 +216,7 @@ export const CommandCenterFilterRail = ({
             activeCalendarFilters.forEach(f => onToggleCalendarFilter(f));
           }}
           className={cn(
-            "w-full py-2 rounded-lg text-xs font-medium bg-slate-700 hover:bg-slate-600 transition-colors",
+            "w-full py-2 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 transition-colors",
             isCollapsed && "px-1"
           )}
         >

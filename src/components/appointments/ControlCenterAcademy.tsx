@@ -64,7 +64,7 @@ export const ControlCenterAcademy: React.FC = () => {
               </span>
 
               {/* Title */}
-              <span className="text-white/70 text-[11px] sm:text-xs leading-tight line-clamp-2">
+              <span className="text-white/70 text-sm sm:text-xs leading-tight line-clamp-2">
                 {course.title}
               </span>
 

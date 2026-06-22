@@ -5,15 +5,17 @@ export const MUSICAL_SYMBOLS = {
   wholeNote: '𝅝',
   halfNote: '𝅗𝅥',
   quarterNote: '𝅘𝅥',
-  eighthNote: '𝅘𝅥𝅮',
-  sixteenthNote: '𝅘𝅥𝅯',
-  
+  eighthNote: '♪',           // Music-symbols block U+1D158-glyph isn't widely supported in iOS UI fonts; the basic music block ♪ renders everywhere
+  sixteenthNote: '♬',         // Beamed-pair fallback for the same reason
+  thirtySecondNote: '♬',      // same beamed glyph until we add a proper 32nd
+
   // Rests
   wholeRest: '𝄻',
   halfRest: '𝄼',
   quarterRest: '𝄽',
   eighthRest: '𝄾',
   sixteenthRest: '𝄿',
+  thirtySecondRest: '𝅀',
   
   // Clefs
   trebleClef: '𝄞',
@@ -46,14 +48,23 @@ export const MUSICAL_SYMBOLS = {
   keySignatureFlatOrder: ['B♭', 'E♭', 'A♭', 'D♭', 'G♭', 'C♭', 'F♭']
 };
 
-// Helper functions for backward compatibility
+// Helper functions for backward compatibility.
+//
+// Accept BOTH the long names (`'sixteenth'`, `'thirtySecond'`) AND the
+// short codes that flow through the rest of the app (`'16th'`,
+// `'32nd'`). The form was sending `'16th'` and `'32nd'`, which used to
+// silently fall through to the quarter-note default — that's why the
+// last two icons looked like duplicate quarters.
 export const getNoteSymbol = (noteType: string) => {
   const symbolMap: Record<string, string> = {
     'whole': MUSICAL_SYMBOLS.wholeNote,
     'half': MUSICAL_SYMBOLS.halfNote,
     'quarter': MUSICAL_SYMBOLS.quarterNote,
     'eighth': MUSICAL_SYMBOLS.eighthNote,
-    'sixteenth': MUSICAL_SYMBOLS.sixteenthNote
+    'sixteenth': MUSICAL_SYMBOLS.sixteenthNote,
+    '16th': MUSICAL_SYMBOLS.sixteenthNote,
+    'thirtySecond': MUSICAL_SYMBOLS.thirtySecondNote,
+    '32nd': MUSICAL_SYMBOLS.thirtySecondNote,
   };
   return symbolMap[noteType] || MUSICAL_SYMBOLS.quarterNote;
 };
@@ -64,7 +75,10 @@ export const getRestSymbol = (restType: string) => {
     'half': MUSICAL_SYMBOLS.halfRest,
     'quarter': MUSICAL_SYMBOLS.quarterRest,
     'eighth': MUSICAL_SYMBOLS.eighthRest,
-    'sixteenth': MUSICAL_SYMBOLS.sixteenthRest
+    'sixteenth': MUSICAL_SYMBOLS.sixteenthRest,
+    '16th': MUSICAL_SYMBOLS.sixteenthRest,
+    'thirtySecond': MUSICAL_SYMBOLS.thirtySecondRest,
+    '32nd': MUSICAL_SYMBOLS.thirtySecondRest,
   };
   return symbolMap[restType] || MUSICAL_SYMBOLS.quarterRest;
 };

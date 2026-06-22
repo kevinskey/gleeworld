@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface PollQuestion {
   question: string;
@@ -160,10 +161,6 @@ export const CoursePollManager: React.FC<CoursePollManagerProps> = ({ courseId, 
   };
 
   const deletePoll = async (pollId: string) => {
-    if (!confirm('Are you sure you want to delete this poll? This action cannot be undone.')) {
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('gw_academy_polls')
@@ -459,14 +456,16 @@ export const CoursePollManager: React.FC<CoursePollManagerProps> = ({ courseId, 
                           </>
                         )}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deletePoll(poll.id)}
-                        className="text-destructive hover:text-destructive"
+                      <ConfirmDeleteButton
+                        confirmKey="delete-course-poll"
+                        title="Delete this poll?"
+                        description="The poll and any responses will be permanently removed."
+                        onConfirm={() => deletePoll(poll.id)}
+                        ariaLabel="Delete poll"
+                        className="inline-flex items-center justify-center rounded-md h-9 w-9 text-destructive hover:text-destructive hover:bg-muted"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </div>
                   </div>
 

@@ -43,7 +43,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
             <h1 className="text-lg lg:text-2xl xl:text-4xl font-bold font-['Cinzel'] tracking-wide text-white">
               Portal
             </h1>
-            <p className="text-[10px] lg:text-xs font-['Dancing_Script'] lg:text-base italic text-white/80">
+            <p className="text-xs lg:text-xs font-['Dancing_Script'] lg:text-base italic text-white/80">
               {getOrgName()}
             </p>
           </div>
@@ -62,7 +62,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
           className={`relative h-10 w-10 p-0 ${showMessages ? 'bg-muted' : ''}`}
         >
           <MessageCircle className="h-5 w-5" />
-          <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]">
+          <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs">
             3
           </Badge>
         </Button>

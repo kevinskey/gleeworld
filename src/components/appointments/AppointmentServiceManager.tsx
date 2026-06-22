@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Edit, Trash2, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface AppointmentService {
   id: string;
@@ -147,8 +148,6 @@ export const AppointmentServiceManager = () => {
   };
 
   const handleDelete = async (serviceId: string) => {
-    if (!confirm('Are you sure you want to delete this appointment service?')) return;
-
     try {
       const { error } = await supabase
         .from('gw_appointment_services')
@@ -358,13 +357,16 @@ export const AppointmentServiceManager = () => {
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(service.id)}
+                  <ConfirmDeleteButton
+                    confirmKey="delete-appointment-service"
+                    title="Delete this appointment service?"
+                    description="Existing bookings remain; the service stops accepting new ones."
+                    onConfirm={() => handleDelete(service.id)}
+                    ariaLabel="Delete service"
+                    className="inline-flex items-center justify-center rounded-md h-9 w-9 hover:bg-muted"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </ConfirmDeleteButton>
                 </div>
               </div>
             </CardHeader>

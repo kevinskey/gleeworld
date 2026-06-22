@@ -329,7 +329,7 @@ export const CourseHeroPlayer: React.FC<CourseHeroPlayerProps> = ({
                   <GraduationCap className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-[10px] text-white/60 font-medium uppercase tracking-wide">
+                  <span className="text-xs text-white/60 font-medium uppercase tracking-wide">
                     Course Grade
                   </span>
                   <div className="flex items-baseline gap-1.5">

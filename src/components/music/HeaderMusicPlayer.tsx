@@ -316,13 +316,13 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
           }}
         >
           {/* Show albums with custom hover flyouts */}
-          <div className="px-2 py-1.5 text-[10px] font-semibold text-amber-900 bg-amber-100/50 border-b" style={{ fontFamily: 'serif' }}>
+          <div className="px-2 py-1.5 text-xs font-semibold text-amber-900 bg-amber-100/50 border-b" style={{ fontFamily: 'serif' }}>
             🎼 Choose Album 🎼
           </div>
           {albums.map((album) => (
             <div key={album.id} className="relative">
               <div
-                className="text-[10px] flex items-center gap-2 p-2 hover:bg-white/50 cursor-pointer transition-colors"
+                className="text-xs flex items-center gap-2 p-2 hover:bg-white/50 cursor-pointer transition-colors"
                 onMouseEnter={() => setHoveredAlbum(album)}
               >
                 {/* Album Art */}
@@ -359,7 +359,7 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
                     <div
                       key={track.id}
                       onClick={() => handleTrackSelect(track)}
-                      className="text-[10px] p-2 hover:bg-white/50 cursor-pointer transition-colors border-b border-gray-100/50 last:border-b-0"
+                      className="text-xs p-2 hover:bg-white/50 cursor-pointer transition-colors border-b border-gray-100/50 last:border-b-0"
                     >
                       <div className="flex flex-col">
                         <span className="font-medium">{track.title}</span>
@@ -378,7 +378,7 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
               <div className="border-t my-1"></div>
               <div className="relative">
                 <div
-                  className="text-[10px] flex items-center gap-2 p-2 hover:bg-white/50 cursor-pointer transition-colors"
+                  className="text-xs flex items-center gap-2 p-2 hover:bg-white/50 cursor-pointer transition-colors"
                   onMouseEnter={() => setHoveredAlbum({ id: 'all', title: 'All Tracks', tracks: tracks })}
                 >
                   <div className="w-6 h-6 rounded bg-muted flex items-center justify-center flex-shrink-0">
@@ -407,7 +407,7 @@ export const HeaderMusicPlayer = ({ className = "", isExpanded = false, onToggle
                       <div
                         key={track.id}
                         onClick={() => handleTrackSelect(track)}
-                        className="text-[10px] p-2 hover:bg-white/50 cursor-pointer transition-colors border-b border-gray-100/50 last:border-b-0"
+                        className="text-xs p-2 hover:bg-white/50 cursor-pointer transition-colors border-b border-gray-100/50 last:border-b-0"
                       >
                         <div className="flex flex-col">
                           <span className="font-medium">{track.title}</span>

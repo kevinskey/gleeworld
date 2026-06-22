@@ -148,13 +148,13 @@ export const BusTripAnimation: React.FC<BusTripAnimationProps> = ({ cities, tour
         {/* City labels - from and to */}
         <div className="flex justify-between items-end mb-2">
           <div className="text-left max-w-[40%]">
-            <p className="text-[10px] text-foreground/50 uppercase tracking-wide">From</p>
+            <p className="text-xs text-foreground/50 uppercase tracking-wide">From</p>
             <p className="text-xs font-bold text-foreground truncate">
               {sortedCities[0].city_name}
             </p>
           </div>
           <div className="text-right max-w-[40%]">
-            <p className="text-[10px] text-foreground/50 uppercase tracking-wide">To</p>
+            <p className="text-xs text-foreground/50 uppercase tracking-wide">To</p>
             <p className="text-xs font-bold text-foreground truncate">
               {sortedCities[sortedCities.length - 1].city_name}
             </p>

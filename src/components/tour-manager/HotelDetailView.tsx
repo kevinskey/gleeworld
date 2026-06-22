@@ -380,7 +380,7 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
                       <div className="flex items-center gap-2 min-w-0">
                         <Bed className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                         <span className="truncate">Room {room.room_number}</span>
-                        <Badge variant="outline" className="text-[10px] px-1 h-4 capitalize">{room.room_type}</Badge>
+                        <Badge variant="outline" className="text-xs px-1 h-4 capitalize">{room.room_type}</Badge>
                       </div>
                       <span className="text-muted-foreground shrink-0">
                         {room.occupantCount}/{room.max_occupants}

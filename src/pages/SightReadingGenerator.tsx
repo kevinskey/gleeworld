@@ -1,13 +1,12 @@
 import React from 'react';
 import { SightSingingStudio } from '@/components/sight-singing/SightSingingStudio';
-import { UniversalHeader } from '@/components/layout/UniversalHeader';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SightReadingGenerator: React.FC = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <UniversalHeader />
+    <DashboardShell>
       <SightSingingStudio />
-    </div>
+    </DashboardShell>
   );
 };
 

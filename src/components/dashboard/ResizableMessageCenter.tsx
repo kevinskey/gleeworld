@@ -250,13 +250,13 @@ export const ResizableMessageCenter = ({
             return <div key={msg.id} className={`flex gap-1.5 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
                       <Avatar className="h-7 w-7 flex-shrink-0">
                         <AvatarImage src={msg.gw_profiles?.avatar_url} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
                       <div className={`flex-1 max-w-[80%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
                         <div className={`flex items-baseline gap-1 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                          <span className="text-[11px] font-semibold">{senderName}</span>
+                          <span className="text-sm font-semibold">{senderName}</span>
                           <span className="text-[9px] text-muted-foreground">
                             {formatDistanceToNow(new Date(msg.created_at), {
                       addSuffix: true

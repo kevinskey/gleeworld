@@ -205,7 +205,7 @@ export const ModuleVideosModal: React.FC<ModuleVideosModalProps> = ({
                         {/* TikTok badge overlay */}
                         {isTikTok && (
                           <div className="absolute top-1 left-1">
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-black/70 text-white border-0">
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-black/70 text-white border-0">
                               TikTok
                             </Badge>
                           </div>

@@ -8,6 +8,7 @@ import { Volume2, VolumeX, X, Maximize2, Minimize2, GripHorizontal } from 'lucid
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { WebAudioSynth, SYNTH_INSTRUMENTS } from '@/utils/webAudioSynth';
 import { forceUnlockAudio, getSharedAudioContext, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
+import { holdPianoNote, preloadPianoSampler, isPianoSamplerLoaded } from '@/lib/audioTools/pianoSampler';
 
 interface DockablePianoProps {
   onClose: () => void;
@@ -99,6 +100,14 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const synthRef = useRef<WebAudioSynth | null>(null);
+  // Per-key release functions for the Salamander Grand Piano sampler. We
+  // route the "piano" instrument through real samples; every other voice
+  // (organ, harpsichord, etc.) keeps the WebAudioSynth oscillator path.
+  const pianoReleaseRef = useRef<Map<string, () => void>>(new Map());
+  // Kick off the sample download as soon as the keyboard is mounted so the
+  // first key press has a chance to use real samples instead of the
+  // PolySynth fallback. Silent failure — fallback handles missing samples.
+  useEffect(() => { preloadPianoSampler().catch(() => {}); }, []);
 
   // Setup mobile audio unlock
   useEffect(() => {
@@ -135,18 +144,33 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
     forceUnlockAudio();
     const ctx = getSharedAudioContext();
     audioContextRef.current = ctx;
-    
+
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
-    
+
+    // Sampled piano path: route through Salamander via Tone.js. Other
+    // instruments (organ, harpsichord, strings) stay on the WebAudioSynth
+    // oscillator path so behavior is unchanged for them.
+    if (selectedInstrument === 'piano') {
+      const vel = Math.max(0.1, Math.min(1, velocity / 127));
+      holdPianoNote(noteName, vel)
+        .then((releaseFn) => {
+          pianoReleaseRef.current.set(noteName, releaseFn);
+        })
+        .catch((err) => console.warn('🎹 sampler note failed:', err));
+      setActiveNotes(prev => new Set(prev).add(noteName));
+      if (!audioUnlocked) setAudioUnlocked(true);
+      return;
+    }
+
     if (!synthRef.current) {
       synthRef.current = new WebAudioSynth(ctx);
       synthRef.current.setInstrument(selectedInstrument);
       synthRef.current.setVolume(isMuted ? 0 : volume[0]);
       setSynthReady(true);
     }
-    
+
     try {
       synthRef.current.playNote(noteName, frequency, velocity);
       setActiveNotes(prev => new Set(prev).add(noteName));
@@ -157,6 +181,12 @@ export const DockablePiano: React.FC<DockablePianoProps> = ({ onClose, className
   }, [selectedInstrument, isMuted, volume, audioUnlocked]);
 
   const stopNote = useCallback((noteName: string) => {
+    // Release the sampled piano note if one was holding it.
+    const release = pianoReleaseRef.current.get(noteName);
+    if (release) {
+      release();
+      pianoReleaseRef.current.delete(noteName);
+    }
     if (synthRef.current) {
       synthRef.current.stopNote(noteName);
     }

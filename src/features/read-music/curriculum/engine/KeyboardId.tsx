@@ -44,7 +44,7 @@ export default function KeyboardId({ targetPc, chosenPc, onSelect }: Props) {
           key={k.pc}
           disabled={answered}
           onClick={() => onSelect(k.pc)}
-          className={`absolute top-0 z-10 rounded-b-md border border-gray-800 flex items-end justify-center pb-1 text-[10px] font-semibold text-white transition-colors ${keyClass(k.pc, true)}`}
+          className={`absolute top-0 z-10 rounded-b-md border border-gray-800 flex items-end justify-center pb-1 text-xs font-semibold text-white transition-colors ${keyClass(k.pc, true)}`}
           style={{ left: (k.after + 1) * whiteW - 14, width: 28, height: 92 }}
         >
           {answered ? k.label : ''}

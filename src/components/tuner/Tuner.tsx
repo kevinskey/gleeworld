@@ -143,7 +143,7 @@ export const Tuner: React.FC<{ className?: string }>
   return (
     <div className={`bg-background border border-border rounded-lg p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-sm font-medium">Tuner</div>
+        <div className="text-sm font-medium">Guitar Tuner</div>
         <button
           onClick={isListening ? stop : start}
           className={`inline-flex items-center gap-2 text-xs px-3 py-1 rounded-md border transition-colors ${
@@ -171,7 +171,7 @@ export const Tuner: React.FC<{ className?: string }>
             <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[18px] border-l-transparent border-r-transparent border-b-primary" />
           </div>
           {/* labels */}
-          <div className="absolute inset-x-0 bottom-0 text-[10px] text-muted-foreground flex justify-between px-4">
+          <div className="absolute inset-x-0 bottom-0 text-xs text-muted-foreground flex justify-between px-4">
             <span>-50¢</span>
             <span>0¢</span>
             <span>+50¢</span>

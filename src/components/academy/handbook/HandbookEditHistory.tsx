@@ -92,11 +92,11 @@ export const HandbookEditHistory: React.FC<HandbookEditHistoryProps> = ({
                           <span className="truncate max-w-[120px]">{log.editor_name}</span>
                         </div>
                         {log.editor_role && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0">
                             {log.editor_role}
                           </Badge>
                         )}
-                        <span className="text-[10px] text-muted-foreground ml-auto">
+                        <span className="text-xs text-muted-foreground ml-auto">
                           {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })}
                         </span>
                       </div>

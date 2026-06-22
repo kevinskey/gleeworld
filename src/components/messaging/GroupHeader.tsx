@@ -120,7 +120,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
         
         <Avatar className="h-7 w-7 md:h-10 md:w-10 flex-shrink-0 border-2 border-white/30">
           <AvatarImage src={groupAvatar} />
-          <AvatarFallback className="bg-white/20 text-primary-foreground font-medium text-[10px] md:text-sm">
+          <AvatarFallback className="bg-white/20 text-primary-foreground font-medium text-xs md:text-sm">
             {groupInitials}
           </AvatarFallback>
         </Avatar>
@@ -139,7 +139,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
             <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
             <span className="hidden sm:inline text-xs md:text-sm font-medium">Polls</span>
             {unvotedCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 bg-red-500 text-white h-5 min-w-5 px-1.5 text-[10px] font-bold rounded-full animate-pulse">
+              <Badge className="absolute -top-1 -right-1 bg-red-500 text-white h-5 min-w-5 px-1.5 text-xs font-bold rounded-full animate-pulse">
                 {unvotedCount}
               </Badge>
             )}

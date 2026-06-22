@@ -13,6 +13,7 @@ import { Plus, Trash2, Settings2, Image, Youtube, ShoppingBag, Calendar, Megapho
 import { toast } from 'sonner';
 import type { SliderWithSlides, SliderType, HeightPreset, TransitionEffect, GapSize } from '@/types/universal-slider';
 import { SlideManager } from './SlideManager';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 const SLIDER_TYPE_OPTIONS: { value: SliderType; label: string; icon: React.ReactNode }[] = [
   { value: 'custom', label: 'Custom', icon: <Sparkles className="h-3 w-3" /> },
@@ -53,7 +54,6 @@ export const SliderManager: React.FC = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete "${name}"? This will also delete all slides.`)) return;
     try {
       await deleteSlider.mutateAsync(id);
       toast.success('Slider deleted');
@@ -350,10 +350,17 @@ const SliderRow: React.FC<{
                   <Copy className="h-3 w-3 mr-1" />
                   Duplicate
                 </Button>
-                <Button variant="destructive" size="sm" className="text-xs h-7" onClick={onDelete}>
+                <ConfirmDeleteButton
+                  confirmKey="delete-slider"
+                  title={`Delete "${slider.name}"?`}
+                  description="This will also delete all slides in this slider."
+                  onConfirm={onDelete}
+                  ariaLabel="Delete slider"
+                  className="inline-flex items-center justify-center rounded-md text-xs h-7 px-3 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
                   <Trash2 className="h-3 w-3 mr-1" />
                   Delete
-                </Button>
+                </ConfirmDeleteButton>
               </div>
             </div>
           </TabsContent>

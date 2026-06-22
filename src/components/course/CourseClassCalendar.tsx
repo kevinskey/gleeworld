@@ -18,6 +18,7 @@ import { Calendar as CalendarIcon, Plus, QrCode, Users, Clock, MapPin, ChevronLe
 import { Switch } from '@/components/ui/switch';
 import { CONFIRMED_SCHEDULES } from '@/utils/updateCourseMeetingPatterns';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addHours, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
 import conductingImage from '@/assets/conducting-class-event.jpg';
@@ -842,7 +843,6 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
 
   // Delete session
   const deleteSession = async (sessionId: string) => {
-    if (!confirm('Are you sure you want to delete this class session?')) return;
     try {
       const {
         error
@@ -1143,7 +1143,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                           {dayCampusEvents.slice(0, 1).map(event => (
                             <div 
                               key={event.id} 
-                              className="text-[9px] sm:text-[10px] font-medium bg-amber-200 dark:bg-amber-800 rounded px-1 py-0.5 truncate text-amber-900 dark:text-amber-100"
+                              className="text-[9px] sm:text-xs font-medium bg-amber-200 dark:bg-amber-800 rounded px-1 py-0.5 truncate text-amber-900 dark:text-amber-100"
                             >
                               {event.title}
                             </div>
@@ -1153,7 +1153,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                             return (
                               <div 
                                 key={session.id} 
-                                className="text-[9px] sm:text-[10px] font-medium bg-primary text-primary-foreground rounded px-1 py-0.5 truncate flex items-center gap-0.5"
+                                className="text-[9px] sm:text-xs font-medium bg-primary text-primary-foreground rounded px-1 py-0.5 truncate flex items-center gap-0.5"
                               >
                                 <typeConfig.icon className="h-2.5 w-2.5 flex-shrink-0" />
                                 <span className="truncate">{session.title}</span>
@@ -1209,7 +1209,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                         )}
                       >
                         {isHoliday && (
-                          <div className="flex items-center gap-1 text-amber-600 text-[10px] font-medium mb-1">
+                          <div className="flex items-center gap-1 text-amber-600 text-xs font-medium mb-1">
                             <AlertCircle className="h-3 w-3" />
                             Holiday
                           </div>
@@ -1218,7 +1218,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                           {dayCampusEvents.slice(0, 2).map(event => (
                             <div 
                               key={event.id} 
-                              className="text-[10px] sm:text-xs font-medium bg-amber-200 dark:bg-amber-800 rounded px-1.5 py-1 truncate text-amber-900 dark:text-amber-100"
+                              className="text-xs sm:text-xs font-medium bg-amber-200 dark:bg-amber-800 rounded px-1.5 py-1 truncate text-amber-900 dark:text-amber-100"
                             >
                               {event.title}
                             </div>
@@ -1228,7 +1228,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                             return (
                               <div 
                                 key={session.id} 
-                                className="text-[10px] sm:text-xs font-medium bg-primary text-primary-foreground rounded px-1.5 py-1"
+                                className="text-xs sm:text-xs font-medium bg-primary text-primary-foreground rounded px-1.5 py-1"
                               >
                                 <div className="flex items-center gap-1">
                                   <typeConfig.icon className="h-3 w-3 flex-shrink-0" />
@@ -1241,7 +1241,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                             );
                           })}
                           {daySessions.length === 0 && dayCampusEvents.length === 0 && !isHoliday && (
-                            <div className="text-[10px] text-center py-2" style={{ color: '#64748b' }}>No sessions</div>
+                            <div className="text-xs text-center py-2" style={{ color: '#64748b' }}>No sessions</div>
                           )}
                           {daySessions.length + dayCampusEvents.length > 3 && (
                             <div className="text-[9px] text-muted-foreground font-medium px-1">
@@ -1322,9 +1322,16 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                               <QrCode className="h-4 w-4 mr-2" />
                                               QR Attendance
                                             </Button>
-                                            <Button size="sm" variant="ghost" onClick={() => deleteSession(session.id)} className="text-destructive">
+                                            <ConfirmDeleteButton
+                                              confirmKey="delete-class-session"
+                                              title="Delete this class session?"
+                                              description="Attendance records for this session will be removed."
+                                              onConfirm={() => deleteSession(session.id)}
+                                              ariaLabel="Delete session"
+                                              className="inline-flex items-center justify-center rounded-md h-9 w-9 text-destructive hover:bg-muted"
+                                            >
                                               <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            </ConfirmDeleteButton>
                                           </div>}
                                       </div>
                                     </div>;
@@ -1427,9 +1434,16 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                   <QrCode className="h-4 w-4 mr-2" />
                                   QR Attendance
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => deleteSession(session.id)} className="text-destructive">
+                                <ConfirmDeleteButton
+                                  confirmKey="delete-class-session"
+                                  title="Delete this class session?"
+                                  description="Attendance records for this session will be removed."
+                                  onConfirm={() => deleteSession(session.id)}
+                                  ariaLabel="Delete session"
+                                  className="inline-flex items-center justify-center rounded-md h-9 w-9 text-destructive hover:bg-muted"
+                                >
                                   <Trash2 className="h-4 w-4" />
-                                </Button>
+                                </ConfirmDeleteButton>
                               </div>}
                           </div>
                         </div>;
@@ -1612,26 +1626,26 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                         )}
                       >
                         {isHoliday && (
-                          <div className="flex items-center gap-1 text-red-600 text-[10px] mb-1">
+                          <div className="flex items-center gap-1 text-red-600 text-xs mb-1">
                             <AlertCircle className="h-3 w-3" />
                             Holiday
                           </div>
                         )}
                         <div className="space-y-0.5 overflow-hidden">
                           {academicEvent && (
-                            <div className="text-[10px] bg-amber-200 text-amber-800 rounded px-1 py-0.5 truncate">
+                            <div className="text-xs bg-amber-200 text-amber-800 rounded px-1 py-0.5 truncate">
                               {academicEvent.title}
                             </div>
                           )}
                           {dayCampusEvents.slice(0, 2).map(event => (
-                            <div key={event.id} className="text-[10px] bg-amber-100 rounded px-1 py-0.5 truncate text-amber-900">
+                            <div key={event.id} className="text-xs bg-amber-100 rounded px-1 py-0.5 truncate text-amber-900">
                               {event.title}
                             </div>
                           ))}
                           {daySessions.slice(0, 3).map(session => {
                             const typeConfig = getSessionTypeConfig(session.session_type);
                             return (
-                              <div key={session.id} className="text-[10px] bg-primary/10 rounded px-1 py-0.5">
+                              <div key={session.id} className="text-xs bg-primary/10 rounded px-1 py-0.5">
                                 <div className="flex items-center gap-0.5 font-medium text-primary">
                                   <typeConfig.icon className="h-2.5 w-2.5 flex-shrink-0" />
                                   <span className="truncate">{session.title}</span>
@@ -1643,7 +1657,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                             );
                           })}
                           {daySessions.length === 0 && dayCampusEvents.length === 0 && !academicEvent && !isHoliday && (
-                            <div className="text-[10px] text-center py-2 text-muted-foreground">No events</div>
+                            <div className="text-xs text-center py-2 text-muted-foreground">No events</div>
                           )}
                           {daySessions.length + dayCampusEvents.length > 3 && (
                             <div className="text-[9px] text-muted-foreground px-1">

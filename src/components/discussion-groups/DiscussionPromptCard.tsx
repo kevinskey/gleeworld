@@ -119,7 +119,7 @@ export const DiscussionPromptCard: React.FC<DiscussionPromptCardProps> = ({
                   )}
                 >
                   <span className="truncate max-w-[80px]">{phase.label}</span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {format(phase.deadline, 'MMM d')}
                   </span>
                 </div>

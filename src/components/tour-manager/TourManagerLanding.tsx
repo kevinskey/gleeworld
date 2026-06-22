@@ -15,6 +15,7 @@ import { TourStopDetailDialog, type TourStopFull } from './TourStopDetailDialog'
 import { TourStopEditForm } from './TourStopEditForm';
 import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
 import { exportItineraryPdf, exportRosterPdf } from '@/utils/tourPdfExport';
+import { useTourCourseId } from './TourCourseContext';
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -50,6 +51,7 @@ export const TourManagerLanding = ({
   stats
 }: TourManagerLandingProps) => {
   const navigate = useNavigate();
+  const tourCourseId = useTourCourseId();
   const [contractTourDates, setContractTourDates] = useState<ContractTourDate[]>([]);
   const [tourTitle, setTourTitle] = useState<string | null>(null);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
@@ -79,12 +81,13 @@ export const TourManagerLanding = ({
       if (data) setTourEvents(data as TourStopFull[]);
     };
     const fetchTourName = async () => {
-      const { data } = await supabase
+      let q = supabase
         .from('gw_tours')
         .select('name')
         .eq('status', 'planning')
-        .limit(1)
-        .single();
+        .limit(1);
+      if (tourCourseId) q = q.eq('course_id', tourCourseId);
+      const { data } = await q.maybeSingle();
       if (data) setTourTitle(data.name);
     };
     const fetchRoster = async () => {
@@ -299,7 +302,7 @@ export const TourManagerLanding = ({
               const isToday = isSameDay(day, new Date());
               return (
                 <div key={day.toISOString()} className="flex flex-col items-center">
-                  <span className="text-[10px] uppercase text-muted-foreground font-medium">
+                  <span className="text-xs uppercase text-muted-foreground font-medium">
                     {format(day, 'EEE')}
                   </span>
                   <div className={cn(
@@ -338,7 +341,7 @@ export const TourManagerLanding = ({
                     <div className="w-1 h-8 rounded-full bg-primary flex-shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium truncate text-foreground">{event.title}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {format(new Date(event.start_date), 'EEE, MMM d · h:mm a')}
                         {event.venue_name && ` · ${event.venue_name}`}
                       </p>
@@ -413,7 +416,7 @@ export const TourManagerLanding = ({
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <MapPinned className="h-4 w-4 text-primary" />
                   Tour Itinerary
-                  <Badge variant="secondary" className="text-[10px] ml-1">{tourEvents.length} stops</Badge>
+                  <Badge variant="secondary" className="text-xs ml-1">{tourEvents.length} stops</Badge>
                 </CardTitle>
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => exportItineraryPdf(tourEvents, tourTitle || undefined)}>
@@ -447,7 +450,7 @@ export const TourManagerLanding = ({
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-semibold text-foreground">{cityKey}</p>
-                                <p className="text-[10px] text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                   {format(earliestDate, 'MMM d')}
                                   {latestDate && ` – ${format(latestDate, 'MMM d')}`}
                                   {' · '}{cityEvents.length} event{cityEvents.length !== 1 ? 's' : ''}
@@ -486,7 +489,7 @@ export const TourManagerLanding = ({
                                     <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5", isEventToday ? "bg-primary animate-pulse" : dotColor)} />
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className="text-[10px] font-medium text-muted-foreground">
+                                        <span className="text-xs font-medium text-muted-foreground">
                                           {format(eventDate, 'EEE, MMM d')}
                                         </span>
                                         {isEventToday && <Badge className="text-[8px] h-4 px-1 bg-primary">Today</Badge>}
@@ -497,33 +500,33 @@ export const TourManagerLanding = ({
                                       <p className="text-xs font-medium text-foreground">{event.title}</p>
                                       {/* Show full details */}
                                       {event.venue_name && (
-                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 mt-0.5">
+                                        <p className="text-xs text-muted-foreground flex items-center gap-0.5 mt-0.5">
                                           <Building2 className="h-2.5 w-2.5 flex-shrink-0" /> {event.venue_name}
                                         </p>
                                       )}
                                       {(event.concert_time || event.arrival_time) && (
-                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                        <p className="text-xs text-muted-foreground flex items-center gap-0.5">
                                           <Clock className="h-2.5 w-2.5 flex-shrink-0" />
                                           {event.concert_time ? `Concert: ${event.concert_time}` : `Arrival: ${event.arrival_time}`}
                                         </p>
                                       )}
                                       {event.host_name && (
-                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                        <p className="text-xs text-muted-foreground flex items-center gap-0.5">
                                           <Users className="h-2.5 w-2.5 flex-shrink-0" /> Host: {event.host_name}
                                         </p>
                                       )}
                                       {event.lodging_name && (
-                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                        <p className="text-xs text-muted-foreground flex items-center gap-0.5">
                                           <Hotel className="h-2.5 w-2.5 flex-shrink-0" /> {event.lodging_name}
                                         </p>
                                       )}
                                       {event.meal_info && (
-                                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                        <p className="text-xs text-muted-foreground flex items-center gap-0.5">
                                           🍽️ {event.meal_info}
                                         </p>
                                       )}
                                       {event.description && (
-                                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{event.description}</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{event.description}</p>
                                       )}
                                     </div>
                                   </div>
@@ -550,7 +553,7 @@ export const TourManagerLanding = ({
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
                   Tour Roster
-                  <Badge variant="secondary" className="text-[10px] ml-1">{rosterMembers.length}</Badge>
+                  <Badge variant="secondary" className="text-xs ml-1">{rosterMembers.length}</Badge>
                 </CardTitle>
                 <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", rosterOpen && "rotate-180")} />
               </div>
@@ -568,7 +571,7 @@ export const TourManagerLanding = ({
                     if (members.length === 0) return null;
                     return (
                       <div key={part} className="mb-3 last:mb-0">
-                        <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1.5">{part} · {members.length}</p>
+                        <p className="text-xs font-semibold uppercase text-muted-foreground mb-1.5">{part} · {members.length}</p>
                         <div className="grid grid-cols-2 gap-1">
                           {members.map(m => (
                             <div key={m.id} className="flex items-center gap-1.5 p-1 rounded-md">
@@ -590,7 +593,7 @@ export const TourManagerLanding = ({
                     if (unassigned.length === 0) return null;
                     return (
                       <div className="mb-3 last:mb-0">
-                        <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1.5">Unassigned · {unassigned.length}</p>
+                        <p className="text-xs font-semibold uppercase text-muted-foreground mb-1.5">Unassigned · {unassigned.length}</p>
                         <div className="grid grid-cols-2 gap-1">
                           {unassigned.map(m => (
                             <div key={m.id} className="flex items-center gap-1.5 p-1 rounded-md">
@@ -632,7 +635,7 @@ export const TourManagerLanding = ({
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-primary" />
                   Tour Hosts
-                  <Badge variant="secondary" className="text-[10px] ml-1">{hosts.length}</Badge>
+                  <Badge variant="secondary" className="text-xs ml-1">{hosts.length}</Badge>
                 </CardTitle>
                 <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", hostsOpen && "rotate-180")} />
               </div>
@@ -651,21 +654,21 @@ export const TourManagerLanding = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium text-foreground">{host.organization_name}</p>
-                        <p className="text-[10px] text-muted-foreground">{host.contact_name}</p>
+                        <p className="text-xs text-muted-foreground">{host.contact_name}</p>
                         <div className="flex items-center gap-3 mt-0.5">
                           {host.contact_phone && (
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                               <Phone className="h-2.5 w-2.5" /> {host.contact_phone}
                             </span>
                           )}
                           {host.city && (
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                               <MapPin className="h-2.5 w-2.5" /> {host.city}{host.state ? `, ${host.state}` : ''}
                             </span>
                           )}
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[10px] flex-shrink-0 capitalize">{host.status}</Badge>
+                      <Badge variant="outline" className="text-xs flex-shrink-0 capitalize">{host.status}</Badge>
                     </div>
                   ))}
                   <Button variant="ghost" size="sm" className="w-full mt-1 text-xs" onClick={() => onNavigate('hosts')}>
@@ -687,7 +690,7 @@ export const TourManagerLanding = ({
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <FileCheck className="h-4 w-4 text-primary" />
                   Contracts
-                  <Badge variant="secondary" className="text-[10px] ml-1">{contracts.length}</Badge>
+                  <Badge variant="secondary" className="text-xs ml-1">{contracts.length}</Badge>
                 </CardTitle>
                 <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", contractsOpen && "rotate-180")} />
               </div>
@@ -707,7 +710,7 @@ export const TourManagerLanding = ({
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium text-foreground truncate">{contract.title}</p>
                       </div>
-                      <Badge variant={contract.status === 'completed' ? 'default' : 'outline'} className="text-[10px] flex-shrink-0 capitalize">
+                      <Badge variant={contract.status === 'completed' ? 'default' : 'outline'} className="text-xs flex-shrink-0 capitalize">
                         {contract.status}
                       </Badge>
                     </div>
@@ -731,7 +734,7 @@ export const TourManagerLanding = ({
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Wallet className="h-4 w-4 text-primary" />
                   Tour Budgets
-                  <Badge variant="secondary" className="text-[10px] ml-1">{budgets.length}</Badge>
+                  <Badge variant="secondary" className="text-xs ml-1">{budgets.length}</Badge>
                 </CardTitle>
                 <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", budgetsOpen && "rotate-180")} />
               </div>
@@ -743,7 +746,7 @@ export const TourManagerLanding = ({
                 <div className="text-center py-4">
                   <Wallet className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
                   <p className="text-sm text-muted-foreground">No budgets created yet</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">Add a main tour budget and sub-budgets for expenses</p>
+                  <p className="text-xs text-muted-foreground mt-1">Add a main tour budget and sub-budgets for expenses</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -762,17 +765,17 @@ export const TourManagerLanding = ({
                             <DollarSign className="h-4 w-4 text-primary" />
                             <p className="text-sm font-semibold text-foreground">{budget.title}</p>
                           </div>
-                          <Badge variant={budget.status === 'active' ? 'default' : 'outline'} className="text-[10px] capitalize">
+                          <Badge variant={budget.status === 'active' ? 'default' : 'outline'} className="text-xs capitalize">
                             {budget.status}
                           </Badge>
                         </div>
                         {budget.description && (
-                          <p className="text-[10px] text-muted-foreground mb-2">{budget.description}</p>
+                          <p className="text-xs text-muted-foreground mb-2">{budget.description}</p>
                         )}
 
                         {/* Budget progress bar */}
                         <div className="mb-2">
-                          <div className="flex justify-between text-[10px] mb-1">
+                          <div className="flex justify-between text-xs mb-1">
                             <span className="text-muted-foreground">Spent: ${spent.toLocaleString()}</span>
                             <span className="text-muted-foreground">Total: ${total.toLocaleString()}</span>
                           </div>
@@ -782,7 +785,7 @@ export const TourManagerLanding = ({
                               style={{ width: `${percentUsed}%` }}
                             />
                           </div>
-                          <div className="flex justify-between text-[10px] mt-1">
+                          <div className="flex justify-between text-xs mt-1">
                             <span className={cn("font-medium", isOverBudget ? "text-destructive" : "text-foreground")}>
                               {isOverBudget ? `Over by $${Math.abs(remaining).toLocaleString()}` : `$${remaining.toLocaleString()} remaining`}
                             </span>
@@ -793,7 +796,7 @@ export const TourManagerLanding = ({
                         {/* Sub-budget categories */}
                         {categories.length > 0 && (
                           <div className="mt-2 pt-2 border-t space-y-1.5">
-                            <p className="text-[10px] font-semibold uppercase text-muted-foreground">Sub-Budgets</p>
+                            <p className="text-xs font-semibold uppercase text-muted-foreground">Sub-Budgets</p>
                             {categories.map(cat => {
                               const catSpent = cat.spent_amount || 0;
                               const catTotal = cat.allocated_amount || 1;
@@ -801,7 +804,7 @@ export const TourManagerLanding = ({
                               return (
                                 <div key={cat.id} className="flex items-center gap-2">
                                   <div className="min-w-0 flex-1">
-                                    <div className="flex justify-between text-[10px]">
+                                    <div className="flex justify-between text-xs">
                                       <span className="text-foreground font-medium truncate">{cat.name}</span>
                                       <span className="text-muted-foreground">${catSpent.toLocaleString()} / ${catTotal.toLocaleString()}</span>
                                     </div>
@@ -816,7 +819,7 @@ export const TourManagerLanding = ({
                         )}
 
                         {/* Date range */}
-                        <div className="mt-2 pt-2 border-t flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <div className="mt-2 pt-2 border-t flex items-center gap-2 text-xs text-muted-foreground">
                           <CalendarDays className="h-3 w-3" />
                           {format(new Date(budget.start_date), 'MMM d, yyyy')}
                           {budget.end_date && ` – ${format(new Date(budget.end_date), 'MMM d, yyyy')}`}
@@ -843,7 +846,7 @@ export const TourManagerLanding = ({
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Bus className="h-4 w-4 text-primary" />
                   Bus Company
-                  {busCompanies.length > 0 && <Badge variant="secondary" className="text-[10px] ml-1">{busCompanies.length}</Badge>}
+                  {busCompanies.length > 0 && <Badge variant="secondary" className="text-xs ml-1">{busCompanies.length}</Badge>}
                 </CardTitle>
                 <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", busOpen && "rotate-180")} />
               </div>
@@ -855,7 +858,7 @@ export const TourManagerLanding = ({
                 <div className="text-center py-4">
                   <Bus className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
                   <p className="text-sm text-muted-foreground">No bus company added yet</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">Add your contracted bus company details</p>
+                  <p className="text-xs text-muted-foreground mt-1">Add your contracted bus company details</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -865,33 +868,33 @@ export const TourManagerLanding = ({
                         <Bus className="h-4 w-4 text-primary" />
                         <p className="text-sm font-semibold text-foreground">{bus.company_name}</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
                         {bus.contact_name && (
                           <div>
-                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Contact</p>
+                            <p className="text-muted-foreground text-xs uppercase font-medium">Contact</p>
                             <p className="text-foreground">{bus.contact_name}</p>
                           </div>
                         )}
                         {bus.contact_phone && (
                           <div>
-                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Phone</p>
+                            <p className="text-muted-foreground text-xs uppercase font-medium">Phone</p>
                             <p className="text-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> {bus.contact_phone}</p>
                           </div>
                         )}
                         {bus.driver_name ? (
                           <div>
-                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Driver</p>
+                            <p className="text-muted-foreground text-xs uppercase font-medium">Driver</p>
                             <p className="text-foreground">{bus.driver_name}</p>
                           </div>
                         ) : (
                           <div>
-                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Driver</p>
+                            <p className="text-muted-foreground text-xs uppercase font-medium">Driver</p>
                             <p className="text-muted-foreground italic">No driver info</p>
                           </div>
                         )}
                         {bus.driver_phone && (
                           <div>
-                            <p className="text-muted-foreground text-[10px] uppercase font-medium">Driver Phone</p>
+                            <p className="text-muted-foreground text-xs uppercase font-medium">Driver Phone</p>
                             <p className="text-foreground flex items-center gap-1"><Phone className="h-3 w-3" /> {bus.driver_phone}</p>
                           </div>
                         )}
@@ -922,7 +925,7 @@ export const TourManagerLanding = ({
       <div className="hidden md:grid grid-cols-6 gap-2">
         {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
             <div className="text-xl font-bold text-foreground">{section.stat}</div>
-            <div className="text-[10px] capitalize text-slate-950">{section.statLabel}</div>
+            <div className="text-xs capitalize text-slate-950">{section.statLabel}</div>
           </button>)}
       </div>
 
@@ -962,7 +965,7 @@ export const TourManagerLanding = ({
                             <div className="text-lg font-bold leading-none text-foreground">
                               {format(performanceDate, 'd')}
                             </div>
-                            <div className="text-[10px] uppercase text-muted-foreground">
+                            <div className="text-xs uppercase text-muted-foreground">
                               {format(performanceDate, 'MMM')}
                             </div>
                           </> : <div className="text-xs text-muted-foreground">TBD</div>}
@@ -976,7 +979,7 @@ export const TourManagerLanding = ({
                             {meta?.venue_name || location}
                           </p>}
                       </div>
-                      <Badge variant={contract.status === 'completed' ? 'default' : 'outline'} className="text-[10px] flex-shrink-0">
+                      <Badge variant={contract.status === 'completed' ? 'default' : 'outline'} className="text-xs flex-shrink-0">
                         {contract.status === 'completed' ? 'Signed' : contract.status}
                       </Badge>
                     </div>;
@@ -985,7 +988,7 @@ export const TourManagerLanding = ({
             
             {/* Calendar Integration Note */}
             <div className="mt-3 pt-3 border-t">
-              <p className="text-[10px] flex items-center gap-1 text-muted-foreground">
+              <p className="text-xs flex items-center gap-1 text-muted-foreground">
                 <CalendarDays className="h-3 w-3" />
                 Tour dates from signed contracts
               </p>

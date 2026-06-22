@@ -56,7 +56,7 @@ export const CountdownText = ({
       <div className={`flex items-center gap-2 text-xs sm:text-sm font-medium text-card-foreground px-2 sm:px-3 py-1.5 rounded-lg ${className}`}>
         <Calendar className="h-3.5 w-3.5 text-card-foreground/80" />
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-[11px] sm:text-xs">
+          <span className="font-mono text-sm sm:text-xs">
             {timeLeft.days} {timeLeft.days === 1 ? 'day' : 'days'} to {eventName}
           </span>
         </div>

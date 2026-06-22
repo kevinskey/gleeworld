@@ -152,7 +152,7 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
             <p className="text-xs text-white font-semibold tracking-wide truncate">
               {currentTrack?.track_data?.title || 'MUSIC PLAYER'}
             </p>
-            <p className="text-[10px] text-white/60 truncate">
+            <p className="text-xs text-white/60 truncate">
               {currentTrack ? (selectedPlaylist?.title || 'Playlist') : 'Select a track to play'}
             </p>
           </div>
@@ -287,7 +287,7 @@ export const CourseMiniPlayer: React.FC<CourseMiniPlayerProps> = ({
                   {track.track_data?.title || 'Unknown'}
                 </p>
                 {track.track_data?.artist && (
-                  <p className="text-xs sm:text-[10px] text-white/50 truncate">
+                  <p className="text-xs sm:text-xs text-white/50 truncate">
                     {track.track_data.artist}
                   </p>
                 )}

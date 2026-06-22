@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
+// Member Sight Reading Studio — practice-tool surface.
+//
+// Stripped of assignments/grades/instructor scaffolding 2026-06-19 at
+// Kevin's request. This is a personal practice surface now: generate a
+// fresh exercise, run the practice studio with pitch-detection scoring,
+// reach for the pitch pipe to find a starting note, browse reference
+// resources. No assignments-due, no semester grade, no "Current Grade A-"
+// hardcoded placeholders.
+
+import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Music, FileText, Headphones, Target } from 'lucide-react';
-import { AssignmentsList } from './AssignmentsList';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { Music, Music2, Headphones, Sparkles, BookOpen, Play, ArrowRight } from 'lucide-react';
 import { PracticeStudio } from './PracticeStudio';
-import { GradeTracker } from './GradeTracker';
 import { ResourceLibrary } from './ResourceLibrary';
 import { PitchPipe } from '../sight-singing/PitchPipe';
-import { useAssignments } from '@/hooks/useAssignments';
-import { useSemesterGrades } from '@/hooks/useSemesterGrades';
 
 interface MemberSightReadingStudioProps {
   user?: {
@@ -20,114 +26,139 @@ interface MemberSightReadingStudioProps {
   };
 }
 
-export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> = ({ user }) => {
-  const [activeTab, setActiveTab] = useState('assignments');
-  const { assignments, getOverdueAssignments, getUpcomingAssignments } = useAssignments();
-  const { semesterGrade } = useSemesterGrades();
+// Activity log — same localStorage key as the member SightReadingPage,
+// so entries written from either surface show in the other's "Recent
+// activity" panel.
+const ACTIVITY_KEY = 'gw_sight_reading_activity';
+type Activity = {
+  ts: number;
+  kind: 'generated' | 'practiced' | 'theory';
+  label: string;
+};
 
-  const overdueCount = getOverdueAssignments().length;
-  const upcomingCount = getUpcomingAssignments().length;
-  const totalAssignments = assignments.length;
+function readActivity(): Activity[] {
+  try {
+    const raw = localStorage.getItem(ACTIVITY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function formatAge(ts: number): string {
+  const diff = Date.now() - ts;
+  const min = Math.floor(diff / 60_000);
+  const hr  = Math.floor(diff / 3_600_000);
+  const day = Math.floor(diff / 86_400_000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  if (hr < 24) return `${hr}h ago`;
+  if (day < 7) return `${day}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> = ({ user }) => {
+  const [activeTab, setActiveTab] = useState('practice');
+  const [activity, setActivity] = useState<Activity[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => { setActivity(readActivity()); }, []);
+  useEffect(() => {
+    const onFocus = () => setActivity(readActivity());
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
 
   return (
     <div className="w-full page-container">
-      {/* Header */}
       <div className="section-spacing">
+        <div className="flex items-center gap-2 mb-1">
+          <Music2 className="h-5 w-5 text-primary" />
+          <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
+            Practice tool
+          </span>
+        </div>
         <h1 className="page-title-large">Sight Reading Studio</h1>
         <p className="mobile-text-lg text-muted-foreground">
-          Practice sight reading, complete assignments, and track your progress through the semester.
+          Generate exercises, sing them with real-time scoring, and warm up with the pitch pipe.
+          No assignments, no grades — just practice.
         </p>
       </div>
 
-      {/* Quick Stats */}
-      <div className="responsive-grid-4">
-        <Card>
-          <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="mobile-text-lg font-medium">Current Grade</CardTitle>
-            <Target className="touch-target h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="card-compact">
-            <div className="mobile-text-2xl font-bold">
-              {semesterGrade?.letter_grade || 'N/A'}
+      {/* Quick action tiles — generator, practice, theory. */}
+      <div className="responsive-grid-2 md:grid-cols-3 gap-3">
+        <button
+          type="button"
+          onClick={() => navigate('/sight-reading-generator')}
+          className="group text-left p-4 rounded-xl border border-border bg-card hover:border-primary hover:shadow-md transition-all"
+        >
+          <div className="flex items-start gap-3">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+              <Sparkles className="h-5 w-5" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {semesterGrade?.current_grade ? `${semesterGrade.current_grade.toFixed(1)}%` : 'No grades yet'}
-            </p>
-          </CardContent>
-        </Card>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-base">Generate exercise</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Pick a level, key, and time — get a fresh line.
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-1" />
+          </div>
+        </button>
 
-        <Card>
-          <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="mobile-text-lg font-medium">Total Assignments</CardTitle>
-            <FileText className="touch-target h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="card-compact">
-            <div className="mobile-text-2xl font-bold">{totalAssignments}</div>
-            <p className="text-xs text-muted-foreground">This semester</p>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => setActiveTab('practice')}
+          className="group text-left p-4 rounded-xl border border-border bg-card hover:border-primary hover:shadow-md transition-all"
+        >
+          <div className="flex items-start gap-3">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
+              <Play className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-base">Practice studio</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Sing along with pitch detection.
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-1" />
+          </div>
+        </button>
 
-        <Card>
-          <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="mobile-text-lg font-medium">Upcoming</CardTitle>
-            <Calendar className="touch-target h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="card-compact">
-            <div className="mobile-text-2xl font-bold text-blue-600">{upcomingCount}</div>
-            <p className="text-xs text-muted-foreground">Due this week</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="card-header-compact flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="mobile-text-lg font-medium">Overdue</CardTitle>
-            <Calendar className="touch-target h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="card-compact">
-            <div className="mobile-text-2xl font-bold text-red-600">{overdueCount}</div>
-            <p className="text-xs text-muted-foreground">Needs attention</p>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => navigate('/mus-100')}
+          className="group text-left p-4 rounded-xl border border-border bg-card hover:border-primary hover:shadow-md transition-all"
+        >
+          <div className="flex items-start gap-3">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600 shrink-0">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-base">Theory review</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Scales, intervals, key signatures.
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-1" />
+          </div>
+        </button>
       </div>
 
-      {/* Main Content */}
+      {/* Main practice surface: tabs for Practice / Resources / Pitch Pipe. */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="section-spacing">
-        <TabsList className="responsive-grid-2 md:grid-cols-5 gap-0.5 md:gap-1 h-auto p-1">
-          <TabsTrigger value="assignments" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
-            <FileText className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-            <span className="hidden xs:inline">Assignments</span>
-            <span className="xs:hidden">Assign</span>
-            {overdueCount > 0 && (
-              <Badge variant="destructive" className="ml-1 text-xs touch-target">
-                {overdueCount}
-              </Badge>
-            )}
-          </TabsTrigger>
+        <TabsList className="grid grid-cols-3 gap-0.5 md:gap-1 h-auto p-1">
           <TabsTrigger value="practice" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
             <Music className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-            <span className="hidden xs:inline">Practice</span>
-            <span className="xs:hidden">Prac</span>
+            <span>Practice</span>
           </TabsTrigger>
           <TabsTrigger value="resources" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
             <Headphones className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-            <span className="hidden xs:inline">Resources</span>
-            <span className="xs:hidden">Res</span>
-          </TabsTrigger>
-          <TabsTrigger value="grades" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
-            <Target className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-            <span className="hidden xs:inline">Grades</span>
-            <span className="xs:hidden">Grade</span>
+            <span>Resources</span>
           </TabsTrigger>
           <TabsTrigger value="pitch-pipe" className="dropdown-item-compact flex items-center gap-1 md:gap-2">
             <Music className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-            <span className="hidden xs:inline">Pitch Pipe</span>
-            <span className="xs:hidden">Pitch</span>
+            <span>Pitch Pipe</span>
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="assignments" className="section-spacing">
-          <AssignmentsList user={user} />
-        </TabsContent>
 
         <TabsContent value="practice" className="section-spacing">
           <PracticeStudio user={user} />
@@ -137,16 +168,12 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
           <ResourceLibrary user={user} />
         </TabsContent>
 
-        <TabsContent value="grades" className="section-spacing">
-          <GradeTracker user={user} />
-        </TabsContent>
-
         <TabsContent value="pitch-pipe" className="section-spacing">
           <Card>
             <CardHeader className="card-header-compact">
               <CardTitle className="page-header">Pitch Pipe</CardTitle>
               <CardDescription className="mobile-text-lg">
-                Use this virtual pitch pipe to find your starting pitch for sight reading exercises.
+                Find your starting pitch before you sing.
               </CardDescription>
             </CardHeader>
             <CardContent className="card-compact">
@@ -155,6 +182,43 @@ export const MemberSightReadingStudio: React.FC<MemberSightReadingStudioProps> =
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Recent activity — local-only, no DB. */}
+      <div className="section-spacing">
+        <Card>
+          <CardHeader className="card-header-compact">
+            <CardTitle className="mobile-text-lg font-medium">Recent practice</CardTitle>
+            <CardDescription className="text-xs">
+              Last few sessions, stored locally on this device.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="card-compact">
+            {activity.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">
+                No sessions logged yet. Generate an exercise or open the practice studio above.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {activity.slice(0, 8).map((a, idx) => {
+                  const Icon = a.kind === 'generated' ? Sparkles : a.kind === 'practiced' ? Play : BookOpen;
+                  const tint = a.kind === 'generated' ? 'text-primary' : a.kind === 'practiced' ? 'text-emerald-600' : 'text-violet-600';
+                  return (
+                    <li key={`${a.ts}-${idx}`} className="flex items-start gap-2 text-sm">
+                      <Icon className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${tint}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate text-foreground">{a.label}</div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {formatAge(a.ts)}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

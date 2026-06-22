@@ -7,6 +7,8 @@ export interface BrandingSettings {
   short_name: string | null;
   tagline: string | null;
   logo_url: string | null;
+  /** Optional hero image rendered behind the auth page; falls back to the tenant gradient. */
+  auth_background_url: string | null;
   primary_color: string;
   setup_completed: boolean;
 }
@@ -21,6 +23,7 @@ function fallback(): BrandingSettings {
     short_name: TENANT?.shortName ?? null,
     tagline: null,
     logo_url: TENANT?.logoUrl ?? null,
+    auth_background_url: null,
     primary_color: '#150d26',
     setup_completed: false,
   };
@@ -40,11 +43,22 @@ export function useBrandingSettings() {
         q = q.eq('gw_tenants.slug', bootstrapTenantSlug);
       }
       const { data, error } = await q.limit(1).maybeSingle();
+      const fb = fallback();
       if (error) {
         console.warn('[branding] read failed', error.message);
-        return fallback();
+        return fb;
       }
-      return (data as BrandingSettings) || fallback();
+      if (!data) return fb;
+      // Merge: DB row wins for set fields, TENANT bootstrap fills the holes
+      // (org_name/short_name/logo_url often null on freshly provisioned tenants).
+      const row = data as Partial<BrandingSettings>;
+      const merged: BrandingSettings = { ...fb };
+      for (const [k, v] of Object.entries(row)) {
+        if (v !== null && v !== undefined && v !== '') {
+          (merged as Record<string, unknown>)[k] = v;
+        }
+      }
+      return merged;
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,

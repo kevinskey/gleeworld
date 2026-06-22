@@ -3,7 +3,6 @@ import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, LogIn, ArrowLeft, Eye, EyeOff, KeyRound } from 'lucide-react';
@@ -11,13 +10,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import gleeWorldLogoCircle from '@/assets/glee-world-logo-circle.png';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { getOrgName } from '@/lib/orgName';
-// The legacy 2 MB concert photo was the single biggest contributor to the
-// /auth page's slow paint. Replaced with a CSS gradient — same visual feel,
-// zero network bytes.
-const authBackgroundStyle: React.CSSProperties = {
-  background:
-    'linear-gradient(135deg, hsl(220, 60%, 12%) 0%, hsl(265, 50%, 18%) 50%, hsl(290, 45%, 20%) 100%)',
-};
+import { tenantAuthGradient, tenantButtonGradient } from '@/lib/tenantGradient';
+
 export default function AuthPage() {
   const {
     user,
@@ -28,11 +22,29 @@ export default function AuthPage() {
   } = useToast();
   const { settings: branding } = useBrandingSettings();
   const siteName = branding.short_name || branding.org_name || 'GleeWorld';
+  // Auth background gradient derived from the tenant's primary color so
+  // login / signup chrome matches the tenant's brand.
+  // If the tenant has set a hero image for auth, render it behind a dark
+  // overlay so the form stays legible. Otherwise fall back to the
+  // primary-color-derived gradient.
+  const hasAuthImage = !!branding.auth_background_url;
+  const authBackgroundStyle: React.CSSProperties = hasAuthImage
+    ? {
+        backgroundImage: `url(${branding.auth_background_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#0a0518',
+      }
+    : { background: tenantAuthGradient(branding.primary_color) };
+  const buttonGradient = tenantButtonGradient(branding.primary_color);
+  const tenantLogo = branding.logo_url || gleeWorldLogoCircle;
+  const SANS = "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif";
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(searchParams.get('forgot') === 'true');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -161,114 +173,154 @@ export default function AuthPage() {
     return <div className="min-h-screen flex items-center justify-center relative auth-page" style={authBackgroundStyle}>
         <div className="absolute inset-0 bg-black/60" />
         <div className="text-center relative z-10">
-          <img src={gleeWorldLogoCircle} alt="Loading" className="h-12 w-12 mx-auto mb-4 animate-pulse" />
+          <img src={tenantLogo} alt="Loading" className="h-12 w-12 mx-auto mb-4 animate-pulse rounded-full object-contain" />
           <p className="text-white/90 text-lg">Loading...</p>
         </div>
       </div>;
   }
-  return <div className="min-h-screen relative flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] auth-page" style={{
-    ...authBackgroundStyle,
-    paddingLeft: 'max(1rem, env(safe-area-inset-left))',
-    paddingRight: 'max(1rem, env(safe-area-inset-right))'
-  }}>
-      {/* Back Button */}
-      <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="absolute z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300" style={{
-      top: 'max(1.5rem, calc(env(safe-area-inset-top) + 0.5rem))',
-      left: 'max(1.5rem, env(safe-area-inset-left))'
-    }}>
+  const inputClass =
+    "w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-transparent transition";
+  const focusRing: React.CSSProperties = { ['--tw-ring-color' as never]: 'hsl(265, 60%, 60%)' };
+
+  return (
+    <div
+      className="relative flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] auth-page"
+      style={{
+        // 100dvh tracks the dynamic viewport (iOS/iPad WKWebView used to
+        // serve 100vh shorter than the visible area, leaving the body's
+        // solid background bleeding through and "losing" our gradient).
+        minHeight: '100dvh',
+        paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+        paddingRight: 'max(1rem, env(safe-area-inset-right))',
+        fontFamily: SANS,
+      }}
+    >
+      {/* Background layer pinned to the viewport so it never depends on
+          flex sizing or vh math. Sits behind the form card (z-0). */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={authBackgroundStyle}
+        aria-hidden="true"
+      />
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate('/')}
+        className="absolute z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300"
+        style={{
+          top: 'max(1.5rem, calc(env(safe-area-inset-top) + 0.5rem))',
+          left: 'max(1.5rem, env(safe-area-inset-left))',
+        }}
+      >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Home
       </Button>
 
-      {/* Main Content */}
-      <div className="w-full max-w-md relative z-10">
-        
+      <div className="w-full max-w-md relative z-10 sm:translate-x-[200px]">
         {/* Header */}
-        <div className="text-center mb-3 sm:mb-5 md:mb-8">
-          <div className="flex justify-center mb-2 sm:mb-3 md:mb-5">
-            <img src={gleeWorldLogoCircle} alt="GleeWorld.org logo" className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain drop-shadow-2xl" />
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-4">
+            <img
+              src={tenantLogo}
+              alt={`${siteName} logo`}
+              className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-full bg-white/5 p-1 drop-shadow-xl"
+            />
           </div>
-          <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-white mb-1 sm:mb-2 drop-shadow-2xl lg:text-5xl">
+          <h1
+            className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1.5"
+            style={{ fontFamily: SANS, letterSpacing: '-0.02em' }}
+          >
             {siteName}
           </h1>
-          <h2 className="text-sm sm:text-base md:text-xl mb-1 sm:mb-2 md:mb-3 drop-shadow-lg font-serif text-white font-semibold">
-            {isForgotPassword ? 'Reset Your Password' : 'Sign in or Create an account'}
-          </h2>
-          <p className="text-white/80 text-xs sm:text-sm md:text-base drop-shadow-md">
-            {isForgotPassword 
-              ? 'Enter your email to receive a reset link' 
-              : isLogin 
-                ? 'Sign in to access your account' 
-                : 'Join our musical family'}
+          <p className="text-white/85 text-sm sm:text-base">
+            {isForgotPassword
+              ? 'Reset your password'
+              : isLogin
+              ? 'Sign in to access your account'
+              : 'Create an account to get started'}
           </p>
         </div>
 
-        {/* Auth Card */}
-        <Card className="bg-black/40 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 pointer-events-none" />
-          
-          <CardHeader className="relative py-3 sm:py-4 md:py-6">
-            <CardTitle className="flex items-center justify-center text-base sm:text-lg md:text-3xl text-primary">
-              {isForgotPassword ? <>
-                  <KeyRound className="h-5 w-5 mr-2" />
-                  Reset Password
-                </> : isLogin ? <>
-                  <LogIn className="h-5 w-5 mr-2" />
-                  Welcome Back
-                </> : <>
-                  <UserPlus className="h-5 w-5 mr-2" />
-                  Create Account
-                </>}
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent className="relative bg-brand-gradient-deep">
+        {/* Auth Card — semi-opaque so the background scene shows through */}
+        <div className="rounded-3xl bg-white/85 backdrop-blur-md shadow-2xl overflow-hidden border border-white/40">
+          <div className="px-7 sm:px-8 py-7 sm:py-8">
+            <div className="flex items-center justify-center gap-2 mb-6 text-slate-900">
+              {isForgotPassword ? (
+                <>
+                  <KeyRound className="h-5 w-5" />
+                  <span className="text-lg sm:text-xl font-bold" style={{ letterSpacing: '-0.01em' }}>
+                    Reset Password
+                  </span>
+                </>
+              ) : isLogin ? (
+                <>
+                  <LogIn className="h-5 w-5" />
+                  <span className="text-lg sm:text-xl font-bold" style={{ letterSpacing: '-0.01em' }}>
+                    Welcome back
+                  </span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-5 w-5" />
+                  <span className="text-lg sm:text-xl font-bold" style={{ letterSpacing: '-0.01em' }}>
+                    Create account
+                  </span>
+                </>
+              )}
+            </div>
+
             {isForgotPassword ? (
-              // Forgot Password Form
               resetEmailSent ? (
-                <div className="text-center py-4">
-                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <KeyRound className="h-8 w-8 text-green-400" />
+                <div className="text-center py-2">
+                  <div
+                    className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-white"
+                    style={{ background: buttonGradient }}
+                  >
+                    <KeyRound className="h-7 w-7" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Check Your Email</h3>
-                  <p className="text-white/80 text-sm mb-6">
-                    We sent a password reset link to <strong className="text-white">{email}</strong>
+                  <h3 className="text-base font-semibold text-slate-900 mb-1">Check your email</h3>
+                  <p className="text-slate-600 text-sm mb-6">
+                    We sent a reset link to <strong className="text-slate-900">{email}</strong>
                   </p>
-                  <Button 
+                  <button
+                    type="button"
                     onClick={() => {
                       setIsForgotPassword(false);
                       setResetEmailSent(false);
                       navigate('/auth');
                     }}
-                    className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30"
+                    className="w-full inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors"
                   >
-                    Back to Sign In
-                  </Button>
+                    Back to sign in
+                  </button>
                 </div>
               ) : (
-                <form onSubmit={handleForgotPassword} className="space-y-5">
+                <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block text-primary-foreground">
-                      Email Address *
+                    <label htmlFor="forgot-email" className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 block">
+                      Email
                     </label>
-                    <Input 
-                      type="email" 
-                      placeholder="you@example.com" 
-                      value={email} 
-                      onChange={e => setEmail(e.target.value)} 
-                      required 
-                      className="auth-input" 
+                    <Input
+                      id="forgot-email"
+                      name="email"
+                      autoComplete="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className={inputClass}
+                      style={focusRing}
                     />
                   </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-4 sm:py-5 md:py-6 text-sm sm:text-base md:text-lg font-semibold" 
+                  <button
+                    type="submit"
                     disabled={isSubmitting}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.01] disabled:opacity-70 disabled:cursor-not-allowed"
+                    style={{ background: buttonGradient }}
                   >
-                    {isSubmitting ? 'Sending...' : 'Send Reset Link'}
-                  </Button>
-
+                    {isSubmitting ? 'Sending…' : 'Send reset link'}
+                  </button>
                   <div className="text-center">
                     <button
                       type="button"
@@ -276,40 +328,79 @@ export default function AuthPage() {
                         setIsForgotPassword(false);
                         navigate('/auth');
                       }}
-                      className="text-sm text-white/80 hover:text-white underline underline-offset-2 transition-colors"
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline-offset-2 hover:underline transition-colors"
                     >
-                      Back to Sign In
+                      Back to sign in
                     </button>
                   </div>
                 </form>
               )
             ) : (
-              // Login/Signup Form
               <>
-                <form onSubmit={handleAuth} className="space-y-5">
-                  {!isLogin && <div>
-                      <label className="text-sm font-medium text-white/90 mb-2 block">
-                        Full Name *
+                <form onSubmit={handleAuth} className="space-y-4">
+                  {!isLogin && (
+                    <div>
+                      <label htmlFor="auth-name" className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 block">
+                        Full name
                       </label>
-                      <Input type="text" placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} required={!isLogin} className="auth-input" />
-                    </div>}
+                      <Input
+                        id="auth-name"
+                        name="name"
+                        autoComplete="name"
+                        type="text"
+                        placeholder="Your full name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required={!isLogin}
+                        className={inputClass}
+                        style={focusRing}
+                      />
+                    </div>
+                  )}
 
                   <div>
-                    <label className="text-sm font-medium mb-2 block text-primary-foreground">
-                      Email Address *
+                    <label htmlFor="auth-email" className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 block">
+                      Email
                     </label>
-                    <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" />
+                    <Input
+                      id="auth-email"
+                      name="email"
+                      autoComplete={isLogin ? 'username' : 'email'}
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className={inputClass}
+                      style={focusRing}
+                    />
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium mb-2 block text-primary-foreground">
-                      Password *
+                    <label htmlFor="auth-password" className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 block">
+                      Password
                     </label>
                     <div className="relative">
-                      <Input type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required className="auth-input pr-10" />
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-white/60 hover:text-white/80 hover:bg-white/10">
+                      <Input
+                        id="auth-password"
+                        name="password"
+                        autoComplete={isLogin ? 'current-password' : 'new-password'}
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className={`${inputClass} pr-10`}
+                        style={focusRing}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 inline-flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-50 transition-colors"
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
+                      </button>
                     </div>
                     {isLogin && (
                       <div className="text-right mt-2">
@@ -319,7 +410,7 @@ export default function AuthPage() {
                             setIsForgotPassword(true);
                             navigate('/auth?forgot=true');
                           }}
-                          className="text-sm text-white/80 hover:text-white underline underline-offset-2 transition-colors"
+                          className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline-offset-2 hover:underline transition-colors"
                         >
                           Forgot your password?
                         </button>
@@ -327,33 +418,56 @@ export default function AuthPage() {
                     )}
                   </div>
 
-                  <Button type="submit" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-4 sm:py-5 md:py-6 text-sm sm:text-base md:text-lg font-semibold" disabled={isSubmitting}>
-                    {isSubmitting ? isLogin ? 'Signing in...' : 'Creating account...' : isLogin ? 'Sign In' : 'Create Account & Apply'}
-                  </Button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.01] disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                    style={{ background: buttonGradient }}
+                  >
+                    {isSubmitting
+                      ? isLogin
+                        ? 'Signing in…'
+                        : 'Creating account…'
+                      : isLogin
+                      ? 'Sign in'
+                      : 'Create account'}
+                  </button>
                 </form>
 
-                <div className="mt-6 text-center">
-                  <Button variant="link" onClick={() => setIsLogin(!isLogin)} className="text-white/80 hover:text-white text-sm transition-colors duration-300 no-underline">
-                    {isLogin ? "Don't have an account? Create one here" : "Already have an account? Sign in here"}
-                  </Button>
+                <div className="mt-5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                  >
+                    {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                    <span className="underline underline-offset-2">
+                      {isLogin ? 'Create one' : 'Sign in'}
+                    </span>
+                  </button>
                 </div>
 
-                {!isLogin && <div className="mt-6 p-4 bg-white/10 rounded-lg border border-white/20 backdrop-blur-sm">
-                    <p className="text-sm text-white/80">
-                      <strong className="text-white">Becoming a fan:</strong> You&apos;ll get concert announcements, behind-the-scenes news, and access to the fan page. Students are enrolled separately by the program director.
+                {!isLogin && (
+                  <div className="mt-5 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      <strong className="text-slate-900">Becoming a fan:</strong> You'll get concert
+                      announcements and access to the fan page. Students are enrolled separately by the
+                      program director.
                     </p>
-                  </div>}
+                  </div>
+                )}
               </>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-white/60 text-sm">
-            © 2024 {getOrgName()}. All rights reserved.
+        <div className="text-center mt-6">
+          <p className="text-white/60 text-xs">
+            © {new Date().getFullYear()} {getOrgName()}. All rights reserved.
           </p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }

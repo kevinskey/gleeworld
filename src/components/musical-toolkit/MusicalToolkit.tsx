@@ -121,7 +121,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             <Piano className="mr-2 h-4 w-4" /> Piano
           </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, tuner: true })); }}>
-            <Gauge className="mr-2 h-4 w-4" /> Tuner
+            <Gauge className="mr-2 h-4 w-4" /> Guitar Tuner
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -211,7 +211,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
       <Dialog open={open.tuner} onOpenChange={(v) => setOpen((o) => ({ ...o, tuner: v }))}>
         <DialogContent className="sm:max-w-md bg-background border border-border top-[15%] translate-y-0 sm:top-[20%]">
           <DialogHeader>
-            <DialogTitle className="text-base">Instrument Tuner</DialogTitle>
+            <DialogTitle className="text-base">Guitar Tuner</DialogTitle>
           </DialogHeader>
           <Tuner />
         </DialogContent>

@@ -109,7 +109,7 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
-      <div className="grid grid-cols-7 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground border-b border-border">
+      <div className="grid grid-cols-7 text-xs sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground border-b border-border">
         {WEEKDAYS.map((w) => (
           <div key={w} className="px-2 py-2 text-center">{w}</div>
         ))}
@@ -144,14 +144,14 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
                   )}
                 </span>
                 {dayEvents.length > 1 && (
-                  <span className="text-[10px] text-muted-foreground">{dayEvents.length}</span>
+                  <span className="text-xs text-muted-foreground">{dayEvents.length}</span>
                 )}
               </div>
               <div className="mt-1 space-y-0.5">
                 {dayEvents.slice(0, 2).map((ev) => (
                   <div
                     key={ev.id}
-                    className="text-[10px] sm:text-xs rounded px-1 py-0.5 truncate"
+                    className="text-xs sm:text-xs rounded px-1 py-0.5 truncate"
                     title={ev.title}
                     style={{ background: 'var(--site-accent)', color: 'white', opacity: 0.9 }}
                   >
@@ -159,7 +159,7 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
                   </div>
                 ))}
                 {dayEvents.length > 2 && (
-                  <div className="text-[10px] text-muted-foreground px-1">+{dayEvents.length - 2} more</div>
+                  <div className="text-xs text-muted-foreground px-1">+{dayEvents.length - 2} more</div>
                 )}
               </div>
             </div>
@@ -182,11 +182,11 @@ function UpcomingList({ events }: { events: PublicEvent[] }) {
             className="rounded-lg border border-border bg-card p-3 flex gap-3"
           >
             <div className="text-center w-12 shrink-0">
-              <div className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--site-accent)' }}>
+              <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--site-accent)' }}>
                 {d.toLocaleDateString(undefined, { month: 'short' })}
               </div>
               <div className="text-xl font-bold leading-none">{d.getDate()}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-xs text-muted-foreground mt-0.5">
                 {d.toLocaleDateString(undefined, { weekday: 'short' })}
               </div>
             </div>

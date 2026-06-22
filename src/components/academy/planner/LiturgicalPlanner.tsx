@@ -104,7 +104,7 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                 </span>
                 <Badge 
                   variant="secondary" 
-                  className={`text-[10px] px-1.5 py-0 shrink-0 ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : getSeasonColor(week.season)}`}
+                  className={`text-xs px-1.5 py-0 shrink-0 ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : getSeasonColor(week.season)}`}
                 >
                   {week.season || 'Unknown'}
                 </Badge>
@@ -154,7 +154,7 @@ export const LiturgicalPlanner: React.FC<LiturgicalPlannerProps> = ({ isAdmin = 
                   </p>
                 </div>
                 {selectedWeek?.season && (
-                  <Badge className={`${getSeasonColor(selectedWeek.season)} text-[10px] shrink-0`}>
+                  <Badge className={`${getSeasonColor(selectedWeek.season)} text-xs shrink-0`}>
                     {selectedWeek.season}
                   </Badge>
                 )}

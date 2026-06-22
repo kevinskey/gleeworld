@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ResourceViewer } from './ResourceViewer';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface ModuleResource {
   id: string;
@@ -198,8 +199,6 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
   };
 
   const handleDeleteResource = async (id: string) => {
-    if (!confirm('Delete this resource?')) return;
-
     try {
       const { error } = await supabase
         .from('lh100_module_resources')
@@ -478,15 +477,16 @@ const EditableModuleResources: React.FC<EditableModuleResourcesProps> = ({
 
                   {/* Delete */}
                   {user && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => handleDeleteResource(resource.id)}
-                      title="Delete resource"
+                    <ConfirmDeleteButton
+                      confirmKey="delete-module-resource"
+                      title="Delete this resource?"
+                      description="The resource will be unlinked from this module."
+                      onConfirm={() => handleDeleteResource(resource.id)}
+                      ariaLabel="Delete resource"
+                      className="inline-flex items-center justify-center h-8 w-8 rounded-md text-destructive hover:text-destructive hover:bg-muted"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   )}
                 </div>
               </div>

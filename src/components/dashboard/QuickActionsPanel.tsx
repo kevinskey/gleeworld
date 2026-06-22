@@ -102,7 +102,7 @@ const SortableActionItem = ({
         <IconComponent className="h-3 w-3 mr-1.5 text-primary" />
         <div className="flex-1 text-left">
           <div className="font-normal text-popover-foreground">{action.title}</div>
-          <div className="text-[10px] text-popover-foreground/60">{action.description}</div>
+          <div className="text-xs text-popover-foreground/60">{action.description}</div>
         </div>
         <ChevronRight className="h-3 w-3 text-popover-foreground/50" />
       </button>
@@ -279,13 +279,13 @@ export const QuickActionsPanel = ({
               </DndContext> : allActions.map(action => <SortableActionItem key={action.moduleId} action={action} isManaging={false} onActionClick={handleActionClick} onDelete={handleDeleteAction} />)}
             {allActions.length === 0 && <div className="text-center py-4 text-popover-foreground/70">
                 <p className="text-xs mb-1">No quick actions configured</p>
-                <p className="text-[10px]">Click + to add modules</p>
+                <p className="text-xs">Click + to add modules</p>
               </div>}
           </div>
 
           {/* Footer */}
           <div className="px-2 py-1.5 border-t border-white/20">
-            <div className="flex items-center justify-between text-[10px] text-popover-foreground/60">
+            <div className="flex items-center justify-between text-xs text-popover-foreground/60">
               <span>
                 {isManaging ? 'Drag to reorder' : 'Click outside to close'}
               </span>

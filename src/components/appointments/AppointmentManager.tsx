@@ -13,6 +13,7 @@ import { format, addDays } from 'date-fns';
 import { useCalendars } from '@/hooks/useCalendars';
 import { AppointmentPayment } from './AppointmentPayment';
 import { supabase } from '@/integrations/supabase/client';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface Appointment {
   id: string;
@@ -259,13 +260,11 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this appointment?')) {
-      onAppointmentDelete?.(id);
-      toast({
-        title: "Success",
-        description: "Appointment deleted successfully!"
-      });
-    }
+    onAppointmentDelete?.(id);
+    toast({
+      title: "Success",
+      description: "Appointment deleted successfully!"
+    });
   };
 
   const filteredAppointments = appointments.filter(apt => {
@@ -572,13 +571,16 @@ export const AppointmentManager: React.FC<AppointmentManagerProps> = ({
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(appointment.id)}
+                      <ConfirmDeleteButton
+                        confirmKey="delete-appointment"
+                        title="Delete this appointment?"
+                        description="The booking will be removed for both sides."
+                        onConfirm={() => handleDelete(appointment.id)}
+                        ariaLabel="Delete appointment"
+                        className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </ConfirmDeleteButton>
                     </div>
                   </div>
                 </div>

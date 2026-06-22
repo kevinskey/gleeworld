@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { 
+import {
   Calculator, Plus, Pencil, Trash2, Search, RefreshCw
 } from 'lucide-react';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface TaxRegion {
   id: string;
@@ -97,8 +98,6 @@ export const TaxManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this tax region?')) return;
-
     try {
       const { error } = await supabase
         .from('gw_tax_regions')
@@ -309,13 +308,16 @@ export const TaxManager = () => {
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleDelete(region.id)}
+                        <ConfirmDeleteButton
+                          confirmKey="delete-tax-region"
+                          title="Delete this tax region?"
+                          description="Future orders will no longer apply this region's rate."
+                          onConfirm={() => handleDelete(region.id)}
+                          ariaLabel="Delete tax region"
+                          className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 w-9 hover:bg-muted"
                         >
                           <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </ConfirmDeleteButton>
                       </div>
                     </TableCell>
                   </TableRow>

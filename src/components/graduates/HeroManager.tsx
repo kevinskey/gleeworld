@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
 import { CanvaEmbedModal } from "./CanvaEmbedModal";
 import WebFont from 'webfontloader';
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface TitleFormatting {
   fontSize: number;
@@ -243,8 +244,6 @@ export const HeroManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this hero slide?")) return;
-
     const { error } = await supabase
       .from("alumnae_newsletter_hero_slides")
       .delete()
@@ -494,14 +493,16 @@ export const HeroManager = () => {
                     >
                       <MoveDown className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => handleDelete(slide.id)}
-                      title="Delete slide"
+                    <ConfirmDeleteButton
+                      confirmKey="delete-hero-slide"
+                      title="Delete this hero slide?"
+                      description="The slide will be removed from the hero carousel."
+                      onConfirm={() => handleDelete(slide.id)}
+                      ariaLabel="Delete slide"
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </div>
               ))}

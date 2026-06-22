@@ -80,7 +80,7 @@ export const ConductingTextbook: React.FC = () => {
                   className="flex flex-col items-center gap-1 py-2 px-1 text-xs"
                 >
                   <section.icon className="h-4 w-4" />
-                  <span className="truncate text-[10px]">{section.label}</span>
+                  <span className="truncate text-xs">{section.label}</span>
                 </TabsTrigger>
               ))}
             </TabsList>

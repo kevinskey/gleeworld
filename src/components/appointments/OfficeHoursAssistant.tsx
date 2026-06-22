@@ -376,7 +376,7 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
               <VolumeX className="h-4 w-4" />
             </button>
           )}
-          <button onClick={() => setShowVoicePicker(!showVoicePicker)} className="p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors text-[10px]">
+          <button onClick={() => setShowVoicePicker(!showVoicePicker)} className="p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors text-xs">
             🎙
           </button>
         </div>
@@ -389,7 +389,7 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
                   key={voice.id}
                   onClick={() => handleVoiceSelect(voice.id)}
                   className={cn(
-                    "text-left p-1.5 rounded-lg text-[10px] transition-colors",
+                    "text-left p-1.5 rounded-lg text-xs transition-colors",
                     selectedVoiceId === voice.id
                       ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
                       : "text-white/60 hover:bg-white/10 hover:text-white border border-transparent"

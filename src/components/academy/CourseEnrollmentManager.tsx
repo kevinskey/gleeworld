@@ -10,6 +10,7 @@ import { UserPlus, Users, Search, GraduationCap, Trash2, Filter, ArrowUpDown, So
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ClasslistUploadDialog } from '@/components/academy/ClasslistUploadDialog';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 interface Enrollment {
   id: string;
   user_id: string;
@@ -239,7 +240,6 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
     }
   };
   const removeEnrollment = async (enrollmentId: string) => {
-    if (!confirm('Are you sure you want to remove this enrollment?')) return;
     try {
       const {
         error
@@ -491,9 +491,17 @@ export const CourseEnrollmentManager: React.FC<CourseEnrollmentManagerProps> = (
                     
                     <Input placeholder="Grade" value={enrollment.grade || ''} onChange={e => updateFinalGrade(enrollment.id, e.target.value)} className="w-20" />
                     
-                    <Button variant="ghost" size="icon" onClick={() => removeEnrollment(enrollment.id)}>
+                    <ConfirmDeleteButton
+                      confirmKey="remove-enrollment"
+                      title="Remove this enrollment?"
+                      description="The student will no longer be enrolled in this course."
+                      onConfirm={() => removeEnrollment(enrollment.id)}
+                      confirmLabel="Remove"
+                      ariaLabel="Remove enrollment"
+                      className="inline-flex items-center justify-center rounded-md h-9 w-9 hover:bg-muted"
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </div>
               </CardContent>

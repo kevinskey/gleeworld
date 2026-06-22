@@ -370,7 +370,7 @@ export const PlannerMusicTab: React.FC<PlannerMusicTabProps> = ({
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm">{entry.moment}</span>
                           {moment?.required && (
-                            <Badge variant="outline" className="text-[10px] px-1 py-0">
+                            <Badge variant="outline" className="text-xs px-1 py-0">
                               Req
                             </Badge>
                           )}

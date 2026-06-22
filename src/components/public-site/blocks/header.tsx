@@ -79,18 +79,14 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         </a>
       ))}
       {ctx.memberSignIn && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            setMenuOpen(false);
-            setSignInOpen(true);
-          }}
-          className="rounded-full px-3 py-1 whitespace-nowrap border opacity-90 hover:opacity-100 hover:bg-white/10 transition-opacity text-sm"
+        <a
+          href="/auth"
+          onClick={() => setMenuOpen(false)}
+          className="rounded-full px-3 py-1 whitespace-nowrap border opacity-90 hover:opacity-100 hover:bg-white/10 transition-opacity text-sm inline-flex items-center"
           style={{ color: linkColor, borderColor: linkColor + '4d' }}
         >
           Sign in
-        </button>
+        </a>
       )}
     </>
   );
@@ -151,17 +147,13 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
               </a>
             ))}
             {ctx.memberSignIn && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMenuOpen(false);
-                  setSignInOpen(true);
-                }}
+              <a
+                href="/auth"
+                onClick={() => setMenuOpen(false)}
                 className="py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors border-t border-slate-200 mt-1 pt-3 text-left"
               >
                 Sign in
-              </button>
+              </a>
             )}
           </nav>
         </div>
@@ -213,7 +205,7 @@ function EditorForm({ config, onChange, theme, onThemeChange }: BlockEditorFormP
       </div>
       {theme && onThemeChange && (
         <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
-          <div className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold">Brand colors</div>
+          <div className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Brand colors</div>
           <div className="flex items-center justify-between">
             <Label className="text-sm">Primary color</Label>
             <input
@@ -279,11 +271,11 @@ function EditorForm({ config, onChange, theme, onThemeChange }: BlockEditorFormP
       )}
       <div className="space-y-2">
         <Label>Menu links</Label>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-sm text-slate-500">
           Text color is picked automatically (black or white) to stay readable on your primary color.
         </p>
         {config.navLinks.length > 0 && (
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 text-[10px] uppercase tracking-wide text-slate-500 px-1">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 text-xs uppercase tracking-wide text-slate-500 px-1">
             <span>Text</span>
             <span>Goes to</span>
             <span />

@@ -237,7 +237,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
               )}
             </div>
             <div className="text-right">
-              <span className="text-white/50 text-[10px] uppercase tracking-wider">
+              <span className="text-white/50 text-xs uppercase tracking-wider">
                 {isAttendanceOnly ? 'Attendance-based' : 'Deductive model'}
               </span>
             </div>
@@ -270,8 +270,8 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                       <div className="flex items-center gap-2 min-w-0">
                         {getStatusIcon(record.status)}
                         <div className="min-w-0">
-                          <p className="text-[11px] font-medium text-white/90 truncate">{record.title}</p>
-                          <p className="text-[10px] text-white/50">
+                          <p className="text-sm font-medium text-white/90 truncate">{record.title}</p>
+                          <p className="text-xs text-white/50">
                             {format(new Date(record.date), 'MMM d, yyyy')}
                           </p>
                         </div>
@@ -289,7 +289,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                             Excuse
                           </button>
                         )}
-                        <Badge variant="outline" className={cn("text-[10px] capitalize border-white/20 text-white/80")}>
+                        <Badge variant="outline" className={cn("text-xs capitalize border-white/20 text-white/80")}>
                           {record.status}
                         </Badge>
                       </div>
@@ -401,11 +401,11 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                           <p className="text-xs font-semibold truncate">
                             {conflict.course_code || conflict.course_name}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {conflict.days?.join(', ')} · {conflict.start_time?.slice(0, 5)}–{conflict.end_time?.slice(0, 5)}
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-[10px] bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 shrink-0 ml-2">
+                        <Badge variant="outline" className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 shrink-0 ml-2">
                           Conflict
                         </Badge>
                       </div>

@@ -312,7 +312,7 @@ export const OrderOfMassMusicEditor: React.FC<OrderOfMassMusicEditorProps> = ({
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{selection.liturgical_moment}</span>
                         {moment?.required && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0">
+                          <Badge variant="outline" className="text-xs px-1 py-0">
                             Required
                           </Badge>
                         )}

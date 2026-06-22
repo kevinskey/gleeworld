@@ -12,6 +12,11 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Rss, Trash2, Plus, Newspaper, GraduationCap, Loader2, ExternalLink } from 'lucide-react';
 
+const SOFT_CARD = 'border-0 rounded-2xl bg-card';
+const SOFT_CARD_STYLE: React.CSSProperties = {
+  boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
+};
+
 type FeedType = 'news' | 'scholarship';
 
 interface FeedSource {
@@ -121,9 +126,9 @@ export default function FeedControl() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Rss className="w-6 h-6 text-primary" /> Feed Control
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -138,7 +143,7 @@ export default function FeedControl() {
         </TabsList>
 
         <TabsContent value={tab} className="space-y-6 mt-4">
-          <Card>
+          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
             <CardHeader>
               <CardTitle>Popular {tab === 'news' ? 'music & education' : 'scholarship'} feeds</CardTitle>
             </CardHeader>
@@ -161,7 +166,7 @@ export default function FeedControl() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
             <CardHeader><CardTitle>Add your own</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <p className="text-xs text-muted-foreground">Paste an RSS feed URL from a blog, podcast, or news site. Most sites have one — look for an Rss icon at the bottom of their page.</p>
@@ -177,7 +182,7 @@ export default function FeedControl() {
           </Card>
 
           {customSources.length > 0 && (
-            <Card>
+            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
               <CardHeader><CardTitle>Your custom feeds</CardTitle></CardHeader>
               <CardContent className="space-y-2">
                 {customSources.map((s) => (

@@ -193,7 +193,7 @@ export const TourStopEditForm = ({ stop, open, onOpenChange, onSaved, busCompani
               {/* Live utilization preview */}
               {((form.travel_duration_hours || 0) > 0 || (form.driver_hours_before || 0) > 0) && (
                 <div className="p-3 rounded-lg border bg-muted/20">
-                  <p className="text-[10px] uppercase font-medium text-muted-foreground mb-1">Driver Utilization Preview</p>
+                  <p className="text-xs uppercase font-medium text-muted-foreground mb-1">Driver Utilization Preview</p>
                   <div className="flex items-center justify-between text-xs">
                     <span>Total: {((form.driver_hours_before || 0) + (form.travel_duration_hours || 0)).toFixed(1)}h / 10h</span>
                     <span className={((form.driver_hours_before || 0) + (form.travel_duration_hours || 0)) > 10 ? 'text-destructive font-bold' : 'text-emerald-600'}>

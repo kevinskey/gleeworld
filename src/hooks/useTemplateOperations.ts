@@ -219,21 +219,19 @@ export const useTemplateOperations = () => {
   };
 
   const handleDeleteTemplate = async (id: string) => {
-    if (confirm("Are you sure you want to delete this template?")) {
-      const templateToDelete = templates.find(t => t.id === id);
-      await deleteTemplate(id);
-      
-      // Log activity
-      if (templateToDelete) {
-        await logActivity({
-          actionType: ACTIVITY_TYPES.TEMPLATE_DELETED,
-          resourceType: RESOURCE_TYPES.TEMPLATE,
-          resourceId: id,
-          details: {
-            templateName: templateToDelete.name
-          }
-        });
-      }
+    const templateToDelete = templates.find(t => t.id === id);
+    await deleteTemplate(id);
+
+    // Log activity
+    if (templateToDelete) {
+      await logActivity({
+        actionType: ACTIVITY_TYPES.TEMPLATE_DELETED,
+        resourceType: RESOURCE_TYPES.TEMPLATE,
+        resourceId: id,
+        details: {
+          templateName: templateToDelete.name
+        }
+      });
     }
   };
 

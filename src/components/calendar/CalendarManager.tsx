@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Edit, Trash2, Palette, Calendar, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 interface Calendar {
   id: string;
   name: string;
@@ -105,9 +106,6 @@ export const CalendarManager = () => {
   const deleteCalendar = async (calendar: Calendar) => {
     if (calendar.is_default) {
       toast.error("Cannot delete the default calendar");
-      return;
-    }
-    if (!confirm(`Are you sure you want to delete "${calendar.name}"? This action cannot be undone.`)) {
       return;
     }
     try {
@@ -230,9 +228,16 @@ export const CalendarManager = () => {
                   <Button size="sm" variant="ghost" onClick={() => openEditDialog(calendar)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  {!calendar.is_default && <Button size="sm" variant="ghost" onClick={() => deleteCalendar(calendar)}>
+                  {!calendar.is_default && <ConfirmDeleteButton
+                      confirmKey="delete-calendar"
+                      title={`Delete "${calendar.name}"?`}
+                      description="Only empty calendars can be deleted; events must be moved first."
+                      onConfirm={() => deleteCalendar(calendar)}
+                      ariaLabel="Delete calendar"
+                      className="inline-flex items-center justify-center rounded-md h-9 w-9 hover:bg-muted"
+                    >
                       <Trash2 className="h-4 w-4" />
-                    </Button>}
+                    </ConfirmDeleteButton>}
                 </div>
               </div>
             </CardHeader>

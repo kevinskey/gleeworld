@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Send, Users, Plus, MessageSquare, X, Loader2, Image as ImageIcon,
   Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Video, Zap, Smartphone,
-  ChevronLeft, Bell, BellOff, Newspaper, User as UserIcon,
+  ChevronLeft, Bell, BellOff, Newspaper, User as UserIcon, Search,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
@@ -313,7 +313,10 @@ export default function Messenger() {
     await supabase.from('gw_group_members').insert({
       group_id: data.id, user_id: user.id, role: 'admin',
     });
-    await addAdminsToGroup(data.id);
+    // Best-effort: auto-add tenant admins so they can moderate. RLS will
+    // block this for non-admin creators — that's fine, members can still
+    // own their group, they just don't get to seed it with the staff.
+    try { await addAdminsToGroup(data.id); } catch { /* ignored */ }
     setNewGroupName(''); setShowNewGroup(false);
     qc.invalidateQueries({ queryKey: ['messenger-groups'] });
     setSelectedGroupId(data.id);
@@ -434,54 +437,106 @@ export default function Messenger() {
     target.addEventListener('pointerup', up);
   }
 
+  // Mode-driven content: clicking a tab swaps the in-shell body. Chat is the
+  // default. 'broadcasts' replaces the older 'newsletter' label and the
+  // existing NewsletterStudio component renders there. 'templates' is a
+  // placeholder for the upcoming message-templates feature.
+  type Mode = 'chat' | 'email' | 'sms' | 'video' | 'broadcasts' | 'templates';
+  const [mode, setMode] = useState<Mode>('chat');
+  const [convoFilter, setConvoFilter] = useState<'all' | 'unread' | 'groups' | 'direct'>('all');
+
+  const modeTabs: Array<{ id: Mode; label: string; icon: typeof Mail; onClick: () => void }> = [
+    { id: 'chat',       label: 'Chat',       icon: MessageSquare, onClick: () => { setMode('chat'); setActiveMeetingRoom(null); } },
+    { id: 'email',      label: 'Email',      icon: Mail,          onClick: () => { setMode('email'); setActiveMeetingRoom(null); } },
+    { id: 'sms',        label: 'SMS',        icon: Smartphone,    onClick: () => { setMode('sms'); setActiveMeetingRoom(null); } },
+    { id: 'video',      label: 'Video',      icon: Video,         onClick: () => {
+        // Don't auto-start a meeting — just open the Video pane. The user
+        // clicks "Start meeting" from the landing card to actually join.
+        setMode('video');
+      } },
+    { id: 'broadcasts', label: 'Broadcasts', icon: Megaphone,     onClick: () => { setMode('broadcasts'); setActiveMeetingRoom(null); } },
+    { id: 'templates',  label: 'Templates',  icon: Newspaper,     onClick: () => { setMode('templates'); setActiveMeetingRoom(null); } },
+  ];
+
+  const backToChat = () => setMode('chat');
+
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
+      {/* Page title row */}
+      <div className="shrink-0 px-6 pt-4 pb-2 bg-card">
+        <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-2xl">Messenger</h1>
+      </div>
+
+      {/* Mode tab bar — underline-style, like Gmail's primary nav */}
+      <div className="shrink-0 border-b border-border bg-card px-4">
+        <div className="flex gap-1 overflow-x-auto">
+          {modeTabs.map((t) => {
+            const active = mode === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={t.onClick}
+                className={`relative inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-colors ${
+                  active
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <t.icon className={`w-4 h-4 ${active ? 'text-primary' : ''}`} />
+                <span>{t.label}</span>
+                {active && (
+                  <span className="absolute left-2 right-2 bottom-0 h-0.5 bg-primary rounded-t-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Inline composer surfaces — render in-page instead of modal overlays */}
+      {mode === 'email' && (
+        <div className="flex-1 overflow-hidden">
+          <EmailClient inline onClose={backToChat} />
+        </div>
+      )}
+      {mode === 'sms' && (
+        <div className="flex-1 overflow-hidden">
+          <SmsComposer inline onClose={backToChat} />
+        </div>
+      )}
+      {mode === 'broadcasts' && (
+        <div className="flex-1 overflow-hidden">
+          <NewsletterStudio inline onClose={backToChat} />
+        </div>
+      )}
+      {mode === 'templates' && (
+        <div className="flex-1 overflow-y-auto px-6 py-10">
+          <div className="max-w-md mx-auto text-center space-y-3">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 inline-flex items-center justify-center">
+              <Newspaper className="w-7 h-7 text-primary" />
+            </div>
+            <h2 className="text-lg font-semibold">Message Templates</h2>
+            <p className="text-sm text-muted-foreground">
+              Save reusable announcements, rehearsal reminders, and concert blasts so
+              you can fire them off in two clicks. Coming next release.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className={`flex flex-1 overflow-hidden ${mode !== 'chat' && mode !== 'video' ? 'hidden' : ''}`}>
       <aside
         style={{ width: sidebarWidth }}
-        className={`shrink-0 flex-col bg-muted/30 max-md:!w-full ${selectedGroupId ? 'hidden md:flex' : 'flex'}`}
+        className={`shrink-0 flex-col bg-muted/30 max-md:!w-full ${
+          mode === 'video' ? 'hidden' : (selectedGroupId ? 'hidden md:flex' : 'flex')
+        }`}
       >
         <div className="p-3 border-b flex items-center justify-between">
-          <h2 className="font-semibold text-sm flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" /> Groups
+          <h2 className="font-semibold text-base flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" /> Groups
           </h2>
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={() => setShowSmsComposer(true)} title="Send a text (SMS)">
-              <Smartphone className="w-4 h-4" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" title="Email & newsletters">
-                  <Mail className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowEmailClient(true)}>
-                  <Mail className="w-4 h-4 mr-2" /> Email
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowNewsletters(true)}>
-                  <Newspaper className="w-4 h-4 mr-2" /> Newsletters
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" title="Quick blast">
-                  <Zap className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setQuickBlastMode('custom')}>
-                  <UserIcon className="w-4 h-4 mr-2" /> Blast a person
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setQuickBlastMode('group')}>
-                  <Users className="w-4 h-4 mr-2" /> Blast a group
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="ghost" size="sm" onClick={() => setShowBroadcast(true)} title="Emergency broadcast to all groups">
-              <Megaphone className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowNewGroup((v) => !v)}>
+            <Button variant="ghost" size="sm" onClick={() => setShowNewGroup((v) => !v)} title="New group">
               <Plus className="w-4 h-4" />
             </Button>
           </div>
@@ -504,70 +559,162 @@ export default function Messenger() {
             </Button>
           </div>
         )}
-        <div className="flex-1 overflow-y-auto">
-          {groups.length === 0 && (
-            <p className="p-4 text-sm text-muted-foreground">No groups yet. Tap + to create one.</p>
-          )}
-          {groups.map((g) => (
-            <button
-              key={g.id}
-              onClick={() => setSelectedGroupId(g.id)}
-              className={`w-full text-left px-3 py-3 border-b hover:bg-muted/60 ${
-                g.id === selectedGroupId ? 'bg-muted' : ''
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <div className={`text-sm truncate flex-1 ${groupMeta[g.id]?.unread ? 'font-bold' : 'font-semibold'}`}>{g.name}</div>
-                {groupMeta[g.id]?.muted && <BellOff className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
-                {(groupMeta[g.id]?.unread ?? 0) > 0 && (
-                  <span className="shrink-0 min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold flex items-center justify-center">
-                    {groupMeta[g.id].unread > 99 ? '99+' : groupMeta[g.id].unread}
-                  </span>
-                )}
-              </div>
-              <div className="text-xs text-muted-foreground truncate">{g.description || g.group_type}</div>
-            </button>
-          ))}
+        {/* Filter pills */}
+        <div className="px-3 pt-3 pb-2 flex items-center gap-2 overflow-x-auto">
+          {(['all', 'unread', 'groups', 'direct'] as const).map((f) => {
+            const label = f.charAt(0).toUpperCase() + f.slice(1);
+            const active = convoFilter === f;
+            return (
+              <button
+                key={f}
+                onClick={() => setConvoFilter(f)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors ${
+                  active
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-transparent text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-2 pb-2">
+          {(() => {
+            const filtered = groups.filter((g) => {
+              if (convoFilter === 'unread') return (groupMeta[g.id]?.unread ?? 0) > 0;
+              if (convoFilter === 'groups') return g.group_type !== 'direct' && g.group_type !== 'dm';
+              if (convoFilter === 'direct') return g.group_type === 'direct' || g.group_type === 'dm';
+              return true;
+            });
+            if (filtered.length === 0) {
+              return <p className="p-4 text-sm text-muted-foreground">
+                {convoFilter === 'unread' ? 'Inbox zero — no unread conversations.' : 'No conversations.'}
+              </p>;
+            }
+            return filtered.map((g) => {
+              const meta = groupMeta[g.id] ?? { unread: 0, muted: false };
+              const isActive = g.id === selectedGroupId;
+              const isDM = g.group_type === 'direct' || g.group_type === 'dm';
+              const initial = (g.name || '?').charAt(0).toUpperCase();
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => setSelectedGroupId(g.id)}
+                  className={`w-full text-left px-3 py-3 rounded-xl flex items-start gap-3 transition-colors ${
+                    isActive ? 'bg-primary/10' : 'hover:bg-muted/60'
+                  }`}
+                >
+                  {/* Avatar */}
+                  <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-semibold ${
+                    isDM ? 'bg-cyan-100 text-cyan-700' : 'bg-primary/15 text-primary'
+                  }`}>
+                    {isDM ? initial : <Users className="w-5 h-5" />}
+                  </div>
+
+                  {/* Middle: name + preview */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-sm truncate ${meta.unread > 0 ? 'font-bold text-foreground' : 'font-semibold text-foreground'}`}>
+                        {g.name}
+                      </span>
+                      {meta.muted && <BellOff className="w-3 h-3 text-muted-foreground shrink-0" />}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate mt-0.5">
+                      {g.description || g.group_type}
+                    </div>
+                  </div>
+
+                  {/* Right: timestamp + unread badge */}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className="text-sm text-muted-foreground">{/* timestamp slot */}</span>
+                    {meta.unread > 0 && (
+                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center">
+                        {meta.unread > 99 ? '99+' : meta.unread}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            });
+          })()}
         </div>
       </aside>
 
       <div
         onPointerDown={startResize}
-        className="w-3 -mx-1 shrink-0 cursor-col-resize touch-none hidden md:flex items-stretch justify-center group z-10"
+        className={`w-3 -mx-1 shrink-0 cursor-col-resize touch-none ${mode === 'video' ? 'hidden' : 'hidden md:flex'} items-stretch justify-center group z-10`}
         title="Drag to resize"
       >
         <div className="w-px bg-border group-hover:w-1 group-hover:bg-primary/50 group-active:w-1 group-active:bg-primary transition-all" />
       </div>
 
-      <main className={`flex-1 flex-col min-w-0 ${selectedGroupId ? 'flex' : 'hidden md:flex'}`}>
-        {activeMeetingRoom && user ? (
+      <main className={`flex-1 flex-col min-w-0 ${
+        mode === 'video' ? 'flex' : (selectedGroupId ? 'flex' : 'hidden md:flex')
+      }`}>
+        {mode === 'video' && activeMeetingRoom && user ? (
           <JitsiMeetingPanel
             roomName={activeMeetingRoom}
             userName={userProfile?.full_name || user.email || 'Guest'}
             userEmail={user.email}
-            onClose={() => setActiveMeetingRoom(null)}
+            onClose={() => { setActiveMeetingRoom(null); setMode('chat'); }}
           />
+        ) : mode === 'video' ? (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center max-w-sm space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary inline-flex items-center justify-center mx-auto">
+                <Video className="w-7 h-7" />
+              </div>
+              <h2 className="font-semibold text-lg">Start a video meeting</h2>
+              <p className="text-sm text-muted-foreground">
+                A new Jitsi room will spin up and you'll be joined as host.
+              </p>
+              <Button
+                size="lg"
+                onClick={() => setActiveMeetingRoom(`gleeworld-meeting-${Date.now().toString(36)}`)}
+                className="font-semibold"
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Start meeting
+              </Button>
+            </div>
+          </div>
         ) : selectedGroup ? (
           <>
-            <header className="border-b px-2 sm:px-4 py-3 flex items-center justify-between">
-              <Button variant="ghost" size="sm" className="md:hidden shrink-0 mr-1" onClick={() => setSelectedGroupId(null)} aria-label="Back to groups">
+            <header className="border-b border-border px-3 sm:px-5 py-3 flex items-center gap-3 bg-card">
+              <Button variant="ghost" size="sm" className="md:hidden shrink-0 -ml-2" onClick={() => setSelectedGroupId(null)} aria-label="Back to groups">
                 <ChevronLeft className="w-5 h-5" />
               </Button>
-              <div className="min-w-0 flex-1">
-                <h1 className="font-semibold truncate">{selectedGroup.name}</h1>
-                {selectedGroup.description && (
-                  <p className="text-xs text-muted-foreground truncate">{selectedGroup.description}</p>
-                )}
+              {/* Group avatar */}
+              <div className="w-10 h-10 rounded-full shrink-0 bg-primary/15 text-primary flex items-center justify-center">
+                <Users className="w-5 h-5" />
               </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" onClick={toggleMute} title={groupMeta[selectedGroup.id]?.muted ? 'Unmute notifications' : 'Mute notifications'}>
+              <div className="min-w-0 flex-1">
+                <h1 className="font-semibold truncate text-base inline-flex items-center gap-1.5">
+                  {selectedGroup.name}
+                  {/* Pinned star — placeholder; future: read from a per-user pinned table */}
+                  <span className="text-amber-500" aria-hidden>★</span>
+                </h1>
+                <p className="text-xs text-muted-foreground truncate">
+                  {members.length > 0 ? `${members.length} member${members.length === 1 ? '' : 's'}` : (selectedGroup.description || selectedGroup.group_type)}
+                </p>
+              </div>
+              <div className="flex items-center gap-0.5">
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground" title="Search in chat" disabled>
+                  <Search className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground" onClick={() => setActiveMeetingRoom(`gleeworld-meeting-${Date.now().toString(36)}`)} title="Start video call">
+                  <Video className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground" onClick={toggleMute} title={groupMeta[selectedGroup.id]?.muted ? 'Unmute notifications' : 'Mute notifications'}>
                   {groupMeta[selectedGroup.id]?.muted ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={summarize} disabled={summarizing || messages.length === 0} title="AI summary">
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground" onClick={summarize} disabled={summarizing || messages.length === 0} title="AI summary">
                   {summarizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setShowMembers((v) => !v)}>
-                  <Users className="w-4 h-4" />
+                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground" onClick={() => setShowMembers((v) => !v)} title="Members / info">
+                  <UserIcon className="w-4 h-4" />
                 </Button>
               </div>
             </header>
@@ -600,8 +747,12 @@ export default function Messenger() {
                       )}
                     </div>
                     <div className={`max-w-[75%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+                      {/* Sender name + time above received bubbles (first in a run only) */}
                       {showAuthor && !isMe && (
-                        <span className="text-xs text-muted-foreground mb-0.5">{m.author?.full_name || 'Unknown'}</span>
+                        <span className="text-xs text-muted-foreground mb-1 inline-flex items-center gap-1.5">
+                          <span className="font-semibold text-foreground">{m.author?.full_name || 'Unknown'}</span>
+                          <span>{new Date(m.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
+                        </span>
                       )}
                       {m.message_type === 'image' && m.file_url ? (
                         <a href={m.file_url} target="_blank" rel="noreferrer">
@@ -616,8 +767,12 @@ export default function Messenger() {
                       ) : m.message_type === 'system' && m.content?.includes('room:') ? (
                         <MeetingJoinCard content={m.content} onJoin={(room) => setActiveMeetingRoom(room)} />
                       ) : (
-                        <div className={`rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap break-words ${
-                          isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        // Pastel-tinted bubbles: warm cream for received, soft
+                        // lavender for sent. Reads gentler than full primary.
+                        <div className={`rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words ${
+                          isMe
+                            ? 'bg-primary/15 text-foreground rounded-tr-md'
+                            : 'bg-amber-50 text-foreground rounded-tl-md'
                         }`}>
                           {renderWithMentions(m.content || '', memberNames)}
                         </div>
@@ -640,7 +795,7 @@ export default function Messenger() {
                             {emoji} {info.count}
                           </button>
                         ))}
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {new Date(m.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                         </span>
                       </div>
@@ -663,7 +818,7 @@ export default function Messenger() {
               })}
               <div ref={messagesEndRef} />
             </div>
-            <footer className="border-t p-3 flex gap-2 items-end">
+            <footer className="border-t border-border p-4 bg-card">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -671,37 +826,81 @@ export default function Messenger() {
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])}
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                title="Image"
-              >
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
-              </Button>
-              {user && <VoiceRecorder groupId={selectedGroup.id} userId={user.id} onUpload={(url) => sendMessage('', 'audio', url)} />}
-              <Button variant="ghost" size="sm" onClick={() => setShowPollComposer(true)} title="Poll">
-                <BarChart3 className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowRsvpComposer(true)} title="Event RSVP">
-                <Calendar className="w-4 h-4" />
-              </Button>
-              <Input
-                value={composer}
-                onChange={(e) => setComposer(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-                placeholder={`Message ${selectedGroup.name}…`}
-                className="flex-1"
-              />
-              <Button onClick={() => sendMessage()} disabled={!composer.trim()}>
-                <Send className="w-4 h-4" />
-              </Button>
+              {/* Pill-shaped text input — composer style from the design comp */}
+              <div className="rounded-2xl border border-border bg-muted/30 px-4 py-2.5 focus-within:bg-card focus-within:border-primary/40 transition-colors">
+                <Input
+                  value={composer}
+                  onChange={(e) => setComposer(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                  placeholder={`Message ${selectedGroup.name}…`}
+                  className="border-0 shadow-none bg-transparent h-8 px-0 focus-visible:ring-0 text-sm"
+                />
+              </div>
+
+              {/* Toolbar row: attach + emoji + GIF + image + mic on left, send on right */}
+              <div className="flex items-center justify-between mt-2.5">
+                <div className="flex items-center gap-0.5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    title="Attach image"
+                  >
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => setReactionPickerFor('composer')}
+                    title="Emoji"
+                  >
+                    <SmilePlus className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Image"
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowPollComposer(true)}
+                    title="Poll"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowRsvpComposer(true)}
+                    title="Event RSVP"
+                  >
+                    <Calendar className="w-4 h-4" />
+                  </Button>
+                  {user && <VoiceRecorder groupId={selectedGroup.id} userId={user.id} onUpload={(url) => sendMessage('', 'audio', url)} />}
+                </div>
+                <Button
+                  onClick={() => sendMessage()}
+                  disabled={!composer.trim()}
+                  className="h-10 w-10 p-0 rounded-full bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
             </footer>
           </>
         ) : (
@@ -726,13 +925,14 @@ export default function Messenger() {
                 <Avatar name={m.full_name || m.email} url={m.avatar_url} />
                 <div className="flex-1 min-w-0">
                   <div className="truncate">{m.full_name || m.email}</div>
-                  {m.role !== 'member' && <div className="text-[10px] text-muted-foreground capitalize">{m.role}</div>}
+                  {m.role !== 'member' && <div className="text-xs text-muted-foreground capitalize">{m.role}</div>}
                 </div>
               </div>
             ))}
           </div>
         </aside>
       )}
+      </div>{/* /flex flex-1 overflow-hidden */}
 
       {quickBlastMode && (
         <EmailBlastComposer initialGroup={quickBlastMode === 'custom' ? 'custom' : 'students'} onClose={() => setQuickBlastMode(null)} />

@@ -112,8 +112,6 @@ export const GraduatesPageBuilder = () => {
   };
 
   const handleDeleteSection = async (sectionId: string) => {
-    if (!confirm('Are you sure you want to delete this section?')) return;
-
     try {
       const { error } = await supabase
         .from('alumnae_page_sections')

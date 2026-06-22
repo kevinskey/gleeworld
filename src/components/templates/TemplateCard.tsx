@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Eye, Copy, Trash2, Image, FileDown } from "lucide-react";
 import type { ContractTemplate } from "@/hooks/useContractTemplates";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface TemplateCardProps {
   template: ContractTemplate;
@@ -121,15 +122,16 @@ export const TemplateCard = ({
               >
                 <Copy className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onDelete(template.id)}
-                title="Delete template"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              <ConfirmDeleteButton
+                confirmKey="delete-contract-template"
+                title="Delete this template?"
+                description="The template will be removed; existing contracts that used it are unaffected."
+                onConfirm={() => onDelete(template.id)}
+                ariaLabel="Delete template"
+                className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 px-3 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" />
-              </Button>
+              </ConfirmDeleteButton>
             </div>
           </div>
         </div>

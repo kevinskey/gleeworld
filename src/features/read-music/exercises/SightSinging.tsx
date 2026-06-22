@@ -97,7 +97,7 @@ export default function SightSinging({ tier }: { tier: Tier }) {
               </button>
             ))}
           </div>
-          <div className="text-[10px] text-white/40">3+ counts as correct</div>
+          <div className="text-xs text-white/40">3+ counts as correct</div>
         </div>
       )}
     </DrillScaffold>

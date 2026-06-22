@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -111,6 +111,23 @@ export function AvatarCropDialog({
       console.error('Error cropping image:', error);
     }
   }, [completedCrop, getCroppedImg, onCropComplete]);
+
+  // Enter-to-save: lets users confirm the crop with the keyboard instead of
+  // hunting for the Save Avatar button at the bottom of the dialog.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      if (isUploading || !completedCrop) return;
+      const target = e.target as HTMLElement | null;
+      // Don't hijack Enter inside text inputs (none here today, but future-proof).
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+      e.preventDefault();
+      handleCropAndSave();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, isUploading, completedCrop, handleCropAndSave]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

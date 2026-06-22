@@ -83,12 +83,12 @@ export const DailyRunSheet = ({
   return (
     <div className="flex flex-col h-full bg-white text-slate-900">
       {/* Header */}
-      <div className="bg-[#003366] text-white px-4 py-3 flex-shrink-0">
+      <div className="bg-card border-b border-border  text-foreground px-4 py-3 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
           <div>
             <h2 className="text-lg font-bold">Daily Run Sheet</h2>
-            <p className="text-sm text-white/70">
+            <p className="text-sm text-muted-foreground">
               {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </p>
           </div>
@@ -100,19 +100,19 @@ export const DailyRunSheet = ({
         <div className="p-4 space-y-3">
           {sortedEvents.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500 font-medium">No events scheduled</p>
-              <p className="text-slate-400 text-sm mt-1">
+              <Calendar className="h-12 w-12 text-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground font-medium">No events scheduled</p>
+              <p className="text-muted-foreground text-sm mt-1">
                 Select a date to view the run sheet
               </p>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Today's Schedule
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-muted-foreground">
                   {sortedEvents.length} event{sortedEvents.length !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -134,7 +134,7 @@ export const DailyRunSheet = ({
                       }}
                     />
                     {attendanceCounts[event.id] > 0 && (
-                      <div className="flex items-center gap-1 mt-1 ml-11 text-[11px] text-slate-500">
+                      <div className="flex items-center gap-1 mt-1 ml-11 text-sm text-muted-foreground">
                         <Users className="h-3 w-3" />
                         <span>{attendanceCounts[event.id]} checked in</span>
                       </div>
@@ -149,7 +149,7 @@ export const DailyRunSheet = ({
 
       {/* Quick Actions */}
       <div className="border-t border-slate-200 bg-slate-50 p-4 flex-shrink-0">
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Quick Actions
         </h3>
         <div className="grid grid-cols-2 gap-2">
@@ -169,12 +169,12 @@ export const DailyRunSheet = ({
                   className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: action.color }}
                 >
-                  <Icon className="h-3.5 w-3.5 text-white" />
+                  <Icon className="h-3.5 w-3.5 text-foreground" />
                 </div>
                 <span className="text-xs font-medium text-slate-700 truncate">
                   {action.label}
                 </span>
-                <ChevronRight className="h-3.5 w-3.5 text-slate-400 ml-auto flex-shrink-0" />
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground ml-auto flex-shrink-0" />
               </Button>
             );
           })}

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Camera, Mic, Video, Users, Sparkles, Image, FileAudio, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface GleeCamCategory {
   id: string;
@@ -174,8 +175,6 @@ export const GleeCamManagerModule = () => {
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
-    if (!confirm('Delete this category? Media will be unlinked but not deleted.')) return;
-    
     try {
       // First unlink media from this category
       await supabase
@@ -201,8 +200,6 @@ export const GleeCamManagerModule = () => {
   };
 
   const handleDeleteMedia = async (mediaId: string) => {
-    if (!confirm('Delete this media item?')) return;
-    
     try {
       const { error } = await supabase
         .from('gw_media_library')
@@ -380,9 +377,16 @@ export const GleeCamManagerModule = () => {
                         <Button size="icon" variant="ghost" onClick={() => openEditCategory(category)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => handleDeleteCategory(category.id)}>
+                        <ConfirmDeleteButton
+                          confirmKey="delete-glee-cam-category"
+                          title="Delete this category?"
+                          description="Media will be unlinked but not deleted."
+                          onConfirm={() => handleDeleteCategory(category.id)}
+                          ariaLabel="Delete category"
+                          className="inline-flex items-center justify-center rounded-md h-9 w-9 hover:bg-muted"
+                        >
                           <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        </ConfirmDeleteButton>
                       </div>
                     </div>
                     {category.description && (
@@ -438,14 +442,16 @@ export const GleeCamManagerModule = () => {
                         <FileAudio className="h-12 w-12 text-muted-foreground" />
                       </div>
                     )}
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="absolute top-2 right-2 h-6 w-6"
-                      onClick={() => handleDeleteMedia(media.id)}
+                    <ConfirmDeleteButton
+                      confirmKey="delete-glee-cam-media"
+                      title="Delete this media item?"
+                      description="The file will be removed from this category."
+                      onConfirm={() => handleDeleteMedia(media.id)}
+                      ariaLabel="Delete media"
+                      className="absolute top-2 right-2 inline-flex items-center justify-center h-6 w-6 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       <Trash2 className="h-3 w-3" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                   <CardContent className="p-2">
                     <p className="text-xs font-medium truncate">{media.title}</p>

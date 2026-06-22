@@ -404,7 +404,7 @@ function ClassCard({
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="text-xs font-mono text-sky-400">{course.course_code}</div>
           {role && (
-            <Badge className="bg-primary text-primary-foreground border-0 text-[10px]">
+            <Badge className="bg-primary text-primary-foreground border-0 text-xs">
               {role}
             </Badge>
           )}
@@ -413,7 +413,7 @@ function ClassCard({
         {course.description && (
           <div className="text-xs text-muted-foreground line-clamp-2 mb-3">{course.description}</div>
         )}
-        <div className="mt-auto flex items-center justify-between text-[11px] text-muted-foreground">
+        <div className="mt-auto flex items-center justify-between text-sm text-muted-foreground">
           <span>{course.instructor_name || ''}</span>
           <span className="flex items-center gap-1">
             {fmtSemester(course.semester)}

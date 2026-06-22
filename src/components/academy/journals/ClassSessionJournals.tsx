@@ -18,6 +18,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import { format, parseISO, isToday, differenceInSeconds, getDay } from 'date-fns';
 
 interface JournalSession {
@@ -434,8 +435,6 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
 
   // Delete session
   const handleDeleteSession = async (sessionId: string) => {
-    if (!confirm('Delete this session? This will also delete all student journals for this session.')) return;
-    
     try {
       const { error } = await supabase
         .from('class_journal_sessions')
@@ -860,13 +859,16 @@ export const ClassSessionJournals: React.FC<ClassSessionJournalsProps> = ({
                                     {session.is_active ? 'Active' : 'Inactive'}
                                   </span>
                                 </div>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  onClick={() => handleDeleteSession(session.id)}
+                                <ConfirmDeleteButton
+                                  confirmKey="delete-journal-session"
+                                  title="Delete this session?"
+                                  description="All student journals for this session will also be removed."
+                                  onConfirm={() => handleDeleteSession(session.id)}
+                                  ariaLabel="Delete session"
+                                  className="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-muted"
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
+                                </ConfirmDeleteButton>
                               </div>
                             </div>
                           </CardContent>

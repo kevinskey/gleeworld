@@ -221,14 +221,14 @@ export function CreateClassDialog({ open, onOpenChange, onCreated }: Props) {
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <span className="font-semibold text-sm">{t.title}</span>
                       {t.is_platform && (
-                        <Badge variant="secondary" className="text-[10px] gap-1">
+                        <Badge variant="secondary" className="text-xs gap-1">
                           <Sparkles className="w-3 h-3" /> Platform
                         </Badge>
                       )}
                     </div>
                     <div className="text-xs font-mono text-muted-foreground mb-1">{t.course_code}</div>
                     {t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
-                    <div className="text-[11px] text-muted-foreground mt-2">
+                    <div className="text-sm text-muted-foreground mt-2">
                       {t.unit_count} units · {t.lesson_count} lessons · {t.assignment_count} assignments
                     </div>
                   </button>
@@ -257,7 +257,7 @@ export function CreateClassDialog({ open, onOpenChange, onCreated }: Props) {
                   >
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="font-semibold text-sm">{p.title}</span>
-                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{p.semester || p.term}</span>
+                      <span className="text-xs uppercase tracking-wide text-muted-foreground">{p.semester || p.term}</span>
                     </div>
                     <div className="text-xs font-mono text-muted-foreground">{p.course_code}</div>
                   </button>
@@ -307,7 +307,7 @@ export function CreateClassDialog({ open, onOpenChange, onCreated }: Props) {
                 <Input value={semester} onChange={(e) => setSemester(e.target.value)} className="h-8 text-sm" />
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Assignment due-dates will shift to land relative to your new start date. Roster + attendance start fresh.
             </p>
           </div>

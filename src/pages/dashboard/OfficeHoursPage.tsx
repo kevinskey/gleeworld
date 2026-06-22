@@ -1,0 +1,37 @@
+// Office Hours — Calendly-style workshop for instructors, clean booking
+// surface for students. The instructor "workshop" lets teachers configure
+// services, set availability (which works with their Google Calendar busy
+// data), and review bookings. Students see only available services and times.
+
+import { lazy, Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
+import { useUserRole } from '@/hooks/useUserRole';
+
+const InstructorWorkshop = lazy(() => import('@/components/officehours/InstructorWorkshop'));
+const StudentBooking = lazy(() => import('@/components/officehours/StudentBooking'));
+
+export default function OfficeHoursPage() {
+  const { profile } = useProfile();
+  const { isSuperAdmin, isAdmin } = useUserRole();
+  const isInstructor = isSuperAdmin() || isAdmin() || profile?.role === 'instructor';
+
+  return (
+    <div className="max-w-5xl mx-auto px-6 py-6 space-y-5">
+      <div>
+        <h1 className="font-sans normal-case font-bold tracking-tight leading-tight text-2xl">
+          Office Hours
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1.5">
+          {isInstructor
+            ? 'Configure your services, set the times students can book, and review what\'s on the calendar.'
+            : 'Pick a service, choose an open time, and we\'ll sync it to your calendar.'}
+        </p>
+      </div>
+
+      <Suspense fallback={<div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div>}>
+        {isInstructor ? <InstructorWorkshop /> : <StudentBooking />}
+      </Suspense>
+    </div>
+  );
+}

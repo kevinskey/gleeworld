@@ -764,7 +764,7 @@ export const HotelManagement = () => {
                 <span className="text-xs font-medium text-muted-foreground">Stop</span>
                 <span className="text-lg font-bold text-primary">{index + 1}</span>
                 {hotel.check_in_date && (
-                  <span className="text-[10px] text-muted-foreground text-center leading-tight mt-0.5">
+                  <span className="text-xs text-muted-foreground text-center leading-tight mt-0.5">
                     {new Date(hotel.check_in_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 )}

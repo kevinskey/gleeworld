@@ -293,7 +293,7 @@ export function NativePowerPointViewer({
                   </p>
                 ))}
               </div>
-              <div className="absolute bottom-1 right-1 bg-background/80 text-[10px] px-1.5 py-0.5 rounded">
+              <div className="absolute bottom-1 right-1 bg-background/80 text-xs px-1.5 py-0.5 rounded">
                 {idx + 1}
               </div>
             </button>

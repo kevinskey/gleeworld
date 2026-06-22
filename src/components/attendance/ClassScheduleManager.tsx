@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface ClassSchedule {
   id: string;
@@ -139,8 +140,6 @@ export default function ClassScheduleManager() {
   };
 
   const handleDelete = async (scheduleId: string) => {
-    if (!confirm('Are you sure you want to delete this class schedule?')) return;
-
     try {
       const { error } = await supabase
         .from('gw_class_schedules')
@@ -442,14 +441,16 @@ export default function ClassScheduleManager() {
                     >
                       <Edit className="h-3 w-3" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(schedule.id)}
-                      className="gap-1 text-destructive hover:text-destructive"
+                    <ConfirmDeleteButton
+                      confirmKey="delete-class-schedule"
+                      title="Delete this class schedule?"
+                      description="The schedule is archived; existing attendance records remain."
+                      onConfirm={() => handleDelete(schedule.id)}
+                      ariaLabel="Delete schedule"
+                      className="inline-flex items-center justify-center rounded-md border border-input bg-background h-9 px-3 gap-1 text-destructive hover:text-destructive hover:bg-muted"
                     >
                       <Trash2 className="h-3 w-3" />
-                    </Button>
+                    </ConfirmDeleteButton>
                   </div>
                 </div>
               </CardHeader>

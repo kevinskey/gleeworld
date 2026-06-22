@@ -38,6 +38,7 @@ import { WardrobeCSVImportDialog } from "./WardrobeCSVImportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface WardrobeItem {
   id: string;
@@ -297,10 +298,6 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
   };
 
   const handleDelete = async (item: WardrobeItem) => {
-    if (!confirm(`Are you sure you want to delete "${item.item_name}"? This action cannot be undone.`)) {
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('gw_wardrobe_inventory')
@@ -658,14 +655,16 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                                  >
                                    <Edit className="h-3 w-3" />
                                  </Button>
-                                 <Button 
-                                   variant="ghost" 
-                                   size="sm" 
-                                   className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                                   onClick={() => handleDelete(item)}
+                                 <ConfirmDeleteButton
+                                   confirmKey="delete-wardrobe-item"
+                                   title={`Delete "${item.item_name}"?`}
+                                   description="This action cannot be undone."
+                                   onConfirm={() => handleDelete(item)}
+                                   ariaLabel="Delete item"
+                                   className="inline-flex items-center justify-center rounded-md h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                                  >
                                    <Trash2 className="h-3 w-3" />
-                                 </Button>
+                                 </ConfirmDeleteButton>
                                </div>
                             </div>
                             
@@ -811,14 +810,16 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                              >
                                <Edit className="h-4 w-4" />
                              </Button>
-                             <Button 
-                               variant="ghost" 
-                               size="sm" 
-                               className="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive"
-                               onClick={() => handleDelete(item)}
+                             <ConfirmDeleteButton
+                               confirmKey="delete-wardrobe-item"
+                               title={`Delete "${item.item_name}"?`}
+                               description="This action cannot be undone."
+                               onConfirm={() => handleDelete(item)}
+                               ariaLabel="Delete item"
+                               className="inline-flex items-center justify-center rounded-md h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive"
                              >
                                <Trash2 className="h-4 w-4" />
-                             </Button>
+                             </ConfirmDeleteButton>
                            </div>
                         </TableCell>
                       </TableRow>

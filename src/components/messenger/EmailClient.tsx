@@ -42,7 +42,7 @@ interface SentEmail {
 const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024;
 const MAX_ATTACHMENTS = 5;
 
-export function EmailClient({ onClose }: { onClose: () => void }) {
+export function EmailClient({ onClose, inline = false }: { onClose: () => void; inline?: boolean }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [view, setView] = useState<'compose' | 'history'>('compose');
@@ -218,8 +218,12 @@ export function EmailClient({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 sm:p-4">
-      <div className="w-full max-w-4xl h-full sm:h-[85vh] bg-white text-gray-900 rounded-none sm:rounded-xl shadow-xl flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0">
+    <div className={inline
+      ? "w-full h-full flex"
+      : "fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-0 sm:p-4"}>
+      <div className={inline
+        ? "w-full h-full bg-card text-foreground flex flex-col overflow-hidden"
+        : "w-full max-w-4xl h-full sm:h-[85vh] bg-white text-gray-900 rounded-none sm:rounded-xl shadow-xl flex flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0"}>
         {/* Title bar */}
         <div className="border-b px-4 py-3 flex items-center justify-between bg-white">
           <h2 className="font-semibold flex items-center gap-2"><Mail className="w-5 h-5" /> Email</h2>
@@ -372,7 +376,7 @@ export function EmailClient({ onClose }: { onClose: () => void }) {
                   >
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="font-medium text-sm truncate">{e.title || '(no subject)'}</span>
-                      <span className="text-[11px] text-muted-foreground shrink-0">
+                      <span className="text-sm text-muted-foreground shrink-0">
                         {new Date(e.sent_at || e.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                       </span>
                     </div>

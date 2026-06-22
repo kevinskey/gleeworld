@@ -18,6 +18,7 @@ import backgroundImage from '@/assets/mus240-background.jpg';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 export default function Groups() {
   const navigate = useNavigate();
   const {
@@ -127,19 +128,15 @@ export default function Groups() {
     }
   };
   const handleDeleteGroup = async (groupId: string) => {
-    if (confirm('Are you sure you want to delete this group?')) {
-      try {
-        await deleteGroup(groupId);
-        toast.success('Group deleted successfully!');
-      } catch (err) {
-        toast.error('Failed to delete group');
-      }
+    try {
+      await deleteGroup(groupId);
+      toast.success('Group deleted successfully!');
+    } catch (err) {
+      toast.error('Failed to delete group');
     }
   };
   const handleCreateProjectGroups = async () => {
-    if (!confirm('This will create all 6 project type groups. Are you sure?')) {
-      return;
-    }
+    // TODO: replace with themed AlertDialog (bulk-create confirm, not tied to a delete button)
     setAutoAssigning(true);
     try {
       console.log('Starting to create project groups...');
@@ -190,9 +187,7 @@ export default function Groups() {
     }
   };
   const handleAutoAssignGroups = async () => {
-    if (!confirm('This will clear all existing groups and create new ones with the project types. Are you sure?')) {
-      return;
-    }
+    // TODO: replace with themed AlertDialog (destructive bulk action, not tied to a delete button)
     setAutoAssigning(true);
     try {
       // 1. Delete all existing groups and memberships
@@ -306,12 +301,6 @@ export default function Groups() {
     }
   };
   const handleDeleteAllGroups = async () => {
-    if (!window.confirm('Are you sure you want to delete ALL MUS 240 groups? This action cannot be undone and will remove all groups, memberships, and applications.')) {
-      return;
-    }
-    if (!window.confirm('This will permanently delete all groups and cannot be reversed. Are you absolutely sure?')) {
-      return;
-    }
     setDeletingAllGroups(true);
     try {
       const session = await supabase.auth.getSession();
@@ -348,9 +337,6 @@ export default function Groups() {
     }
   };
   const handleLeaveGroup = async (groupId: string) => {
-    if (!confirm('Are you sure you want to leave this group?')) {
-      return;
-    }
     try {
       await leaveGroup(groupId);
       toast.success('Successfully left the group');
@@ -442,7 +428,15 @@ export default function Groups() {
             {hasAdminAccess && <div className="flex flex-wrap gap-2 justify-center">
                 
                 
-                <Button onClick={handleDeleteAllGroups} disabled={deletingAllGroups} variant="destructive" className="shadow-md">
+                <ConfirmDeleteButton
+                  confirmKey="delete-all-mus240-groups"
+                  title="Delete ALL MUS 240 groups?"
+                  description="This permanently removes every group, membership, and application. Cannot be undone."
+                  onConfirm={handleDeleteAllGroups}
+                  disabled={deletingAllGroups}
+                  ariaLabel="Delete all groups"
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md disabled:opacity-50"
+                >
                   {deletingAllGroups ? <>
                       <Clock className="h-4 w-4 mr-2 animate-spin" />
                       Deleting...
@@ -450,7 +444,7 @@ export default function Groups() {
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete All Groups
                     </>}
-                </Button>
+                </ConfirmDeleteButton>
               </div>}
           </div>
 
@@ -533,9 +527,16 @@ export default function Groups() {
                           })} variant="ghost" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50" title="Edit Group">
                             <Edit2 className="h-4 w-4" />
                           </Button>
-                          {hasAdminAccess && <Button onClick={() => handleDeleteGroup(group.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/20">
+                          {hasAdminAccess && <ConfirmDeleteButton
+                              confirmKey="delete-mus240-group"
+                              title="Delete this group?"
+                              description="All memberships and applications for this group will be removed."
+                              onConfirm={() => handleDeleteGroup(group.id)}
+                              ariaLabel="Delete group"
+                              className="inline-flex items-center justify-center rounded-md h-9 w-9 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                            >
                               <Trash2 className="h-4 w-4" />
-                            </Button>}
+                            </ConfirmDeleteButton>}
                         </div>
                       </div>
                     </CardHeader>
@@ -577,9 +578,17 @@ export default function Groups() {
                                <UserCheck className="h-3 w-3 mr-1" />
                                Your Group
                              </Badge>
-                             <Button onClick={() => handleLeaveGroup(group.id)} variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50" title="Leave Group">
+                             <ConfirmDeleteButton
+                               confirmKey="leave-mus240-group"
+                               title="Leave this group?"
+                               description="You'll be removed from this group's roster."
+                               onConfirm={() => handleLeaveGroup(group.id)}
+                               confirmLabel="Leave"
+                               ariaLabel="Leave group"
+                               className="inline-flex items-center justify-center rounded-md h-9 px-3 text-red-600 border border-red-300 hover:bg-red-50"
+                             >
                                <X className="h-4 w-4" />
-                             </Button>
+                             </ConfirmDeleteButton>
                             </div>}
                        </div>
                     </CardContent>
@@ -634,9 +643,17 @@ export default function Groups() {
                         </div>
                         
                         <div className="flex justify-end">
-                          <Button onClick={() => handleLeaveGroup(userGroup.id)} variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50">
+                          <ConfirmDeleteButton
+                            confirmKey="leave-mus240-group"
+                            title="Leave this group?"
+                            description="You'll be removed from this group's roster."
+                            onConfirm={() => handleLeaveGroup(userGroup.id)}
+                            confirmLabel="Leave"
+                            ariaLabel="Leave group"
+                            className="inline-flex items-center justify-center rounded-md h-9 px-3 text-red-600 border border-red-300 hover:bg-red-50"
+                          >
                             Leave Group
-                          </Button>
+                          </ConfirmDeleteButton>
                         </div>
                       </div>
                     </CardContent>

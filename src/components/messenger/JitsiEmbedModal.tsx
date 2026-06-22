@@ -1,7 +1,14 @@
 // In-app Jitsi meeting via direct iframe — rendered inline in the chat pane,
 // not a popup. Simpler and more reliable than the External API.
+//
+// Base URL is the public meet.jit.si until the self-hosted instance at
+// meet.gleeworld.org is provisioned (the subdomain currently has no DNS
+// record, which is why "Jitsi is broken" with the previous URL).
+// To flip to self-hosted later, change JITSI_BASE below.
 import { Button } from '@/components/ui/button';
 import { X, Video } from 'lucide-react';
+
+const JITSI_BASE = 'https://meet.jit.si';
 
 interface JitsiMeetingPanelProps {
   roomName: string;
@@ -22,7 +29,7 @@ export function JitsiMeetingPanel({ roomName, userName, onClose }: JitsiMeetingP
     `userInfo.displayName=${encodeURIComponent(`"${userName}"`)}`,
   ].join('&');
 
-  const src = `https://meet.gleeworld.org/${roomName}#${hash}`;
+  const src = `${JITSI_BASE}/${roomName}#${hash}`;
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">

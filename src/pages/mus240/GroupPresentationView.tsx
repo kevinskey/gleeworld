@@ -374,7 +374,7 @@ export default function GroupPresentationView() {
             <span className="hidden sm:inline">Back to List</span>
             <span className="sm:hidden">Back</span>
           </Link>
-          <div className="text-white/80 text-[10px] sm:text-sm text-center">
+          <div className="text-white/80 text-xs sm:text-sm text-center">
             <div className="sm:hidden">
               {currentSlideIndex + 1}/{slides.length}
             </div>
@@ -404,7 +404,7 @@ export default function GroupPresentationView() {
           <div className="absolute bottom-0 left-0 right-0 px-3 sm:px-8 py-2 sm:py-4 bg-black/20 backdrop-blur-sm">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 text-white/70 text-xs sm:text-sm">
               <span className="truncate max-w-full">{update.group_name}</span>
-              <span className="text-[10px] sm:text-sm truncate max-w-full">
+              <span className="text-xs sm:text-sm truncate max-w-full">
                 <span className="hidden sm:inline">Submitted by {update.submitter_name} • </span>
                 {new Date(update.created_at).toLocaleDateString()}
               </span>
@@ -468,7 +468,7 @@ export default function GroupPresentationView() {
                 <span className="sm:hidden">Prev</span>
               </Button>
               
-              <span className="text-white/50 text-[10px] sm:text-xs hidden sm:inline">
+              <span className="text-white/50 text-xs sm:text-xs hidden sm:inline">
                 Switch Presentations
               </span>
 
@@ -487,7 +487,7 @@ export default function GroupPresentationView() {
           )}
 
           {/* Keyboard Hints */}
-          <div className="text-center text-white/40 text-[10px] sm:text-xs mt-2 sm:mt-3 hidden sm:block">
+          <div className="text-center text-white/40 text-xs sm:text-xs mt-2 sm:mt-3 hidden sm:block">
             Use ← → arrow keys to navigate slides • ESC to return to list
           </div>
         </div>

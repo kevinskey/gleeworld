@@ -27,6 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { OrderOfMassMusicEditor } from './OrderOfMassMusicEditor';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 export interface LH100Module {
   id: string;
@@ -351,18 +352,17 @@ export const WeeklyModuleEditor: React.FC<WeeklyModuleEditorProps> = ({
       {/* Delete Option (Admin Only) */}
       {isEditing && isAdmin && onDelete && (
         <div className="pt-4 border-t">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => {
-              if (confirm('Are you sure you want to delete this module?')) {
-                onDelete(module.id);
-              }
-            }}
+          <ConfirmDeleteButton
+            confirmKey="delete-lh100-module"
+            title="Delete this module?"
+            description="The weekly module and its content will be removed."
+            onConfirm={() => onDelete(module.id)}
+            ariaLabel="Delete module"
+            className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete Module
-          </Button>
+          </ConfirmDeleteButton>
         </div>
       )}
     </div>

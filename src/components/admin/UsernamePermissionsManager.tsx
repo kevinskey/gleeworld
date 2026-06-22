@@ -168,15 +168,15 @@ export const UsernamePermissionsManager = () => {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate text-foreground">{permission.user_email}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <Badge variant="secondary" className="text-[10px]">
+                      <Badge variant="secondary" className="text-xs">
                         {module?.title || permission.module_name}
                       </Badge>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {new Date(permission.granted_at).toLocaleDateString()}
                       </span>
                     </div>
                     {permission.notes && (
-                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">{permission.notes}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{permission.notes}</p>
                     )}
                   </div>
                   <Button

@@ -28,9 +28,13 @@ export function ModuleWrapper({
           <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
         </div>
 
-        <div className="flex items-center justify-center gap-3">
-          <Icon className="h-6 w-6 text-slate-700 dark:text-slate-200" />
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-wide">
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-slate-700 dark:text-slate-200" />
+          {/* tracking-wide bloated long titles like "Auditions Management"
+              past the iPad-portrait container and looked like letters were
+              colliding. Switching to tracking-tight + responsive font-size
+              keeps them legible at every width. */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 tracking-tight text-center break-words max-w-full">
             {title}
           </h1>
         </div>

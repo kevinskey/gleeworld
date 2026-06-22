@@ -232,12 +232,12 @@ export const TourWeatherSection: React.FC = () => {
                     <MapPin className="h-4 w-4 text-primary" />
                     {w.city}{w.state ? `, ${w.state}` : ''}
                   </CardTitle>
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-xs">
                     Stop {idx + 1}
                   </Badge>
                 </div>
                 {w.arrivalDate && (
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {new Date(w.arrivalDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     {w.departureDate && ` – ${new Date(w.departureDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                   </p>

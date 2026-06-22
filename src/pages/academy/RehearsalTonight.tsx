@@ -366,7 +366,7 @@ export default function RehearsalTonight() {
                           {e.full_name || e.email || "(no name)"}
                         </div>
                         {e.voice_part && (
-                          <div className="text-[10px] sm:text-xs text-slate-500">{e.voice_part}</div>
+                          <div className="text-xs sm:text-xs text-slate-500">{e.voice_part}</div>
                         )}
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
@@ -377,7 +377,7 @@ export default function RehearsalTonight() {
                               key={s}
                               onClick={() => setStatus(e.user_id, s)}
                               disabled={saving}
-                              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-xs font-semibold transition-all ${
+                              className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-xs sm:text-xs font-semibold transition-all ${
                                 active
                                   ? "text-white shadow-sm"
                                   : "text-slate-600 bg-slate-100 hover:bg-slate-200"
@@ -418,7 +418,7 @@ export default function RehearsalTonight() {
                 rows={6}
                 className="text-sm font-mono resize-none"
               />
-              <p className="text-[10px] text-slate-400 mt-2">
+              <p className="text-xs text-slate-400 mt-2">
                 Local only — link to the Music Library for full search.
               </p>
             </div>

@@ -140,7 +140,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5 text-primary" />
             Glee Cam
-            <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
+            <span className="text-xs md:text-xs font-normal text-foreground/70 ml-2 uppercase">
               member moments
             </span>
           </CardTitle>
@@ -170,7 +170,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5 text-primary" />
             Glee Cam
-            <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
+            <span className="text-xs md:text-xs font-normal text-foreground/70 ml-2 uppercase">
               member moments
             </span>
           </CardTitle>
@@ -267,7 +267,7 @@ const SlideItem = ({
         )}
         {slide.description && (
           <p 
-            className="text-[9px] sm:text-[10px] line-clamp-1 drop-shadow-md"
+            className="text-[9px] sm:text-xs line-clamp-1 drop-shadow-md"
             style={{ color: 'rgba(255,255,255,0.95)' }}
           >
             {slide.description}

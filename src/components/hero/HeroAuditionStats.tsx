@@ -61,11 +61,11 @@ export const HeroAuditionStats: React.FC<{ className?: string }>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           {/* Audition total */}
           <div className="flex-1">
-            <div className="text-[11px] md:text-xs text-muted-foreground">Number of Auditions Scheduled</div>
+            <div className="text-sm md:text-xs text-muted-foreground">Number of Auditions Scheduled</div>
             <div className="text-xl md:text-2xl font-semibold tracking-tight">{loading ? '—' : total.toLocaleString()}</div>
           </div>
         </div>
-        {error && <div className="mt-2 text-[11px] text-destructive">{error}</div>}
+        {error && <div className="mt-2 text-sm text-destructive">{error}</div>}
       </div>
     </div>
   );

@@ -349,7 +349,7 @@ export const SheetMusicLibrary = ({
               {(item.composer || item.arranger) && (
                 <p 
                   className={`text-muted-foreground truncate ${
-                    isMobile && columns >= 2 ? 'text-[10px]' : 'text-xs'
+                    isMobile && columns >= 2 ? 'text-xs' : 'text-xs'
                   }`} 
                   title={item.composer || item.arranger || ''}
                 >
@@ -361,7 +361,7 @@ export const SheetMusicLibrary = ({
               {(isSelected || (isMobile && columns === 1)) && (
                 <div className="mt-2 space-y-1.5">
                   {(item.key_signature || item.time_signature) && (
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       {item.key_signature && <span>Key: {item.key_signature}</span>}
                       {item.time_signature && <span>• {item.time_signature}</span>}
                     </div>
@@ -370,12 +370,12 @@ export const SheetMusicLibrary = ({
                   {item.voice_parts && item.voice_parts.length > 0 && columns === 1 && (
                     <div className="flex flex-wrap gap-1">
                       {item.voice_parts.slice(0, 3).map((part, index) => (
-                        <Badge key={index} variant="outline" className="text-[10px] px-1.5 py-0">
+                        <Badge key={index} variant="outline" className="text-xs px-1.5 py-0">
                           {part}
                         </Badge>
                       ))}
                       {item.voice_parts.length > 3 && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        <Badge variant="outline" className="text-xs px-1.5 py-0">
                           +{item.voice_parts.length - 3}
                         </Badge>
                       )}

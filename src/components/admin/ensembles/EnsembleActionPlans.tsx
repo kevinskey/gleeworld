@@ -185,7 +185,7 @@ function PlanView({
                   #{r.rank}
                 </Badge>
                 <span className="text-sm font-medium">{r.title}</span>
-                <Badge variant="outline" className="text-[10px] uppercase ml-auto">
+                <Badge variant="outline" className="text-xs uppercase ml-auto">
                   {r.flag_key}
                 </Badge>
               </div>
@@ -196,7 +196,7 @@ function PlanView({
                 ))}
               </ul>
               {r.owner_hint && (
-                <p className="text-[11px] text-muted-foreground italic">Owner: {r.owner_hint}</p>
+                <p className="text-sm text-muted-foreground italic">Owner: {r.owner_hint}</p>
               )}
             </li>
           ))}

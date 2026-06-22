@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
+import { useEventCategories } from "@/hooks/useEventCategories";
+import { pushEventToGoogle } from "@/hooks/useGoogleConnection";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,10 +93,13 @@ export const CreateEventDialog = ({
   const [startTime, setStartTime] = useState('9:00 AM');
   const [endTime, setEndTime] = useState('10:00 AM');
   
+  const { data: categoryOptions = [] } = useEventCategories();
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     event_type: 'meeting',
+    category: '',
     timezone: 'America/New_York',
     venue_name: '',
     address: '',
@@ -372,6 +377,7 @@ export const CreateEventDialog = ({
         title: formData.title.trim(),
         description: formData.description?.trim() || null,
         event_type: formData.event_type,
+        category: formData.category || null,
         start_date: startDateTime.toISOString(),
         end_date: endDateTime.toISOString(),
         location: null,
@@ -405,6 +411,10 @@ export const CreateEventDialog = ({
         console.error('Database error:', error);
         throw error;
       }
+
+      // Mirror to Google Calendar (no-op if the user isn't connected or
+      // doesn't have write scope). Fire-and-forget — never blocks the UI.
+      pushEventToGoogle(newEvent.id, 'create');
 
       // Upload image if selected
       if (imageFile) {
@@ -487,6 +497,7 @@ export const CreateEventDialog = ({
       title: '',
       description: '',
       event_type: 'meeting',
+      category: '',
       timezone: 'America/New_York',
       venue_name: '',
       address: '',
@@ -905,6 +916,27 @@ export const CreateEventDialog = ({
                   ))}
                 </SelectContent>
               </Select>
+              {categoryOptions.length > 0 && (
+                <Select
+                  value={formData.category || '__none__'}
+                  onValueChange={value => setFormData(prev => ({ ...prev, category: value === '__none__' ? '' : value }))}
+                >
+                  <SelectTrigger className="flex-1 h-10">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    <SelectItem value="__none__">No category</SelectItem>
+                    {categoryOptions.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.slug}>
+                        <span className="inline-flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: cat.color }} />
+                          {cat.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               {calendars.length > 0 && (
                 <Select 
                   value={selectedCalendarId} 

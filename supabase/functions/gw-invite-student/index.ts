@@ -37,21 +37,58 @@ serve(async (req) => {
     // existing user → ?next" routing.
     const origin = (body.appOrigin || "").replace(/\/+$/, "");
     let next = "/academy";
+    let courseTitle = ""; // used in the email subject + body
     if (body.courseId) {
-      // Look up the course_code so we can deep-link to the class page.
-      const { data: c } = await supabase.from("gw_courses").select("course_code").eq("id", body.courseId).maybeSingle();
-      if (c?.course_code) next = `/academy/c/${String(c.course_code).toLowerCase()}`;
+      // Look up the course_code AND title so we can deep-link to the
+      // class page and address the student by the class name in the
+      // invite email. Slug convention matches CourseShell's URL parser:
+      // lowercase + spaces → hyphens. e.g. "GLEE 000" → "glee-000".
+      const { data: c } = await supabase
+        .from("gw_courses")
+        .select("course_code, title")
+        .eq("id", body.courseId)
+        .maybeSingle();
+      if (c?.course_code) {
+        const slug = String(c.course_code).toLowerCase().replace(/\s+/g, "-");
+        next = `/academy/c/${slug}`;
+      }
+      if (c?.title) courseTitle = String(c.title);
     }
     const redirectTo = origin ? `${origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
-    const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
-      type: "magiclink",
-      email: body.email,
-      options: { redirectTo },
+
+    // Call GoTrue's admin endpoint directly. The supabase-js SDK nests
+    // redirectTo under `options`, but GoTrue's admin/generate_link
+    // expects `redirect_to` at the top level — when it's nested,
+    // GoTrue silently falls back to SITE_URL (no path, no query), so
+    // the magic link redirects to `https://gleeworld.org/` instead of
+    // `/auth/callback?next=…` and the user sees a hung "Signing you in…".
+    const goTrueUrl = `${Deno.env.get("SUPABASE_URL") ?? ""}/auth/v1/admin/generate_link`;
+    const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const linkRes = await fetch(goTrueUrl, {
+      method: "POST",
+      headers: {
+        apikey: serviceRole,
+        Authorization: `Bearer ${serviceRole}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type: "magiclink",
+        email: body.email,
+        ...(redirectTo ? { redirect_to: redirectTo } : {}),
+      }),
     });
-    if (linkErr) throw new Error(`Magic link failed: ${linkErr.message}`);
-    const actionLink = linkData?.properties?.action_link;
-    const userId = linkData?.user?.id;
-    if (!actionLink || !userId) throw new Error("No action_link or user_id returned");
+    if (!linkRes.ok) {
+      const text = await linkRes.text().catch(() => "");
+      throw new Error(`Magic link failed: ${linkRes.status} ${text}`);
+    }
+    const linkData = await linkRes.json();
+    const actionLink: string | undefined = linkData?.action_link
+      ?? linkData?.properties?.action_link;
+    const userId: string | undefined = linkData?.user?.id
+      ?? linkData?.id;
+    if (!actionLink || !userId) {
+      throw new Error("No action_link or user_id returned from generate_link");
+    }
 
     // 2. Resolve tenant_id — needed for both profile and tenant membership so
     //    storage/RLS work for the new user.
@@ -108,12 +145,18 @@ serve(async (req) => {
     // Sender shows the tenant's name (the actual address stays on our verified
     // gleeworld.org domain so Resend will deliver).
     const safeFromName = orgName.replace(/[<>"]/g, "").trim() || "Your music program";
-    const subject = `Welcome to ${orgName}`;
+    // Subject + body lead with the class name when we have one ("You're
+    // invited to join Choir 101"). Fall back to the org name when this
+    // invite isn't tied to a specific course.
+    const classLabel = courseTitle || orgName;
+    const subject = courseTitle
+      ? `You're invited to join ${courseTitle}`
+      : `You're invited to join ${orgName}`;
     const html = `
       <div style="font-family:sans-serif;max-width:600px;padding:24px;">
-        <h2 style="color:#1a1a1a;">Welcome to ${escapeHtml(orgName)}.</h2>
-        <p>You've been invited to join. Click below to sign in — no password needed.</p>
-        <p><a href="${actionLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Sign in to your account</a></p>
+        <h2 style="color:#1a1a1a;">You're invited to join ${escapeHtml(classLabel)}.</h2>
+        <p>Click the link below to accept your invitation and sign in — no password needed.</p>
+        <p><a href="${actionLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
         <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${actionLink}</p>
       </div>
     `;

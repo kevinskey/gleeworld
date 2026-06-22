@@ -95,7 +95,7 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
           rows={10}
           className="font-mono text-sm"
         />
-        <p className="text-[11px] text-slate-500">
+        <p className="text-sm text-slate-500">
           Tip: blank lines separate paragraphs. Start a line with <code>## </code> for a section heading or <code>### </code> for a sub-heading.
         </p>
       </div>

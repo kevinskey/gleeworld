@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   BookOpen,
   Upload,
   Camera,
@@ -14,6 +18,7 @@ import {
   Clock,
   AlertCircle,
   ChevronLeft,
+  AlertTriangle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +56,11 @@ const modules: ModuleConfig[] = [
 export const LibrarianDashboard = () => {
   const [activeModule, setActiveModule] = useState<ModuleKey>('home');
   const [showScanner, setShowScanner] = useState(false);
+  // Copyright disclaimer that gates the scanner. Opens when the user
+  // clicks "Scan New Score" / "Scan" in the header; the scanner only
+  // mounts after they acknowledge. Shown each time so the librarian
+  // is reminded what they're certifying before they capture.
+  const [scanDisclaimerOpen, setScanDisclaimerOpen] = useState(false);
   const navigate = useNavigate();
   const homePath = useHomePath();
   const { toast } = useToast();
@@ -148,7 +158,7 @@ export const LibrarianDashboard = () => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setShowScanner(true)}
+            onClick={() => setScanDisclaimerOpen(true)}
             className="h-9 gap-1.5"
           >
             <Camera className="h-4 w-4" />
@@ -194,7 +204,7 @@ export const LibrarianDashboard = () => {
                   <FileText className="h-4 w-4 text-primary" />
                   <span className="font-semibold text-sm">Quick Actions</span>
                 </div>
-                <Button size="sm" className="w-full h-10 text-sm" onClick={() => setShowScanner(true)}>
+                <Button size="sm" className="w-full h-10 text-sm" onClick={() => setScanDisclaimerOpen(true)}>
                   <Camera className="h-4 w-4 mr-2" />
                   Scan New Score
                 </Button>
@@ -259,6 +269,31 @@ export const LibrarianDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Copyright disclaimer — gates the scanner. The librarian must
+          tap "I understand" before the camera + scan flow mounts. */}
+      <AlertDialog open={scanDisclaimerOpen} onOpenChange={setScanDisclaimerOpen}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Copyright notice
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm leading-relaxed text-foreground/90">
+              By uploading content to GleeWorld, you certify that you own the content or have
+              obtained all necessary licenses and permissions to use and distribute it. You are
+              responsible for complying with all copyright laws and publisher licensing
+              requirements. GleeWorld serves as a content management platform and does not
+              grant or transfer copyright permissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => { setScanDisclaimerOpen(false); setShowScanner(true); }}>
+              I understand
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Document Scanner Modal */}
       {showScanner && (

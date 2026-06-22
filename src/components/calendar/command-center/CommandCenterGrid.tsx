@@ -84,13 +84,16 @@ export const CommandCenterGrid = ({
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
       {/* Day Headers */}
-      <div className="grid grid-cols-7 bg-[#003366] text-white flex-shrink-0">
+      <div className="grid grid-cols-7 bg-card border-b border-border  text-foreground flex-shrink-0">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
           <div
             key={idx}
-            className="py-2.5 text-center text-sm font-semibold tracking-wide border-r border-[#002244] last:border-r-0"
+            className="py-2.5 px-1 text-center text-sm font-semibold tracking-wide border-r border-border last:border-r-0 overflow-hidden"
           >
-            {day}
+            {/* Show full label on roomy screens; abbreviate to 1 letter
+                on iPad / cramped widths so they never touch each other. */}
+            <span className="hidden lg:inline">{day}</span>
+            <span className="lg:hidden">{day.charAt(0)}</span>
           </div>
         ))}
       </div>
@@ -125,10 +128,10 @@ export const CommandCenterGrid = ({
               <div className="flex items-center justify-between mb-1.5">
                 <span className={cn(
                   "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold",
-                  !isCurrentMonth && "text-slate-400",
+                  !isCurrentMonth && "text-muted-foreground",
                   isCurrentMonth && !isToday && !isSelected && "text-slate-800",
-                  isToday && "bg-[#003366] text-white",
-                  isSelected && !isToday && "bg-[#B8860B] text-white"
+                  isToday && "bg-card border-b border-border text-foreground",
+                  isSelected && !isToday && "bg-primary text-foreground"
                 )}>
                   {format(day, 'd')}
                 </span>
@@ -145,7 +148,7 @@ export const CommandCenterGrid = ({
                   {dayAvailability.filter(s => s.is_available).map(slot => (
                     <div
                       key={slot.id}
-                      className="rounded px-1 py-0.5 text-[10px] leading-tight truncate"
+                      className="rounded px-1 py-0.5 text-xs leading-tight truncate"
                       style={{
                         backgroundColor: 'rgba(6, 182, 212, 0.15)',
                         color: 'rgba(6, 125, 150, 0.7)',
@@ -176,7 +179,7 @@ export const CommandCenterGrid = ({
                     );
                   })}
                   {dayEvents.length > (viewMode === 'week' ? 5 : 3) && (
-                    <span className="text-xs text-slate-500 font-medium pl-1">
+                    <span className="text-xs text-muted-foreground font-medium pl-1">
                       +{dayEvents.length - (viewMode === 'week' ? 5 : 3)} more
                     </span>
                   )}

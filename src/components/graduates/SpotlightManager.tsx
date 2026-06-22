@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface Spotlight {
   id: string;
@@ -104,8 +105,6 @@ export const SpotlightManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this spotlight?")) return;
-
     const { error } = await supabase
       .from("alumnae_newsletter_spotlights")
       .delete()
@@ -270,13 +269,16 @@ export const SpotlightManager = () => {
                       <p className="text-sm mt-2">{spotlight.description}</p>
                     )}
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDelete(spotlight.id)}
+                  <ConfirmDeleteButton
+                    confirmKey="delete-spotlight"
+                    title="Delete this spotlight?"
+                    description="The spotlight will be removed from this newsletter."
+                    onConfirm={() => handleDelete(spotlight.id)}
+                    ariaLabel="Delete spotlight"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </ConfirmDeleteButton>
                 </div>
               ))}
             </div>

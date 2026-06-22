@@ -923,7 +923,7 @@ export const GleeAssistant = () => {
               <div className="mt-2 flex items-center gap-2">
                 <Volume2 className="h-3 w-3 text-slate-400" />
                 <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-                  <SelectTrigger className="h-6 text-[10px] flex-1 border-none bg-transparent p-0 shadow-none">
+                  <SelectTrigger className="h-6 text-xs flex-1 border-none bg-transparent p-0 shadow-none">
                     <SelectValue placeholder="Voice" />
                   </SelectTrigger>
                   <SelectContent>

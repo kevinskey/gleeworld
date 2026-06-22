@@ -464,7 +464,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         {urgentAssignment && (
           <Card className={`${isMus070 ? `${glassCard} border-l-4 border-l-sky-400` : 'border-l-4 border-l-primary'}`}>
             <CardHeader className="pb-2">
-              <CardTitle className={`flex items-center gap-2 text-base font-semibold ${glassText}`}>
+              <CardTitle className={`flex items-center gap-2 text-lg font-semibold ${glassText}`}>
                 <ClipboardList className={`h-4 w-4 ${glassAccent}`} />
                 What's Due Next
               </CardTitle>
@@ -537,7 +537,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         <Card className={glassCard}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className={`flex items-center gap-2 text-base font-semibold ${glassText}`}>
+              <CardTitle className={`flex items-center gap-2 text-lg font-semibold ${glassText}`}>
                 <FileText className={`h-4 w-4 ${glassAccent}`} />
                 Current Module / Week
               </CardTitle>
@@ -608,7 +608,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
             {/* Assignments List */}
             <div className="space-y-3">
-              <h4 className={`font-semibold text-base ${glassText}`}>Assignments</h4>
+              <h4 className={`font-semibold text-lg ${glassText}`}>Assignments</h4>
               {assignments.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No assignments yet</p>
               ) : (
@@ -689,7 +689,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
             {/* Announcements Section */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-base flex items-center gap-2">
+                <h4 className="font-semibold text-lg flex items-center gap-2">
                   <Bell className="h-4 w-4 text-muted-foreground" />
                   Announcements
                 </h4>
@@ -722,9 +722,9 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm">{announcement.title}</p>
+                                <p className="font-semibold text-base">{announcement.title}</p>
                                 {announcement.is_pinned && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                                  <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4">
                                     Pinned
                                   </Badge>
                                 )}
@@ -765,7 +765,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         {/* Upcoming Events & Assignments */}
         <Card className={glassCard}>
           <CardHeader className="pb-3">
-            <CardTitle className={`text-base font-semibold flex items-center gap-2 ${glassText}`}>
+            <CardTitle className={`text-lg font-semibold flex items-center gap-2 ${glassText}`}>
               <Calendar className={`h-4 w-4 ${glassAccent}`} />
               Upcoming
             </CardTitle>
@@ -796,7 +796,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                   }}
                 >
                   <div className="flex-shrink-0 w-10 text-center">
-                    <div className={`text-[10px] font-semibold uppercase ${
+                    <div className={`text-xs font-semibold uppercase ${
                       event.is_assignment ? 'text-primary' : 'text-muted-foreground'
                     }`}>
                       {format(new Date(event.start_date), 'MMM')}
@@ -809,7 +809,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm truncate">{event.title}</p>
                       {event.is_assignment && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+                        <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 shrink-0">
                           {event.points} pts
                         </Badge>
                       )}
@@ -842,7 +842,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         {/* Attendance Summary */}
         <Card className={glassCard}>
           <CardHeader className="pb-3">
-            <CardTitle className={`text-base font-semibold flex items-center gap-2 ${glassText}`}>
+            <CardTitle className={`text-lg font-semibold flex items-center gap-2 ${glassText}`}>
               <CheckCircle className={`h-4 w-4 ${glassAccent}`} />
               Attendance
             </CardTitle>
@@ -856,7 +856,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                   </div>
                 </div>
                 <p className="text-lg font-bold text-green-600">{attendanceStats.present}</p>
-                <p className="text-[10px] text-muted-foreground">Present</p>
+                <p className="text-xs text-muted-foreground">Present</p>
               </div>
               <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-3 text-center">
                 <div className="flex justify-center mb-1">
@@ -865,7 +865,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                   </div>
                 </div>
                 <p className="text-lg font-bold text-red-600">{attendanceStats.absent}</p>
-                <p className="text-[10px] text-muted-foreground">Absent</p>
+                <p className="text-xs text-muted-foreground">Absent</p>
               </div>
               <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
                 <div className="flex justify-center mb-1">
@@ -874,7 +874,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
                   </div>
                 </div>
                 <p className="text-lg font-bold text-amber-600">{attendanceStats.late}</p>
-                <p className="text-[10px] text-muted-foreground">Late</p>
+                <p className="text-xs text-muted-foreground">Late</p>
               </div>
             </div>
           </CardContent>

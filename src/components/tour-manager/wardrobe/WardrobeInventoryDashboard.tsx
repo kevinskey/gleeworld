@@ -11,6 +11,7 @@ import { Plus, Package, AlertTriangle, Edit, Minus, TrendingUp, Trash2 } from 'l
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AddWardrobeItemDialog } from './AddWardrobeItemDialog';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface WardrobeItem {
   id: string;
@@ -150,10 +151,6 @@ export const WardrobeInventoryDashboard = () => {
   };
 
   const handleDeleteItem = async (item: WardrobeItem) => {
-    if (!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`)) {
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('gw_wardrobe_inventory')
@@ -352,13 +349,16 @@ export const WardrobeInventoryDashboard = () => {
                     <Edit className="h-3 w-3 mr-1" />
                     Update
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteItem(item)}
+                  <ConfirmDeleteButton
+                    confirmKey="delete-tour-wardrobe-item"
+                    title={`Delete "${item.name}"?`}
+                    description="This action cannot be undone."
+                    onConfirm={() => handleDeleteItem(item)}
+                    ariaLabel="Delete item"
+                    className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
                     <Trash2 className="h-3 w-3" />
-                  </Button>
+                  </ConfirmDeleteButton>
                 </div>
               </div>
             </CardContent>

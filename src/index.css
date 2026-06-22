@@ -93,37 +93,55 @@
     background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
-    /* WCAG AA: Base font size 16px minimum */
+  }
+
+  /* Typography scale — Kennedy's responsive guide, interaction-heavy app
+     profile. Body floor is 16px on mobile (iOS auto-zoom rule on inputs
+     also relies on this), lifts to 17px on desktop. Secondary text
+     (text-sm) sits 2px below body; tertiary (text-xs) sits 2 more below.
+     Headings use clamp() so they scale smoothly from phone to desktop:
+       h1 → 28–40 px  (page titles)
+       h2 → 22–30 px
+       h3 → 20–24 px
+       h4 → 18 px
+     The four-step scale (h1, body, text-sm, text-xs) is intentional —
+     the guide warns that using more than ~4 sizes makes a UI feel busy. */
+  html, body {
     font-size: 16px;
     line-height: 1.5;
   }
-  
-  /* WCAG AA Typography Standards - Compact but readable */
-  /* Consistent body text sizing - excluding span to allow Tailwind overrides */
   p, label, li, td, th, dd, dt {
-    font-size: 0.875rem; /* 14px base for body text */
-    line-height: 1.5;
+    font-size: 1rem; /* 16px — body floor */
+    line-height: 1.55;
   }
-  
-  /* Small text - still readable */
   .text-xs {
-    font-size: 0.75rem !important; /* 12px */
+    font-size: 0.75rem !important;  /* 12px */
     line-height: 1.4 !important;
   }
-  
   .text-sm {
-    font-size: 0.8125rem !important; /* 13px */
-    line-height: 1.45 !important;
+    font-size: 0.875rem !important; /* 14px = 2px under body */
+    line-height: 1.5 !important;
   }
-  
-  /* Headings - consistent scale. Use semantic foreground so the heading
-     adapts to whatever theme is active (dark cards get light text, light
-     surfaces get dark text). */
-  h1 { font-size: 1.5rem; font-weight: 700; color: hsl(var(--foreground)); }
-  h2 { font-size: 1.25rem; font-weight: 600; color: hsl(var(--foreground)); }
-  h3 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); }
-  h4 { font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); }
-  h5, h6 { font-size: 0.875rem; font-weight: 600; color: hsl(var(--foreground)); }
+  @media (min-width: 1024px) {
+    html, body { font-size: 17px; }
+    p, label, li, td, th, dd, dt { font-size: 1.0625rem; /* 17px */ }
+    .text-xs { font-size: 0.8125rem !important; /* 13px */ }
+    .text-sm { font-size: 0.9375rem !important; /* 15px */ }
+  }
+  @media (min-width: 1536px) {
+    html, body { font-size: 18px; }
+    p, label, li, td, th, dd, dt { font-size: 1.125rem; /* 18px */ }
+    .text-sm { font-size: 1rem !important; /* 16px */ }
+  }
+
+  /* Heading sizes — single source of truth (the duplicate Bebas Neue
+     block lower in this file only overrides font-family/letter-spacing,
+     these sizes win). */
+  h1 { font-size: clamp(1.75rem, 4.5vw, 2.5rem); font-weight: 700; color: hsl(var(--foreground)); line-height: 1.15; } /* 28→40 */
+  h2 { font-size: clamp(1.375rem, 3.5vw, 1.875rem); font-weight: 700; color: hsl(var(--foreground)); line-height: 1.2; } /* 22→30 */
+  h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 600; color: hsl(var(--foreground)); line-height: 1.25; } /* 20→24 */
+  h4 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.3; } /* 18 */
+  h5, h6 { font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.4; } /* 16 */
 
   :root {
     /* High-Contrast Design System for GleeWorld */
@@ -886,8 +904,8 @@ html[data-theme="hbcu"] h6 {
   body {
     @apply bg-background text-foreground min-h-screen;
     font-family: 'Inter', 'Roboto', system-ui, sans-serif;
-    font-size: 14px;
-    line-height: 1.6;
+    /* font-size + line-height come from the base block above so we have a
+       single source of truth for the type scale (Kennedy's responsive guide). */
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
   
@@ -909,51 +927,17 @@ html[data-theme="hbcu"] h6 {
     text-transform: uppercase;
   }
   
-  @media (min-width: 640px) {
-    body {
-      font-size: 15px;
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    body {
-      font-size: 17px;
-    }
-  }
-
-  /* GleeWorld Typography System - Refined & Elegant */
+  /* GleeWorld heading family — sizes already set by the canonical block
+     above, this block only adds the brand font + letter-spacing + balanced
+     wrapping. NOTE: the Bebas Neue heading family was visually too wide
+     for body-style headings on dashboards; kept here for parity with the
+     original design system but consider trimming to h1–h2 only later. */
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Bebas Neue', system-ui, sans-serif;
     font-weight: 400;
     letter-spacing: 0.02em;
     color: inherit;
-    line-height: 1.2;
     text-wrap: balance;
-  }
-
-  h1 {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
-    letter-spacing: 0.01em;
-  }
-
-  h2 {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-  }
-
-  h3 {
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
-  }
-
-  h4 {
-    font-size: clamp(1.125rem, 2vw, 1.25rem);
-  }
-
-  h5 {
-    font-size: clamp(1rem, 1.5vw, 1.125rem);
-  }
-
-  h6 {
-    font-size: clamp(0.875rem, 1.25vw, 1rem);
   }
 
   /* Body text - optimized for readability */
@@ -1645,61 +1629,19 @@ html[data-theme="hbcu"] h6 {
   background-repeat: no-repeat !important;
 }
 
-/* Site-wide override: Change all yellow/gold buttons to brand blue */
-button[style*="background-color: rgb(250, 204, 21)"],
-button[style*="background-color: rgb(245, 158, 11)"],
-button[style*="background-color: rgb(217, 119, 6)"],
-.bg-yellow-400,
-.bg-yellow-500,
-.bg-yellow-600,
-.bg-amber-400,
-.bg-amber-500,
-.bg-amber-600,
-[class*="bg-yellow"],
-[class*="bg-amber"] {
-  background-color: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
-}
+/* Previous "Site-wide override: Change all yellow/gold buttons to brand
+   blue" block was removed 2026-06-17. It was added when the platform's
+   default theme was sky-blue, intended to convert legacy yellow CTAs to
+   the brand color. But it used `!important` on `[class*="bg-amber"]`
+   AND `button[style*="background-color: rgb(245, 158, 11)"]` — which
+   meant every amber utility class AND every inline-style fix matched
+   and was force-recolored. On the demo tenant (gold brand, gold
+   primary-foreground) every Part Tracks gold button rendered as
+   gold-on-gold with invisible labels.
 
-/* Override yellow/gold text colors */
-.text-yellow-400,
-.text-yellow-500,
-.text-yellow-600,
-.text-amber-400,
-.text-amber-500,
-.text-amber-600,
-[class*="text-yellow"],
-[class*="text-amber"] {
-  color: hsl(var(--primary)) !important;
-}
-
-/* Override yellow/gold borders */
-.border-yellow-400,
-.border-yellow-500,
-.border-yellow-600,
-.border-amber-400,
-.border-amber-500,
-.border-amber-600,
-[class*="border-yellow"],
-[class*="border-amber"] {
-  border-color: hsl(var(--primary)) !important;
-}
-
-/* Override hover states for yellow/gold buttons */
-button[style*="background-color: rgb(250, 204, 21)"]:hover,
-button[style*="background-color: rgb(245, 158, 11)"]:hover,
-button[style*="background-color: rgb(217, 119, 6)"]:hover,
-.bg-yellow-400:hover,
-.bg-yellow-500:hover,
-.bg-yellow-600:hover,
-.bg-amber-400:hover,
-.bg-amber-500:hover,
-.bg-amber-600:hover,
-[class*="bg-yellow"]:hover,
-[class*="bg-amber"]:hover {
-  background-color: hsl(var(--primary) / 0.9) !important;
-  color: hsl(var(--primary-foreground)) !important;
-}
+   If we ever need to bulk-recolor amber UI again, do it at the design-
+   token level (--site-accent) instead of with class-substring overrides
+   like this. */
 
 /* Submission Animation Enhancements */
 @keyframes slide-right {
@@ -2559,4 +2501,40 @@ button[role="combobox"] > svg {
   padding-top: 0.5rem !important;
   padding-bottom: 0.5rem !important;
   min-height: 0 !important;
+}
+
+/* iPad / touch tap-target safety net.
+   On coarse-pointer devices (iPad, iPhone, Android tablets), bump custom
+   <button> elements and explicitly button-roled elements to at least 44pt.
+   Lets us keep dense desktop layouts without sacrificing iPad ergonomics.
+   Opt out per element with the `data-compact` attribute when the design
+   really needs a smaller target (e.g. a tiny inline X inside a chip). */
+@media (pointer: coarse) {
+  button:not([data-compact]):not([data-radix-collection-item]),
+  [role="button"]:not([data-compact]):not([data-radix-collection-item]),
+  a[role="button"]:not([data-compact]),
+  label[role="button"]:not([data-compact]) {
+    min-height: 44px;
+  }
+  /* Tiny utility-sized buttons sized via Tailwind utilities (h-6, h-7,
+     h-8, w-6, w-7, w-8) get bumped on touch — anchor the original CSS
+     height so flex layouts that read computed dimensions still work. */
+  button:not([data-compact]).h-6,
+  button:not([data-compact]).h-7,
+  button:not([data-compact]).h-8,
+  button:not([data-compact]).h-9 {
+    height: 44px;
+  }
+  button:not([data-compact]).w-6,
+  button:not([data-compact]).w-7,
+  button:not([data-compact]).w-8,
+  button:not([data-compact]).w-9 {
+    width: 44px;
+  }
+}
+
+/* Stage mode (Music Tools piano expanded) hides the sidebar so the
+   keyboard can fill the full viewport width. Toggled from MusicToolsPage. */
+body.gw-stage-mode .gw-collapsible-sidebar {
+  display: none !important;
 }

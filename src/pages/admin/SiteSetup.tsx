@@ -479,7 +479,7 @@ export default function SiteSetup() {
               <div key={m.module_id} className="flex items-center gap-2 text-sm">
                 <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
                 <span className="text-card-foreground">{m.module_name}</span>
-                {m.tier === 'addon' && <Badge variant="default" className="text-[10px] py-0">add-on</Badge>}
+                {m.tier === 'addon' && <Badge variant="default" className="text-xs py-0">add-on</Badge>}
               </div>
             ))}
             {tenantModules.length > 10 && (

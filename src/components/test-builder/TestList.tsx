@@ -31,12 +31,12 @@ export const TestList = ({
             <div className="flex-1 space-y-1.5 sm:space-y-2 mb-3 lg:mb-0 lg:mr-4">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <h3 className="font-semibold text-sm sm:text-base md:text-lg text-foreground">{test.title}</h3>
-                {test.is_practice ? <Badge variant="outline" className="border-blue-500/50 text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-400 text-[10px] sm:text-xs">Practice Test</Badge> : test.is_published ? <Badge variant="default" className="shadow-sm text-[10px] sm:text-xs">Published</Badge> : <Badge variant="secondary" className="border text-[10px] sm:text-xs">Draft</Badge>}
+                {test.is_practice ? <Badge variant="outline" className="border-blue-500/50 text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-400 text-xs sm:text-xs">Practice Test</Badge> : test.is_published ? <Badge variant="default" className="shadow-sm text-xs sm:text-xs">Published</Badge> : <Badge variant="secondary" className="border text-xs sm:text-xs">Draft</Badge>}
               </div>
               {test.description && <p className="text-xs sm:text-sm line-clamp-2 pr-0 lg:pr-4 text-primary-foreground">
                   {test.description}
                 </p>}
-              <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 text-[10px] sm:text-xs text-muted-foreground">
+              <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 text-xs sm:text-xs text-muted-foreground">
                 <span className="flex items-center gap-1 text-primary-foreground">
                   <span className="font-medium text-primary-foreground">{test.total_points}</span> points
                 </span>

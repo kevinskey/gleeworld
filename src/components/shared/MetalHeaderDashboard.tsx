@@ -700,7 +700,7 @@ export const MetalHeaderDashboard = ({
                     <div className="flex items-center gap-1">
                       <Star className="h-2.5 w-2.5 text-primary fill-current" />
                       Favorites
-                      <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                      <Badge variant="secondary" className="ml-1 text-xs px-1 py-0">
                         {moduleFavorites.size}
                       </Badge>
                     </div>

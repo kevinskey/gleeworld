@@ -1,9 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist';
-
-// Ensure worker is configured
-if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-}
+import { PDF_WORKER_READY } from '@/lib/pdfWorker';
+void PDF_WORKER_READY;
 
 export interface PDFPageImage {
   pageNum: number;

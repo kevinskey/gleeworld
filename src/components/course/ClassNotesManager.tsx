@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { Plus, FileText, Upload, Trash2, Download, Pin, Eye, EyeOff, BookOpen, GraduationCap, User, Loader2, Video, ExternalLink, Pencil, X, Share2, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 interface ClassNote {
   id: string;
@@ -404,7 +405,7 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
         )}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{format(new Date(note.created_at), 'MMM d, yyyy')}</span>
-          {isOwner(note) && <Badge variant="outline" className="text-[10px]">You</Badge>}
+          {isOwner(note) && <Badge variant="outline" className="text-xs">You</Badge>}
         </div>
       </CardContent>
     </Card>
@@ -479,10 +480,16 @@ export const ClassNotesManager = ({ courseId, isInstructor = false }: ClassNotes
                   <Share2 className="h-4 w-4 mr-1" />
                   {viewingNote.visibility === 'all_students' ? 'Make Private' : 'Share with Class'}
                 </Button>
-                <Button size="sm" variant="destructive"
-                  onClick={() => { if (confirm('Delete this note?')) deleteNoteMutation.mutate(viewingNote.id); }}>
+                <ConfirmDeleteButton
+                  confirmKey="delete-class-note"
+                  title="Delete this note?"
+                  description="The note will be removed for the whole class."
+                  onConfirm={() => deleteNoteMutation.mutate(viewingNote.id)}
+                  ariaLabel="Delete note"
+                  className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
                   <Trash2 className="h-4 w-4 mr-1" />Delete
-                </Button>
+                </ConfirmDeleteButton>
               </DialogFooter>
             )}
           </>

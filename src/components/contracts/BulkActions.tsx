@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Users } from "lucide-react";
 import { useRef, useEffect } from "react";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 
 interface BulkActionsProps {
   contracts: any[];
@@ -64,14 +65,17 @@ export const BulkActions = ({
               Send to Roster
             </Button>
           )}
-          <Button 
-            onClick={onDeleteSelected}
-            variant="destructive"
-            size="sm"
+          <ConfirmDeleteButton
+            confirmKey="delete-selected-contracts"
+            title={`Delete ${selectedContracts.size} contract(s)?`}
+            description="The selected contracts will be permanently removed."
+            onConfirm={onDeleteSelected}
+            ariaLabel="Delete selected contracts"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete Selected ({selectedContracts.size})
-          </Button>
+          </ConfirmDeleteButton>
         </div>
       )}
     </div>

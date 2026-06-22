@@ -11,8 +11,9 @@
  * existing component exists (gradebook, attendance grid, modules), we
  * wrap it. Where none does, we render a clean fresh implementation.
  */
-import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
+import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useQuery as useQueryReactQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -25,9 +26,44 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Home, BookOpen, FileText, ClipboardCheck, MessagesSquare,
   Users, BarChart3, CalendarCheck, Loader2, Calendar, Clock, Plus, Zap,
-  ChevronRight, Megaphone, Send, AlertCircle,
+  ChevronRight, ChevronDown, ChevronUp, Megaphone, Send, AlertCircle, Settings,
+  Trash2,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { ModuleResources } from "@/components/academy/ModuleResources";
+import { useEnabledAddonTabs, type AddonSlug } from "@/hooks/useCourseAddons";
+import { StudentDetailDialog } from "@/components/academy/StudentDetailDialog";
+import { CourseCohortsPanel } from "@/components/academy/CourseCohortsPanel";
+import { SimpleMarkdown } from "@/components/markdown/SimpleMarkdown";
+import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
+const PollsAddon = lazy(() => import("@/components/academy/addons/PollsAddon"));
+const QRAttendanceAddon = lazy(() => import("@/components/academy/addons/QRAttendanceAddon"));
+const TourAddon = lazy(() => import("@/components/academy/addons/TourAddon"));
+const WardrobeAddon = lazy(() => import("@/components/academy/addons/WardrobeAddon"));
+const AiGradingAddon = lazy(() => import("@/components/academy/addons/AiGradingAddon"));
+// Workspace modules embedded inside their corresponding course add-on so
+// the in-course view has the same feature depth as the workspace module.
+const WardrobeHubEmbed = lazy(() =>
+  import("@/components/wardrobe/WardrobeManagementHub").then(m => ({ default: m.WardrobeManagementHub }))
+);
+const TourDashboardEmbed = lazy(() =>
+  import("@/components/tour-manager/TourManagerDashboard").then(m => ({ default: m.TourManagerDashboard }))
+);
+const AIHubEmbed = lazy(() =>
+  import("@/components/modules/AIHub").then(m => ({ default: (m as any).AIHub ?? (m as any).default }))
+);
+const AuditionsEmbed = lazy(() =>
+  import("@/components/modules/AuditionsModule").then(m => ({ default: (m as any).AuditionsModule ?? (m as any).default }))
+);
+const BucketsOfLoveEmbed = lazy(() =>
+  import("@/components/modules/BucketsOfLoveModule").then(m => ({ default: (m as any).BucketsOfLoveModule ?? (m as any).default }))
+);
+import {
+  Plane, Shirt, Ticket, Heart, Brain, Sparkles, LibraryBig,
+  Award as AwardIcon, Newspaper, Music as MusicIcon,
+  Mic as MicIcon,
+} from "lucide-react";
+const CoursePracticeTab = lazy(() => import("@/components/academy/CoursePracticeTab"));
 
 // Lazy-load the heavier existing components so the shell stays light.
 // These export named — adapt to default.
@@ -50,7 +86,9 @@ interface CourseRow {
 
 type TabKey =
   | "overview" | "modules" | "assignments" | "quizzes"
-  | "discussions" | "people" | "grades" | "attendance";
+  | "discussions" | "people" | "grades" | "attendance"
+  | "practice"
+  | `addon:${string}`;
 
 const TABS: { key: TabKey; label: string; Icon: typeof Home }[] = [
   { key: "overview",    label: "Overview",    Icon: Home },
@@ -62,6 +100,15 @@ const TABS: { key: TabKey; label: string; Icon: typeof Home }[] = [
   { key: "grades",      label: "Grades",      Icon: BarChart3 },
   { key: "attendance",  label: "Attendance",  Icon: CalendarCheck },
 ];
+
+// Courses where the Practice tab should appear. Includes both the seeded
+// "GLEE 000" sight-singing institute and the auto-provisioned Student
+// Practice course (course_code = STUDENT-PRACTICE).
+function isPracticeCourse(code: string | null | undefined): boolean {
+  if (!code) return false;
+  const normalized = code.replace(/\s+/g, '').toUpperCase();
+  return normalized === 'STUDENT-PRACTICE' || normalized === 'GLEE000';
+}
 
 export default function CourseShell() {
   const { code } = useParams();
@@ -83,16 +130,31 @@ export default function CourseShell() {
     async function load() {
       if (!code) return;
       setLoading(true);
-      const slug = code.replace(/-/g, " ").toUpperCase();
-      const { data } = await supabase
-        .from("gw_courses")
-        .select("id, course_code, title, description, instructor_id, instructor_name, semester")
-        .or(`course_code.ilike.%${slug}%,course_code.eq.${slug}`)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
+      // Two encoding conventions exist in the wild:
+      //   legacy: "MUS 101" stored, URL is "mus-101" (hyphen→space)
+      //   templates / new: "TPL-CHOIR101" stored, URL is "tpl-choir101" (hyphen kept)
+      // Try both — exact match on the as-is uppercase first, then the
+      // hyphen-as-space variant. Don't use .or() with raw user input
+      // because spaces break PostgREST's filter parser.
+      const asIs = code.toUpperCase();
+      const spaced = code.replace(/-/g, " ").toUpperCase();
+      const select =
+        "id, course_code, title, description, instructor_id, instructor_name, semester";
+      const tryFetch = async (codeValue: string) => {
+        const { data, error } = await supabase
+          .from("gw_courses")
+          .select(select)
+          .eq("course_code", codeValue)
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+        if (error) return null;
+        return data;
+      };
+      let row = await tryFetch(asIs);
+      if (!row && spaced !== asIs) row = await tryFetch(spaced);
       if (!cancelled) {
-        setCourse((data || null) as CourseRow | null);
+        setCourse((row || null) as CourseRow | null);
         setLoading(false);
       }
     }
@@ -105,6 +167,11 @@ export default function CourseShell() {
     sp.set("tab", t);
     setSearchParams(sp, { replace: true });
   }
+
+  // Hooks must run in the same order on every render — call useEnabledAddonTabs
+  // BEFORE any early returns. Pass undefined while course is still loading;
+  // the hook handles that (enabled=false).
+  const addonTabs = useEnabledAddonTabs(course?.id);
 
   if (loading) {
     return (
@@ -139,7 +206,7 @@ export default function CourseShell() {
             Glee Academy
           </button>
           <div className="flex flex-wrap items-baseline gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: '-0.02em' }}>
+            <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: '-0.02em' }}>
               {course.title}
             </h1>
             <Badge className="bg-slate-700 text-slate-200 border-slate-600">{course.course_code}</Badge>
@@ -159,7 +226,34 @@ export default function CourseShell() {
         {/* Left rail */}
         <nav className="lg:sticky lg:top-6 lg:self-start">
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            {TABS.map(({ key, label, Icon }) => {
+            {/* Conditionally injected Practice tab — Student Practice courses only.
+                Built inline so we don't have to mutate the shared TABS array. */}
+            {[
+              ...TABS,
+              ...(isPracticeCourse(course.course_code)
+                ? [{ key: "practice" as TabKey, label: "Practice", Icon: MicIcon }]
+                : []),
+            ].map(({ key, label, Icon }) => {
+              const active = activeTab === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => switchTab(key)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors border-l-2 ${
+                    active
+                      ? "bg-slate-50 text-slate-900 font-semibold border-l-sky-600"
+                      : "text-slate-700 hover:bg-slate-50 border-l-transparent"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  {label}
+                </button>
+              );
+            })}
+            {/* Dynamic add-on tabs (per the course's gw_course_addons) */}
+            {addonTabs.length > 0 && <div className="border-t border-slate-200" />}
+            {addonTabs.map(({ slug, label, Icon }) => {
+              const key = `addon:${slug}` as TabKey;
               const active = activeTab === key;
               return (
                 <button
@@ -186,6 +280,25 @@ export default function CourseShell() {
             <Zap className="w-4 h-4" />
             Rehearsal tonight
           </button>
+
+          {canEdit && (
+            <>
+              <button
+                onClick={() => navigate(`/academy/c/${code}/addons`)}
+                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                Manage add-ons
+              </button>
+              <button
+                onClick={() => navigate(`/academy/c/${code}/settings`)}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                Course settings
+              </button>
+            </>
+          )}
         </nav>
 
         {/* Main content */}
@@ -198,6 +311,16 @@ export default function CourseShell() {
           {activeTab === "people"      && <PeopleTab      {...tabProps} />}
           {activeTab === "grades"      && <GradesTab      {...tabProps} />}
           {activeTab === "attendance"  && <AttendanceTab  {...tabProps} />}
+          {activeTab === "practice"    && (
+            <Suspense fallback={<div className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-slate-400" /></div>}>
+              <CoursePracticeTab courseId={course.id} canEdit={canEdit} />
+            </Suspense>
+          )}
+          {typeof activeTab === "string" && activeTab.startsWith("addon:") && (
+            <Suspense fallback={<div className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-slate-400" /></div>}>
+              <AddonDispatch slug={activeTab.slice(6) as AddonSlug} courseId={course.id} canEdit={canEdit} />
+            </Suspense>
+          )}
         </main>
       </div>
     </div>
@@ -215,17 +338,30 @@ interface TabProps {
 
 // ─── Overview ─────────────────────────────────────────────────────────────
 
-function OverviewTab({ course }: TabProps) {
+function OverviewTab({ course, canEdit }: TabProps) {
   const [announcements, setAnns] = useState<any[]>([]);
   const [assignments, setAssigns] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [composeOpen, setComposeOpen] = useState(false);
+
+  function reloadAnnouncements() {
+    supabase
+      .from("gw_course_announcements")
+      .select("id,title,content,created_at,cohort_id,gw_course_cohorts(name,color)")
+      .eq("course_id", course.id)
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data }) => setAnns(data || []));
+  }
 
   useEffect(() => {
     let c = false;
     Promise.all([
-      supabase.from("gw_course_announcements").select("id,title,content,created_at").eq("course_id", course.id).order("created_at", { ascending: false }).limit(5),
-      supabase.from("gw_course_assignments").select("id,title,due_date,points").eq("course_id", course.id).gte("due_date", new Date().toISOString()).order("due_date", { ascending: true }).limit(5),
+      supabase.from("gw_course_announcements").select("id,title,content,created_at,cohort_id,gw_course_cohorts(name,color)").eq("course_id", course.id).order("created_at", { ascending: false }).limit(10),
+      // Pivoted to gw_assignments to stay in sync with what AssignmentsTab
+      // writes (and what the calendar-sync trigger reads).
+      supabase.from("gw_assignments").select("id,title,due_at,points").eq("course_id", course.id).eq("is_active", true).gte("due_at", new Date().toISOString()).order("due_at", { ascending: true }).limit(5),
       supabase.from("gw_course_calendar").select("id,title,start_time,location").eq("course_id", course.id).gte("start_time", new Date().toISOString()).order("start_time", { ascending: true }).limit(5),
     ]).then(([a, as, e]) => {
       if (c) return;
@@ -239,23 +375,47 @@ function OverviewTab({ course }: TabProps) {
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Announcements" icon={<Megaphone className="w-4 h-4" />}>
+      <SectionCard
+        title="Announcements"
+        icon={<Megaphone className="w-4 h-4" />}
+        action={canEdit ? (
+          <Button size="sm" variant="outline" onClick={() => setComposeOpen(true)}>
+            <Plus className="w-4 h-4 mr-1.5" /> New announcement
+          </Button>
+        ) : null}
+      >
         {loading ? <Loader /> : announcements.length === 0 ? (
           <Empty>No announcements yet.</Empty>
         ) : (
           <div className="space-y-3">
             {announcements.map((a) => (
               <div key={a.id} className="border border-slate-100 rounded-lg p-3 hover:bg-slate-50">
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="font-semibold text-slate-900">{a.title}</div>
-                  <div className="text-[10px] text-slate-500 whitespace-nowrap">{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</div>
+                <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                  <div className="font-semibold text-slate-900 flex items-center gap-2">
+                    {a.title}
+                    {a.cohort_id && a.gw_course_cohorts && (
+                      <Badge variant="outline" className="text-xs" style={{ borderColor: a.gw_course_cohorts.color, color: a.gw_course_cohorts.color }}>
+                        {a.gw_course_cohorts.name}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-500 whitespace-nowrap">{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</div>
                 </div>
-                <p className="text-sm text-slate-700 mt-1 line-clamp-3 whitespace-pre-wrap">{a.content}</p>
+                <div className="text-sm text-slate-700 mt-1">
+                  <SimpleMarkdown source={a.content || ''} />
+                </div>
               </div>
             ))}
           </div>
         )}
       </SectionCard>
+
+      <AnnouncementComposeDialog
+        open={composeOpen}
+        courseId={course.id}
+        onClose={() => setComposeOpen(false)}
+        onPosted={() => { reloadAnnouncements(); setComposeOpen(false); }}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SectionCard title="Coming due" icon={<FileText className="w-4 h-4" />}>
@@ -268,7 +428,7 @@ function OverviewTab({ course }: TabProps) {
                   <div className="min-w-0">
                     <div className="font-medium text-slate-900 truncate">{a.title}</div>
                     <div className="text-xs text-slate-500">
-                      Due {format(new Date(a.due_date), "EEE MMM d")} · {a.points || 0} pts
+                      Due {format(new Date(a.due_at || a.due_date), "EEE MMM d")} · {a.points || 0} pts
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -305,25 +465,57 @@ function OverviewTab({ course }: TabProps) {
 // ─── Modules ──────────────────────────────────────────────────────────────
 
 function ModulesTab({ course, canEdit }: TabProps) {
+  const { user } = useAuth();
   const [modules, setModules] = useState<any[]>([]);
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newWeek, setNewWeek] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    let c = false;
+  function reload() {
     supabase
       .from("gw_course_modules")
-      .select("id, module_id, title, description, week_number, learning_objectives, is_locked")
+      .select("id, module_id, title, description, week_number, learning_objectives, is_locked, display_order, prerequisite_module_id")
       .eq("course_id", course.id)
       .order("display_order", { ascending: true })
-      .then(({ data }) => {
-        if (!c) { setModules(data || []); setLoading(false); }
-      });
+      .then(({ data }) => setModules(data || []));
+  }
+
+  function reloadCompletions() {
+    if (!user?.id) return;
+    supabase
+      .from("gw_course_module_completions")
+      .select("module_id")
+      .eq("course_id", course.id)
+      .eq("user_id", user.id)
+      .then(({ data }) => setCompletedIds(new Set((data || []).map((r: any) => r.module_id))));
+  }
+
+  useEffect(() => {
+    let c = false;
+    Promise.all([
+      supabase
+        .from("gw_course_modules")
+        .select("id, module_id, title, description, week_number, learning_objectives, is_locked, display_order, prerequisite_module_id")
+        .eq("course_id", course.id)
+        .order("display_order", { ascending: true }),
+      user?.id
+        ? supabase
+            .from("gw_course_module_completions")
+            .select("module_id")
+            .eq("course_id", course.id)
+            .eq("user_id", user.id)
+        : Promise.resolve({ data: [] } as any),
+    ]).then(([modulesResult, completionsResult]: any[]) => {
+      if (c) return;
+      setModules(modulesResult.data || []);
+      setCompletedIds(new Set((completionsResult.data || []).map((r: any) => r.module_id)));
+      setLoading(false);
+    });
     return () => { c = true; };
-  }, [course.id]);
+  }, [course.id, user?.id]);
 
   async function submit() {
     if (!newTitle.trim()) return;
@@ -405,21 +597,19 @@ function ModulesTab({ course, canEdit }: TabProps) {
         </Empty>
       ) : (
         <div className="space-y-2">
-          {modules.map((m) => (
-            <div key={m.id} className="border border-border rounded-lg p-4 bg-card hover:shadow-sm transition-shadow">
-              <div className="flex items-baseline justify-between gap-2 mb-1">
-                <div className="font-semibold text-card-foreground">
-                  {m.week_number ? `Week ${m.week_number} · ` : ""}{m.title}
-                </div>
-                {m.is_locked && <Badge variant="outline" className="text-xs">Locked</Badge>}
-              </div>
-              {m.description && <p className="text-sm text-muted-foreground">{m.description}</p>}
-              {Array.isArray(m.learning_objectives) && m.learning_objectives.length > 0 && (
-                <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground space-y-0.5">
-                  {m.learning_objectives.slice(0, 3).map((o: string, i: number) => <li key={i}>{o}</li>)}
-                </ul>
-              )}
-            </div>
+          {modules.map((m, i) => (
+            <ModuleCard
+              key={m.id}
+              module={m}
+              courseId={course.id}
+              canEdit={!!canEdit}
+              allModules={modules}
+              isFirst={i === 0}
+              isLast={i === modules.length - 1}
+              onChanged={reload}
+              completedIds={completedIds}
+              onCompletionChanged={reloadCompletions}
+            />
           ))}
         </div>
       )}
@@ -427,9 +617,192 @@ function ModulesTab({ course, canEdit }: TabProps) {
   );
 }
 
+function ModuleCard({
+  module: m, courseId, canEdit, allModules, isFirst, isLast, onChanged,
+  completedIds, onCompletionChanged,
+}: {
+  module: any;
+  courseId: string;
+  canEdit: boolean;
+  allModules: any[];
+  isFirst: boolean;
+  isLast: boolean;
+  onChanged: () => void;
+  completedIds: Set<string>;
+  onCompletionChanged: () => void;
+}) {
+  const { user } = useAuth();
+  const [expanded, setExpanded] = useState(false);
+  // Gating rules:
+  //   • Instructors always see content (can preview locked modules)
+  //   • Student is gated if:
+  //       a) is_locked is set on this module, OR
+  //       b) module has a prereq AND that prereq isn't in completedIds
+  const isCompleted = completedIds.has(m.id);
+  const prereqMet = !m.prerequisite_module_id || completedIds.has(m.prerequisite_module_id);
+  const gated = !canEdit && (!!m.is_locked || !prereqMet);
+
+  const prereq = allModules.find((x) => x.id === m.prerequisite_module_id);
+
+  // Swap display_order with the neighbor (up = previous, down = next).
+  async function move(direction: 'up' | 'down') {
+    const idx = allModules.findIndex((x) => x.id === m.id);
+    const neighborIdx = direction === 'up' ? idx - 1 : idx + 1;
+    const neighbor = allModules[neighborIdx];
+    if (!neighbor) return;
+    const myOrder = m.display_order ?? idx;
+    const theirOrder = neighbor.display_order ?? neighborIdx;
+    await supabase.from('gw_course_modules').update({ display_order: theirOrder }).eq('id', m.id);
+    await supabase.from('gw_course_modules').update({ display_order: myOrder }).eq('id', neighbor.id);
+    onChanged();
+  }
+
+  async function setPrereq(prereqId: string | null) {
+    await supabase.from('gw_course_modules').update({ prerequisite_module_id: prereqId }).eq('id', m.id);
+    onChanged();
+  }
+
+  async function toggleLock() {
+    await supabase.from('gw_course_modules').update({ is_locked: !m.is_locked }).eq('id', m.id);
+    onChanged();
+  }
+
+  async function remove() {
+    const { error } = await supabase.from('gw_course_modules').delete().eq('id', m.id);
+    if (error) { toast.error(error.message); return; }
+    onChanged();
+  }
+
+  async function markComplete() {
+    if (!user?.id) return;
+    const { error } = await supabase.from('gw_course_module_completions').insert({
+      course_id: courseId,
+      module_id: m.id,
+      user_id: user.id,
+    });
+    if (error && !error.message.toLowerCase().includes('duplicate')) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Marked "${m.title}" complete.`);
+    onCompletionChanged();
+  }
+  async function markIncomplete() {
+    if (!user?.id) return;
+    const { error } = await supabase
+      .from('gw_course_module_completions')
+      .delete()
+      .eq('module_id', m.id)
+      .eq('user_id', user.id);
+    if (error) { toast.error(error.message); return; }
+    onCompletionChanged();
+  }
+
+  return (
+    <div className="border border-border rounded-lg bg-card transition-shadow hover:shadow-sm">
+      <div className="flex items-start gap-2 p-4">
+        {canEdit && (
+          <div className="flex flex-col gap-0.5 -mt-1">
+            <button
+              disabled={isFirst}
+              onClick={() => move('up')}
+              className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Move up"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+            <button
+              disabled={isLast}
+              onClick={() => move('down')}
+              className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Move down"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => !gated && setExpanded((v) => !v)}
+          className={`flex-1 min-w-0 text-left ${gated ? 'cursor-not-allowed opacity-70' : ''}`}
+          aria-disabled={gated}
+          title={gated ? 'This module is locked. Your instructor will release it when ready.' : undefined}
+        >
+          <div className="flex items-baseline gap-2 mb-1 flex-wrap">
+            <div className="font-semibold text-card-foreground">
+              {m.week_number ? `Week ${m.week_number} · ` : ""}{m.title}
+            </div>
+            {isCompleted && <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">✓ Completed</Badge>}
+            {m.is_locked && <Badge variant="outline" className="text-xs bg-rose-50 text-rose-700 border-rose-200">🔒 Locked</Badge>}
+            {prereq && !prereqMet && <Badge variant="outline" className="text-xs text-amber-700 bg-amber-50 border-amber-200">Complete "{prereq.title}" first</Badge>}
+            {prereq && prereqMet && <Badge variant="outline" className="text-xs text-muted-foreground">After: {prereq.title}</Badge>}
+          </div>
+          {m.description && <p className="text-sm text-muted-foreground">{m.description}</p>}
+          {Array.isArray(m.learning_objectives) && m.learning_objectives.length > 0 && (
+            <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground space-y-0.5">
+              {m.learning_objectives.slice(0, 3).map((o: string, i: number) => <li key={i}>{o}</li>)}
+            </ul>
+          )}
+        </button>
+        <ChevronDown
+          className={`w-4 h-4 mt-1 text-muted-foreground transition-transform shrink-0 ${expanded ? 'rotate-180' : ''}`}
+        />
+      </div>
+      {expanded && !gated && (
+        <div className="border-t border-border p-4 bg-background/40 space-y-3">
+          {!canEdit && (
+            <div className="flex items-center justify-end pb-3 border-b">
+              {isCompleted ? (
+                <Button size="sm" variant="ghost" onClick={markIncomplete}>
+                  ✓ Completed — undo
+                </Button>
+              ) : (
+                <Button size="sm" onClick={markComplete}>
+                  Mark complete
+                </Button>
+              )}
+            </div>
+          )}
+          {canEdit && (
+            <div className="flex items-center gap-2 flex-wrap pb-3 border-b">
+              <label className="text-xs font-medium">Prereq:</label>
+              <select
+                value={m.prerequisite_module_id || ''}
+                onChange={(e) => setPrereq(e.target.value || null)}
+                className="h-8 rounded-md border bg-background px-2 text-xs"
+              >
+                <option value="">— none —</option>
+                {allModules.filter((x) => x.id !== m.id).map((x) => (
+                  <option key={x.id} value={x.id}>{x.title}</option>
+                ))}
+              </select>
+              <Button size="sm" variant="outline" onClick={toggleLock}>
+                {m.is_locked ? 'Unlock' : 'Lock'}
+              </Button>
+              <div className="flex-1" />
+              <ConfirmDeleteButton
+                confirmKey="delete-course-module"
+                title={`Delete "${m.title}"?`}
+                description="The module and its ordering will be removed."
+                onConfirm={remove}
+                ariaLabel="Delete module"
+                className="inline-flex items-center justify-center rounded-md h-8 px-3 text-sm text-rose-600 hover:text-rose-700 hover:bg-muted"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+              </ConfirmDeleteButton>
+            </div>
+          )}
+          <ModuleResources moduleId={m.id} courseId={courseId} canEdit={canEdit} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Assignments ──────────────────────────────────────────────────────────
 
 function AssignmentsTab({ course, canEdit }: TabProps) {
+  const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -437,16 +810,38 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   const [newPoints, setNewPoints] = useState("100");
   const [newDue, setNewDue] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+
+  // Pivoted from gw_course_assignments → gw_assignments so the
+  // calendar-sync trigger (gw_assignment_sync_event) fires and new
+  // assignments land on the main calendar automatically. Field names:
+  //   due_date     → due_at
+  //   is_published → is_active (false = draft)
+  function reload() {
+    supabase
+      .from("gw_assignments")
+      .select("id, title, description, due_at, points, is_active")
+      .eq("course_id", course.id)
+      .order("due_at", { ascending: true })
+      .then(({ data }) => setItems((data || []).map((r: any) => ({
+        ...r, due_date: r.due_at, is_published: r.is_active,
+      }))));
+  }
 
   useEffect(() => {
     let c = false;
     supabase
-      .from("gw_course_assignments")
-      .select("id, title, description, due_date, points, is_published")
+      .from("gw_assignments")
+      .select("id, title, description, due_at, points, is_active")
       .eq("course_id", course.id)
-      .order("due_date", { ascending: true })
+      .order("due_at", { ascending: true })
       .then(({ data }) => {
-        if (!c) { setItems(data || []); setLoading(false); }
+        if (!c) {
+          setItems((data || []).map((r: any) => ({
+            ...r, due_date: r.due_at, is_published: r.is_active,
+          })));
+          setLoading(false);
+        }
       });
     return () => { c = true; };
   }, [course.id]);
@@ -455,23 +850,26 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
     if (!newTitle.trim()) return;
     setSaving(true);
     const { data, error } = await supabase
-      .from("gw_course_assignments")
+      .from("gw_assignments")
       .insert({
         course_id: course.id,
         title: newTitle.trim(),
         points: Number(newPoints) || 0,
-        due_date: newDue ? new Date(newDue).toISOString() : null,
-        is_published: false,
-        display_order: items.length,
+        due_at: newDue ? new Date(newDue).toISOString() : null,
+        is_active: false,                 // draft until published
+        assignment_type: 'standard',
+        category: 'general',
+        created_by: user?.id,
       })
-      .select("id, title, description, due_date, points, is_published")
+      .select("id, title, description, due_at, points, is_active")
       .single();
     setSaving(false);
     if (error || !data) {
       toast.error(`Couldn't add assignment: ${error?.message || "unknown error"}`);
       return;
     }
-    setItems((prev) => [...prev, data].sort((a, b) => (a.due_date || "z").localeCompare(b.due_date || "z")));
+    const ui = { ...data, due_date: data.due_at, is_published: data.is_active };
+    setItems((prev) => [...prev, ui].sort((a, b) => (a.due_date || "z").localeCompare(b.due_date || "z")));
     setNewTitle(""); setNewPoints("100"); setNewDue("");
     setAddOpen(false);
     toast.success(`Added "${data.title}" (draft)`);
@@ -527,11 +925,15 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
             const due = a.due_date ? new Date(a.due_date) : null;
             const overdue = due && due < new Date();
             return (
-              <li key={a.id} className="py-3 flex items-center justify-between gap-2 hover:bg-slate-50 px-2 -mx-2 rounded">
+              <li
+                key={a.id}
+                className="py-3 flex items-center justify-between gap-2 hover:bg-slate-50 px-2 -mx-2 rounded cursor-pointer"
+                onClick={() => canEdit ? setEditing(a) : null}
+              >
                 <div className="min-w-0">
                   <div className="font-medium text-slate-900 flex items-center gap-2">
                     {a.title}
-                    {!a.is_published && <Badge variant="outline" className="text-[10px]">Draft</Badge>}
+                    {!a.is_published && <Badge variant="outline" className="text-xs">Draft</Badge>}
                   </div>
                   <div className="text-xs text-slate-500">
                     {due ? `Due ${format(due, "EEE MMM d, h:mm a")}` : "No due date"}
@@ -545,13 +947,157 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
           })}
         </ul>
       )}
+      <AssignmentEditDialog
+        open={!!editing}
+        assignment={editing}
+        onClose={() => setEditing(null)}
+        onChanged={() => { reload(); setEditing(null); }}
+      />
     </SectionCard>
   );
+}
+
+// ─── Assignment editor ────────────────────────────────────────────────────
+// Inline dialog reached by clicking an assignment row. Lets the
+// instructor edit title/description/points/due, toggle publish, or delete.
+
+function AssignmentEditDialog({
+  open, assignment, onClose, onChanged,
+}: {
+  open: boolean;
+  assignment: any | null;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const [form, setForm] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (assignment) {
+      setForm({
+        ...assignment,
+        due_date_local: assignment.due_date ? toLocalInput(assignment.due_date) : '',
+      });
+    } else {
+      setForm(null);
+    }
+  }, [assignment]);
+
+  if (!open || !form) return null;
+
+  async function save() {
+    setSaving(true);
+    const { error } = await supabase
+      .from('gw_assignments')
+      .update({
+        title: form.title,
+        description: form.description || null,
+        points: Number(form.points) || 0,
+        due_at: form.due_date_local ? new Date(form.due_date_local).toISOString() : null,
+        is_active: !!form.is_published,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', form.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Saved.');
+    onChanged();
+  }
+  async function del() {
+    setDeleting(true);
+    const { error } = await supabase.from('gw_assignments').delete().eq('id', form.id);
+    setDeleting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Deleted.');
+    onChanged();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 space-y-4">
+          <div>
+            <h3 className="font-semibold text-lg">Edit assignment</h3>
+            <p className="text-xs text-muted-foreground">Changes are visible to students once you save with "Published" on.</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium">Title</label>
+            <Input value={form.title || ''} onChange={(e) => setForm((f: any) => ({ ...f, title: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium">Description / instructions</label>
+            <Textarea
+              value={form.description || ''}
+              onChange={(e) => setForm((f: any) => ({ ...f, description: e.target.value }))}
+              rows={5}
+              placeholder="What students need to do, materials they'll need, rubric…"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">Points</label>
+              <Input
+                type="number"
+                value={form.points ?? ''}
+                onChange={(e) => setForm((f: any) => ({ ...f, points: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">Due date</label>
+              <Input
+                type="datetime-local"
+                value={form.due_date_local || ''}
+                onChange={(e) => setForm((f: any) => ({ ...f, due_date_local: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t">
+            <label className="text-sm font-medium">Published</label>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!form.is_published}
+                onChange={(e) => setForm((f: any) => ({ ...f, is_published: e.target.checked }))}
+                className="rounded"
+              />
+              <span className="text-xs text-muted-foreground">{form.is_published ? 'Visible to students' : 'Draft — hidden'}</span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t">
+            <Button variant="destructive" size="sm" onClick={del} disabled={deleting}>
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+              Delete
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button onClick={save} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function toLocalInput(iso: string): string {
+  // datetime-local expects "YYYY-MM-DDTHH:mm". Drop seconds/tz.
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 // ─── Quizzes ──────────────────────────────────────────────────────────────
 
 function QuizzesTab({ course, canEdit }: TabProps) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { code } = useParams();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -559,12 +1105,22 @@ function QuizzesTab({ course, canEdit }: TabProps) {
   const [newPoints, setNewPoints] = useState("100");
   const [newDuration, setNewDuration] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+
+  function reload() {
+    supabase
+      .from("gw_course_tests")
+      .select("id, title, description, instructions, total_points, duration_minutes, available_from, available_until, allow_retakes, max_attempts, show_results_immediately, randomize_questions, is_published")
+      .eq("course_id", course.id)
+      .order("available_from", { ascending: true })
+      .then(({ data }) => setItems(data || []));
+  }
 
   useEffect(() => {
     let c = false;
     supabase
       .from("gw_course_tests")
-      .select("id, title, description, total_points, duration_minutes, available_from, available_until, is_published")
+      .select("id, title, description, instructions, total_points, duration_minutes, available_from, available_until, allow_retakes, max_attempts, show_results_immediately, randomize_questions, is_published")
       .eq("course_id", course.id)
       .order("available_from", { ascending: true })
       .then(({ data }) => {
@@ -584,8 +1140,9 @@ function QuizzesTab({ course, canEdit }: TabProps) {
         total_points: Number(newPoints) || 0,
         duration_minutes: newDuration ? Number(newDuration) : null,
         is_published: false,
+        created_by: user?.id,
       })
-      .select("id, title, description, total_points, duration_minutes, available_from, available_until, is_published")
+      .select("id, title, description, instructions, total_points, duration_minutes, available_from, available_until, allow_retakes, max_attempts, show_results_immediately, randomize_questions, is_published")
       .single();
     setSaving(false);
     if (error || !data) {
@@ -646,19 +1203,249 @@ function QuizzesTab({ course, canEdit }: TabProps) {
       ) : (
         <ul className="divide-y divide-slate-100">
           {items.map((t) => (
-            <li key={t.id} className="py-3 flex items-center justify-between gap-2 hover:bg-slate-50 px-2 -mx-2 rounded">
-              <div>
-                <div className="font-medium text-slate-900">{t.title}</div>
+            <li
+              key={t.id}
+              className="py-3 px-2 -mx-2 rounded hover:bg-slate-50 flex items-center justify-between gap-2"
+            >
+              <button
+                onClick={() => canEdit ? setEditing(t) : navigate(`/academy/c/${code}/test/${t.id}/take`)}
+                className="flex-1 min-w-0 text-left"
+              >
+                <div className="font-medium text-slate-900 flex items-center gap-2">
+                  {t.title}
+                  {!t.is_published && <Badge variant="outline" className="text-xs">Draft</Badge>}
+                </div>
                 <div className="text-xs text-slate-500">
                   {t.total_points || 0} pts · {t.duration_minutes ? `${t.duration_minutes} min` : "untimed"}
+                  {t.available_from && ` · ${format(new Date(t.available_from), "MMM d")}`}
                 </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+              {canEdit ? (
+                <div className="flex items-center gap-1.5">
+                  <Button size="sm" variant="outline" onClick={() => navigate(`/academy/c/${code}/test/${t.id}/attempts`)}>
+                    Attempts
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate(`/academy/c/${code}/test/${t.id}/questions`)}>
+                    Build questions
+                  </Button>
+                </div>
+              ) : (
+                t.is_published && (
+                  <Button size="sm" onClick={() => navigate(`/academy/c/${code}/test/${t.id}/take`)}>
+                    Take quiz
+                  </Button>
+                )
+              )}
             </li>
           ))}
         </ul>
       )}
+      <QuizEditDialog
+        open={!!editing}
+        quiz={editing}
+        onClose={() => setEditing(null)}
+        onChanged={() => { reload(); setEditing(null); }}
+      />
     </SectionCard>
+  );
+}
+
+// ─── Quiz / test editor ───────────────────────────────────────────────────
+// Mirrors AssignmentEditDialog. The full question-bank UX comes later — for
+// now teachers can set scheduling, attempt rules, point value, publish.
+
+function QuizEditDialog({
+  open, quiz, onClose, onChanged,
+}: {
+  open: boolean;
+  quiz: any | null;
+  onClose: () => void;
+  onChanged: () => void;
+}) {
+  const [form, setForm] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (quiz) {
+      setForm({
+        ...quiz,
+        available_from_local: quiz.available_from ? toLocalInput(quiz.available_from) : '',
+        available_until_local: quiz.available_until ? toLocalInput(quiz.available_until) : '',
+      });
+    } else {
+      setForm(null);
+    }
+  }, [quiz]);
+
+  if (!open || !form) return null;
+
+  async function save() {
+    setSaving(true);
+    const { error } = await supabase
+      .from('gw_course_tests')
+      .update({
+        title: form.title,
+        description: form.description || null,
+        instructions: form.instructions || null,
+        total_points: Number(form.total_points) || 0,
+        duration_minutes: form.duration_minutes ? Number(form.duration_minutes) : null,
+        available_from: form.available_from_local ? new Date(form.available_from_local).toISOString() : null,
+        available_until: form.available_until_local ? new Date(form.available_until_local).toISOString() : null,
+        allow_retakes: !!form.allow_retakes,
+        max_attempts: form.allow_retakes ? Number(form.max_attempts) || 1 : 1,
+        show_results_immediately: !!form.show_results_immediately,
+        randomize_questions: !!form.randomize_questions,
+        is_published: !!form.is_published,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', form.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Saved.');
+    onChanged();
+  }
+  async function del() {
+    setDeleting(true);
+    const { error } = await supabase.from('gw_course_tests').delete().eq('id', form.id);
+    setDeleting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Deleted.');
+    onChanged();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 space-y-4">
+          <div>
+            <h3 className="font-semibold text-lg">Edit quiz / test</h3>
+            <p className="text-xs text-muted-foreground">Set the window students can take it, attempt rules, and whether they see results immediately.</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium">Title</label>
+            <Input value={form.title || ''} onChange={(e) => setForm((f: any) => ({ ...f, title: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium">Description</label>
+            <Textarea
+              value={form.description || ''}
+              onChange={(e) => setForm((f: any) => ({ ...f, description: e.target.value }))}
+              rows={2}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium">Instructions for students</label>
+            <Textarea
+              value={form.instructions || ''}
+              onChange={(e) => setForm((f: any) => ({ ...f, instructions: e.target.value }))}
+              rows={3}
+              placeholder="Open book? Time limit? Anything they need to know before they start."
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">Total points</label>
+              <Input
+                type="number"
+                value={form.total_points ?? ''}
+                onChange={(e) => setForm((f: any) => ({ ...f, total_points: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">Duration (minutes)</label>
+              <Input
+                type="number"
+                value={form.duration_minutes ?? ''}
+                onChange={(e) => setForm((f: any) => ({ ...f, duration_minutes: e.target.value }))}
+                placeholder="Untimed"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">Available from</label>
+              <Input
+                type="datetime-local"
+                value={form.available_from_local || ''}
+                onChange={(e) => setForm((f: any) => ({ ...f, available_from_local: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium">Available until</label>
+              <Input
+                type="datetime-local"
+                value={form.available_until_local || ''}
+                onChange={(e) => setForm((f: any) => ({ ...f, available_until_local: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="pt-2 border-t space-y-2">
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-sm font-medium">Allow retakes</span>
+              <input
+                type="checkbox"
+                checked={!!form.allow_retakes}
+                onChange={(e) => setForm((f: any) => ({ ...f, allow_retakes: e.target.checked }))}
+              />
+            </label>
+            {form.allow_retakes && (
+              <div className="space-y-1.5 pl-4">
+                <label className="text-xs font-medium">Max attempts</label>
+                <Input
+                  type="number"
+                  value={form.max_attempts ?? 1}
+                  onChange={(e) => setForm((f: any) => ({ ...f, max_attempts: e.target.value }))}
+                  className="w-24"
+                />
+              </div>
+            )}
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-sm font-medium">Show results immediately</span>
+              <input
+                type="checkbox"
+                checked={!!form.show_results_immediately}
+                onChange={(e) => setForm((f: any) => ({ ...f, show_results_immediately: e.target.checked }))}
+              />
+            </label>
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-sm font-medium">Randomize question order</span>
+              <input
+                type="checkbox"
+                checked={!!form.randomize_questions}
+                onChange={(e) => setForm((f: any) => ({ ...f, randomize_questions: e.target.checked }))}
+              />
+            </label>
+            <label className="flex items-center justify-between cursor-pointer pt-2 border-t mt-2">
+              <span className="text-sm font-medium">Published</span>
+              <span className="inline-flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{form.is_published ? 'Visible to students' : 'Draft — hidden'}</span>
+                <input
+                  type="checkbox"
+                  checked={!!form.is_published}
+                  onChange={(e) => setForm((f: any) => ({ ...f, is_published: e.target.checked }))}
+                />
+              </span>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t">
+            <Button variant="destructive" size="sm" onClick={del} disabled={deleting}>
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+              Delete
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button onClick={save} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -666,18 +1453,33 @@ function QuizzesTab({ course, canEdit }: TabProps) {
 
 function DiscussionsTab({ course, canEdit }: TabProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { code } = useParams();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [newCohortId, setNewCohortId] = useState<string>("");
   const [saving, setSaving] = useState(false);
+
+  const { data: cohorts = [] } = useQueryReactQuery({
+    queryKey: ['discussions-cohorts', course.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_course_cohorts')
+        .select('id, name, color')
+        .eq('course_id', course.id)
+        .order('position');
+      return data ?? [];
+    },
+  });
 
   useEffect(() => {
     let c = false;
     supabase
       .from("gw_course_discussions")
-      .select("id, title, content, author_id, is_pinned, view_count, created_at")
+      .select("id, title, content, author_id, is_pinned, view_count, created_at, cohort_id, gw_course_cohorts(name, color)")
       .eq("course_id", course.id)
       .is("parent_id", null)
       .order("is_pinned", { ascending: false })
@@ -708,8 +1510,9 @@ function DiscussionsTab({ course, canEdit }: TabProps) {
         author_id: user.id,
         is_pinned: false,
         view_count: 0,
+        cohort_id: newCohortId || null,
       })
-      .select("id, title, content, author_id, is_pinned, view_count, created_at")
+      .select("id, title, content, author_id, is_pinned, view_count, created_at, cohort_id, gw_course_cohorts(name, color)")
       .single();
     setSaving(false);
     if (error || !data) {
@@ -717,9 +1520,9 @@ function DiscussionsTab({ course, canEdit }: TabProps) {
       return;
     }
     setItems((prev) => [data, ...prev]);
-    setNewTitle(""); setNewContent("");
+    setNewTitle(""); setNewContent(""); setNewCohortId("");
     setAddOpen(false);
-    toast.success(`Posted "${data.title}"`);
+    toast.success(newCohortId ? `Posted to cohort.` : `Posted "${data.title}"`);
   }
 
   return (
@@ -741,12 +1544,27 @@ function DiscussionsTab({ course, canEdit }: TabProps) {
             className="h-9 text-sm"
           />
           <textarea
-            placeholder="Opening message…"
+            placeholder="Opening message… markdown supported (**bold**, *italic*, [links](url), - lists)"
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
             rows={3}
             className="w-full text-sm rounded-md border border-border bg-background px-3 py-2"
           />
+          {canEdit && cohorts.length > 0 && (
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground whitespace-nowrap">Visible to:</label>
+              <select
+                value={newCohortId}
+                onChange={(e) => setNewCohortId(e.target.value)}
+                className="flex-1 h-9 rounded-md border bg-background px-2 text-sm"
+              >
+                <option value="">Everyone in this class</option>
+                {cohorts.map((c: any) => (
+                  <option key={c.id} value={c.id}>Cohort: {c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="ghost" onClick={() => setAddOpen(false)}>Cancel</Button>
             <Button size="sm" onClick={submit} disabled={saving || !newTitle.trim() || !newContent.trim()}>
@@ -761,11 +1579,20 @@ function DiscussionsTab({ course, canEdit }: TabProps) {
       ) : (
         <ul className="divide-y divide-slate-100">
           {items.map((d) => (
-            <li key={d.id} className="py-3 flex items-center justify-between gap-2 hover:bg-slate-50 px-2 -mx-2 rounded">
+            <li
+              key={d.id}
+              onClick={() => navigate(`/academy/c/${code}/discuss/${d.id}`)}
+              className="py-3 flex items-center justify-between gap-2 hover:bg-slate-50 px-2 -mx-2 rounded cursor-pointer"
+            >
               <div className="min-w-0">
-                <div className="font-medium text-slate-900 flex items-center gap-2">
-                  {d.is_pinned && <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px]">Pinned</Badge>}
+                <div className="font-medium text-slate-900 flex items-center gap-2 flex-wrap">
+                  {d.is_pinned && <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">Pinned</Badge>}
                   {d.title}
+                  {d.cohort_id && d.gw_course_cohorts && (
+                    <Badge variant="outline" className="text-xs" style={{ borderColor: d.gw_course_cohorts.color, color: d.gw_course_cohorts.color }}>
+                      {d.gw_course_cohorts.name}
+                    </Badge>
+                  )}
                 </div>
                 <div className="text-xs text-slate-500">
                   {formatDistanceToNow(new Date(d.created_at), { addSuffix: true })} · {d.view_count || 0} views
@@ -788,39 +1615,80 @@ function PeopleTab({ course, canEdit }: TabProps) {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmails, setInviteEmails] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [cohortFilter, setCohortFilter] = useState<string>('');
+
+  // Cohorts (for filter dropdown + badges)
+  const { data: cohorts = [] } = useQueryReactQuery({
+    queryKey: ['people-tab-cohorts', course.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_course_cohorts')
+        .select('id, name, color, position')
+        .eq('course_id', course.id)
+        .order('position');
+      return data ?? [];
+    },
+  });
+
+  // Cohort memberships joined to students.
+  const { data: memberships = [] } = useQueryReactQuery({
+    queryKey: ['people-tab-memberships', course.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_course_cohort_members')
+        .select('cohort_id, user_id, gw_course_cohorts!inner(course_id)')
+        .eq('gw_course_cohorts.course_id', course.id);
+      return data ?? [];
+    },
+  });
+
+  const cohortMap = useMemo(() => {
+    const map = new Map<string, any>();
+    cohorts.forEach((c: any) => map.set(c.id, c));
+    return map;
+  }, [cohorts]);
+
+  const memberCohortIds = useMemo(() => {
+    const map = new Map<string, string[]>();
+    memberships.forEach((m: any) => {
+      const arr = map.get(m.user_id) || [];
+      arr.push(m.cohort_id);
+      map.set(m.user_id, arr);
+    });
+    return map;
+  }, [memberships]);
+
+  const refreshRoster = useCallback(async () => {
+    const { data: enrolls } = await supabase
+      .from("gw_course_enrollments")
+      .select("id, user_id, role, enrollment_status, created_at")
+      .eq("course_id", course.id)
+      .order("role", { ascending: true })
+      .order("created_at", { ascending: true });
+    const ids = (enrolls || []).map((e) => e.user_id);
+    let pMap = new Map<string, { full_name: string | null; email: string | null; voice_part: string | null }>();
+    if (ids.length) {
+      const { data: profs } = await supabase
+        .from("gw_profiles_directory")
+        .select("user_id, full_name, email, voice_part")
+        .in("user_id", ids);
+      (profs || []).forEach((p: any) =>
+        pMap.set(p.user_id, { full_name: p.full_name, email: p.email, voice_part: p.voice_part })
+      );
+    }
+    setRows(
+      (enrolls || []).map((e: any) => {
+        const p = pMap.get(e.user_id) || { full_name: null, email: null, voice_part: null };
+        return { ...e, ...p };
+      })
+    );
+    setLoading(false);
+  }, [course.id]);
 
   useEffect(() => {
-    let c = false;
-    async function load() {
-      const { data: enrolls } = await supabase
-        .from("gw_course_enrollments")
-        .select("id, user_id, role, enrollment_status, created_at")
-        .eq("course_id", course.id)
-        .order("role", { ascending: true })
-        .order("created_at", { ascending: true });
-      const ids = (enrolls || []).map((e) => e.user_id);
-      let pMap = new Map<string, { full_name: string | null; email: string | null; voice_part: string | null }>();
-      if (ids.length) {
-        const { data: profs } = await supabase
-          .from("gw_profiles_directory")
-          .select("user_id, full_name, email, voice_part")
-          .in("user_id", ids);
-        (profs || []).forEach((p: any) =>
-          pMap.set(p.user_id, { full_name: p.full_name, email: p.email, voice_part: p.voice_part })
-        );
-      }
-      if (c) return;
-      setRows(
-        (enrolls || []).map((e: any) => {
-          const p = pMap.get(e.user_id) || { full_name: null, email: null, voice_part: null };
-          return { ...e, ...p };
-        })
-      );
-      setLoading(false);
-    }
-    load();
-    return () => { c = true; };
-  }, [course.id]);
+    refreshRoster();
+  }, [refreshRoster]);
 
   async function inviteByEmail() {
     const emails = inviteEmails
@@ -876,7 +1744,10 @@ function PeopleTab({ course, canEdit }: TabProps) {
   }
 
   const instructors = rows.filter((r) => r.role === "instructor" || r.role === "ta");
-  const students = rows.filter((r) => r.role !== "instructor" && r.role !== "ta");
+  const allStudents = rows.filter((r) => r.role !== "instructor" && r.role !== "ta");
+  const students = cohortFilter
+    ? allStudents.filter((s) => (memberCohortIds.get(s.user_id) || []).includes(cohortFilter))
+    : allStudents;
 
   return (
     <div className="space-y-6">
@@ -919,38 +1790,226 @@ function PeopleTab({ course, canEdit }: TabProps) {
             {instructors.length > 0 && (
               <div>
                 <h4 className="text-xs uppercase tracking-wider text-slate-500 mb-2">Instructors &amp; TAs</h4>
-                <PeopleList rows={instructors} />
+                <PeopleList rows={instructors} canDrillIn={false} onSelect={() => {}} cohortBadges={{}} />
               </div>
             )}
             <div>
-              <h4 className="text-xs uppercase tracking-wider text-slate-500 mb-2">Students ({students.length})</h4>
-              {students.length ? <PeopleList rows={students} /> : <Empty>No students enrolled.</Empty>}
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <h4 className="text-xs uppercase tracking-wider text-slate-500">
+                  Students ({students.length}{cohortFilter && allStudents.length !== students.length ? ` of ${allStudents.length}` : ''})
+                </h4>
+                {cohorts.length > 0 && (
+                  <select
+                    value={cohortFilter}
+                    onChange={(e) => setCohortFilter(e.target.value)}
+                    className="h-7 rounded-md border bg-background px-2 text-xs"
+                  >
+                    <option value="">All cohorts</option>
+                    {cohorts.map((c: any) => <option key={c.id} value={c.id}>Filter: {c.name}</option>)}
+                  </select>
+                )}
+              </div>
+              {students.length ? (
+                <PeopleList
+                  rows={students}
+                  canDrillIn={canEdit}
+                  onSelect={setSelectedStudent}
+                  courseId={course.id}
+                  canResend={canEdit}
+                  onRemoved={refreshRoster}
+                  cohortBadges={students.reduce((acc, s) => {
+                    acc[s.user_id] = (memberCohortIds.get(s.user_id) || []).map((cid) => cohortMap.get(cid)).filter(Boolean);
+                    return acc;
+                  }, {} as Record<string, any[]>)}
+                />
+              ) : (
+                <Empty>{cohortFilter ? 'No students in this cohort.' : 'No students enrolled.'}</Empty>
+              )}
             </div>
           </div>
         )}
       </SectionCard>
+
+      {/* Cohort sub-grouping inside the course (instructor-managed). */}
+      <CourseCohortsPanel
+        courseId={course.id}
+        canEdit={canEdit}
+        students={students}
+      />
+
+      {/* Student detail dialog — opens on row click for instructors. */}
+      <StudentDetailDialog
+        student={selectedStudent}
+        courseId={course.id}
+        courseCode={course.course_code}
+        onClose={() => setSelectedStudent(null)}
+      />
     </div>
   );
 }
 
-function PeopleList({ rows }: { rows: any[] }) {
+function PeopleList({ rows, canDrillIn, onSelect, cohortBadges, courseId, canResend, onRemoved }: {
+  rows: any[];
+  canDrillIn: boolean;
+  onSelect: (r: any) => void;
+  cohortBadges?: Record<string, any[]>;
+  /** Course these enrollments belong to — passed to the resend edge call. */
+  courseId?: string;
+  /** Teachers/admins only — hides the resend / remove controls for read-only views. */
+  canResend?: boolean;
+  /** Called after a successful remove so the parent can refresh the list. */
+  onRemoved?: () => void;
+}) {
   return (
     <ul className="divide-y divide-slate-100">
-      {rows.map((r) => (
-        <li key={r.id} className="py-2.5 flex items-center gap-3 hover:bg-slate-50 px-2 -mx-2 rounded">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-pink-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-            {(r.full_name?.[0] || r.email?.[0] || "?").toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="font-medium text-slate-900 truncate">{r.full_name || r.email || "(no name)"}</div>
-            <div className="text-xs text-slate-500 truncate">
-              {r.email}{r.voice_part ? ` · ${r.voice_part}` : ""}
+      {rows.map((r) => {
+        const cohorts = cohortBadges?.[r.user_id] || [];
+        return (
+          <li
+            key={r.id}
+            onClick={() => canDrillIn ? onSelect(r) : undefined}
+            className={`py-2.5 flex items-center gap-3 px-2 -mx-2 rounded ${
+              canDrillIn ? 'cursor-pointer hover:bg-slate-50' : 'hover:bg-slate-50'
+            }`}
+          >
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-pink-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+              {(r.full_name?.[0] || r.email?.[0] || "?").toUpperCase()}
             </div>
-          </div>
-          <Badge variant="outline" className="text-[10px]">{r.role}</Badge>
-        </li>
-      ))}
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-slate-900 truncate">{r.full_name || r.email || "(no name)"}</div>
+              <div className="text-xs text-slate-500 truncate flex items-center gap-1.5 flex-wrap">
+                <span className="truncate">{r.email}{r.voice_part ? ` · ${r.voice_part}` : ""}</span>
+                {cohorts.map((c) => (
+                  <span
+                    key={c.id}
+                    className="inline-flex items-center text-xs px-1.5 py-0.5 rounded-full border"
+                    style={{ borderColor: c.color, color: c.color }}
+                  >
+                    {c.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <Badge variant="outline" className="text-xs">{r.role}</Badge>
+            {canResend && r.email && courseId && (
+              <ResendInviteButton email={r.email} courseId={courseId} />
+            )}
+            {canResend && courseId && r.id && (
+              <RemoveStudentButton
+                enrollmentId={r.id}
+                userId={r.user_id}
+                email={r.email}
+                fullName={r.full_name}
+                courseId={courseId}
+                onRemoved={onRemoved}
+              />
+            )}
+            {canDrillIn && <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />}
+          </li>
+        );
+      })}
     </ul>
+  );
+}
+
+// Per-row "remove from class" button. Drops the enrollment row and any
+// pending invite record for this course; the student keeps their auth
+// account + profile (other classes are unaffected). Uses a single
+// confirm dialog because un-enrolling is recoverable (the teacher can
+// re-invite from the same People panel).
+function RemoveStudentButton({
+  enrollmentId,
+  userId,
+  email,
+  fullName,
+  courseId,
+  onRemoved,
+}: {
+  enrollmentId: string;
+  userId?: string;
+  email?: string;
+  fullName?: string;
+  courseId: string;
+  onRemoved?: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      onClick={async (e) => {
+        e.stopPropagation();
+        const label = fullName || email || 'this student';
+        if (!window.confirm(`Remove ${label} from this class? They keep their account and can be re-invited.`)) return;
+        setBusy(true);
+        try {
+          // Drop the active enrollment.
+          const { error: enErr } = await supabase
+            .from('gw_course_enrollments')
+            .delete()
+            .eq('id', enrollmentId);
+          if (enErr) throw enErr;
+          // Best-effort: clear any pending invite rows for this user+course
+          // so a Resend later starts fresh.
+          if (email) {
+            await supabase
+              .from('gw_student_invites')
+              .delete()
+              .eq('email', email)
+              .eq('course_id', courseId);
+          }
+          toast.success(`Removed ${label}`);
+          onRemoved?.();
+        } catch (err: any) {
+          toast.error(`Remove failed: ${err?.message ?? 'unknown error'}`);
+        } finally {
+          setBusy(false);
+        }
+      }}
+      disabled={busy}
+      className="h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 shrink-0"
+      title={`Remove ${fullName || email || 'student'} from this class`}
+    >
+      {busy
+        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        : <Trash2 className="w-3.5 h-3.5" />}
+    </Button>
+  );
+}
+
+// Per-row "resend invite" button. Re-calls gw-invite-student with the
+// same email + course; the edge function is idempotent on the user side
+// (skips create if the email already has an account) and re-sends a
+// fresh magic-link email.
+function ResendInviteButton({ email, courseId }: { email: string; courseId: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      onClick={async (e) => {
+        e.stopPropagation();
+        setBusy(true);
+        try {
+          const { error } = await supabase.functions.invoke('gw-invite-student', {
+            body: { email, courseId, appOrigin: window.location.origin },
+          });
+          if (error) throw error;
+          toast.success(`Invite re-sent to ${email}`);
+        } catch (err: any) {
+          toast.error(`Resend failed: ${err?.message ?? 'unknown error'}`);
+        } finally {
+          setBusy(false);
+        }
+      }}
+      disabled={busy}
+      className="h-7 px-2 text-xs text-slate-600 hover:text-slate-900 shrink-0"
+      title={`Resend invite to ${email}`}
+    >
+      {busy
+        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        : <><Send className="w-3.5 h-3.5 mr-1" /> Resend</>}
+    </Button>
   );
 }
 
@@ -1010,7 +2069,7 @@ function SectionCard({
       <div className="px-5 sm:px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-slate-700">
           {icon}
-          <h2 className="font-bold text-slate-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
         </div>
         {action}
       </div>
@@ -1038,4 +2097,174 @@ function Empty({ children }: { children: React.ReactNode }) {
 function fmtSemester(s: string | null): string {
   if (!s) return "";
   return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// ─── Announcement compose dialog ───────────────────────────────────────────
+// Lets an instructor post a new announcement, optionally scoped to one
+// cohort. Supports markdown (rendered live on Overview).
+
+function AnnouncementComposeDialog({
+  open, courseId, onClose, onPosted,
+}: {
+  open: boolean;
+  courseId: string;
+  onClose: () => void;
+  onPosted: () => void;
+}) {
+  const { user } = useAuth();
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [cohortId, setCohortId] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+
+  const { data: cohorts = [] } = useQueryReactQuery({
+    queryKey: ['compose-cohorts', courseId],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_course_cohorts')
+        .select('id, name, color')
+        .eq('course_id', courseId)
+        .order('position');
+      return data ?? [];
+    },
+  });
+
+  useEffect(() => { if (open) { setTitle(''); setContent(''); setCohortId(''); } }, [open]);
+
+  if (!open) return null;
+
+  async function post() {
+    if (!title.trim() || !content.trim()) {
+      toast.error('Title and message both required.');
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from('gw_course_announcements').insert({
+      course_id: courseId,
+      title: title.trim(),
+      content: content.trim(),
+      created_by: user?.id,
+      cohort_id: cohortId || null,
+    });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(cohortId ? 'Posted to cohort.' : 'Posted to class.');
+    onPosted();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="p-5 space-y-3">
+          <div>
+            <h3 className="font-semibold text-lg">New announcement</h3>
+            <p className="text-xs text-muted-foreground">Markdown supported (headings, **bold**, lists, [links](url)).</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium">Title</label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Rehearsal cancelled tomorrow" />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium">Message</label>
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={6}
+              placeholder="What students need to know…"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium">Send to</label>
+            <select
+              value={cohortId}
+              onChange={(e) => setCohortId(e.target.value)}
+              className="w-full h-9 rounded-md border bg-background px-2 text-sm"
+            >
+              <option value="">Everyone in this class</option>
+              {cohorts.map((c: any) => (
+                <option key={c.id} value={c.id}>Cohort: {c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {content && (
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold mb-1.5">Preview</div>
+              <SimpleMarkdown source={content} className="text-sm" />
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={post} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Send className="w-4 h-4 mr-1.5" />}
+              Post
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Add-on dispatch ──────────────────────────────────────────────────────
+// Render the matching add-on component for the active slug. Unknown slugs
+// fall through to a "not built yet" message so toggling on a placeholder
+// addon doesn't blank the page.
+
+function AddonDispatch({
+  slug, courseId, canEdit,
+}: {
+  slug: AddonSlug | string;
+  courseId: string;
+  canEdit: boolean;
+}) {
+  switch (slug) {
+    case 'polls':          return <PollsAddon         courseId={courseId} canEdit={canEdit} />;
+    case 'qr-attendance':  return <QRAttendanceAddon  courseId={courseId} canEdit={canEdit} />;
+    case 'tour-manager':
+      // Unified: course-scoped events rollup + embedded TourManagerDashboard.
+      return <TourAddon courseId={courseId} canEdit={canEdit} />;
+    case 'wardrobe':
+      // Unified: addon renders course-scoped rollups (checkouts/orders
+      // for this class) on top of the embedded WardrobeManagementHub.
+      return <WardrobeAddon courseId={courseId} canEdit={canEdit} />;
+    case 'ai-grading':
+      return <AiGradingAddon courseId={courseId} canEdit={canEdit} />;
+    case 'ai-hub':
+      return <EmbeddedWorkspaceModule label="AI Hub"><AIHubEmbed /></EmbeddedWorkspaceModule>;
+    default:
+      return (
+        <Card className="border-0 rounded-2xl bg-white p-8 text-center">
+          <p className="text-sm text-slate-600">
+            This add-on doesn't have an in-course view yet — the toggle is live, the renderer is on the way.
+          </p>
+        </Card>
+      );
+  }
+}
+
+// Wraps a workspace-level module embedded inside a course tab so it gets
+// a small contextual header ("Workspace tool" pill + label) and survives
+// any layout assumptions the module makes about top-of-page real estate.
+function EmbeddedWorkspaceModule({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Badge variant="outline" className="text-xs">Workspace tool</Badge>
+        <span>{label} — same controls as in your workspace settings.</span>
+      </div>
+      <div className="rounded-2xl bg-card overflow-hidden" style={{
+        boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
+      }}>
+        <Suspense fallback={<div className="py-10 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-slate-400" /></div>}>
+          {children}
+        </Suspense>
+      </div>
+    </div>
+  );
 }
