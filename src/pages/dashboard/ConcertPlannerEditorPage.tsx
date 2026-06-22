@@ -79,6 +79,11 @@ export default function ConcertPlannerEditorPage() {
     min: 180, max: 480,
     storageKey: 'gw.concertPlanner.railWidth',
   });
+  // On phones the rail can't co-exist with the canvas side-by-side
+  // (240 px rail + main = forced horizontal scroll on a 375 px screen).
+  // Hide it by default and let the top bar's "Cards" button slide it
+  // in as a temporary drawer.
+  const [mobileRailOpen, setMobileRailOpen] = useState(false);
 
   // Snapshot fields the admin types into so we don't fire a DB write per
   // keystroke. Push to DB on blur or 800ms after the last edit.
@@ -243,6 +248,18 @@ export default function ConcertPlannerEditorPage() {
             <ArrowLeft className="w-4 h-4" />
           </Link>
         </Button>
+        {/* Phone-only hamburger to open the card rail as a drawer. */}
+        {viewMode === 'editor' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileRailOpen(true)}
+            className="px-2 lg:hidden"
+            aria-label="Open card list"
+          >
+            <Layers className="w-4 h-4" />
+          </Button>
+        )}
         <input
           type="text"
           value={header.title}
@@ -330,24 +347,55 @@ export default function ConcertPlannerEditorPage() {
           </section>
         ) : (
           <>
-            <CardNavigator
-              cards={cards}
-              activeIndex={activeCardIndex}
-              onSelect={setActiveCardIndex}
-              pieceCount={pieces.length}
-              onAddPiece={() => addPiece.mutate({})}
-              onReorderPieces={(ids) => reorderPieces.mutate(ids)}
-              pieces={pieces}
-              width={railResize.width}
-            />
-            {/* Resize handle for the rail — 4 px wide hit area, expands
-                visually on hover. */}
-            <div
-              {...railResize.handleProps}
-              className="no-print w-1 cursor-col-resize bg-border/40 hover:bg-primary/40 active:bg-primary/60 transition-colors shrink-0"
-              aria-label="Resize card rail"
-            />
-            <section className="flex-1 overflow-auto px-4 py-6 lg:px-8 lg:py-8">
+            {/* Desktop rail — visible at lg+ as a flex sibling. */}
+            <div className="hidden lg:flex shrink-0">
+              <CardNavigator
+                cards={cards}
+                activeIndex={activeCardIndex}
+                onSelect={setActiveCardIndex}
+                pieceCount={pieces.length}
+                onAddPiece={() => addPiece.mutate({})}
+                onReorderPieces={(ids) => reorderPieces.mutate(ids)}
+                pieces={pieces}
+                width={railResize.width}
+              />
+              <div
+                {...railResize.handleProps}
+                className="no-print w-1 cursor-col-resize bg-border/40 hover:bg-primary/40 active:bg-primary/60 transition-colors shrink-0"
+                aria-label="Resize card rail"
+              />
+            </div>
+
+            {/* Phone rail — slides in from the left, tap backdrop to close. */}
+            {mobileRailOpen && (
+              <div className="lg:hidden fixed inset-0 z-40 flex">
+                <div className="relative bg-card shadow-2xl flex">
+                  <CardNavigator
+                    cards={cards}
+                    activeIndex={activeCardIndex}
+                    onSelect={(i) => { setActiveCardIndex(i); setMobileRailOpen(false); }}
+                    pieceCount={pieces.length}
+                    onAddPiece={() => { addPiece.mutate({}); setMobileRailOpen(false); }}
+                    onReorderPieces={(ids) => reorderPieces.mutate(ids)}
+                    pieces={pieces}
+                    width={280}
+                  />
+                  <button
+                    onClick={() => setMobileRailOpen(false)}
+                    aria-label="Close card list"
+                    className="absolute top-2 -right-9 w-8 h-8 rounded-full bg-card border border-border shadow flex items-center justify-center"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div
+                  className="flex-1 bg-black/40"
+                  onClick={() => setMobileRailOpen(false)}
+                />
+              </div>
+            )}
+
+            <section className="flex-1 min-w-0 overflow-auto px-3 py-4 sm:px-4 sm:py-6 lg:px-8 lg:py-8">
               <div className="max-w-5xl mx-auto">
                 {cards[activeCardIndex] ? (
                   <ProgramCardView
