@@ -329,7 +329,8 @@ export default function ConcertPlannerEditorPage() {
               onSelect={setActiveCardIndex}
               pieceCount={pieces.length}
               onAddPiece={() => addPiece.mutate({})}
-              theme={theme}
+              onReorderPieces={(ids) => reorderPieces.mutate(ids)}
+              pieces={pieces}
             />
             <section className="flex-1 overflow-auto px-4 py-6 lg:px-8 lg:py-8">
               <div className="max-w-5xl mx-auto">
@@ -360,21 +361,21 @@ export default function ConcertPlannerEditorPage() {
                 ) : null}
 
                 {/* Page nav at bottom of single-card view */}
-                <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground no-print">
+                <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground no-print">
                   <button
                     onClick={() => setActiveCardIndex(Math.max(0, activeCardIndex - 1))}
                     disabled={activeCardIndex === 0}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded hover:bg-muted disabled:opacity-30"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded hover:bg-muted disabled:opacity-30"
                   >
-                    <ChevronUp className="w-3.5 h-3.5 -rotate-90" /> Previous
+                    <ChevronUp className="w-4 h-4 -rotate-90" /> Previous
                   </button>
                   <span className="font-mono tabular-nums">{activeCardIndex + 1} / {cards.length}</span>
                   <button
                     onClick={() => setActiveCardIndex(Math.min(cards.length - 1, activeCardIndex + 1))}
                     disabled={activeCardIndex >= cards.length - 1}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded hover:bg-muted disabled:opacity-30"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded hover:bg-muted disabled:opacity-30"
                   >
-                    Next <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
+                    Next <ChevronDown className="w-4 h-4 -rotate-90" />
                   </button>
                 </div>
               </div>
@@ -759,27 +760,83 @@ function ProgramCardView(p: CardViewProps) {
 }
 
 // Gamma-style thumbnail rail. Click any card to jump straight to it
-// in the main canvas. Numbered, with a short label per card kind so
-// the user can tell which is which without rendering full previews.
+// in the main canvas. Piece-detail cards are draggable so the user can
+// reorder repertoire by drag-and-drop; non-piece cards (cover, program,
+// roster, rights, share) are fixed in position by the transform layer.
 function CardNavigator({
-  cards, activeIndex, onSelect, pieceCount, onAddPiece, theme,
+  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, pieces,
 }: {
   cards: ProgramCard[];
   activeIndex: number;
   onSelect: (i: number) => void;
   pieceCount: number;
   onAddPiece: () => void;
-  theme: ReturnType<typeof themeStyles>;
+  onReorderPieces: (orderedIds: string[]) => void;
+  pieces: { id: string; sort_order: number }[];
 }) {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, card: ProgramCard) => {
+    if (card.kind !== 'piece-detail' || !card.pieceId) {
+      e.preventDefault();
+      return;
+    }
+    setDraggingId(card.pieceId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', card.pieceId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, card: ProgramCard) => {
+    if (!draggingId || card.kind !== 'piece-detail' || !card.pieceId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (card.pieceId !== draggingId) setDragOverId(card.pieceId);
+  };
+
+  const handleDrop = (e: React.DragEvent, target: ProgramCard) => {
+    e.preventDefault();
+    if (!draggingId || target.kind !== 'piece-detail' || !target.pieceId) {
+      setDraggingId(null);
+      setDragOverId(null);
+      return;
+    }
+    if (target.pieceId === draggingId) {
+      setDraggingId(null);
+      setDragOverId(null);
+      return;
+    }
+    // Build the new piece order from the current pieces sorted by sort_order,
+    // then move the dragged piece's id to the position of the target.
+    const ordered = pieces.slice().sort((a, b) => a.sort_order - b.sort_order).map((p) => p.id);
+    const fromIdx = ordered.indexOf(draggingId);
+    const toIdx = ordered.indexOf(target.pieceId);
+    if (fromIdx === -1 || toIdx === -1) {
+      setDraggingId(null);
+      setDragOverId(null);
+      return;
+    }
+    const [moved] = ordered.splice(fromIdx, 1);
+    ordered.splice(toIdx, 0, moved);
+    onReorderPieces(ordered);
+    setDraggingId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingId(null);
+    setDragOverId(null);
+  };
+
   return (
-    <aside className="no-print w-52 shrink-0 border-r border-border bg-muted/30 flex flex-col">
-      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
+    <aside className="no-print w-60 shrink-0 border-r border-border bg-muted/30 flex flex-col">
+      <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
+        <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
           {cards.length} card{cards.length === 1 ? '' : 's'}
         </span>
         <button
           onClick={onAddPiece}
-          className="p-1 rounded hover:bg-card text-muted-foreground hover:text-foreground"
+          className="p-1.5 rounded hover:bg-card text-muted-foreground hover:text-foreground"
           aria-label="Add piece"
           title="Add piece"
         >
@@ -790,23 +847,34 @@ function CardNavigator({
         {cards.map((c, i) => {
           const isActive = i === activeIndex;
           const label = cardLabel(c);
+          const isDraggable = c.kind === 'piece-detail';
+          const isDragging = isDraggable && c.pieceId === draggingId;
+          const isDragTarget = isDraggable && c.pieceId === dragOverId && c.pieceId !== draggingId;
           return (
             <button
               key={c.id}
               onClick={() => onSelect(i)}
+              draggable={isDraggable}
+              onDragStart={(e) => handleDragStart(e, c)}
+              onDragOver={(e) => handleDragOver(e, c)}
+              onDrop={(e) => handleDrop(e, c)}
+              onDragEnd={handleDragEnd}
               className={`w-full text-left rounded-md border transition-all ${
                 isActive
                   ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm'
                   : 'border-transparent hover:border-border hover:bg-card/60'
-              } ${!c.visible ? 'opacity-50' : ''}`}
+              } ${!c.visible ? 'opacity-50' : ''}
+              ${isDragging ? 'opacity-40' : ''}
+              ${isDragTarget ? 'border-primary/60 bg-primary/5' : ''}
+              ${isDraggable ? 'cursor-move' : 'cursor-pointer'}`}
             >
-              <div className="flex items-start gap-2 p-2">
-                <span className="text-[10px] font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{i + 1}</span>
+              <div className="flex items-start gap-2.5 p-2.5">
+                <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{i + 1}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
-                  <div className="text-xs font-semibold leading-tight truncate">{label.title}</div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
+                  <div className="text-sm font-semibold leading-tight truncate">{label.title}</div>
                 </div>
-                {!c.visible && <EyeOff className="w-3 h-3 text-muted-foreground mt-0.5 shrink-0" />}
+                {!c.visible && <EyeOff className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />}
               </div>
             </button>
           );
@@ -816,7 +884,7 @@ function CardNavigator({
         <Button size="sm" variant="outline" onClick={onAddPiece} className="w-full">
           <Plus className="w-3.5 h-3.5 mr-1" /> Add piece
         </Button>
-        <div className="mt-1.5 text-[10px] text-center text-muted-foreground">
+        <div className="mt-1.5 text-xs text-center text-muted-foreground">
           {pieceCount} piece{pieceCount === 1 ? '' : 's'} on the program
         </div>
       </div>
@@ -863,47 +931,47 @@ function ValidationBadge({
     <>
       <button
         onClick={onToggle}
-        className={`no-print fixed bottom-4 left-4 z-20 ${badgeColor} rounded-full pl-2.5 pr-3 py-1.5 text-xs font-semibold shadow-lg flex items-center gap-1.5 hover:scale-105 transition-transform`}
+        className={`no-print fixed bottom-4 left-4 z-20 ${badgeColor} rounded-full pl-3 pr-4 py-2 text-sm font-semibold shadow-lg flex items-center gap-2 hover:scale-105 transition-transform`}
       >
-        {requiredCount > 0 ? <XCircle className="w-3.5 h-3.5" /> : warnCount > 0 ? <AlertTriangle className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+        {requiredCount > 0 ? <XCircle className="w-4 h-4" /> : warnCount > 0 ? <AlertTriangle className="w-4 h-4" /> : <Check className="w-4 h-4" />}
         {badgeLabel}
       </button>
       {open && (
-        <div className="no-print fixed bottom-16 left-4 z-30 w-96 max-h-[60vh] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
-          <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-            <h3 className="font-semibold text-xs uppercase tracking-wide flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5" /> Validation
+        <div className="no-print fixed bottom-16 left-4 z-30 w-[28rem] max-h-[60vh] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h3 className="font-semibold text-sm uppercase tracking-wide flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Validation
             </h3>
-            <button onClick={onToggle} className="p-1 hover:bg-muted rounded">
-              <X className="w-3.5 h-3.5" />
+            <button onClick={onToggle} className="p-1.5 hover:bg-muted rounded">
+              <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {validation.items.map((item) => (
               <div
                 key={item.id}
-                className={`p-2 rounded border text-[11px] flex items-start gap-2 ${
+                className={`p-2.5 rounded border text-sm flex items-start gap-2 ${
                   item.level === 'required' ? 'bg-rose-50 border-rose-100 text-rose-900'
                   : item.level === 'warning' ? 'bg-amber-50 border-amber-100 text-amber-900'
                   : 'bg-emerald-50 border-emerald-100 text-emerald-900'
                 }`}
               >
-                {item.level === 'required' && <XCircle className="w-3.5 h-3.5 mt-0.5 text-rose-600 shrink-0" />}
-                {item.level === 'warning' && <AlertTriangle className="w-3.5 h-3.5 mt-0.5 text-amber-600 shrink-0" />}
-                {item.level === 'ready' && <Check className="w-3.5 h-3.5 mt-0.5 text-emerald-600 shrink-0" />}
+                {item.level === 'required' && <XCircle className="w-4 h-4 mt-0.5 text-rose-600 shrink-0" />}
+                {item.level === 'warning' && <AlertTriangle className="w-4 h-4 mt-0.5 text-amber-600 shrink-0" />}
+                {item.level === 'ready' && <Check className="w-4 h-4 mt-0.5 text-emerald-600 shrink-0" />}
                 <div>
-                  <div className="text-[9px] uppercase font-semibold opacity-70">{item.category} · {item.level}</div>
-                  <div className="mt-0.5">{item.message}</div>
+                  <div className="text-xs uppercase font-semibold opacity-70 tracking-wide">{item.category} · {item.level}</div>
+                  <div className="mt-0.5 leading-snug">{item.message}</div>
                 </div>
               </div>
             ))}
           </div>
-          <label className="px-3 py-2 border-t border-border flex items-start gap-2 cursor-pointer text-xs bg-muted/30">
+          <label className="px-4 py-3 border-t border-border flex items-start gap-2 cursor-pointer text-sm bg-muted/30">
             <input
               type="checkbox"
               checked={hasApproval}
               onChange={(e) => onApprovalChange(e.target.checked)}
-              className="mt-0.5"
+              className="mt-1"
             />
             <span>I've reviewed every piece's composer, arranger, rights status, and the roster.</span>
           </label>
