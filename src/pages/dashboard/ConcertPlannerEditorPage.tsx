@@ -364,6 +364,11 @@ export default function ConcertPlannerEditorPage() {
                 pieceCount={pieces.length}
                 onAddPiece={() => addPiece.mutate({})}
                 onReorderPieces={(ids) => reorderPieces.mutate(ids)}
+                onReorderCards={(orderIds) => {
+                  updateProgram.mutate({
+                    card_layout: { ...(program.card_layout ?? {}), order: orderIds },
+                  } as any);
+                }}
                 pieces={pieces}
                 width={railResize.width}
                 onToggleVisible={toggleVisible}
@@ -386,6 +391,11 @@ export default function ConcertPlannerEditorPage() {
                     pieceCount={pieces.length}
                     onAddPiece={() => { addPiece.mutate({}); setMobileRailOpen(false); }}
                     onReorderPieces={(ids) => reorderPieces.mutate(ids)}
+                    onReorderCards={(orderIds) => {
+                      updateProgram.mutate({
+                        card_layout: { ...(program.card_layout ?? {}), order: orderIds },
+                      } as any);
+                    }}
                     pieces={pieces}
                     width={280}
                     onToggleVisible={toggleVisible}
@@ -837,7 +847,7 @@ function ProgramCardView(p: CardViewProps) {
 // reorder repertoire by drag-and-drop; non-piece cards (cover, program,
 // roster, rights, share) are fixed in position by the transform layer.
 function CardNavigator({
-  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, pieces, width, onToggleVisible,
+  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, onReorderCards, pieces, width, onToggleVisible,
 }: {
   cards: ProgramCard[];
   activeIndex: number;
@@ -845,6 +855,7 @@ function CardNavigator({
   pieceCount: number;
   onAddPiece: () => void;
   onReorderPieces: (orderedIds: string[]) => void;
+  onReorderCards: (orderedCardIds: string[]) => void;
   pieces: { id: string; sort_order: number }[];
   width: number;
   onToggleVisible: (cardId: string) => void;
@@ -860,21 +871,37 @@ function CardNavigator({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // Only piece-detail cards are sortable. The structural cards (cover,
-  // program, ensemble, rights, share) stay anchored — moving the cover
-  // below the pieces would break the program's reading order.
-  const pieceIds = cards
-    .filter((c) => c.kind === 'piece-detail' && c.pieceId)
-    .map((c) => c.pieceId!) as string[];
+  // All cards are sortable. Two reorder paths:
+  // 1. Piece-detail ↔ piece-detail → updates pieces.sort_order so the
+  //    Timeline-card list and printed program reflect the new order.
+  // 2. Any drag that touches a non-piece card → writes to
+  //    card_layout.order on the program. The transform layer respects
+  //    that override on every render.
+  const cardIds = cards.map((c) => c.id);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const fromIdx = pieceIds.indexOf(String(active.id));
-    const toIdx = pieceIds.indexOf(String(over.id));
+    const fromIdx = cardIds.indexOf(String(active.id));
+    const toIdx = cardIds.indexOf(String(over.id));
     if (fromIdx === -1 || toIdx === -1) return;
-    const next = arrayMove(pieceIds, fromIdx, toIdx);
-    onReorderPieces(next);
+
+    const activeCard = cards[fromIdx];
+    const overCard = cards[toIdx];
+
+    // Pure piece-to-piece reorder → keep pieces.sort_order honest so the
+    // timeline reads in the new order on the printed program too.
+    if (activeCard.kind === 'piece-detail' && overCard.kind === 'piece-detail'
+        && activeCard.pieceId && overCard.pieceId) {
+      const pieceIds = pieces.slice().sort((a, b) => a.sort_order - b.sort_order).map((p) => p.id);
+      const pFrom = pieceIds.indexOf(activeCard.pieceId);
+      const pTo = pieceIds.indexOf(overCard.pieceId);
+      if (pFrom !== -1 && pTo !== -1) onReorderPieces(arrayMove(pieceIds, pFrom, pTo));
+    }
+
+    // Always write to card_layout.order so the rail's visual order
+    // sticks across reloads — even for cross-kind drags.
+    onReorderCards(arrayMove(cardIds, fromIdx, toIdx));
   };
 
   return (
@@ -896,28 +923,15 @@ function CardNavigator({
         </button>
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={pieceIds} strategy={verticalListSortingStrategy}>
+        <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
             {cards.map((c, i) => {
               const isActive = i === activeIndex;
               const label = cardLabel(c);
-              if (c.kind === 'piece-detail' && c.pieceId) {
-                return (
-                  <SortablePieceRow
-                    key={c.id}
-                    pieceId={c.pieceId}
-                    index={i + 1}
-                    label={label}
-                    isActive={isActive}
-                    visible={c.visible}
-                    onSelect={() => onSelect(i)}
-                    onToggleVisible={() => onToggleVisible(c.id)}
-                  />
-                );
-              }
               return (
-                <StaticCardRow
+                <SortableCardRow
                   key={c.id}
+                  cardId={c.id}
                   index={i + 1}
                   label={label}
                   isActive={isActive}
@@ -944,10 +958,10 @@ function CardNavigator({
 
 // Sortable wrapper for piece-detail rows. The drag handle lives on a
 // dedicated grip icon so the rest of the row stays clickable for select.
-function SortablePieceRow({
-  pieceId, index, label, isActive, visible, onSelect, onToggleVisible,
+function SortableCardRow({
+  cardId, index, label, isActive, visible, onSelect, onToggleVisible,
 }: {
-  pieceId: string;
+  cardId: string;
   index: number;
   label: { kind: string; title: string };
   isActive: boolean;
@@ -955,7 +969,7 @@ function SortablePieceRow({
   onSelect: () => void;
   onToggleVisible: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pieceId });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cardId });
   return (
     <div
       ref={setNodeRef}
@@ -975,40 +989,6 @@ function SortablePieceRow({
     >
       <div className="flex items-start gap-2.5 p-2.5">
         <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-muted-foreground mt-0.5 shrink-0" />
-        <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
-        <div className="min-w-0 flex-1">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
-          <div className="text-sm font-semibold leading-tight truncate">{label.title}</div>
-        </div>
-        <VisibilityToggle visible={visible} onToggle={onToggleVisible} />
-      </div>
-    </div>
-  );
-}
-
-// Non-piece cards — render the same row shape without the drag handle so
-// the rail visual stays consistent.
-function StaticCardRow({
-  index, label, isActive, visible, onSelect, onToggleVisible,
-}: {
-  index: number;
-  label: { kind: string; title: string };
-  isActive: boolean;
-  visible: boolean;
-  onSelect: () => void;
-  onToggleVisible: () => void;
-}) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
-      className={`group w-full text-left rounded-md border transition-all cursor-pointer ${
-        isActive ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm' : 'border-transparent hover:border-border hover:bg-card/60'
-      } ${!visible ? 'opacity-50' : ''}`}
-    >
-      <div className="flex items-start gap-2.5 p-2.5 pl-7">
         <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
         <div className="min-w-0 flex-1">
           <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
