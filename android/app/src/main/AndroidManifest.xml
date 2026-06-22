@@ -33,9 +33,28 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Foreground service that owns the persistent "Recording…"
+             notification while a Part Tracks take is rolling. The
+             mediaPlayback type matches the MediaStyle notification it
+             posts. -->
+        <service
+            android:name=".RecordingForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
     </application>
 
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Recording uses the mic + posts a persistent notification + needs
+         foreground-service-mediaPlayback so the OS keeps the WKWebView's
+         audio playback alive during a take. POST_NOTIFICATIONS is
+         Android 13+ runtime ask; mic permission is handled by Capacitor
+         when the JS code calls getUserMedia. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
