@@ -871,23 +871,25 @@ function CardNavigator({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // All cards are sortable. Two reorder paths:
-  // 1. Piece-detail ↔ piece-detail → updates pieces.sort_order so the
-  //    Timeline-card list and printed program reflect the new order.
-  // 2. Any drag that touches a non-piece card → writes to
-  //    card_layout.order on the program. The transform layer respects
-  //    that override on every render.
-  const cardIds = cards.map((c) => c.id);
+  // Anchored top/bottom — Cover + Ensemble always lead, Rights + Share
+  // always trail. The middle (Program timeline + every Piece detail) is
+  // the only group that can be re-ordered by drag.
+  const isAnchoredTop = (c: ProgramCard) => c.kind === 'hero-cover' || c.kind === 'grid-roster';
+  const isAnchoredBottom = (c: ProgramCard) => c.kind === 'rights-footer' || c.kind === 'qr-access';
+  const topCards = cards.filter(isAnchoredTop);
+  const bottomCards = cards.filter(isAnchoredBottom);
+  const middleCards = cards.filter((c) => !isAnchoredTop(c) && !isAnchoredBottom(c));
+  const middleIds = middleCards.map((c) => c.id);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const fromIdx = cardIds.indexOf(String(active.id));
-    const toIdx = cardIds.indexOf(String(over.id));
+    const fromIdx = middleIds.indexOf(String(active.id));
+    const toIdx = middleIds.indexOf(String(over.id));
     if (fromIdx === -1 || toIdx === -1) return;
 
-    const activeCard = cards[fromIdx];
-    const overCard = cards[toIdx];
+    const activeCard = middleCards[fromIdx];
+    const overCard = middleCards[toIdx];
 
     // Pure piece-to-piece reorder → keep pieces.sort_order honest so the
     // timeline reads in the new order on the printed program too.
@@ -899,9 +901,14 @@ function CardNavigator({
       if (pFrom !== -1 && pTo !== -1) onReorderPieces(arrayMove(pieceIds, pFrom, pTo));
     }
 
-    // Always write to card_layout.order so the rail's visual order
-    // sticks across reloads — even for cross-kind drags.
-    onReorderCards(arrayMove(cardIds, fromIdx, toIdx));
+    // Write the full card_layout.order = top + new middle + bottom so
+    // the visible order sticks across reloads.
+    const newMiddleIds = arrayMove(middleIds, fromIdx, toIdx);
+    onReorderCards([
+      ...topCards.map((c) => c.id),
+      ...newMiddleIds,
+      ...bottomCards.map((c) => c.id),
+    ]);
   };
 
   return (
@@ -922,28 +929,59 @@ function CardNavigator({
           <Plus className="w-4 h-4" />
         </button>
       </div>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-            {cards.map((c, i) => {
-              const isActive = i === activeIndex;
-              const label = cardLabel(c);
-              return (
-                <SortableCardRow
-                  key={c.id}
-                  cardId={c.id}
-                  index={i + 1}
-                  label={label}
-                  isActive={isActive}
-                  visible={c.visible}
-                  onSelect={() => onSelect(i)}
-                  onToggleVisible={() => onToggleVisible(c.id)}
-                />
-              );
-            })}
-          </div>
-        </SortableContext>
-      </DndContext>
+      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+        {topCards.map((c) => {
+          const i = cards.indexOf(c);
+          return (
+            <AnchoredCardRow
+              key={c.id}
+              index={i + 1}
+              label={cardLabel(c)}
+              isActive={i === activeIndex}
+              visible={c.visible}
+              onSelect={() => onSelect(i)}
+              onToggleVisible={() => onToggleVisible(c.id)}
+            />
+          );
+        })}
+        {middleCards.length > 0 && (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={middleIds} strategy={verticalListSortingStrategy}>
+              <div className="space-y-1.5">
+                {middleCards.map((c) => {
+                  const i = cards.indexOf(c);
+                  return (
+                    <SortableCardRow
+                      key={c.id}
+                      cardId={c.id}
+                      index={i + 1}
+                      label={cardLabel(c)}
+                      isActive={i === activeIndex}
+                      visible={c.visible}
+                      onSelect={() => onSelect(i)}
+                      onToggleVisible={() => onToggleVisible(c.id)}
+                    />
+                  );
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
+        {bottomCards.map((c) => {
+          const i = cards.indexOf(c);
+          return (
+            <AnchoredCardRow
+              key={c.id}
+              index={i + 1}
+              label={cardLabel(c)}
+              isActive={i === activeIndex}
+              visible={c.visible}
+              onSelect={() => onSelect(i)}
+              onToggleVisible={() => onToggleVisible(c.id)}
+            />
+          );
+        })}
+      </div>
       <div className="p-2 border-t border-border">
         <Button size="sm" variant="outline" onClick={onAddPiece} className="w-full">
           <Plus className="w-3.5 h-3.5 mr-1" /> Add piece
@@ -989,6 +1027,40 @@ function SortableCardRow({
     >
       <div className="flex items-start gap-2.5 p-2.5">
         <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-muted-foreground mt-0.5 shrink-0" />
+        <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
+          <div className="text-sm font-semibold leading-tight truncate">{label.title}</div>
+        </div>
+        <VisibilityToggle visible={visible} onToggle={onToggleVisible} />
+      </div>
+    </div>
+  );
+}
+
+// Anchored Cover/Ensemble/Rights/Share rows — same visual shape as the
+// sortable rows but no drag handle and no listeners.
+function AnchoredCardRow({
+  index, label, isActive, visible, onSelect, onToggleVisible,
+}: {
+  index: number;
+  label: { kind: string; title: string };
+  isActive: boolean;
+  visible: boolean;
+  onSelect: () => void;
+  onToggleVisible: () => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
+      className={`group w-full text-left rounded-md border transition-all cursor-pointer ${
+        isActive ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm' : 'border-transparent hover:border-border hover:bg-card/60'
+      } ${!visible ? 'opacity-50' : ''}`}
+    >
+      <div className="flex items-start gap-2.5 p-2.5 pl-[1.6rem]">
         <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
         <div className="min-w-0 flex-1">
           <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>

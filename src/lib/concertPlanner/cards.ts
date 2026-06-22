@@ -51,9 +51,16 @@ export function transformProgramToCards(
     [QR_ID]: printFormat === 'qr-lobby' || !!program.published_slug,
   };
 
-  // Default order. Piece-detail cards slot between timeline and roster.
+  // Default order. Top anchors: Cover then Ensemble (so the audience
+  // meets the performers before the music). Middle sortable group:
+  // Program timeline + per-piece detail cards. Bottom anchors: Rights
+  // then Share/QR (always last so the closing credits land at the end
+  // of the printed program). The CardNavigator UI enforces the
+  // top/bottom anchors at drag time — this transform just provides
+  // the default order.
   const defaultCards: ProgramCard[] = [
     { id: HERO_ID, kind: 'hero-cover', title: program.title || 'Untitled program', visible: defaultVisible[HERO_ID] },
+    { id: ROSTER_ID, kind: 'grid-roster', title: 'Ensemble', visible: defaultVisible[ROSTER_ID] },
     { id: TIMELINE_ID, kind: 'timeline-program', title: 'Program order', visible: defaultVisible[TIMELINE_ID] },
     ...pieces
       .slice()
@@ -64,7 +71,6 @@ export function transformProgramToCards(
         defaultVisible[id] = pieceVisible;
         return { id, kind: 'piece-detail', title: p.title, visible: pieceVisible, pieceId: p.id };
       }),
-    { id: ROSTER_ID, kind: 'grid-roster', title: 'Ensemble', visible: defaultVisible[ROSTER_ID] },
     { id: RIGHTS_ID, kind: 'rights-footer', title: 'Rights & credits', visible: defaultVisible[RIGHTS_ID] },
     { id: QR_ID, kind: 'qr-access', title: 'Open the digital program', visible: defaultVisible[QR_ID] },
   ];
