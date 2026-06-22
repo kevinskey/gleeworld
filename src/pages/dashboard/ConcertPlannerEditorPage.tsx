@@ -39,6 +39,14 @@ import {
 import { RosterEditor } from '@/components/concertPlanner/RosterEditor';
 import { SpeechInputButton } from '@/components/concertPlanner/SpeechInputButton';
 import { useResizableWidth } from '@/hooks/useResizableWidth';
+import {
+  DndContext, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
+  closestCenter, type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext, useSortable, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function ConcertPlannerEditorPage() {
@@ -358,6 +366,7 @@ export default function ConcertPlannerEditorPage() {
                 onReorderPieces={(ids) => reorderPieces.mutate(ids)}
                 pieces={pieces}
                 width={railResize.width}
+                onToggleVisible={toggleVisible}
               />
               <div
                 {...railResize.handleProps}
@@ -379,6 +388,7 @@ export default function ConcertPlannerEditorPage() {
                     onReorderPieces={(ids) => reorderPieces.mutate(ids)}
                     pieces={pieces}
                     width={280}
+                    onToggleVisible={toggleVisible}
                   />
                   <button
                     onClick={() => setMobileRailOpen(false)}
@@ -827,7 +837,7 @@ function ProgramCardView(p: CardViewProps) {
 // reorder repertoire by drag-and-drop; non-piece cards (cover, program,
 // roster, rights, share) are fixed in position by the transform layer.
 function CardNavigator({
-  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, pieces, width,
+  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, pieces, width, onToggleVisible,
 }: {
   cards: ProgramCard[];
   activeIndex: number;
@@ -837,59 +847,34 @@ function CardNavigator({
   onReorderPieces: (orderedIds: string[]) => void;
   pieces: { id: string; sort_order: number }[];
   width: number;
+  onToggleVisible: (cardId: string) => void;
 }) {
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  // Touch + mouse drag via @dnd-kit. The old HTML5 drag API doesn't
+  // fire touchstart/touchmove on iOS Safari, which left iPad users
+  // unable to reorder. Pointer + Touch sensors below cover both.
+  // Activation distance prevents tap-to-select from being interpreted
+  // as drag-to-reorder.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
-  const handleDragStart = (e: React.DragEvent, card: ProgramCard) => {
-    if (card.kind !== 'piece-detail' || !card.pieceId) {
-      e.preventDefault();
-      return;
-    }
-    setDraggingId(card.pieceId);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', card.pieceId);
-  };
+  // Only piece-detail cards are sortable. The structural cards (cover,
+  // program, ensemble, rights, share) stay anchored — moving the cover
+  // below the pieces would break the program's reading order.
+  const pieceIds = cards
+    .filter((c) => c.kind === 'piece-detail' && c.pieceId)
+    .map((c) => c.pieceId!) as string[];
 
-  const handleDragOver = (e: React.DragEvent, card: ProgramCard) => {
-    if (!draggingId || card.kind !== 'piece-detail' || !card.pieceId) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (card.pieceId !== draggingId) setDragOverId(card.pieceId);
-  };
-
-  const handleDrop = (e: React.DragEvent, target: ProgramCard) => {
-    e.preventDefault();
-    if (!draggingId || target.kind !== 'piece-detail' || !target.pieceId) {
-      setDraggingId(null);
-      setDragOverId(null);
-      return;
-    }
-    if (target.pieceId === draggingId) {
-      setDraggingId(null);
-      setDragOverId(null);
-      return;
-    }
-    // Build the new piece order from the current pieces sorted by sort_order,
-    // then move the dragged piece's id to the position of the target.
-    const ordered = pieces.slice().sort((a, b) => a.sort_order - b.sort_order).map((p) => p.id);
-    const fromIdx = ordered.indexOf(draggingId);
-    const toIdx = ordered.indexOf(target.pieceId);
-    if (fromIdx === -1 || toIdx === -1) {
-      setDraggingId(null);
-      setDragOverId(null);
-      return;
-    }
-    const [moved] = ordered.splice(fromIdx, 1);
-    ordered.splice(toIdx, 0, moved);
-    onReorderPieces(ordered);
-    setDraggingId(null);
-    setDragOverId(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggingId(null);
-    setDragOverId(null);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const fromIdx = pieceIds.indexOf(String(active.id));
+    const toIdx = pieceIds.indexOf(String(over.id));
+    if (fromIdx === -1 || toIdx === -1) return;
+    const next = arrayMove(pieceIds, fromIdx, toIdx);
+    onReorderPieces(next);
   };
 
   return (
@@ -910,43 +895,41 @@ function CardNavigator({
           <Plus className="w-4 h-4" />
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-        {cards.map((c, i) => {
-          const isActive = i === activeIndex;
-          const label = cardLabel(c);
-          const isDraggable = c.kind === 'piece-detail';
-          const isDragging = isDraggable && c.pieceId === draggingId;
-          const isDragTarget = isDraggable && c.pieceId === dragOverId && c.pieceId !== draggingId;
-          return (
-            <button
-              key={c.id}
-              onClick={() => onSelect(i)}
-              draggable={isDraggable}
-              onDragStart={(e) => handleDragStart(e, c)}
-              onDragOver={(e) => handleDragOver(e, c)}
-              onDrop={(e) => handleDrop(e, c)}
-              onDragEnd={handleDragEnd}
-              className={`w-full text-left rounded-md border transition-all ${
-                isActive
-                  ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm'
-                  : 'border-transparent hover:border-border hover:bg-card/60'
-              } ${!c.visible ? 'opacity-50' : ''}
-              ${isDragging ? 'opacity-40' : ''}
-              ${isDragTarget ? 'border-primary/60 bg-primary/5' : ''}
-              ${isDraggable ? 'cursor-move' : 'cursor-pointer'}`}
-            >
-              <div className="flex items-start gap-2.5 p-2.5">
-                <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{i + 1}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
-                  <div className="text-sm font-semibold leading-tight truncate">{label.title}</div>
-                </div>
-                {!c.visible && <EyeOff className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={pieceIds} strategy={verticalListSortingStrategy}>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            {cards.map((c, i) => {
+              const isActive = i === activeIndex;
+              const label = cardLabel(c);
+              if (c.kind === 'piece-detail' && c.pieceId) {
+                return (
+                  <SortablePieceRow
+                    key={c.id}
+                    pieceId={c.pieceId}
+                    index={i + 1}
+                    label={label}
+                    isActive={isActive}
+                    visible={c.visible}
+                    onSelect={() => onSelect(i)}
+                    onToggleVisible={() => onToggleVisible(c.id)}
+                  />
+                );
+              }
+              return (
+                <StaticCardRow
+                  key={c.id}
+                  index={i + 1}
+                  label={label}
+                  isActive={isActive}
+                  visible={c.visible}
+                  onSelect={() => onSelect(i)}
+                  onToggleVisible={() => onToggleVisible(c.id)}
+                />
+              );
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
       <div className="p-2 border-t border-border">
         <Button size="sm" variant="outline" onClick={onAddPiece} className="w-full">
           <Plus className="w-3.5 h-3.5 mr-1" /> Add piece
@@ -956,6 +939,105 @@ function CardNavigator({
         </div>
       </div>
     </aside>
+  );
+}
+
+// Sortable wrapper for piece-detail rows. The drag handle lives on a
+// dedicated grip icon so the rest of the row stays clickable for select.
+function SortablePieceRow({
+  pieceId, index, label, isActive, visible, onSelect, onToggleVisible,
+}: {
+  pieceId: string;
+  index: number;
+  label: { kind: string; title: string };
+  isActive: boolean;
+  visible: boolean;
+  onSelect: () => void;
+  onToggleVisible: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: pieceId });
+  return (
+    <div
+      ref={setNodeRef}
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`group w-full text-left rounded-md border transition-all touch-none ${
+        isActive ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm' : 'border-transparent hover:border-border hover:bg-card/60'
+      } ${!visible ? 'opacity-50' : ''} ${isDragging ? 'opacity-50 shadow-lg z-10 relative bg-card' : ''} cursor-pointer`}
+    >
+      <div className="flex items-start gap-2 p-2.5">
+        {/* Drag handle — pointer/touch listeners attach only here so
+            tapping the body still selects the card. */}
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          onClick={(e) => e.stopPropagation()}
+          className="p-1 -m-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-grab active:cursor-grabbing shrink-0 touch-none"
+          aria-label="Drag to reorder piece"
+          title="Drag to reorder"
+        >
+          <MoreVertical className="w-3.5 h-3.5" />
+        </button>
+        <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
+          <div className="text-sm font-semibold leading-tight truncate">{label.title}</div>
+        </div>
+        <VisibilityToggle visible={visible} onToggle={onToggleVisible} />
+      </div>
+    </div>
+  );
+}
+
+// Non-piece cards — render the same row shape without the drag handle so
+// the rail visual stays consistent.
+function StaticCardRow({
+  index, label, isActive, visible, onSelect, onToggleVisible,
+}: {
+  index: number;
+  label: { kind: string; title: string };
+  isActive: boolean;
+  visible: boolean;
+  onSelect: () => void;
+  onToggleVisible: () => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
+      className={`group w-full text-left rounded-md border transition-all cursor-pointer ${
+        isActive ? 'border-primary ring-2 ring-primary/20 bg-card shadow-sm' : 'border-transparent hover:border-border hover:bg-card/60'
+      } ${!visible ? 'opacity-50' : ''}`}
+    >
+      <div className="flex items-start gap-2.5 p-2.5 pl-7">
+        <span className="text-xs font-mono font-bold text-muted-foreground tabular-nums w-4 mt-0.5 shrink-0">{index}</span>
+        <div className="min-w-0 flex-1">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>
+          <div className="text-sm font-semibold leading-tight truncate">{label.title}</div>
+        </div>
+        <VisibilityToggle visible={visible} onToggle={onToggleVisible} />
+      </div>
+    </div>
+  );
+}
+
+function VisibilityToggle({ visible, onToggle }: { visible: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onToggle(); }}
+      className={`p-1 -m-1 rounded hover:bg-muted shrink-0 ${visible ? 'opacity-0 group-hover:opacity-60 hover:!opacity-100' : 'opacity-80 hover:opacity-100'}`}
+      aria-label={visible ? 'Hide from audience' : 'Show in audience'}
+      title={visible ? 'Hide from audience' : 'Show in audience'}
+    >
+      {visible ? <Eye className="w-3.5 h-3.5 text-muted-foreground" /> : <EyeOff className="w-3.5 h-3.5 text-rose-500" />}
+    </button>
   );
 }
 
