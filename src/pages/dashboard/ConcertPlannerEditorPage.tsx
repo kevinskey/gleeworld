@@ -693,13 +693,13 @@ function ProgramCardView(p: CardViewProps) {
             <div className="space-y-2 mt-2">
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-tight break-words leading-[1.05]" style={theme.heroTitle}>{program.title || 'Untitled program'}</h2>
               {program.subtitle && <p className="text-base italic opacity-80">{program.subtitle}</p>}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-border text-xs text-muted-foreground">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-3 border-t border-current/20 text-sm opacity-80">
                 {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}
                 {program.conductor && <div><strong>Conductor:</strong> {program.conductor}</div>}
                 {program.accompanist && <div><strong>Accompanist:</strong> {program.accompanist}</div>}
               </div>
               {program.event_date && (
-                <div className="text-xs text-muted-foreground pt-1">
+                <div className="text-sm opacity-70 pt-1">
                   {new Date(program.event_date).toLocaleDateString(undefined, { dateStyle: 'long' })}
                   {program.call_time && ` · Call ${program.call_time}`}
                 </div>
@@ -1542,12 +1542,16 @@ function FieldInline({ label, value, onChange, type = 'text' }: {
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</span>
+      {/* `text-current` + opacity-70 inherits the hero card's theme
+          color (cream on Cathedral, white on Jazz Club, etc.). The old
+          text-muted-foreground was a fixed dark-slate that disappeared
+          on dark hero backdrops. */}
+      <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-0.5 bg-background border border-border rounded px-1.5 py-0.5 text-xs"
+        className="w-full mt-0.5 bg-white/10 backdrop-blur border border-current/20 rounded px-1.5 py-0.5 text-xs text-current placeholder-current/50 focus:outline-none focus:border-current/50"
       />
     </label>
   );

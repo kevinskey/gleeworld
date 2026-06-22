@@ -119,13 +119,16 @@ export default function PublicConcertProgramPage() {
                 <span className={theme.accent}>Concert Program</span>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight mt-1 break-words leading-[1.05]" style={theme.heroTitle}>{program.title}</h1>
                 {program.subtitle && <p className="text-base italic opacity-80 mt-1">{program.subtitle}</p>}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4 border-t border-border mt-4 text-xs text-muted-foreground">
+                {/* Inherit the hero's theme color via opacity-80 so the
+                    metadata reads cleanly on both light and dark hero
+                    backdrops (Cathedral burgundy, Jazz Club navy, etc.). */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-4 border-t border-current/20 mt-4 text-sm opacity-80">
                   {program.venue && <div><strong>Venue:</strong> {program.venue}</div>}
                   {program.conductor && <div><strong>Conductor:</strong> {program.conductor}</div>}
                   {program.accompanist && <div><strong>Accompanist:</strong> {program.accompanist}</div>}
                 </div>
                 {program.event_date && (
-                  <div className="text-xs text-muted-foreground pt-1 mt-2">
+                  <div className="text-sm opacity-70 pt-1 mt-2">
                     {new Date(program.event_date).toLocaleDateString(undefined, { dateStyle: 'long' })}
                     {program.call_time && ` · Call ${program.call_time}`}
                   </div>
