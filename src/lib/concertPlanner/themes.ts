@@ -115,11 +115,16 @@ export function themeStyles(theme: VisualTheme): ThemeStyle {
 }
 
 export function printFormatStyles(format: PrintFormat): string {
+  // Max-widths are intentionally roomier than the equivalent paper
+  // dimensions — these classes drive both the editor preview AND the
+  // published /program/:slug page, and a literal 8.5" column reads as
+  // a tiny strip on a 1440px+ monitor. The print stylesheet handles
+  // actual paper geometry.
   switch (format) {
-    case 'half-fold': return 'max-w-xl mx-auto';
-    case 'trifold':   return 'max-w-6xl mx-auto';
-    case 'qr-lobby':  return 'max-w-md mx-auto text-center';
+    case 'half-fold': return 'max-w-3xl mx-auto';
+    case 'trifold':   return 'max-w-7xl mx-auto';
+    case 'qr-lobby':  return 'max-w-lg mx-auto text-center';
     case 'letter-portrait':
-    default:          return 'max-w-4xl mx-auto';
+    default:          return 'max-w-6xl mx-auto';
   }
 }

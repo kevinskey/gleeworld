@@ -1223,18 +1223,18 @@ function PieceDetailEditor({
   // is expanded.
   if (viewMode !== 'editor') {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-        <div className="md:col-span-5 border-l-2 border-border pl-3">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        <div className="md:col-span-4 border-l-2 border-border pl-3">
           <span className={themeAccent}>Performance notes</span>
           <div className="mt-1">
-            <h4 className="text-lg font-bold leading-tight">{piece.title || 'Untitled work'}</h4>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <h4 className="text-xl font-bold leading-tight">{piece.title || 'Untitled work'}</h4>
+            <p className="text-sm text-muted-foreground mt-1">
               {piece.composer || 'Composer pending'}
               {piece.arranger && ` · arr. ${piece.arranger}`}
             </p>
           </div>
         </div>
-        <div className="md:col-span-7 text-sm">
+        <div className="md:col-span-8 text-base">
           <p className="leading-relaxed italic text-muted-foreground">
             "{piece.program_notes || 'No program notes provided.'}"
           </p>
