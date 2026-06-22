@@ -663,8 +663,14 @@ function ProgramCardView(p: CardViewProps) {
       )}
 
       {card.kind === 'hero-cover' && (
-        <div className="text-center py-4">
-          <span className={theme.accent}>Concert Program</span>
+        // Hero card content uses an explicit `color: inherit` so every
+        // descendant picks up the theme.heroBg foreground (cream on
+        // Cathedral, white on Jazz Club, etc.) instead of the global
+        // container text color. theme.accent's fixed `text-[...]` color
+        // is dropped on the hero — we render the "Concert Program"
+        // kicker with an inherited-color span instead.
+        <div className="text-center py-4" style={{ color: 'inherit' }}>
+          <span className="uppercase font-bold text-[10px] tracking-[0.24em] block mb-1 opacity-80">Concert Program</span>
           {viewMode === 'editor' ? (
             <div className="space-y-3 max-w-3xl mx-auto mt-2">
               <div className="relative">
@@ -1544,18 +1550,19 @@ function PieceDetailEditor({
 function FieldInline({ label, value, onChange, type = 'text' }: {
   label: string; value: string; onChange: (v: string) => void; type?: string;
 }) {
+  // Inline `color: inherit` forces both label + input to pick up the
+  // hero card's theme foreground (cream / white / dark depending on the
+  // theme), beating the browser's UA stylesheet on input + Tailwind's
+  // dark text-muted-foreground default on the outer container.
   return (
-    <label className="block">
-      {/* `text-current` + opacity-70 inherits the hero card's theme
-          color (cream on Cathedral, white on Jazz Club, etc.). The old
-          text-muted-foreground was a fixed dark-slate that disappeared
-          on dark hero backdrops. */}
-      <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">{label}</span>
+    <label className="block" style={{ color: 'inherit' }}>
+      <span className="text-[10px] uppercase font-bold tracking-wider opacity-70" style={{ color: 'inherit' }}>{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-0.5 bg-white/10 backdrop-blur border border-current/20 rounded px-1.5 py-0.5 text-xs text-current placeholder-current/50 focus:outline-none focus:border-current/50"
+        className="w-full mt-0.5 bg-white/10 backdrop-blur border border-current/30 rounded px-1.5 py-1 text-sm placeholder-current/50 focus:outline-none focus:border-current/70"
+        style={{ color: 'inherit', colorScheme: 'dark light' }}
       />
     </label>
   );
