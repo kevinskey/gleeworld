@@ -86,16 +86,51 @@ export function transformProgramToCards(
   return ordered.map((c) => ({ ...c, visible: c.visible && !hiddenSet.has(c.id) }));
 }
 
-// Re-order according to an explicit list. Cards missing from the override
-// keep their relative positions at the end (so a new piece doesn't vanish
-// just because the admin saved an older layout snapshot).
+// Re-order according to an explicit list, with a smart insertion point
+// for cards missing from the override (e.g. a piece added after the
+// admin last saved a custom order).
+//
+// Rule: missing piece-detail cards land at the END of the piece group
+// in the saved order — never after Rights/Share. Other missing cards
+// (rare) fall back to their position in the default order.
 function orderByOverride(cards: ProgramCard[], order: string[]): ProgramCard[] {
   const idx = new Map(order.map((id, i) => [id, i]));
-  return cards.slice().sort((a, b) => {
-    const ia = idx.has(a.id) ? idx.get(a.id)! : order.length + cards.indexOf(a);
-    const ib = idx.has(b.id) ? idx.get(b.id)! : order.length + cards.indexOf(b);
-    return ia - ib;
-  });
+
+  // Walk the saved order once and remember:
+  //   - the highest index assigned to any piece-detail card so we can
+  //     slot new pieces just after the last existing piece.
+  //   - the lowest index of any "bottom anchor" card (rights/qr) so the
+  //     piece-fallback never crosses that line.
+  let lastPieceIdx = -1;
+  let firstBottomIdx = Number.POSITIVE_INFINITY;
+  const cardById = new Map(cards.map((c) => [c.id, c]));
+  for (const id of order) {
+    const c = cardById.get(id);
+    if (!c) continue;
+    const i = idx.get(id)!;
+    if (c.kind === 'piece-detail' && i > lastPieceIdx) lastPieceIdx = i;
+    if ((c.kind === 'rights-footer' || c.kind === 'qr-access') && i < firstBottomIdx) firstBottomIdx = i;
+  }
+
+  // Each missing piece-detail card gets a fractional index that puts
+  // it after the last existing piece but BEFORE any bottom-anchor card.
+  // Counter ensures multiple new pieces preserve their relative order.
+  let newPieceCounter = 0;
+
+  const sortKey = (c: ProgramCard): number => {
+    if (idx.has(c.id)) return idx.get(c.id)!;
+    if (c.kind === 'piece-detail') {
+      const base = lastPieceIdx >= 0
+        ? lastPieceIdx + 0.001
+        : Math.min(firstBottomIdx, order.length) - 0.5;
+      return base + (++newPieceCounter) * 0.0001;
+    }
+    // Non-piece missing card — drop at the very end, ordered by their
+    // position in the default cards array.
+    return order.length + cards.indexOf(c);
+  };
+
+  return cards.slice().sort((a, b) => sortKey(a) - sortKey(b));
 }
 
 export { HERO_ID, TIMELINE_ID, ROSTER_ID, RIGHTS_ID, QR_ID, pieceCardId };
