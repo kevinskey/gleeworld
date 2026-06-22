@@ -1,0 +1,13 @@
+# Fastlane Appfile — Android.
+#
+# json_key_file points at the Google Play Console service-account JSON
+# you'll download AFTER the app is created in Play Console:
+#
+#   Play Console → Setup → API access → Create service account
+#     → grant role "Release manager" → Download JSON
+#
+# Drop the JSON anywhere outside the repo (the path below is .gitignored)
+# and update this file to match.
+
+json_key_file("../play-store-service-account.json")
+package_name("org.gleeworld.app")

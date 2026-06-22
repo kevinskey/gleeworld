@@ -1,0 +1,81 @@
+# Fastlane Android lanes — bundle + upload to Play Console.
+#
+# Usage from android/ directory:
+#
+#   fastlane internal      # build + push to internal testing
+#   fastlane beta          # build + push to closed/open beta track
+#   fastlane production    # build + push to production (rollout 10%)
+#   fastlane bump_version  # increment versionCode in app/build.gradle
+#
+# The first release of an app MUST be uploaded manually via the Play
+# Console web UI — Google's API rejects the very first push because
+# the listing, content rating, and target audience aren't filled in.
+# Once that initial release ships, these lanes take over for every
+# subsequent build.
+
+default_platform(:android)
+
+platform :android do
+  before_all do
+    # Fastlane runs gradle commands from the project root, so make sure
+    # the JDK 21 we installed via brew is on the path. Without this
+    # gradle picks up the system Java and chokes with "invalid source
+    # release: 21".
+    ENV["JAVA_HOME"] = "/opt/homebrew/opt/openjdk@21"
+    ENV["ANDROID_HOME"] = "#{ENV['HOME']}/android-sdk"
+  end
+
+  desc "Bump versionCode in app/build.gradle by 1."
+  lane :bump_version do
+    path = "app/build.gradle"
+    contents = File.read(path)
+    updated = contents.sub(/versionCode (\d+)/) { "versionCode #{$1.to_i + 1}" }
+    File.write(path, updated)
+    new_code = updated.match(/versionCode (\d+)/)[1]
+    UI.success("versionCode → #{new_code}")
+  end
+
+  desc "Build a signed AAB. Pulls the latest web bundle via cap sync first."
+  lane :bundle do
+    sh("cd .. && npm run build")
+    sh("cd .. && npx cap sync android")
+    gradle(task: "clean bundleRelease")
+  end
+
+  desc "Push the AAB to the internal testing track. Safest for daily builds."
+  lane :internal do
+    bump_version
+    bundle
+    upload_to_play_store(
+      track: "internal",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      release_status: "draft", # promote in console after smoke test
+    )
+  end
+
+  desc "Push the AAB to the open beta track."
+  lane :beta do
+    bump_version
+    bundle
+    upload_to_play_store(
+      track: "beta",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      release_status: "completed",
+    )
+  end
+
+  desc "Push the AAB to production with a 10% staged rollout."
+  lane :production do
+    bump_version
+    bundle
+    upload_to_play_store(
+      track: "production",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      release_status: "inProgress",
+      rollout: "0.1",
+    )
+  end
+end

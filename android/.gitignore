@@ -107,3 +107,11 @@ keystore.properties
 google-services.json
 local.properties
 
+
+# Play Store service account JSON — never commit
+play-store-service-account.json
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
