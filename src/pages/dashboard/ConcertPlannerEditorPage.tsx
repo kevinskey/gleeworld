@@ -38,6 +38,7 @@ import {
 } from '@/lib/concertPlanner';
 import { RosterEditor } from '@/components/concertPlanner/RosterEditor';
 import { SpeechInputButton } from '@/components/concertPlanner/SpeechInputButton';
+import { useResizableWidth } from '@/hooks/useResizableWidth';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function ConcertPlannerEditorPage() {
@@ -72,6 +73,12 @@ export default function ConcertPlannerEditorPage() {
   // Theme picker + validation badge modals.
   const [themeOpen, setThemeOpen] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
+  // Drag-to-resize the thumbnail rail. Width persists per user across
+  // sessions via localStorage.
+  const railResize = useResizableWidth(240, {
+    min: 180, max: 480,
+    storageKey: 'gw.concertPlanner.railWidth',
+  });
 
   // Snapshot fields the admin types into so we don't fire a DB write per
   // keystroke. Push to DB on blur or 800ms after the last edit.
@@ -331,6 +338,14 @@ export default function ConcertPlannerEditorPage() {
               onAddPiece={() => addPiece.mutate({})}
               onReorderPieces={(ids) => reorderPieces.mutate(ids)}
               pieces={pieces}
+              width={railResize.width}
+            />
+            {/* Resize handle for the rail — 4 px wide hit area, expands
+                visually on hover. */}
+            <div
+              {...railResize.handleProps}
+              className="no-print w-1 cursor-col-resize bg-border/40 hover:bg-primary/40 active:bg-primary/60 transition-colors shrink-0"
+              aria-label="Resize card rail"
             />
             <section className="flex-1 overflow-auto px-4 py-6 lg:px-8 lg:py-8">
               <div className="max-w-5xl mx-auto">
@@ -764,7 +779,7 @@ function ProgramCardView(p: CardViewProps) {
 // reorder repertoire by drag-and-drop; non-piece cards (cover, program,
 // roster, rights, share) are fixed in position by the transform layer.
 function CardNavigator({
-  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, pieces,
+  cards, activeIndex, onSelect, pieceCount, onAddPiece, onReorderPieces, pieces, width,
 }: {
   cards: ProgramCard[];
   activeIndex: number;
@@ -773,6 +788,7 @@ function CardNavigator({
   onAddPiece: () => void;
   onReorderPieces: (orderedIds: string[]) => void;
   pieces: { id: string; sort_order: number }[];
+  width: number;
 }) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -829,7 +845,10 @@ function CardNavigator({
   };
 
   return (
-    <aside className="no-print w-60 shrink-0 border-r border-border bg-muted/30 flex flex-col">
+    <aside
+      className="no-print shrink-0 border-r border-border bg-muted/30 flex flex-col"
+      style={{ width }}
+    >
       <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
         <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">
           {cards.length} card{cards.length === 1 ? '' : 's'}
