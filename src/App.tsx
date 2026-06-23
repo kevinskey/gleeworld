@@ -205,6 +205,9 @@ const GraduatesLanding = lazy(() => import("./pages/GraduatesLanding"));
 const GraduatesAdmin = lazy(() => import("./pages/admin/GraduatesAdmin"));
 const GraduatesManagement = lazy(() => import("./pages/GraduatesManagement"));
 const GraduatesPageView = lazy(() => import("./pages/GraduatesPageView"));
+const CopyrightPolicy = lazy(() => import("./pages/policies/CopyrightPolicy"));
+const TermsOfService = lazy(() => import("./pages/policies/TermsOfService"));
+const PrivacyPolicy = lazy(() => import("./pages/policies/PrivacyPolicy"));
 const GraduatesManagementModule = lazy(() => import("./components/modules/GraduatesManagementModule").then((m) => ({ default: (m as any).GraduatesManagementModule ?? (m as any).default })));
 const SendNotificationPage = lazy(() => import("./pages/SendNotificationPage"));
 const AuditionPage = lazy(() => import("./pages/AuditionPage"));
@@ -470,8 +473,11 @@ const App = () => {
                         </PublicRoute>
                       }
                     />
-              <Route path="/terms" element={<PublicRoute><Terms /></PublicRoute>} />
-              <Route path="/privacy" element={<PublicRoute><Privacy /></PublicRoute>} />
+              <Route path="/terms" element={<PublicRoute><TermsOfService /></PublicRoute>} />
+              <Route path="/terms-of-service" element={<PublicRoute><TermsOfService /></PublicRoute>} />
+              <Route path="/privacy" element={<PublicRoute><PrivacyPolicy /></PublicRoute>} />
+              <Route path="/privacy-policy" element={<PublicRoute><PrivacyPolicy /></PublicRoute>} />
+              <Route path="/copyright-policy" element={<PublicRoute><CopyrightPolicy /></PublicRoute>} />
               <Route path="/thank-you" element={<PublicRoute><ThankYou /></PublicRoute>} />
               <Route
                 path="/academy/:courseCode/rehearsal-today"

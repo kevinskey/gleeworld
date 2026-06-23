@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { useViewerRecentOpens } from '@/hooks/useViewerRecentOpens';
 import { useAllBookmarks } from '@/hooks/useAllBookmarks';
 import { useViewerSetlists, useSetlistScores, type ViewerSetlist } from '@/hooks/useViewerSetlists';
+import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 
 const ViewerReader = lazy(() =>
   import('@/components/viewer/ViewerReader').then((m) => ({ default: m.ViewerReader })),
@@ -198,6 +199,8 @@ function ViewerLanding({
       )}
       {tab === 'setlists' && <SetlistsTab onOpenScore={onOpenScore} />}
       {tab === 'bookmarks' && <BookmarksTab onOpenScore={onOpenScore} />}
+
+      <CopyrightPolicyLink />
     </div>
   );
 }

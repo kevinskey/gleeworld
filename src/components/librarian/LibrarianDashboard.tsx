@@ -34,6 +34,7 @@ import { SinglePDFCropTool } from './SinglePDFCropTool';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useHomePath } from '@/hooks/useHomePath';
+import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 
 type ModuleKey = 'home' | 'library' | 'pdf-import' | 'ai-tools' | 'inventory' | 'csv';
 
@@ -309,6 +310,8 @@ export const LibrarianDashboard = () => {
           }}
         />
       )}
+
+      <CopyrightPolicyLink />
     </div>
   );
 };

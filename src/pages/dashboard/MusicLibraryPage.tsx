@@ -27,6 +27,7 @@ import { useScopeFilter } from '@/hooks/useScopeFilter';
 import { useSheetMusicTracks } from '@/hooks/useSheetMusicTracks';
 import { ScopeFilterChips } from '@/components/library/ScopeFilterChips';
 import { useUserRole } from '@/hooks/useUserRole';
+import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 
 const SetlistBuilder = lazy(() =>
   import('@/components/music-library/SetlistBuilder').then((m) => ({ default: m.SetlistBuilder })),
@@ -349,6 +350,8 @@ export default function MusicLibraryPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <CopyrightPolicyLink />
     </div>
   );
 }
