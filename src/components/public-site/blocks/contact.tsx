@@ -84,7 +84,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           )}
         </div>
         {socials.length > 0 && (
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-6">
             {socials.map(({ key, href, Icon, label }) => (
               <a
                 key={key}
@@ -96,7 +96,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 aria-label={label}
                 title={label}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-10 h-10" />
               </a>
             ))}
           </div>

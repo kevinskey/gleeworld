@@ -940,11 +940,14 @@ html[data-theme="hbcu"] h6 {
     text-wrap: balance;
   }
 
-  /* Body text - optimized for readability */
+  /* Body text - optimized for readability.
+     Note: the 70ch max-width that used to live here applied to EVERY
+     <p> tag, which left-anchored copyright lines and other short
+     centered text. Long-form pages should set their own max-width on
+     the wrapping container instead (e.g. .prose, max-w-2xl). */
   p {
     font-size: inherit;
     line-height: 1.7;
-    max-width: 70ch;
   }
 
   /* Small text */

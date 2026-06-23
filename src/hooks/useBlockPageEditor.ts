@@ -48,6 +48,11 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
   const [publishing, setPublishing] = useState(false);
   const [resetting, setResetting] = useState(false);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Single debounced auto-republish handle. Any mutation while
+  // `is_published` is already true triggers a re-snapshot to
+  // `published_blocks` so anonymous visitors see edits within ~600ms
+  // without the admin having to click Publish for every typo.
+  const autoPublishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: page, isLoading: pageLoading } = useQuery<BlockPageRow | null>({
     queryKey: [opts.pageQueryKey],
@@ -105,7 +110,40 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
         b.position === i ? null : supabase.from(opts.blocksTable).update({ position: i }).eq('id', b.id),
       ),
     );
+    scheduleAutoRepublish();
   };
+
+  // Debounced re-snapshot of draft blocks → published_blocks. Only fires
+  // when the page is already published — unpublished pages stay drafts
+  // until the admin explicitly hits Publish. The delay collapses bursts
+  // of edits (typing in a Hero headline, dragging blocks around) into a
+  // single DB write.
+  function scheduleAutoRepublish() {
+    if (!page?.is_published) return;
+    if (autoPublishTimer.current) clearTimeout(autoPublishTimer.current);
+    autoPublishTimer.current = setTimeout(async () => {
+      try {
+        // Read the latest blocks fresh from the DB so we don't snapshot
+        // stale in-memory state if multiple edits raced.
+        const { data: latest, error: readErr } = await supabase
+          .from(opts.blocksTable)
+          .select('id, block_type, position, config, is_visible')
+          .order('position');
+        if (readErr) throw readErr;
+        const snapshot = (latest ?? []).map((b: any, i: number) => ({ ...b, position: i }));
+        const { error: writeErr } = await supabase
+          .from(opts.pageTable)
+          .update({ published_blocks: snapshot, published_at: new Date().toISOString() })
+          .eq('id', page.id);
+        if (writeErr) throw writeErr;
+        queryClient.invalidateQueries({ queryKey: [opts.pageQueryKey] });
+      } catch (e: any) {
+        // Silent — we don't want a noisy toast on every keystroke.
+        // Manual Publish button still surfaces errors loudly.
+        console.warn('[useBlockPageEditor] auto-republish failed', e);
+      }
+    }, 700);
+  }
 
   const onDragEnd = (active: { id: string }, over: { id: string } | null) => {
     if (!over || active.id === over.id) return;
@@ -132,6 +170,7 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
     saveTimers.current[id] = setTimeout(async () => {
       const { error } = await supabase.from(opts.blocksTable).update({ config }).eq('id', id);
       if (error) toast({ title: 'Save failed', description: error.message, variant: 'destructive' });
+      else scheduleAutoRepublish();
     }, 600);
   };
 
@@ -139,6 +178,7 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
     const next = !block.is_visible;
     setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, is_visible: next } : b)));
     await supabase.from(opts.blocksTable).update({ is_visible: next }).eq('id', block.id);
+    scheduleAutoRepublish();
   };
 
   const deleteBlock = async (block: SiteBlock) => {
@@ -146,6 +186,7 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
     if (selectedId === block.id) setSelectedId(null);
     const { error } = await supabase.from(opts.blocksTable).delete().eq('id', block.id);
     if (error) toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+    else scheduleAutoRepublish();
   };
 
   const addBlock = async (type: string) => {
@@ -164,6 +205,7 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
     }
     setBlocks((prev) => [...prev, data as SiteBlock]);
     setSelectedId((data as SiteBlock).id);
+    scheduleAutoRepublish();
     return data as SiteBlock;
   };
 
@@ -174,7 +216,15 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
     if (themeTimer.current) clearTimeout(themeTimer.current);
     themeTimer.current = setTimeout(async () => {
       const { error } = await supabase.from(opts.pageTable).update({ theme: next }).eq('id', page.id);
-      if (!error) await queryClient.invalidateQueries({ queryKey: [opts.pageQueryKey] });
+      if (!error) {
+        await queryClient.invalidateQueries({ queryKey: [opts.pageQueryKey] });
+        // Theme change updates the page row directly — published readers
+        // pick it up from the same row, no snapshot needed. But the
+        // published_at stamp drives cache busts elsewhere, so refresh it.
+        if (page.is_published) {
+          await supabase.from(opts.pageTable).update({ published_at: new Date().toISOString() }).eq('id', page.id);
+        }
+      }
       setPendingTheme(null);
     }, 400);
   };

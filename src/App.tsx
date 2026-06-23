@@ -205,6 +205,7 @@ const GraduatesLanding = lazy(() => import("./pages/GraduatesLanding"));
 const GraduatesAdmin = lazy(() => import("./pages/admin/GraduatesAdmin"));
 const GraduatesManagement = lazy(() => import("./pages/GraduatesManagement"));
 const GraduatesPageView = lazy(() => import("./pages/GraduatesPageView"));
+const GraduatesManagementModule = lazy(() => import("./components/modules/GraduatesManagementModule").then((m) => ({ default: (m as any).GraduatesManagementModule ?? (m as any).default })));
 const SendNotificationPage = lazy(() => import("./pages/SendNotificationPage"));
 const AuditionPage = lazy(() => import("./pages/AuditionPage"));
 const Handbook = lazy(() => import("./pages/Handbook"));
@@ -1487,7 +1488,7 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><GraduatesPageView /></DashboardShell>
+                        <DashboardShell><GraduatesManagementModule /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
