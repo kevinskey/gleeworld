@@ -28,6 +28,9 @@ import { useSheetMusicTracks } from '@/hooks/useSheetMusicTracks';
 import { ScopeFilterChips } from '@/components/library/ScopeFilterChips';
 import { useUserRole } from '@/hooks/useUserRole';
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
+import { RightsBadge } from '@/components/policies/RightsBadge';
+import { PublicDomainSearch } from '@/components/music-library/PublicDomainSearch';
+import { BookOpen as BookOpenIcon } from 'lucide-react';
 
 const SetlistBuilder = lazy(() =>
   import('@/components/music-library/SetlistBuilder').then((m) => ({ default: m.SetlistBuilder })),
@@ -36,7 +39,7 @@ const PDFViewerWithAnnotations = lazy(() =>
   import('@/components/PDFViewerWithAnnotations').then((m) => ({ default: m.PDFViewerWithAnnotations })),
 );
 
-type TopTab = 'scores' | 'setlists';
+type TopTab = 'scores' | 'setlists' | 'public-domain';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -56,6 +59,12 @@ interface ScoreRow {
   physical_location: string | null;
   course_id: string | null;
   created_at: string | null;
+  // Rights model (added via migration 20260622040000_sheet_music_rights.sql).
+  // unknown = legacy row that still needs to be tagged by the librarian.
+  rights_status: 'public_domain' | 'licensed' | 'all_rights_reserved' | 'unknown' | null;
+  license_seat_count: number | null;
+  license_expires_at: string | null;
+  copyright_holder: string | null;
 }
 
 export default function MusicLibraryPage() {
@@ -90,7 +99,7 @@ export default function MusicLibraryPage() {
     queryFn: async () => {
       let q = supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder')
         .eq('is_archived', false)
         .order('title')
         .limit(200);
@@ -129,11 +138,12 @@ export default function MusicLibraryPage() {
             Music Library is read-only for browsing/playback. */}
       </header>
 
-      {/* Top-level tabs: Scores vs Setlists. */}
+      {/* Top-level tabs: Scores | Setlists | Public Domain (CPDL search). */}
       <div className="flex gap-2 border-b border-border">
         {([
-          { key: 'scores',   label: 'Scores',   Icon: Music },
-          { key: 'setlists', label: 'Setlists', Icon: ListMusic },
+          { key: 'scores',        label: 'Scores',         Icon: Music },
+          { key: 'setlists',      label: 'Setlists',       Icon: ListMusic },
+          { key: 'public-domain', label: 'Public Domain',  Icon: BookOpenIcon },
         ] as Array<{ key: TopTab; label: string; Icon: React.ComponentType<{ className?: string }> }>).map((t) => {
           const isActive = t.key === topTab;
           return (
@@ -154,7 +164,7 @@ export default function MusicLibraryPage() {
         })}
       </div>
 
-      {topTab === 'scores' ? (
+      {topTab === 'scores' && (
         <>
           <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
             <CardContent className="p-5 space-y-4">
@@ -206,7 +216,9 @@ export default function MusicLibraryPage() {
             </div>
           )}
         </>
-      ) : (
+      )}
+
+      {topTab === 'setlists' && (
         // Setlists tab — wraps the existing SetlistBuilder inside the same
         // card surface. SetlistBuilder owns create / reorder / share /
         // delete; we pass onPdfSelect so picking a song from inside a
@@ -230,6 +242,8 @@ export default function MusicLibraryPage() {
           </CardContent>
         </Card>
       )}
+
+      {topTab === 'public-domain' && <PublicDomainSearch />}
 
 <AttachAudioDialog
         score={attachingAudio}
@@ -395,6 +409,16 @@ function ScoreCard({
               {row.composer || '\u00A0'}
             </div>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <RightsBadge
+                status={row.rights_status}
+                seatCount={row.license_seat_count}
+                warning={
+                  row.rights_status === 'licensed' && row.license_expires_at && new Date(row.license_expires_at) < new Date()
+                    ? 'expired'
+                    : null
+                }
+                compact
+              />
               {row.voicing && <Badge variant="outline" className="text-xs">{row.voicing}</Badge>}
               {row.difficulty_level && <Badge variant="outline" className="text-xs">{row.difficulty_level}</Badge>}
               {courseCode ? (
@@ -977,6 +1001,10 @@ function EditScoreDialog({
   const [voicing, setVoicing] = useState('');
   const [physicalCopies, setPhysicalCopies] = useState('');
   const [physicalLocation, setPhysicalLocation] = useState('');
+  // Rights model — see Copyright & Content Policy.
+  const [rightsStatus, setRightsStatus] = useState<'public_domain' | 'licensed' | 'all_rights_reserved' | 'unknown'>('unknown');
+  const [licenseSeatCount, setLicenseSeatCount] = useState('');
+  const [copyrightHolder, setCopyrightHolder] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -988,6 +1016,9 @@ function EditScoreDialog({
         score.physical_copies_count != null ? String(score.physical_copies_count) : '',
       );
       setPhysicalLocation(score.physical_location ?? '');
+      setRightsStatus((score.rights_status as any) ?? 'unknown');
+      setLicenseSeatCount(score.license_seat_count != null ? String(score.license_seat_count) : '');
+      setCopyrightHolder(score.copyright_holder ?? '');
     }
   }, [score]);
 
@@ -996,6 +1027,14 @@ function EditScoreDialog({
     setSubmitting(true);
     try {
       const copies = parseInt(physicalCopies, 10);
+      // CHECK constraint requires: licensed → seat count set; non-licensed → seat count null.
+      const seatNum = parseInt(licenseSeatCount, 10);
+      const seatForDb = rightsStatus === 'licensed' && Number.isFinite(seatNum) && seatNum > 0
+        ? seatNum
+        : null;
+      if (rightsStatus === 'licensed' && seatForDb === null) {
+        throw new Error('Licensed works need a seat count (how many copies your license covers).');
+      }
       const { error } = await supabase
         .from('gw_sheet_music')
         .update({
@@ -1004,6 +1043,9 @@ function EditScoreDialog({
           voicing: voicing.trim() || null,
           physical_copies_count: Number.isFinite(copies) ? copies : 0,
           physical_location: physicalLocation.trim() || null,
+          rights_status: rightsStatus,
+          license_seat_count: seatForDb,
+          copyright_holder: copyrightHolder.trim() || null,
         })
         .eq('id', score.id);
       if (error) throw error;
@@ -1057,6 +1099,54 @@ function EditScoreDialog({
                 placeholder="Folder B-12"
               />
             </div>
+          </div>
+
+          {/* Rights model — see /copyright-policy. */}
+          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Rights &amp; licensing
+            </div>
+            <div>
+              <Label className="text-sm">Rights status</Label>
+              <select
+                value={rightsStatus}
+                onChange={(e) => setRightsStatus(e.target.value as typeof rightsStatus)}
+                className="w-full mt-1 h-9 border border-border rounded-md bg-background px-2 text-sm"
+              >
+                <option value="unknown">Not yet tagged</option>
+                <option value="public_domain">Public domain (free to distribute)</option>
+                <option value="licensed">Licensed (limited seats)</option>
+                <option value="all_rights_reserved">All rights reserved (private use only)</option>
+              </select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {rightsStatus === 'public_domain' && 'No seat limit. Modern editions may still be copyrighted — verify the editor.'}
+                {rightsStatus === 'licensed' && 'One active member per seat. Reduce roster or buy more copies if you grow past the count.'}
+                {rightsStatus === 'all_rights_reserved' && 'Private use only — do NOT share with members or move to the shared library.'}
+                {rightsStatus === 'unknown' && 'Tag this work before adding it to a course library.'}
+              </p>
+            </div>
+            {rightsStatus === 'licensed' && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">Seat count</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={licenseSeatCount}
+                    onChange={(e) => setLicenseSeatCount(e.target.value)}
+                    placeholder="40"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Copyright holder</Label>
+                  <Input
+                    value={copyrightHolder}
+                    onChange={(e) => setCopyrightHolder(e.target.value)}
+                    placeholder="Hal Leonard"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <DialogFooter>
