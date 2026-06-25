@@ -1,0 +1,114 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "schema_version": "1.0.0",
+  "title": "Example: voice + drums sketch",
+  "description": "Canonical example for schema validation tests and as a reference for the iOS team. One audio track (vocal take) + one MIDI track (drum loop) + master FX.",
+  "tempo_bpm": 96,
+  "time_signature": { "numerator": 4, "denominator": 4 },
+  "length_seconds": 32,
+  "master": {
+    "volume_db": 0,
+    "pan": 0,
+    "fx": [
+      {
+        "id": "00000000-0000-4000-8000-0000000000aa",
+        "type": "compressor",
+        "enabled": true,
+        "params": { "threshold_db": -12, "ratio": 2.5, "attack_ms": 8, "release_ms": 120, "makeup_db": 1 }
+      }
+    ]
+  },
+  "tracks": [
+    {
+      "id": "00000000-0000-4000-8000-0000000000b1",
+      "kind": "audio",
+      "name": "Lead vocal",
+      "color": "#ef4444",
+      "volume_db": -2,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "fx": [
+        {
+          "id": "00000000-0000-4000-8000-0000000000c1",
+          "type": "eq3",
+          "enabled": true,
+          "params": { "low_db": -2, "mid_db": 1, "high_db": 2, "mid_hz": 1500 }
+        },
+        {
+          "id": "00000000-0000-4000-8000-0000000000c2",
+          "type": "reverb",
+          "enabled": true,
+          "params": { "wet": 0.18, "room_size": 0.55, "damp": 0.5 }
+        }
+      ],
+      "clips": [
+        {
+          "id": "00000000-0000-4000-8000-0000000000d1",
+          "kind": "audio",
+          "asset_id": "00000000-0000-4000-8000-0000000000e1",
+          "start_seconds": 0,
+          "duration_seconds": 16,
+          "offset_seconds": 0,
+          "gain_db": 0,
+          "fade_in_seconds": 0.05,
+          "fade_out_seconds": 0.25,
+          "reverse": false,
+          "pitch_semitones": 0,
+          "time_stretch": 1
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-4000-8000-0000000000b2",
+      "kind": "midi",
+      "name": "Drums",
+      "color": "#a855f7",
+      "volume_db": -4,
+      "pan": 0,
+      "mute": false,
+      "solo": false,
+      "arm": false,
+      "fx": [],
+      "instrument": {
+        "type": "sampler",
+        "preset_id": "kit_basic",
+        "params": {}
+      },
+      "clips": [
+        {
+          "id": "00000000-0000-4000-8000-0000000000d2",
+          "kind": "midi",
+          "start_seconds": 0,
+          "duration_seconds": 8,
+          "notes": [
+            { "pitch": 36, "velocity": 110, "start_seconds": 0,    "duration_seconds": 0.1 },
+            { "pitch": 38, "velocity": 95,  "start_seconds": 0.625, "duration_seconds": 0.1 },
+            { "pitch": 36, "velocity": 110, "start_seconds": 1.25, "duration_seconds": 0.1 },
+            { "pitch": 38, "velocity": 95,  "start_seconds": 1.875, "duration_seconds": 0.1 },
+            { "pitch": 42, "velocity": 80,  "start_seconds": 0,    "duration_seconds": 0.1 },
+            { "pitch": 42, "velocity": 80,  "start_seconds": 0.3125, "duration_seconds": 0.1 },
+            { "pitch": 42, "velocity": 80,  "start_seconds": 0.625, "duration_seconds": 0.1 },
+            { "pitch": 42, "velocity": 80,  "start_seconds": 0.9375, "duration_seconds": 0.1 }
+          ]
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "id": "00000000-0000-4000-8000-0000000000e1",
+      "filename": "lead-vocal-take-3.wav",
+      "format": "wav",
+      "duration_seconds": 16.42,
+      "sample_rate": 48000,
+      "channels": 1,
+      "size_bytes": 1577472
+    }
+  ],
+  "owner_user_id": "d9629bf9-6944-4d94-b830-e877267df29b",
+  "tenant_id": "ae2fbec2-7562-45f9-9028-c4df93b99cef",
+  "created_at": "2026-06-24T20:00:00.000Z",
+  "updated_at": "2026-06-24T20:00:00.000Z"
+}

@@ -51,7 +51,8 @@ import {
   Menu,
   User as UserIcon,
   Heart,
-  Mic,
+  Disc3,
+  Film,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -247,10 +248,11 @@ function Sidebar() {
       label: 'Add-ons',
       items: [
         { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tourId: 'nav-music-tools', tone: 'bg-cyan-50 text-cyan-600' },
+        { to: '/studio',                label: 'Studio',      icon: Disc3,  tourId: 'nav-studio',      tone: 'bg-sky-50 text-sky-600' },
+        { to: '/video',                 label: 'Video',       icon: Film,   tourId: 'nav-video',       tone: 'bg-pink-50 text-pink-600' },
         ...(hasBoxOffice && isTenantAdmin ? [{ to: '/dashboard/box-office',     label: 'Box Office',      icon: Ticket,        tourId: 'nav-box-office',      tone: 'bg-rose-50 text-rose-700' }] : []),
         ...(hasAuditions    ? [{ to: '/dashboard/auditions',      label: 'Auditions',       icon: ScanLine,      tourId: 'nav-auditions',       tone: 'bg-lime-50 text-lime-600' }] : []),
         ...(hasPrHub        ? [{ to: '/dashboard/pr-hub',         label: 'PR Hub',          icon: Megaphone,     tourId: 'nav-pr-hub',          tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
-        ...(hasAlumni       ? [{ to: '/dashboard/alumni',         label: 'Alumni',          icon: GraduationCap, tourId: 'nav-alumni',          tone: 'bg-teal-50 text-teal-600' }] : []),
         ...(hasFinance      ? [{ to: '/dashboard/finance',        label: 'Finance',         icon: DollarSign,    tourId: 'nav-finance',         tone: 'bg-emerald-50 text-emerald-600' }] : []),
         ...(hasMerch        ? [{ to: '/dashboard/shop',           label: 'Store',           icon: Store,  tourId: 'nav-shop',            tone: 'bg-amber-50 text-amber-600' }] : []),
         ...(hasFeeds        ? [{ to: '/dashboard/feeds',          label: 'Feeds',           icon: Newspaper,     tourId: 'nav-feeds',           tone: 'bg-blue-50 text-blue-600' }] : []),
@@ -262,7 +264,7 @@ function Sidebar() {
       items: [
         { to: '/dashboard/users',     label: 'People',    icon: Users,       tourId: 'nav-people',    tone: 'bg-cyan-50 text-cyan-600' },
         { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp,  tourId: 'nav-analytics', tone: 'bg-purple-50 text-purple-600' },
-        ...(isTenantAdmin ? [{ to: '/settings/modules', label: 'Modules', icon: Boxes, tourId: 'nav-modules', tone: 'bg-primary/10 text-primary' }] : []),
+        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tourId: 'nav-alumni', tone: 'bg-teal-50 text-teal-600' }] : []),
         ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tourId: 'nav-site-setup', tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
         ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tourId: 'nav-fan-page', tone: 'bg-rose-50 text-rose-700' }] : []),
         ...(isTenantAdmin ? [{ to: '/dashboard/practice-recordings', label: 'Practice', icon: Mic, tourId: 'nav-practice', tone: 'bg-teal-50 text-teal-700' }] : []),
@@ -270,6 +272,13 @@ function Sidebar() {
       ],
     },
   ];
+
+  // Studio session editor needs the full window for clips + mixer.
+  // Hide the sidebar when an open session is loaded. The user can
+  // still go back to the session list via the "Sessions" link in the
+  // editor's own top bar.
+  const inStudioSession = /^\/studio\/sessions\/[^/]+/.test(location.pathname);
+  if (inStudioSession) return null;
 
   return (
     <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 border-r border-border bg-card h-screen sticky top-0 gw-collapsible-sidebar">
@@ -359,30 +368,19 @@ function Sidebar() {
         })}
       </nav>
 
-      {/* Tenant pill — uses the same logo as the brand area for consistency. */}
-      <div className="p-3 border-t border-border">
-        <div className="rounded-lg border border-border p-3">
-          <div className="flex items-center gap-2.5 mb-2.5">
-            <BrandLogo
-              logoUrl={branding?.logo_url}
-              fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
-              alt={tenantLongName}
-              size="md"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="text-[15px] font-semibold truncate leading-tight">{tenantLongName}</div>
-              <div className="text-[12px] text-muted-foreground leading-tight mt-0.5">Pro Plan</div>
-            </div>
-          </div>
-          {isPlatformAdmin && (
-            <Link
-              to="/admin/tenants"
-              className="block text-center text-[13px] text-muted-foreground hover:text-foreground border border-border rounded-md py-1.5 transition-colors"
-            >
-              Switch Site &rarr;
-            </Link>
-          )}
-        </div>
+      {/* Tenant pill — compact one-row footer. The brand + name are
+          already at the top of the sidebar, so we don't repeat the
+          logo here. Keeps vertical room for the nav itself. */}
+      <div className="px-2 py-1.5 border-t border-border flex items-center gap-2 text-[12px] text-muted-foreground">
+        <span className="truncate flex-1">{tenantLongName} · Pro</span>
+        {isPlatformAdmin && (
+          <Link
+            to="/admin/tenants"
+            className="shrink-0 px-1.5 py-0.5 rounded border border-border hover:bg-muted hover:text-foreground transition-colors"
+          >
+            Switch
+          </Link>
+        )}
       </div>
     </aside>
   );
@@ -441,10 +439,11 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
       label: 'Add-ons',
       items: [
         { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tone: 'bg-cyan-50 text-cyan-600' },
+        { to: '/studio',                label: 'Studio',      icon: Disc3,  tone: 'bg-sky-50 text-sky-600' },
+        { to: '/video',                 label: 'Video',       icon: Film,   tone: 'bg-pink-50 text-pink-600' },
         ...(hasBoxOffice && isTenantAdmin ? [{ to: '/dashboard/box-office',     label: 'Box Office',      icon: Ticket,        tone: 'bg-rose-50 text-rose-700' }] : []),
         ...(hasAuditions    ? [{ to: '/dashboard/auditions',      label: 'Auditions',       icon: ScanLine,      tone: 'bg-lime-50 text-lime-600' }] : []),
         ...(hasPrHub        ? [{ to: '/dashboard/pr-hub',         label: 'PR Hub',          icon: Megaphone,     tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
-        ...(hasAlumni       ? [{ to: '/dashboard/alumni',         label: 'Alumni',          icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
         ...(hasFinance      ? [{ to: '/dashboard/finance',        label: 'Finance',         icon: DollarSign,    tone: 'bg-emerald-50 text-emerald-600' }] : []),
         ...(hasMerch        ? [{ to: '/dashboard/shop',           label: 'Store',           icon: Store,  tone: 'bg-amber-50 text-amber-600' }] : []),
         ...(hasFeeds        ? [{ to: '/dashboard/feeds',          label: 'Feeds',           icon: Newspaper,     tone: 'bg-blue-50 text-blue-600' }] : []),
@@ -456,7 +455,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
       items: [
         { to: '/dashboard/users',     label: 'People',    icon: Users,       tone: 'bg-cyan-50 text-cyan-600' },
         { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp,  tone: 'bg-purple-50 text-purple-600' },
-        ...(isTenantAdmin ? [{ to: '/settings/modules', label: 'Modules', icon: Boxes, tone: 'bg-primary/10 text-primary' }] : []),
+        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
         ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
         ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tone: 'bg-rose-50 text-rose-700' }] : []),
         ...(isTenantAdmin ? [{ to: '/dashboard/practice-recordings', label: 'Practice', icon: Mic, tone: 'bg-teal-50 text-teal-700' }] : []),

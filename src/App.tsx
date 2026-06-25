@@ -70,6 +70,28 @@ const StudentOnboarding = lazy(() => import("./pages/admin/StudentOnboarding"));
 const JoinCourse = lazy(() => import("./pages/JoinCourse"));
 const EnrollLanding = lazy(() => import("./pages/EnrollLanding"));
 import AuthCallback from "./pages/AuthCallback";
+const LtiComplete = lazy(() => import("./pages/auth/LtiComplete"));
+const DeepLinkPicker = lazy(() => import("./pages/lti/DeepLinkPicker"));
+const LtiPlatforms = lazy(() => import("./pages/admin/LtiPlatforms"));
+const CanvasAcademy = lazy(() => import("./pages/academy/CanvasAcademy"));
+const CanvasCourseDetail = lazy(() => import("./pages/academy/CanvasCourseDetail"));
+const CanvasAssignmentDetail = lazy(() => import("./pages/academy/CanvasAssignmentDetail"));
+const CanvasCourseGrades = lazy(() => import("./pages/academy/CanvasCourseGrades"));
+const CanvasDiscussionTopic = lazy(() => import("./pages/academy/CanvasDiscussionTopic"));
+const CanvasInbox = lazy(() => import("./pages/academy/CanvasInbox"));
+const CanvasGradebook = lazy(() => import("./pages/academy/CanvasGradebook"));
+const CanvasCalendar = lazy(() => import("./pages/academy/CanvasCalendar"));
+const CanvasSpeedGrader = lazy(() => import("./pages/academy/CanvasSpeedGrader"));
+const CanvasPeerReview = lazy(() => import("./pages/academy/CanvasPeerReview"));
+const CanvasCourseAnalytics = lazy(() => import("./pages/academy/CanvasCourseAnalytics"));
+const CanvasQuizEditor = lazy(() => import("./pages/academy/CanvasQuizEditor"));
+const CanvasRubricsPage = lazy(() => import("./pages/academy/CanvasRubricsPage"));
+const CanvasOutcomes = lazy(() => import("./pages/academy/CanvasOutcomes"));
+const CanvasBlueprint = lazy(() => import("./pages/academy/CanvasBlueprint"));
+const StudioHome = lazy(() => import("./pages/studio/StudioHome"));
+const StudioEditor = lazy(() => import("./pages/studio/StudioEditor"));
+const VideoLibrary = lazy(() => import("./pages/video/VideoLibrary"));
+const VideoPlayer = lazy(() => import("./pages/video/VideoPlayer"));
 const Messenger = lazy(() => import("./pages/admin/Messenger"));
 import { Terms, Privacy } from "./pages/Legal";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
@@ -822,6 +844,29 @@ const App = () => {
               <Route path="/join/:code" element={<PublicRoute><JoinCourse /></PublicRoute>} />
               <Route path="/enroll" element={<PublicRoute><EnrollLanding /></PublicRoute>} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/auth/lti" element={<LtiComplete />} />
+              <Route path="/lti/deep-link" element={<ProtectedRoute><DeepLinkPicker /></ProtectedRoute>} />
+              <Route path="/dashboard/lti-platforms" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><LtiPlatforms /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasAcademy /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasCourseDetail /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/assignments/:assignmentId" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasAssignmentDetail /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/grades" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasCourseGrades /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/discussions/:topicId" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasDiscussionTopic /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/inbox" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasInbox /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/inbox/:conversationId" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasInbox /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/gradebook" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasGradebook /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/calendar" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasCalendar /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/assignments/:assignmentId/grade" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasSpeedGrader /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/assignments/:assignmentId/peer-review/:userId" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasPeerReview /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/analytics" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasCourseAnalytics /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/quizzes/:quizId/edit" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasQuizEditor /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/rubrics" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasRubricsPage /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/outcomes" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasOutcomes /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/academy/canvas/courses/:courseId/blueprint" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasBlueprint /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/studio" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><StudioHome /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/studio/sessions/:id" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><StudioEditor /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/video" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoLibrary /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/video/:id" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoPlayer /></DashboardShell></UniversalLayout></ProtectedRoute>} />
               <Route
                 path="/academy/c/:code/discuss/:threadId"
                 element={
