@@ -144,7 +144,6 @@ export function useStudioEngine(session: Session | null) {
   const native = isNativeStudioAvailable();
   const engineRef = useRef<StudioEngine | null>(null);
   const nativeCloseRef = useRef<(() => Promise<void>) | null>(null);
-  const lastStructuralSigRef = useRef<string | null>(null);
   const [state, setState] = useState<EngineState | null>(null);
   const [warming, setWarming] = useState(false);
 
@@ -158,23 +157,17 @@ export function useStudioEngine(session: Session | null) {
       unsub();
       engine.dispose();
       engineRef.current = null;
-      lastStructuralSigRef.current = null;
     };
   }, [native]);
 
-  // Reload session whenever it changes structurally. Volume / pan /
-  // mute / solo edits ARE in the React session state but they're
-  // pushed straight to the engine via updateTrackStrip — they don't
-  // need a full engine rebuild. We skip loadSession when only those
-  // changed; otherwise a slider drag would dispose every Tone.Player
-  // mid-playback and the music drops out.
+  // Reload session whenever it changes. A previous "structural sig"
+  // optimization that skipped reload on volume/pan changes broke the
+  // first load for some sessions and left them silent — until we can
+  // root-cause that, the full reload here is the safe path. The
+  // volume-drag rebuild lag returns; we'll address it again with a
+  // gentler approach.
   useEffect(() => {
     if (!session) return;
-    const sig = structuralSig(session);
-    const isFirstLoad = lastStructuralSigRef.current === null;
-    const structuralChange = sig !== lastStructuralSigRef.current;
-    if (!isFirstLoad && !structuralChange) return;
-    lastStructuralSigRef.current = sig;
     let cancelled = false;
 
     if (native) {
@@ -189,7 +182,7 @@ export function useStudioEngine(session: Session | null) {
             isReady: s.isReady, isPlaying: s.isPlaying,
             positionSeconds: s.positionSeconds, tempoBpm: s.tempoBpm,
             loopEnabled: false, loopStartSeconds: 0, loopEndSeconds: 0,
-            metronomeOn: false, peakDbL: -Infinity, peakDbR: -Infinity,
+            metronomeOn: false, metronomeVolumeDb: 0, peakDbL: -Infinity, peakDbR: -Infinity,
           }),
         });
         if (cancelled) { await close(); return; }
@@ -238,6 +231,13 @@ export function useStudioEngine(session: Session | null) {
         setMetronome: (_on: boolean) => { /* native engine doesn't expose metronome yet */ },
         setMetronomeVolume: (_db: number) => { /* native engine doesn't expose click volume yet */ },
         triggerMetronomeClick: (_accent: boolean) => { /* native count-in not wired yet */ },
+        /** iOS-only: kicks the AVAudioEngine input tap into a WAV file
+         * in the app's tmp dir. Returns when the take stops. The
+         * editor's startRecording dispatches here on iOS instead of
+         * using Tone.js + getUserMedia + MediaRecorder, which is the
+         * unreliable web fallback inside WKWebView. */
+        nativeRecordStart: async () => { await NativeStudio.recordStart(); },
+        nativeRecordStop: async () => NativeStudio.recordStop(),
       };
     }
     return {
@@ -256,6 +256,11 @@ export function useStudioEngine(session: Session | null) {
       setMetronome: (on: boolean) => engineRef.current?.setMetronome(on),
       setMetronomeVolume: (db: number) => engineRef.current?.setMetronomeVolume(db),
       triggerMetronomeClick: (accent: boolean) => engineRef.current?.triggerMetronomeClick(accent),
+      /** Web path doesn't have a native recorder — the editor falls
+       * back to its existing Tone.js + getUserMedia + MediaRecorder
+       * flow when these return null. */
+      nativeRecordStart: null as null | (() => Promise<void>),
+      nativeRecordStop: null as null | (() => Promise<{ localUrl: string; filename: string }>),
     };
   }, [native]);
 

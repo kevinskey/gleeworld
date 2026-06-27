@@ -41,8 +41,11 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "mixdown", returnType: CAPPluginReturnPromise),
     ]
 
-    private let engine = StudioNativeEngine()
-    private let assetLoader = AssetLoader()
+    // Every heavy-init thing is lazy. The plugin instance is created at
+    // app launch via MainViewController.capacitorDidLoad — anything
+    // touched here runs before any JS or audio session exists.
+    private lazy var engine = StudioNativeEngine()
+    private lazy var assetLoader = AssetLoader()
     private lazy var recorder = StudioNativeRecorder(engine: engine.avEngine)
 
     public override func load() {

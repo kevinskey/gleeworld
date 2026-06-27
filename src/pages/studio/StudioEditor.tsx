@@ -208,7 +208,11 @@ function extFromMime(mime: string): 'webm' | 'mp4' | 'm4a' | 'mp3' | 'wav' | 'og
 /** Live recording state. While set, every armed track shows a growing
  * clip-shaped block at `startSeconds` with a real-time waveform. */
 interface RecordingSession {
-  recorder: MicRecorder;
+  /** null when the iOS native path owns the recorder — the AVAudioEngine
+   * input tap writes the WAV directly and we just collect it on stop. */
+  recorder: MicRecorder | null;
+  /** true → finalize via NativeStudio.recordStop() instead of recorder.stop(). */
+  native: boolean;
   startSeconds: number;
   startWallMs: number;
   armedTrackIds: string[];
@@ -424,34 +428,49 @@ function Editor({
         setCountInBeat(null);
       }
 
+      const startSec = state?.positionSeconds ?? 0;
+      const startedAt = performance.now();
+
+      // On iOS Capacitor we run the AVAudioEngine input tap instead of
+      // Tone.UserMedia / getUserMedia / MediaRecorder — MediaRecorder
+      // is too unreliable inside WKWebView to ship as the takes path.
+      if (engineState.native && engineState.nativeRecordStart) {
+        await engineState.nativeRecordStart();
+        setRecording({
+          recorder: null, native: true,
+          startSeconds: startSec, startWallMs: startedAt,
+          armedTrackIds, peaks: [],
+        });
+        if (!state?.isPlaying) play();
+        toast.success('Recording — click ● again to stop');
+        return;
+      }
+
+      // Web path: Tone.UserMedia + MediaRecorder.
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
       const recorder = await openMicRecorder({ inputDeviceId, inputGainDb });
       await recorder.start();
-      const startSec = state?.positionSeconds ?? 0;
-      const startedAt = performance.now();
       setRecording({
-        recorder, startSeconds: startSec, startWallMs: startedAt,
+        recorder, native: false,
+        startSeconds: startSec, startWallMs: startedAt,
         armedTrackIds, peaks: [],
       });
       if (!state?.isPlaying) play();
       toast.success('Recording — click ● again to stop');
 
-      // Drive live waveform polling.
+      // Drive live waveform polling (web only — native take has no
+      // analyser hook into the AVAudioEngine input tap yet).
       const tick = () => {
         const now = performance.now();
         const wave = recorder.getWaveform();
-        // Compute peak of this 512-sample window — that's one "pixel" of the waveform UI.
         let peak = 0;
         for (let i = 0; i < wave.length; i++) {
           const v = Math.abs(wave[i]);
           if (v > peak) peak = v;
         }
-        // Sample at ~30Hz to keep the array small.
         const since = now - startedAt;
         const targetCount = Math.floor(since / 33);
-        // peaks is mutated in-place via the recording state object (the
-        // outer object is stable; React only re-renders via forceRender).
         setRecording((prev) => {
           if (!prev) return prev;
           while (prev.peaks.length < targetCount) prev.peaks.push(peak);
@@ -469,12 +488,25 @@ function Editor({
   const stopRecording = async () => {
     if (!recording) return;
     if (recRafRef.current !== null) { cancelAnimationFrame(recRafRef.current); recRafRef.current = null; }
-    const { recorder, startSeconds, startWallMs, armedTrackIds: armed } = recording;
+    const { recorder, native: nativeTake, startSeconds, startWallMs, armedTrackIds: armed } = recording;
     setRecording(null);
     const elapsed = (performance.now() - startWallMs) / 1000;
     try {
-      const rawBlob = await recorder.stop();
-      recorder.dispose();
+      let rawBlob: Blob;
+      if (nativeTake && engineState.nativeRecordStop) {
+        // iOS path: the AVAudioEngine tap wrote a WAV to the app's tmp
+        // dir. Pull the bytes out of the local URL the plugin handed
+        // back, then feed it into the same finalize pipeline as a web
+        // take so the upload + clip placement code below stays one path.
+        const { localUrl } = await engineState.nativeRecordStop();
+        const fileRes = await fetch(localUrl);
+        rawBlob = await fileRes.blob();
+      } else if (recorder) {
+        rawBlob = await recorder.stop();
+        recorder.dispose();
+      } else {
+        throw new Error('no recorder source');
+      }
       const { blob: uploadBlob, buf, ext } = await finalizeRecordingBlob(rawBlob);
       const peaks = computePeaks(buf);
       const assetRaw = await uploadAudioAsset({
@@ -697,6 +729,12 @@ function Editor({
     <TrackHeightContext.Provider value={trackHeight}>
     <GridLevelContext.Provider value={gridLevel}>
     <ScrollSyncContext.Provider value={scrollSync}>
+    {/* Editor surface forces dark theme inside the otherwise light
+     * app — every shadcn / Tailwind token (bg-card, text-foreground,
+     * border-border, etc.) resolves to its dark-mode value, giving the
+     * Studio the high-contrast DAW look (Logic / ProTools / Ableton)
+     * without leaking dark surfaces anywhere else in the app. */}
+    <div className="dark bg-background text-foreground min-h-[calc(100vh-5rem)] -mt-2">
     <div className="px-3 py-3 max-w-[1400px] mx-auto space-y-2">
       {/* Top bar */}
       <div className="flex items-center gap-2 text-sm">
@@ -1076,6 +1114,7 @@ function Editor({
         </div>
         <span className="opacity-70">Space play/stop · R record · M metronome · ←/→ scrub · ⌘+/⌘− zoom · B split clip · Del delete · ⌘Z undo · ⌘S save</span>
       </div>
+    </div>
     </div>
     </ScrollSyncContext.Provider>
     </GridLevelContext.Provider>
@@ -1675,7 +1714,7 @@ function DraggableClip({
       style={{
         left: start * pxPerSecond,
         width,
-        backgroundColor: selected ? `${tint}66` : `${tint}40`,
+        backgroundColor: selected ? `${tint}aa` : `${tint}66`,
         borderColor: tint,
         borderWidth: selected ? 2 : 1,
       }}
@@ -2606,9 +2645,24 @@ function ClickTrackRow({
     const startH = trackHeight;
     // Click row renders at half the global height, so the cursor moves
     // twice as far as the row grows. Scale the delta so dragging the
-    // click handle feels 1:1 with the visible row height.
-    const move = (ev: PointerEvent) => onHeightChange(startH + 2 * (ev.clientY - startY));
-    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    // click handle feels 1:1 with the visible row height. rAF-throttle
+    // so the visible height tracks the cursor smoothly rather than
+    // stepping on every pointer batch.
+    let pending: number | null = null;
+    let raf: number | null = null;
+    const move = (ev: PointerEvent) => {
+      pending = startH + 2 * (ev.clientY - startY);
+      if (raf !== null) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        if (pending !== null) onHeightChange(pending);
+      });
+    };
+    const up = () => {
+      if (raf !== null) cancelAnimationFrame(raf);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
@@ -2725,8 +2779,23 @@ function DarkTrackRow({
     e.preventDefault();
     const startY = e.clientY;
     const startH = trackHeight;
-    const move = (ev: PointerEvent) => onHeightChange(startH + (ev.clientY - startY));
-    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    // rAF-throttle so the height tracks the cursor smoothly instead of
+    // stepping when pointermove events outpace React's render cycle.
+    let pending: number | null = null;
+    let raf: number | null = null;
+    const move = (ev: PointerEvent) => {
+      pending = startH + (ev.clientY - startY);
+      if (raf !== null) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        if (pending !== null) onHeightChange(pending);
+      });
+    };
+    const up = () => {
+      if (raf !== null) cancelAnimationFrame(raf);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };

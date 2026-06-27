@@ -91,12 +91,15 @@ function BrandLogo({
   alt: string;
   size?: 'md' | 'lg';
 }) {
-  const [src, setSrc] = useState<string | null>(logoUrl || '/lovable-uploads/gleeworld-logo-tight.png');
-  // Track whether we've already fallen back so we don't infinite-loop.
-  const [triedFallback, setTriedFallback] = useState(false);
+  // No global fallback to the GleeWorld marketing globe — that bled
+  // platform branding into every tenant that hadn't uploaded a logo
+  // yet. When the tenant has no `logo_url`, OR while branding is
+  // still loading, render the colored monogram derived from the
+  // tenant's name. The monogram is tenant-neutral and matches the
+  // brand color via `bg-primary`.
+  const [src, setSrc] = useState<string | null>(logoUrl ?? null);
   useEffect(() => {
-    setSrc(logoUrl || '/lovable-uploads/gleeworld-logo-tight.png');
-    setTriedFallback(false);
+    setSrc(logoUrl ?? null);
   }, [logoUrl]);
   const dim = size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
   if (src) {
@@ -105,14 +108,7 @@ function BrandLogo({
         src={src}
         alt={alt}
         className={`${dim} object-contain shrink-0`}
-        onError={() => {
-          if (!triedFallback) {
-            setTriedFallback(true);
-            setSrc('/lovable-uploads/gleeworld-logo-tight.png');
-          } else {
-            setSrc(null);
-          }
-        }}
+        onError={() => setSrc(null)}
       />
     );
   }

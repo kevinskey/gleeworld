@@ -82,10 +82,34 @@ public final class TrackBinding {
             let assetMap = Dictionary(uniqueKeysWithValues: allAssets.map { ($0.id, $0) })
             for clip in t.clips {
                 guard let asset = assetMap[clip.asset_id] else { continue }
-                let file = try await assetLoader.loadAsset(id: asset.id, format: asset.format.rawValue)
+                // Some asset formats (notably .webm from older Chrome
+                // recordings) can't be decoded by AVAudioFile. Skip the
+                // clip rather than aborting the whole loadSession — the
+                // user keeps all the OTHER tracks / clips working, and
+                // the broken clip just doesn't play. Recordings post-
+                // latency-trim are always WAV so this only affects
+                // legacy data.
+                let file: AVAudioFile
+                do {
+                    file = try await assetLoader.loadAsset(id: asset.id, format: asset.format.rawValue)
+                } catch {
+                    NSLog("[Studio] skipping clip \(clip.id) — asset \(asset.id) (.\(asset.format.rawValue)) failed to load: \(error.localizedDescription)")
+                    continue
+                }
+                // Defensive: validate the file's format before passing
+                // it to engine.connect. A bad sample rate or channel
+                // layout would raise an Obj-C exception out of
+                // AVAudioEngine.connect that Swift can't catch — so
+                // we filter ahead of time and skip the clip instead
+                // of taking the whole app down.
+                let fmt = file.processingFormat
+                guard fmt.sampleRate > 0 && fmt.channelCount > 0 else {
+                    NSLog("[Studio] skipping clip \(clip.id) — invalid file format (sr=\(fmt.sampleRate), ch=\(fmt.channelCount))")
+                    continue
+                }
                 let player = AVAudioPlayerNode()
                 engine.attach(player)
-                engine.connect(player, to: strip, format: file.processingFormat)
+                engine.connect(player, to: strip, format: fmt)
                 binding.playerNodes.append(player)
                 binding.loadedClips.append((clip, file, player))
             }
@@ -112,17 +136,21 @@ public final class TrackBinding {
     public func startScheduling(from currentSeconds: Double, anchor: AVAudioTime) {
         switch kind {
         case .audio:
+            NSLog("[Studio] track \(trackId) startScheduling \(loadedClips.count) clip(s) at pos=\(currentSeconds)")
             for (clip, file, player) in loadedClips {
                 let clipStart = clip.start_seconds
                 let clipEnd = clipStart + clip.duration_seconds
-                if clipEnd <= currentSeconds { continue }
+                if clipEnd <= currentSeconds {
+                    NSLog("[Studio]   skip clip \(clip.id) — ended at \(clipEnd)")
+                    continue
+                }
 
                 let trimSec = max(0, currentSeconds - clipStart)   // how much of the head we skip
                 let playOffset = clip.offset_seconds + trimSec
                 let playDuration = clip.duration_seconds - trimSec
                 let sampleRate = file.processingFormat.sampleRate
                 let startFrame = AVAudioFramePosition(playOffset * sampleRate)
-                let frameCount = AVAudioFrameCount(playDuration * sampleRate)
+                let frameCount = AVAudioFrameCount(max(0, playDuration * sampleRate))
 
                 let when: AVAudioTime
                 let secondsUntilStart = clipStart - currentSeconds
@@ -133,9 +161,15 @@ public final class TrackBinding {
                     when = AVAudioTime(hostTime: anchor.hostTime + offsetHost)
                 }
 
+                // Make sure the player node is actually playing. After
+                // engine restarts (e.g. session route changes) the
+                // player can fall into a "stopped" state where
+                // scheduleSegment queues but no audio comes out until
+                // play() is called explicitly.
+                if !player.isPlaying { player.play(at: when) }
                 player.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount,
                                        at: when, completionHandler: nil)
-                player.play(at: when)
+                NSLog("[Studio]   clip \(clip.id) scheduled: startFrame=\(startFrame) frames=\(frameCount) sr=\(sampleRate)")
             }
         case .midi:
             guard let inst = instrument else { return }

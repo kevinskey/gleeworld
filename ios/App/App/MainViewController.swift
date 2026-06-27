@@ -15,6 +15,9 @@ class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(AudioSessionConfigPlugin())
         bridge?.registerPluginInstance(NativeMusicKitPlugin())
+        // StudioEnginePlugin — the AVAudioEngine bridge for Studio. Same
+        // dead-strip problem as the others, same explicit fix.
+        bridge?.registerPluginInstance(StudioEnginePlugin())
         // RecordingLiveActivityPlugin disabled — needs widget extension's
         // GleeWorldRecordingAttributes type that's not in the main target.
     }

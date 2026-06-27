@@ -21,8 +21,14 @@ public struct StudioEngineState {
 }
 
 public final class StudioNativeEngine {
-    private let engine = AVAudioEngine()
-    private let masterMixer: AVAudioMixerNode
+    // AVAudioEngine() and AVAudioMixerNode() both touch CoreAudio at
+    // construction time and have been observed to crash when the audio
+    // session isn't fully established yet. Since the plugin is now
+    // registered at app launch (MainViewController.capacitorDidLoad)
+    // these MUST be lazy — they're built on first access from `start()`,
+    // by which time the audio session has been configured.
+    private lazy var engine = AVAudioEngine()
+    private lazy var masterMixer = AVAudioMixerNode()
     /// FX chain inserted in front of the engine's main output mixer.
     /// The masterMixer feeds the first FX node; the last FX node feeds
     /// the engine's `mainMixerNode`, which is connected to the output.
@@ -44,25 +50,54 @@ public final class StudioNativeEngine {
     public var onState: ((StudioEngineState) -> Void)?
     private var positionTimer: Timer?
 
+    /// True once the master mixer has been connected to the engine's
+    /// main output node. We defer that connection out of init() because
+    /// accessing `engine.mainMixerNode` triggers default output routing,
+    /// which can crash the app if no audio session is active yet. The
+    /// plugin is now registered at app launch, so init() runs before
+    /// anything has set up CoreAudio.
+    private var masterConnected = false
+
     public init() {
-        self.masterMixer = AVAudioMixerNode()
-        engine.attach(masterMixer)
-        // Master mixer → engine main → speakers (default routing).
-        engine.connect(masterMixer, to: engine.mainMixerNode, format: nil)
+        // Empty by design. AVAudioEngine + AVAudioMixerNode are now
+        // `lazy var`, so we don't allocate them until start() runs.
+        // Anything we did here would defeat the lazy-init contract.
     }
 
     // MARK: - Lifecycle
 
     public func start() throws {
+        NSLog("[Studio] engine.start: configuring audio session")
+        // Configure the audio session BEFORE touching AVAudioEngine. iOS
+        // is unhappy if you reach into mainMixerNode before there's a
+        // valid session — defaultToSpeaker route resolution can crash.
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .default,
                                 options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
-        // 5ms target latency — Core Audio will get as close as the
-        // hardware allows. iPad Pro can hit 5ms; iPhone usually 10-15ms.
-        try session.setPreferredIOBufferDuration(0.005)
         try session.setActive(true)
+        // setPreferredIOBufferDuration must be called AFTER setActive on
+        // some iOS versions. Best-effort: ignore failures so a 10ms buffer
+        // instead of 5ms doesn't take the whole engine down with it.
+        try? session.setPreferredIOBufferDuration(0.005)
+        NSLog("[Studio] engine.start: audio session active")
+
+        // First-time wiring: attach the master mixer and route it into
+        // the engine's main mixer. Idempotent — only runs once per
+        // engine lifetime. THIS is the line that historically crashed
+        // when CoreAudio wasn't ready; the lazy-var trick above plus
+        // the now-completed audio-session setup keep us safe.
+        if !masterConnected {
+            NSLog("[Studio] engine.start: attaching master mixer")
+            engine.attach(masterMixer)
+            NSLog("[Studio] engine.start: connecting master to main")
+            engine.connect(masterMixer, to: engine.mainMixerNode, format: nil)
+            masterConnected = true
+        }
+
         if !engine.isRunning {
+            NSLog("[Studio] engine.start: starting AVAudioEngine")
             try engine.start()
+            NSLog("[Studio] engine.start: AVAudioEngine running")
         }
         emit()
     }
@@ -80,6 +115,10 @@ public final class StudioNativeEngine {
     // MARK: - Session binding
 
     public func loadSession(_ s: Studio.Session, assetLoader: AssetLoader) async throws {
+        // start() must have run first. If a caller forgot to wire the
+        // audio session, do it now so the rest of this method is safe.
+        if !masterConnected { try start() }
+
         // Tear down previous bindings.
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
@@ -131,16 +170,28 @@ public final class StudioNativeEngine {
     // MARK: - Transport
 
     public func play() {
-        guard engine.isRunning else { try? engine.start(); return }
+        // If the engine isn't running yet (race or aborted start), bring
+        // it up here and CONTINUE into scheduling. The previous version
+        // returned after the start() attempt, which meant the user had
+        // to press Play twice for any audio to come out.
+        if !engine.isRunning {
+            do { try engine.start() } catch {
+                NSLog("[Studio] engine.start in play() failed: \(error.localizedDescription)")
+                return
+            }
+        }
         if isPlayingNow { return }
         // Compute the absolute host time at "now + small buffer" so the
-        // first scheduled event lands cleanly.
+        // first scheduled event lands cleanly. AVAudioTime.hostTime(forSeconds:)
+        // returns a delta in host-time units; we add it to "now" to get
+        // the absolute reference for player.play(at:) calls.
         let renderTime = engine.outputNode.lastRenderTime ?? AVAudioTime(hostTime: mach_absolute_time())
         let nowAbs = renderTime.hostTime
         let startAbs = nowAbs + AVAudioTime.hostTime(forSeconds: 0.05)
         let startTime = AVAudioTime(hostTime: startAbs)
         startHostTime = startTime
 
+        NSLog("[Studio] play: scheduling \(tracks.count) track(s), pausedAt=\(pausedAt)")
         for (_, t) in tracks { t.startScheduling(from: pausedAt, anchor: startTime) }
 
         isPlayingNow = true
