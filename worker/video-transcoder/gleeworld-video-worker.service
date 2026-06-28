@@ -1,0 +1,18 @@
+[Unit]
+Description=GleeWorld Video Transcoder
+After=network-online.target supabase.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/gleeworld-video-worker
+EnvironmentFile=/etc/gleeworld-video-worker.env
+ExecStart=/usr/bin/node index.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

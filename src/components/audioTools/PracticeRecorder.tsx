@@ -548,15 +548,15 @@ async function mixClickIntoRecording(
   const micSrc = offline.createBufferSource();
   micSrc.buffer = micBuffer;
   const preGain = offline.createGain();
-  preGain.gain.value = 10.0; // big upfront boost; the compressor + limiter rein it in
+  preGain.gain.value = 12.0; // big upfront boost; the compressor + limiter rein it in
   const compressor = offline.createDynamicsCompressor();
-  compressor.threshold.value = -28; // start compressing at -28 dBFS
-  compressor.knee.value = 24;       // smooth onset
-  compressor.ratio.value = 6;       // 6:1 — firm but not brick-wall
-  compressor.attack.value = 0.005;
-  compressor.release.value = 0.18;
+  compressor.threshold.value = -34; // tighter than before so RMS rises
+  compressor.knee.value = 20;       // smooth onset
+  compressor.ratio.value = 10;      // close to limiting — flattens dynamics for loud playback
+  compressor.attack.value = 0.003;
+  compressor.release.value = 0.15;
   const makeup = offline.createGain();
-  makeup.gain.value = 2.0; // post-compressor makeup
+  makeup.gain.value = 4.0; // +12 dB post-compressor — final loudness driver
   micSrc.connect(preGain).connect(compressor).connect(makeup).connect(offline.destination);
 
   // Click track — clicks live much quieter in the final mix than they
@@ -584,12 +584,12 @@ async function mixClickIntoRecording(
 
   micSrc.start(0);
   const rendered = await offline.startRendering();
-  // Soft-clip any residual transients still above 0.95, then peak-
-  // normalize to 0.97. After the compressor most samples should already
-  // sit in 0.2–0.7 territory, so this just guarantees broadcast-loud
-  // playback without int16 clipping.
-  softClipAudioBuffer(rendered, 0.95);
-  normalizeAudioBuffer(rendered, 0.97);
+  // Soft-clip at 0.85 to catch transients before the final lift, then
+  // peak-normalize to full scale (0 dBFS). softClip's tanh curve keeps
+  // any post-clip residue inside the ceiling, so int16 PCM conversion
+  // won't overflow.
+  softClipAudioBuffer(rendered, 0.85);
+  normalizeAudioBuffer(rendered, 1.0);
   return audioBufferToWavBlob(rendered);
 }
 

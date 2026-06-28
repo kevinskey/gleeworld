@@ -178,12 +178,35 @@ export function useStudioEngine(session: Session | null) {
           session,
           assets: session.assets,
           resolveUrl: (a) => getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset: a }),
-          onState: (s: NativeEngineState) => setState({
-            isReady: s.isReady, isPlaying: s.isPlaying,
-            positionSeconds: s.positionSeconds, tempoBpm: s.tempoBpm,
-            loopEnabled: false, loopStartSeconds: 0, loopEndSeconds: 0,
-            metronomeOn: false, metronomeVolumeDb: 0, peakDbL: -Infinity, peakDbR: -Infinity,
-          }),
+          onState: (s: NativeEngineState & { status?: string }) => {
+            // Diagnostic emits (e.g. play() debug ping) come through
+            // with a `status` field instead of the normal state shape.
+            // Log them so we can confirm the bridge round-trips, but
+            // don't overwrite React state with undefined fields.
+            if (typeof s?.status === 'string') {
+              console.info('[StudioEngine] bridge ping:', s.status);
+              return;
+            }
+            // Temporary diagnostic — logs every payload so we can see
+            // whether `metronomeOn` is missing or arriving as the wrong
+            // type. Will remove once metronome toggle is verified.
+            console.debug('[StudioEngine] state', JSON.stringify({
+              metOn: s.metronomeOn,
+              metOnType: typeof s.metronomeOn,
+              pos: s.positionSeconds,
+            }));
+            setState({
+              isReady: s.isReady, isPlaying: s.isPlaying,
+              positionSeconds: s.positionSeconds, tempoBpm: s.tempoBpm,
+              loopEnabled: false, loopStartSeconds: 0, loopEndSeconds: 0,
+              // Coerce to Boolean — some Capacitor bridges hand Bool
+              // values across as 0/1 NSNumber, which `??` would treat
+              // as defined but `state?.metronomeOn` would render falsy
+              // for `0`. Explicit `!!` removes ambiguity.
+              metronomeOn: !!s.metronomeOn, metronomeVolumeDb: 0,
+              peakDbL: -Infinity, peakDbR: -Infinity,
+            });
+          },
         });
         if (cancelled) { await close(); return; }
         nativeCloseRef.current = close;
@@ -228,8 +251,16 @@ export function useStudioEngine(session: Session | null) {
         updateTransport: async (_args: { tempo?: number; timeSignature?: [number, number]; loop?: { start: number; end: number; enabled: boolean } }) => {
           /* native loop wiring lands in a future iOS pass */
         },
-        setMetronome: (_on: boolean) => { /* native engine doesn't expose metronome yet */ },
-        setMetronomeVolume: (_db: number) => { /* native engine doesn't expose click volume yet */ },
+        setMetronome: (on: boolean) => {
+          // Fire-and-forget — the click engine itself is the only
+          // listener that cares about the toggle.
+          void NativeStudio.setMetronome({ on });
+        },
+        setMetronomeVolume: (db: number) => {
+          // Send the new gain alongside the current on-state. Cheap
+          // enough that re-sending `on` on every drag is fine.
+          void NativeStudio.setMetronome({ on: true, volumeDb: db });
+        },
         triggerMetronomeClick: (_accent: boolean) => { /* native count-in not wired yet */ },
         /** iOS-only: kicks the AVAudioEngine input tap into a WAV file
          * in the app's tmp dir. Returns when the take stops. The

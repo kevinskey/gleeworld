@@ -1,0 +1,46 @@
+{
+  "title": "GleeWorld",
+  "description": "Music program LMS - assignments, practice recordings, sheet music.",
+  "target_link_uri": "https://gleeworld.org/auth/lti",
+  "oidc_initiation_url": "https://supabase.gleeworld.org/functions/v1/lti-oidc-init",
+  "public_jwk_url": "https://supabase.gleeworld.org/functions/v1/lti-jwks",
+  "scopes": [
+    "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem",
+    "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly",
+    "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly",
+    "https://purl.imsglobal.org/spec/lti-ags/scope/score",
+    "https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly"
+  ],
+  "extensions": [
+    {
+      "platform": "canvas.instructure.com",
+      "domain": "gleeworld.org",
+      "tool_id": "gleeworld",
+      "privacy_level": "public",
+      "settings": {
+        "text": "GleeWorld",
+        "placements": [
+          {
+            "placement": "course_navigation",
+            "message_type": "LtiResourceLinkRequest",
+            "target_link_uri": "https://gleeworld.org/auth/lti",
+            "text": "GleeWorld",
+            "enabled": true
+          },
+          {
+            "placement": "assignment_selection",
+            "message_type": "LtiDeepLinkingRequest",
+            "target_link_uri": "https://supabase.gleeworld.org/functions/v1/lti-oidc-init",
+            "text": "Add from GleeWorld"
+          },
+          {
+            "placement": "link_selection",
+            "message_type": "LtiDeepLinkingRequest",
+            "target_link_uri": "https://supabase.gleeworld.org/functions/v1/lti-oidc-init",
+            "text": "Insert GleeWorld content"
+          }
+        ]
+      }
+    }
+  ]
+}

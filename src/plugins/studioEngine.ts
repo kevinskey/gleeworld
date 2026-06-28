@@ -1,0 +1,71 @@
+// TypeScript bridge for the iOS StudioEnginePlugin (AVAudioEngine).
+// Mirror image of the web-side StudioEngine (src/lib/studio/engine/engine.ts).
+//
+// Outside Capacitor iOS the bridge is unavailable — the web editor
+// uses the Tone.js engine instead. The platform switch lives in
+// src/hooks/useStudio.ts.
+
+import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
+import type { Session, AudioAsset } from '@/lib/studio/session';
+
+export interface NativeEngineState {
+  isReady: boolean;
+  isPlaying: boolean;
+  positionSeconds: number;
+  tempoBpm: number;
+  metronomeOn: boolean;
+}
+
+interface StudioEnginePluginShape {
+  start(): Promise<void>;
+  stopEngine(): Promise<void>;
+  loadSession(args: { session: Session; assetUrls: Record<string, string> }): Promise<void>;
+  play(): Promise<void>;
+  pause(): Promise<void>;
+  stop(): Promise<void>;
+  seek(args: { seconds: number }): Promise<void>;
+  updateStrip(args: { trackId: string; volumeDb?: number; pan?: number; mute?: boolean }): Promise<void>;
+  updateTempo(args: { bpm: number }): Promise<void>;
+  setMetronome(args: { on: boolean; volumeDb?: number }): Promise<void>;
+  recordStart(): Promise<void>;
+  recordStop(): Promise<{ localUrl: string; filename: string }>;
+  mixdown(): Promise<{ localUrl: string; filename: string }>;
+  addListener(eventName: 'state', listener: (s: NativeEngineState) => void): Promise<PluginListenerHandle>;
+}
+
+const Native = registerPlugin<StudioEnginePluginShape>('StudioEngine');
+
+export function isNativeStudioAvailable(): boolean {
+  return Capacitor.getPlatform() === 'ios';
+}
+
+/** Convenience wrapper: open the engine + load the session + pre-warm
+ *  asset signed URLs. Returns an unsubscribe function for the state
+ *  listener. The caller passes a Map of asset_id → signed URL produced
+ *  via supabase.storage.createSignedUrl(); the native side downloads
+ *  each one on demand. */
+export async function openNativeStudio(args: {
+  session: Session;
+  assets: AudioAsset[];
+  resolveUrl: (asset: AudioAsset) => Promise<string>;
+  onState: (s: NativeEngineState) => void;
+}): Promise<() => Promise<void>> {
+  await Native.start();
+  // Pre-resolve all signed URLs concurrently. The native side asks for
+  // them by asset_id when it needs to decode a clip.
+  const urlEntries = await Promise.all(
+    args.assets.map(async (a) => [a.id, await args.resolveUrl(a)] as const),
+  );
+  const assetUrls: Record<string, string> = {};
+  for (const [k, v] of urlEntries) assetUrls[k] = v;
+
+  await Native.loadSession({ session: args.session, assetUrls });
+  const handle = await Native.addListener('state', args.onState);
+
+  return async () => {
+    await handle.remove();
+    await Native.stopEngine();
+  };
+}
+
+export const NativeStudio = Native;

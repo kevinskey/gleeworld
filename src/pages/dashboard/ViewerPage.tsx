@@ -56,22 +56,21 @@ export default function ViewerPage() {
   const [search] = useSearchParams();
   const setlistId = search.get('setlist') ?? undefined;
 
-  if (scoreId) {
-    return (
-      <Suspense fallback={<FullScreenSpinner />}>
-        <ViewerReader
-          scoreId={scoreId}
-          setlistId={setlistId}
-          onBack={() => navigate('/dashboard/viewer')}
-        />
-      </Suspense>
-    );
-  }
-
-  return <ViewerLanding onOpenScore={(id, sid) => {
-    const q = sid ? `?setlist=${sid}` : '';
-    navigate(`/dashboard/viewer/${id}${q}`);
-  }} />;
+  // Render the reader chrome for BOTH the landing and a-score-is-open
+  // states. When no scoreId is in the URL, the reader shows a black
+  // empty surface (because the user hasn't picked a score yet) and
+  // auto-opens the library popout so they can choose one. This keeps
+  // the visual identity consistent — same pills, same drawer, no jarring
+  // jump between a list-style landing and a full-bleed reader.
+  return (
+    <Suspense fallback={<FullScreenSpinner />}>
+      <ViewerReader
+        scoreId={scoreId}
+        setlistId={setlistId}
+        onBack={() => navigate('/dashboard')}
+      />
+    </Suspense>
+  );
 }
 
 function FullScreenSpinner() {

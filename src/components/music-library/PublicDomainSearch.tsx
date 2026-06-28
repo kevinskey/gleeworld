@@ -11,8 +11,8 @@
 // + creating the tenant-side library row).
 
 import { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search, ExternalLink, Plus, Loader2, ShieldCheck, BookOpen } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Search, ExternalLink, Plus, Loader2, ShieldCheck, BookOpen, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -185,11 +185,43 @@ export function PublicDomainSearch() {
 }
 
 function PdResultCard({ row }: { row: PdSearchRow }) {
-  // CP3 stub — actual upload + library-row creation lands in CP4.
-  const handleAdd = () => {
-    toast.info('Add to library coming in the next checkpoint.', {
-      description: 'CP4 will cache the score PDF to GleeWorld storage and create the library entry.',
-    });
+  const queryClient = useQueryClient();
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = async () => {
+    setAdding(true);
+    try {
+      // Calls the pd-add-to-library edge function which:
+      //   - caches the source PDF to our sheet-music bucket on first
+      //     request (subsequent tenants reuse the cached object), and
+      //   - inserts a gw_sheet_music row in the caller's tenant with
+      //     rights_status='public_domain' (the rights gate auto-approves
+      //     PD works — see Copyright & Content Policy).
+      const { data, error } = await supabase.functions.invoke('pd-add-to-library', {
+        body: { pd_work_id: row.id },
+      });
+      if (error) throw error;
+      if (data?.already_in_library) {
+        toast.success('Already in your library', {
+          description: `"${row.title}" was added previously.`,
+        });
+      } else {
+        toast.success('Added to library', {
+          description: `"${row.title}" is now available in Scores. Editor credit is preserved per the CPDL share-alike license.`,
+        });
+      }
+      setAdded(true);
+      // Refresh the Music Library Scores tab so the new row appears
+      // without a page reload.
+      queryClient.invalidateQueries({ queryKey: ['music-library-scores'] });
+    } catch (e: any) {
+      toast.error('Could not add to library', {
+        description: e?.message ?? 'Try again, or contact support if it persists.',
+      });
+    } finally {
+      setAdding(false);
+    }
   };
   const licenseLabel = useMemo(
     () => row.license_type === 'public_domain' ? 'Public domain' : 'CPDL edition (share-alike)',
@@ -236,9 +268,16 @@ function PdResultCard({ row }: { row: PdSearchRow }) {
               <Button
                 size="sm"
                 onClick={handleAdd}
+                disabled={adding || added}
                 className="h-8 text-xs"
               >
-                <Plus className="w-3.5 h-3.5 mr-1" /> Add to library
+                {adding ? (
+                  <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Adding…</>
+                ) : added ? (
+                  <><Check className="w-3.5 h-3.5 mr-1" /> Added</>
+                ) : (
+                  <><Plus className="w-3.5 h-3.5 mr-1" /> Add to library</>
+                )}
               </Button>
             </div>
           </div>

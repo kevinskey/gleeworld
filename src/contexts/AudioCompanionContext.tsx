@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 
 interface AudioCompanionState {
@@ -421,8 +422,15 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       }
     } catch (err: any) {
       console.error('[AudioContext] loadAppleMusic failed', err);
+      // Surface the real error to the user. The silent failure mode
+      // (only console output) made debugging "Apple Music doesn't work"
+      // impossible from the field — users couldn't tell whether the
+      // script never loaded, the token endpoint was down, or they
+      // simply needed to sign in.
+      const msg = err?.message ?? 'Failed to load Apple Music track.';
+      toast.error('Apple Music failed', { description: msg });
       setAppleMusicNeedsAuth(true);
-      setAppleMusicAuthError(err?.message ?? 'Failed to load Apple Music track.');
+      setAppleMusicAuthError(msg);
       setPlayerReady(false);
     } finally {
       setIsLoading(false);
@@ -439,14 +447,19 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       const result = await authFn();
       if (result.ok) {
         setAppleMusicNeedsAuth(false);
+        toast.success('Signed in to Apple Music');
         return true;
       }
+      const msg = result.message ?? 'Sign-in failed.';
       setAppleMusicNeedsAuth(true);
-      setAppleMusicAuthError(result.message ?? 'Sign-in failed.');
+      setAppleMusicAuthError(msg);
+      toast.error('Apple Music sign-in failed', { description: msg });
       return false;
     } catch (err: any) {
+      const msg = err?.message ?? 'Sign-in failed.';
       setAppleMusicNeedsAuth(true);
-      setAppleMusicAuthError(err?.message ?? 'Sign-in failed.');
+      setAppleMusicAuthError(msg);
+      toast.error('Apple Music sign-in failed', { description: msg });
       return false;
     }
   }, []);

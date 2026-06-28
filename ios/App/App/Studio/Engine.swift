@@ -18,6 +18,7 @@ public struct StudioEngineState {
     public var isPlaying: Bool
     public var positionSeconds: Double
     public var tempoBpm: Double
+    public var metronomeOn: Bool
 }
 
 public final class StudioNativeEngine {
@@ -50,6 +51,22 @@ public final class StudioNativeEngine {
     public var onState: ((StudioEngineState) -> Void)?
     private var positionTimer: Timer?
 
+    // Metronome — short square-wave clicks scheduled per beat between
+    // `pausedAt` and `session.length_seconds`. Routed through a dedicated
+    // AVAudioPlayerNode → master mixer so it shares the master FX/output
+    // path but bypasses the per-track strips.
+    private var metronomeOn: Bool = false
+    private var metronomeVolume: Float = 0.7
+    private lazy var metronomePlayer = AVAudioPlayerNode()
+    private var metronomeAttached = false
+    private var metronomeTimers: [Timer] = []
+    // Click buffers built lazily in the masterMixer's output format so
+    // the buffer's channel count + sample rate matches what the engine
+    // expects. A mono 44.1kHz buffer fed into a stereo bus silently
+    // drops on AVAudioPlayerNode — no error, just silence.
+    private var metronomeBeatBuffer: AVAudioPCMBuffer?
+    private var metronomeAccentBuffer: AVAudioPCMBuffer?
+
     /// True once the master mixer has been connected to the engine's
     /// main output node. We defer that connection out of init() because
     /// accessing `engine.mainMixerNode` triggers default output routing,
@@ -67,35 +84,33 @@ public final class StudioNativeEngine {
     // MARK: - Lifecycle
 
     public func start() throws {
-        NSLog("[Studio] engine.start: configuring audio session")
-        // Configure the audio session BEFORE touching AVAudioEngine. iOS
-        // is unhappy if you reach into mainMixerNode before there's a
-        // valid session — defaultToSpeaker route resolution can crash.
-        let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .default,
-                                options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
-        try session.setActive(true)
-        // setPreferredIOBufferDuration must be called AFTER setActive on
-        // some iOS versions. Best-effort: ignore failures so a 10ms buffer
-        // instead of 5ms doesn't take the whole engine down with it.
-        try? session.setPreferredIOBufferDuration(0.005)
-        NSLog("[Studio] engine.start: audio session active")
-
-        // First-time wiring: attach the master mixer and route it into
-        // the engine's main mixer. Idempotent — only runs once per
-        // engine lifetime. THIS is the line that historically crashed
-        // when CoreAudio wasn't ready; the lazy-var trick above plus
-        // the now-completed audio-session setup keep us safe.
+        NSLog("[Studio] engine.start: enter")
+        // Every AVAudioEngine call below can raise a raw NSException
+        // (not a Swift Error) on internal-state mismatches — bad audio
+        // session, format incompat, dead node, etc. We wrap each in
+        // StudioObjC.catchExceptions so the failure becomes a throwable Swift
+        // error the plugin can reject with, instead of crashing.
         if !masterConnected {
             NSLog("[Studio] engine.start: attaching master mixer")
-            engine.attach(masterMixer)
-            NSLog("[Studio] engine.start: connecting master to main")
-            engine.connect(masterMixer, to: engine.mainMixerNode, format: nil)
+            if let err = StudioObjC.catchExceptions({ self.engine.attach(self.masterMixer) }) {
+                NSLog("[Studio] engine.start: attach raised \(err.localizedDescription)")
+                throw err
+            }
+            NSLog("[Studio] engine.start: connecting master → mainMixerNode")
+            if let err = StudioObjC.catchExceptions({
+                self.engine.connect(self.masterMixer, to: self.engine.mainMixerNode, format: nil)
+            }) {
+                NSLog("[Studio] engine.start: connect raised \(err.localizedDescription)")
+                throw err
+            }
             masterConnected = true
+            NSLog("[Studio] engine.start: master wired")
         }
 
         if !engine.isRunning {
             NSLog("[Studio] engine.start: starting AVAudioEngine")
+            // engine.start() throws Swift Error, not NSException, so a
+            // plain try is fine here.
             try engine.start()
             NSLog("[Studio] engine.start: AVAudioEngine running")
         }
@@ -170,30 +185,35 @@ public final class StudioNativeEngine {
     // MARK: - Transport
 
     public func play() {
-        // If the engine isn't running yet (race or aborted start), bring
-        // it up here and CONTINUE into scheduling. The previous version
-        // returned after the start() attempt, which meant the user had
-        // to press Play twice for any audio to come out.
+        NSLog("[Studio] play: enter (engine.isRunning=\(engine.isRunning), tracks=\(tracks.count))")
         if !engine.isRunning {
-            do { try engine.start() } catch {
-                NSLog("[Studio] engine.start in play() failed: \(error.localizedDescription)")
+            // Try to bring the engine up. If this throws, log and bail
+            // rather than continuing into scheduling code that requires
+            // a running engine.
+            do {
+                try engine.start()
+                NSLog("[Studio] play: engine started from inside play()")
+            } catch {
+                NSLog("[Studio] play: engine.start failed: \(error.localizedDescription)")
                 return
             }
         }
-        if isPlayingNow { return }
-        // Compute the absolute host time at "now + small buffer" so the
-        // first scheduled event lands cleanly. AVAudioTime.hostTime(forSeconds:)
-        // returns a delta in host-time units; we add it to "now" to get
-        // the absolute reference for player.play(at:) calls.
-        let renderTime = engine.outputNode.lastRenderTime ?? AVAudioTime(hostTime: mach_absolute_time())
-        let nowAbs = renderTime.hostTime
-        let startAbs = nowAbs + AVAudioTime.hostTime(forSeconds: 0.05)
+        if isPlayingNow { NSLog("[Studio] play: already playing, no-op"); return }
+
+        // Use `mach_absolute_time()` directly as the host-time anchor
+        // when the engine hasn't produced a render yet. Accessing
+        // `engine.outputNode.lastRenderTime` before the first render
+        // can return nil OR crash on some iOS versions; either way the
+        // mach_absolute_time path is safe.
+        let nowAbs = mach_absolute_time()
+        let startAbs = nowAbs + AVAudioTime.hostTime(forSeconds: 0.1)
         let startTime = AVAudioTime(hostTime: startAbs)
         startHostTime = startTime
-
         NSLog("[Studio] play: scheduling \(tracks.count) track(s), pausedAt=\(pausedAt)")
         for (_, t) in tracks { t.startScheduling(from: pausedAt, anchor: startTime) }
+        NSLog("[Studio] play: schedule done")
 
+        if metronomeOn { scheduleMetronome(from: pausedAt) }
         isPlayingNow = true
         startPositionTimer()
         emit()
@@ -204,6 +224,7 @@ public final class StudioNativeEngine {
         // Record where we paused so play() resumes from there.
         pausedAt = currentPositionSeconds()
         for (_, t) in tracks { t.stopScheduling() }
+        cancelMetronome()
         isPlayingNow = false
         positionTimer?.invalidate(); positionTimer = nil
         emit()
@@ -211,6 +232,7 @@ public final class StudioNativeEngine {
 
     public func stopTransport() {
         for (_, t) in tracks { t.stopScheduling() }
+        cancelMetronome()
         pausedAt = 0
         isPlayingNow = false
         startHostTime = nil
@@ -229,11 +251,18 @@ public final class StudioNativeEngine {
     }
 
     public func currentPositionSeconds() -> Double {
-        guard isPlayingNow, let start = startHostTime,
-              let now = engine.outputNode.lastRenderTime else {
+        // Use mach_absolute_time() as the wall clock. The previous version
+        // depended on `engine.outputNode.lastRenderTime`, which is nil
+        // until the engine produces a render — that left the playhead
+        // frozen at 0. It also used `&-` on UInt64, which underflows to
+        // a massive value when `now < start` (the first 100ms after
+        // play(), since startHostTime is scheduled 0.1s in the future).
+        guard isPlayingNow, let start = startHostTime else {
             return pausedAt
         }
-        let elapsedHost = now.hostTime &- start.hostTime
+        let nowAbs = mach_absolute_time()
+        if nowAbs <= start.hostTime { return pausedAt }
+        let elapsedHost = nowAbs - start.hostTime
         let elapsedSec = AVAudioTime.seconds(forHostTime: elapsedHost)
         return pausedAt + elapsedSec
     }
@@ -243,7 +272,8 @@ public final class StudioNativeEngine {
             isReady: engine.isRunning,
             isPlaying: isPlayingNow,
             positionSeconds: currentPositionSeconds(),
-            tempoBpm: session?.tempo_bpm ?? 120
+            tempoBpm: session?.tempo_bpm ?? 120,
+            metronomeOn: metronomeOn
         )
     }
 
@@ -256,18 +286,187 @@ public final class StudioNativeEngine {
 
     private func startPositionTimer() {
         positionTimer?.invalidate()
-        positionTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+        // Bind to RunLoop.main explicitly. `Timer.scheduledTimer` adds
+        // to the *current* thread's run loop — which on a background
+        // queue is nil — and the timer silently never fires. Anchoring
+        // to RunLoop.main makes the tick fire regardless of which queue
+        // play() was invoked from.
+        //
+        // Tick at 15 Hz, not 30. Each tick crosses the Capacitor bridge
+        // (notifyListeners → JSON serialize → webview message) and at
+        // 30 Hz that contention starved the audio buffer thread. 15 Hz
+        // is still smoother than the human eye notices on a playhead.
+        let timer = Timer(timeInterval: 1.0 / 15.0, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.emit()
-            // Auto-stop at end of session length.
             if let s = self.session, self.currentPositionSeconds() >= s.length_seconds {
                 self.stopTransport()
             }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        positionTimer = timer
     }
 
     private func emit() {
         onState?(snapshot())
+    }
+
+    // MARK: - Metronome
+
+    public func setMetronome(on: Bool) {
+        // No early-return guard. The plugin's engine instance is a
+        // singleton attached at app launch, so `metronomeOn` persists
+        // across editor mounts — meanwhile JS-side React state resets
+        // to false on every mount. If a previous session left the flag
+        // true, the user's first toggle would short-circuit here and
+        // emit no state event, leaving the React button stuck off.
+        // Always emit; only skip the heavy work when state truly didn't
+        // change.
+        let changed = metronomeOn != on
+        metronomeOn = on
+        NSLog("[Studio] setMetronome on=\(on) isPlaying=\(isPlayingNow) changed=\(changed)")
+        if changed {
+            if on {
+                ensureMetronomeAttached()
+                // One immediate click as a confirmation tone. Decouples
+                // the audio path from the Timer-driven scheduler — if
+                // the user hears this on toggle, any silence during
+                // playback is a scheduling bug, not an output-chain bug.
+                playClick(accent: true)
+                if isPlayingNow { scheduleMetronome(from: currentPositionSeconds()) }
+            } else {
+                cancelMetronome()
+            }
+        }
+        emit()
+    }
+
+    public func setMetronomeVolume(db: Double) {
+        // Map dB to a linear gain on the click player's buffer playback.
+        // Clamp at -60 dB ≈ silence.
+        let gain = db <= -60 ? 0 : pow(10.0, db / 20.0)
+        metronomeVolume = Float(min(2.0, max(0, gain)))
+        metronomePlayer.volume = metronomeVolume
+        emit()
+    }
+
+    private func ensureMetronomeAttached() {
+        guard !metronomeAttached else { return }
+        // Negotiate format against the master mixer's input so the
+        // click buffers we generate later use the same channel count +
+        // sample rate the engine actually wants.
+        let mixerFormat = masterMixer.outputFormat(forBus: 0)
+        NSLog("[Studio] metronome attach: mixer fmt sr=\(mixerFormat.sampleRate) ch=\(mixerFormat.channelCount)")
+        if let err = StudioObjC.catchExceptions({
+            self.engine.attach(self.metronomePlayer)
+            self.engine.connect(self.metronomePlayer, to: self.masterMixer, format: mixerFormat)
+        }) {
+            NSLog("[Studio] metronome attach failed: \(err.localizedDescription)")
+            return
+        }
+        metronomePlayer.volume = metronomeVolume
+        // Build the click buffers in the negotiated format so
+        // scheduleBuffer doesn't silently drop them. Caller passes Self
+        // can't see instance state, so we inline here instead of using
+        // a static helper.
+        metronomeBeatBuffer = makeClickBuffer(format: mixerFormat, frequency: 1000, durationMs: 30)
+        metronomeAccentBuffer = makeClickBuffer(format: mixerFormat, frequency: 1500, durationMs: 30)
+        metronomeAttached = true
+    }
+
+    private func scheduleMetronome(from currentSeconds: Double) {
+        guard let s = session, let anchor = startHostTime else { return }
+        ensureMetronomeAttached()
+        cancelMetronome()
+        // Single self-rescheduling Timer instead of pre-scheduling one
+        // per beat for the whole session. The previous version piled up
+        // hundreds of pending Timers, all owned by the run loop, all
+        // competing for main thread when they fired. That contention
+        // starved AVAudioEngine's buffer thread and audio glitched
+        // ~30s into playback.
+        let secondsPerBeat = 60.0 / max(20.0, s.tempo_bpm)
+        let beatsPerBar = max(1, s.time_signature.numerator)
+        let firstBeat = Int(ceil(currentSeconds / secondsPerBeat))
+        let nowAbs = mach_absolute_time()
+        let anchorReal = max(0, AVAudioTime.seconds(forHostTime: anchor.hostTime &- nowAbs))
+        let firstDelay = (Double(firstBeat) * secondsPerBeat - currentSeconds) + anchorReal
+        scheduleNextClick(after: max(0, firstDelay),
+                          beat: firstBeat,
+                          beatsPerBar: beatsPerBar,
+                          secondsPerBeat: secondsPerBeat,
+                          sessionLength: s.length_seconds)
+    }
+
+    private func scheduleNextClick(after delay: Double, beat: Int, beatsPerBar: Int,
+                                   secondsPerBeat: Double, sessionLength: Double) {
+        let accent = (beat % beatsPerBar) == 0
+        let timer = Timer(timeInterval: delay, repeats: false) { [weak self] _ in
+            guard let self, self.metronomeOn, self.isPlayingNow else { return }
+            self.playClick(accent: accent)
+            let nextBeat = beat + 1
+            let nextAbsSec = Double(nextBeat) * secondsPerBeat
+            if nextAbsSec >= sessionLength { return }
+            self.scheduleNextClick(after: secondsPerBeat,
+                                   beat: nextBeat,
+                                   beatsPerBar: beatsPerBar,
+                                   secondsPerBeat: secondsPerBeat,
+                                   sessionLength: sessionLength)
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        metronomeTimers.append(timer)
+    }
+
+    private func cancelMetronome() {
+        for t in metronomeTimers { t.invalidate() }
+        metronomeTimers.removeAll()
+        if metronomePlayer.isPlaying { metronomePlayer.stop() }
+    }
+
+    private func playClick(accent: Bool) {
+        guard let buf = accent ? metronomeAccentBuffer : metronomeBeatBuffer else {
+            NSLog("[Studio] metronome click: no buffer (attached=\(metronomeAttached))")
+            return
+        }
+        // The player can't produce audio if the engine isn't already
+        // running — bring it up here as a guard against the user
+        // toggling the metronome before pressing play.
+        if !engine.isRunning {
+            do { try engine.start() }
+            catch { NSLog("[Studio] metronome click: engine.start failed: \(error.localizedDescription)"); return }
+        }
+        NSLog("[Studio] metronome click: accent=\(accent) vol=\(metronomePlayer.volume) engineRunning=\(engine.isRunning) playerAttached=\(metronomeAttached)")
+        if let err = StudioObjC.catchExceptions({
+            self.metronomePlayer.scheduleBuffer(buf, at: nil, options: [.interrupts], completionHandler: nil)
+            if !self.metronomePlayer.isPlaying { self.metronomePlayer.play() }
+        }) {
+            NSLog("[Studio] metronome click raised \(err.localizedDescription)")
+        }
+    }
+
+    /// Build a short windowed square-wave click in the given format so
+    /// `scheduleBuffer` doesn't silently reject a format mismatch. Writes
+    /// the same waveform to all channels of the target format.
+    private func makeClickBuffer(format: AVAudioFormat, frequency: Double, durationMs: Double) -> AVAudioPCMBuffer? {
+        let sr = format.sampleRate
+        let frames = AVAudioFrameCount(sr * durationMs / 1000.0)
+        guard frames > 0,
+              let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames)
+        else { return nil }
+        buf.frameLength = frames
+        let twoPiF = 2.0 * .pi * frequency / sr
+        let channels = Int(format.channelCount)
+        for ch in 0..<channels {
+            guard let chan = buf.floatChannelData?[ch] else { continue }
+            for i in 0..<Int(frames) {
+                let t = Double(i) / sr
+                let env: Double
+                if t < 0.004 { env = t / 0.004 }
+                else { env = max(0, 1 - (t - 0.004) / (durationMs / 1000.0 - 0.004)) }
+                let s = sin(twoPiF * Double(i)) > 0 ? 1.0 : -1.0
+                chan[i] = Float(0.4 * env * s)
+            }
+        }
+        return buf
     }
 }
 

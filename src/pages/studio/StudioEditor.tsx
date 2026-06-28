@@ -494,12 +494,17 @@ function Editor({
     try {
       let rawBlob: Blob;
       if (nativeTake && engineState.nativeRecordStop) {
-        // iOS path: the AVAudioEngine tap wrote a WAV to the app's tmp
-        // dir. Pull the bytes out of the local URL the plugin handed
-        // back, then feed it into the same finalize pipeline as a web
-        // take so the upload + clip placement code below stays one path.
+        // iOS path: AVAudioRecorder wrote a WAV to the app's tmp dir.
+        // WKWebView can't fetch `file://` URLs directly, so we run the
+        // URL through `Capacitor.convertFileSrc()`, which rewrites it
+        // to Capacitor's internal scheme (`capacitor://localhost/_capacitor_file_/…`)
+        // — that one the webview CAN load. Without this rewrite, fetch
+        // throws "Load failed" and the user sees "Could not finalize
+        // recording".
         const { localUrl } = await engineState.nativeRecordStop();
-        const fileRes = await fetch(localUrl);
+        const { Capacitor } = await import('@capacitor/core');
+        const fetchable = Capacitor.convertFileSrc(localUrl);
+        const fileRes = await fetch(fetchable);
         rawBlob = await fileRes.blob();
       } else if (recorder) {
         rawBlob = await recorder.stop();
@@ -588,9 +593,17 @@ function Editor({
         } else if (state?.isPlaying) {
           stop();
         } else {
-          start();
-          if (loopEnabled && loopRegion) engineState.seek?.(loopRegion.start);
-          play();
+          (async () => {
+            try {
+              await start();
+              if (loopEnabled && loopRegion) engineState.seek?.(loopRegion.start);
+              await play();
+            } catch (e) {
+              toast.error('Could not start playback', {
+                description: e instanceof Error ? e.message : String(e),
+              });
+            }
+          })();
         }
       } else if (e.key === 's' && !hasMod) {
         e.preventDefault();
@@ -797,14 +810,20 @@ function Editor({
 
         {/* Transport buttons */}
         <button onClick={async () => {
-            await start();
-            // When a loop region is armed, every Play starts at the
-            // region's left edge — so the user can audition the region
-            // without manually rewinding first.
-            if (loopEnabled && loopRegion) {
-              engineState.seek?.(loopRegion.start);
+            try {
+              await start();
+              // When a loop region is armed, every Play starts at the
+              // region's left edge — so the user can audition the region
+              // without manually rewinding first.
+              if (loopEnabled && loopRegion) {
+                engineState.seek?.(loopRegion.start);
+              }
+              await play();
+            } catch (e) {
+              toast.error('Could not start playback', {
+                description: e instanceof Error ? e.message : String(e),
+              });
             }
-            play();
           }} disabled={state?.isPlaying}
           className={`h-9 w-9 rounded flex items-center justify-center transition border ${state?.isPlaying ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border hover:bg-muted/70'} disabled:opacity-50`}
           title="Play (Space)">

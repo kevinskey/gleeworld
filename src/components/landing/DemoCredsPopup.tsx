@@ -75,8 +75,16 @@ export function DemoCredsPopup() {
     <div
       role="dialog"
       aria-label="Demo login credentials"
-      className="fixed z-[90] bottom-4 right-4 left-4 sm:left-auto sm:bottom-6 sm:right-6 max-w-sm sm:w-[22rem] rounded-2xl shadow-2xl overflow-hidden"
-      style={{ background: PROMO_GRADIENT, fontFamily: SANS, animation: "gw-pop-in 0.35s ease-out" }}
+      className="fixed z-[90] bottom-4 right-4 left-4 sm:left-auto sm:bottom-6 max-w-sm sm:w-[22rem] rounded-2xl shadow-2xl overflow-hidden"
+      // On wide viewports, anchor the popup to the right edge of the
+      // 1280px content cap rather than the viewport edge — keeps it
+      // visually attached to the page, not floating in the gutter.
+      style={{
+        background: PROMO_GRADIENT,
+        fontFamily: SANS,
+        animation: "gw-pop-in 0.35s ease-out",
+        right: "max(1rem, calc((100vw - 1280px) / 2 + 1.5rem))",
+      }}
     >
       <style>{`
         @keyframes gw-pop-in {

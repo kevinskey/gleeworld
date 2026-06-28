@@ -467,11 +467,16 @@ interface LevelConfig {
 }
 
 const LEVELS: Record<number, LevelConfig> = {
+  // `maxStep` is scale-degree distance per move. Capped at 5 across the
+  // board now (a sixth) — the previous level-5 value of 7 produced
+  // descending-seventh leaps that broke common-practice melodic rules.
+  // Diatonic leaps wider than a sixth are reserved for advanced material
+  // outside the rule-based generator's scope.
   1: { rangeLow: 1, rangeHigh: 8,  maxStep: 1, durations: ["quarter", "half"],                       allowRests: false },
   2: { rangeLow: 1, rangeHigh: 8,  maxStep: 2, durations: ["quarter", "half", "eighth"],             allowRests: false },
   3: { rangeLow: 1, rangeHigh: 10, maxStep: 3, durations: ["quarter", "half", "eighth", "whole"],    allowRests: true  },
-  4: { rangeLow: -1, rangeHigh: 10, maxStep: 5, durations: ["quarter", "half", "eighth", "16th", "whole"], allowRests: true },
-  5: { rangeLow: -3, rangeHigh: 12, maxStep: 7, durations: ["quarter", "half", "eighth", "16th", "whole"], allowRests: true },
+  4: { rangeLow: -1, rangeHigh: 10, maxStep: 4, durations: ["quarter", "half", "eighth", "16th", "whole"], allowRests: true },
+  5: { rangeLow: -3, rangeHigh: 12, maxStep: 5, durations: ["quarter", "half", "eighth", "16th", "whole"], allowRests: true },
 };
 
 const BEATS_BY_DUR: Record<string, number> = {
@@ -521,6 +526,11 @@ function generateRuleBasedScore(
 
   // Walk one scale-degree offset from tonic. 0 = tonic, 1 = supertonic, etc.
   let currentDegreeOffset = 0;
+  // Track the LAST step (signed scale-degree distance). Used for the
+  // "after a leap, step back" voice-leading rule — common-practice
+  // melodic writing recovers from a leap of a fourth or wider by
+  // moving by step in the opposite direction.
+  let lastStep = 0;
   const measures: any[][] = [];
 
   for (let m = 0; m < numMeasures; m++) {
@@ -542,20 +552,60 @@ function generateRuleBasedScore(
         durBase = rng.choice(valid);
       }
 
-      // Pick the next scale-degree offset. Final note of the piece
-      // is force-anchored to the tonic; everything else walks
-      // stepwise (or by small leap) from the previous note inside
-      // the level's range.
+      // Pick the next scale-degree offset.
+      //
+      //   - FIRST note of the piece: anchored to the tonic (degree 1)
+      //     for levels 1–3 (basic / intermediate sight-singing). Tonal
+      //     melodies establish key by starting on the tonic; starting
+      //     on degree 2, 3, etc. is a hallmark of advanced exercises
+      //     where students already know how to find the tonic from
+      //     context. Levels 4–5 keep the free starting note so
+      //     advanced students can practice that skill.
+      //   - LAST note of the piece: also tonic (clean cadence).
+      //   - EVERYTHING ELSE: stepwise / small-leap walk inside the
+      //     level's allowed range.
+      const isFirstNote = m === 0 && beatsLeft === beatsPerMeasure;
+      // Penultimate-note detection: the note we're about to push is
+      // the SECOND-TO-LAST note IF (a) we're in the last measure AND
+      // (b) the beats remaining after this note will exactly fill ONE
+      // more event of the chosen final duration. We simplify to "last
+      // measure + this isn't itself the final beat" — the final-note
+      // anchor below handles the closer.
+      const willBeFinalNote = isLastMeasure && beatsLeft === BEATS_BY_DUR[durBase];
+      const willBePenultimate = isLastMeasure && !willBeFinalNote &&
+        (beatsLeft - BEATS_BY_DUR[durBase]) <= BEATS_BY_DUR[durBase] * 1.5;
+
       let nextOffset: number;
-      if (isLastMeasure && beatsLeft === BEATS_BY_DUR[durBase]) {
+      if (isFirstNote && params.level <= 3) {
+        nextOffset = 0;
+      } else if (willBeFinalNote) {
         // Final note → tonic. By config invariant, every level has
         // rangeLow ≤ 1 ≤ rangeHigh, so 0 is always in range.
         nextOffset = 0;
+      } else if (willBePenultimate) {
+        // Penultimate note must approach the final tonic by step.
+        // Common practice resolves degree 2→1 (descending) or
+        // degree 7→1 (ascending leading tone). Pick whichever is
+        // closer to the current note so the cadence feels smooth.
+        const opt2 = 1;   // supertonic
+        const opt7 = -1;  // leading tone (one diatonic step below tonic)
+        nextOffset = Math.abs(currentDegreeOffset - opt2) <= Math.abs(currentDegreeOffset - opt7)
+          ? opt2
+          : opt7;
       } else {
         let step = rng.nextInt(-cfg.maxStep, cfg.maxStep);
         // 65% of the time prefer stepwise (|step| <= 1) for singability.
         if (Math.abs(step) > 1 && rng.next() < 0.65) {
           step = rng.nextInt(-1, 1);
+        }
+        // Leap-recovery rule. After a leap of a fourth or wider, the
+        // next move should be by step in the opposite direction —
+        // canonical voice-leading for vocal music. Without this rule
+        // the generator would happily leap a sixth up and then a
+        // fifth down, producing zigzag lines that are hard to sing.
+        if (Math.abs(lastStep) >= 3) {
+          const recoveryDir = -Math.sign(lastStep);
+          step = recoveryDir; // single diatonic step opposite the leap
         }
         nextOffset = currentDegreeOffset + step;
         // Reflect off the range edges so the walk never escapes the
@@ -564,6 +614,9 @@ function generateRuleBasedScore(
         if (nextOffset < cfg.rangeLow - 1)  nextOffset = currentDegreeOffset + 1;
       }
 
+      // Track the actual step taken (signed scale-degree distance)
+      // so the next iteration can apply the leap-recovery rule.
+      lastStep = nextOffset - currentDegreeOffset;
       currentDegreeOffset = nextOffset;
       measure.push(buildNoteFromDegree(key, nextOffset, baseOct, durBase));
       beatsLeft -= BEATS_BY_DUR[durBase];

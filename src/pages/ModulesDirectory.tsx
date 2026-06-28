@@ -98,19 +98,32 @@ export const ModulesDirectory: React.FC = () => {
     <div>
       <header className="w-full border-b border-border bg-background">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold tracking-tight">Modules Directory</h1>
-          <p className="text-muted-foreground mt-2 max-w-2xl">Explore all functional modules in GleeWorld. Open any module or propose cleanup of redundant modules. No deletions will occur without your approval.</p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-bold tracking-tight">Modules Directory</h1>
+              <p className="text-muted-foreground mt-2 max-w-2xl">Explore all functional modules in GleeWorld. Open any module or propose cleanup of redundant modules. No deletions will occur without your approval.</p>
+            </div>
+            {/* Activation lives in Workspace Settings, not here. Deep-link
+                so the admin doesn't have to hunt for it. */}
+            <Button
+              variant="outline"
+              onClick={() => navigate('/dashboard/workspace?tab=modules')}
+              className="shrink-0"
+            >
+              Manage subscriptions →
+            </Button>
+          </div>
           <div className="mt-4 max-w-md">
-            <Input 
-              value={query} 
+            <Input
+              value={query}
               onChange={(e) => {
                 const val = e.target.value;
                 setQuery(val);
                 const sp = new URLSearchParams(searchParams);
                 if (val) sp.set('q', val); else sp.delete('q');
                 setSearchParams(sp, { replace: true });
-              }} 
-              placeholder="Search modules by name, category, or description" 
+              }}
+              placeholder="Search modules by name, category, or description"
             />
           </div>
         </div>

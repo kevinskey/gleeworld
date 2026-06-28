@@ -875,6 +875,34 @@ export const SightSingingStudio: React.FC = () => {
         voiceParts = ['Soprano'];
       }
 
+      // Render the exercise to PDF + upload to the `sheet-music` bucket
+      // so the saved row has a real `pdf_url`. Without this, the Viewer
+      // reader can't display the saved exercise (it requires a PDF).
+      // The XML is still stored on the row for any tooling that needs
+      // the structured source (re-render, MIDI export, etc.).
+      let pdfUrl: string | undefined;
+      try {
+        const { musicxmlToPdfBlob } = await import('@/lib/musicxml-to-pdf');
+        const pdfBlob = await musicxmlToPdfBlob(currentMusicXML);
+        if (pdfBlob) {
+          const path = `generated/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
+          const { error: upErr } = await supabase.storage
+            .from('sheet-music')
+            .upload(path, pdfBlob, { contentType: 'application/pdf', upsert: false });
+          if (upErr) throw upErr;
+          pdfUrl = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
+        }
+      } catch (renderErr) {
+        // Don't block the save — fall back to saving without a PDF
+        // so the row still lands in the library. The user can re-open
+        // it in the sight-singing studio and try again.
+        console.warn('[SightSinging] PDF render/upload failed, saving XML-only', renderErr);
+        toast({
+          title: 'PDF render failed',
+          description: 'Saving without PDF. The score will appear in your library but not in the Viewer until re-rendered.',
+        });
+      }
+
       await addScore({
         title,
         composer: parameters ? 'AI Generated' : 'Uploaded',
@@ -884,8 +912,9 @@ export const SightSingingStudio: React.FC = () => {
         voice_parts: voiceParts,
         tags: ['sight-reading', parameters ? 'generated' : 'uploaded'],
         xml_content: currentMusicXML,
-        is_public: false
-      });
+        is_public: false,
+        ...(pdfUrl ? { pdf_url: pdfUrl } : {}),
+      } as Parameters<typeof addScore>[0]);
 
       toast({
         title: "Saved to Library!",

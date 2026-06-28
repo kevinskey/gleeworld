@@ -1,0 +1,16 @@
+{
+  "name": "gleeworld-video-transcoder",
+  "version": "1.0.0",
+  "description": "Polls gw_studio_videos for uploaded sources and transcodes them to HLS for adaptive playback.",
+  "main": "index.js",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "pg": "^8.13.0",
+    "ws": "^8.18.0"
+  }
+}

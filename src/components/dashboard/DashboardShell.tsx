@@ -125,8 +125,13 @@ function BrandLogo({
 // 2026 nav type scale — denser, slightly larger touch targets, no tinted
 // tile chrome. The colored `tone` value still drives the ICON glyph color
 // (a subtle category cue) but no longer paints a background pill behind it.
+// Denser row — tighter vertical padding + smaller text so the full
+// section list fits within a typical iPad / laptop viewport without an
+// internal scroll. The previous text-[15px] py-2 stack pushed the nav
+// past the fold on shorter displays and forced users to scroll the
+// sidebar separately from the page content.
 const NAV_BASE =
-  'flex items-center gap-3 px-2.5 py-2 rounded-lg text-[15px] leading-tight transition-colors w-full text-left';
+  'flex items-center gap-2 px-2 py-1 rounded-md text-[13px] leading-tight transition-colors w-full text-left';
 const NAV_INACTIVE = 'text-foreground/85 hover:bg-muted/70 hover:text-foreground';
 const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 // `tone` is now {color}-600/700 text-only — strip the legacy bg- portion.
@@ -274,7 +279,12 @@ function Sidebar() {
   // still go back to the session list via the "Sessions" link in the
   // editor's own top bar.
   const inStudioSession = /^\/studio\/sessions\/[^/]+/.test(location.pathname);
-  if (inStudioSession) return null;
+  // Viewer reader (score open) takes the full window for the score —
+  // the reader has its own back chrome. The landing page (/dashboard/viewer
+  // with no scoreId) keeps the sidebar so the user can still see the
+  // site brand + nav.
+  const inViewerReader = /^\/dashboard\/viewer\/[^/]+/.test(location.pathname);
+  if (inStudioSession || inViewerReader) return null;
 
   return (
     <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 border-r border-border bg-card h-screen sticky top-0 gw-collapsible-sidebar">

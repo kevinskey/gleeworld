@@ -145,11 +145,43 @@ serve(async (req) => {
 async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.Session) {
   const tenantId = session.metadata?.tenant_id || session.client_reference_id;
   const moduleId = session.metadata?.module_id;
+  const planId   = session.metadata?.plan_id;
+  const kind     = session.metadata?.kind;        // 'plan' | 'addon' | undefined
   const courseSku = session.metadata?.course_sku;
-  logStep("Processing checkout.session.completed", { id: session.id, tenantId, moduleId, courseSku });
+  logStep("Processing checkout.session.completed", { id: session.id, tenantId, moduleId, planId, kind, courseSku });
 
   if (tenantId && courseSku && session.mode === 'payment') {
     await handleCoursePurchase(supabase, session, tenantId, courseSku);
+    return;
+  }
+
+  // ── Base plan subscription (create-plan-checkout) ─────────────────
+  if (tenantId && planId && session.mode === 'subscription' && kind === 'plan') {
+    const cycle = session.metadata?.billing_cycle === 'annual' ? 'annual' : 'monthly';
+    const { error: planErr } = await supabase
+      .from('gw_tenant_plans')
+      .upsert({
+        tenant_id: tenantId,
+        plan_id: planId,
+        billing_cycle: cycle,
+        status: 'active',
+        stripe_subscription_id: (session.subscription as string) || null,
+        stripe_customer_id: (session.customer as string) || null,
+        cancelled_at: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'tenant_id' });
+    if (planErr) {
+      logStep("Plan activation failed", { error: planErr.message });
+      throw new Error(`Plan activation failed: ${planErr.message}`);
+    }
+    logStep("Plan activated", { tenantId, planId, cycle });
+    if (session.customer) {
+      await supabase
+        .from('gw_tenants')
+        .update({ stripe_customer_id: session.customer as string })
+        .eq('id', tenantId)
+        .is('stripe_customer_id', null);
+    }
     return;
   }
 
@@ -268,6 +300,23 @@ async function handleSubscriptionChanged(supabase: any, subscription: Stripe.Sub
 
   const tenantId = subscription.metadata?.tenant_id;
   const moduleId = subscription.metadata?.module_id;
+  const planId   = subscription.metadata?.plan_id;
+  const kind     = subscription.metadata?.kind;
+
+  // Route to the right table based on the SKU kind. plans live in
+  // gw_tenant_plans; everything else stays in gw_tenant_subscriptions.
+  if (kind === 'plan' && tenantId && planId) {
+    const { error } = await supabase
+      .from('gw_tenant_plans')
+      .update(update)
+      .eq('tenant_id', tenantId);
+    if (error) {
+      logStep("Plan subscription update failed", { error: error.message });
+      throw new Error(`Plan subscription update failed: ${error.message}`);
+    }
+    logStep("Plan row updated", { tenantId, planId, status });
+    return;
+  }
 
   const query = supabase.from('gw_tenant_subscriptions').update(update);
   const { error } = tenantId && moduleId

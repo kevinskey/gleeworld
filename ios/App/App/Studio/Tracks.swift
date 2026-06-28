@@ -145,12 +145,19 @@ public final class TrackBinding {
                     continue
                 }
 
-                let trimSec = max(0, currentSeconds - clipStart)   // how much of the head we skip
+                let trimSec = max(0, currentSeconds - clipStart)
                 let playOffset = clip.offset_seconds + trimSec
                 let playDuration = clip.duration_seconds - trimSec
                 let sampleRate = file.processingFormat.sampleRate
                 let startFrame = AVAudioFramePosition(playOffset * sampleRate)
                 let frameCount = AVAudioFrameCount(max(0, playDuration * sampleRate))
+
+                // Guard zero-length segments — AVAudioPlayerNode crashes
+                // (signal abort) on scheduleSegment with frameCount=0.
+                guard frameCount > 0 else {
+                    NSLog("[Studio]   skip clip \(clip.id) — zero frame count")
+                    continue
+                }
 
                 let when: AVAudioTime
                 let secondsUntilStart = clipStart - currentSeconds
@@ -161,14 +168,18 @@ public final class TrackBinding {
                     when = AVAudioTime(hostTime: anchor.hostTime + offsetHost)
                 }
 
-                // Make sure the player node is actually playing. After
-                // engine restarts (e.g. session route changes) the
-                // player can fall into a "stopped" state where
-                // scheduleSegment queues but no audio comes out until
-                // play() is called explicitly.
-                if !player.isPlaying { player.play(at: when) }
-                player.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount,
-                                       at: when, completionHandler: nil)
+                // scheduleSegment + play(at:) can raise NSException on
+                // format mismatch or wrong player state; both are
+                // caught at the ObjC layer so one bad clip can't crash
+                // the app.
+                if let err = StudioObjC.catchExceptions({
+                    player.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount,
+                                           at: when, completionHandler: nil)
+                    if !player.isPlaying { player.play(at: when) }
+                }) {
+                    NSLog("[Studio]   clip \(clip.id) schedule raised \(err.localizedDescription) — skipping")
+                    continue
+                }
                 NSLog("[Studio]   clip \(clip.id) scheduled: startFrame=\(startFrame) frames=\(frameCount) sr=\(sampleRate)")
             }
         case .midi:
@@ -178,9 +189,10 @@ public final class TrackBinding {
                     let absStart = clip.start_seconds + note.start_seconds
                     if absStart < currentSeconds { continue }
                     let delay = absStart - currentSeconds
-                    let timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { _ in
+                    let timer = Timer(timeInterval: delay, repeats: false) { _ in
                         inst.trigger(pitch: note.pitch, durationSeconds: note.duration_seconds, velocity01: Double(note.velocity) / 127.0)
                     }
+                    RunLoop.main.add(timer, forMode: .common)
                     midiTimers.append(timer)
                 }
             }

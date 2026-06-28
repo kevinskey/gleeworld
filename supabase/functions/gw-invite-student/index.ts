@@ -32,6 +32,58 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // 0. Resolve tenant_id early so we can enforce the plan's student cap
+    //    BEFORE creating any auth/profile state. (The post-link block
+    //    further down does the same resolution; this duplicates the
+    //    minimum needed for the cap check so we fail fast on over-cap.)
+    let preflightTenantId: string | undefined = body.tenantId;
+    if (!preflightTenantId && body.courseId) {
+      const { data: c } = await supabase.from("gw_courses").select("tenant_id").eq("id", body.courseId).maybeSingle();
+      if (c?.tenant_id) preflightTenantId = c.tenant_id;
+    }
+    if (!preflightTenantId && body.appOrigin) {
+      try {
+        const host = new URL(body.appOrigin).hostname.replace(/^www\./, "");
+        const slugGuess = host.split(".")[0];
+        const { data: t } = await supabase.from("gw_tenants").select("id").eq("slug", slugGuess).maybeSingle();
+        if (t?.id) preflightTenantId = t.id;
+      } catch { /* ignore */ }
+    }
+
+    // Plan cap enforcement. Skip when:
+    //   • tenant_id couldn't be resolved (no plan to check)
+    //   • the email is already a student in this tenant (re-invite,
+    //     no new seat consumed)
+    //   • the tenant has no paid plan (free trials and unconfigured
+    //     workspaces aren't blocked)
+    //   • the plan's student_cap is null (University tier = unlimited)
+    if (preflightTenantId) {
+      const emailLower = body.email.toLowerCase().trim();
+      const { data: existingProfile } = await supabase
+        .from("gw_profiles")
+        .select("user_id")
+        .eq("tenant_id", preflightTenantId)
+        .ilike("email", emailLower)
+        .maybeSingle();
+      if (!existingProfile) {
+        const { data: usage } = await supabase.rpc("gw_tenant_plan_usage", { p_tenant_id: preflightTenantId });
+        const u = Array.isArray(usage) && usage.length ? usage[0] : null;
+        if (u && u.student_cap !== null && u.current_students >= u.student_cap) {
+          return new Response(
+            JSON.stringify({
+              error: "plan_student_cap_reached",
+              detail: `Your ${u.plan_id ?? "current"} plan is capped at ${u.student_cap} students (currently ${u.current_students}). Upgrade your plan in Workspace Settings to add more.`,
+              plan_id: u.plan_id,
+              current_students: u.current_students,
+              student_cap: u.student_cap,
+              upgrade_url: body.appOrigin ? `${body.appOrigin.replace(/\/+$/, "")}/dashboard/workspace?tab=plan` : "/dashboard/workspace?tab=plan",
+            }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      }
+    }
+
     // 1. Generate a magic link (creates user if doesn't exist).
     // The link lands on /auth/callback which handles "new user → onboarding,
     // existing user → ?next" routing.

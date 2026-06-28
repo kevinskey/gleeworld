@@ -8,13 +8,18 @@
 //
 // MODES (request body):
 //   { "mode": "category", "category": "Category:SATB works",
-//     "max_pages": 50, "delay_ms": 1000 }
+//     "max_pages": 50, "delay_ms": 1000, "continue_token": "..." }
 //   { "mode": "search",   "query":    "Ave Maria",
-//     "max_pages": 50, "delay_ms": 1000 }
+//     "max_pages": 50, "delay_ms": 1000, "continue_token": "..." }
+//   { "mode": "allpages", "max_pages": 50, "delay_ms": 1000,
+//     "continue_token": "..." }  // full-catalog walk via list=allpages
 //
 //   max_pages caps how many work pages we touch in one run (default 25)
-//   so a kicked-off run can't accidentally crawl the entire site. Run
-//   the same command repeatedly with continuation handled internally.
+//   so a kicked-off run can't accidentally crawl the entire site.
+//   continue_token (returned as `next_continue` in the response) lets
+//   a cron driver resume from where the previous call left off — for
+//   category mode it's the MediaWiki cmcontinue string, for search it's
+//   the next sroffset, for allpages it's the next apcontinue title.
 //
 // IDEMPOTENCY: upserts into `pd_works` keyed on (source, source_id).
 //   source    = 'cpdl'
@@ -63,11 +68,17 @@ const corsHeaders = {
 };
 
 interface IngestBody {
-  mode?: "category" | "search";
+  mode?: "category" | "search" | "allpages";
   category?: string;
   query?: string;
   max_pages?: number;
   delay_ms?: number;
+  continue_token?: string;
+}
+
+interface DiscoverResult {
+  pages: CpdlPageSummary[];
+  nextContinue: string | null;
 }
 
 interface CpdlPageSummary {
@@ -166,10 +177,11 @@ async function cpdlFetch(params: Record<string, string>, delayMs: number): Promi
   }
 }
 
-// Walk a category (paginated). Returns at most max_pages results.
-async function fetchCategoryMembers(category: string, maxPages: number, delayMs: number): Promise<CpdlPageSummary[]> {
+// Walk a category (paginated). Returns at most max_pages results plus
+// the MediaWiki cmcontinue cursor a cron driver can persist to resume.
+async function fetchCategoryMembers(category: string, maxPages: number, delayMs: number, startToken?: string): Promise<DiscoverResult> {
   const out: CpdlPageSummary[] = [];
-  let cmcontinue: string | undefined;
+  let cmcontinue: string | undefined = startToken || undefined;
   while (out.length < maxPages) {
     const params: Record<string, string> = {
       action: "query",
@@ -189,13 +201,14 @@ async function fetchCategoryMembers(category: string, maxPages: number, delayMs:
     if (!cmcontinue) break;
     await new Promise((r) => setTimeout(r, delayMs));
   }
-  return out.slice(0, maxPages);
+  return { pages: out.slice(0, maxPages), nextContinue: cmcontinue ?? null };
 }
 
-// Free-text search via the API. Returns up to max_pages results.
-async function searchPages(query: string, maxPages: number, delayMs: number): Promise<CpdlPageSummary[]> {
+// Free-text search via the API. Returns up to max_pages results plus
+// the next sroffset for resumption.
+async function searchPages(query: string, maxPages: number, delayMs: number, startToken?: string): Promise<DiscoverResult> {
   const out: CpdlPageSummary[] = [];
-  let sroffset = 0;
+  let sroffset = startToken ? Number(startToken) || 0 : 0;
   while (out.length < maxPages) {
     const data = await cpdlFetch(
       {
@@ -214,10 +227,40 @@ async function searchPages(query: string, maxPages: number, delayMs: number): Pr
     if (hits.length === 0) break;
     out.push(...hits);
     sroffset += hits.length;
-    if (!data?.continue?.sroffset) break;
+    if (!data?.continue?.sroffset) {
+      return { pages: out.slice(0, maxPages), nextContinue: null };
+    }
     await new Promise((r) => setTimeout(r, delayMs));
   }
-  return out.slice(0, maxPages);
+  return { pages: out.slice(0, maxPages), nextContinue: String(sroffset) };
+}
+
+// Walk the entire main namespace via list=allpages. Used by the nightly
+// full-catalog mirror cron. apcontinue is the cursor — the next title
+// the API will start from.
+async function fetchAllPages(maxPages: number, delayMs: number, startToken?: string): Promise<DiscoverResult> {
+  const out: CpdlPageSummary[] = [];
+  let apcontinue: string | undefined = startToken || undefined;
+  while (out.length < maxPages) {
+    const params: Record<string, string> = {
+      action: "query",
+      list: "allpages",
+      apnamespace: "0", // main namespace = work pages + composer pages
+      aplimit: String(Math.min(50, maxPages - out.length)),
+      apfilterredir: "nonredirects",
+    };
+    if (apcontinue) params.apcontinue = apcontinue;
+    const data = await cpdlFetch(params, delayMs);
+    const members: CpdlPageSummary[] = (data?.query?.allpages ?? []).map((m: any) => ({
+      pageid: m.pageid,
+      title: m.title,
+    }));
+    out.push(...members);
+    apcontinue = data?.continue?.apcontinue;
+    if (!apcontinue) break;
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+  return { pages: out.slice(0, maxPages), nextContinue: apcontinue ?? null };
 }
 
 // Resolve a single work page: its canonical URL, categories, and the
@@ -325,27 +368,37 @@ serve(async (req) => {
 
   try {
     // 1) Discover candidate pages.
-    let pages: CpdlPageSummary[];
+    let discovered: DiscoverResult;
     if (mode === "search") {
       if (!body.query) {
         return new Response(JSON.stringify({ error: "missing_query" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      pages = await searchPages(body.query, maxPages, delayMs);
+      discovered = await searchPages(body.query, maxPages, delayMs, body.continue_token);
+    } else if (mode === "allpages") {
+      discovered = await fetchAllPages(maxPages, delayMs, body.continue_token);
     } else {
       if (!body.category) {
         return new Response(JSON.stringify({ error: "missing_category" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      pages = await fetchCategoryMembers(body.category, maxPages, delayMs);
+      discovered = await fetchCategoryMembers(body.category, maxPages, delayMs, body.continue_token);
     }
+    const pages = discovered.pages;
 
-    // 2) Resolve each page in sequence with the configured delay.
+    // 2) Resolve each page in sequence with the configured delay. In
+    //    allpages mode the main namespace mixes work pages with composer
+    //    bios / help pages, so we skip anything that doesn't look like
+    //    a work — heuristic: must have a "Work (Composer)" parenthetical.
     const upserts: PdWorkUpsert[] = [];
     const skipped: { pageid: number; reason: string }[] = [];
     for (const p of pages) {
+      if (mode === "allpages" && !/\([^()]+\)\s*$/.test(p.title)) {
+        skipped.push({ pageid: p.pageid, reason: "non_work_title" });
+        continue;
+      }
       try {
         const detail = await fetchPageDetail(p.pageid, delayMs);
         if (!detail) { skipped.push({ pageid: p.pageid, reason: "missing" }); continue; }
@@ -375,12 +428,13 @@ serve(async (req) => {
       JSON.stringify({
         ok: true,
         mode,
-        scope: body.category ?? body.query ?? null,
+        scope: body.category ?? body.query ?? (mode === "allpages" ? "allpages" : null),
         pages_discovered: pages.length,
         pages_upserted: upserts.length,
         pages_skipped: skipped.length,
         skipped_sample: skipped.slice(0, 5),
         rows_touched: inserted + updated,
+        next_continue: discovered.nextContinue,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

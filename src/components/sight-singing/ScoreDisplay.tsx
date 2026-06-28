@@ -172,6 +172,12 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           autoBeam: true,
         });
 
+        // Stretch the final system to full page width — by default OSMD
+        // leaves the last row at its natural length, which made a
+        // short closer (e.g. a 2-bar phrase) look weirdly truncated
+        // compared to the full-width systems above it.
+        (osmd.EngravingRules as any).StretchLastSystemLine = true;
+
         // Store reference for cleanup and resize
         osmdRef.current = osmd;
 

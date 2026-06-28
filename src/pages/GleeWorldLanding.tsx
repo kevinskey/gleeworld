@@ -353,7 +353,7 @@ export const GleeWorldLanding = () => {
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                   <a
-                    href="mailto:kevin@gleeworld.org?subject=GleeWorld%20for%20my%20group&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20set%20up%20GleeWorld%20for%20my%20group.%0A%0AName%20of%20organization%3A%20%0ASize%20%28approx%20members%29%3A%20%0APreferred%20subdomain%3A%20%0AHow%20did%20you%20find%20us%3F%20%0A%0AThanks%21"
+                    href="mailto:kevin@gleeworld.org?subject=GleeWorld%20for%20my%20group&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20set%20up%20GleeWorld%20for%20my%20group.%0A%0AName%20of%20organization%3A%20%0ASize%20%28approx%20students%29%3A%20%0APreferred%20subdomain%3A%20%0AHow%20did%20you%20find%20us%3F%20%0A%0AThanks%21"
                     className="inline-flex items-center justify-center gap-2 rounded-lg font-bold text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 shadow-xl transition-colors"
                     style={{ backgroundColor: '#fbbf24', color: '#0f172a' }}
                   >
@@ -511,7 +511,7 @@ const SANS = "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif
 const HEADING_STYLE = { fontFamily: SANS, textTransform: 'none' as const };
 
 const MAILTO_BUY =
-  'mailto:kevin@gleeworld.org?subject=GleeWorld%20for%20my%20group&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20set%20up%20GleeWorld%20for%20my%20group.%0A%0AName%20of%20organization%3A%20%0ASize%20%28approx%20members%29%3A%20%0APreferred%20subdomain%3A%20%0AHow%20did%20you%20find%20us%3F%20%0A%0AThanks%21';
+  'mailto:kevin@gleeworld.org?subject=GleeWorld%20for%20my%20group&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20set%20up%20GleeWorld%20for%20my%20group.%0A%0AName%20of%20organization%3A%20%0ASize%20%28approx%20students%29%3A%20%0APreferred%20subdomain%3A%20%0AHow%20did%20you%20find%20us%3F%20%0A%0AThanks%21';
 const MAILTO_DEMO = 'mailto:kevin@gleeworld.org?subject=GleeWorld%20demo%20request';
 
 // "Get started" buttons across the marketing site open a single shared
@@ -540,7 +540,27 @@ function MarketingSite() {
         <AppleHero />
         <AppleVideo />
         <AppleProductBig />
+        <FounderSection />
+        <ReplacementTable />
         <AppleAudienceGrid />
+        {/* CPDL leads the feature stack — your single biggest content
+            differentiator. Nobody else mirrors the public-domain library. */}
+        <AppleFeatureRow
+          eyebrow="Public-Domain Catalog"
+          title="33,000 works. Already legal to share."
+          body="Search the Choral Public Domain Library from inside GleeWorld. We cache the PDF on first add, preserve the editor's credit, and tag every score as public-domain so it bypasses the rights gate automatically."
+          mockup={<CPDLCatalogMockup />}
+          pastel="#fef3c7"
+          imageLeft={false}
+        />
+        <AppleFeatureRow
+          eyebrow="Music Library"
+          title="Your whole repertoire in one place."
+          body="PDF previews, recordings, setlists. Tag by voicing, season, or programme. Searchable in one click."
+          mockup={<MusicLibraryMockup />}
+          pastel="#d1fae5"
+          imageLeft={true}
+        />
         <AppleFeatureRow
           eyebrow="Glee Academy"
           title="The LMS built for music."
@@ -560,7 +580,7 @@ function MarketingSite() {
         <AppleFeatureRow
           eyebrow="Calendar"
           title="Every rehearsal, every concert."
-          body="Recurring events, sectionals, performances — all in one view your singers can sync to their phones."
+          body="Recurring events, sectionals, performances — all in one view your students can sync to their phones."
           mockup={<CalendarMockup />}
           pastel="#ede9fe"
           imageLeft={false}
@@ -574,11 +594,27 @@ function MarketingSite() {
           imageLeft={true}
         />
         <AppleFeatureRow
-          eyebrow="Music Library"
-          title="Your whole repertoire in one place."
-          body="PDF previews, recordings, setlists. Tag by voicing, season, or programme. Searchable in one click."
-          mockup={<MusicLibraryMockup />}
-          pastel="#d1fae5"
+          eyebrow="Concert Planner"
+          title="Print-ready programs in minutes."
+          body="Drag pieces from your library, assign soloists and accompanists, and export a clean bulletin. Editor credits ride along on every score so attribution is never your problem."
+          mockup={<ConcertPlannerMockup />}
+          pastel="#dbeafe"
+          imageLeft={false}
+        />
+        <AppleFeatureRow
+          eyebrow="Practice Studio"
+          title="Recordings that actually sound like music."
+          body="Students record takes with a built-in metronome. A real audio engine — preamp, compressor, normalizer — mixes them clean before they hit your inbox for teacher feedback."
+          mockup={<PracticeStudioMockup />}
+          pastel="#ede9fe"
+          imageLeft={true}
+        />
+        <AppleFeatureRow
+          eyebrow="iOS + Android"
+          title="On every phone your students carry."
+          body="Native apps in the App Store and Google Play. Push notifications for rehearsal changes. Tenant-aware so a student who belongs to two ensembles can switch between them with a tap."
+          mockup={<MobileAppMockup />}
+          pastel="#fce7f3"
           imageLeft={false}
         />
         <AppleHowItWorks />
@@ -653,38 +689,43 @@ function AppleHero() {
   const { open: openInquiry } = useInquiry();
 
   return (
-    <section className="relative bg-[#0a0518] w-full">
-      {slide?.imageUrl ? (
-        <>
-          {/* Mobile <640px: prefer mobile image, fall back to desktop */}
-          <img
-            src={slide.mobileImageUrl || slide.imageUrl}
-            alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
-            className="w-full h-auto block sm:hidden"
-          />
-          {/* Desktop ≥640px */}
-          <img
-            src={slide.imageUrl}
-            alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
-            className="w-full h-auto hidden sm:block"
-          />
-        </>
-      ) : (
-        // No hero configured — gradient backdrop in place of the image.
-        <div
-          className="w-full aspect-[16/8] sm:aspect-[16/7] flex items-center justify-center"
-          style={{ background: 'radial-gradient(circle at 50% 30%, #1a0f3a 0%, #0a0518 70%)' }}
-        >
-          <div className="text-center text-white/70 px-6">
-            <p className="text-sm sm:text-base uppercase tracking-widest opacity-60">No hero configured</p>
-            <p className="text-lg sm:text-2xl font-semibold mt-2">Run your music program. Beautifully.</p>
+    <section className="relative w-full bg-white">
+      {/* Both the hero image AND its dark backdrop are capped to the page
+          max-width so the section stays consistent with everything below
+          it. Background lives on the inner wrapper (not the section) so
+          there's no full-bleed dark gutter on wide viewports. */}
+      <div className="max-w-7xl mx-auto bg-[#0a0518]">
+        {slide?.imageUrl ? (
+          <>
+            {/* Mobile <640px: prefer mobile image, fall back to desktop */}
+            <img
+              src={slide.mobileImageUrl || slide.imageUrl}
+              alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
+              className="w-full h-auto block sm:hidden"
+            />
+            {/* Desktop ≥640px */}
+            <img
+              src={slide.imageUrl}
+              alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
+              className="w-full h-auto hidden sm:block"
+            />
+          </>
+        ) : (
+          // No hero configured — gradient backdrop in place of the image.
+          <div
+            className="w-full aspect-[16/8] sm:aspect-[16/7] flex items-center justify-center"
+            style={{ background: 'radial-gradient(circle at 50% 30%, #1a0f3a 0%, #0a0518 70%)' }}
+          >
+            <div className="text-center text-white/70 px-6">
+              <p className="text-sm sm:text-base uppercase tracking-widest opacity-60">No hero configured</p>
+              <p className="text-lg sm:text-2xl font-semibold mt-2">Run your music program. Beautifully.</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* CTA strip — sits BELOW the hero image, not overlaying it */}
-      <div className="px-6 py-8 sm:py-12 bg-[#0a0518]">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3 justify-center items-center">
+        {/* CTA strip — sits BELOW the hero image, not overlaying it */}
+        <div className="px-6 py-8 sm:py-12">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3 justify-center items-center">
           <button
             type="button"
             onClick={openInquiry}
@@ -703,8 +744,9 @@ function AppleHero() {
           >
             Watch a demo <ArrowRight className="h-4 w-4" />
           </a>
-        </div>
-      </div>
+          </div>{/* /CTA inner */}
+        </div>{/* /CTA outer */}
+      </div>{/* /max-w-7xl wrapper */}
     </section>
   );
 }
@@ -969,6 +1011,141 @@ function MusicLibraryMockup() {
   );
 }
 
+function CPDLCatalogMockup() {
+  const hits = [
+    { title: 'Ave Maria', composer: 'Josquin des Prez', voicing: 'SATB', lang: 'Latin' },
+    { title: 'Lift Thine Eyes', composer: 'Felix Mendelssohn', voicing: 'SSA', lang: 'English' },
+    { title: 'Sicut Cervus', composer: 'Giovanni P. da Palestrina', voicing: 'SATB', lang: 'Latin' },
+    { title: 'Ubi Caritas', composer: 'Maurice Duruflé', voicing: 'SATB', lang: 'Latin' },
+  ];
+  return (
+    <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-bold text-slate-900">Public-Domain Catalog</div>
+        <div className="text-[10px] sm:text-xs text-emerald-700 font-semibold px-2 py-0.5 rounded-full bg-emerald-50">CPDL · 33,000 works</div>
+      </div>
+      <div className="bg-slate-50 rounded-md px-3 py-1.5 mb-3 text-slate-500 text-xs">Search title or composer…</div>
+      <div className="space-y-1.5">
+        {hits.map((h, i) => (
+          <div key={i} className="flex items-center gap-3 p-2 rounded hover:bg-slate-50">
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-slate-900 truncate">{h.title}</div>
+              <div className="text-xs text-slate-500 truncate">{h.composer}</div>
+            </div>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">{h.voicing}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">{h.lang}</span>
+            <button className="text-[10px] sm:text-xs font-semibold text-white px-2.5 py-1 rounded-md bg-slate-900">Add</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConcertPlannerMockup() {
+  const program = [
+    { piece: 'Sicut Cervus', composer: 'Palestrina', soloist: '' },
+    { piece: 'Ave Verum Corpus', composer: 'Mozart', soloist: 'Maria Lee (S)' },
+    { piece: 'Lift Every Voice and Sing', composer: 'Johnson', soloist: 'Choir' },
+    { piece: 'Total Praise', composer: 'Smallwood', soloist: 'Devon James (T)' },
+  ];
+  return (
+    <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="font-bold text-slate-900">Spring Concert · Apr 18</div>
+          <div className="text-[11px] text-slate-500">Sage Auditorium · 7:30 PM</div>
+        </div>
+        <button className="text-[10px] sm:text-xs font-semibold text-white px-2.5 py-1 rounded-md bg-slate-900">Print program</button>
+      </div>
+      <div className="border border-slate-200 rounded-md divide-y divide-slate-100">
+        {program.map((p, i) => (
+          <div key={i} className="flex items-center gap-3 px-3 py-2">
+            <div className="text-slate-400 font-mono text-[11px] w-5">{i + 1}.</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-slate-900 truncate">{p.piece}</div>
+              <div className="text-[11px] text-slate-500 truncate">{p.composer}</div>
+            </div>
+            {p.soloist && <div className="text-[10px] text-indigo-700 italic truncate max-w-[7rem]">{p.soloist}</div>}
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 text-[10px] text-slate-500 italic">
+        Editor credits preserved from CPDL on print export.
+      </div>
+    </div>
+  );
+}
+
+function PracticeStudioMockup() {
+  return (
+    <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-bold text-slate-900">Practice take · 6/23</div>
+        <div className="text-[11px] text-slate-500 font-mono">♩=120 · 4/4 · 2:18</div>
+      </div>
+      <div className="flex items-end gap-[2px] h-16 mb-3 px-1">
+        {Array.from({ length: 48 }).map((_, i) => {
+          const h = 18 + Math.round(40 * Math.abs(Math.sin(i / 2.3)) * (0.5 + Math.random() / 2));
+          return <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-indigo-500 to-pink-400" style={{ height: `${h}%` }} />;
+        })}
+      </div>
+      <div className="flex items-center gap-3 text-[11px] text-slate-500 mb-3">
+        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold">Compressed</span>
+        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold">Normalized 0 dB</span>
+        <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700">Click track</span>
+      </div>
+      <div className="border border-slate-200 rounded-md p-3 bg-slate-50">
+        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-1">Teacher feedback</div>
+        <p className="text-slate-700 leading-snug">Lovely tone on the sustained notes. Watch the diphthong on "lord" in m.&nbsp;12.</p>
+      </div>
+    </div>
+  );
+}
+
+function MobileAppMockup() {
+  return (
+    <div className="bg-gradient-to-b from-slate-50 to-white p-5 sm:p-6 text-xs sm:text-sm">
+      <div className="flex items-end justify-center gap-4">
+        {/* Phone 1 — push notification */}
+        <div className="w-32 h-56 rounded-[1.5rem] border-4 border-slate-900 bg-white shadow-xl overflow-hidden">
+          <div className="h-4 bg-slate-900" />
+          <div className="p-2 space-y-2">
+            <div className="text-[8px] text-slate-400 font-semibold uppercase tracking-wider">9:41</div>
+            <div className="rounded-md bg-slate-100 p-1.5">
+              <div className="text-[8px] font-bold text-slate-900">GleeWorld</div>
+              <div className="text-[8px] text-slate-600 leading-tight">Rehearsal moved to 6:30 PM tonight.</div>
+            </div>
+            <div className="rounded-md bg-slate-100 p-1.5">
+              <div className="text-[8px] font-bold text-slate-900">Messenger</div>
+              <div className="text-[8px] text-slate-600 leading-tight">@Sopranos — please review mm. 24–32.</div>
+            </div>
+          </div>
+        </div>
+        {/* Phone 2 — practice recorder */}
+        <div className="w-32 h-56 rounded-[1.5rem] border-4 border-slate-900 bg-white shadow-xl overflow-hidden">
+          <div className="h-4 bg-slate-900" />
+          <div className="p-2">
+            <div className="text-[9px] font-bold text-slate-900 mb-1">Practice Studio</div>
+            <div className="flex items-end gap-[1px] h-10 mb-2">
+              {Array.from({ length: 18 }).map((_, i) => (
+                <div key={i} className="flex-1 rounded-sm bg-indigo-500" style={{ height: `${20 + Math.abs(Math.sin(i)) * 70}%` }} />
+              ))}
+            </div>
+            <div className="w-full text-center text-[8px] font-mono text-slate-500">♩=120 · 0:42</div>
+            <div className="mt-3 mx-auto w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center text-white text-[10px] font-bold">REC</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-slate-500">
+        <span>iOS · TestFlight</span>
+        <span>·</span>
+        <span>Google Play · Internal testing</span>
+      </div>
+    </div>
+  );
+}
+
 function AppleProductBig() {
   return (
     <section id="product" className="py-16 sm:py-24 md:py-32" style={{ backgroundColor: '#f5f5f7' }}>
@@ -985,14 +1162,138 @@ function AppleProductBig() {
           <span className="text-slate-400">Nothing it doesn't.</span>
         </h2>
         <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          Forty-five modules. One sign-in. No more stitching Google Sheets, Mailchimp,
-          Stripe, and Dropbox into something that almost works.
+          A 33,000-work public-domain library, print-ready concert programs, student
+          practice recordings, attendance, gradebook, and a native iOS + Android app —
+          all under one sign-in.
         </p>
       </div>
       <div className="max-w-6xl mx-auto px-6 mt-12 sm:mt-16">
         <BrowserFrame>
           <DashboardMockup />
         </BrowserFrame>
+      </div>
+    </section>
+  );
+}
+
+// ── FounderSection ──────────────────────────────────────────────────────
+// Kevin's actual credentials (conductor, composer, professor, church
+// musician) are the most credible thing on this page and the hardest
+// thing for a competitor to fake. The bio is short on purpose — the
+// list of titles does the heavy lifting.
+//
+// PHOTO: drop a square portrait at /lovable-uploads/kevin-portrait.jpg
+// (or update FOUNDER_PHOTO below). Until then a gradient placeholder
+// renders so the layout doesn't collapse.
+const FOUNDER_PHOTO = '/lovable-uploads/kevin-portrait.jpg';
+function FounderSection() {
+  return (
+    <section id="founder" className="py-16 sm:py-24 md:py-32 bg-white">
+      <div className="max-w-5xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-[auto,1fr] gap-8 md:gap-12 items-center">
+          <div className="mx-auto md:mx-0">
+            <div
+              className="w-44 h-44 sm:w-52 sm:h-52 rounded-3xl shadow-xl bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${FOUNDER_PHOTO}), linear-gradient(135deg, #3b82f6, #8b5cf6, #c084fc)`,
+              }}
+              aria-label="Dr. Kevin Johnson"
+            />
+          </div>
+          <div>
+            <p
+              className="text-sm font-semibold uppercase tracking-wider mb-3"
+              style={{ color: '#0071e3' }}
+            >
+              Why GleeWorld exists
+            </p>
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-slate-900 mb-5"
+              style={{ ...HEADING_STYLE, letterSpacing: '-0.025em' }}
+            >
+              Built by a director, for directors.
+            </h2>
+            <p className="text-base sm:text-lg text-slate-700 leading-relaxed mb-4">
+              Most music programs run on a patchwork of software that was never
+              designed for music. After decades directing choirs, teaching
+              college students, managing libraries, producing concerts, and
+              serving churches, I built GleeWorld to bring everything together
+              in one place — and to treat music programs like music programs,
+              not generic offices.
+            </p>
+            <p className="text-base sm:text-lg text-slate-900 font-semibold">
+              Dr. Kevin Johnson
+            </p>
+            <p className="text-sm text-slate-500">
+              Conductor · Composer · Educator · Church Musician
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── ReplacementTable ────────────────────────────────────────────────────
+// Frames GleeWorld as a consolidation play, not a "yet another tool."
+// Each row is a tool the buyer already pays for or already hates juggling.
+// Purely factual — no testimonials, no fabricated numbers required.
+function ReplacementTable() {
+  const rows: { uses: string; replaces: string }[] = [
+    { uses: 'GroupMe, WhatsApp, Remind',              replaces: 'Messenger with push notifications' },
+    { uses: 'Google Drive, Dropbox',                  replaces: 'Music Library with rights tagging' },
+    { uses: 'Google Calendar, Calendly',              replaces: 'Calendar with rehearsal recurrence' },
+    { uses: 'Canvas, Google Classroom',               replaces: 'Academy + Grading + Assignments' },
+    { uses: 'Excel, Google Sheets',                   replaces: 'Attendance & Rosters' },
+    { uses: 'Mailchimp, Constant Contact',            replaces: 'Announcements & section broadcasts' },
+    { uses: 'Eventbrite, TicketTailor',               replaces: 'Box Office (add-on)' },
+    { uses: 'Audacity, GarageBand',                   replaces: 'Practice Studio with auto-mix' },
+    { uses: 'Word, InDesign, PageMaker',              replaces: 'Concert Planner (print-ready programs)' },
+    { uses: 'Browsing CPDL by hand',                  replaces: 'Public-Domain Catalog (33k works)' },
+  ];
+  return (
+    <section id="replaces" className="py-16 sm:py-24 md:py-32 bg-slate-50">
+      <div className="max-w-5xl mx-auto px-6">
+        <div className="text-center mb-10 sm:mb-14">
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>
+            One platform · One bill · One sign-in
+          </p>
+          <h2
+            className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-slate-900"
+            style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
+          >
+            What GleeWorld replaces.
+          </h2>
+          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mt-4">
+            Most directors duct-tape ten apps together. GleeWorld is one app
+            that knows it's for music.
+          </p>
+        </div>
+        <div className="rounded-3xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+          <div className="grid grid-cols-[1fr,auto,1fr] sm:grid-cols-[1fr,auto,1fr] text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200">
+            <div className="px-4 sm:px-6 py-3">What you use today</div>
+            <div className="px-2 py-3" aria-hidden="true" />
+            <div className="px-4 sm:px-6 py-3">GleeWorld replaces it with</div>
+          </div>
+          {rows.map((r, i) => (
+            <div
+              key={r.uses}
+              className={`grid grid-cols-[1fr,auto,1fr] sm:grid-cols-[1fr,auto,1fr] items-center text-sm sm:text-base ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
+            >
+              <div className="px-4 sm:px-6 py-3 sm:py-4 text-slate-700 line-through decoration-slate-300">
+                {r.uses}
+              </div>
+              <div className="px-2 text-slate-400" aria-hidden="true">→</div>
+              <div className="px-4 sm:px-6 py-3 sm:py-4 text-slate-900 font-semibold">
+                {r.replaces}
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-center text-sm text-slate-500 mt-8 max-w-2xl mx-auto">
+          Cancel the others. Add the modules you need. Pay for one platform
+          built specifically for the way music programs run.
+        </p>
       </div>
     </section>
   );
@@ -1242,40 +1543,57 @@ function AppleVideo() {
 //   • Custom field "subdomain" (text, optional) — used as their site URL slug
 // Paste each Payment Link URL below. Until then the buttons gracefully fall
 // back to the contact email.
+// Keys correspond to the four base tiers. Old payment-link IDs are reused
+// where the price didn't change (ensemble/studio/university). Conservatory
+// is new — until its Stripe Payment Link exists, the button falls back to
+// the MAILTO_BUY contact email.
 const STRIPE_LINKS: Record<string, string | null> = {
-  solo:        "https://buy.stripe.com/14A14m2C8bir73qfqf4Vy00",
-  school:      "https://buy.stripe.com/6oUaEW7Ws0DN87u5PF4Vy01",
-  institution: "https://buy.stripe.com/cNibJ00u0aen9bya5V4Vy02",
+  ensemble:     "https://buy.stripe.com/14A14m2C8bir73qfqf4Vy00",
+  studio:       "https://buy.stripe.com/6oUaEW7Ws0DN87u5PF4Vy01",
+  conservatory: null,
+  university:   "https://buy.stripe.com/cNibJ00u0aen9bya5V4Vy02",
 };
+
+const ADDON_MODULES: { name: string; price: string; tagline: string }[] = [
+  { name: 'Concert Planner', price: '$19', tagline: 'Print-ready programs with editor credits.' },
+  { name: 'Part Tracks', price: '$29', tagline: 'Multitrack rehearsal aids per voice.' },
+  { name: 'Practice Studio', price: '$29', tagline: 'Student takes with built-in audio engine.' },
+  { name: 'Sight Reading', price: '$15', tagline: 'Daily exercises with progress tracking.' },
+  { name: 'Tour Manager', price: '$25', tagline: 'Routes, hotels, weather, manifests.' },
+  { name: 'Box Office', price: '$39', tagline: 'Ticketing + 1% of ticket sales.' },
+  { name: 'Contracts & Finance', price: '$25', tagline: 'E-signed contracts and invoicing.' },
+];
 
 function ApplePricing() {
   const tiers = [
     {
-      key: 'solo',
-      name: 'Solo Director',
+      key: 'ensemble',
+      name: 'Ensemble',
       price: '$49',
       cadence: '/month',
-      tagline: 'For independent choir or band directors.',
+      tagline: 'Small church choirs, community ensembles, youth choirs.',
       bullets: [
-        'Up to 60 members',
-        'All 45 modules',
+        'Up to 40 students',
+        '25 GB storage',
+        'All 9 core features',
         'Your subdomain (yourname.gleeworld.org)',
         'Branded logo + colors',
         'Email + chat support',
       ],
-      cta: 'Start with Solo',
+      cta: 'Start with Ensemble',
       pastel: '#f0f9ff',
       featured: false,
     },
     {
-      key: 'school',
-      name: 'School / Program',
+      key: 'studio',
+      name: 'Studio',
       price: '$99',
       cadence: '/month',
-      tagline: 'For school music programs and small ensembles.',
+      tagline: 'High-school choirs, mid-sized parish music, community choruses.',
       bullets: [
-        'Up to 250 members',
-        'All 45 modules',
+        'Up to 100 students',
+        '100 GB storage',
+        'All 9 core features',
         'Your subdomain + optional custom domain',
         'Branded logo + colors + tagline',
         'Priority support (24h)',
@@ -1286,16 +1604,34 @@ function ApplePricing() {
       featured: true,
     },
     {
-      key: 'institution',
-      name: 'Institution',
+      key: 'conservatory',
+      name: 'Conservatory',
+      price: '$179',
+      cadence: '/month',
+      tagline: 'Small university music depts, megachurch music ministries.',
+      bullets: [
+        'Up to 250 students',
+        '500 GB storage',
+        'Single Sign-On (SSO)',
+        'Custom domain included',
+        'Custom branding (logo, colors, fonts)',
+        'Priority support (12h business hours)',
+      ],
+      cta: 'Start with Conservatory',
+      pastel: '#fce7f3',
+      featured: false,
+    },
+    {
+      key: 'university',
+      name: 'University',
       price: '$299',
       cadence: '/month',
-      tagline: 'For universities, dioceses, and multi-ensemble programs.',
+      tagline: 'Universities, dioceses, multi-ensemble programs.',
       bullets: [
-        'Unlimited members',
-        'All 45 modules',
-        'Custom domain included',
-        'Full white-label (your branding everywhere)',
+        'Unlimited students',
+        'Unlimited storage',
+        'SSO + custom branding',
+        'API access + SLA',
         'Priority support (4h business hours)',
         'Onboarding call + data migration',
       ],
@@ -1319,11 +1655,11 @@ function ApplePricing() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
           {tiers.map((t) => (
             <div
               key={t.name}
-              className={`relative rounded-3xl p-8 sm:p-10 flex flex-col ${t.featured ? 'shadow-2xl ring-2' : 'shadow-sm border border-slate-200'}`}
+              className={`relative rounded-3xl p-6 sm:p-8 flex flex-col ${t.featured ? 'shadow-2xl ring-2' : 'shadow-sm border border-slate-200'}`}
               style={{
                 background: t.pastel,
                 ...(t.featured ? { ['--tw-ring-color' as any]: '#8b5cf6' } : {}),
@@ -1369,6 +1705,39 @@ function ApplePricing() {
           Annual plans available (save 2 months). Educational institutions get 20% off all tiers.
           All plans include hosting, SSL, automatic backups, and ongoing platform updates.
         </p>
+
+        {/* Add-on modules — same price at every tier. */}
+        <div className="mt-20 sm:mt-24 border-t border-slate-200 pt-12 sm:pt-16">
+          <div className="text-center mb-10">
+            <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>
+              Add-ons
+            </p>
+            <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-slate-900" style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}>
+              Add specialized modules — only what you need.
+            </h3>
+            <p className="text-base text-slate-600 max-w-2xl mx-auto mt-3">
+              Every base tier includes the 9 core features. Plug in the modules below at any time. Same price at every tier.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-5xl mx-auto">
+            {ADDON_MODULES.map((m) => (
+              <div key={m.name} className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="flex items-baseline justify-between mb-1">
+                  <span className="font-bold text-slate-900">{m.name}</span>
+                  <span className="text-2xl font-bold text-slate-900" style={{ ...HEADING_STYLE }}>{m.price}<span className="text-sm font-normal text-slate-500">/mo</span></span>
+                </div>
+                <p className="text-sm text-slate-600">{m.tagline}</p>
+              </div>
+            ))}
+            <div className="rounded-2xl border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-pink-50 p-5">
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="font-bold text-slate-900">All-Access Bundle</span>
+                <span className="text-2xl font-bold text-indigo-700" style={{ ...HEADING_STYLE }}>$129<span className="text-sm font-normal text-slate-500">/mo</span></span>
+              </div>
+              <p className="text-sm text-slate-700">All 7 add-on modules. Saves ~$52/mo vs à la carte.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

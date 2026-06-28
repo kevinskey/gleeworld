@@ -151,14 +151,121 @@ serve(async (req) => {
 
     console.log('[approve-ai-grade] Final grade created:', finalGrade.id, 'Published:', publish);
 
+    // ── LTI grade passback ─────────────────────────────────────────────
+    // If this student arrived through a Canvas LTI launch we push the
+    // score back to Canvas's gradebook so the LMS stays the source of
+    // record for the instructor. Best-effort: failures here are logged
+    // but never break the GleeWorld grade publish itself.
+    const ltiPushResults: Array<{ ok: boolean; platform: string; context?: string; detail?: string }> = [];
+    if (publish === true) {
+      try {
+        const courseTenantId = (await supabase
+          .from('gw_courses')
+          .select('tenant_id')
+          .eq('id', draft.course_id)
+          .maybeSingle()).data?.tenant_id;
+
+        // Strategy:
+        //   1. PREFERRED — find lti_context_links rows that are explicitly
+        //      bound to this gw_course (gw_course_id = draft.course_id),
+        //      then look up which of the student's user_links touch those
+        //      contexts via lti_user_contexts. This is the proper match
+        //      for multi-Canvas-course students.
+        //   2. FALLBACK — student has launched at least once but no
+        //      explicit binding exists yet; use their lti_user_links.
+        //      last_context_id (works fine for single-course tenants).
+
+        type Push = { userLinkId: string; contextLinkId: string; platformId: string; via: 'bound' | 'last' };
+        const targets: Push[] = [];
+
+        // ── Strategy 1: explicit course binding ─────────────────────────
+        const { data: boundCtx } = await supabase
+          .from('lti_context_links')
+          .select('id, platform_id, lti_platforms!inner(tenant_id)')
+          .eq('gw_course_id', draft.course_id);
+        // deno-lint-ignore no-explicit-any
+        for (const ctx of (boundCtx ?? []) as any[]) {
+          if (courseTenantId && ctx.lti_platforms.tenant_id !== courseTenantId) continue;
+          // Find user_link rows for this student on this platform.
+          const { data: ulinks } = await supabase
+            .from('lti_user_links')
+            .select('id')
+            .eq('user_id', draft.student_id)
+            .eq('platform_id', ctx.platform_id);
+          // deno-lint-ignore no-explicit-any
+          for (const ul of (ulinks ?? []) as any[]) {
+            // Confirm the student has actually launched from this context.
+            const { data: hit } = await supabase
+              .from('lti_user_contexts')
+              .select('id')
+              .eq('user_link_id', ul.id)
+              .eq('context_link_id', ctx.id)
+              .maybeSingle();
+            if (hit) targets.push({ userLinkId: ul.id, contextLinkId: ctx.id, platformId: ctx.platform_id, via: 'bound' });
+          }
+        }
+
+        // ── Strategy 2: fallback to last_context_id ─────────────────────
+        if (targets.length === 0) {
+          const { data: links } = await supabase
+            .from('lti_user_links')
+            .select('id, platform_id, last_context_id, lti_platforms!inner(tenant_id)')
+            .eq('user_id', draft.student_id);
+          // deno-lint-ignore no-explicit-any
+          for (const link of (links ?? []) as any[]) {
+            if (courseTenantId && link.lti_platforms.tenant_id !== courseTenantId) continue;
+            if (!link.last_context_id) continue;
+            const { data: ctx } = await supabase
+              .from('lti_context_links')
+              .select('id')
+              .eq('platform_id', link.platform_id)
+              .eq('context_id', link.last_context_id)
+              .maybeSingle();
+            if (ctx) targets.push({ userLinkId: link.id, contextLinkId: ctx.id, platformId: link.platform_id, via: 'last' });
+          }
+        }
+
+        for (const t of targets) {
+          const pushRes = await fetch(`${supabaseUrl}/functions/v1/lti-grade-push`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              lti_user_link_id: t.userLinkId,
+              context_link_id: t.contextLinkId,
+              resource_type: 'assignment',
+              resource_id: draft.assignment_id,
+              score: totalScore,
+              score_maximum: maxScore,
+              comment: instructorComment || finalFeedback || undefined,
+              label: `GleeWorld assignment ${String(draft.assignment_id).slice(0, 8)}`,
+            }),
+          });
+          if (pushRes.ok) {
+            ltiPushResults.push({ ok: true, platform: t.platformId, context: t.contextLinkId });
+          } else {
+            const txt = await pushRes.text().catch(() => '');
+            console.warn('[approve-ai-grade] lti-grade-push failed:', pushRes.status, txt.slice(0, 200));
+            ltiPushResults.push({ ok: false, platform: t.platformId, context: t.contextLinkId, detail: `${pushRes.status}: ${txt.slice(0, 120)}` });
+          }
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.warn('[approve-ai-grade] LTI passback skipped:', msg);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: publish 
+        message: publish
           ? 'Grade approved and published to student'
           : 'Grade approved - pending publication',
         finalGradeId: finalGrade.id,
         isPublished: publish === true,
+        ltiPushed: ltiPushResults,
         grade: {
           totalScore,
           maxScore,

@@ -83,6 +83,12 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
 const SOFT_CARD_STYLE_AMBER: React.CSSProperties = {
   boxShadow: '0 4px 10px rgba(180,83,9,0.12), 0 16px 32px -8px rgba(180,83,9,0.24)',
 };
+// Keeps any single card from dominating an iPad viewport. The internal
+// list scrolls within the card so users still see every card at a
+// glance instead of having to scroll past one screen-tall card to reach
+// the next. Desktop grids are unaffected (lg+) because rows already
+// constrain height via `items-stretch`.
+const CARD_HEIGHT_CAP = 'max-h-[360px] sm:max-h-[420px] lg:max-h-none';
 
 // ── Stat tile ───────────────────────────────────────────────────────────────
 
@@ -101,17 +107,25 @@ function StatTile({
   value: React.ReactNode;
   detail: string;
 }) {
+  // Horizontal-first layout. The previous version stacked icon → label →
+  // big number → detail line vertically and burned ~140px of card height
+  // for what is essentially "one stat". This version puts the icon on
+  // the left and stacks label + value + detail to its right, cutting
+  // card height roughly in half on every breakpoint without losing
+  // any information.
   return (
     <Card className={`h-full ${SOFT_CARD}`} style={SOFT_CARD_STYLE}>
-      <CardContent className="p-3 sm:p-5">
-        <div className="flex items-center gap-2 sm:gap-2.5 mb-2 sm:mb-3">
-          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
-            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconFg}`} />
-          </div>
-          <div className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">{label}</div>
+      <CardContent className="px-3 py-2.5 sm:px-4 sm:py-3 flex items-center gap-3">
+        <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
+          <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconFg}`} />
         </div>
-        <div className="text-xl sm:text-3xl font-bold tracking-tight leading-none">{value}</div>
-        <div className="text-[11px] sm:text-sm text-muted-foreground mt-1 sm:mt-2 line-clamp-1 sm:line-clamp-none">{detail}</div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wide leading-none">{label}</div>
+          <div className="flex items-baseline gap-2 mt-1">
+            <div className="text-xl sm:text-2xl font-bold tracking-tight leading-none">{value}</div>
+            <div className="text-[11px] sm:text-xs text-muted-foreground truncate">{detail}</div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -121,9 +135,9 @@ function StatTile({
 
 function TodaysSchedule({ rows, loading }: { rows: FeedRow[]; loading: boolean }) {
   return (
-    <Card className={`h-full ${SOFT_CARD}`} style={SOFT_CARD_STYLE}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-5">
+    <Card className={`h-full ${SOFT_CARD} ${CARD_HEIGHT_CAP}`} style={SOFT_CARD_STYLE}>
+      <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
+        <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-muted-foreground" />
             <h2 className="font-semibold text-lg">Today&apos;s Schedule</h2>
@@ -142,7 +156,7 @@ function TodaysSchedule({ rows, loading }: { rows: FeedRow[]; loading: boolean }
             Nothing on the calendar today.
           </p>
         ) : (
-          <ul className="space-y-5">
+          <ul className="space-y-3 sm:space-y-5 flex-1 overflow-y-auto pr-1 -mr-1">
             {rows.map((s) => {
               const loc = (s.meta?.location as string | null) || (s.meta?.venue_name as string | null) || null;
               return (
@@ -160,7 +174,7 @@ function TodaysSchedule({ rows, loading }: { rows: FeedRow[]; loading: boolean }
             })}
           </ul>
         )}
-        <Link to="/calendar" className="block mt-5 text-sm text-primary hover:underline">
+        <Link to="/calendar" className="block mt-3 sm:mt-5 text-sm text-primary hover:underline shrink-0">
           View full day schedule &rarr;
         </Link>
       </CardContent>
@@ -172,9 +186,9 @@ function TodaysSchedule({ rows, loading }: { rows: FeedRow[]; loading: boolean }
 
 function RecentAnnouncements({ rows, loading }: { rows: FeedRow[]; loading: boolean }) {
   return (
-    <Card className={`h-full ${SOFT_CARD}`} style={SOFT_CARD_STYLE}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-5">
+    <Card className={`h-full ${SOFT_CARD} ${CARD_HEIGHT_CAP}`} style={SOFT_CARD_STYLE}>
+      <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
+        <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
           <h2 className="font-semibold text-lg">Recent Announcements</h2>
           <Link to="/communications" className="text-sm text-primary hover:underline">View All</Link>
         </div>
@@ -185,7 +199,7 @@ function RecentAnnouncements({ rows, loading }: { rows: FeedRow[]; loading: bool
             No recent announcements.
           </p>
         ) : (
-          <ul className="space-y-5">
+          <ul className="space-y-3 sm:space-y-5 flex-1 overflow-y-auto pr-1 -mr-1">
             {rows.slice(0, 4).map((a) => (
               <li key={a.id} className="flex gap-3 items-start">
                 <div className="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center shrink-0">
@@ -215,11 +229,11 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
   // solid gold block with invisible text on some tenants.
   return (
     <Card
-      className="h-full border-0 rounded-2xl"
+      className={`h-full border-0 rounded-2xl ${CARD_HEIGHT_CAP}`}
       style={{ ...SOFT_CARD_STYLE_AMBER, background: 'rgba(254,243,199,0.4)' }}
     >
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-5">
+      <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
+        <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
           <h2 className="font-semibold text-lg" style={{ color: '#78350f' }}>Needs Your Attention</h2>
           <span
             className="text-sm font-semibold rounded-full w-6 h-6 inline-flex items-center justify-center"
@@ -233,7 +247,7 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
         ) : rows.length === 0 ? (
           <p className="text-sm text-center py-6" style={{ color: '#92400e' }}>All caught up.</p>
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-3 sm:space-y-4 flex-1 overflow-y-auto pr-1 -mr-1">
             {rows.slice(0, 5).map((t) => {
               const Icon = t.subtype === 'practice_recording'
                 ? Mic
@@ -270,7 +284,7 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
             })}
           </ul>
         )}
-        <Link to="/legacy-dashboard" className="block mt-5 text-sm font-medium hover:underline" style={{ color: '#92400e' }}>
+        <Link to="/legacy-dashboard" className="block mt-3 sm:mt-5 text-sm font-medium hover:underline shrink-0" style={{ color: '#92400e' }}>
           View all tasks &rarr;
         </Link>
       </CardContent>
@@ -282,9 +296,9 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
 
 function UpcomingEvents({ rows, loading }: { rows: FeedRow[]; loading: boolean }) {
   return (
-    <Card className={`h-full ${SOFT_CARD}`} style={SOFT_CARD_STYLE}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-5">
+    <Card className={`h-full ${SOFT_CARD} ${CARD_HEIGHT_CAP}`} style={SOFT_CARD_STYLE}>
+      <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
+        <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
           <h2 className="font-semibold text-lg">Upcoming Events</h2>
           <Link to="/calendar" className="text-sm text-primary hover:underline">View All</Link>
         </div>
@@ -295,7 +309,7 @@ function UpcomingEvents({ rows, loading }: { rows: FeedRow[]; loading: boolean }
             No upcoming events on the feed.
           </p>
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-3 sm:space-y-4 flex-1 overflow-y-auto pr-1 -mr-1">
             {rows.slice(0, 4).map((e) => {
               const d = parseISO(e.event_at);
               const month = format(d, 'MMM').toUpperCase();
@@ -342,18 +356,18 @@ const QUICK_ACTIONS: Array<{
 
 function QuickActions() {
   return (
-    <Card className={`h-full ${SOFT_CARD}`} style={SOFT_CARD_STYLE}>
-      <CardContent className="p-6">
-        <h2 className="font-semibold text-lg mb-5">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <Card className={`h-full ${SOFT_CARD} ${CARD_HEIGHT_CAP}`} style={SOFT_CARD_STYLE}>
+      <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
+        <h2 className="font-semibold text-lg mb-3 sm:mb-5 shrink-0">Quick Actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 flex-1 overflow-y-auto pr-1 -mr-1">
           {QUICK_ACTIONS.map((a) => (
             <Link
               key={a.label}
               to={a.to}
-              className={`${a.bg} rounded-xl p-4 flex flex-col items-center justify-center gap-2.5 min-h-[110px] hover:brightness-95 transition`}
+              className={`${a.bg} rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 min-h-[80px] sm:min-h-[110px] hover:brightness-95 transition`}
             >
-              <a.icon className={`w-7 h-7 ${a.fg}`} />
-              <span className="text-sm font-semibold text-center leading-tight">{a.label}</span>
+              <a.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${a.fg}`} />
+              <span className="text-xs sm:text-sm font-semibold text-center leading-tight">{a.label}</span>
             </Link>
           ))}
         </div>
@@ -382,9 +396,9 @@ function describeActivity(row: FeedRow): { actor: string; verb: string; icon: Re
 
 function ActivityFeed({ rows, loading }: { rows: FeedRow[]; loading: boolean }) {
   return (
-    <Card className={`h-full ${SOFT_CARD}`} style={SOFT_CARD_STYLE}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-5">
+    <Card className={`h-full ${SOFT_CARD} ${CARD_HEIGHT_CAP}`} style={SOFT_CARD_STYLE}>
+      <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
+        <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
           <h2 className="font-semibold text-lg">Activity Feed</h2>
           <Link to="/legacy-dashboard" className="text-sm text-primary hover:underline">View All</Link>
         </div>
@@ -395,7 +409,7 @@ function ActivityFeed({ rows, loading }: { rows: FeedRow[]; loading: boolean }) 
             Nothing recent.
           </p>
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-3 sm:space-y-4 flex-1 overflow-y-auto pr-1 -mr-1">
             {rows.slice(0, 5).map((r) => {
               const a = describeActivity(r);
               return (

@@ -1,13 +1,21 @@
-// Native recorder — taps the engine's input node, writes to a WAV
-// file in the app's tmp dir, and returns the local URL. The JS layer
-// uploads the file to Supabase Storage via the standard storage client.
+// Native recorder — uses AVAudioRecorder (the high-level Apple API)
+// instead of AVAudioEngine.installTap. Trade-off: we lose live metering
+// for now, but AVAudioRecorder converts every failure mode into a clean
+// Swift error, so a missing mic permission or an audio session conflict
+// surfaces as a JS toast instead of crashing the whole app.
+//
+// AVAudioRecorder writes directly to a WAV file we hand it. JS reads
+// the bytes back from the local URL and uploads.
 
 import Foundation
 import AVFoundation
 
 public final class StudioNativeRecorder {
+    /// We keep an `engine` reference for API symmetry with the previous
+    /// implementation, but AVAudioRecorder doesn't need it — the
+    /// recorder is independent of the playback graph.
     private let engine: AVAudioEngine
-    private var file: AVAudioFile?
+    private var avRecorder: AVAudioRecorder?
     private(set) public var isRecording = false
     private(set) public var outputUrl: URL?
 
@@ -15,34 +23,63 @@ public final class StudioNativeRecorder {
         self.engine = engine
     }
 
-    /// Begin recording to a fresh WAV file under tmp/. Use stop() to
-    /// flush and return the final file URL.
     public func start() throws {
         guard !isRecording else { return }
-        let input = engine.inputNode
-        let format = input.outputFormat(forBus: 0)
+
+        // CALLER is responsible for ensuring mic permission has already
+        // been granted BEFORE this is called. Don't block here — that
+        // deadlocked the watchdog when the permission alert had to run
+        // on the main thread.
+
+        // Switch the session into a mic-capable category just-in-time.
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playAndRecord, mode: .default,
+                                options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
+        try session.setActive(true)
+
+        // Sanity-check — if permission still isn't granted, throw a
+        // proper Swift error rather than letting AVAudioRecorder do
+        // something undefined.
+        if session.recordPermission != .granted {
+            throw NSError(domain: "StudioRecorder", code: 2, userInfo: [
+                NSLocalizedDescriptionKey: "Microphone permission required. Enable it in Settings → GleeWorld.",
+            ])
+        }
 
         let filename = "studio-take-\(Int(Date().timeIntervalSince1970)).wav"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        let settings = format.settings
-        let file = try AVAudioFile(forWriting: url, settings: settings,
-                                   commonFormat: format.commonFormat, interleaved: format.isInterleaved)
-        self.file = file
         self.outputUrl = url
 
-        input.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
-            guard let self, let file = self.file else { return }
-            do { try file.write(from: buffer) }
-            catch { /* swallow individual buffer errors; final stop() reports */ }
+        // 44.1 kHz, 16-bit, mono PCM — small files, universal compatibility.
+        let settings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVSampleRateKey: 44_100.0,
+            AVNumberOfChannelsKey: 1,
+            AVLinearPCMBitDepthKey: 16,
+            AVLinearPCMIsFloatKey: false,
+            AVLinearPCMIsBigEndianKey: false,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+        ]
+        let recorder = try AVAudioRecorder(url: url, settings: settings)
+        recorder.prepareToRecord()
+        let ok = recorder.record()
+        if !ok {
+            throw NSError(domain: "StudioRecorder", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: "AVAudioRecorder refused to start recording"
+            ])
         }
+        self.avRecorder = recorder
         isRecording = true
+        NSLog("[Studio] recorder.start: recording to \(url.lastPathComponent)")
     }
 
     public func stop() -> URL? {
         guard isRecording else { return outputUrl }
-        engine.inputNode.removeTap(onBus: 0)
-        file = nil // close + flush
+        avRecorder?.stop()
+        avRecorder = nil
         isRecording = false
+        NSLog("[Studio] recorder.stop: file=\(outputUrl?.lastPathComponent ?? "nil")")
         return outputUrl
     }
+
 }
