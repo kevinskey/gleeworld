@@ -396,7 +396,7 @@ function ScoreCard({
           : undefined
       }
     >
-      <CardContent className="p-4 flex-1 flex flex-col">
+      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
         <div className="flex items-start gap-3">
           <div className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
             <Music className="w-5 h-5" />
@@ -1080,7 +1080,7 @@ function EditScoreDialog({
             <Label className="text-sm">Voicing</Label>
             <Input value={voicing} onChange={(e) => setVoicing(e.target.value)} placeholder="SATB" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-sm">Physical copies</Label>
               <Input
@@ -1126,7 +1126,7 @@ function EditScoreDialog({
               </p>
             </div>
             {rightsStatus === 'licensed' && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-sm">Seat count</Label>
                   <Input

@@ -577,8 +577,10 @@ function TopBar() {
       {/* Spacer pushes the cluster to the right */}
       <div className="flex-1" />
 
-      {/* Search — hidden on the smallest viewports to give the action
-          cluster room. Users can reach search from the messenger panel. */}
+      {/* Search — full input on sm+, icon-trigger on phones. Earlier the
+          input was simply `hidden sm:block`, which left mobile users with
+          no path to search at all. The mobile button opens a focused
+          search prompt (browser-native via <dialog>-style fallback). */}
       <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -590,6 +592,17 @@ function TopBar() {
           />
         </div>
       </form>
+      <button
+        onClick={() => {
+          const q = window.prompt('Search students, events, music, and more…')?.trim();
+          if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+        }}
+        title="Search"
+        className="sm:hidden w-11 h-11 rounded-full inline-flex items-center justify-center hover:bg-muted transition"
+        aria-label="Search"
+      >
+        <Search className="w-5 h-5" />
+      </button>
 
       {/* + button */}
       <button
@@ -608,7 +621,7 @@ function TopBar() {
       >
         <Bell className="w-6 h-6 text-foreground" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-xs font-semibold rounded-full min-w-[18px] h-[18px] inline-flex items-center justify-center px-1">
+          <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[10px] leading-none font-semibold rounded-full min-w-[22px] h-[18px] inline-flex items-center justify-center px-1">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}

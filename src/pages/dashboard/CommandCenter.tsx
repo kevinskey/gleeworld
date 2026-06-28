@@ -120,7 +120,7 @@ function StatTile({
           <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconFg}`} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wide leading-none">{label}</div>
+          <div className="text-[11px] sm:text-[12px] font-semibold text-muted-foreground uppercase tracking-wide leading-none">{label}</div>
           <div className="flex items-baseline gap-2 mt-1">
             <div className="text-xl sm:text-2xl font-bold tracking-tight leading-none">{value}</div>
             <div className="text-[11px] sm:text-xs text-muted-foreground truncate">{detail}</div>
@@ -570,7 +570,7 @@ export default function CommandCenter() {
             </p>
           )}
         </div>
-        <div className="rounded-md border border-border bg-card px-3.5 py-2 text-base inline-flex items-center gap-2 shrink-0">
+        <div className="rounded-md border border-border bg-card px-2 sm:px-3.5 py-2 text-sm sm:text-base inline-flex items-center gap-2 shrink-0">
           <Calendar className="w-4 h-4 text-muted-foreground" />
           {format(new Date(), 'MMM d, yyyy')}
         </div>

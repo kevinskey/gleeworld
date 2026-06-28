@@ -217,7 +217,7 @@ function LibraryTab({
   return (
     <>
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 max-w-md min-w-[200px]">
+        <div className="relative flex-1 max-w-md min-w-0">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
@@ -363,7 +363,9 @@ function SetlistRow({
                 disabled={!sc.pdf_url}
                 onClick={() => sc.pdf_url && onOpenScore(sc.sheet_music_id)}
                 className={cn(
-                  'w-full flex items-center gap-3 px-2 py-2 text-left transition-colors',
+                  // min-h-[44px] = Apple HIG min tap target. Old py-2
+                  // only gave ~32px which fails on touch devices.
+                  'w-full flex items-center gap-3 px-2 py-2 min-h-[44px] text-left transition-colors',
                   sc.pdf_url ? 'hover:bg-accent/40' : 'opacity-50 cursor-not-allowed',
                 )}
               >
@@ -435,7 +437,7 @@ function BookmarksTab({
                 <button
                   type="button"
                   onClick={() => onOpenScore(scoreId)}
-                  className="text-left text-sm flex items-center gap-2 py-1 hover:text-primary transition-colors"
+                  className="w-full text-left text-sm flex items-center gap-2 py-2 min-h-[44px] hover:text-primary transition-colors"
                 >
                   <Bookmark className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs tabular-nums text-muted-foreground">p.{b.page_number}</span>
