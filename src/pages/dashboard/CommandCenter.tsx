@@ -617,25 +617,27 @@ export default function CommandCenter() {
         />
       </div>
 
-      {/* Middle row — two cards per row on iPad-ish (md), three on
-          desktop (lg+). On the md tier the third card spans the full
-          width (col-span-2) so it doesn't orphan in a half-row.
+      {/* Middle row — two cards per row up to xl (1280px), three on
+          desktop landscape. xl (not lg) is the 3-col gate because
+          iPad Pro 12.9" portrait is exactly 1024px which is the lg
+          threshold — using lg there would put the dashboard back into
+          the 3-col layout on the largest iPad. The third card spans
+          the full width below xl so it doesn't orphan in a half-row.
           items-start prevents a shallow card from stretching to match
           the tallest neighbour. */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-start">
-        <div className="md:col-span-1 lg:col-span-5"><TodaysSchedule rows={schedule} loading={isLoading} /></div>
-        <div className="md:col-span-1 lg:col-span-4"><RecentAnnouncements rows={announcements} loading={isLoading} /></div>
-        <div className="md:col-span-2 lg:col-span-3"><NeedsAttention rows={urgent} loading={isLoading} /></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 items-start">
+        <div className="md:col-span-1 xl:col-span-5"><TodaysSchedule rows={schedule} loading={isLoading} /></div>
+        <div className="md:col-span-1 xl:col-span-4"><RecentAnnouncements rows={announcements} loading={isLoading} /></div>
+        <div className="md:col-span-2 xl:col-span-3"><NeedsAttention rows={urgent} loading={isLoading} /></div>
       </div>
 
-      {/* Bottom row — same pattern: two columns on iPad, three on
-          desktop. Activity Feed spans the full width on the md tier so
-          it gets room to breathe instead of squeezing next to Quick
-          Actions in a half-width cell. */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
+      {/* Bottom row — same xl gate. Activity Feed spans the full width
+          below xl so it gets room to breathe instead of squeezing next
+          to Quick Actions in a half-width cell. */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
         <UpcomingEvents rows={eventsOnly} loading={isLoading} />
         <QuickActions />
-        <div className="md:col-span-2 lg:col-span-1"><ActivityFeed rows={activity} loading={isLoading} /></div>
+        <div className="md:col-span-2 xl:col-span-1"><ActivityFeed rows={activity} loading={isLoading} /></div>
       </div>
     </div>
     </DashboardShell>
