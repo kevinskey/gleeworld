@@ -248,8 +248,13 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
         ) : rows.length === 0 ? (
           <p className="text-sm text-center py-6" style={{ color: '#92400e' }}>All caught up.</p>
         ) : (
-          <ul className="space-y-3 sm:space-y-4 flex-1 overflow-y-auto pr-1 -mr-1">
-            {rows.slice(0, 5).map((t) => {
+          {/* Cap the visible window to 3 items so the card stays compact,
+              but let users scroll within the card to reach the rest.
+              `max-h` is chosen so 3 rows fit comfortably (each row is
+              ~64px tall including space-y). The list still scrolls
+              vertically when there are more than 3 items. */}
+          <ul className="space-y-3 sm:space-y-4 flex-1 overflow-y-auto pr-1 -mr-1 max-h-[220px] sm:max-h-[260px]">
+            {rows.map((t) => {
               const Icon = t.subtype === 'practice_recording'
                 ? Mic
                 : t.subtype === 'missing_attendance'
