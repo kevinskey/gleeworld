@@ -13,7 +13,7 @@
 // Multi-tenant safety lives in the view (security_invoker=on + explicit
 // tenant_id = current_tenant_id() filters). The frontend just reads.
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
@@ -37,6 +37,9 @@ import {
   Video,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -186,6 +189,11 @@ function TodaysSchedule({ rows, loading }: { rows: FeedRow[]; loading: boolean }
 // ── Recent Announcements column ─────────────────────────────────────────────
 
 function RecentAnnouncements({ rows, loading }: { rows: FeedRow[]; loading: boolean }) {
+  // Tap a row → open the full announcement in a Dialog. The card itself
+  // stays fixed-height so the list scrolls when there are many rows;
+  // the "fly-out" lets the user read past the 2-line truncation without
+  // leaving the dashboard.
+  const [open, setOpen] = useState<FeedRow | null>(null);
   return (
     <Card className={`h-full ${SOFT_CARD} ${CARD_HEIGHT_CAP}`} style={SOFT_CARD_STYLE}>
       <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
@@ -201,23 +209,44 @@ function RecentAnnouncements({ rows, loading }: { rows: FeedRow[]; loading: bool
           </p>
         ) : (
           <ul className="space-y-3 sm:space-y-5 flex-1 overflow-y-auto pr-1 -mr-1">
-            {rows.slice(0, 4).map((a) => (
-              <li key={a.id} className="flex gap-3 items-start">
-                <div className="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center shrink-0">
-                  <Megaphone className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-base font-semibold leading-snug">{a.title}</div>
-                  {a.detail && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1 leading-relaxed">{a.detail}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">{relativeAge(a.event_at)}</p>
-                </div>
+            {rows.map((a) => (
+              <li key={a.id}>
+                <button
+                  type="button"
+                  onClick={() => setOpen(a)}
+                  className="w-full flex gap-3 items-start text-left hover:bg-muted/40 -mx-2 px-2 py-1 rounded-md transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-md bg-emerald-50 flex items-center justify-center shrink-0">
+                    <Megaphone className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-base font-semibold leading-snug">{a.title}</div>
+                    {a.detail && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1 leading-relaxed">{a.detail}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">{relativeAge(a.event_at)}</p>
+                  </div>
+                </button>
               </li>
             ))}
           </ul>
         )}
       </CardContent>
+      <Dialog open={!!open} onOpenChange={(v) => !v && setOpen(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-base">{open?.title ?? ''}</DialogTitle>
+          </DialogHeader>
+          {open?.detail && (
+            <div className="text-sm leading-relaxed whitespace-pre-wrap max-h-[60vh] overflow-y-auto">
+              {open.detail}
+            </div>
+          )}
+          {open?.event_at && (
+            <p className="text-xs text-muted-foreground mt-2">{relativeAge(open.event_at)}</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -248,11 +277,9 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
         ) : rows.length === 0 ? (
           <p className="text-sm text-center py-6" style={{ color: '#92400e' }}>All caught up.</p>
         ) : (
-          {/* Cap the visible window to 3 items so the card stays compact,
-              but let users scroll within the card to reach the rest.
-              `max-h` is chosen so 3 rows fit comfortably (each row is
-              ~64px tall including space-y). The list still scrolls
-              vertically when there are more than 3 items. */}
+          // max-h caps the visible window to ~3 rows so the card stays
+          // compact in the 2-col iPad layout; overflow-y-auto lets the
+          // rest scroll inside the card.
           <ul className="space-y-3 sm:space-y-4 flex-1 overflow-y-auto pr-1 -mr-1 max-h-[220px] sm:max-h-[260px]">
             {rows.map((t) => {
               const Icon = t.subtype === 'practice_recording'
@@ -290,7 +317,10 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
             })}
           </ul>
         )}
-        <Link to="/legacy-dashboard" className="block mt-3 sm:mt-5 text-sm font-medium hover:underline shrink-0" style={{ color: '#92400e' }}>
+        {/* Practice recordings is where every row in this card actually
+            lives — the previous link to /legacy-dashboard rendered a
+            broken page. */}
+        <Link to="/dashboard/practice-recordings" className="block mt-3 sm:mt-5 text-sm font-medium hover:underline shrink-0" style={{ color: '#92400e' }}>
           View all tasks &rarr;
         </Link>
       </CardContent>
@@ -569,7 +599,7 @@ export default function CommandCenter() {
 
   return (
     <DashboardShell>
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-6 overflow-x-hidden">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 sm:pt-3 pb-6 space-y-5 overflow-x-hidden">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -623,14 +653,12 @@ export default function CommandCenter() {
       </div>
 
       {/* Middle row — two cards per row up to xl (1280px), three on
-          desktop landscape. xl (not lg) is the 3-col gate because
-          iPad Pro 12.9" portrait is exactly 1024px which is the lg
-          threshold — using lg there would put the dashboard back into
-          the 3-col layout on the largest iPad. The third card spans
-          the full width below xl so it doesn't orphan in a half-row.
-          items-start prevents a shallow card from stretching to match
-          the tallest neighbour. */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 items-start">
+          desktop landscape. items-stretch up to xl so Today's Schedule
+          and Recent Announcements match each other in their two-col
+          row on iPad. items-start at xl prevents the tall Needs Your
+          Attention card from stretching the others (xl is when all
+          three land in one row). */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 items-stretch xl:items-start">
         <div className="md:col-span-1 xl:col-span-5"><TodaysSchedule rows={schedule} loading={isLoading} /></div>
         <div className="md:col-span-1 xl:col-span-4"><RecentAnnouncements rows={announcements} loading={isLoading} /></div>
         <div className="md:col-span-2 xl:col-span-3"><NeedsAttention rows={urgent} loading={isLoading} /></div>
