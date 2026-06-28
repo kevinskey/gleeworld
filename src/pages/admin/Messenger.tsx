@@ -462,13 +462,17 @@ export default function Messenger() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
-      {/* Page title row */}
-      <div className="shrink-0 px-6 pt-4 pb-2 bg-card">
-        <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-2xl">Messenger</h1>
+      {/* Page title row — explicit `!text-lg` overrides the global
+          `h1 { clamp(1.75rem, 4.5vw, 2.5rem) }` reset in index.css, which
+          otherwise pushes this title to 40px+ on wide monitors. */}
+      <div className="shrink-0 px-4 sm:px-6 pt-3 pb-1.5 bg-card">
+        <h1 className="font-sans normal-case font-bold tracking-tight leading-none !text-lg">Messenger</h1>
       </div>
 
-      {/* Mode tab bar — underline-style, like Gmail's primary nav */}
-      <div className="shrink-0 border-b border-border bg-card px-4">
+      {/* Mode tab bar — underline-style, like Gmail's primary nav. The
+          `text-sm` here is bumped up to 16px by the responsive scale on
+          big screens; pin it to !text-xs so the bar stays compact. */}
+      <div className="shrink-0 border-b border-border bg-card px-3 sm:px-4">
         <div className="flex gap-1 overflow-x-auto">
           {modeTabs.map((t) => {
             const active = mode === t.id;
@@ -476,7 +480,7 @@ export default function Messenger() {
               <button
                 key={t.id}
                 onClick={t.onClick}
-                className={`relative inline-flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-colors ${
+                className={`relative inline-flex items-center gap-1.5 px-3 py-2 !text-xs sm:!text-sm font-semibold whitespace-nowrap transition-colors ${
                   active
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
@@ -531,9 +535,9 @@ export default function Messenger() {
           mode === 'video' ? 'hidden' : (selectedGroupId ? 'hidden md:flex' : 'flex')
         }`}
       >
-        <div className="p-3 border-b flex items-center justify-between">
-          <h2 className="font-semibold text-base flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" /> Groups
+        <div className="p-2.5 border-b flex items-center justify-between">
+          <h2 className="font-semibold !text-sm flex items-center gap-1.5 uppercase tracking-wide">
+            <MessageSquare className="w-4 h-4" /> Groups
           </h2>
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" onClick={() => setShowNewGroup((v) => !v)} title="New group">
@@ -904,7 +908,7 @@ export default function Messenger() {
             </footer>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
             Pick a group from the left, or create a new one.
           </div>
         )}

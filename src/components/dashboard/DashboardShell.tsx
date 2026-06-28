@@ -125,13 +125,12 @@ function BrandLogo({
 // 2026 nav type scale — denser, slightly larger touch targets, no tinted
 // tile chrome. The colored `tone` value still drives the ICON glyph color
 // (a subtle category cue) but no longer paints a background pill behind it.
-// Denser row — tighter vertical padding + smaller text so the full
-// section list fits within a typical iPad / laptop viewport without an
-// internal scroll. The previous text-[15px] py-2 stack pushed the nav
-// past the fold on shorter displays and forced users to scroll the
-// sidebar separately from the page content.
+// Density tier: dense on phones / portrait iPad so the full nav fits
+// without an internal scroll, then steps up to text-[14px] on tablets
+// and text-[15px] on desktops for comfortable reading. The previous
+// flat text-[13px] looked cramped on a 12.9" iPad.
 const NAV_BASE =
-  'flex items-center gap-2 px-2 py-1 rounded-md text-[13px] leading-tight transition-colors w-full text-left';
+  'flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] md:text-[14px] lg:text-[15px] leading-tight transition-colors w-full text-left';
 const NAV_INACTIVE = 'text-foreground/85 hover:bg-muted/70 hover:text-foreground';
 const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 // `tone` is now {color}-600/700 text-only — strip the legacy bg- portion.
@@ -313,8 +312,10 @@ function Sidebar() {
       {/* Nav — grouped by section. Sections with zero visible items are
           skipped. Labeled sections (Add-ons, Admin) are collapsible; if
           the user is on a route inside a collapsed section, that section
-          auto-expands so the active item stays visible. */}
-      <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-1.5">
+          auto-expands so the active item stays visible. Extra top
+          padding (pt-4 sm:pt-5) gives the first item air below the
+          brand block instead of glueing flush against the divider. */}
+      <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2 space-y-1.5">
         {sections.map((section, idx) => {
           if (section.items.length === 0) return null;
           const hasActive = section.items.some((it) =>
@@ -681,7 +682,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar />
-        <main className="flex-1 min-w-0 overflow-x-hidden">{children}</main>
+        {/* pt-3 gives every page a small breath of space below the
+            sticky topbar — pages that want more (CommandCenter, Viewer
+            landing) add their own larger top padding on top of this. */}
+        <main className="flex-1 min-w-0 overflow-x-hidden pt-3 sm:pt-4">{children}</main>
       </div>
       {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
       <ProductTour />

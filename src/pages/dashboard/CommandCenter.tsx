@@ -83,12 +83,13 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
 const SOFT_CARD_STYLE_AMBER: React.CSSProperties = {
   boxShadow: '0 4px 10px rgba(180,83,9,0.12), 0 16px 32px -8px rgba(180,83,9,0.24)',
 };
-// Keeps any single card from dominating an iPad viewport. The internal
-// list scrolls within the card so users still see every card at a
-// glance instead of having to scroll past one screen-tall card to reach
-// the next. Desktop grids are unaffected (lg+) because rows already
-// constrain height via `items-stretch`.
-const CARD_HEIGHT_CAP = 'max-h-[360px] sm:max-h-[420px] lg:max-h-none';
+// Cap card heights at every breakpoint INCLUDING desktop. Without the
+// lg cap, `items-stretch` on the row was making shallow cards (like an
+// empty announcements panel) match the tallest card in the row,
+// producing huge whitespace blocks below the actual content. The cap
+// keeps each card sized to its own content range; internal lists still
+// scroll if they overflow.
+const CARD_HEIGHT_CAP = 'max-h-[360px] sm:max-h-[420px] lg:max-h-[480px]';
 
 // ── Stat tile ───────────────────────────────────────────────────────────────
 
@@ -364,10 +365,14 @@ function QuickActions() {
             <Link
               key={a.label}
               to={a.to}
-              className={`${a.bg} rounded-xl p-3 sm:p-4 flex flex-col items-center justify-center gap-1.5 sm:gap-2.5 min-h-[80px] sm:min-h-[110px] hover:brightness-95 transition`}
+              className={`${a.bg} rounded-xl p-2 sm:p-3 flex flex-col items-center justify-center gap-1 sm:gap-2 min-h-[80px] sm:min-h-[100px] hover:brightness-95 transition`}
             >
-              <a.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${a.fg}`} />
-              <span className="text-xs sm:text-sm font-semibold text-center leading-tight">{a.label}</span>
+              <a.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${a.fg}`} />
+              {/* break-words + leading-snug stops the per-button label
+                  from spilling across the icon below it when the button
+                  is narrow (Quick Actions sits in a 3-col 4ths-wide row
+                  on iPad portrait, ~110px per cell). */}
+              <span className="text-[11px] sm:text-xs font-semibold text-center leading-snug break-words">{a.label}</span>
             </Link>
           ))}
         </div>
@@ -612,18 +617,25 @@ export default function CommandCenter() {
         />
       </div>
 
-      {/* Middle row */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-        <div className="lg:col-span-5"><TodaysSchedule rows={schedule} loading={isLoading} /></div>
-        <div className="lg:col-span-4"><RecentAnnouncements rows={announcements} loading={isLoading} /></div>
-        <div className="lg:col-span-3"><NeedsAttention rows={urgent} loading={isLoading} /></div>
+      {/* Middle row — two cards per row on iPad-ish (md), three on
+          desktop (lg+). On the md tier the third card spans the full
+          width (col-span-2) so it doesn't orphan in a half-row.
+          items-start prevents a shallow card from stretching to match
+          the tallest neighbour. */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-start">
+        <div className="md:col-span-1 lg:col-span-5"><TodaysSchedule rows={schedule} loading={isLoading} /></div>
+        <div className="md:col-span-1 lg:col-span-4"><RecentAnnouncements rows={announcements} loading={isLoading} /></div>
+        <div className="md:col-span-2 lg:col-span-3"><NeedsAttention rows={urgent} loading={isLoading} /></div>
       </div>
 
-      {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+      {/* Bottom row — same pattern: two columns on iPad, three on
+          desktop. Activity Feed spans the full width on the md tier so
+          it gets room to breathe instead of squeezing next to Quick
+          Actions in a half-width cell. */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
         <UpcomingEvents rows={eventsOnly} loading={isLoading} />
         <QuickActions />
-        <ActivityFeed rows={activity} loading={isLoading} />
+        <div className="md:col-span-2 lg:col-span-1"><ActivityFeed rows={activity} loading={isLoading} /></div>
       </div>
     </div>
     </DashboardShell>
