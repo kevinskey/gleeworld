@@ -29,6 +29,7 @@ import { SmsComposer } from '@/components/messenger/SmsComposer';
 import { EmailClient } from '@/components/messenger/EmailClient';
 import { NewsletterStudio } from '@/components/messenger/NewsletterStudio';
 import { JitsiMeetingPanel } from '@/components/messenger/JitsiEmbedModal';
+import { MessageTemplatesPanel } from '@/components/messenger/MessageTemplatesPanel';
 
 interface Group {
   id: string;
@@ -513,20 +514,7 @@ export default function Messenger() {
           <NewsletterStudio inline onClose={backToChat} />
         </div>
       )}
-      {mode === 'templates' && (
-        <div className="flex-1 overflow-y-auto px-6 py-10">
-          <div className="max-w-md mx-auto text-center space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 inline-flex items-center justify-center">
-              <Newspaper className="w-7 h-7 text-primary" />
-            </div>
-            <h2 className="text-lg font-semibold">Message Templates</h2>
-            <p className="text-sm text-muted-foreground">
-              Save reusable announcements, rehearsal reminders, and concert blasts so
-              you can fire them off in two clicks. Coming next release.
-            </p>
-          </div>
-        </div>
-      )}
+      {mode === 'templates' && <MessageTemplatesPanel />}
 
       <div className={`flex flex-1 overflow-hidden ${mode !== 'chat' && mode !== 'video' ? 'hidden' : ''}`}>
       <aside
@@ -662,6 +650,11 @@ export default function Messenger() {
             roomName={activeMeetingRoom}
             userName={userProfile?.full_name || user.email || 'Guest'}
             userEmail={user.email}
+            userId={user.id}
+            // Any signed-in user starting a call from Messenger is the
+            // moderator — JaaS rooms route moderator privileges via the
+            // JWT, so this avoids the "waiting for moderator" stall.
+            isModerator
             onClose={() => { setActiveMeetingRoom(null); setMode('chat'); }}
           />
         ) : mode === 'video' ? (

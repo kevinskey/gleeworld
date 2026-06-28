@@ -1,35 +1,63 @@
-// In-app Jitsi meeting via direct iframe — rendered inline in the chat pane,
-// not a popup. Simpler and more reliable than the External API.
+// In-app Jitsi meeting via iframe pointed at JaaS (8x8.vc) with a JWT.
 //
-// Base URL is the public meet.jit.si until the self-hosted instance at
-// meet.gleeworld.org is provisioned (the subdomain currently has no DNS
-// record, which is why "Jitsi is broken" with the previous URL).
-// To flip to self-hosted later, change JITSI_BASE below.
+// History: this used to load https://meet.jit.si directly, which since
+// Jitsi's 2022 policy change requires every meeting to have a logged-in
+// moderator. In WKWebView (iOS Capacitor) the moderator-login popup is
+// blocked, producing the "Login popup was blocked by your browser"
+// banner with the meeting stuck on "Asking to join meeting…".
+//
+// Fix: fetch a JaaS JWT via our `jaas-jwt-token` edge function and load
+// 8x8.vc with that token embedded in the URL. JaaS rooms accept JWT
+// participants directly — no second-factor login popup, works inside
+// WKWebView.
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { X, Video } from 'lucide-react';
-
-const JITSI_BASE = 'https://meet.jit.si';
+import { X, Video, Loader2 } from 'lucide-react';
 
 interface JitsiMeetingPanelProps {
   roomName: string;
   userName: string;
   userEmail?: string;
+  userId?: string;
+  isModerator?: boolean;
   onClose: () => void;
 }
 
-export function JitsiMeetingPanel({ roomName, userName, onClose }: JitsiMeetingPanelProps) {
-  // Hash params must be URI-encoded manually — URLSearchParams turns spaces
-  // into '+' which Jitsi renders literally in the display name.
-  const hash = [
-    'config.prejoinConfig.enabled=false',
-    'config.prejoinPageEnabled=false',
-    'config.disableDeepLinking=true',
-    'config.startWithAudioMuted=false',
-    'config.startWithVideoMuted=false',
-    `userInfo.displayName=${encodeURIComponent(`"${userName}"`)}`,
-  ].join('&');
+export function JitsiMeetingPanel({ roomName, userName, userEmail, userId, isModerator = false, onClose }: JitsiMeetingPanelProps) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const src = `${JITSI_BASE}/${roomName}#${hash}`;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error: tokenError } = await supabase.functions.invoke('jaas-jwt-token', {
+          body: { roomName, userName, userEmail, userId, isModerator },
+        });
+        if (tokenError) throw new Error(tokenError.message || 'Failed to get meeting token');
+        if (!data?.token || !data?.appId) throw new Error('Invalid token response');
+
+        // JaaS iframe URL. The room path MUST include the appId prefix for
+        // JaaS tenant matching. Hash params turn off the prejoin screen
+        // and deep-linking so the iframe lands the user straight in the
+        // call without any "open in app" interstitials.
+        const hash = [
+          'config.prejoinConfig.enabled=false',
+          'config.prejoinPageEnabled=false',
+          'config.disableDeepLinking=true',
+          'config.startWithAudioMuted=false',
+          'config.startWithVideoMuted=false',
+          `userInfo.displayName=${encodeURIComponent(`"${userName}"`)}`,
+        ].join('&');
+        const url = `https://8x8.vc/${data.appId}/${encodeURIComponent(roomName)}?jwt=${data.token}#${hash}`;
+        if (!cancelled) setSrc(url);
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message ?? 'Failed to start meeting');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [roomName, userName, userEmail, userId, isModerator]);
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
@@ -41,13 +69,24 @@ export function JitsiMeetingPanel({ roomName, userName, onClose }: JitsiMeetingP
           <X className="w-4 h-4 mr-1" /> Leave
         </Button>
       </div>
-      <iframe
-        title="Jitsi meeting"
-        src={src}
-        allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
-        allowFullScreen
-        className="flex-1 w-full border-0"
-      />
+      {error ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-2 p-6 text-center">
+          <p className="text-sm font-semibold text-destructive">Couldn't start the meeting</p>
+          <p className="text-xs text-muted-foreground max-w-md">{error}</p>
+        </div>
+      ) : !src ? (
+        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin mr-2" /> Connecting…
+        </div>
+      ) : (
+        <iframe
+          title="Jitsi meeting"
+          src={src}
+          allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
+          allowFullScreen
+          className="flex-1 w-full border-0"
+        />
+      )}
     </div>
   );
 }
