@@ -34,7 +34,7 @@ export default function MusicToolsPage() {
         <header className="px-4 sm:px-6 pt-3 pb-2 border-b border-border bg-card">
           <div className="flex items-end justify-between gap-3 flex-wrap">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Music Tools</h1>
+              <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Music Tools</h1>
               <p className="text-xs text-muted-foreground">Stage mode — scroll the keyboard to reach any octave.</p>
             </div>
           </div>
@@ -62,7 +62,7 @@ export default function MusicToolsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-4">
       <header>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Music Tools</h1>
+        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Music Tools</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Piano, metronome, pitch pipe, guitar tuner, and an instrument-voice player — also available inside any score's Tools sheet in the Viewer.
         </p>

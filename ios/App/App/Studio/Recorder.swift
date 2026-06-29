@@ -19,6 +19,13 @@ public final class StudioNativeRecorder {
     private(set) public var isRecording = false
     private(set) public var outputUrl: URL?
 
+    /// Fires ~30Hz during recording with the latest peak power (dBFS,
+    /// negative). The plugin forwards each value to JS via
+    /// notifyListeners so the editor's live waveform can draw the
+    /// envelope without waiting for the take to finish.
+    public var onPeak: ((Float) -> Void)?
+    private var peakTimer: Timer?
+
     public init(engine: AVAudioEngine) {
         self.engine = engine
     }
@@ -61,6 +68,7 @@ public final class StudioNativeRecorder {
             AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
         ]
         let recorder = try AVAudioRecorder(url: url, settings: settings)
+        recorder.isMeteringEnabled = true
         recorder.prepareToRecord()
         let ok = recorder.record()
         if !ok {
@@ -71,9 +79,25 @@ public final class StudioNativeRecorder {
         self.avRecorder = recorder
         isRecording = true
         NSLog("[Studio] recorder.start: recording to \(url.lastPathComponent)")
+
+        // Drive the peak callback at ~30 Hz. Capacitor plugin code runs
+        // on a background queue with no run loop, so we MUST attach the
+        // timer to RunLoop.main explicitly — otherwise it never fires
+        // and the JS waveform never gets a sample.
+        peakTimer?.invalidate()
+        let timer = Timer(timeInterval: 0.033, repeats: true) { [weak self] _ in
+            guard let self, let rec = self.avRecorder, self.isRecording else { return }
+            rec.updateMeters()
+            let db = rec.peakPower(forChannel: 0)
+            self.onPeak?(db)
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        peakTimer = timer
     }
 
     public func stop() -> URL? {
+        peakTimer?.invalidate()
+        peakTimer = nil
         guard isRecording else { return outputUrl }
         avRecorder?.stop()
         avRecorder = nil

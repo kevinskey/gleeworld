@@ -35,7 +35,7 @@ export default function ConcertPlannerPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-10 space-y-6">
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight flex items-center gap-2">
             <ClipboardList className="w-7 h-7 text-primary" />
             Concert Planner
           </h1>

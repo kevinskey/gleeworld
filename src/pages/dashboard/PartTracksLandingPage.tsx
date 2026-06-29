@@ -77,7 +77,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Disc3 className="w-7 h-7 text-amber-500" />
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Part Tracks Studio</h1>
+            <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Part Tracks Studio</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             Build accompaniment and voice-part recordings linked to a score. Every project starts from your Music Library.

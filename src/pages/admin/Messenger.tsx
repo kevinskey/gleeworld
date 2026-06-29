@@ -467,7 +467,7 @@ export default function Messenger() {
           `h1 { clamp(1.75rem, 4.5vw, 2.5rem) }` reset in index.css, which
           otherwise pushes this title to 40px+ on wide monitors. */}
       <div className="shrink-0 px-4 sm:px-6 pt-3 pb-1.5 bg-card">
-        <h1 className="font-sans normal-case font-bold tracking-tight leading-none !text-lg">Messenger</h1>
+        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight leading-none">Messenger</h1>
       </div>
 
       {/* Mode tab bar — underline-style, like Gmail's primary nav. The

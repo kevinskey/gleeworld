@@ -48,7 +48,17 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
     // touched here runs before any JS or audio session exists.
     private lazy var engine = StudioNativeEngine()
     private lazy var assetLoader = AssetLoader()
-    private lazy var recorder = StudioNativeRecorder(engine: engine.avEngine)
+    private lazy var recorder: StudioNativeRecorder = {
+        let r = StudioNativeRecorder(engine: engine.avEngine)
+        r.onPeak = { [weak self] db in
+            // Capacitor's notifyListeners is main-thread-only and the
+            // peak timer fires on the main run loop already, so a
+            // direct call is safe. Wrap Float as Double for JS — NSNumber
+            // bridges cleanly that way.
+            self?.notifyListeners("recordPeak", data: ["db": Double(db)])
+        }
+        return r
+    }()
 
     // Capacitor 7 calls `load()` automatically on plugins discovered via
     // `CAPBridgedPlugin`. For plugins added via `registerPluginInstance`

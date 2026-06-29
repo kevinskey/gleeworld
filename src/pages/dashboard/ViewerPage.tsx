@@ -153,7 +153,7 @@ function ViewerLanding({
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-4">
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Viewer</h1>
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Viewer</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Performance reader for your sheet music. Tap a score to open the full-screen view.
           </p>

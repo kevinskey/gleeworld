@@ -60,7 +60,7 @@ const PRHubPage = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <h1 className="text-4xl font-bold">PR Hub</h1>
+                      <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">PR Hub</h1>
                       <Sparkles className="w-6 h-6 text-secondary" />
                     </div>
                     <p className="text-white/90 text-lg max-w-2xl">

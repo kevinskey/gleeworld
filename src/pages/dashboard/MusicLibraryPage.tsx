@@ -129,7 +129,7 @@ export default function MusicLibraryPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-6">
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Music Library</h1>
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Music Library</h1>
           <p className="text-sm text-muted-foreground mt-1.5">
             Sheet music scores across your ensembles. Other media types live in the Media Library.
           </p>

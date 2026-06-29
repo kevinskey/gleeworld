@@ -31,6 +31,7 @@ interface StudioEnginePluginShape {
   recordStop(): Promise<{ localUrl: string; filename: string }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
   addListener(eventName: 'state', listener: (s: NativeEngineState) => void): Promise<PluginListenerHandle>;
+  addListener(eventName: 'recordPeak', listener: (e: { db: number }) => void): Promise<PluginListenerHandle>;
 }
 
 const Native = registerPlugin<StudioEnginePluginShape>('StudioEngine');

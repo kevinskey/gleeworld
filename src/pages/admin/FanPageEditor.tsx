@@ -196,7 +196,7 @@ export default function FanPageEditor() {
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-[200px]">
-          <h1 className="font-sans normal-case tracking-tight text-2xl font-bold">Fan page</h1>
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-sans normal-case tracking-tight font-bold">Fan page</h1>
           <p className="text-sm text-muted-foreground">
             {editor.page.is_published
               ? 'Published — signed-in fans see the latest version at /fan.'

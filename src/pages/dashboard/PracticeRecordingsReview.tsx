@@ -94,7 +94,7 @@ export default function PracticeRecordingsReview() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight flex items-center gap-2">
             <Mic className="w-7 h-7 text-primary" />
             Practice recordings
           </h1>

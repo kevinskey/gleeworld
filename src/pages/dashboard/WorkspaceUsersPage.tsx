@@ -121,7 +121,7 @@ export default function WorkspaceUsersPage() {
       {/* Header */}
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">People</h1>
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">People</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Everyone in this workspace — teachers, students, fans.
           </p>

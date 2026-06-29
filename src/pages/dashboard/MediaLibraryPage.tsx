@@ -127,7 +127,7 @@ export default function MediaLibraryPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Media Library</h1>
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Media Library</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Audio, video, MusicXML, documents, images — everything that isn't sheet music.
           </p>

@@ -288,6 +288,16 @@ const MediaLibrary = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedItem = useMemo(() => filtered.find(i => i.id === selectedId) || null, [filtered, selectedId]);
 
+  // Preview dialog open-state is tracked SEPARATELY from selectedId.
+  // Earlier these were unified, but selectedId auto-resets to the first
+  // item via the effect below — clicking the X cleared selectedId, the
+  // effect immediately re-set it, and the dialog kept popping back open.
+  // Now: list-click sets BOTH selectedId AND previewId; X clears only
+  // previewId so the dialog closes for real while the list highlight
+  // stays put.
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const previewItem = useMemo(() => filtered.find(i => i.id === previewId) || null, [filtered, previewId]);
+
   useEffect(() => {
     if (!selectedId && filtered.length) {
       setSelectedId(filtered[0].id);
@@ -495,7 +505,7 @@ const MediaLibrary = () => {
           return (
             <button
               key={m.id}
-              onClick={() => setSelectedId(m.id)}
+              onClick={() => { setSelectedId(m.id); setPreviewId(m.id); }}
               className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-md transition-all ml-5
                 ${active 
                   ? 'bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30' 
@@ -652,7 +662,7 @@ const MediaLibrary = () => {
                   return (
                     <button
                       key={m.id}
-                      onClick={() => setSelectedId(m.id)}
+                      onClick={() => { setSelectedId(m.id); setPreviewId(m.id); }}
                       className={`relative aspect-square rounded-lg overflow-hidden bg-muted/30 border transition-all active:scale-95
                         ${active 
                           ? 'ring-2 ring-primary border-primary shadow-lg' 
@@ -743,15 +753,16 @@ const MediaLibrary = () => {
       </main>
 
       {/* Media Preview Dialog - Mobile Optimized */}
-      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedId(null)}>
+      <Dialog open={!!previewItem} onOpenChange={(open) => !open && setPreviewId(null)}>
         <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
           <DialogHeader className="p-3 sm:p-4 border-b flex-shrink-0">
             <DialogTitle className="text-sm sm:text-base truncate pr-8">
-              {selectedItem?.title || selectedItem?.original_filename || 'Media Preview'}
+              {previewItem?.title || previewItem?.original_filename || 'Media Preview'}
             </DialogTitle>
           </DialogHeader>
           <div className="overflow-y-auto overscroll-contain p-3 sm:p-4">
-            {selectedItem && (() => {
+            {previewItem && (() => {
+              const selectedItem = previewItem;
               const kind = MIME_TO_KIND(selectedItem.mime_type, selectedItem.file_type);
               const isPdf = (selectedItem.mime_type || '').toLowerCase().includes('pdf');
               return (

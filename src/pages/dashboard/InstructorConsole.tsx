@@ -163,7 +163,7 @@ export default function InstructorConsole() {
     <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Instructor Console</h1>
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Instructor Console</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isPrivileged
               ? 'Every class in your workspace. Open one to manage it, or jump to combined media below.'

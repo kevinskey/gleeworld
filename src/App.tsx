@@ -2254,13 +2254,13 @@ const App = () => {
                                   </ProtectedRoute>
                                 }
                               />
+                              {/* Legacy /admin/media route — superseded by the
+                                  Command Center /dashboard/media-library page.
+                                  Redirect so stale bookmarks land on the current
+                                  Media Library instead of the orphan UI. */}
                               <Route
                                 path="/admin/media"
-                                element={
-                                  <ProtectedRoute>
-                                    <MediaLibrary />
-                                  </ProtectedRoute>
-                                } 
+                                element={<Navigate to="/dashboard/media-library" replace />}
                               />
                               <Route 
                                 path="/photo-gallery" 

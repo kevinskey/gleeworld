@@ -452,7 +452,7 @@ export const DayScheduleView = () => {
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight text-foreground">Calendar</h1>
         </div>
 
         <Button 

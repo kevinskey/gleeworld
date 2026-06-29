@@ -19,7 +19,7 @@ export default function OfficeHoursPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-6 space-y-5">
       <div>
-        <h1 className="font-sans normal-case font-bold tracking-tight leading-tight text-2xl">
+        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight leading-tight">
           Office Hours
         </h1>
         <p className="text-sm text-muted-foreground mt-1.5">

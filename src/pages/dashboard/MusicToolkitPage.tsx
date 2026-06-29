@@ -27,7 +27,7 @@ export default function MusicToolkitPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
       {/* Header */}
       <div>
-        <h1 className="font-sans normal-case font-bold tracking-tight leading-tight text-3xl">
+        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-sans normal-case font-bold tracking-tight leading-tight">
           Music Toolkit
         </h1>
         <p className="text-sm text-muted-foreground mt-1">

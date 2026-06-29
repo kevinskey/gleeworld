@@ -98,7 +98,7 @@ const SightReadingPage: React.FC = () => {
             Practice tool
           </span>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">Sight Reading Studio</h1>
+        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Sight Reading Studio</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Generate practice exercises and sing them — no assignments, no grades, no due dates.
           Just practice.

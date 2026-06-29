@@ -53,6 +53,8 @@ import {
   Heart,
   Disc3,
   Film,
+  Route as RouteIcon,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -74,6 +76,18 @@ import {
 import {
   Sheet, SheetContent, SheetTrigger, SheetClose,
 } from '@/components/ui/sheet';
+import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
+import { BecomeTenantDialog } from '@/components/onboarding/BecomeTenantDialog';
+
+/** True when the current subdomain is the public demo. The platform owner
+ * uses this to gate the "Become a tenant" CTA — paying tenants shouldn't
+ * see an upgrade pitch on their own site. */
+function isDemoTenant(): boolean {
+  if (typeof window === 'undefined') return false;
+  const slug = (window as unknown as { __TENANT_CONFIG__?: { tenant?: string } })
+    .__TENANT_CONFIG__?.tenant;
+  return slug === 'demo';
+}
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
 
@@ -131,7 +145,10 @@ function BrandLogo({
 // flat text-[13px] looked cramped on a 12.9" iPad.
 const NAV_BASE =
   'flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] md:text-[14px] lg:text-[15px] leading-tight transition-colors w-full text-left';
-const NAV_INACTIVE = 'text-foreground/85 hover:bg-muted/70 hover:text-foreground';
+// Hover background is 5% brand-gold (--brand-gold is HSL 45 100% 55%).
+// arbitrary value syntax keeps the alpha channel without needing a
+// dedicated Tailwind color token.
+const NAV_INACTIVE = 'text-foreground/85 hover:bg-[hsl(var(--brand-gold)/0.05)] hover:text-foreground';
 const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 // `tone` is now {color}-600/700 text-only — strip the legacy bg- portion.
 const iconTextOnly = (tone: string) =>
@@ -203,6 +220,7 @@ function Sidebar() {
   const { hasAccess: hasFeeds } = useModuleAccess('feeds');
   const { hasAccess: hasViewer } = useModuleAccess('viewer');
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
+  const { hasAccess: hasTourManager } = useModuleAccess('tour');
 
   // Grouped nav. Sections render their entries under a small uppercase
   // label; sections with zero visible entries are hidden entirely so the
@@ -257,6 +275,7 @@ function Sidebar() {
         ...(hasMerch        ? [{ to: '/dashboard/shop',           label: 'Store',           icon: Store,  tourId: 'nav-shop',            tone: 'bg-amber-50 text-amber-600' }] : []),
         ...(hasFeeds        ? [{ to: '/dashboard/feeds',          label: 'Feeds',           icon: Newspaper,     tourId: 'nav-feeds',           tone: 'bg-blue-50 text-blue-600' }] : []),
         ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tourId: 'nav-concert-planner', tone: 'bg-emerald-50 text-emerald-700' }] : []),
+        ...(hasTourManager ? [{ to: '/tour-manager', label: 'Tour Manager', icon: RouteIcon, tourId: 'nav-tour-manager', tone: 'bg-blue-50 text-blue-600' }] : []),
       ],
     },
     {
@@ -416,6 +435,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { hasAccess: hasFeeds } = useModuleAccess('feeds');
   const { hasAccess: hasViewer } = useModuleAccess('viewer');
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
+  const { hasAccess: hasTourManager } = useModuleAccess('tour');
 
   // Group by category to match the desktop sidebar layout. Section labels
   // render above each block so phone/iOS users get the same mental model.
@@ -455,6 +475,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         ...(hasMerch        ? [{ to: '/dashboard/shop',           label: 'Store',           icon: Store,  tone: 'bg-amber-50 text-amber-600' }] : []),
         ...(hasFeeds        ? [{ to: '/dashboard/feeds',          label: 'Feeds',           icon: Newspaper,     tone: 'bg-blue-50 text-blue-600' }] : []),
         ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tone: 'bg-emerald-50 text-emerald-700' }] : []),
+        ...(hasTourManager ? [{ to: '/tour-manager', label: 'Tour Manager', icon: RouteIcon, tone: 'bg-blue-50 text-blue-600' }] : []),
       ],
     },
     {
@@ -485,7 +506,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         {sections.map((section) => (
           section.items.length === 0 ? null : (
             <div key={section.label} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
-              <div className="px-2.5 pb-1 pt-1.5 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground/80 uppercase">
+              <div className="px-2.5 pb-1 pt-1.5 text-[12px] font-semibold tracking-[0.08em] text-muted-foreground/80 uppercase">
                 {section.label}
               </div>
               {section.items.map((item) => (
@@ -494,11 +515,15 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
                   to={item.to}
                   end={item.to === '/dashboard'}
                   onClick={onNavigate}
+                  // Mobile drawer text — comfortably bigger than the
+                  // desktop sidebar (text-[13px]) without overwhelming
+                  // the phone viewport. 17px ≈ iOS standard menu row.
+                  // py-2.5 keeps the tap target at 44px (Apple HIG).
                   className={({ isActive }) =>
-                    `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
+                    `flex items-center gap-2.5 px-2.5 py-2.5 rounded-md !text-[17px] leading-tight transition-colors w-full text-left ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
                   }
                 >
-                  <item.icon className={`w-[18px] h-[18px] shrink-0 ${iconTextOnly(item.tone)}`} />
+                  <item.icon className={`w-5 h-5 shrink-0 ${iconTextOnly(item.tone)}`} />
                   <span className="truncate">{item.label}</span>
                 </NavLink>
               ))}
@@ -545,6 +570,8 @@ function TopBar() {
     (userProfile?.role || '').charAt(0).toUpperCase() + (userProfile?.role || '').slice(1) || 'Member';
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [becomeTenantOpen, setBecomeTenantOpen] = useState(false);
+  const showBecomeTenantCta = isDemoTenant();
 
   return (
     <header
@@ -570,13 +597,39 @@ function TopBar() {
             <Menu className="w-6 h-6" />
           </button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-72">
+        <SheetContent side="left" className="p-0 w-[85vw] max-w-xs">
           <MobileNav onNavigate={() => setMobileNavOpen(false)} />
         </SheetContent>
       </Sheet>
 
       {/* Spacer pushes the cluster to the right */}
       <div className="flex-1" />
+
+      {/* Demo-only: "Get your own GleeWorld" CTA pill. Hidden on paying
+       * tenants. Opens the concierge intake form (BecomeTenantDialog).
+       * Uniform sizing across all breakpoints — earlier sm:h-10 + label
+       * reveal made the pill jump sizes and the text wrap on narrow
+       * widths. `!text-white` overrides the global `button { color }`
+       * reset from index.css that otherwise rendered the label black.
+       * `whitespace-nowrap` keeps "Get your own" on one line. */}
+      {showBecomeTenantCta && (
+        <button
+          onClick={() => setBecomeTenantOpen(true)}
+          title="Get your own GleeWorld site"
+          aria-label="Get your own GleeWorld site"
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm shrink-0 hover:scale-[1.02] transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)',
+            // Inline color wins against every global `button { color }`
+            // override in index.css (radix menu, body foreground, etc.)
+            // without needing layering tricks.
+            color: '#ffffff',
+          }}
+        >
+          <Sparkles className="w-3.5 h-3.5" style={{ color: '#ffffff' }} />
+          <span className="hidden sm:inline" style={{ color: '#ffffff' }}>Get your own</span>
+        </button>
+      )}
 
       {/* Search — full input on sm+, icon-trigger on phones. Earlier the
           input was simply `hidden sm:block`, which left mobile users with
@@ -670,6 +723,15 @@ function TopBar() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Concierge intake — only mounted/shown when triggered from the
+       * topbar pill. Self-portals to body so no layout impact when closed. */}
+      {showBecomeTenantCta && (
+        <BecomeTenantDialog
+          open={becomeTenantOpen}
+          onClose={() => setBecomeTenantOpen(false)}
+        />
+      )}
     </header>
   );
 }
@@ -684,9 +746,14 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <TopBar />
         {/* pt-3 gives every page a small breath of space below the
             sticky topbar — pages that want more (CommandCenter, Viewer
-            landing) add their own larger top padding on top of this. */}
-        <main className="flex-1 min-w-0 overflow-x-hidden pt-3 sm:pt-4">{children}</main>
+            landing) add their own larger top padding on top of this.
+            pb-20 sm:pb-0 reserves room for the MobileBottomNav strip
+            (only rendered on phones; sm+ has no bottom nav). */}
+        <main className="flex-1 min-w-0 overflow-x-hidden pt-3 sm:pt-4 pb-20 sm:pb-0">{children}</main>
       </div>
+      {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
+          so it returns null on tablet/desktop — safe to mount globally. */}
+      <MobileBottomNav />
       {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
       <ProductTour />
     </div>

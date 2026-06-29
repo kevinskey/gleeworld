@@ -80,11 +80,16 @@ function scheduleDot(subtype: FeedRow['subtype']): string {
 // shadow COLOR — i.e. white on a white card, making any class-based shadow
 // invisible. We bypass the cascade with an inline style.
 const SOFT_CARD = 'border-0 rounded-2xl';
+// Tighter shadows — earlier spread (0 16px 32px -8px at 22% alpha) was
+// darkening the page background between cards, making the whole grid
+// feel grey instead of crisp. Reduced the wide-shadow spread by half
+// and dropped both alphas by ~60% so cards lift gently without
+// muddying the surrounding surface.
 const SOFT_CARD_STYLE: React.CSSProperties = {
-  boxShadow: '0 4px 10px rgba(15,23,42,0.10), 0 16px 32px -8px rgba(15,23,42,0.22)',
+  boxShadow: '0 1px 2px rgba(15,23,42,0.05), 0 6px 14px -6px rgba(15,23,42,0.08)',
 };
 const SOFT_CARD_STYLE_AMBER: React.CSSProperties = {
-  boxShadow: '0 4px 10px rgba(180,83,9,0.12), 0 16px 32px -8px rgba(180,83,9,0.24)',
+  boxShadow: '0 1px 2px rgba(180,83,9,0.05), 0 6px 14px -6px rgba(180,83,9,0.10)',
 };
 // Cap card heights at every breakpoint INCLUDING desktop. Without the
 // lg cap, `items-stretch` on the row was making shallow cards (like an
@@ -603,7 +608,11 @@ export default function CommandCenter() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Command Center</h1>
+          {/* The global `h1 { font-size: clamp(1.75rem, 4.5vw, 2.5rem) }`
+              reset in index.css overrides Tailwind text classes, so we
+              force the size with `!` — 1.4rem (22px) phones, 2rem (32px)
+              desktop. 20% smaller than the previous clamp max. */}
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Command Center</h1>
           {error && (
             <p className="text-sm text-destructive mt-1">
               Couldn&apos;t load: {(error as Error).message}
@@ -664,13 +673,12 @@ export default function CommandCenter() {
         <div className="md:col-span-2 xl:col-span-3"><NeedsAttention rows={urgent} loading={isLoading} /></div>
       </div>
 
-      {/* Bottom row — same xl gate. Activity Feed spans the full width
-          below xl so it gets room to breathe instead of squeezing next
-          to Quick Actions in a half-width cell. */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+      {/* Bottom row — Quick Actions removed (every action it surfaced
+          lives in the sidebar nav). Two-up layout: Upcoming Events +
+          Activity Feed. Both lay out the same on iPad and desktop. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
         <UpcomingEvents rows={eventsOnly} loading={isLoading} />
-        <QuickActions />
-        <div className="md:col-span-2 xl:col-span-1"><ActivityFeed rows={activity} loading={isLoading} /></div>
+        <ActivityFeed rows={activity} loading={isLoading} />
       </div>
     </div>
     </DashboardShell>

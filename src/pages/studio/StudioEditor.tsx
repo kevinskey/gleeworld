@@ -11,11 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download,
   Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
-  ChevronLeft, Repeat,
+  ChevronLeft, Repeat, SlidersHorizontal,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -345,6 +346,21 @@ function Editor({
   useEffect(() => { localStorage.setItem('studio.inspectorWidth', String(inspectorWidth)); }, [inspectorWidth]);
   useEffect(() => { localStorage.setItem('studio.stripWidth', String(stripWidth)); }, [stripWidth]);
 
+  // Phone viewports can't afford the 240px desktop strip — it leaves
+  // ~135px for the timeline on a 375px screen. Clamp to 132px on phones
+  // so the timeline gets the larger share. User's saved preference is
+  // preserved for when they rotate / use a larger device.
+  const [isPhoneViewport, setIsPhoneViewport] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 639px)');
+    const onChange = () => setIsPhoneViewport(window.innerWidth < 640);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+  const effectiveStripWidth = isPhoneViewport ? Math.min(stripWidth, 132) : stripWidth;
+
   // Timeline zoom — px per second of session time. Shared across the
   // ruler + every track lane + the playhead via ZoomContext.
   const [pxPerSecond, setPxPerSecond] = useState<number>(() => {
@@ -374,6 +390,20 @@ function Editor({
   const [recording, setRecording] = useState<RecordingSession | null>(null);
   const recRafRef = useRef<number | null>(null);
   const [, forceRender] = useState(0);
+  // Keep a ref to the latest engineState so the recording RAF closure
+  // can read the current peak-dB values (input level) without being
+  // restarted every render. Without this, the iOS waveform would stay
+  // empty for the entire take and only appear when the recording
+  // finalized — the user saw it as "10 seconds to appear".
+  const engineStateRef = useRef(engineState);
+  useEffect(() => { engineStateRef.current = engineState; }, [engineState]);
+  // Latest input peak (dBFS, negative) pushed by the native recorder via
+  // notifyListeners('recordPeak'). The RAF sampler reads this each tick
+  // and writes the corresponding amplitude into recording.peaks.
+  const latestPeakDbRef = useRef<number>(-Infinity);
+  // PluginListenerHandle for the native recordPeak subscription —
+  // unwired in stopRecording().
+  const nativePeakSubRef = useRef<{ remove: () => Promise<void> } | null>(null);
 
   // Undo stack — snapshots of the session taken right before each
   // structural change (recording finalize, track add/remove, etc.).
@@ -443,6 +473,35 @@ function Editor({
         });
         if (!state?.isPlaying) play();
         toast.success('Recording — click ● again to stop');
+
+        // Subscribe to live peak-dB events from the native AVAudioRecorder
+        // (fires ~30Hz, see Recorder.swift). Each value is a dBFS reading
+        // of the actual mic input — without this the waveform would be
+        // empty for the duration of the take and only fill in after stop,
+        // which the user saw as "10 seconds to appear".
+        const { NativeStudio } = await import('@/plugins/studioEngine');
+        const peakHandle = await NativeStudio.addListener('recordPeak', (e: { db: number }) => {
+          latestPeakDbRef.current = e.db;
+        });
+        nativePeakSubRef.current = peakHandle;
+
+        const nativeTick = () => {
+          const now = performance.now();
+          const peakDb = latestPeakDbRef.current;
+          const amp = Number.isFinite(peakDb) && peakDb > -60
+            ? Math.min(1, Math.pow(10, peakDb / 20))
+            : 0;
+          const since = now - startedAt;
+          const targetCount = Math.floor(since / 33);
+          setRecording((prev) => {
+            if (!prev) return prev;
+            while (prev.peaks.length < targetCount) prev.peaks.push(amp);
+            return prev;
+          });
+          forceRender((n) => n + 1);
+          recRafRef.current = requestAnimationFrame(nativeTick);
+        };
+        recRafRef.current = requestAnimationFrame(nativeTick);
         return;
       }
 
@@ -488,6 +547,11 @@ function Editor({
   const stopRecording = async () => {
     if (!recording) return;
     if (recRafRef.current !== null) { cancelAnimationFrame(recRafRef.current); recRafRef.current = null; }
+    if (nativePeakSubRef.current) {
+      try { await nativePeakSubRef.current.remove(); } catch { /* ignore */ }
+      nativePeakSubRef.current = null;
+    }
+    latestPeakDbRef.current = -Infinity;
     const { recorder, native: nativeTake, startSeconds, startWallMs, armedTrackIds: armed } = recording;
     setRecording(null);
     const elapsed = (performance.now() - startWallMs) / 1000;
@@ -747,8 +811,8 @@ function Editor({
      * border-border, etc.) resolves to its dark-mode value, giving the
      * Studio the high-contrast DAW look (Logic / ProTools / Ableton)
      * without leaking dark surfaces anywhere else in the app. */}
-    <div className="dark bg-background text-foreground min-h-[calc(100vh-5rem)] -mt-2">
-    <div className="px-3 py-3 max-w-[1400px] mx-auto space-y-2">
+    <div className="dark bg-background text-foreground min-h-[calc(100vh-5rem)] -mt-2 overflow-x-hidden">
+    <div className="px-2 sm:px-3 py-2 sm:py-3 max-w-[1400px] mx-auto space-y-1.5 sm:space-y-2">
       {/* Top bar */}
       <div className="flex items-center gap-2 text-sm">
         <Link to="/studio" className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -772,11 +836,11 @@ function Editor({
       </div>
 
       {/* Transport bar — single dense row */}
-      <div className="bg-card border border-border rounded-md p-2 flex items-center gap-2 flex-wrap">
+      <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 flex items-center gap-0.5 sm:gap-2 flex-wrap">
         {/* Go to start */}
         <button
           onClick={() => engineState.seek?.(0)}
-          className="h-9 w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Go to beginning (Home)">
           <SkipBack className="w-4 h-4" />
         </button>
@@ -801,12 +865,12 @@ function Editor({
         {/* Skip to end */}
         <button
           onClick={() => engineState.seek?.(session.length_seconds)}
-          className="h-9 w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Skip to end">
           <SkipForward className="w-4 h-4" />
         </button>
 
-        <div className="w-px h-7 bg-border mx-0.5" />
+        <div className="hidden sm:block w-px h-7 bg-border mx-0.5" />
 
         {/* Transport buttons */}
         <button onClick={async () => {
@@ -825,28 +889,28 @@ function Editor({
               });
             }
           }} disabled={state?.isPlaying}
-          className={`h-9 w-9 rounded flex items-center justify-center transition border ${state?.isPlaying ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border hover:bg-muted/70'} disabled:opacity-50`}
+          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${state?.isPlaying ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border hover:bg-muted/70'} disabled:opacity-50`}
           title="Play (Space)">
           <Play className="w-4 h-4" />
         </button>
         <button onClick={pause} disabled={!state?.isPlaying}
-          className="h-9 w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 flex items-center justify-center"
+          className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 flex items-center justify-center"
           title="Pause (Space)">
           <Pause className="w-4 h-4" />
         </button>
         <button
           onClick={() => { if (recording) stopRecording(); stop(); }}
-          className="h-9 w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+          className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
           title="Stop (S) — also finalizes any active recording">
           <Square className="w-4 h-4" />
         </button>
         <button onClick={() => recording ? stopRecording() : startRecording()}
-          className={`h-9 w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
+          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
           title="Record (R)">
           <Circle className={`w-3.5 h-3.5 ${isRecording ? 'fill-white text-white' : 'fill-rose-500 text-rose-500'}`} />
         </button>
         <button onClick={async () => { await start(); setMetronome(!state?.metronomeOn); }}
-          className={`h-9 w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
+          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
           title="Metronome (M)">
           <Timer className="w-4 h-4" />
         </button>
@@ -878,7 +942,7 @@ function Editor({
             }
             setLoopEnabled(true);
           }}
-          className={`h-9 w-9 rounded flex items-center justify-center border ${loopEnabled ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border hover:bg-muted/70'}`}
+          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${loopEnabled ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border hover:bg-muted/70'}`}
           title={
             selectedClip
               ? 'Loop the selected clip — toggle on/off'
@@ -891,16 +955,104 @@ function Editor({
         </button>
 
         {/* Bar.beat.tick LCD-style timecode */}
-        <div className="px-3 py-1 bg-zinc-900 rounded text-emerald-400 text-lg leading-none tabular-nums font-mono">
+        <div className="px-2 sm:px-3 py-1 bg-zinc-900 rounded text-emerald-400 text-sm sm:text-lg leading-none tabular-nums font-mono">
           {formatBarBeat(state?.positionSeconds ?? 0, session.tempo_bpm, session.time_signature.numerator)}
         </div>
-        <div className="text-muted-foreground text-sm tabular-nums font-mono">
+        <div className="hidden sm:block text-muted-foreground text-sm tabular-nums font-mono">
           {formatTime(state?.positionSeconds ?? 0)} / {formatTime(session.length_seconds)}
         </div>
 
+        {/* Mobile-only: open a bottom sheet with all the secondary
+         * controls (count-in, tempo, snap, grid, end) so the transport
+         * bar can fit on a single phone-width row. */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <button
+              className="sm:hidden ml-auto h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+              title="Session settings"
+              aria-label="Session settings">
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="dark bg-card text-foreground border-border">
+            <SheetHeader className="mb-3">
+              <SheetTitle className="text-base">Session</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-4 text-sm pb-4">
+              {/* Count-in */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Count-in</span>
+                <button
+                  onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
+                  className={`h-10 px-4 rounded border text-sm font-bold ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground'}`}>
+                  {countInBars === 0 ? 'Off' : `${countInBars} bar${countInBars > 1 ? 's' : ''}`}
+                </button>
+              </div>
+              {/* BPM */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">BPM</span>
+                <input type="number" min={20} max={300} value={session.tempo_bpm}
+                  onChange={(e) => {
+                    const bpm = Number(e.target.value) || 120;
+                    update((s) => ({ ...s, tempo_bpm: bpm }));
+                    updateTempo(bpm);
+                  }}
+                  className="w-20 h-10 bg-background border border-border rounded text-center" />
+              </div>
+              {/* Time signature */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Time signature</span>
+                <CompactTimeSignaturePicker
+                  numerator={session.time_signature.numerator}
+                  denominator={session.time_signature.denominator}
+                  onChange={(n, d) => {
+                    update((s) => ({ ...s, time_signature: { numerator: n, denominator: d } }));
+                    updateTimeSignature(n, d);
+                  }}
+                />
+              </div>
+              {/* Snap */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Snap</span>
+                <select value={snapMode} onChange={(e) => setSnapMode(e.target.value as SnapMode)}
+                  className="h-10 bg-background border border-border rounded px-2 min-w-[120px]">
+                  <option value="free">Free</option>
+                  <option value="bar">Bar</option>
+                  <option value="1/2">1/2 note</option>
+                  <option value="1/4">1/4 note</option>
+                  <option value="1/8">1/8 note</option>
+                  <option value="1/16">1/16</option>
+                  <option value="1/32">1/32</option>
+                </select>
+              </div>
+              {/* Grid */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Grid</span>
+                <select value={gridLevel} onChange={(e) => setGridLevel(e.target.value as GridLevel)}
+                  className="h-10 bg-background border border-border rounded px-2 min-w-[120px]">
+                  <option value="auto">Auto</option>
+                  <option value="off">Bars only</option>
+                  <option value="1/2">1/2 note</option>
+                  <option value="beat">1/4 note</option>
+                  <option value="1/8">1/8 note</option>
+                  <option value="1/16">1/16</option>
+                  <option value="1/32">1/32</option>
+                </select>
+              </div>
+              {/* End time */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">End (sec)</span>
+                <input type="number" min={4} max={3600} value={session.length_seconds}
+                  onChange={(e) => update((s) => ({ ...s, length_seconds: Number(e.target.value) || 60 }))}
+                  className="w-20 h-10 bg-background border border-border rounded text-center" />
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
         {/* Count-in cycle button: Off → 1 bar → 2 bars → Off. Lives in
          * the transport bar so it sits with the other recording controls. */}
-        <div className="ml-2 inline-flex items-center gap-1.5">
+        <div className="hidden sm:inline-flex ml-2 items-center gap-1.5">
           <span className="text-sm text-muted-foreground">Count-in</span>
           <button
             onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
@@ -918,7 +1070,7 @@ function Editor({
         </div>
 
         {/* Tempo / time sig */}
-        <div className="flex items-center gap-1 ml-2 text-sm">
+        <div className="hidden sm:flex items-center gap-1 ml-2 text-sm">
           <span className="text-muted-foreground">BPM</span>
           <input type="number" min={20} max={300} value={session.tempo_bpm}
             onChange={(e) => {
@@ -937,7 +1089,7 @@ function Editor({
           />
         </div>
 
-        <div className="flex items-center gap-1 ml-2 text-sm">
+        <div className="hidden sm:flex items-center gap-1 ml-2 text-sm">
           <span className="text-muted-foreground" title={`Snap quantum at current tempo: ${snapSeconds > 0 ? `${(snapSeconds * 1000).toFixed(0)} ms` : 'off'}`}>Snap</span>
           <select value={snapMode} onChange={(e) => setSnapMode(e.target.value as SnapMode)}
             className="h-7 bg-background border border-border rounded text-sm px-1 min-w-[68px]"
@@ -971,14 +1123,17 @@ function Editor({
         </div>
 
         {/* Master VU at the far right */}
-        <div className="ml-auto">
+        <div className="hidden sm:block ml-auto">
           <VuMeter peakDbL={state?.peakDbL ?? -Infinity} peakDbR={state?.peakDbR ?? -Infinity} />
         </div>
       </div>
 
       {/* Logic-style main window — Inspector left | Tracks area right */}
       <div className="flex gap-2 items-start">
-        {/* INSPECTOR (left rail, resizable) */}
+        {/* INSPECTOR (left rail, resizable). Hidden on phones — they
+         * don't have the horizontal room and the side rail steals
+         * timeline width. */}
+        <div className="hidden sm:contents">
         <Inspector
           width={inspectorWidth}
           onWidthChange={(w) => setInspectorWidth(Math.max(INSPECTOR_WIDTH_MIN, Math.min(INSPECTOR_WIDTH_MAX, w)))}
@@ -988,6 +1143,7 @@ function Editor({
           }
           update={update}
         />
+        </div>
 
         <div className="flex-1 min-w-0 space-y-2">
           {/* Add-track row */}
@@ -1036,8 +1192,8 @@ function Editor({
         <div className="bg-card border border-border rounded-md overflow-hidden">
           {/* Bar/beat ruler */}
           <div className="flex border-b border-border bg-muted/30">
-            <div className="shrink-0 border-r border-border" style={{ width: stripWidth }} />
-            <div className="flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" ref={scrollSync.register}>
+            <div className="shrink-0 border-r border-border" style={{ width: effectiveStripWidth }} />
+            <div className="flex-1 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" ref={scrollSync.register}>
               <BarRuler
                 lengthSeconds={session.length_seconds}
                 tempoBpm={session.tempo_bpm}
@@ -1056,7 +1212,7 @@ function Editor({
            * Lane shows where each click hits, accent on beat 1. */}
           <ClickTrackRow
             session={session}
-            stripWidth={stripWidth}
+            stripWidth={effectiveStripWidth}
             metronomeOn={state?.metronomeOn ?? false}
             metronomeVolumeDb={state?.metronomeVolumeDb ?? 0}
             onToggle={async () => {
@@ -1079,7 +1235,7 @@ function Editor({
               snapSeconds={snapSeconds}
               selectedClip={selectedClip}
               recording={recording}
-              stripWidth={stripWidth}
+              stripWidth={effectiveStripWidth}
               onStripWidthChange={(w) => setStripWidth(Math.max(STRIP_WIDTH_MIN, Math.min(STRIP_WIDTH_MAX, w)))}
               onSelectClip={setSelectedClip}
               onUpdate={(mut) => update((s) => ({ ...s, tracks: s.tracks.map((x) => x.id === t.id ? mut(x) : x) }))}
@@ -1093,9 +1249,9 @@ function Editor({
            * ruler + every track lane via the ScrollSyncContext. Per-row
            * scrollbars are hidden so the user sees ONE coordinated bar. */}
           <div className="flex border-t border-border bg-muted/20">
-            <div className="shrink-0 border-r border-border" style={{ width: stripWidth }} />
+            <div className="shrink-0 border-r border-border" style={{ width: effectiveStripWidth }} />
             <div
-              className="flex-1 overflow-x-scroll"
+              className="flex-1 min-w-0 overflow-x-scroll"
               ref={scrollSync.register}
               title="Drag to scroll the timeline horizontally — all tracks move together"
             >
@@ -1125,7 +1281,7 @@ function Editor({
         />
       )}
 
-      <div className="text-xs text-muted-foreground flex items-center justify-between pt-1">
+      <div className="hidden sm:flex text-xs text-muted-foreground items-center justify-between pt-1">
         <div>
           {state?.isPlaying ? <span className="text-emerald-600">● Playing</span> : 'Stopped'}
           {isRecording && <span className="ml-2 text-rose-600">● Recording</span>}
@@ -3470,7 +3626,11 @@ function SmartControls({
   selectedTrackId: string | null;
   update: (mut: (s: Session) => Session) => void;
 }) {
-  const [open, setOpen] = useState(true);
+  // Default closed on phones so it doesn't eat the small viewport's
+  // vertical space — users tap the chevron when they want FX.
+  const [open, setOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 640 : true,
+  );
   const [tab, setTab] = useState<'track' | 'master'>('track');
   const track = selectedTrackId ? session.tracks.find((t) => t.id === selectedTrackId) ?? null : null;
   const showTrack = tab === 'track';
@@ -3743,7 +3903,7 @@ function ScrubButton({
       onPointerUp={(e) => { try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ } stopScrub(); }}
       onPointerCancel={stopScrub}
       onPointerLeave={stopScrub}
-      className="h-9 w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+      className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
       title={title}
     >
       {icon}

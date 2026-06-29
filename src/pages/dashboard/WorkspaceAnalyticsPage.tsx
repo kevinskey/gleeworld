@@ -115,7 +115,7 @@ export default function WorkspaceAnalyticsPage() {
   return (
     <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
           Workspace Analytics
         </h1>

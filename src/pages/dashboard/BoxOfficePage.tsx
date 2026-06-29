@@ -159,7 +159,7 @@ export default function BoxOfficePage() {
               Add-on
             </span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Box Office</h1>
+          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Box Office</h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
             Sell general-admission tickets to your concerts. Buyers pay through your own
             Stripe account. We never custody the funds and take no cut of ticket revenue.

@@ -190,7 +190,7 @@ export default function SiteSetup() {
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground"
+            <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold text-foreground"
                 style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", textTransform: 'none', letterSpacing: 0 }}>
               Welcome — set up your site
             </h1>
