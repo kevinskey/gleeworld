@@ -126,12 +126,16 @@ export const TakeAttendance = () => {
     
     setLoading(true);
     try {
-      // Load all glee club members
+      // Load all glee club members. 2000 is a soft cap — well above any
+      // realistic single-tenant choir roster — to keep the attendance UI
+      // from rendering a 5k-row list on a runaway tenant. If a tenant ever
+      // exceeds this, add a search-filtered fetch instead of raising the cap.
       const { data: profilesData, error: profilesError } = await supabase
         .from('gw_profiles_directory')
         .select('user_id, full_name, voice_part, avatar_url')
         .not('full_name', 'is', null)
-        .order('full_name');
+        .order('full_name')
+        .limit(2000);
 
       if (profilesError) throw profilesError;
 

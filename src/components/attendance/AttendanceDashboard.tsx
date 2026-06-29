@@ -114,9 +114,20 @@ export const AttendanceDashboard = () => {
       const myAttendanceRate = totalUserEvents > 0 ? Math.round((myPresentCount / totalUserEvents) * 100) : 0;
 
       if (isAdmin) {
+        // TODO: replace with an RPC that returns aggregated stats — pulling
+        // every attendance row to count client-side scales with tenant size.
+        // Cap at 50k rows so the dashboard cannot OOM on the largest tenants;
+        // ordered newest-first so the cap drops the oldest history first.
+        const ATTENDANCE_STATS_CAP = 50_000;
         const [allLegacy, allGw] = await Promise.all([
-          supabase.from('attendance').select('status, user_id, event_id'),
-          supabase.from('gw_event_attendance').select('attendance_status, user_id, event_id'),
+          supabase.from('attendance')
+            .select('status, user_id, event_id')
+            .order('created_at', { ascending: false })
+            .limit(ATTENDANCE_STATS_CAP),
+          supabase.from('gw_event_attendance')
+            .select('attendance_status, user_id, event_id')
+            .order('created_at', { ascending: false })
+            .limit(ATTENDANCE_STATS_CAP),
         ]);
 
         const allCombined = [

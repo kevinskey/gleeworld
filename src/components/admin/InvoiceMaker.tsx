@@ -41,11 +41,23 @@ const BRAND_INFO = {
   taxStatus: "501(c)(3) Nonprofit Organization — Riverside Music Institute",
 };
 
-const emptyLineItem: InvoiceLineItem = {
+// Local row type with a stable `_key` so React can match rows across
+// add/remove without reusing the wrong row's input DOM. `_key` is stripped
+// before line items are persisted or passed to the preview renderer — the
+// shared `InvoiceLineItem` type stays clean for storage.
+type LineItemRow = InvoiceLineItem & { _key: string };
+
+const newLineItem = (): LineItemRow => ({
+  _key: crypto.randomUUID(),
   description: "",
   quantity: 1,
   unitPrice: 0,
   amount: 0,
+});
+
+const stripKey = (row: LineItemRow): InvoiceLineItem => {
+  const { _key, ...item } = row;
+  return item;
 };
 
 export const InvoiceMaker = () => {
@@ -65,7 +77,7 @@ export const InvoiceMaker = () => {
   const [donorPhone, setDonorPhone] = useState("");
   const [directorName, setDirectorName] = useState("Dr. Kevin Phillip Johnson");
   const [directorTitle, setDirectorTitle] = useState(`Director, ${getOrgName()}`);
-  const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([{ ...emptyLineItem }]);
+  const [lineItems, setLineItems] = useState<LineItemRow[]>(() => [newLineItem()]);
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState("");
 
@@ -80,7 +92,7 @@ export const InvoiceMaker = () => {
     setDonorPhone("");
     setDirectorName("Dr. Kevin Phillip Johnson");
     setDirectorTitle(`Director, ${getOrgName()}`);
-    setLineItems([{ ...emptyLineItem }]);
+    setLineItems([newLineItem()]);
     setNotes("");
     setDueDate("");
   };
@@ -94,7 +106,7 @@ export const InvoiceMaker = () => {
     setLineItems(updated);
   };
 
-  const addLineItem = () => setLineItems([...lineItems, { ...emptyLineItem }]);
+  const addLineItem = () => setLineItems([...lineItems, newLineItem()]);
   const removeLineItem = (index: number) => {
     if (lineItems.length > 1) setLineItems(lineItems.filter((_, i) => i !== index));
   };
@@ -116,7 +128,7 @@ export const InvoiceMaker = () => {
         donor_phone: donorPhone.trim() || undefined,
         director_name: directorName,
         director_title: directorTitle,
-        line_items: lineItems.filter(i => i.description.trim()),
+        line_items: lineItems.filter(i => i.description.trim()).map(stripKey),
         subtotal,
         total_amount: subtotal,
         notes: notes.trim() || undefined,
@@ -144,7 +156,7 @@ export const InvoiceMaker = () => {
       donor_email: donorEmail,
       director_name: directorName,
       director_title: directorTitle,
-      line_items: lineItems,
+      line_items: lineItems.map(stripKey),
       subtotal,
       total_amount: subtotal,
       notes,
@@ -344,7 +356,7 @@ export const InvoiceMaker = () => {
               </div>
               <div className="space-y-3">
                 {lineItems.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-12 gap-2 items-end">
+                  <div key={item._key} className="grid grid-cols-12 gap-2 items-end">
                     <div className="col-span-5">
                       {idx === 0 && <Label className="text-xs">Description</Label>}
                       <Input

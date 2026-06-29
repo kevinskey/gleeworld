@@ -135,7 +135,7 @@ const ForcePasswordChange = lazy(() => import("./pages/ForcePasswordChange"));
 const AuditionApplicationPage = lazy(() => import("./pages/AuditionApplicationPage"));
 const FanDashboard = lazy(() => import("./pages/FanDashboard"));
 // import AdminDashboard from "./pages/AdminDashboard";
-import { DuesManagement } from "./pages/DuesManagement";
+const DuesManagement = lazy(() => import("./pages/DuesManagement").then(m => ({ default: m.DuesManagement })));
 const PermissionsPage = lazy(() => import("./pages/admin/Permissions"));
 const WeekPage = lazy(() => import("./pages/music-theory/WeekPage"));
 
@@ -148,7 +148,7 @@ const Accounting = lazy(() => import("./pages/Accounting"));
 const DocsArchitecture = lazy(() => import("./pages/DocsArchitecture"));
 const SavedFeed = lazy(() => import("./pages/SavedFeed"));
 const FeedControl = lazy(() => import("./pages/FeedControl"));
-import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
+const UnifiedDashboard = lazy(() => import("./components/dashboard/UnifiedDashboard").then(m => ({ default: m.UnifiedDashboard })));
 const TestBuilderPage = lazy(() => import("./pages/mus240/TestBuilderPage"));
 const TestBuilderEdit = lazy(() => import("./pages/TestBuilderEdit"));
 // (TestPreview page deleted with the radio purge 2026-05-31 — was the only consumer of useRadioPlayer.)
@@ -161,11 +161,11 @@ const Mus240Auth = lazy(() => import("./pages/Mus240Auth"));
 
 const EventPlanner = lazy(() => import("./pages/EventPlanner"));
 const BudgetApprovals = lazy(() => import("./pages/BudgetApprovals"));
-import { Shop } from "./pages/Shop";
+const Shop = lazy(() => import("./pages/Shop").then(m => ({ default: m.Shop })));
 const PointOfSale = lazy(() => import("./pages/PointOfSale"));
-import { GraduatesShop } from "./pages/GraduatesShop";
-import { CheckoutPage } from "./pages/CheckoutPage";
-import { OrderConfirmation } from "./pages/OrderConfirmation";
+const GraduatesShop = lazy(() => import("./pages/GraduatesShop").then(m => ({ default: m.GraduatesShop })));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
+const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation").then(m => ({ default: m.OrderConfirmation })));
 const Payments = lazy(() => import("./pages/Payments"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
@@ -222,7 +222,7 @@ const Treasurer = lazy(() => import("./pages/Treasurer"));
 
 const PerformanceSuite = lazy(() => import("./pages/PerformanceSuite"));
 const WellnessSuite = lazy(() => import("./pages/WellnessSuite"));
-import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/FeedbackDashboard";
+const FeedbackDashboard = lazy(() => import("./modules/rehearsals/feedback-dashboard/FeedbackDashboard").then(m => ({ default: m.FeedbackDashboard })));
 const GraduatesLanding = lazy(() => import("./pages/GraduatesLanding"));
 const GraduatesAdmin = lazy(() => import("./pages/admin/GraduatesAdmin"));
 const GraduatesManagement = lazy(() => import("./pages/GraduatesManagement"));
@@ -237,8 +237,8 @@ const Handbook = lazy(() => import("./pages/Handbook"));
 const ScholarshipHub = lazy(() => import("./pages/ScholarshipHub"));
 const AdminScholarships = lazy(() => import("./pages/AdminScholarships"));
 const AdminProducts = lazy(() => import("./pages/AdminProducts"));
-import { SectionalManagement } from "./pages/SectionalManagement";
-import { SRFManagement } from "./pages/SRFManagement";
+const SectionalManagement = lazy(() => import("./pages/SectionalManagement").then(m => ({ default: m.SectionalManagement })));
+const SRFManagement = lazy(() => import("./pages/SRFManagement").then(m => ({ default: m.SRFManagement })));
 import { MemberViewDashboard } from "@/components/member-view/MemberViewDashboard";
 const GleeClubContactsManagement = lazy(() => import("./pages/GleeClubContactsManagement"));
 
@@ -259,8 +259,8 @@ const Weather = lazy(() => import("./pages/Weather"));
 const BookingRequest = lazy(() => import("./pages/BookingRequest"));
 const BookingForms = lazy(() => import("./pages/BookingForms"));
 const Wardrobe = lazy(() => import("./pages/Wardrobe"));
-import { WardrobeManagementHub } from "./components/wardrobe/WardrobeManagementHub";
-import { ProductManagement } from "./pages/ProductManagement";
+const WardrobeManagementHub = lazy(() => import("./components/wardrobe/WardrobeManagementHub").then(m => ({ default: m.WardrobeManagementHub })));
+const ProductManagement = lazy(() => import("./pages/ProductManagement").then(m => ({ default: m.ProductManagement })));
 const PRHubPage = lazy(() => import("./pages/PRHubPage"));
 const ModulesDirectory = lazy(() => import("./pages/ModulesDirectory"));
 const SharedAnnotation = lazy(() => import("./pages/SharedAnnotation").then(m => ({ default: m.SharedAnnotation })));
@@ -273,16 +273,16 @@ const CommandCenter = lazy(() => import("./pages/dashboard/CommandCenter"));
 const PracticeRecordingsReview = lazy(() => import("./pages/dashboard/PracticeRecordingsReview"));
 const MusicToolkitPage = lazy(() => import("./pages/dashboard/MusicToolkitPage"));
 const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
-import { DashboardShell } from "./components/dashboard/DashboardShell";
+const DashboardShell = lazy(() => import("./components/dashboard/DashboardShell").then(m => ({ default: m.DashboardShell })));
 import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
 const MobileScoring = lazy(() => import("./pages/MobileScoring"));
 const MemberDirectory = lazy(() => import("./pages/MemberDirectory"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
-import { AuditionsManagement } from "./components/admin/AuditionsManagement";
+const AuditionsManagement = lazy(() => import("./components/admin/AuditionsManagement").then(m => ({ default: m.AuditionsManagement })));
 const SoundCloudSearch = lazy(() => import("./pages/SoundCloudSearch"));
-import { ShoutcastManagement } from "./pages/admin/ShoutcastManagement";
-import { ReceiptsPage } from "./pages/ReceiptsPage";
+const ShoutcastManagement = lazy(() => import("./pages/admin/ShoutcastManagement").then(m => ({ default: m.ShoutcastManagement })));
+const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ default: m.ReceiptsPage })));
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
 import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
 import GroupPresentationView from './pages/mus240/GroupPresentationView';
@@ -292,7 +292,7 @@ const SightReadingGeneratorPage = lazy(() => import("./pages/SightReadingGenerat
 const AssignmentCreatorPage = lazy(() => import("./pages/AssignmentCreator"));
 const PracticeStudioPage = lazy(() => import("./pages/PracticeStudioPage"));
 import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
-import { MessagingInterface } from "./components/messaging/MessagingInterface";
+const MessagingInterface = lazy(() => import("./components/messaging/MessagingInterface").then(m => ({ default: m.MessagingInterface })));
 
 const BookAppointmentPage = lazy(() => import("./pages/BookAppointmentPage"));
 const GoogleDocsPage = lazy(() => import("./pages/GoogleDocs"));
@@ -305,9 +305,9 @@ const WardrobeAppointments = lazy(() => import("./pages/WardrobeAppointments"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const FirstYearHub = lazy(() => import("./pages/FirstYearHub"));
 const SetupCrewPage = lazy(() => import("./pages/SetupCrewPage"));
-import { Onboarding } from "./pages/Onboarding";
+const Onboarding = lazy(() => import("./pages/Onboarding").then(m => ({ default: m.Onboarding })));
 const AcademyStudentRegistration = lazy(() => import("./pages/AcademyStudentRegistration"));
-import { ProviderDashboard } from "./components/providers/ProviderDashboard";
+const ProviderDashboard = lazy(() => import("./components/providers/ProviderDashboard").then(m => ({ default: m.ProviderDashboard })));
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 import { ProfileCompletionGuard } from "./components/auth/ProfileCompletionGuard";
@@ -327,15 +327,15 @@ const GroupDetail = lazy(() => import("./pages/mus240/GroupDetail"));
 const GroupUpdateForm = lazy(() => import("./pages/mus240/GroupUpdateForm"));
 const ResourcesAdmin = lazy(() => import("./pages/mus240/admin/ResourcesAdmin"));
 
-import { StudentMidtermGrading } from "./pages/mus240/StudentMidtermGrading";
-import { StudentWorkOverview } from "./pages/mus240/StudentWorkOverview";
-import { StudentDashboard } from "./pages/mus240/StudentDashboard";
-import { PeerReviewBrowserPage } from "./pages/mus240/PeerReviewBrowserPage";
+const StudentMidtermGrading = lazy(() => import("./pages/mus240/StudentMidtermGrading").then(m => ({ default: m.StudentMidtermGrading })));
+const StudentWorkOverview = lazy(() => import("./pages/mus240/StudentWorkOverview").then(m => ({ default: m.StudentWorkOverview })));
+const StudentDashboard = lazy(() => import("./pages/mus240/StudentDashboard").then(m => ({ default: m.StudentDashboard })));
+const PeerReviewBrowserPage = lazy(() => import("./pages/mus240/PeerReviewBrowserPage").then(m => ({ default: m.PeerReviewBrowserPage })));
 const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
 const MUS100SightSingingPage = lazy(() => import("./pages/MUS100SightSingingPage"));
-import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
+const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
 const ChildrenGoAudition = lazy(() => import("./pages/ChildrenGoAudition"));
@@ -347,7 +347,7 @@ const RegistrationThankYou = lazy(() => import("./pages/RegistrationThankYou"));
 
 const GrandStaves = lazy(() => import("./pages/GrandStaves"));
 const GrandStaffClassroom = lazy(() => import("./pages/GrandStaffClassroom"));
-import { Mus240PollPage } from "./pages/Mus240PollPage";
+const Mus240PollPage = lazy(() => import("./pages/Mus240PollPage").then(m => ({ default: m.Mus240PollPage })));
 const JazzPage = lazy(() => import("./pages/mus240/JazzPage"));
 const Tour2026Page = lazy(() => import("./pages/Tour2026Page"));
 const BusInformation = lazy(() => import("./pages/BusInformation"));
@@ -380,6 +380,13 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      // Treat data as fresh for 60s so route revisits / sibling components
+      // sharing a queryKey reuse the cache instead of refetching on every
+      // mount. gcTime keeps unused entries for 5 min before eviction so
+      // back-nav restores instantly. Real-time consumers (Messenger, etc.)
+      // override these with `staleTime: 0` at the useQuery site.
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
     },
   },
 });

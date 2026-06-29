@@ -9,11 +9,22 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface StipendEntry {
+  // Stable per-row id so React can match rows across add/remove without
+  // reusing the wrong row's DOM (form state, focus) when entries shift.
+  id: string;
   username: string;
   contractTitle: string;
   amount: number;
   description: string;
 }
+
+const newEntry = (): StipendEntry => ({
+  id: crypto.randomUUID(),
+  username: "",
+  contractTitle: "",
+  amount: 0,
+  description: "",
+});
 
 interface AddBatchStipendDialogProps {
   onSuccess: () => void;
@@ -21,7 +32,7 @@ interface AddBatchStipendDialogProps {
 
 export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [entries, setEntries] = useState<StipendEntry[]>([{ username: "", contractTitle: "", amount: 0, description: "" }]);
+  const [entries, setEntries] = useState<StipendEntry[]>(() => [newEntry()]);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<Array<{ id: string; label: string; value: string }>>([]);
   const [contracts, setContracts] = useState<Array<{ id: string; title: string; value: string }>>([]);
@@ -88,7 +99,7 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
   };
 
   const addEntry = () => {
-    setEntries([...entries, { username: "", contractTitle: "", amount: 0, description: "" }]);
+    setEntries([...entries, newEntry()]);
   };
 
   const removeEntry = (index: number) => {
@@ -177,7 +188,7 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
       });
 
       setOpen(false);
-      setEntries([{ username: "", contractTitle: "", amount: 0, description: "" }]);
+      setEntries([newEntry()]);
       onSuccess();
 
     } catch (error) {
@@ -210,7 +221,7 @@ export const AddBatchStipendDialog = ({ onSuccess }: AddBatchStipendDialogProps)
         
         <div className="space-y-4">
           {entries.map((entry, index) => (
-            <div key={index} className="grid grid-cols-12 gap-4 p-4 border rounded-lg">
+            <div key={entry.id} className="grid grid-cols-12 gap-4 p-4 border rounded-lg">
               <div className="col-span-3">
                 <Label htmlFor={`username-${index}`}>Username/Email</Label>
                 <Select
