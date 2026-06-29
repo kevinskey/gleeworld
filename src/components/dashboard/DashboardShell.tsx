@@ -240,54 +240,85 @@ function Sidebar() {
   };
   type NavSection = { label: string | null; items: NavItem[] };
 
+  // Verb-grouped nav (Today / Music / Teach / Make / Plan / Reach /
+  // Money / People / Admin). The sections describe what the user is
+  // *doing*, not what kind of object the feature is — so Studio +
+  // Video sit together as creation tools, Concert Planner + Tour
+  // Manager + Auditions sit together as scheduling tools, and so on.
+  // Empty sections (no module access) collapse out of the column.
   const sections: NavSection[] = [
     {
-      label: null,
+      label: 'Today',
       items: [
-        { to: '/dashboard',              label: 'Command Center', icon: Home,           end: true, tourId: 'nav-command-center', tone: 'bg-primary/10 text-primary' },
-        { to: '/dashboard/messenger',    label: 'Messenger',      icon: MessageSquare,             tourId: 'nav-messenger',      tone: 'bg-cyan-50 text-cyan-600' },
-        { to: '/dashboard/calendar',     label: 'Calendar',       icon: Calendar,                  tourId: 'nav-calendar',       tone: 'bg-purple-50 text-purple-600' },
-        { to: '/dashboard/office-hours', label: 'Office Hours',   icon: CalendarClock,             tourId: 'nav-office-hours',   tone: 'bg-emerald-50 text-emerald-600' },
-        { to: '/dashboard/academy',      label: 'Academy',        icon: GraduationCap,             tourId: 'nav-academy',        tone: 'bg-primary text-primary-foreground', hero: true },
+        { to: '/dashboard',           label: 'Command Center', icon: Home,          end: true, tourId: 'nav-command-center', tone: 'bg-primary/10 text-primary' },
+        { to: '/dashboard/messenger', label: 'Messenger',      icon: MessageSquare,            tourId: 'nav-messenger',      tone: 'bg-cyan-50 text-cyan-600' },
+        { to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,                 tourId: 'nav-calendar',       tone: 'bg-purple-50 text-purple-600' },
       ],
     },
     {
-      label: 'Library',
+      label: 'Music',
       items: [
-        { to: '/dashboard/music-library', label: 'Music Library', icon: Music,  tourId: 'nav-music-library', tone: 'bg-rose-50 text-rose-600' },
-        ...(hasSightReading ? [{ to: '/dashboard/sight-reading',  label: 'Sight Reading',   icon: Eye,           tourId: 'nav-sight-reading',   tone: 'bg-violet-50 text-violet-600' }] : []),
-        ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian',      label: 'Librarian',       icon: LibraryBig,    tourId: 'nav-librarian',       tone: 'bg-slate-50 text-slate-600' }] : []),
+        { to: '/dashboard/music-library', label: 'Music Library', icon: Music, tourId: 'nav-music-library', tone: 'bg-rose-50 text-rose-600' },
         ...(hasViewer ? [{ to: '/dashboard/viewer', label: 'Viewer', icon: ScanEye, tourId: 'nav-viewer', tone: 'bg-amber-50 text-amber-700' }] : []),
-        ...(hasPartTracks   ? [{ to: '/dashboard/part-tracks',    label: 'Part Tracks',     icon: Mic,           tourId: 'nav-part-tracks',     tone: 'bg-indigo-50 text-indigo-600' }] : []),
+        ...(hasSightReading ? [{ to: '/dashboard/sight-reading', label: 'Sight Reading', icon: Eye, tourId: 'nav-sight-reading', tone: 'bg-violet-50 text-violet-600' }] : []),
+        ...(hasPartTracks ? [{ to: '/dashboard/part-tracks', label: 'Part Tracks', icon: Mic, tourId: 'nav-part-tracks', tone: 'bg-indigo-50 text-indigo-600' }] : []),
         { to: '/dashboard/media-library', label: 'Media Library', icon: Images, tourId: 'nav-media-library', tone: 'bg-orange-50 text-orange-600' },
+        ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian', label: 'Librarian', icon: LibraryBig, tourId: 'nav-librarian', tone: 'bg-slate-50 text-slate-600' }] : []),
       ],
     },
     {
-      label: 'Add-ons',
+      label: 'Teach',
       items: [
-        { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tourId: 'nav-music-tools', tone: 'bg-cyan-50 text-cyan-600' },
+        { to: '/dashboard/academy',      label: 'Academy',      icon: GraduationCap, tourId: 'nav-academy',      tone: 'bg-primary text-primary-foreground', hero: true },
+        { to: '/dashboard/office-hours', label: 'Office Hours', icon: CalendarClock, tourId: 'nav-office-hours', tone: 'bg-emerald-50 text-emerald-600' },
+        ...(isTenantAdmin ? [{ to: '/dashboard/practice-recordings', label: 'Practice', icon: Mic, tourId: 'nav-practice', tone: 'bg-teal-50 text-teal-700' }] : []),
+      ],
+    },
+    {
+      label: 'Make',
+      items: [
         { to: '/studio',                label: 'Studio',      icon: Disc3,  tourId: 'nav-studio',      tone: 'bg-sky-50 text-sky-600' },
         { to: '/video',                 label: 'Video',       icon: Film,   tourId: 'nav-video',       tone: 'bg-pink-50 text-pink-600' },
-        ...(hasBoxOffice && isTenantAdmin ? [{ to: '/dashboard/box-office',     label: 'Box Office',      icon: Ticket,        tourId: 'nav-box-office',      tone: 'bg-rose-50 text-rose-700' }] : []),
-        ...(hasAuditions    ? [{ to: '/dashboard/auditions',      label: 'Auditions',       icon: ScanLine,      tourId: 'nav-auditions',       tone: 'bg-lime-50 text-lime-600' }] : []),
-        ...(hasPrHub        ? [{ to: '/dashboard/pr-hub',         label: 'PR Hub',          icon: Megaphone,     tourId: 'nav-pr-hub',          tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
-        ...(hasFinance      ? [{ to: '/dashboard/finance',        label: 'Finance',         icon: DollarSign,    tourId: 'nav-finance',         tone: 'bg-emerald-50 text-emerald-600' }] : []),
-        ...(hasMerch        ? [{ to: '/dashboard/shop',           label: 'Store',           icon: Store,  tourId: 'nav-shop',            tone: 'bg-amber-50 text-amber-600' }] : []),
-        ...(hasFeeds        ? [{ to: '/dashboard/feeds',          label: 'Feeds',           icon: Newspaper,     tourId: 'nav-feeds',           tone: 'bg-blue-50 text-blue-600' }] : []),
+        { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tourId: 'nav-music-tools', tone: 'bg-cyan-50 text-cyan-600' },
+      ],
+    },
+    {
+      label: 'Plan',
+      items: [
         ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tourId: 'nav-concert-planner', tone: 'bg-emerald-50 text-emerald-700' }] : []),
-        ...(hasTourManager ? [{ to: '/tour-manager', label: 'Tour Manager', icon: RouteIcon, tourId: 'nav-tour-manager', tone: 'bg-blue-50 text-blue-600' }] : []),
+        ...(hasTourManager   ? [{ to: '/tour-manager',               label: 'Tour Manager',    icon: RouteIcon,     tourId: 'nav-tour-manager',    tone: 'bg-blue-50 text-blue-600' }] : []),
+        ...(hasAuditions     ? [{ to: '/dashboard/auditions',        label: 'Auditions',       icon: ScanLine,      tourId: 'nav-auditions',       tone: 'bg-lime-50 text-lime-600' }] : []),
+      ],
+    },
+    {
+      label: 'Reach',
+      items: [
+        ...(hasPrHub ? [{ to: '/dashboard/pr-hub', label: 'PR Hub', icon: Megaphone, tourId: 'nav-pr-hub', tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
+        ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tourId: 'nav-fan-page', tone: 'bg-rose-50 text-rose-700' }] : []),
+        ...(hasFeeds ? [{ to: '/dashboard/feeds', label: 'Feeds', icon: Newspaper, tourId: 'nav-feeds', tone: 'bg-blue-50 text-blue-600' }] : []),
+        ...(hasMerch ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tourId: 'nav-shop',  tone: 'bg-amber-50 text-amber-600' }] : []),
+      ],
+    },
+    {
+      label: 'Money',
+      items: [
+        ...(hasBoxOffice && isTenantAdmin ? [{ to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     tourId: 'nav-box-office', tone: 'bg-rose-50 text-rose-700' }] : []),
+        ...(hasFinance                    ? [{ to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, tourId: 'nav-finance',    tone: 'bg-emerald-50 text-emerald-600' }] : []),
+      ],
+    },
+    {
+      label: 'People',
+      items: [
+        { to: '/dashboard/users', label: 'People', icon: Users, tourId: 'nav-people', tone: 'bg-cyan-50 text-cyan-600' },
+        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tourId: 'nav-alumni', tone: 'bg-teal-50 text-teal-600' }] : []),
       ],
     },
     {
       label: 'Admin',
       items: [
-        { to: '/dashboard/users',     label: 'People',    icon: Users,       tourId: 'nav-people',    tone: 'bg-cyan-50 text-cyan-600' },
-        { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp,  tourId: 'nav-analytics', tone: 'bg-purple-50 text-purple-600' },
-        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tourId: 'nav-alumni', tone: 'bg-teal-50 text-teal-600' }] : []),
         ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tourId: 'nav-site-setup', tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
-        ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tourId: 'nav-fan-page', tone: 'bg-rose-50 text-rose-700' }] : []),
-        ...(isTenantAdmin ? [{ to: '/dashboard/practice-recordings', label: 'Practice', icon: Mic, tourId: 'nav-practice', tone: 'bg-teal-50 text-teal-700' }] : []),
-        { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,    tourId: 'nav-settings',  tone: 'bg-muted text-muted-foreground' },
+        { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp, tourId: 'nav-analytics', tone: 'bg-purple-50 text-purple-600' },
+        { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,   tourId: 'nav-settings',  tone: 'bg-muted text-muted-foreground' },
       ],
     },
   ];
@@ -337,11 +368,14 @@ function Sidebar() {
       <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2 space-y-1.5">
         {sections.map((section, idx) => {
           if (section.items.length === 0) return null;
-          const hasActive = section.items.some((it) =>
-            it.end ? location.pathname === it.to : location.pathname.startsWith(it.to),
-          );
           const isCollapsible = !!section.label;
-          const isCollapsed = isCollapsible && collapsed.has(section.label!) && !hasActive;
+          // Honor the user's manual collapse intent regardless of which
+          // route they're on. The previous `&& !hasActive` override
+          // re-expanded any section containing the current route, which
+          // made the chevron silently no-op on the section you most
+          // wanted to collapse (e.g. clicking "Music" while reading a
+          // score in the viewer).
+          const isCollapsed = isCollapsible && collapsed.has(section.label!);
           return (
             // Each section is its own card-like surface with a muted
             // background so the long nav reads as grouped sections rather
@@ -355,7 +389,7 @@ function Sidebar() {
                 <button
                   type="button"
                   onClick={() => toggleSection(section.label!)}
-                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/80 hover:text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/75 hover:text-foreground transition-colors"
                 >
                   <span>{section.label}</span>
                   {isCollapsed ? (
@@ -382,10 +416,13 @@ function Sidebar() {
                     return `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`;
                   }}
                 >
-                  {/* Icon glyph only — colored by category, no tile. Hero
-                      items use the primary color so the icon matches the
-                      tinted row. */}
-                  <item.icon className={`w-[18px] h-[18px] shrink-0 ${item.hero ? 'text-primary' : iconTextOnly(item.tone)}`} />
+                  {/* Single tonal icon family — slate-500 default, the
+                   * tenant's primary tone only on the hero row.
+                   * Replaces the previous 10+ category hues (rose,
+                   * amber, violet, indigo, sky, pink…) which violated
+                   * the "hero accent only for the main brand identity"
+                   * discipline. */}
+                  <item.icon className={`w-[18px] h-[18px] shrink-0 ${item.hero ? 'text-primary' : 'text-slate-500'}`} />
                   <span className="truncate">{item.label}</span>
                 </NavLink>
               ))}
@@ -437,57 +474,84 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
   const { hasAccess: hasTourManager } = useModuleAccess('tour');
 
-  // Group by category to match the desktop sidebar layout. Section labels
-  // render above each block so phone/iOS users get the same mental model.
+  // Verb-grouped to match the desktop sidebar (Today / Music / Teach /
+  // Make / Plan / Reach / Money / People / Admin). Empty sections drop
+  // out so a tenant without box-office or finance modules doesn't see
+  // an empty "Money" header.
   type Item = { to: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string };
   const sections: Array<{ label: string; items: Item[] }> = [
     {
-      label: 'Home',
+      label: 'Today',
       items: [
-        { to: '/dashboard',              label: 'Command Center', icon: Home,           tone: 'bg-primary/10 text-primary' },
-        { to: '/dashboard/messenger',    label: 'Messenger',      icon: MessageSquare,  tone: 'bg-cyan-50 text-cyan-600' },
-        { to: '/dashboard/calendar',     label: 'Calendar',       icon: Calendar,       tone: 'bg-purple-50 text-purple-600' },
-        { to: '/dashboard/office-hours', label: 'Office Hours',   icon: CalendarClock,  tone: 'bg-emerald-50 text-emerald-600' },
-        { to: '/dashboard/academy',      label: 'Academy',        icon: GraduationCap,  tone: 'bg-primary text-primary-foreground' },
+        { to: '/dashboard',           label: 'Command Center', icon: Home,          tone: 'bg-primary/10 text-primary' },
+        { to: '/dashboard/messenger', label: 'Messenger',      icon: MessageSquare, tone: 'bg-cyan-50 text-cyan-600' },
+        { to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      tone: 'bg-purple-50 text-purple-600' },
       ],
     },
     {
-      label: 'Library',
+      label: 'Music',
       items: [
-        { to: '/dashboard/music-library',label: 'Music Library',  icon: Music,          tone: 'bg-rose-50 text-rose-600' },
-        ...(hasSightReading ? [{ to: '/dashboard/sight-reading',  label: 'Sight Reading',   icon: Eye,           tone: 'bg-violet-50 text-violet-600' }] : []),
-        ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian', label: 'Librarian', icon: LibraryBig, tone: 'bg-slate-50 text-slate-600' }] : []),
+        { to: '/dashboard/music-library', label: 'Music Library', icon: Music, tone: 'bg-rose-50 text-rose-600' },
         ...(hasViewer ? [{ to: '/dashboard/viewer', label: 'Viewer', icon: ScanEye, tone: 'bg-amber-50 text-amber-700' }] : []),
-        ...(hasPartTracks ? [{ to: '/dashboard/part-tracks',      label: 'Part Tracks',     icon: Mic,           tone: 'bg-indigo-50 text-indigo-600' }] : []),
-        { to: '/dashboard/media-library',label: 'Media Library',  icon: Images,         tone: 'bg-orange-50 text-orange-600' },
+        ...(hasSightReading ? [{ to: '/dashboard/sight-reading', label: 'Sight Reading', icon: Eye, tone: 'bg-violet-50 text-violet-600' }] : []),
+        ...(hasPartTracks ? [{ to: '/dashboard/part-tracks', label: 'Part Tracks', icon: Mic, tone: 'bg-indigo-50 text-indigo-600' }] : []),
+        { to: '/dashboard/media-library', label: 'Media Library', icon: Images, tone: 'bg-orange-50 text-orange-600' },
+        ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian', label: 'Librarian', icon: LibraryBig, tone: 'bg-slate-50 text-slate-600' }] : []),
       ],
     },
     {
-      label: 'Add-ons',
+      label: 'Teach',
       items: [
-        { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tone: 'bg-cyan-50 text-cyan-600' },
+        { to: '/dashboard/academy',      label: 'Academy',      icon: GraduationCap, tone: 'bg-primary text-primary-foreground' },
+        { to: '/dashboard/office-hours', label: 'Office Hours', icon: CalendarClock, tone: 'bg-emerald-50 text-emerald-600' },
+        ...(isTenantAdmin ? [{ to: '/dashboard/practice-recordings', label: 'Practice', icon: Mic, tone: 'bg-teal-50 text-teal-700' }] : []),
+      ],
+    },
+    {
+      label: 'Make',
+      items: [
         { to: '/studio',                label: 'Studio',      icon: Disc3,  tone: 'bg-sky-50 text-sky-600' },
         { to: '/video',                 label: 'Video',       icon: Film,   tone: 'bg-pink-50 text-pink-600' },
-        ...(hasBoxOffice && isTenantAdmin ? [{ to: '/dashboard/box-office',     label: 'Box Office',      icon: Ticket,        tone: 'bg-rose-50 text-rose-700' }] : []),
-        ...(hasAuditions    ? [{ to: '/dashboard/auditions',      label: 'Auditions',       icon: ScanLine,      tone: 'bg-lime-50 text-lime-600' }] : []),
-        ...(hasPrHub        ? [{ to: '/dashboard/pr-hub',         label: 'PR Hub',          icon: Megaphone,     tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
-        ...(hasFinance      ? [{ to: '/dashboard/finance',        label: 'Finance',         icon: DollarSign,    tone: 'bg-emerald-50 text-emerald-600' }] : []),
-        ...(hasMerch        ? [{ to: '/dashboard/shop',           label: 'Store',           icon: Store,  tone: 'bg-amber-50 text-amber-600' }] : []),
-        ...(hasFeeds        ? [{ to: '/dashboard/feeds',          label: 'Feeds',           icon: Newspaper,     tone: 'bg-blue-50 text-blue-600' }] : []),
-        ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tone: 'bg-emerald-50 text-emerald-700' }] : []),
-        ...(hasTourManager ? [{ to: '/tour-manager', label: 'Tour Manager', icon: RouteIcon, tone: 'bg-blue-50 text-blue-600' }] : []),
+        { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tone: 'bg-cyan-50 text-cyan-600' },
       ],
     },
     {
-      label: 'Workspace',
+      label: 'Plan',
       items: [
-        { to: '/dashboard/users',     label: 'People',    icon: Users,       tone: 'bg-cyan-50 text-cyan-600' },
-        { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp,  tone: 'bg-purple-50 text-purple-600' },
-        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
-        ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
+        ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tone: 'bg-emerald-50 text-emerald-700' }] : []),
+        ...(hasTourManager   ? [{ to: '/tour-manager',               label: 'Tour Manager',    icon: RouteIcon,     tone: 'bg-blue-50 text-blue-600' }] : []),
+        ...(hasAuditions     ? [{ to: '/dashboard/auditions',        label: 'Auditions',       icon: ScanLine,      tone: 'bg-lime-50 text-lime-600' }] : []),
+      ],
+    },
+    {
+      label: 'Reach',
+      items: [
+        ...(hasPrHub ? [{ to: '/dashboard/pr-hub', label: 'PR Hub', icon: Megaphone, tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
         ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tone: 'bg-rose-50 text-rose-700' }] : []),
-        ...(isTenantAdmin ? [{ to: '/dashboard/practice-recordings', label: 'Practice', icon: Mic, tone: 'bg-teal-50 text-teal-700' }] : []),
-        { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,    tone: 'bg-muted text-muted-foreground' },
+        ...(hasFeeds ? [{ to: '/dashboard/feeds', label: 'Feeds', icon: Newspaper, tone: 'bg-blue-50 text-blue-600' }] : []),
+        ...(hasMerch ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tone: 'bg-amber-50 text-amber-600' }] : []),
+      ],
+    },
+    {
+      label: 'Money',
+      items: [
+        ...(hasBoxOffice && isTenantAdmin ? [{ to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     tone: 'bg-rose-50 text-rose-700' }] : []),
+        ...(hasFinance                    ? [{ to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, tone: 'bg-emerald-50 text-emerald-600' }] : []),
+      ],
+    },
+    {
+      label: 'People',
+      items: [
+        { to: '/dashboard/users', label: 'People', icon: Users, tone: 'bg-cyan-50 text-cyan-600' },
+        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
+      ],
+    },
+    {
+      label: 'Admin',
+      items: [
+        ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
+        { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp, tone: 'bg-purple-50 text-purple-600' },
+        { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,   tone: 'bg-muted text-muted-foreground' },
       ],
     },
   ];
@@ -523,7 +587,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
                     `flex items-center gap-2.5 px-2.5 py-2.5 rounded-md !text-[17px] leading-tight transition-colors w-full text-left ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
                   }
                 >
-                  <item.icon className={`w-5 h-5 shrink-0 ${iconTextOnly(item.tone)}`} />
+                  <item.icon className="w-5 h-5 shrink-0 text-slate-500" />
                   <span className="truncate">{item.label}</span>
                 </NavLink>
               ))}
@@ -577,12 +641,13 @@ function TopBar() {
     <header
       className="border-b border-border bg-card flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-30"
       style={{
-        // Add iOS safe-area inset to the header top so the title row clears
-        // notches / Dynamic Island on iPad + iPhone Capacitor. Falls back to
-        // a comfortable 18px on desktop.
-        paddingTop: 'max(0.5rem, env(safe-area-inset-top))',
-        paddingBottom: '0.5rem',
-        minHeight: '4.5rem',
+        // Pin the topbar to exactly the same 80px the sidebar's brand
+        // block uses (h-[80px]) so the two visually meet at the same
+        // baseline instead of the topbar overhanging the brand row by
+        // ~18px. Safe-area inset is ADDED on top of the 80px so iOS
+        // notches still clear without growing the visible header.
+        paddingTop: 'env(safe-area-inset-top)',
+        height: '80px',
       }}
     >
       {/* Mobile menu (lg:hidden) — drawer with nav. State is controlled so
@@ -619,7 +684,7 @@ function TopBar() {
           aria-label="Get your own GleeWorld site"
           className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm shrink-0 hover:scale-[1.02] transition-transform"
           style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)',
+            background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)',
             // Inline color wins against every global `button { color }`
             // override in index.css (radix menu, body foreground, etc.)
             // without needing layering tricks.

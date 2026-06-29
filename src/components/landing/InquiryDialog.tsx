@@ -16,7 +16,7 @@ interface InquiryDialogProps {
 }
 
 const PROMO_GRADIENT =
-  "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)";
+  "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)";
 const SANS = "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif";
 
 export function InquiryDialog({ open, onClose }: InquiryDialogProps) {

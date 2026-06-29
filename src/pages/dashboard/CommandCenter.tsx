@@ -77,20 +77,16 @@ function scheduleDot(subtype: FeedRow['subtype']): string {
 // Soft card surface used across the dashboard: rounded-2xl, no harsh border,
 // gentle diffused shadow. The base Card component's default variant adds
 // `shadow-card`, which Tailwind compiles to use hsl(var(--card)) as the
-// shadow COLOR — i.e. white on a white card, making any class-based shadow
-// invisible. We bypass the cascade with an inline style.
-const SOFT_CARD = 'border-0 rounded-2xl';
-// Tighter shadows — earlier spread (0 16px 32px -8px at 22% alpha) was
-// darkening the page background between cards, making the whole grid
-// feel grey instead of crisp. Reduced the wide-shadow spread by half
-// and dropped both alphas by ~60% so cards lift gently without
-// muddying the surrounding surface.
-const SOFT_CARD_STYLE: React.CSSProperties = {
-  boxShadow: '0 1px 2px rgba(15,23,42,0.05), 0 6px 14px -6px rgba(15,23,42,0.08)',
-};
-const SOFT_CARD_STYLE_AMBER: React.CSSProperties = {
-  boxShadow: '0 1px 2px rgba(180,83,9,0.05), 0 6px 14px -6px rgba(180,83,9,0.10)',
-};
+// Tactile-brutalism cards: 1px solid line + the canvas/card one-step
+// contrast carries the elevation. No drop shadows. Sharper radius
+// (`rounded-md` instead of the old `rounded-2xl`) matches the
+// editorial-precision look the system aims for in 2026.
+const SOFT_CARD = 'border border-border rounded-md';
+// boxShadow stripped — kept as empty objects so existing call sites
+// don't need to change, but the actual elevation is now the line +
+// the canvas/card contrast (paper-on-paper).
+const SOFT_CARD_STYLE: React.CSSProperties = {};
+const SOFT_CARD_STYLE_AMBER: React.CSSProperties = {};
 // Cap card heights at every breakpoint INCLUDING desktop. Without the
 // lg cap, `items-stretch` on the row was making shallow cards (like an
 // empty announcements panel) match the tallest card in the row,
@@ -183,7 +179,7 @@ function TodaysSchedule({ rows, loading }: { rows: FeedRow[]; loading: boolean }
             })}
           </ul>
         )}
-        <Link to="/calendar" className="block mt-3 sm:mt-5 text-sm text-primary hover:underline shrink-0">
+        <Link to="/calendar" className="block mt-3 sm:mt-5 text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline shrink-0">
           View full day schedule &rarr;
         </Link>
       </CardContent>
@@ -204,7 +200,7 @@ function RecentAnnouncements({ rows, loading }: { rows: FeedRow[]; loading: bool
       <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
         <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
           <h2 className="font-semibold text-lg">Recent Announcements</h2>
-          <Link to="/communications" className="text-sm text-primary hover:underline">View All</Link>
+          <Link to="/communications" className="text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline">View All</Link>
         </div>
         {loading ? (
           <div className="text-center py-6"><Loader2 className="w-5 h-5 animate-spin inline-block text-muted-foreground" /></div>
@@ -325,7 +321,7 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
         {/* Practice recordings is where every row in this card actually
             lives — the previous link to /legacy-dashboard rendered a
             broken page. */}
-        <Link to="/dashboard/practice-recordings" className="block mt-3 sm:mt-5 text-sm font-medium hover:underline shrink-0" style={{ color: '#92400e' }}>
+        <Link to="/dashboard/practice-recordings" className="block mt-3 sm:mt-5 text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline shrink-0">
           View all tasks &rarr;
         </Link>
       </CardContent>
@@ -341,7 +337,7 @@ function UpcomingEvents({ rows, loading }: { rows: FeedRow[]; loading: boolean }
       <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
         <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
           <h2 className="font-semibold text-lg">Upcoming Events</h2>
-          <Link to="/calendar" className="text-sm text-primary hover:underline">View All</Link>
+          <Link to="/calendar" className="text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline">View All</Link>
         </div>
         {loading ? (
           <div className="text-center py-6"><Loader2 className="w-5 h-5 animate-spin inline-block text-muted-foreground" /></div>
@@ -445,7 +441,7 @@ function ActivityFeed({ rows, loading }: { rows: FeedRow[]; loading: boolean }) 
       <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
         <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
           <h2 className="font-semibold text-lg">Activity Feed</h2>
-          <Link to="/legacy-dashboard" className="text-sm text-primary hover:underline">View All</Link>
+          <Link to="/legacy-dashboard" className="text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline">View All</Link>
         </div>
         {loading ? (
           <div className="text-center py-6"><Loader2 className="w-5 h-5 animate-spin inline-block text-muted-foreground" /></div>
@@ -605,80 +601,78 @@ export default function CommandCenter() {
   return (
     <DashboardShell>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 sm:pt-3 pb-6 space-y-5 overflow-x-hidden">
-      {/* Header */}
+      {/* Header — viewport-scaled wordmark per 2026 architectural
+          typography. The h1 inherits clamp(2rem, 8vw, 5.5rem) from
+          index.css; we keep weight 800 + tight tracking on top. */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          {/* The global `h1 { font-size: clamp(1.75rem, 4.5vw, 2.5rem) }`
-              reset in index.css overrides Tailwind text classes, so we
-              force the size with `!` — 1.4rem (22px) phones, 2rem (32px)
-              desktop. 20% smaller than the previous clamp max. */}
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Command Center</h1>
+          <h1 className="font-extrabold tracking-tight">Command Center</h1>
           {error && (
             <p className="text-sm text-destructive mt-1">
               Couldn&apos;t load: {(error as Error).message}
             </p>
           )}
         </div>
-        <div className="rounded-md border border-border bg-card px-2 sm:px-3.5 py-2 text-sm sm:text-base inline-flex items-center gap-2 shrink-0">
+        <div className="border border-border bg-card px-2 sm:px-3.5 py-2 text-sm sm:text-base inline-flex items-center gap-2 shrink-0">
           <Calendar className="w-4 h-4 text-muted-foreground" />
           {format(new Date(), 'MMM d, yyyy')}
         </div>
       </div>
 
-      {/* Stat tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <StatTile
-          icon={Users}
-          iconBg="bg-purple-50"
-          iconFg="text-purple-600"
+      {/* Bento grid — 12-col on lg+, asymmetric. Stats strip across
+       * the top (each 3 cols), then a hero "Needs Attention" 6×2 on
+       * the left with TodaysSchedule + RecentAnnouncements stacked
+       * 6×1 each on the right, then UpcomingEvents + ActivityFeed
+       * 6×1 each on the bottom row. `grid-flow-row-dense` packs any
+       * gaps that would form when a card shrinks to less than its
+       * declared row span. Mobile collapses to a single column. */}
+      <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 grid-flow-row-dense gap-3 sm:gap-4 auto-rows-min">
+        <div className="md:col-span-3 lg:col-span-3"><StatTile
+          icon={Users} iconBg="bg-slate-100" iconFg="text-slate-700"
           label="Attendance"
           value={stats.attendanceMissing === 0 ? '—' : `${stats.attendanceMissing}`}
           detail={stats.attendanceMissing === 0 ? 'Awaiting summary' : `${stats.attendanceMissing} pending`}
-        />
-        <StatTile
-          icon={Calendar}
-          iconBg="bg-emerald-50"
-          iconFg="text-emerald-600"
-          label="Events"
-          value={stats.scheduleCount}
+        /></div>
+        <div className="md:col-span-3 lg:col-span-3"><StatTile
+          icon={Calendar} iconBg="bg-slate-100" iconFg="text-slate-700"
+          label="Events" value={stats.scheduleCount}
           detail={stats.nextEvent ? `Next: ${stats.nextEvent}` : 'Nothing scheduled today'}
-        />
-        <StatTile
+        /></div>
+        <div className="md:col-span-3 lg:col-span-3"><StatTile
           icon={ClipboardList}
-          iconBg="bg-orange-50"
-          iconFg="text-orange-600"
-          label="Tasks"
-          value={stats.urgentCount}
+          iconBg={stats.urgentCount > 0 ? 'bg-indigo-100' : 'bg-slate-100'}
+          iconFg={stats.urgentCount > 0 ? 'text-indigo-700' : 'text-slate-700'}
+          label="Tasks" value={stats.urgentCount}
           detail={stats.urgentCount === 0 ? 'All caught up' : 'Requires your attention'}
-        />
-        <StatTile
+        /></div>
+        <div className="md:col-span-3 lg:col-span-3"><StatTile
           icon={MessageSquare}
-          iconBg="bg-cyan-50"
-          iconFg="text-cyan-600"
-          label="Messages"
-          value={stats.unreadCount}
+          iconBg={stats.unreadCount > 0 ? 'bg-indigo-100' : 'bg-slate-100'}
+          iconFg={stats.unreadCount > 0 ? 'text-indigo-700' : 'text-slate-700'}
+          label="Messages" value={stats.unreadCount}
           detail={stats.unreadCount === 0 ? 'Inbox clear' : 'Across all channels'}
-        />
-      </div>
+        /></div>
 
-      {/* Middle row — two cards per row up to xl (1280px), three on
-          desktop landscape. items-stretch up to xl so Today's Schedule
-          and Recent Announcements match each other in their two-col
-          row on iPad. items-start at xl prevents the tall Needs Your
-          Attention card from stretching the others (xl is when all
-          three land in one row). */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-4 items-stretch xl:items-start">
-        <div className="md:col-span-1 xl:col-span-5"><TodaysSchedule rows={schedule} loading={isLoading} /></div>
-        <div className="md:col-span-1 xl:col-span-4"><RecentAnnouncements rows={announcements} loading={isLoading} /></div>
-        <div className="md:col-span-2 xl:col-span-3"><NeedsAttention rows={urgent} loading={isLoading} /></div>
-      </div>
+        {/* HERO — Needs Attention spans 2 rows on the left half of the grid. */}
+        <div className="md:col-span-6 lg:col-span-6 lg:row-span-2">
+          <NeedsAttention rows={urgent} loading={isLoading} />
+        </div>
 
-      {/* Bottom row — Quick Actions removed (every action it surfaced
-          lives in the sidebar nav). Two-up layout: Upcoming Events +
-          Activity Feed. Both lay out the same on iPad and desktop. */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-        <UpcomingEvents rows={eventsOnly} loading={isLoading} />
-        <ActivityFeed rows={activity} loading={isLoading} />
+        {/* Right column stacked: Today's Schedule then Recent Announcements. */}
+        <div className="md:col-span-6 lg:col-span-6">
+          <TodaysSchedule rows={schedule} loading={isLoading} />
+        </div>
+        <div className="md:col-span-6 lg:col-span-6">
+          <RecentAnnouncements rows={announcements} loading={isLoading} />
+        </div>
+
+        {/* Bottom row — Upcoming Events + Activity Feed side by side. */}
+        <div className="md:col-span-6 lg:col-span-6">
+          <UpcomingEvents rows={eventsOnly} loading={isLoading} />
+        </div>
+        <div className="md:col-span-6 lg:col-span-6">
+          <ActivityFeed rows={activity} loading={isLoading} />
+        </div>
       </div>
     </div>
     </DashboardShell>

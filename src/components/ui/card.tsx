@@ -7,21 +7,26 @@ const Card = React.forwardRef<
     variant?: "default" | "glass" | "elevated" | "outline" | "glossy" | "muted"
   }
 >(({ className, variant = "default", ...props }, ref) => {
+  // Tactile-brutalism cards: 1px line + canvas-to-card contrast carries
+  // the elevation. No drop shadows on any variant; the "elevated"
+  // variant just bumps to a stronger border instead. `rounded-none` is
+  // explicit so a per-page `className` can opt back in via `rounded-sm`
+  // etc. without fighting the shadcn base.
   const variants = {
-    default: "bg-card border border-border shadow-card hover:shadow-card-hover",
-    glass: "bg-card/80 backdrop-blur-md border border-border/50 shadow-glass",
-    elevated: "bg-card border-0 shadow-elevated hover:shadow-glass-lg",
+    default: "bg-card border border-border",
+    glass: "bg-card/80 backdrop-blur-md border border-border/50",
+    elevated: "bg-card border-2 border-border",
     outline: "bg-transparent border-2 border-border hover:border-primary/50",
-    glossy: "bg-card border border-border shadow-lg",
+    glossy: "bg-card border border-border",
     muted: "bg-muted border border-border/50",
   }
-  
+
   return (
     <div
       ref={ref}
       data-component="card"
       className={cn(
-        "rounded-lg text-card-foreground transition-all duration-200 relative overflow-hidden",
+        "rounded-none text-card-foreground transition-colors duration-150 relative overflow-hidden",
         variants[variant],
         className
       )}

@@ -95,6 +95,34 @@
     background-repeat: no-repeat;
   }
 
+  /* Subtle film-grain overlay — code-generated SVG noise at very low
+   * opacity. Adds the "physical, high-end" tactility called for in
+   * 2026 standards without shipping a heavy texture image. Position
+   * fixed so it stays consistent across scroll; pointer-events:none
+   * so it never intercepts clicks. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* Micro-interactions baseline — everything that the user can hit
+   * gets a 150ms color+transform transition by default. Component
+   * surfaces can opt out with `transition-none`. */
+  button, a, [role="button"], input, select, textarea, label[for] {
+    transition-property: color, background-color, border-color, transform, box-shadow, opacity;
+    transition-duration: 150ms;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  button:active:not(:disabled), [role="button"]:active:not(:disabled) {
+    transform: translateY(1px) scale(0.99);
+  }
+
   /* Typography scale — Kennedy's responsive guide, interaction-heavy app
      profile. Body floor is 16px on mobile (iOS auto-zoom rule on inputs
      also relies on this), lifts to 17px on desktop. Secondary text
@@ -137,11 +165,19 @@
   /* Heading sizes — single source of truth (the duplicate Bebas Neue
      block lower in this file only overrides font-family/letter-spacing,
      these sizes win). */
-  h1 { font-size: clamp(1.75rem, 4.5vw, 2.5rem); font-weight: 700; color: hsl(var(--foreground)); line-height: 1.15; } /* 28→40 */
-  h2 { font-size: clamp(1.375rem, 3.5vw, 1.875rem); font-weight: 700; color: hsl(var(--foreground)); line-height: 1.2; } /* 22→30 */
-  h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 600; color: hsl(var(--foreground)); line-height: 1.25; } /* 20→24 */
-  h4 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.3; } /* 18 */
-  h5, h6 { font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.4; } /* 16 */
+  /* "Typography as architecture" — let large headers carry visible
+   * weight on big screens rather than relying on imagery or animation.
+   * Page titles (h1) scale 28→56px so a desktop dashboard reads as
+   * an editorial spread instead of a small label. Page-specific
+   * components can still opt out with !text-[Npx]. */
+  /* True viewport-scaling so headlines stretch as page architecture
+   * rather than reading as labels. 32→88px at 8vw, capped so a
+   * 4K monitor doesn't blow up. */
+  h1 { font-size: clamp(2rem, 8vw, 5.5rem); font-weight: 800; letter-spacing: -0.025em; color: hsl(var(--foreground)); line-height: 1.02; }
+  h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 700; letter-spacing: -0.015em; color: hsl(var(--foreground)); line-height: 1.15; }
+  h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 600; color: hsl(var(--foreground)); line-height: 1.25; }
+  h4 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.3; }
+  h5, h6 { font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.4; }
 
   :root {
     /* High-Contrast Design System for GleeWorld */
@@ -170,12 +206,17 @@
     --message-received: 210 20% 95%; /* Very light blue-gray — clearly "theirs" */
     --message-received-fg: 220 20% 18%; /* Near-black text for readability */
     
-    /* High-Contrast Backgrounds - PURE WHITE, NEUTRAL */
-    --background: 0 0% 100%; /* Pure white background */
+    /* Canvas — "Cloud Dancer" warm off-white (oatmeal) per 2026 design
+     * standards. Pure #FFFFFF is being phased out (eye strain + flat
+     * feel); a touch of warmth gives the editorial paper quality. Cards
+     * stay near-white so they pop crisply against this canvas — that
+     * one-step contrast IS the elevation, replacing heavy shadows. */
+    --background: 36 30% 97%; /* #FAF7F1 — warm oatmeal canvas */
     --foreground: 222 47% 11%; /* #0F172A - Primary text */
 
-    /* Card System - Clean white cards */
-    --card: 0 0% 100%; /* Pure white cards */
+    /* Card System — slightly warmer-white than pure to stay one step
+     * brighter than the canvas without going clinical white. */
+    --card: 36 25% 99%; /* #FEFDFB — paper white */
     --card-foreground: 222 47% 11%; /* #0F172A */
 
     /* Popover and Dropdown Elements */
@@ -199,12 +240,25 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border and Input Styling - Warm neutral borders */
-    --border: 40 5% 88%; /* Warm gray borders */
+    /* Border — bumped a step darker so 1px solids actually read against
+     * the warm canvas (tactile-brutalism standard: precise, crisp
+     * geometry instead of blurry shadows for elevation). */
+    --border: 32 12% 82%; /* #DCD5C9 — warm sand line */
     --input: 0 0% 100%; /* White inputs */
     --ring: 271 76% 53%; /* Purple focus rings */
 
-    --radius: 0.375rem;
+    /* Chrome accent — tenant-neutral indigo for links, secondary CTAs,
+     * and "View all"-style affordances. Independent of the per-tenant
+     * --primary so a Spelman site keeps gold for active nav + brand
+     * surfaces while navigation chrome stays in a universally-readable
+     * electric indigo (2026 Tech/AI standard). */
+    --link: 239 84% 56%; /* #4F46E5 — indigo-600 */
+    --link-hover: 243 75% 47%; /* #4338CA — indigo-700 */
+
+    /* Wireframe-segregation geometry: 0px corners everywhere shadcn's
+     * --radius cascades. Pills (rounded-full) still pill via their own
+     * utility; everything else goes square per 2026 tactile-brutalism. */
+    --radius: 0rem;
 
     /* Enhanced Color Tokens - WCAG Compliant */
     --hover-accent: 219 78% 40%; /* Subtle blue for hovers */
