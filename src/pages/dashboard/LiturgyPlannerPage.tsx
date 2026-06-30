@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import {
   liturgicalDayFor, usccbReadingsUrl, type SundayCycle, type LiturgicalSeason,
@@ -177,6 +178,104 @@ function MassListRow({ row }: { row: MassRow }) {
   );
 }
 
+// ── Universalis → MassRow field mapping ──────────────────────────────
+// The readings function returns a flat list of {heading, citation, html}
+// blocks. We pattern-match heading text (case-insensitive) to the
+// columns we store. psalm_full gets the readable html of the psalm
+// block stripped to plain text since it's a textarea, not rich HTML.
+
+function stripHtml(s: string): string {
+  return s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function mapReadingBlocksToFields(blocks: Array<{ heading: string; citation: string | null; html: string }>): Partial<MassRow> {
+  const out: Partial<MassRow> = {};
+  const seenSecond = { val: false };
+  for (const b of blocks) {
+    const h = b.heading.toLowerCase();
+    const cite = b.citation || null;
+    if (/responsorial\s*psalm/.test(h)) {
+      if (cite) out.responsorial_psalm = cite;
+      const txt = stripHtml(b.html);
+      if (txt) out.psalm_full = txt;
+    } else if (/gospel\s*acclamation|verse\s*before\s*the\s*gospel|alleluia/.test(h)) {
+      if (cite) out.gospel_acclamation = cite;
+    } else if (/gospel/.test(h)) {
+      if (cite) out.gospel = cite;
+    } else if (/second\s*reading/.test(h) || (/reading\s*2/.test(h))) {
+      if (cite) { out.second_reading = cite; seenSecond.val = true; }
+    } else if (/first\s*reading|reading\s*1/.test(h)) {
+      if (cite) out.first_reading = cite;
+    } else if (/^reading$/.test(h.trim())) {
+      // Weekday Masses use a single "Reading" heading — treat as first.
+      if (cite && !out.first_reading) out.first_reading = cite;
+    }
+  }
+  return out;
+}
+
+// Find the first reading block whose heading matches any of the given
+// regex source strings (case-insensitive). Returns null if none match.
+function pickBlock(
+  blocks: Array<{ heading: string; citation: string | null; html: string }>,
+  patterns: string[],
+): { heading: string; citation: string | null; html: string } | null {
+  for (const p of patterns) {
+    const re = new RegExp(p, 'i');
+    const hit = blocks.find((b) => re.test(b.heading.trim()));
+    if (hit) return hit;
+  }
+  return null;
+}
+
+// One row of the Readings card: label + citation input + optional
+// "Read" hover-trigger that pops the full text from Universalis.
+function ReadingRow({
+  label, value, onChange, placeholder, block,
+}: {
+  label: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+  placeholder: string;
+  block: { heading: string; citation: string | null; html: string } | null;
+}) {
+  return (
+    <Field label={label}>
+      <div className="flex items-center gap-2">
+        <Input
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value || null)}
+          placeholder={placeholder}
+          className="flex-1"
+        />
+        {block && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline shrink-0"
+                aria-label={`Read full text of ${label}`}
+              >
+                <BookOpen className="w-3.5 h-3.5" /> Read
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[min(28rem,calc(100vw-2rem))] max-h-[60vh] overflow-y-auto p-4">
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{block.heading}</p>
+                {block.citation && <p className="text-xs italic text-muted-foreground">{block.citation}</p>}
+                <div
+                  className="prose prose-sm max-w-none text-sm leading-relaxed text-foreground/90 [&_p]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic"
+                  dangerouslySetInnerHTML={{ __html: block.html }}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+      </div>
+    </Field>
+  );
+}
+
 // ── Editor page ──────────────────────────────────────────────────────
 
 const SONG_SLOTS = [
@@ -201,6 +300,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
   // stable across renders. The previous placement (post-`if (!row)`)
   // crashed with React error #310.
   const [readingsOpen, setReadingsOpen] = useState(false);
+  const [pullingReadings, setPullingReadings] = useState(false);
+  // Cached blocks from the last Universalis pull. Keyed for the inline
+  // hover popovers so each citation field can show its full text without
+  // re-hitting the upstream.
+  const [readingBlocks, setReadingBlocks] = useState<Array<{ heading: string; citation: string | null; html: string }>>([]);
 
   useEffect(() => {
     (async () => {
@@ -213,8 +317,47 @@ function LiturgyEditor({ massId }: { massId: string }) {
       if (error) { toast.error(error.message); setLoading(false); return; }
       setRow(data as MassRow);
       setLoading(false);
+
+      // First-time auto-pull: if the row has no reading citations yet,
+      // try Universalis silently so the editor lands populated. Failure
+      // is non-blocking — the user can still pull manually.
+      const r = data as MassRow;
+      const empty = !r.first_reading && !r.responsorial_psalm && !r.second_reading && !r.gospel_acclamation && !r.gospel;
+      if (empty) {
+        void fetchReadingsAndApply(r.mass_date, /*overwrite=*/false);
+      }
     })();
   }, [massId]);
+
+  // Calls the universalis proxy and merges the parsed citations into
+  // the row's reading fields. `overwrite=true` replaces whatever's
+  // there; `false` keeps user-edited values and only fills blanks.
+  async function fetchReadingsAndApply(iso: string, overwrite: boolean) {
+    setPullingReadings(true);
+    try {
+      const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
+        body: { date: iso },
+      });
+      if (fnErr) throw new Error(fnErr.message);
+      const blocks = ((resp as any)?.readings as Array<{ heading: string; citation: string | null; html: string }>) || [];
+      if (!blocks.length) return;
+      setReadingBlocks(blocks);
+      const mapped = mapReadingBlocksToFields(blocks);
+      setRow((cur) => {
+        if (!cur) return cur;
+        const next: Partial<MassRow> = {};
+        for (const [k, v] of Object.entries(mapped) as Array<[keyof MassRow, string | null]>) {
+          if (v == null) continue;
+          if (overwrite || !cur[k]) (next as any)[k] = v;
+        }
+        return Object.keys(next).length ? { ...cur, ...next } : cur;
+      });
+    } catch (e: any) {
+      if (overwrite) toast.error(`Couldn't fetch readings: ${e?.message || e}`);
+    } finally {
+      setPullingReadings(false);
+    }
+  }
 
   if (loading) return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 text-sm text-muted-foreground flex items-center gap-2">
@@ -226,7 +369,9 @@ function LiturgyEditor({ massId }: { massId: string }) {
   const update = (patch: Partial<MassRow>) => setRow((r) => r ? { ...r, ...patch } : r);
 
   // When the user changes the date, recompute the auto observation /
-  // cycle / season unless they've manually customized the observation.
+  // cycle / season unless they've manually customized the observation,
+  // then fire a non-blocking Universalis pull to fill any empty reading
+  // fields for the new date.
   const onDateChange = (iso: string) => {
     const day = liturgicalDayFor(parseISODate(iso));
     update({
@@ -239,6 +384,10 @@ function LiturgyEditor({ massId }: { massId: string }) {
         ? row.observation
         : (day.observation ?? null),
     });
+    // Readings are inherently a function of the date — when the user
+    // picks a new date, replace whatever was there with the new date's
+    // citations. If they want bespoke text they can edit after.
+    void fetchReadingsAndApply(iso, /*overwrite=*/true);
   };
 
   const save = async () => {
@@ -297,14 +446,26 @@ function LiturgyEditor({ massId }: { massId: string }) {
            * X-Frame-Options: SAMEORIGIN so a direct iframe is blocked;
            * the `usccb-readings` edge function proxies + extracts the
            * readings so we render them in our own panel. */}
-          <button
-            type="button"
-            onClick={() => setReadingsOpen(true)}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline"
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            View today&apos;s readings on USCCB.org
-          </button>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <button
+              type="button"
+              onClick={() => setReadingsOpen(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              View today&apos;s readings
+            </button>
+            <button
+              type="button"
+              onClick={() => fetchReadingsAndApply(row.mass_date, /*overwrite=*/true)}
+              disabled={pullingReadings}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline disabled:opacity-50"
+              title="Replace reading citations + psalm with Universalis data for this date"
+            >
+              {pullingReadings ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BookOpen className="w-3.5 h-3.5" />}
+              Pull from Universalis
+            </button>
+          </div>
         </CardContent>
       </Card>
 
@@ -334,21 +495,41 @@ function LiturgyEditor({ massId }: { massId: string }) {
       <Card>
         <CardContent className="p-4 space-y-3">
           <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Readings</h2>
-          <Field label="First Reading">
-            <Input value={row.first_reading ?? ''} onChange={(e) => update({ first_reading: e.target.value || null })} placeholder="e.g. Isaiah 55:1-3" />
-          </Field>
-          <Field label="Responsorial Psalm (citation)">
-            <Input value={row.responsorial_psalm ?? ''} onChange={(e) => update({ responsorial_psalm: e.target.value || null })} placeholder="e.g. Psalm 145" />
-          </Field>
-          <Field label="Second Reading">
-            <Input value={row.second_reading ?? ''} onChange={(e) => update({ second_reading: e.target.value || null })} placeholder="e.g. Romans 8:35, 37-39" />
-          </Field>
-          <Field label="Gospel Acclamation">
-            <Input value={row.gospel_acclamation ?? ''} onChange={(e) => update({ gospel_acclamation: e.target.value || null })} placeholder="Alleluia verse" />
-          </Field>
-          <Field label="Gospel">
-            <Input value={row.gospel ?? ''} onChange={(e) => update({ gospel: e.target.value || null })} placeholder="e.g. Matthew 14:13-21" />
-          </Field>
+          <ReadingRow
+            label="First Reading"
+            value={row.first_reading}
+            onChange={(v) => update({ first_reading: v })}
+            placeholder="e.g. Isaiah 55:1-3"
+            block={pickBlock(readingBlocks, ['first reading', 'reading 1', '^reading$'])}
+          />
+          <ReadingRow
+            label="Responsorial Psalm (citation)"
+            value={row.responsorial_psalm}
+            onChange={(v) => update({ responsorial_psalm: v })}
+            placeholder="e.g. Psalm 145"
+            block={pickBlock(readingBlocks, ['responsorial psalm'])}
+          />
+          <ReadingRow
+            label="Second Reading"
+            value={row.second_reading}
+            onChange={(v) => update({ second_reading: v })}
+            placeholder="e.g. Romans 8:35, 37-39"
+            block={pickBlock(readingBlocks, ['second reading', 'reading 2'])}
+          />
+          <ReadingRow
+            label="Gospel Acclamation"
+            value={row.gospel_acclamation}
+            onChange={(v) => update({ gospel_acclamation: v })}
+            placeholder="Alleluia verse"
+            block={pickBlock(readingBlocks, ['gospel acclamation', 'verse before the gospel', 'alleluia'])}
+          />
+          <ReadingRow
+            label="Gospel"
+            value={row.gospel}
+            onChange={(v) => update({ gospel: v })}
+            placeholder="e.g. Matthew 14:13-21"
+            block={pickBlock(readingBlocks, ['^gospel$'])}
+          />
         </CardContent>
       </Card>
 

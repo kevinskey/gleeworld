@@ -205,6 +205,89 @@ public final class TrackBinding {
         midiTimers.removeAll()
     }
 
+    // MARK: - Incremental clip add / remove
+    //
+    // Pair with the JS-side diff in useStudio.ts. The engine adds or
+    // removes a single AVAudioPlayerNode on the live graph without
+    // tearing down the rest of the session — the "stuck reloading"
+    // state after a fresh recording goes away.
+
+    /// Attach a new clip's player on the running graph. The asset file
+    /// must already be decoded (Engine resolves the URL + loads the
+    /// AVAudioFile before calling this). If the engine is currently
+    /// playing, the new clip is scheduled against the live transport
+    /// anchor so it joins playback at the correct position.
+    public func addClip(clip: Studio.AudioClip, file: AVAudioFile,
+                        currentSeconds: Double, anchor: AVAudioTime?) {
+        // Skip if we already have a player for this clip id (caller is
+        // expected to remove first when updating).
+        if loadedClips.contains(where: { $0.clip.id == clip.id }) { return }
+
+        let fmt = file.processingFormat
+        guard fmt.sampleRate > 0 && fmt.channelCount > 0 else {
+            NSLog("[Studio] incremental addClip skipped — bad format on \(clip.id)")
+            return
+        }
+        let player = AVAudioPlayerNode()
+        engine.attach(player)
+        if let err = StudioObjC.catchExceptions({
+            self.engine.connect(player, to: self.strip, format: fmt)
+        }) {
+            NSLog("[Studio] incremental connect failed for \(clip.id): \(err.localizedDescription)")
+            engine.detach(player)
+            return
+        }
+        playerNodes.append(player)
+        loadedClips.append((clip, file, player))
+
+        // If the transport is rolling, splice this clip into the current
+        // pass so the user hears the just-added take in place.
+        if let anchor = anchor, engine.isRunning {
+            let clipStart = clip.start_seconds
+            let clipEnd = clipStart + clip.duration_seconds
+            if clipEnd > currentSeconds {
+                let trimSec = max(0, currentSeconds - clipStart)
+                let playOffset = clip.offset_seconds + trimSec
+                let playDuration = clip.duration_seconds - trimSec
+                let sampleRate = fmt.sampleRate
+                let startFrame = AVAudioFramePosition(playOffset * sampleRate)
+                let frameCount = AVAudioFrameCount(max(0, playDuration * sampleRate))
+                if frameCount > 0 {
+                    let when: AVAudioTime
+                    let secondsUntilStart = clipStart - currentSeconds
+                    if secondsUntilStart <= 0 {
+                        when = anchor
+                    } else {
+                        let offsetHost = AVAudioTime.hostTime(forSeconds: secondsUntilStart)
+                        when = AVAudioTime(hostTime: anchor.hostTime + offsetHost)
+                    }
+                    _ = StudioObjC.catchExceptions({
+                        player.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount,
+                                               at: when, completionHandler: nil)
+                        if !player.isPlaying { player.play(at: when) }
+                    })
+                }
+            }
+        }
+    }
+
+    /// Remove a clip's player without touching the rest of the track.
+    public func removeClip(clipId: String) {
+        guard let idx = loadedClips.firstIndex(where: { $0.clip.id == clipId }) else { return }
+        let entry = loadedClips[idx]
+        entry.player.stop()
+        engine.disconnectNodeInput(entry.player)
+        engine.detach(entry.player)
+        if let pidx = playerNodes.firstIndex(of: entry.player) {
+            playerNodes.remove(at: pidx)
+        }
+        loadedClips.remove(at: idx)
+    }
+
+    public func hasClip(clipId: String) -> Bool {
+        return loadedClips.contains(where: { $0.clip.id == clipId })
+    }
+
     public func dispose() {
         stopScheduling()
         for p in playerNodes {

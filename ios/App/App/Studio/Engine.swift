@@ -267,6 +267,49 @@ public final class StudioNativeEngine {
         return pausedAt + elapsedSec
     }
 
+    // MARK: - Incremental clip add / remove
+
+    /// Splice a single audio clip into a live track without rebuilding
+    /// the engine. Caller resolves the asset to a local file path
+    /// (download / cache lookup) and hands it in. We open the
+    /// AVAudioFile, then ask the TrackBinding to attach a player.
+    /// If the transport is currently playing, the new clip is scheduled
+    /// against the live anchor so it joins playback in place.
+    public func addClipToTrack(trackId: String, clip: Studio.AudioClip, localFilePath: String) {
+        guard let binding = tracks[trackId] else {
+            NSLog("[Studio] addClipToTrack — unknown trackId \(trackId)")
+            return
+        }
+        let url = URL(fileURLWithPath: localFilePath)
+        let file: AVAudioFile
+        do {
+            file = try AVAudioFile(forReading: url)
+        } catch {
+            NSLog("[Studio] addClipToTrack — AVAudioFile open failed for \(localFilePath): \(error.localizedDescription)")
+            return
+        }
+        binding.addClip(clip: clip, file: file,
+                        currentSeconds: currentPositionSeconds(),
+                        anchor: startHostTime)
+    }
+
+    public func removeClipFromTrack(trackId: String, clipId: String) {
+        guard let binding = tracks[trackId] else { return }
+        binding.removeClip(clipId: clipId)
+    }
+
+    public func hasTrack(trackId: String) -> Bool {
+        return tracks[trackId] != nil
+    }
+
+    /// Total hardware round-trip latency in milliseconds (input + output
+    /// + buffer duration). Used by the recording / mixdown layer to
+    /// align captured audio with scheduled clicks.
+    public func getHardwareLatencyMs() -> Double {
+        let session = AVAudioSession.sharedInstance()
+        return (session.inputLatency + session.outputLatency + session.ioBufferDuration) * 1000.0
+    }
+
     public func snapshot() -> StudioEngineState {
         StudioEngineState(
             isReady: engine.isRunning,

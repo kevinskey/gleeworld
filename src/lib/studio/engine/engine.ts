@@ -14,9 +14,10 @@
 //     for Tone version quirks we've hit before. Looks redundant, isn't.
 
 import * as Tone from 'tone';
-import type { Session } from '../session';
+import type { Session, AudioAsset, AudioClip } from '../session';
 import { buildFxChain, type EngineFxChain } from './fx';
 import { buildTrack, type EngineTrack } from './tracks';
+import { setAssetUrl } from './assetUrlCache';
 
 export interface EngineState {
   isReady: boolean;
@@ -276,6 +277,75 @@ export class StudioEngine {
     this.recomputeSolo();
   }
 
+  /** Incremental clip add. The new asset's signed URL must already be
+   *  in the cache (caller's responsibility) — `scheduleAudioClip` reads
+   *  it synchronously. No other tracks, players, or FX nodes touched.
+   *  Pairs with `useStudio`'s diff path so a recording lands without a
+   *  full engine reload. */
+  addClipToTrack(trackId: string, clip: AudioClip, asset: AudioAsset): void {
+    const t = this.tracks.get(trackId);
+    if (!t) return;
+    t.addClip(clip, asset);
+  }
+
+  /** Incremental clip remove. */
+  removeClipFromTrack(trackId: string, clipId: string): void {
+    const t = this.tracks.get(trackId);
+    if (!t) return;
+    t.removeClip(clipId);
+  }
+
+  /** Whether the engine has a live EngineTrack for this id. Used by
+   *  useStudio to decide whether incremental updates are safe (false
+   *  means we have to fall back to loadSession). */
+  hasTrack(trackId: string): boolean {
+    return this.tracks.has(trackId);
+  }
+
+  // ── Runtime-hook aliases ──────────────────────────────────────────
+  // Thin shape-matching wrappers so `useStudioEngineRuntime` can call
+  // the engine with the API shape it expects (linear-volume-like
+  // setTrackVolume, addClipIncremental(trackId, clip, assetUrl)).
+  // No new behavior — these delegate straight through.
+
+  /** dB volume on a track strip, click-free via updateTrackStrip's
+   *  ramp. Identity-aliases the canonical updateTrackStrip. */
+  setTrackVolume(trackId: string, volumeDb: number): void {
+    this.updateTrackStrip(trackId, { volume_db: volumeDb });
+  }
+
+  /** Add a clip whose asset URL is already known to the caller. Primes
+   *  the URL cache so scheduleAudioClip's synchronous lookup hits, then
+   *  delegates to addClipToTrack with a synthetic AudioAsset. Use this
+   *  when the caller has a local blob URL (e.g. a fresh recording) and
+   *  doesn't want to round-trip through Supabase storage. */
+  addClipIncremental(
+    trackId: string,
+    clip: AudioClip,
+    assetUrl: string,
+    assetMeta: Partial<AudioAsset> = {},
+  ): void {
+    const assetId = clip.asset_id;
+    setAssetUrl(assetId, assetUrl);
+    const synthetic: AudioAsset = {
+      id: assetId,
+      filename: assetMeta.filename ?? `${assetId}.wav`,
+      format: assetMeta.format ?? 'wav',
+      duration_seconds: assetMeta.duration_seconds ?? clip.duration_seconds,
+      sample_rate: assetMeta.sample_rate ?? 44100,
+      channels: assetMeta.channels ?? 2,
+      size_bytes: assetMeta.size_bytes ?? 0,
+      peaks: assetMeta.peaks,
+    };
+    this.addClipToTrack(trackId, clip, synthetic);
+  }
+
+  /** Mirror of removeClipFromTrack — same method name as the
+   *  runtime-hook spec. */
+  removeClipIncremental(trackId: string, clipId: string): void {
+    this.removeClipFromTrack(trackId, clipId);
+  }
+
   /** Solo override — when any track is soloed, non-soloed tracks are
    * silenced regardless of their own mute flag. */
   private recomputeSolo(): void {
@@ -362,8 +432,37 @@ export class StudioEngine {
   }
 
   seek(seconds: number): void {
-    Tone.getTransport().seconds = Math.max(0, seconds);
-    this.state.positionSeconds = seconds;
+    const where = Math.max(0, seconds);
+    const wasPlaying = this.state.isPlaying;
+    const transport = Tone.getTransport();
+
+    if (wasPlaying) {
+      // In-flight clip Players are unaware of the transport jump — they
+      // keep streaming their original buffer until they end. Stop them
+      // and clear the pending schedules, then re-play from the new
+      // position so each clip starts at the correct offset. Matches the
+      // iOS engine's seek() behavior; without this, rewinding while a
+      // click is playing leaves audio stuck on the old timeline until
+      // the user hits Stop + Play.
+      for (const id of this.playScheduleIds) transport.clear(id);
+      this.playScheduleIds = [];
+      for (const track of this.tracks.values()) {
+        for (const pb of track.playbacks) {
+          try { pb.player.stop(); } catch { /* not playing */ }
+        }
+      }
+    }
+
+    transport.seconds = where;
+    this.state.positionSeconds = where;
+
+    if (wasPlaying) {
+      // Re-schedule every clip against the new transport position so the
+      // playhead resumes mid-clip if applicable.
+      for (const track of this.tracks.values()) {
+        for (const pb of track.playbacks) this.schedulePlayback(pb, where);
+      }
+    }
     this.emit();
   }
 

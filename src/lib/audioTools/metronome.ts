@@ -175,6 +175,15 @@ export function getMetronomeContext(): AudioContext {
   return getCtx();
 }
 
+/** AudioContext time of the next scheduled click. Used by the recorder
+ *  to align the offline click-mixdown to the live click the performer
+ *  actually heard during the take. Returns null when the scheduler is
+ *  idle (no clicks queued). */
+export function getMetronomeNextClickTime(): number | null {
+  if (!running) return null;
+  return nextBeatTime;
+}
+
 /** Register a secondary output for every click. Pass `null` to unregister.
  *  Used by PracticeRecorder to mix clicks into a recorded MediaStream. */
 export function setMetronomeTap(node: AudioNode | null): void {

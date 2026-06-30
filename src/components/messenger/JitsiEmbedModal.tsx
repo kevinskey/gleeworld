@@ -13,7 +13,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { X, Video, Loader2 } from 'lucide-react';
+import { X, Video, Loader2, ExternalLink } from 'lucide-react';
 
 interface JitsiMeetingPanelProps {
   roomName: string;
@@ -65,9 +65,21 @@ export function JitsiMeetingPanel({ roomName, userName, userEmail, userId, isMod
         <span className="text-sm font-semibold flex items-center gap-2 truncate">
           <Video className="w-4 h-4 shrink-0 text-primary" /> <span className="truncate">Video meeting</span>
         </span>
-        <Button variant="outline" size="sm" onClick={onClose}>
-          <X className="w-4 h-4 mr-1" /> Leave
-        </Button>
+        <div className="flex items-center gap-2">
+          {src && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(src, '_blank', 'noopener')}
+              title="Open in a new tab — useful for diagnosing JaaS errors"
+            >
+              <ExternalLink className="w-4 h-4 mr-1" /> Open externally
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={onClose}>
+            <X className="w-4 h-4 mr-1" /> Leave
+          </Button>
+        </div>
       </div>
       {error ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-2 p-6 text-center">

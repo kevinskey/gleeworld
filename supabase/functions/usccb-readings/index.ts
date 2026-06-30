@@ -1,7 +1,11 @@
 // Daily Catholic readings proxy. Originally targeted USCCB but their
-// Cloudflare Bot Fight Mode returns 403/stub to every server-side
+// Cloudflare Bot Fight Mode returns 403 / stub to every server-side
 // fetch, so we source from universalis.com — same lectionary, less
 // hostile to crawlers, and returns clean parseable HTML.
+//
+// Caveat: Universalis's mass.htm page strips the Responsorial Psalm body
+// (citation only). The frontend surfaces this — directors paste the
+// psalm verses by hand when planning the song slot.
 //
 // The function name is kept as `usccb-readings` for backward compat
 // with deployed clients; only the upstream and parser changed.
@@ -87,11 +91,7 @@ function json(body: unknown, status: number): Response {
 function parseUniversalisReadings(html: string): { liturgicalTitle: string | null; readings: ReadingBlock[] } {
   const liturgicalTitle = extractTitle(html);
 
-  // Trim to the readings region: everything between "Mass readings" or
-  // the first <hr class="shortrule"/> and the page footer. The
-  // shortrule split below tolerates anything before the first rule.
   const chunks = html.split(/<hr\s+class="shortrule"\s*\/?>/i);
-  // Drop the first chunk (page chrome before any reading).
   chunks.shift();
 
   const readings: ReadingBlock[] = [];
@@ -104,8 +104,6 @@ function parseUniversalisReadings(html: string): { liturgicalTitle: string | nul
 }
 
 function extractTitle(html: string): string | null {
-  // The page title is "Universalis: Mass (...)". We pull the parenthetical
-  // bit when available, otherwise fall back to "Daily Mass Readings".
   const titleTag = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (titleTag) {
     const t = decode(titleTag[1]).trim();
@@ -116,7 +114,6 @@ function extractTitle(html: string): string | null {
 }
 
 function extractBlock(chunk: string): ReadingBlock | null {
-  // Header row: <table class="each"> <tr><th align="left">{HEADING}</th>...
   const tableMatch = chunk.match(/<table[^>]*class="[^"]*\beach\b[^"]*"[^>]*>([\s\S]*?)<\/table>/i);
   if (!tableMatch) return null;
   const tableInner = tableMatch[1];
@@ -125,13 +122,10 @@ function extractBlock(chunk: string): ReadingBlock | null {
 
   const heading = thMatches[0];
   if (!heading) return null;
-  // Skip anything that isn't actually a reading section (Universalis
-  // also uses <table class="each"> for "About today's readings" etc.).
   if (!/reading|psalm|gospel|acclamation|sequence/i.test(heading)) return null;
 
   const citation = thMatches.slice(1).find(t => t && t.length > 0) || null;
 
-  // Strip the table out, then grab the optional <h4> summary.
   const afterTable = chunk.slice(tableMatch.index! + tableMatch[0].length);
   let body = afterTable;
   let summary: string | null = null;
@@ -143,7 +137,10 @@ function extractBlock(chunk: string): ReadingBlock | null {
 
   body = sanitizeReadingHtml(body);
 
-  if (!body && !summary) return null;
+  // Include citation-only entries (e.g. the Responsorial Psalm on
+  // mass.htm) so the frontend can still auto-fill its citation. The
+  // popover gracefully handles an empty body by showing the citation.
+  if (!body && !summary && !citation) return null;
   return { heading, citation, summary, html: body };
 }
 
@@ -184,13 +181,11 @@ function decode(s: string): string {
  * uniformly. Strip everything else.
  */
 function sanitizeReadingHtml(html: string): string {
-  // Drop audio clip blocks, scripts, styles, etc.
   let s = html
     .replace(/<div[^>]*class="[^"]*\baudioclip\b[^"]*"[^>]*>[\s\S]*?<\/div>/gi, "")
     .replace(/<(script|style|iframe|object|embed|link|audio|video)[\s\S]*?<\/\1>/gi, "")
     .replace(/<hr[^>]*>/gi, "");
 
-  // Map known universalis div classes to semantic tags.
   s = s
     .replace(/<div\s+class="p"[^>]*>([\s\S]*?)<\/div>/gi, "<p>$1</p>")
     .replace(/<div\s+class="pi"[^>]*>([\s\S]*?)<\/div>/gi, '<p style="padding-left:1.5em">$1</p>')

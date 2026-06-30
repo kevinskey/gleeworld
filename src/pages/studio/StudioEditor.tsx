@@ -242,9 +242,17 @@ export default function StudioEditor() {
             <pre className="text-xs mt-1 whitespace-pre-wrap break-all opacity-80">{msg}</pre>
           </div>
         </div>
-        <Link to="/studio" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-          <ArrowLeft className="w-4 h-4" /> Back to sessions
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={sessionState.reload}
+            className="text-xs font-semibold inline-flex items-center gap-1 px-3 py-1.5 rounded bg-primary text-primary-foreground hover:opacity-90"
+          >
+            Try again
+          </button>
+          <Link to="/studio" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+            <ArrowLeft className="w-4 h-4" /> Back to sessions
+          </Link>
+        </div>
       </div>
     );
   }
@@ -610,6 +618,13 @@ function Editor({
         return { ...s, assets: nextAssets, tracks: nextTracks };
       });
       toast.success(`Recorded ${elapsed.toFixed(1)}s`);
+      // Park the playhead at the punch-in point so the user can press
+      // Play (or hit Space) once and immediately hear the take. Auto-
+      // play is intentionally NOT triggered here — the engine reload
+      // that follows the clip add tears down + rebuilds Players (or the
+      // whole AVAudioEngine on iOS), which can take a couple seconds and
+      // makes auto-play race with the rebuild.
+      try { engineState.seek?.(startSeconds); } catch { /* ignore */ }
     } catch (e) {
       toast.error('Could not finalize recording', { description: e instanceof Error ? e.message : String(e) });
     }

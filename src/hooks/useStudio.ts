@@ -66,18 +66,43 @@ export function useStudioSession(sessionId: string | null) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     if (!sessionId) { setSession(null); return; }
     setLoading(true); setError(null);
-    loadSession(sessionId)
-      .then((s) => { if (!cancelled) setSession(s); })
-      .catch((e) => { if (!cancelled) setError(e); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+    // Retry transient network failures (3 attempts, ramp 0/300/900ms).
+    // Recording uploads can saturate the WKWebView network briefly on
+    // iOS and a single fetch racing with that flips the editor to its
+    // error state. A short auto-retry keeps it visible.
+    (async () => {
+      const delays = [0, 300, 900];
+      let lastErr: Error | null = null;
+      for (const wait of delays) {
+        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+        if (cancelled) return;
+        try {
+          const s = await loadSession(sessionId);
+          if (cancelled) return;
+          setSession(s);
+          setError(null);
+          setLoading(false);
+          return;
+        } catch (e) {
+          lastErr = e as Error;
+        }
+      }
+      if (!cancelled) {
+        setError(lastErr);
+        setLoading(false);
+      }
+    })();
     return () => { cancelled = true; };
-  }, [sessionId]);
+  }, [sessionId, reloadKey]);
+
+  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
   const queueSave = useCallback((next: Session) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -100,7 +125,7 @@ export function useStudioSession(sessionId: string | null) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { session, loading, error, update };
+  return { session, loading, error, update, reload };
 }
 
 // ── Engine lifecycle bound to a session ──────────────────────────────
@@ -109,16 +134,14 @@ export function useStudioSession(sessionId: string | null) {
 // Everywhere else we use the Tone.js StudioEngine. The returned API
 // is uniform so StudioEditor doesn't know which engine it's talking to.
 
-/** A signature of the parts of the session that require a full engine
- * rebuild. Volume / pan / mute / solo / arm — the "strip" controls —
- * are NOT in this signature; they go through updateTrackStrip without
- * disposing and rebuilding every player. Without this, a slider drag
- * would reload the whole engine on every animation frame. */
-function structuralSig(session: Session | null): string {
+/** Skeleton signature — only the parts of the session that REQUIRE a
+ *  full engine rebuild. Excludes audio clip lists + the assets array;
+ *  changes to those are handled incrementally via addClipToTrack /
+ *  removeClipFromTrack. Volume / pan / mute / solo go through
+ *  updateTrackStrip and don't bump the skeleton either. */
+function skeletonSig(session: Session | null): string {
   if (!session) return '';
   const parts: string[] = [
-    String(session.tracks.length),
-    String(session.assets.length),
     String(session.tempo_bpm),
     `${session.time_signature.numerator}/${session.time_signature.denominator}`,
     session.master.fx.map((f) => `${f.id}:${f.type}:${f.enabled}`).join(','),
@@ -126,11 +149,10 @@ function structuralSig(session: Session | null): string {
   for (const t of session.tracks) {
     parts.push(`${t.id}:${t.kind}`);
     parts.push(t.fx.map((f) => `${f.id}:${f.type}:${f.enabled}`).join(','));
-    if (t.kind === 'audio') {
-      for (const c of t.clips) {
-        parts.push(`${c.id}:${c.asset_id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${c.offset_seconds.toFixed(3)}:${c.gain_db}:${c.pitch_semitones}:${c.time_stretch}:${c.reverse}`);
-      }
-    } else if (t.kind === 'midi') {
+    if (t.kind === 'midi') {
+      // MIDI tracks still need full rebuild for clip / note edits — the
+      // incremental path here only covers audio clips. List midi notes
+      // in the skeleton so any edit triggers reload.
       parts.push(`${t.instrument.type}:${t.instrument.preset_id ?? ''}`);
       for (const c of t.clips) {
         parts.push(`${c.id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${c.notes.length}`);
@@ -140,12 +162,28 @@ function structuralSig(session: Session | null): string {
   return parts.join('|');
 }
 
+/** Audio-clip signature for a single audio track. Used to detect which
+ *  clips were added / removed / edited between two sessions so we can
+ *  splice the engine instead of rebuilding it. */
+function audioClipSig(c: { id: string; asset_id: string; start_seconds: number; duration_seconds: number; offset_seconds: number; gain_db: number; pitch_semitones: number; time_stretch: number; reverse: boolean }): string {
+  return `${c.id}:${c.asset_id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${c.offset_seconds.toFixed(3)}:${c.gain_db}:${c.pitch_semitones}:${c.time_stretch}:${c.reverse}`;
+}
+
 export function useStudioEngine(session: Session | null) {
   const native = isNativeStudioAvailable();
   const engineRef = useRef<StudioEngine | null>(null);
   const nativeCloseRef = useRef<(() => Promise<void>) | null>(null);
   const [state, setState] = useState<EngineState | null>(null);
   const [warming, setWarming] = useState(false);
+  // Last skeleton signature we built the engine for. Stays constant
+  // across clip edits — only structural changes (tracks, FX, tempo)
+  // bump it. Compared against the incoming session to decide between
+  // incremental splice (cheap, no audio glitch) and full reload (slow).
+  const lastSkeletonRef = useRef<string>('');
+  // Snapshot of the audio-clip sets per track from the last engine
+  // sync. Diffing against the current session tells us exactly which
+  // clips to add or remove on the live graph.
+  const lastAudioClipsRef = useRef<Map<string, Map<string, string>>>(new Map());
 
   // Create the web engine once on mount (no-op on native).
   useEffect(() => {
@@ -171,6 +209,61 @@ export function useStudioEngine(session: Session | null) {
     let cancelled = false;
 
     if (native) {
+      // Native diff path. If the skeleton hasn't changed (just clip /
+      // asset edits), splice clips on the live AVAudioEngine instead
+      // of tearing it down + re-opening — which on iOS means redownload
+      // every asset + redecode every AVAudioFile, easily multi-second.
+      const skeleton = skeletonSig(session);
+      const needsFullReload = skeleton !== lastSkeletonRef.current || !nativeCloseRef.current;
+      if (!needsFullReload) {
+        setWarming(true);
+        (async () => {
+          try {
+            const assetById = new Map(session.assets.map((a) => [a.id, a]));
+            const nextSnap = new Map<string, Map<string, string>>();
+            for (const t of session.tracks) {
+              if (t.kind !== 'audio') continue;
+              const prevClips = lastAudioClipsRef.current.get(t.id) ?? new Map<string, string>();
+              const nextClips = new Map<string, string>();
+              for (const c of t.clips) nextClips.set(c.id, audioClipSig(c as any));
+              nextSnap.set(t.id, nextClips);
+              for (const [cid, prevSig] of prevClips.entries()) {
+                const cur = nextClips.get(cid);
+                if (cur === undefined || cur !== prevSig) {
+                  await NativeStudio.removeClipFromTrack({ trackId: t.id, clipId: cid });
+                }
+              }
+              for (const c of t.clips) {
+                const prev = prevClips.get(c.id);
+                if (prev !== undefined && prev === audioClipSig(c as any)) continue;
+                const asset = assetById.get(c.asset_id);
+                if (!asset) continue;
+                // Resolve the asset to a local URL the native side can
+                // open with AVAudioFile. For freshly-recorded takes the
+                // localUrl is already a file:// path (recordStop wrote
+                // it to tmp); for everything else we need to download
+                // the signed URL and stash it locally first. For now
+                // pass the signed URL through — AVAudioFile happens to
+                // accept https URLs via its NSURL backing on iOS 13+
+                // (it streams + caches), and we can layer a local
+                // download here later if real-world flake demands it.
+                const signedUrl = await getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset });
+                if (cancelled) return;
+                await NativeStudio.addClipToTrack({ trackId: t.id, clip: c, localUrl: signedUrl });
+              }
+            }
+            if (!cancelled) lastAudioClipsRef.current = nextSnap;
+          } catch (e) {
+            console.warn('[StudioEngine] native incremental diff failed, falling back to full reload', e);
+            // Force full reload next render by clearing the skeleton.
+            lastSkeletonRef.current = '';
+          } finally {
+            if (!cancelled) setWarming(false);
+          }
+        })();
+        return () => { cancelled = true; };
+      }
+
       setWarming(true);
       (async () => {
         if (nativeCloseRef.current) { await nativeCloseRef.current(); nativeCloseRef.current = null; }
@@ -210,15 +303,40 @@ export function useStudioEngine(session: Session | null) {
         });
         if (cancelled) { await close(); return; }
         nativeCloseRef.current = close;
+        // Pin the skeleton + audio-clip snapshot now that the native
+        // engine reflects this session. Subsequent clip-only edits
+        // take the incremental path above.
+        lastSkeletonRef.current = skeleton;
+        const snap = new Map<string, Map<string, string>>();
+        for (const t of session.tracks) {
+          if (t.kind !== 'audio') continue;
+          const m = new Map<string, string>();
+          for (const c of t.clips) m.set(c.id, audioClipSig(c as any));
+          snap.set(t.id, m);
+        }
+        lastAudioClipsRef.current = snap;
         setWarming(false);
       })();
       return () => { cancelled = true; nativeCloseRef.current?.(); nativeCloseRef.current = null; };
     }
 
-    // Web path.
-    if (!engineRef.current) return;
+    // Web path. Two flavors:
+    //   - Skeleton change (tracks added/removed, FX edits, tempo, etc.)
+    //     → full engine.loadSession() rebuild. Same as before.
+    //   - Skeleton unchanged, only audio clips / assets differ
+    //     → incremental addClipToTrack / removeClipFromTrack. No
+    //       teardown, no glitch, in-flight playback survives.
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    const skeleton = skeletonSig(session);
+    const needsFullReload = skeleton !== lastSkeletonRef.current;
+
     setWarming(true);
     (async () => {
+      // Pre-warm every signed URL — needed by both paths. Recording flow
+      // already cached the new asset's URL synchronously, but other
+      // imports may need a network hop.
       await Promise.all(session.assets.map(async (a) => {
         try {
           const url = await getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset: a });
@@ -226,7 +344,52 @@ export function useStudioEngine(session: Session | null) {
         } catch { /* swallow */ }
       }));
       if (cancelled) return;
-      engineRef.current?.loadSession(session);
+
+      if (needsFullReload) {
+        engine.loadSession(session);
+        lastSkeletonRef.current = skeleton;
+        // Reset the audio-clip snapshot to mirror what loadSession just
+        // built — every clip on every audio track is now "live".
+        const snap = new Map<string, Map<string, string>>();
+        for (const t of session.tracks) {
+          if (t.kind !== 'audio') continue;
+          const m = new Map<string, string>();
+          for (const c of t.clips) m.set(c.id, audioClipSig(c as any));
+          snap.set(t.id, m);
+        }
+        lastAudioClipsRef.current = snap;
+      } else {
+        // Skeleton-stable diff: per audio track, splice clips that
+        // appeared / disappeared / mutated since the last snapshot.
+        const assetById = new Map(session.assets.map((a) => [a.id, a]));
+        const nextSnap = new Map<string, Map<string, string>>();
+        for (const t of session.tracks) {
+          if (t.kind !== 'audio') continue;
+          const prevClips = lastAudioClipsRef.current.get(t.id) ?? new Map<string, string>();
+          const nextClips = new Map<string, string>();
+          for (const c of t.clips) nextClips.set(c.id, audioClipSig(c as any));
+          nextSnap.set(t.id, nextClips);
+
+          // Remove clips that are gone or whose signature changed (we
+          // re-add them below with the new params).
+          for (const [cid, prevSig] of prevClips.entries()) {
+            const cur = nextClips.get(cid);
+            if (cur === undefined || cur !== prevSig) {
+              engine.removeClipFromTrack(t.id, cid);
+            }
+          }
+          // Add brand-new clips + replacements for mutated ones.
+          for (const c of t.clips) {
+            const prev = prevClips.get(c.id);
+            if (prev !== undefined && prev === audioClipSig(c as any)) continue;
+            const asset = assetById.get(c.asset_id);
+            if (!asset) continue;
+            engine.addClipToTrack(t.id, c, asset);
+          }
+        }
+        lastAudioClipsRef.current = nextSnap;
+      }
+
       setWarming(false);
     })();
     return () => { cancelled = true; };

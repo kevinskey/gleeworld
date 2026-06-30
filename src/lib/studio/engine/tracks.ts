@@ -40,6 +40,12 @@ export interface EngineTrack {
   /** Live clip→player pairs the engine can re-schedule on Play. */
   playbacks: ClipPlayback[];
   updateStrip: (patch: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => void;
+  /** Incremental clip add — no track rebuild, no other clips touched.
+   *  Used after a fresh recording lands so the new take is immediately
+   *  playable without a full engine reload. */
+  addClip: (clip: AudioClip, asset: AudioAsset) => void;
+  /** Incremental clip remove. */
+  removeClip: (clipId: string) => void;
   dispose: () => void;
 }
 
@@ -87,10 +93,44 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
     userSolo: track.solo,
     playbacks,
     updateStrip: (patch) => {
-      if (patch.volume_db !== undefined) panvol.volume.value = patch.volume_db;
-      if (patch.pan !== undefined) panvol.pan.value = patch.pan;
-      if (patch.mute !== undefined) muteGate.gain.value = patch.mute ? 0 : 1;
+      // Smooth ramps (30 ms) prevent the click/pop you'd otherwise get
+      // when the user drags a fader during playback. linearRampTo on the
+      // Param keeps the schedule consistent with anything else queued.
+      const now = Tone.now();
+      if (patch.volume_db !== undefined) {
+        try { panvol.volume.cancelScheduledValues(now); panvol.volume.linearRampTo(patch.volume_db, 0.03, now); }
+        catch { panvol.volume.value = patch.volume_db; }
+      }
+      if (patch.pan !== undefined) {
+        try { panvol.pan.cancelScheduledValues(now); panvol.pan.linearRampTo(patch.pan, 0.03, now); }
+        catch { panvol.pan.value = patch.pan; }
+      }
+      if (patch.mute !== undefined) {
+        try { muteGate.gain.cancelScheduledValues(now); muteGate.gain.linearRampTo(patch.mute ? 0 : 1, 0.02, now); }
+        catch { muteGate.gain.value = patch.mute ? 0 : 1; }
+      }
       // solo handled by caller (engine-level)
+    },
+    addClip: (clip, asset) => {
+      if (!isAudioTrack(track)) return;
+      scheduleAudioClip(clip, asset, panvol, disposers, playbacks);
+    },
+    removeClip: (clipId) => {
+      // The matching disposer lives at the same index in `disposers` as
+      // the playback in `playbacks` (both pushed by scheduleAudioClip).
+      // Find and run the disposer that controls this clip's player.
+      const pbIdx = playbacks.findIndex((p) => p.clipId === clipId);
+      if (pbIdx < 0) return;
+      // The disposer added by scheduleAudioClip removes the playback
+      // entry by clipId — call it directly. We don't need to splice
+      // disposers (running it twice is a no-op since player.dispose is
+      // idempotent), but we DO want the cleanup side-effects now.
+      // The disposer references `playbacks` by clipId so it works
+      // regardless of where it sits in the disposers array.
+      const pb = playbacks[pbIdx];
+      try { pb.player.stop(); } catch { /* ignore */ }
+      try { pb.player.dispose(); } catch { /* ignore */ }
+      playbacks.splice(pbIdx, 1);
     },
     dispose: () => {
       for (const d of disposers) try { d(); } catch { /* ignore */ }

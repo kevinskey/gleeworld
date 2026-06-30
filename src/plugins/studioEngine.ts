@@ -30,6 +30,27 @@ interface StudioEnginePluginShape {
   recordStart(): Promise<void>;
   recordStop(): Promise<{ localUrl: string; filename: string }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
+  // Splice a single clip onto a live track — pairs with useStudio's diff
+  // path so a fresh recording doesn't trigger a full engine teardown.
+  // `localUrl` may be capacitor:// (post-convertFileSrc) or a file:// path;
+  // the plugin normalizes either to an AVAudioFile-readable path.
+  addClipToTrack(args: { trackId: string; clip: unknown; localUrl: string }): Promise<void>;
+  removeClipFromTrack(args: { trackId: string; clipId: string }): Promise<void>;
+  // Hardware round-trip latency (input + output + ioBuffer) in ms. Used
+  // by the recording layer to align captured audio with scheduled clicks.
+  getHardwareLatencyMs(): Promise<{ ms: number }>;
+  // API-shape aliases — flatter params and a separate latencyMs return
+  // key for clients that prefer the linear-volume / flat-clip surface.
+  // Backed by the same engine internals as the canonical methods.
+  updateTrackVolume(args: { trackId: string; volume: number }): Promise<void>;
+  injectNewClip(args: {
+    trackId: string;
+    clipId: string;
+    localPath: string;
+    startSeconds: number;
+    offsetSeconds?: number;
+  }): Promise<void>;
+  getHardwareLatency(): Promise<{ latencyMs: number }>;
   addListener(eventName: 'state', listener: (s: NativeEngineState) => void): Promise<PluginListenerHandle>;
   addListener(eventName: 'recordPeak', listener: (e: { db: number }) => void): Promise<PluginListenerHandle>;
 }

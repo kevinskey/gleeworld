@@ -23,6 +23,8 @@ import {
   startMetronome,
   stopMetronome,
   isMetronomeRunning,
+  getMetronomeContext,
+  getMetronomeNextClickTime,
 } from '@/lib/audioTools/metronome';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
@@ -105,7 +107,24 @@ export function PracticeRecorder({ open, onClose, bpm, timeSig }: PracticeRecord
   // stream — AudioContext-vs-mic clock drift was warping pitch and
   // drifting sync over a 30s recording). Set when recording starts;
   // null means "no metronome in the saved file".
-  const recordedClickRef = useRef<{ bpm: number; beatsPerBar: number; startedAt: number } | null>(null);
+  // `firstClickOffsetSec` is the seconds-from-recording-start where the
+  // FIRST live click landed. The offline mix uses this to place its
+  // synthetic clicks at the same instants the performer actually heard
+  // them — without it the clicks drift by 50-300ms (metronome lookahead
+  // + recorder startup + mic input latency), making the mix sound out of
+  // pocket. Negative values mean the first click was already past when
+  // recording began (we then skip ahead to the next click that's in the
+  // recording window).
+  const recordedClickRef = useRef<{ bpm: number; beatsPerBar: number; firstClickOffsetSec: number } | null>(null);
+  // iOS input latency varies by device/headphones (~30-120ms). User can
+  // nudge this slider to dial in perfect sync. Stored in ms.
+  const [latencyTrimMs, setLatencyTrimMs] = useState<number>(() => {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('practice-latency-trim-ms') : null;
+    return stored ? parseInt(stored, 10) || 0 : 0;
+  });
+  useEffect(() => {
+    try { localStorage.setItem('practice-latency-trim-ms', String(latencyTrimMs)); } catch { /* ignore */ }
+  }, [latencyTrimMs]);
 
   // Reset everything when the drawer closes.
   useEffect(() => {
@@ -200,7 +219,15 @@ export function PracticeRecorder({ open, onClose, bpm, timeSig }: PracticeRecord
       // device and the AudioContext sample rate, which produced pitch
       // wobble + sync drift over a 30s recording. We add the click track
       // in a deterministic offline pass at save time instead.
-      recordedClickRef.current = { bpm, beatsPerBar, startedAt: performance.now() };
+      // Capture the audio-context time of the next click NOW, before
+      // recorder.start(). After recorder.start() resolves, we capture
+      // the AudioContext time again — the delta is where the first live
+      // click landed inside the recording.
+      const sharedCtx = getMetronomeContext();
+      const nextClickAudioCtxTime = getMetronomeNextClickTime() ?? sharedCtx.currentTime;
+      const secondsPerBeat = 60 / bpm;
+      // Provisional value; refined right after recorder.start() returns.
+      recordedClickRef.current = { bpm, beatsPerBar, firstClickOffsetSec: 0 };
 
       // Codec pick — iPhone Safari uses AAC in MP4 natively (hardware-
       // accelerated and tuned for music), so prefer it on iOS. Other
@@ -235,7 +262,7 @@ export function PracticeRecorder({ open, onClose, bpm, timeSig }: PracticeRecord
         const click = recordedClickRef.current;
         if (click) {
           try {
-            finalBlob = await mixClickIntoRecording(rawBlob, click.bpm, click.beatsPerBar);
+            finalBlob = await mixClickIntoRecording(rawBlob, click.bpm, click.beatsPerBar, click.firstClickOffsetSec);
           } catch (mixErr) {
             console.warn('[PracticeRecorder] preview mixdown failed, using raw', mixErr);
           }
@@ -246,6 +273,20 @@ export function PracticeRecorder({ open, onClose, bpm, timeSig }: PracticeRecord
       };
       recorderRef.current = recorder;
       recorder.start();
+      // Snapshot AudioContext clock immediately after the recorder kicked
+      // off. Anything between this `currentTime` and the next live click
+      // is the offset of the first click inside the captured audio.
+      // Subtract a per-device latency trim — iOS WKWebView typically has
+      // 30-100ms of input latency that MediaRecorder doesn't surface, so
+      // the recorded waveform actually represents audio captured a bit
+      // BEFORE recorder.start() returned. A positive trim shifts clicks
+      // earlier in the mix to align with how the performer heard them.
+      const recorderStartedAt = sharedCtx.currentTime;
+      let firstClickOffsetSec = nextClickAudioCtxTime - recorderStartedAt - (latencyTrimMs / 1000);
+      // If the first click was before recording started, walk forward by
+      // whole beats until we land inside the recording window.
+      while (firstClickOffsetSec < 0) firstClickOffsetSec += secondsPerBeat;
+      recordedClickRef.current = { bpm, beatsPerBar, firstClickOffsetSec };
 
       setElapsedSec(0);
       tickRef.current = window.setInterval(() => setElapsedSec((s) => s + 1), 1000);
@@ -425,6 +466,28 @@ export function PracticeRecorder({ open, onClose, bpm, timeSig }: PracticeRecord
               <div className="text-xs text-muted-foreground text-center">
                 {formatElapsed(elapsedSec)} captured
               </div>
+              <div className="rounded-md border border-border p-3 space-y-2 bg-muted/30">
+                <div className="flex items-center justify-between text-xs">
+                  <Label htmlFor="latency-trim" className="font-semibold">
+                    Click latency trim
+                  </Label>
+                  <span className="font-mono text-muted-foreground">{latencyTrimMs > 0 ? `+${latencyTrimMs}` : latencyTrimMs} ms</span>
+                </div>
+                <input
+                  id="latency-trim"
+                  type="range"
+                  min={-200}
+                  max={200}
+                  step={5}
+                  value={latencyTrimMs}
+                  onChange={(e) => setLatencyTrimMs(parseInt(e.target.value, 10))}
+                  className="w-full"
+                  disabled={state === 'saving'}
+                />
+                <p className="text-[10px] text-muted-foreground leading-snug">
+                  Saved per-device. If the click sounds AHEAD of your playing, increase. If it sounds BEHIND, decrease. Re-record to hear the change.
+                </p>
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="practice-title" className="text-xs">Title (optional)</Label>
                 <Input
@@ -525,6 +588,7 @@ async function mixClickIntoRecording(
   micBlob: Blob,
   bpm: number,
   beatsPerBar: number,
+  firstClickOffsetSec: number = 0,
 ): Promise<Blob> {
   const arrayBuffer = await micBlob.arrayBuffer();
   // Decode the mic blob with a throwaway context to learn its rate/length.
@@ -562,10 +626,13 @@ async function mixClickIntoRecording(
   // Click track — clicks live much quieter in the final mix than they
   // sound through speakers (~3× quieter) so the piano takes the
   // foreground. Accent on beat 1, regular tone on the others.
+  // Anchor the first click to firstClickOffsetSec (where the LIVE click
+  // actually landed in the captured audio), not 0 — otherwise the mix
+  // drifts by the metronome's startup delay + mic input latency.
   const totalDuration = micBuffer.duration;
   const secondsPerBeat = 60 / bpm;
   let beat = 0;
-  for (let when = 0; when < totalDuration; when += secondsPerBeat) {
+  for (let when = firstClickOffsetSec; when < totalDuration; when += secondsPerBeat) {
     const isAccent = beat % beatsPerBar === 0;
     const freq = isAccent ? 1500 : 1000;
     const peak = isAccent ? 0.12 : 0.08;

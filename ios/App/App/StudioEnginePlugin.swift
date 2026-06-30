@@ -41,6 +41,16 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "recordStart", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mixdown", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "addClipToTrack", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "removeClipFromTrack", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getHardwareLatencyMs", returnType: CAPPluginReturnPromise),
+        // API-shape aliases — flatter parameters, linear-volume input,
+        // separate "latencyMs" return key. These delegate to the same
+        // engine internals as the canonical methods above; supporting
+        // both shapes keeps the JS bridge call sites flexible.
+        CAPPluginMethod(name: "updateTrackVolume", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "injectNewClip", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getHardwareLatency", returnType: CAPPluginReturnPromise),
     ]
 
     // Every heavy-init thing is lazy. The plugin instance is created at
@@ -269,5 +279,134 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         } catch {
             call.reject("mixdown failed: \(error.localizedDescription)")
         }
+    }
+
+    // MARK: - Incremental clip splicing
+    //
+    // Used by useStudio's diff path so a fresh recording lands on the
+    // engine without a full loadSession() teardown. The JS side resolves
+    // the asset to a local-fetchable URL first, then asks us to attach
+    // a single AVAudioPlayerNode for the new clip.
+
+    @objc func addClipToTrack(_ call: CAPPluginCall) {
+        guard let trackId = call.getString("trackId") else { call.reject("trackId required"); return }
+        guard let clipDict = call.getObject("clip") else { call.reject("clip object required"); return }
+        guard let localUrlOrPath = call.getString("localUrl") ?? call.getString("localFilePath") else {
+            call.reject("localUrl / localFilePath required"); return
+        }
+        // The JS side may hand us a capacitor:// URL (after convertFileSrc)
+        // OR a raw file:// path. Normalize to a real on-disk path because
+        // AVAudioFile(forReading:) wants file:// or a path string.
+        let localPath: String
+        if let url = URL(string: localUrlOrPath), url.isFileURL {
+            localPath = url.path
+        } else if localUrlOrPath.hasPrefix("/") {
+            localPath = localUrlOrPath
+        } else {
+            // Strip capacitor:// scheme + the _capacitor_file_ rewrite.
+            let stripped = localUrlOrPath
+                .replacingOccurrences(of: "capacitor://localhost/_capacitor_file_", with: "")
+                .replacingOccurrences(of: "capacitor://localhost", with: "")
+            localPath = stripped
+        }
+        do {
+            let data = try JSONSerialization.data(withJSONObject: clipDict, options: [])
+            let clip = try JSONDecoder().decode(Studio.AudioClip.self, from: data)
+            engine.addClipToTrack(trackId: trackId, clip: clip, localFilePath: localPath)
+            call.resolve()
+        } catch {
+            call.reject("clip JSON invalid: \(error.localizedDescription)")
+        }
+    }
+
+    @objc func removeClipFromTrack(_ call: CAPPluginCall) {
+        guard let trackId = call.getString("trackId") else { call.reject("trackId required"); return }
+        guard let clipId = call.getString("clipId") else { call.reject("clipId required"); return }
+        engine.removeClipFromTrack(trackId: trackId, clipId: clipId)
+        call.resolve()
+    }
+
+    @objc func getHardwareLatencyMs(_ call: CAPPluginCall) {
+        call.resolve(["ms": engine.getHardwareLatencyMs()])
+    }
+
+    // MARK: - API-shape aliases
+
+    /// Linear-volume strip update. AVAudioMixerNode.outputVolume is
+    /// 0..1 linear gain; this method takes it directly and converts to
+    /// dB internally so it routes through the same updateTrackStrip
+    /// path as the canonical updateStrip method.
+    @objc func updateTrackVolume(_ call: CAPPluginCall) {
+        guard let trackId = call.getString("trackId") else { call.reject("trackId required"); return }
+        guard let v = call.getFloat("volume") else { call.reject("volume required"); return }
+        let clamped = max(Float(0.0001), min(Float(2.0), v))
+        let db = 20.0 * log10(Double(clamped))
+        engine.updateTrackStrip(id: trackId, volumeDb: db, pan: nil, mute: nil)
+        call.resolve()
+    }
+
+    /// Flatter incremental-clip add — caller hands a few primitives,
+    /// we open the AVAudioFile to compute duration, build a default
+    /// Studio.AudioClip, and delegate to engine.addClipToTrack.
+    /// Useful for callers that don't already have a full clip record
+    /// (e.g. quick previews, scratch playback).
+    @objc func injectNewClip(_ call: CAPPluginCall) {
+        guard let trackId = call.getString("trackId") else { call.reject("trackId required"); return }
+        guard let clipId = call.getString("clipId") else { call.reject("clipId required"); return }
+        guard let rawPath = call.getString("localPath") else { call.reject("localPath required"); return }
+        guard let startSec = call.getDouble("startSeconds") else { call.reject("startSeconds required"); return }
+        let offsetSec = call.getDouble("offsetSeconds") ?? 0.0
+
+        // Normalize capacitor:// → /path/ (same logic as addClipToTrack).
+        let localPath: String
+        if let url = URL(string: rawPath), url.isFileURL {
+            localPath = url.path
+        } else if rawPath.hasPrefix("/") {
+            localPath = rawPath
+        } else {
+            localPath = rawPath
+                .replacingOccurrences(of: "capacitor://localhost/_capacitor_file_", with: "")
+                .replacingOccurrences(of: "capacitor://localhost", with: "")
+        }
+
+        // Read the file length so duration_seconds is derivable. We need
+        // it for transport-aware splicing in TrackBinding.addClip.
+        let fileURL = URL(fileURLWithPath: localPath)
+        let audioFile: AVAudioFile
+        do {
+            audioFile = try AVAudioFile(forReading: fileURL)
+        } catch {
+            call.reject("Could not open audio file: \(error.localizedDescription)")
+            return
+        }
+        let sampleRate = audioFile.processingFormat.sampleRate
+        let durationSec = Double(audioFile.length) / sampleRate - offsetSec
+        guard durationSec > 0 else {
+            call.reject("offsetSeconds exceeds file length")
+            return
+        }
+
+        let clip = Studio.AudioClip(
+            id: clipId,
+            kind: .audio,
+            asset_id: clipId,
+            start_seconds: startSec,
+            duration_seconds: durationSec,
+            offset_seconds: offsetSec,
+            gain_db: 0,
+            fade_in_seconds: 0,
+            fade_out_seconds: 0,
+            reverse: false,
+            pitch_semitones: 0,
+            time_stretch: 1
+        )
+        engine.addClipToTrack(trackId: trackId, clip: clip, localFilePath: localPath)
+        call.resolve()
+    }
+
+    /// Same payload as getHardwareLatencyMs but returns under the
+    /// `latencyMs` key (matches the API-shape spec).
+    @objc func getHardwareLatency(_ call: CAPPluginCall) {
+        call.resolve(["latencyMs": engine.getHardwareLatencyMs()])
     }
 }
