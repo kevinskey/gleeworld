@@ -39,6 +39,17 @@ interface StudioEnginePluginShape {
   // Hardware round-trip latency (input + output + ioBuffer) in ms. Used
   // by the recording layer to align captured audio with scheduled clicks.
   getHardwareLatencyMs(): Promise<{ ms: number }>;
+  // Pull-renderer A/B toggle. When on, the iOS engine routes new
+  // clips through an AVAudioSourceNode render block (lock-free mix).
+  // Default off — push-path (AVAudioPlayerNode) remains active.
+  setPullRendererEnabled(args: { on: boolean }): Promise<{ on: boolean }>;
+  isPullRendererEnabled(): Promise<{ on: boolean }>;
+  // Eagerly decode every asset on the supplied list into Float32 PCM
+  // in the LRU cache. Matches Logic Pro's session-open warmup so the
+  // first Play after load has zero disk I/O on the audio thread.
+  // Resolves immediately with the queued count — decodes finish in
+  // the background (up to 4 in parallel).
+  prewarmAssets(args: { assets: Array<{ assetId: string; localPath: string }> }): Promise<{ queued: number }>;
   // API-shape aliases — flatter params and a separate latencyMs return
   // key for clients that prefer the linear-volume / flat-clip surface.
   // Backed by the same engine internals as the canonical methods.

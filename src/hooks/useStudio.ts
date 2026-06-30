@@ -198,12 +198,16 @@ export function useStudioEngine(session: Session | null) {
     };
   }, [native]);
 
-  // Reload session whenever it changes. A previous "structural sig"
-  // optimization that skipped reload on volume/pan changes broke the
-  // first load for some sessions and left them silent — until we can
-  // root-cause that, the full reload here is the safe path. The
-  // volume-drag rebuild lag returns; we'll address it again with a
-  // gentler approach.
+  // Reload session whenever it changes. Two-tier strategy:
+  //   1. Skeleton diff (tracks/FX/tempo/MIDI clips) → full loadSession
+  //      (or openNativeStudio on iOS) — the only path that touches
+  //      master FX or tears down players.
+  //   2. Skeleton-stable change (audio clips added/removed/edited) →
+  //      incremental addClipToTrack / removeClipFromTrack delta. No
+  //      AVAudioEngine teardown, no Tone.Player rebuild, in-flight
+  //      playback survives. Both web and iOS take this path; failures
+  //      gracefully fall back to a full reload on the next pass.
+  // See skeletonSig + audioClipSig helpers above.
   useEffect(() => {
     if (!session) return;
     let cancelled = false;
@@ -316,6 +320,23 @@ export function useStudioEngine(session: Session | null) {
         }
         lastAudioClipsRef.current = snap;
         setWarming(false);
+
+        // Logic-Pro-style eager prewarm: as soon as the engine is up,
+        // queue a background decode of every asset into the LRU cache.
+        // First Play after load has zero disk I/O on the audio thread.
+        // Non-file URLs (e.g. signed Supabase https URLs) silently fail
+        // the AVAudioFile read inside the engine and are skipped;
+        // recorded takes that live in tmp will all warm up successfully.
+        try {
+          const entries: Array<{ assetId: string; localPath: string }> = [];
+          for (const a of session.assets) {
+            const url = await getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset: a });
+            entries.push({ assetId: a.id, localPath: url });
+          }
+          if (entries.length > 0) {
+            void NativeStudio.prewarmAssets({ assets: entries }).catch(() => {});
+          }
+        } catch { /* prewarm is best-effort */ }
       })();
       return () => { cancelled = true; nativeCloseRef.current?.(); nativeCloseRef.current = null; };
     }

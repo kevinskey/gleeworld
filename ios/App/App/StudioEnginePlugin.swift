@@ -51,6 +51,18 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "updateTrackVolume", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "injectNewClip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getHardwareLatency", returnType: CAPPluginReturnPromise),
+        // Pull-renderer A/B toggle. When ON, addClipToTrack decodes via
+        // StudioAudioConverter on a background queue and routes the
+        // resulting PCM buffer through TrackBinding.pullRenderer's
+        // AVAudioSourceNode render block (lock-free mix). Default OFF
+        // keeps the AVAudioPlayerNode push path active.
+        CAPPluginMethod(name: "setPullRendererEnabled", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "isPullRendererEnabled", returnType: CAPPluginReturnPromise),
+        // Eager pre-warm of asset buffers — matches Logic / Pro Tools
+        // session-open behavior. Decodes every asset to Float32 PCM in
+        // the background so the first Play has zero disk I/O on the
+        // audio thread.
+        CAPPluginMethod(name: "prewarmAssets", returnType: CAPPluginReturnPromise),
     ]
 
     // Every heavy-init thing is lazy. The plugin instance is created at
@@ -408,5 +420,43 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
     /// `latencyMs` key (matches the API-shape spec).
     @objc func getHardwareLatency(_ call: CAPPluginCall) {
         call.resolve(["latencyMs": engine.getHardwareLatencyMs()])
+    }
+
+    @objc func setPullRendererEnabled(_ call: CAPPluginCall) {
+        let on = call.getBool("on") ?? false
+        engine.setPullRendererEnabled(on)
+        call.resolve(["on": on])
+    }
+
+    @objc func isPullRendererEnabled(_ call: CAPPluginCall) {
+        call.resolve(["on": engine.isPullRendererEnabled()])
+    }
+
+    /// JS passes `[{ assetId, localPath }]` — the engine decodes each
+    /// one in parallel and seeds the LRU cache. Resolves immediately
+    /// (decodes complete in background); progress isn't reported back.
+    /// First Play after load now has zero disk I/O.
+    @objc func prewarmAssets(_ call: CAPPluginCall) {
+        let raw = call.getArray("assets") ?? []
+        var entries: [(assetId: String, localFilePath: String)] = []
+        for item in raw {
+            guard let dict = item as? [String: Any] else { continue }
+            guard let aid = dict["assetId"] as? String else { continue }
+            guard let path = dict["localPath"] as? String else { continue }
+            // Normalize capacitor:// → /path/ same as addClipToTrack.
+            let resolved: String
+            if let url = URL(string: path), url.isFileURL {
+                resolved = url.path
+            } else if path.hasPrefix("/") {
+                resolved = path
+            } else {
+                resolved = path
+                    .replacingOccurrences(of: "capacitor://localhost/_capacitor_file_", with: "")
+                    .replacingOccurrences(of: "capacitor://localhost", with: "")
+            }
+            entries.append((aid, resolved))
+        }
+        engine.prewarmAssets(entries)
+        call.resolve(["queued": entries.count])
     }
 }

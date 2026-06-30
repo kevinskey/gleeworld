@@ -85,6 +85,33 @@ public final class StudioNativeEngine {
 
     public func start() throws {
         NSLog("[Studio] engine.start: enter")
+
+        // Activate AVAudioSession with a category that actually drives
+        // the speakers. Without this, AVAudioEngine.start() can succeed
+        // and engine.isRunning returns true while every scheduled
+        // buffer plays into a dormant session — total silence with no
+        // error. That was the "metronome won't play in iOS Studio"
+        // failure mode. We pick playback (or playAndRecord if the
+        // recorder pre-armed the session) so output is guaranteed.
+        let session = AVAudioSession.sharedInstance()
+        let wantsRecord = session.category == .playAndRecord
+        do {
+            if wantsRecord {
+                // Recorder already promoted us — keep that contract so
+                // the mic input chain isn't torn down mid-take.
+                try session.setActive(true)
+            } else {
+                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try session.setActive(true)
+            }
+            NSLog("[Studio] engine.start: AVAudioSession active, category=\(session.category.rawValue)")
+        } catch {
+            NSLog("[Studio] engine.start: AVAudioSession activate failed: \(error.localizedDescription)")
+            // Continue — engine.start may still work for non-output use
+            // (e.g. offline render). Caller-side toast will catch true
+            // silence if it persists.
+        }
+
         // Every AVAudioEngine call below can raise a raw NSException
         // (not a Swift Error) on internal-state mismatches — bad audio
         // session, format incompat, dead node, etc. We wrap each in
@@ -280,6 +307,44 @@ public final class StudioNativeEngine {
             NSLog("[Studio] addClipToTrack — unknown trackId \(trackId)")
             return
         }
+
+        // Pull-path branch (opt-in via setPullRendererEnabled). Decode +
+        // convert OFF the audio thread; once the buffer is ready, hand
+        // it to the track's PullRenderer.
+        if pullRendererEnabled {
+            // Ensure the pull renderer is attached to this track before
+            // we enqueue the convert. We pass `self` so the renderer's
+            // render block can pull the live transport position each
+            // cycle.
+            if !binding.isPullPathEnabled {
+                let format = masterMixer.outputFormat(forBus: 0)
+                binding.enablePullRenderer(format: format) { [weak self] in
+                    self?.currentPositionSeconds() ?? 0
+                }
+            }
+            let url = URL(fileURLWithPath: localFilePath)
+            // Route through StudioAudioBufferCache.shared — the same
+            // asset_id reused across multiple clips (loop a chop 16x)
+            // hits the cache instead of decoding 16 times. LRU cap is
+            // 200 MB; eviction never deallocates a buffer that's
+            // currently held by a PullRenderer (ARC keeps it alive).
+            Task {
+                do {
+                    let file = try AVAudioFile(forReading: url)
+                    let format = self.masterMixer.outputFormat(forBus: 0)
+                    let buf = try await StudioAudioBufferCache.shared.loadOrDecode(
+                        assetId: clip.asset_id, file: file, targetFormat: format)
+                    await MainActor.run {
+                        binding.addClipPullPath(clip: clip, buffer: buf)
+                    }
+                } catch {
+                    NSLog("[Studio] pull-path decode failed for \(clip.id): \(error.localizedDescription)")
+                }
+            }
+            return
+        }
+
+        // Push-path (default, battle-tested AVAudioPlayerNode).
         let url = URL(fileURLWithPath: localFilePath)
         let file: AVAudioFile
         do {
@@ -295,7 +360,11 @@ public final class StudioNativeEngine {
 
     public func removeClipFromTrack(trackId: String, clipId: String) {
         guard let binding = tracks[trackId] else { return }
-        binding.removeClip(clipId: clipId)
+        if binding.isPullPathEnabled {
+            binding.removeClipPullPath(clipId: clipId)
+        } else {
+            binding.removeClip(clipId: clipId)
+        }
     }
 
     public func hasTrack(trackId: String) -> Bool {
@@ -308,6 +377,74 @@ public final class StudioNativeEngine {
     public func getHardwareLatencyMs() -> Double {
         let session = AVAudioSession.sharedInstance()
         return (session.inputLatency + session.outputLatency + session.ioBufferDuration) * 1000.0
+    }
+
+    // MARK: - Pull-based rendering (opt-in)
+    //
+    // Experimental path: decode each asset to a master-format PCM
+    // buffer on a background queue, then feed it to an
+    // AVAudioSourceNode whose render block does in-place mixing. The
+    // existing AVAudioPlayerNode path remains the default. Flip per
+    // tenant via setPullRendererEnabled(true) once we've validated
+    // the render block on real hardware. See PullRenderer.swift +
+    // AudioConverter.swift.
+
+    private var pullRendererEnabled: Bool = false
+
+    public func setPullRendererEnabled(_ on: Bool) {
+        pullRendererEnabled = on
+        NSLog("[Studio] pull renderer \(on ? "ENABLED" : "disabled")")
+    }
+
+    public func isPullRendererEnabled() -> Bool { pullRendererEnabled }
+
+    /// Decode + convert an asset file into a buffer matching the
+    /// master mixer's output format. Background-queue work. Returns
+    /// the converted buffer ready to hand to a PullRenderer clip.
+    /// Errors propagate; engine state is untouched.
+    public func prepareAssetForPullRender(localFilePath: String) async throws -> AVAudioPCMBuffer {
+        let url = URL(fileURLWithPath: localFilePath)
+        let file = try AVAudioFile(forReading: url)
+        let target = masterMixer.outputFormat(forBus: 0)
+        return try await StudioAudioConverter.decodeAndConvertAsync(file: file, targetFormat: target)
+    }
+
+    /// Eagerly decode every supplied asset into Float32 PCM and seed
+    /// the LRU cache. Logic Pro / Pro Tools do this on session open
+    /// so the first Play has zero disk I/O on the audio thread. We
+    /// fan the decodes out in parallel on .userInitiated background
+    /// tasks; errors per-asset are logged + swallowed so one bad file
+    /// doesn't block the rest of the warm-up.
+    ///
+    /// Pass `[(assetId, localFilePath)]`. The cache key for each is
+    /// `(assetId, masterFormat)` so future addClipToTrack on the
+    /// pull path resolves instantly.
+    public func prewarmAssets(_ entries: [(assetId: String, localFilePath: String)]) {
+        let target = masterMixer.outputFormat(forBus: 0)
+        // Concurrency cap so we don't open 100 file descriptors at
+        // once on a session with a giant asset list. 4 parallel decodes
+        // saturates a modern A-series CPU's vDSP throughput without
+        // contending for the audio thread.
+        let maxParallel = 4
+        let semaphore = DispatchSemaphore(value: maxParallel)
+        for entry in entries {
+            DispatchQueue.global(qos: .userInitiated).async {
+                semaphore.wait()
+                defer { semaphore.signal() }
+                if StudioAudioBufferCache.shared.get(assetId: entry.assetId, format: target) != nil {
+                    return  // already cached — skip the decode
+                }
+                do {
+                    let url = URL(fileURLWithPath: entry.localFilePath)
+                    let file = try AVAudioFile(forReading: url)
+                    let buf = try StudioAudioConverter.decodeAndConvert(file: file, targetFormat: target)
+                    StudioAudioBufferCache.shared.put(assetId: entry.assetId, format: target, buffer: buf)
+                } catch {
+                    NSLog("[Studio] prewarm failed for \(entry.assetId): \(error.localizedDescription)")
+                }
+            }
+        }
+        NSLog("[Studio] prewarmAssets dispatched \(entries.count) decode task(s) (max \(maxParallel) in flight)")
     }
 
     public func snapshot() -> StudioEngineState {

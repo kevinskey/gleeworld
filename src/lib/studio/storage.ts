@@ -187,23 +187,55 @@ export async function getAssetUrl(args: {
 // ── Delete a session and all its assets ──────────────────────────────
 
 export async function deleteSession(sessionId: string): Promise<void> {
+  // SELECT may legitimately fail (RLS, stale JWT, wrong tenant). We
+  // previously early-returned on `!row`, which silently faked success
+  // and the row reappeared on the next refetch — looking to the user
+  // like the delete button was broken. Now we surface the cause.
   const { data: row, error } = await supabase
     .from('gw_studio_sessions')
-    .select('storage_prefix')
+    .select('storage_prefix, owner_user_id')
     .eq('id', sessionId)
     .maybeSingle();
   if (error) throw error;
-  if (!row) return;
+  if (!row) {
+    throw new Error(
+      `Could not load session ${sessionId} (it may belong to a different tenant, ` +
+      'or your sign-in may need to be refreshed).',
+    );
+  }
 
-  // List + remove every object under the prefix.
-  const audioDir = `${row.storage_prefix}/audio`;
-  const { data: list } = await supabase.storage.from(BUCKET).list(audioDir);
-  const audioPaths = (list ?? []).map((o) => `${audioDir}/${o.name}`);
-  const allPaths = [manifestPath(row.storage_prefix), ...audioPaths];
-  if (allPaths.length) await supabase.storage.from(BUCKET).remove(allPaths);
+  // List + remove storage objects. Errors here are tolerable — the
+  // session row delete is the load-bearing step. We log but don't
+  // throw so a transient Storage hiccup can't block the DB delete.
+  try {
+    const audioDir = `${row.storage_prefix}/audio`;
+    const { data: list } = await supabase.storage.from(BUCKET).list(audioDir);
+    const audioPaths = (list ?? []).map((o) => `${audioDir}/${o.name}`);
+    const allPaths = [manifestPath(row.storage_prefix), ...audioPaths];
+    if (allPaths.length) {
+      const { error: rmErr } = await supabase.storage.from(BUCKET).remove(allPaths);
+      if (rmErr) console.warn('[studio] storage remove failed (non-fatal):', rmErr.message);
+    }
+  } catch (e) {
+    console.warn('[studio] storage cleanup raised, continuing to row delete:', e);
+  }
 
-  const { error: delErr } = await supabase.from('gw_studio_sessions').delete().eq('id', sessionId);
+  // Use `select()` so PostgREST returns the deleted rows. If RLS
+  // silently rejects (DELETE on a row outside our scope returns 0 rows
+  // with no error), we detect it here and throw — instead of letting
+  // the UI show "Deleted" while the row stays put.
+  const { data: deleted, error: delErr } = await supabase
+    .from('gw_studio_sessions')
+    .delete()
+    .eq('id', sessionId)
+    .select('id');
   if (delErr) throw delErr;
+  if (!deleted || deleted.length === 0) {
+    throw new Error(
+      'Delete was blocked by access policy. Only the session owner can delete it ' +
+      '(check that you are signed in as the user who created the session).',
+    );
+  }
 }
 
 export const STUDIO_BUCKET = BUCKET;

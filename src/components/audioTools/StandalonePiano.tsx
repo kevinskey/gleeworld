@@ -6,6 +6,7 @@ import { Plus, Minus, Maximize2, Minimize2 } from 'lucide-react';
 import * as Tone from 'tone';
 import { holdPianoNote, preloadPianoSampler, isPianoSamplerLoaded } from '@/lib/audioTools/pianoSampler';
 import { forceAudioUnlock } from '@/lib/audioTools/unlock';
+import { useIsPhone } from '@/hooks/use-mobile';
 
 interface StandalonePianoProps {
   className?: string;
@@ -36,6 +37,13 @@ interface PianoKey {
 const EXPANDED_WHITE_KEY_WIDTH = 88;       // px each white key
 const EXPANDED_HEIGHT = 320;               // px keyboard height in stage mode
 
+// Phone compact layout: 14 white keys (≈2 octaves) visible inside a
+// ~360 px viewport at 48 px per key gives finger-friendly targets. The
+// container scrolls horizontally to reach the rest. Was: all octaves
+// crammed into 100% width → ~25 px keys that fingers can't hit cleanly.
+const PHONE_WHITE_KEY_WIDTH = 48;
+const PHONE_KEYBOARD_HEIGHT = 200;
+
 function generateKeys(startOctave: number, octaveCount: number): PianoKey[] {
   const keys: PianoKey[] = [];
   for (let o = 0; o < octaveCount; o++) {
@@ -64,12 +72,14 @@ export function StandalonePiano({
   expanded = false,
   onToggleExpand,
 }: StandalonePianoProps) {
+  const isPhone = useIsPhone();
   const [startOctave, setStartOctave] = useState(defaultStartOctave);
   const [octaveCount, setOctaveCount] = useState(defaultOctaveCount);
   const [volume, setVolume] = useState(0.8);
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const releaseFnsRef = useRef<Map<string, () => void>>(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const phoneScrollRef = useRef<HTMLDivElement>(null);
 
   // In expanded mode we ignore the octave + start-octave controls and
   // render the full keyboard (A0–C8 = 88 keys) so the player can simply
@@ -302,7 +312,106 @@ export function StandalonePiano({
           Tailwind arbitrary value classes (`h-[180px]`, `h-[62%]`, …) —
           some downstream tooling (PurgeCSS / iOS WKWebView's older CSS
           engine) silently drops those, which is the most plausible
-          reason past builds showed *only* the white keys' bottom edge. */}
+          reason past builds showed *only* the white keys' bottom edge.
+          On phones we render at a fixed finger-friendly key width and
+          wrap in a horizontal scroller so only ~2 octaves are visible
+          at once and the rest is reachable via swipe — keys at full
+          flex width on a 360 px viewport are too narrow to hit cleanly. */}
+      {isPhone ? (
+        <div
+          ref={phoneScrollRef}
+          className="relative w-full select-none overflow-x-auto overflow-y-hidden"
+          style={{
+            height: PHONE_KEYBOARD_HEIGHT,
+            background: '#fff',
+            borderRadius: 6,
+            border: '1px solid #cbd5e1',
+            touchAction: 'pan-x',
+          }}
+        >
+          <div
+            className="relative select-none"
+            style={{
+              width: whiteCount * PHONE_WHITE_KEY_WIDTH,
+              height: '100%',
+            }}
+          >
+            <div className="flex absolute inset-0" style={{ zIndex: 1 }}>
+              {whiteKeys.map((k) => {
+                const active = activeNotes.has(k.fullName);
+                return (
+                  <button
+                    key={k.fullName}
+                    type="button"
+                    onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture?.(e.pointerId); startNote(k); }}
+                    onPointerUp={() => stopNote(k)}
+                    onPointerLeave={() => stopNote(k)}
+                    onPointerCancel={() => stopNote(k)}
+                    style={{
+                      width: PHONE_WHITE_KEY_WIDTH,
+                      flexShrink: 0,
+                      background: active ? 'rgba(251,191,36,0.4)' : '#ffffff',
+                      borderRight: '1px solid #cbd5e1',
+                      borderBottomLeftRadius: 4,
+                      borderBottomRightRadius: 4,
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      paddingBottom: 6,
+                      fontSize: 10,
+                      color: '#64748b',
+                      cursor: 'pointer',
+                    }}
+                    aria-label={k.fullName}
+                  >
+                    {k.note === 'C' ? k.fullName : ''}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="absolute inset-0" style={{ zIndex: 2, pointerEvents: 'none' }}>
+              {blackKeyPositions.map(({ key, leftPx: _, }, idx) => {
+                // Recompute leftPx for the phone-specific white-key width.
+                // (blackKeyPositions was memoized against EXPANDED width.)
+                const active = activeNotes.has(key.fullName);
+                // Find the white-key index for this black key.
+                let whiteIdx = 0;
+                let count = 0;
+                for (const k of keys) {
+                  if (k.fullName === key.fullName) break;
+                  if (!k.isBlack) { whiteIdx += 1; }
+                  count += 1;
+                }
+                const leftPx = whiteIdx * PHONE_WHITE_KEY_WIDTH - PHONE_WHITE_KEY_WIDTH * 0.3;
+                return (
+                  <button
+                    key={key.fullName}
+                    type="button"
+                    onPointerDown={(e) => { (e.target as HTMLElement).setPointerCapture?.(e.pointerId); startNote(key); }}
+                    onPointerUp={() => stopNote(key)}
+                    onPointerLeave={() => stopNote(key)}
+                    onPointerCancel={() => stopNote(key)}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: leftPx,
+                      width: PHONE_WHITE_KEY_WIDTH * 0.6,
+                      height: PHONE_KEYBOARD_HEIGHT * 0.62,
+                      background: active ? '#fbbf24' : '#0f172a',
+                      borderBottomLeftRadius: 4,
+                      borderBottomRightRadius: 4,
+                      pointerEvents: 'auto',
+                      cursor: 'pointer',
+                      border: 'none',
+                    }}
+                    aria-label={key.fullName}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : (
       <div
         className="relative w-full select-none"
         style={{ height: 200, background: '#fff', borderRadius: 6, border: '1px solid #cbd5e1', overflow: 'hidden' }}
@@ -373,6 +482,12 @@ export function StandalonePiano({
           })}
         </div>
       </div>
+      )}
+      {isPhone && (
+        <p className="text-[10px] text-muted-foreground text-center">
+          Swipe to reach more octaves
+        </p>
+      )}
     </div>
   );
 }

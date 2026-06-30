@@ -27,6 +27,12 @@
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		C692FCC856285FEA81577B2C /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAAED23BD56BF3B55CC650A /* Recorder.swift */; };
 		D4910ED7763D327934102420 /* Tracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71A15DBCA0F6701D171ED70 /* Tracks.swift */; };
+		E1A2B3C4D5E6F7081923A4B5 /* AudioConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4B6 /* AudioConverter.swift */; };
+		E1A2B3C4D5E6F7081923A4B7 /* PullRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4B8 /* PullRenderer.swift */; };
+		E1A2B3C4D5E6F7081923A4B9 /* AudioBufferCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4BA /* AudioBufferCache.swift */; };
+		E1A2B3C4D5E6F7081923A4BB /* ClipStreamer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4BC /* ClipStreamer.swift */; };
+		E1A2B3C4D5E6F7081923A4BD /* StudioBufferPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4BE /* StudioBufferPool.swift */; };
+		E1A2B3C4D5E6F7081923A4BF /* RealtimeThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4C0 /* RealtimeThread.swift */; };
 		ED56BC98FAF679C5E8E8460B /* Mixdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93A915581BC73F5E718C6B9 /* Mixdown.swift */; };
 		F3827DBA2B1BCFB65967AA84 /* Fx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B41B6DB59A4EC515A3D916 /* Fx.swift */; };
 /* End PBXBuildFile section */
@@ -52,6 +58,12 @@
 		693451AC85FAAD6C29DB7ED2 /* StudioObjC.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = StudioObjC.h; sourceTree = "<group>"; };
 		90B41B6DB59A4EC515A3D916 /* Fx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Fx.swift; sourceTree = "<group>"; };
 		A71A15DBCA0F6701D171ED70 /* Tracks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Tracks.swift; sourceTree = "<group>"; };
+		E1A2B3C4D5E6F7081923A4B6 /* AudioConverter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioConverter.swift; sourceTree = "<group>"; };
+		E1A2B3C4D5E6F7081923A4B8 /* PullRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PullRenderer.swift; sourceTree = "<group>"; };
+		E1A2B3C4D5E6F7081923A4BA /* AudioBufferCache.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioBufferCache.swift; sourceTree = "<group>"; };
+		E1A2B3C4D5E6F7081923A4BC /* ClipStreamer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClipStreamer.swift; sourceTree = "<group>"; };
+		E1A2B3C4D5E6F7081923A4BE /* StudioBufferPool.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioBufferPool.swift; sourceTree = "<group>"; };
+		E1A2B3C4D5E6F7081923A4C0 /* RealtimeThread.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RealtimeThread.swift; sourceTree = "<group>"; };
 		ACAAED23BD56BF3B55CC650A /* Recorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
@@ -146,6 +158,12 @@
 				ACAAED23BD56BF3B55CC650A /* Recorder.swift */,
 				D93A915581BC73F5E718C6B9 /* Mixdown.swift */,
 				ED85A7982F21BD5123300ED4 /* AssetLoader.swift */,
+				E1A2B3C4D5E6F7081923A4B6 /* AudioConverter.swift */,
+				E1A2B3C4D5E6F7081923A4B8 /* PullRenderer.swift */,
+				E1A2B3C4D5E6F7081923A4BA /* AudioBufferCache.swift */,
+				E1A2B3C4D5E6F7081923A4BC /* ClipStreamer.swift */,
+				E1A2B3C4D5E6F7081923A4BE /* StudioBufferPool.swift */,
+				E1A2B3C4D5E6F7081923A4C0 /* RealtimeThread.swift */,
 			);
 			name = Studio;
 			path = Studio;
@@ -279,6 +297,12 @@
 				C692FCC856285FEA81577B2C /* Recorder.swift in Sources */,
 				ED56BC98FAF679C5E8E8460B /* Mixdown.swift in Sources */,
 				9FC224AE2381121D2FB58450 /* AssetLoader.swift in Sources */,
+				E1A2B3C4D5E6F7081923A4B5 /* AudioConverter.swift in Sources */,
+				E1A2B3C4D5E6F7081923A4B7 /* PullRenderer.swift in Sources */,
+				E1A2B3C4D5E6F7081923A4B9 /* AudioBufferCache.swift in Sources */,
+				E1A2B3C4D5E6F7081923A4BB /* ClipStreamer.swift in Sources */,
+				E1A2B3C4D5E6F7081923A4BD /* StudioBufferPool.swift in Sources */,
+				E1A2B3C4D5E6F7081923A4BF /* RealtimeThread.swift in Sources */,
 				3FAFA54C6D73BFE7F1E141C5 /* StudioObjC.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -432,7 +456,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 85;
+				CURRENT_PROJECT_VERSION = 88;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -457,7 +481,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 85;
+				CURRENT_PROJECT_VERSION = 88;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (

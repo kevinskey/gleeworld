@@ -148,6 +148,21 @@
     <script src="/tenant-bootstrap.js"></script>
     <!-- Native app only: restores cached tenant config (no subdomain on device). -->
     <script src="/native-boot.js"></script>
+    <script>
+      // Apply tenant branding to the document title BEFORE the React
+      // bundle runs so the browser tab never flashes the marketing
+      // "GleeWorld — Run your music program. Beautifully." title on a
+      // tenant subdomain. The bootstrap above populates __TENANT_CONFIG__
+      // synchronously; we read it here and patch the title in place.
+      // TenantFavicon (React) still runs later for the favicon swap and
+      // any title updates after branding rows load from the DB.
+      (function() {
+        try {
+          var cfg = window.__TENANT_CONFIG__;
+          if (cfg && cfg.org) document.title = cfg.org;
+        } catch (e) { /* ignore — title stays at the index.html default */ }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       // Service worker phase-out — we used to install one for offline caching,

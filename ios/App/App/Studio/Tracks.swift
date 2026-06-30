@@ -20,9 +20,16 @@ public final class TrackBinding {
     private var fxChain: FxChain?
     private let kind: Studio.TrackKind
 
-    // Audio-track resources.
+    // Audio-track resources (push path — default).
     private var playerNodes: [AVAudioPlayerNode] = []
     private var loadedClips: [(clip: Studio.AudioClip, file: AVAudioFile, player: AVAudioPlayerNode)] = []
+
+    // Audio-track resources (pull path — opt-in via Engine flag).
+    // When `pullRenderer` is non-nil, the track's audio is driven by a
+    // single AVAudioSourceNode whose render block sums pre-decoded
+    // PCM buffers. Each clip lives in the renderer's snapshot rather
+    // than as its own AVAudioPlayerNode.
+    private var pullRenderer: PullRenderer?
 
     // MIDI-track resources.
     private var instrument: EngineInstrument?
@@ -285,8 +292,64 @@ public final class TrackBinding {
     }
 
     public func hasClip(clipId: String) -> Bool {
+        if let pr = pullRenderer { return pr.clipCount() > 0 && loadedClips.isEmpty }
         return loadedClips.contains(where: { $0.clip.id == clipId })
     }
+
+    // MARK: - Pull-path wiring (opt-in)
+    //
+    // Engine calls enablePullRenderer(currentPositionProvider:) on a
+    // fresh track to install a PullRenderer + AVAudioSourceNode into
+    // the existing strip → muteGate → fx chain. Subsequent
+    // addClipPullPath / removeClipPullPath calls flow through the
+    // renderer's snapshot instead of attaching individual players.
+    // No-op if already enabled.
+
+    /// Install a PullRenderer for this track. Caller supplies a closure
+    /// that returns the current transport position in seconds — the
+    /// renderer reads it inside its render block to compute clip
+    /// windows. `format` should match the master mixer's output format.
+    public func enablePullRenderer(format: AVAudioFormat,
+                                   currentPositionProvider: @escaping () -> Double) {
+        guard pullRenderer == nil else { return }
+        let renderer = PullRenderer(outputFormat: format,
+                                    currentTimelineSeconds: currentPositionProvider)
+        if let err = StudioObjC.catchExceptions({
+            self.engine.attach(renderer.sourceNode)
+            self.engine.connect(renderer.sourceNode, to: self.strip, format: format)
+        }) {
+            NSLog("[Studio] pullRenderer attach failed: \(err.localizedDescription)")
+            return
+        }
+        pullRenderer = renderer
+        NSLog("[Studio] pullRenderer wired on track \(trackId)")
+    }
+
+    /// Append a clip into the pull renderer. Caller has already decoded
+    /// + converted the asset to master format via
+    /// StudioAudioConverter.decodeAndConvertAsync (which runs on a
+    /// background queue and avoids blocking the audio thread).
+    public func addClipPullPath(clip: Studio.AudioClip, buffer: AVAudioPCMBuffer) {
+        guard let renderer = pullRenderer else {
+            NSLog("[Studio] addClipPullPath called but pullRenderer not enabled on \(trackId)")
+            return
+        }
+        let prClip = PullRendererClip(
+            id: clip.id,
+            buffer: buffer,
+            startSeconds: clip.start_seconds,
+            durationSeconds: clip.duration_seconds,
+            offsetSeconds: clip.offset_seconds,
+            gainLinear: Float(dbToGain(clip.gain_db))
+        )
+        renderer.addClip(prClip)
+    }
+
+    public func removeClipPullPath(clipId: String) {
+        pullRenderer?.removeClip(id: clipId)
+    }
+
+    public var isPullPathEnabled: Bool { pullRenderer != nil }
 
     public func dispose() {
         stopScheduling()
