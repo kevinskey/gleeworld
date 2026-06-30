@@ -209,7 +209,10 @@ export const CommandCenterCalendar = () => {
         registration_required: false,
         is_public: false,
         status: g.status,
-        calendar_id: 'google',
+        // null so the calendar-filter short-circuits (`!event.calendar_id`)
+        // and these synthetic rows aren't dropped just because 'google'
+        // isn't a real gw_calendars id.
+        calendar_id: null,
         course_id: null,
         created_by: null,
         created_at: null,

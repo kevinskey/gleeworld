@@ -1,10 +1,16 @@
-// google-sync — pulls events from the caller's Google primary calendar
+// google-sync — pulls events from every Google calendar the user has
+// opted into (gw_google_calendar_subscriptions where is_enabled=true)
 // into gw_google_events. Refreshes the access_token if it's expired.
 //
-// Strategy: list events in a sensible time window (now − 14d to now + 90d),
-// upsert by (user_id, google_event_id). Events that have moved out of the
-// window stay in the table; events deleted on Google's side are flagged via
-// status='cancelled' on the upsert side (Google returns them in the list).
+// If the user has no subscription rows yet (e.g. first sync after the
+// multi-calendar migration but before they've opened the picker), we
+// fall back to syncing 'primary' so the experience never regresses.
+//
+// Strategy: for each enabled calendar, list events in a sensible window
+// (now − 14d to now + 90d), upsert by (user_id, google_event_id). Events
+// that have moved out of the window stay in the table; events deleted on
+// Google's side are flagged via status='cancelled' on the upsert side
+// (Google returns them in the list).
 //
 // Auth: requires the caller's JWT (we only sync the caller's own data).
 //
@@ -88,57 +94,101 @@ serve(async (req) => {
     }
   }
 
+  // Which calendars should we pull? Honor the user's subscription picks.
+  // Fall back to 'primary' if they haven't picked anything yet so this
+  // function keeps working on first run.
+  const { data: subs } = await admin
+    .from('gw_google_calendar_subscriptions')
+    .select('google_calendar_id')
+    .eq('user_id', user.id)
+    .eq('is_enabled', true);
+  const calendarIds: string[] = (subs && subs.length > 0)
+    ? subs.map(s => s.google_calendar_id as string)
+    : ['primary'];
+
   // List events: 14d back → 90d forward.
   const timeMin = new Date(Date.now() - 14 * 86400_000).toISOString();
   const timeMax = new Date(Date.now() + 90 * 86400_000).toISOString();
-  const listUrl = `https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250&timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`;
+  const nowIso  = new Date().toISOString();
 
-  const listRes = await fetch(listUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
-  if (!listRes.ok) {
-    const t = await listRes.text();
-    await admin.from('gw_google_connections').update({ last_error: 'list_failed: ' + t.slice(0, 200) }).eq('id', conn.id);
-    return new Response(JSON.stringify({ error: 'list_failed', detail: t.slice(0, 200) }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
-  const data = await listRes.json() as { items?: GoogleEvent[] };
-  const items = data.items ?? [];
-
-  // Map → DB rows.
-  const rows = items.map((ev) => {
-    const startAt = ev.start?.dateTime ?? (ev.start?.date ? ev.start.date + 'T00:00:00Z' : null);
-    const endAt   = ev.end?.dateTime   ?? (ev.end?.date   ? ev.end.date   + 'T00:00:00Z' : null);
-    return {
-      user_id:            user.id,
-      tenant_id:          conn.tenant_id,
-      google_event_id:    ev.id,
-      google_calendar_id: 'primary',
-      title:              ev.summary ?? null,
-      description:        ev.description ?? null,
-      location:           ev.location ?? null,
-      start_at:           startAt,
-      end_at:             endAt,
-      all_day:            !!ev.start?.date && !ev.start?.dateTime,
-      html_link:          ev.htmlLink ?? null,
-      recurrence:         ev.recurrence ?? null,
-      status:             ev.status ?? null,
-      synced_at:          new Date().toISOString(),
-    };
-  });
-
+  let fetched = 0;
   let upserts = 0;
-  if (rows.length) {
-    const { error: upErr, count } = await admin
-      .from('gw_google_events')
-      .upsert(rows, { onConflict: 'user_id,google_event_id', count: 'exact' });
-    if (upErr) {
-      await admin.from('gw_google_connections').update({ last_error: 'upsert_failed: ' + upErr.message }).eq('id', conn.id);
-      return new Response(JSON.stringify({ error: 'upsert_failed', detail: upErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  const perCalErrors: Array<{ calendar: string; detail: string }> = [];
+
+  for (const calId of calendarIds) {
+    const listUrl =
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`
+      + `?singleEvents=true&orderBy=startTime&maxResults=250`
+      + `&timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}`;
+    const listRes = await fetch(listUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!listRes.ok) {
+      perCalErrors.push({ calendar: calId, detail: (await listRes.text()).slice(0, 200) });
+      continue;
     }
-    upserts = count ?? rows.length;
+    const data = await listRes.json() as { items?: GoogleEvent[] };
+    const items = data.items ?? [];
+    fetched += items.length;
+
+    const rows = items.map((ev) => {
+      const startAt = ev.start?.dateTime ?? (ev.start?.date ? ev.start.date + 'T00:00:00Z' : null);
+      const endAt   = ev.end?.dateTime   ?? (ev.end?.date   ? ev.end.date   + 'T00:00:00Z' : null);
+      return {
+        user_id:            user.id,
+        tenant_id:          conn.tenant_id,
+        google_event_id:    ev.id,
+        google_calendar_id: calId,
+        title:              ev.summary ?? null,
+        description:        ev.description ?? null,
+        location:           ev.location ?? null,
+        start_at:           startAt,
+        end_at:             endAt,
+        all_day:            !!ev.start?.date && !ev.start?.dateTime,
+        html_link:          ev.htmlLink ?? null,
+        recurrence:         ev.recurrence ?? null,
+        status:             ev.status ?? null,
+        synced_at:          nowIso,
+      };
+    });
+
+    if (rows.length) {
+      const { error: upErr, count } = await admin
+        .from('gw_google_events')
+        .upsert(rows, { onConflict: 'user_id,google_event_id', count: 'exact' });
+      if (upErr) {
+        perCalErrors.push({ calendar: calId, detail: 'upsert_failed: ' + upErr.message });
+        continue;
+      }
+      upserts += count ?? rows.length;
+    }
   }
 
-  await admin.from('gw_google_connections').update({ last_synced_at: new Date().toISOString(), last_error: null }).eq('id', conn.id);
+  // Sweep events whose source calendar is no longer enabled OR was
+  // removed from Google entirely. We delete rows older than this sync
+  // pass whose google_calendar_id isn't in the active set, so the user
+  // sees the change immediately on the calendar grid.
+  if (calendarIds.length > 0) {
+    await admin
+      .from('gw_google_events')
+      .delete()
+      .eq('user_id', user.id)
+      .not('google_calendar_id', 'in', `(${calendarIds.map(id => `"${id}"`).join(',')})`);
+  }
 
-  return new Response(JSON.stringify({ ok: true, fetched: items.length, upserted: upserts }), {
+  const lastError = perCalErrors.length
+    ? perCalErrors.map(e => `${e.calendar}: ${e.detail}`).join(' | ')
+    : null;
+  await admin
+    .from('gw_google_connections')
+    .update({ last_synced_at: nowIso, last_error: lastError })
+    .eq('id', conn.id);
+
+  return new Response(JSON.stringify({
+    ok: true,
+    fetched,
+    upserted: upserts,
+    calendars: calendarIds,
+    errors: perCalErrors,
+  }), {
     status: 200,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });

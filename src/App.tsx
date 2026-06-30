@@ -198,6 +198,7 @@ const BoxOfficeIndexPage = lazy(() => import("./pages/public/BoxOfficeIndexPage"
 const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
 const PartTracksLandingPage = lazy(() => import("./pages/dashboard/PartTracksLandingPage"));
 const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
+const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
 const AuditionsModule = lazy(() => import("./components/modules/AuditionsModule").then(m => ({ default: m.AuditionsModule })));
@@ -1478,6 +1479,31 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
                           <ConcertPlannerEditorPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Liturgy Planner — Catholic Mass planning (addon module 'liturgy_planner'). */}
+                <Route
+                  path="/dashboard/liturgy"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <LiturgyPlannerPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/liturgy/:massId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <LiturgyPlannerPage />
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>

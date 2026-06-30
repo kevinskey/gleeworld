@@ -97,6 +97,85 @@ export function usePushAllToGoogle() {
   });
 }
 
+// One row per Google calendar the user can see. `is_enabled` controls
+// whether google-sync pulls events from it.
+export interface GoogleCalendarSubscription {
+  id: string;
+  google_calendar_id: string;
+  summary: string | null;
+  background_color: string | null;
+  access_role: string | null;
+  is_primary: boolean;
+  is_enabled: boolean;
+  last_listed_at: string;
+}
+
+const SUBS_KEY = ['google-calendar-subscriptions'];
+
+export function useGoogleCalendarSubscriptions() {
+  return useQuery<GoogleCalendarSubscription[]>({
+    queryKey: SUBS_KEY,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_google_calendar_subscriptions')
+        .select('id, google_calendar_id, summary, background_color, access_role, is_primary, is_enabled, last_listed_at')
+        // Primary first, then alphabetical so the picker reads naturally.
+        .order('is_primary', { ascending: false })
+        .order('summary', { ascending: true });
+      if (error) throw error;
+      return (data as GoogleCalendarSubscription[]) || [];
+    },
+  });
+}
+
+// Asks the server to refresh the calendar list from Google. Returns
+// the upserted rows.
+export function useRefreshGoogleCalendars() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('google-list-calendars', {});
+      if (error) throw error;
+      return data as { ok: boolean; found: number };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: SUBS_KEY });
+    },
+  });
+}
+
+// Flips is_enabled on a single subscription row. Optimistic update so
+// the toggle feels instant.
+export function useToggleGoogleCalendar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+      const { error } = await supabase
+        .from('gw_google_calendar_subscriptions')
+        .update({ is_enabled: enabled })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, enabled }) => {
+      await qc.cancelQueries({ queryKey: SUBS_KEY });
+      const prev = qc.getQueryData<GoogleCalendarSubscription[]>(SUBS_KEY);
+      if (prev) {
+        qc.setQueryData<GoogleCalendarSubscription[]>(
+          SUBS_KEY,
+          prev.map(s => s.id === id ? { ...s, is_enabled: enabled } : s),
+        );
+      }
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(SUBS_KEY, ctx.prev);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: SUBS_KEY });
+    },
+  });
+}
+
 export function useDisconnectGoogle() {
   const qc = useQueryClient();
   return useMutation({

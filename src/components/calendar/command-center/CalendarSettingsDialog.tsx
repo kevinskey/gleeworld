@@ -29,6 +29,9 @@ import {
   useSyncGoogle,
   useDisconnectGoogle,
   usePushAllToGoogle,
+  useGoogleCalendarSubscriptions,
+  useRefreshGoogleCalendars,
+  useToggleGoogleCalendar,
   hasWriteScope,
 } from '@/hooks/useGoogleConnection';
 import { useAuth } from '@/contexts/AuthContext';
@@ -607,6 +610,92 @@ function GoogleConnectionPanel() {
         <p className="text-sm text-amber-700 mt-2">
           Your current connection is read-only. Click <span className="font-semibold">Upgrade to two-way sync</span> to grant
           write access — new and edited GleeWorld events will then appear in your Google calendar instantly.
+        </p>
+      )}
+
+      {conn && <GoogleCalendarPicker />}
+    </div>
+  );
+}
+
+// ── Calendar picker ────────────────────────────────────────────────────────
+// Lists every Google calendar the user can see and lets them choose which
+// ones get pulled into GleeWorld. Backed by gw_google_calendar_subscriptions
+// (one row per calendar, is_enabled flag).
+function GoogleCalendarPicker() {
+  const { toast } = useToast();
+  const { data: subs = [], isLoading } = useGoogleCalendarSubscriptions();
+  const refreshMut = useRefreshGoogleCalendars();
+  const toggleMut = useToggleGoogleCalendar();
+
+  async function refresh() {
+    try {
+      const r = await refreshMut.mutateAsync();
+      toast({ title: 'Calendars refreshed', description: `Found ${r.found} on Google` });
+    } catch (e: any) {
+      toast({ title: 'Could not load calendars', description: e?.message || String(e), variant: 'destructive' });
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-border p-4 space-y-3 mt-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Calendars to sync
+          </Label>
+          <p className="text-sm text-muted-foreground mt-1">
+            Pick which of your Google calendars should appear in GleeWorld. Only enabled calendars get pulled.
+          </p>
+        </div>
+        <Button
+          onClick={refresh}
+          disabled={refreshMut.isPending}
+          variant="outline"
+          size="sm"
+          className="gap-2 shrink-0"
+        >
+          {refreshMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          Refresh list
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="text-sm text-muted-foreground py-2"><Loader2 className="w-4 h-4 animate-spin inline mr-2" />Loading…</div>
+      ) : subs.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-4 border border-dashed border-border rounded-md">
+          No calendars loaded yet. Click <span className="font-semibold">Refresh list</span> to pull them from Google.
+        </p>
+      ) : (
+        <ul className="divide-y divide-border rounded-md border border-border overflow-hidden">
+          {subs.map((s) => (
+            <li key={s.id} className="flex items-center gap-3 px-3 py-2">
+              <span
+                className="inline-block w-3 h-3 rounded-full shrink-0"
+                style={{ background: s.background_color || '#94a3b8' }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {s.summary || s.google_calendar_id}
+                  {s.is_primary && (
+                    <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">Primary</span>
+                  )}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{s.google_calendar_id}</p>
+              </div>
+              <Switch
+                checked={s.is_enabled}
+                onCheckedChange={(next) => toggleMut.mutate({ id: s.id, enabled: next })}
+                aria-label={`Toggle ${s.summary || s.google_calendar_id}`}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {subs.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          After changing which calendars are enabled, click <span className="font-semibold">Pull from Google</span> above to re-sync events.
         </p>
       )}
     </div>

@@ -55,6 +55,7 @@ import {
   Film,
   Route as RouteIcon,
   Sparkles,
+  Church,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -221,6 +222,7 @@ function Sidebar() {
   const { hasAccess: hasViewer } = useModuleAccess('viewer');
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
   const { hasAccess: hasTourManager } = useModuleAccess('tour');
+  const { hasAccess: hasLiturgyPlanner } = useModuleAccess('liturgy_planner');
 
   // Grouped nav. Sections render their entries under a small uppercase
   // label; sections with zero visible entries are hidden entirely so the
@@ -286,6 +288,7 @@ function Sidebar() {
       label: 'Plan',
       items: [
         ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tourId: 'nav-concert-planner', tone: 'bg-emerald-50 text-emerald-700' }] : []),
+        ...(hasLiturgyPlanner ? [{ to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        tourId: 'nav-liturgy-planner', tone: 'bg-amber-50 text-amber-700' }] : []),
         ...(hasTourManager   ? [{ to: '/tour-manager',               label: 'Tour Manager',    icon: RouteIcon,     tourId: 'nav-tour-manager',    tone: 'bg-blue-50 text-blue-600' }] : []),
         ...(hasAuditions     ? [{ to: '/dashboard/auditions',        label: 'Auditions',       icon: ScanLine,      tourId: 'nav-auditions',       tone: 'bg-lime-50 text-lime-600' }] : []),
       ],
@@ -319,6 +322,10 @@ function Sidebar() {
         ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tourId: 'nav-site-setup', tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
         { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp, tourId: 'nav-analytics', tone: 'bg-purple-50 text-purple-600' },
         { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,   tourId: 'nav-settings',  tone: 'bg-muted text-muted-foreground' },
+        // Platform-owner only — provision/manage every tenant. Hidden
+        // for tenant super-admins (demo-admin, lincoln-hs admin, etc.)
+        // who don't have cross-tenant authority.
+        ...(isPlatformAdmin ? [{ to: '/admin/tenants', label: 'Tenants', icon: Sparkles, tourId: 'nav-platform-tenants', tone: 'bg-indigo-50 text-indigo-700' }] : []),
       ],
     },
   ];
@@ -458,6 +465,8 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
   const { profile, canEditMusicLibrary } = useUserRole();
+  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
+  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
   const userCanLibrarian = canEditMusicLibrary();
   const { hasAccess: hasSightReading } = useModuleAccess('sight_reading');
@@ -473,6 +482,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { hasAccess: hasViewer } = useModuleAccess('viewer');
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
   const { hasAccess: hasTourManager } = useModuleAccess('tour');
+  const { hasAccess: hasLiturgyPlanner } = useModuleAccess('liturgy_planner');
 
   // Verb-grouped to match the desktop sidebar (Today / Music / Teach /
   // Make / Plan / Reach / Money / People / Admin). Empty sections drop
@@ -519,6 +529,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
       label: 'Plan',
       items: [
         ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tone: 'bg-emerald-50 text-emerald-700' }] : []),
+        ...(hasLiturgyPlanner ? [{ to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        tone: 'bg-amber-50 text-amber-700' }] : []),
         ...(hasTourManager   ? [{ to: '/tour-manager',               label: 'Tour Manager',    icon: RouteIcon,     tone: 'bg-blue-50 text-blue-600' }] : []),
         ...(hasAuditions     ? [{ to: '/dashboard/auditions',        label: 'Auditions',       icon: ScanLine,      tone: 'bg-lime-50 text-lime-600' }] : []),
       ],
@@ -552,6 +563,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
         { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp, tone: 'bg-purple-50 text-purple-600' },
         { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,   tone: 'bg-muted text-muted-foreground' },
+        ...(isPlatformAdmin ? [{ to: '/admin/tenants', label: 'Tenants', icon: Sparkles, tone: 'bg-indigo-50 text-indigo-700' }] : []),
       ],
     },
   ];
