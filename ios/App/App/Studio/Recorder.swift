@@ -31,7 +31,21 @@ public final class StudioNativeRecorder {
     }
 
     public func start() throws {
-        guard !isRecording else { return }
+        // Defensive cleanup: tear down any prior recorder instance even
+        // if the isRecording flag says we're idle. A failed previous
+        // take (mid-flight crash, force-quit, abandoned watchdog) can
+        // leave avRecorder retained but not actively writing — then a
+        // second AVAudioRecorder allocation against the same audio
+        // session category transition triggers an iOS-internal abort
+        // signal that bypasses our try/throw chain. Was the crash
+        // reproed on "record second track".
+        if let stale = avRecorder {
+            stale.stop()
+            avRecorder = nil
+        }
+        peakTimer?.invalidate()
+        peakTimer = nil
+        isRecording = false
 
         // CALLER is responsible for ensuring mic permission has already
         // been granted BEFORE this is called. Don't block here — that
@@ -39,9 +53,14 @@ public final class StudioNativeRecorder {
         // on the main thread.
 
         // Switch the session into a mic-capable category just-in-time.
+        // Skip the transition if we're already in playAndRecord —
+        // redundant setCategory while a take just finalized can
+        // collide with the underlying CoreAudio session state machine.
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .default,
-                                options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
+        if session.category != .playAndRecord {
+            try session.setCategory(.playAndRecord, mode: .default,
+                                    options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
+        }
         try session.setActive(true)
 
         // Sanity-check — if permission still isn't granted, throw a

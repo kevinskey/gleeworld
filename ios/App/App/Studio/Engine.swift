@@ -532,9 +532,24 @@ public final class StudioNativeEngine {
 
     private func ensureMetronomeAttached() {
         guard !metronomeAttached else { return }
-        // Negotiate format against the master mixer's input so the
-        // click buffers we generate later use the same channel count +
-        // sample rate the engine actually wants.
+        // CRITICAL: bring the engine up FIRST so masterMixer is
+        // connected to mainMixerNode + the AVAudioSession is active
+        // before we read the master's outputFormat. Previously this
+        // function ran while masterMixer was still disconnected — it
+        // returned a stub 44.1 kHz default, we wired the metronome
+        // player with that format, then engine.start() later
+        // negotiated 48 kHz hardware → format mismatch, no sound.
+        // This was the "metronome silent on iOS" failure mode on
+        // builds 86–88.
+        if !engine.isRunning {
+            do { try engine.start() }
+            catch {
+                NSLog("[Studio] ensureMetronomeAttached — engine.start failed: \(error.localizedDescription)")
+                return
+            }
+        }
+        // Now masterMixer.outputFormat reflects the real hardware
+        // sample rate + channel layout the OS negotiated.
         let mixerFormat = masterMixer.outputFormat(forBus: 0)
         NSLog("[Studio] metronome attach: mixer fmt sr=\(mixerFormat.sampleRate) ch=\(mixerFormat.channelCount)")
         if let err = StudioObjC.catchExceptions({
@@ -546,9 +561,7 @@ public final class StudioNativeEngine {
         }
         metronomePlayer.volume = metronomeVolume
         // Build the click buffers in the negotiated format so
-        // scheduleBuffer doesn't silently drop them. Caller passes Self
-        // can't see instance state, so we inline here instead of using
-        // a static helper.
+        // scheduleBuffer doesn't silently drop them.
         metronomeBeatBuffer = makeClickBuffer(format: mixerFormat, frequency: 1000, durationMs: 30)
         metronomeAccentBuffer = makeClickBuffer(format: mixerFormat, frequency: 1500, durationMs: 30)
         metronomeAttached = true
