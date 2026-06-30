@@ -91,8 +91,25 @@ public final class StudioNativeEngine {
         // and engine.isRunning returns true while every scheduled
         // buffer plays into a dormant session — total silence with no
         // error. That was the "metronome won't play in iOS Studio"
-        // failure mode. We pick playback (or playAndRecord if the
-        // recorder pre-armed the session) so output is guaranteed.
+        // failure mode.
+        //
+        // CRITICAL: do NOT pass .mixWithOthers here. WKWebView owns
+        // its own audio session (used by HTML <audio>, YouTube embeds,
+        // and the Music Tools web-audio metronome). When .playback is
+        // set with .mixWithOthers, iOS lets the WebView keep audio
+        // focus and our AVAudioEngine outputNode is silently routed
+        // to nowhere — every scheduled buffer fires successfully but
+        // no sound reaches the speaker. That's what was broken on
+        // builds 86–90: Studio metronome + clip playback both silent
+        // while Music Tools (WebView) still worked.
+        //
+        // Without mixWithOthers, .playback takes audio focus. The
+        // WebView's existing audio (Music Tools metronome, YouTube
+        // playback, etc.) will be paused while Studio is active.
+        // That's the correct trade — Studio is a DAW; it should own
+        // the speaker while engaged. Recorder path still uses
+        // .playAndRecord (with defaultToSpeaker so AirPods mic doesn't
+        // route output to earpiece).
         let session = AVAudioSession.sharedInstance()
         let wantsRecord = session.category == .playAndRecord
         do {
@@ -101,10 +118,10 @@ public final class StudioNativeEngine {
                 // the mic input chain isn't torn down mid-take.
                 try session.setActive(true)
             } else {
-                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-                try session.setActive(true)
+                try session.setCategory(.playback, mode: .default, options: [])
+                try session.setActive(true, options: [.notifyOthersOnDeactivation])
             }
-            NSLog("[Studio] engine.start: AVAudioSession active, category=\(session.category.rawValue)")
+            NSLog("[Studio] engine.start: AVAudioSession active, category=\(session.category.rawValue), sampleRate=\(session.sampleRate), otherAudio=\(session.isOtherAudioPlaying)")
         } catch {
             NSLog("[Studio] engine.start: AVAudioSession activate failed: \(error.localizedDescription)")
             // Continue — engine.start may still work for non-output use

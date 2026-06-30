@@ -49,11 +49,16 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
           <Label htmlFor="email" className="text-white">Email</Label>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            inputMode="email"
             required
             className="bg-black/40 border-white/40 text-white placeholder:text-white/60 focus:border-white/70 focus:bg-black/50"
           />
@@ -63,6 +68,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
           <Label htmlFor="password" className="text-white">Password</Label>
           <Input
             id="password"
+            name="password"
             type="password"
             placeholder="Enter your password"
             value={password}
