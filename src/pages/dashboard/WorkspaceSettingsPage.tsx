@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -18,8 +18,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
-  Plug, Save, Building2, Lock, Sparkles, Users,
+  Plug, Save, Building2, Lock, Sparkles, Users, Menu,
 } from 'lucide-react';
+import { NAV_CATALOG, HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/nav/navCatalog';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -57,9 +58,10 @@ export default function WorkspaceSettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-5 max-w-3xl">
+        <TabsList className="grid grid-cols-6 max-w-3xl">
           <TabsTrigger value="plan"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
           <TabsTrigger value="modules"><Plug className="w-3.5 h-3.5 mr-1.5" />Add-ons</TabsTrigger>
+          <TabsTrigger value="navigation"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
           <TabsTrigger value="branding"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
           <TabsTrigger value="billing"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
           <TabsTrigger value="general"><Building2 className="w-3.5 h-3.5 mr-1.5" />General</TabsTrigger>
@@ -67,6 +69,7 @@ export default function WorkspaceSettingsPage() {
 
         <TabsContent value="plan"><PlanTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="modules"><ModulesTabPanel canManage={canManage} /></TabsContent>
+        <TabsContent value="navigation"><NavigationTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="branding"><BrandingTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="billing"><BillingTabPanel /></TabsContent>
         <TabsContent value="general"><GeneralTabPanel canManage={canManage} /></TabsContent>
@@ -229,10 +232,19 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
 const DEMO_TENANT_ID = 'ae2fbec2-7562-45f9-9028-c4df93b99cef';
 
 function ModulesTabPanel({ canManage }: { canManage: boolean }) {
+  const queryClient = useQueryClient();
+  // Invalidate every cache that depends on the tenant's active
+  // subscription set — this panel's own list, plus the sidebar's
+  // useModuleAccess view. Without the second one the nav item
+  // stays visible until the next full reload.
+  const bustSubscriptionCaches = () => {
+    queryClient.invalidateQueries({ queryKey: ['workspace-tenant-subscriptions'] });
+    queryClient.invalidateQueries({ queryKey: ['v_tenant_active_modules'] });
+  };
   // Tenant's active billed add-ons. gw_tenant_subscriptions is the
   // canonical activation table — written by stripe-webhook on
   // customer.subscription.created/updated/deleted events.
-  const { data: tenantModules = [], refetch: refetchActive } = useQuery({
+  const { data: tenantModules = [] } = useQuery({
     queryKey: ['workspace-tenant-subscriptions'],
     queryFn: async () => {
       const { data } = await supabase
@@ -264,28 +276,65 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
     },
     onSuccess: (_d, vars) => {
       toast.success(vars.active ? 'Add-on enabled (sandbox)' : 'Add-on disabled');
-      refetchActive();
+      bustSubscriptionCaches();
     },
     onError: (e: any) => toast.error(e?.message || 'Toggle failed.'),
   });
 
-  // Catalog of add-ons. Real tenants see only rows that have BOTH a
-  // price AND a Stripe price ID (otherwise checkout would fail). The
-  // demo tenant sees every active module so people exploring the
-  // platform can toggle any feature on or off freely.
+  // Direct DB toggle for real tenants on free ($0) add-ons. Skips
+  // Stripe entirely and writes to gw_tenant_subscriptions directly —
+  // RLS grants tenant admins/super-admins write access to their own
+  // tenant's row. Priced add-ons still route through Stripe checkout
+  // for activation.
+  const directToggle = useMutation({
+    mutationFn: async ({ moduleId, active }: { moduleId: string; active: boolean }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const claims = session?.user?.app_metadata as Record<string, unknown> | undefined;
+      const tenantId = (claims?.tenant_id as string | undefined)
+        ?? (session?.user?.user_metadata as any)?.tenant_id;
+      if (!tenantId) throw new Error('No tenant in session');
+      if (active) {
+        const { error } = await supabase
+          .from('gw_tenant_subscriptions')
+          .upsert({
+            tenant_id: tenantId,
+            module_id: moduleId,
+            status: 'active',
+            enabled_at: new Date().toISOString(),
+            cancelled_at: null,
+            metadata: { comped: true },
+          }, { onConflict: 'tenant_id,module_id' });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('gw_tenant_subscriptions')
+          .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+          .eq('tenant_id', tenantId)
+          .eq('module_id', moduleId);
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, vars) => {
+      toast.success(vars.active ? 'Add-on activated' : 'Add-on deactivated');
+      bustSubscriptionCaches();
+    },
+    onError: (e: any) => toast.error(e?.message || 'Toggle failed.'),
+  });
+
+  // Catalog of add-ons — every active row in the billing catalog. In
+  // the previous shape we filtered out rows missing a stripe_price_id
+  // so real tenants only saw priced add-ons; that also hides every
+  // free/comped add-on. Now we surface all of them and gate the CTA
+  // per-row on whether a price + Stripe id are configured.
   const { data: catalog = [] } = useQuery({
-    queryKey: ['workspace-billing-catalog', isDemo],
+    queryKey: ['workspace-billing-catalog'],
     queryFn: async () => {
-      let q = supabase
+      const { data } = await supabase
         .from('gw_billing_modules')
         .select('id, name, description, monthly_price_cents, is_active, category, sort_order, stripe_price_id')
-        .eq('is_active', true);
-      if (!isDemo) {
-        q = q
-          .not('stripe_price_id', 'is', null)
-          .not('monthly_price_cents', 'is', null);
-      }
-      const { data } = await q.order('sort_order').order('name');
+        .eq('is_active', true)
+        .eq('tier', 'addon')
+        .order('sort_order').order('name');
       return data ?? [];
     },
   });
@@ -338,30 +387,176 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                       <div className="text-xs text-muted-foreground">
                         {m.monthly_price_cents ? `$${(m.monthly_price_cents / 100).toFixed(2)}/mo` : 'Free'}
                       </div>
-                      {canManage && (
-                        isDemo ? (
+                      {canManage && (() => {
+                        // Demo tenant always uses the sandbox edge fn
+                        // (hard-gated on server). Everyone else: if
+                        // the add-on is free ($0) OR already active,
+                        // toggle directly against the DB. Priced add-ons
+                        // that aren't yet active go through Stripe.
+                        const isFree = !m.monthly_price_cents;
+                        const needsStripe = !isDemo && !isFree && !isActive;
+                        // Per-card pending state — the mutation is shared
+                        // across every card, so isPending alone would spin
+                        // every button. Compare `.variables.moduleId` to
+                        // the card we're rendering so only the clicked
+                        // card shows the spinner.
+                        const sandboxPending = sandboxToggle.isPending && sandboxToggle.variables?.moduleId === m.id;
+                        const directPending  = directToggle.isPending  && directToggle.variables?.moduleId  === m.id;
+                        const checkoutPending = checkout.isPending && checkout.variables === m.id;
+                        if (isDemo) {
+                          return (
+                            <Button
+                              size="sm"
+                              variant={isActive ? 'outline' : 'default'}
+                              onClick={() => sandboxToggle.mutate({ moduleId: m.id, active: !isActive })}
+                              disabled={sandboxPending}
+                            >
+                              {sandboxPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isActive ? 'Turn off' : 'Turn on'}
+                            </Button>
+                          );
+                        }
+                        if (needsStripe) {
+                          return (
+                            <Button size="sm" onClick={() => checkout.mutate(m.id)} disabled={checkoutPending}>
+                              {checkoutPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Activate'}
+                            </Button>
+                          );
+                        }
+                        return (
                           <Button
                             size="sm"
                             variant={isActive ? 'outline' : 'default'}
-                            onClick={() => sandboxToggle.mutate({ moduleId: m.id, active: !isActive })}
-                            disabled={sandboxToggle.isPending}
+                            onClick={() => directToggle.mutate({ moduleId: m.id, active: !isActive })}
+                            disabled={directPending}
                           >
-                            {sandboxToggle.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isActive ? 'Turn off' : 'Turn on'}
+                            {directPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isActive ? 'Deactivate' : 'Activate'}
                           </Button>
-                        ) : (
-                          !isActive && (
-                            <Button size="sm" onClick={() => checkout.mutate(m.id)} disabled={checkout.isPending}>
-                              {checkout.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Activate'}
-                            </Button>
-                          )
-                        )
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── Navigation ──────────────────────────────────────────────────────
+
+function NavigationTabPanel({ canManage }: { canManage: boolean }) {
+  const queryClient = useQueryClient();
+  const [role, setRole] = useState<NavRole>('student');
+
+  const { data: prefs = [] } = useQuery({
+    queryKey: ['nav-prefs-all'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_tenant_nav_prefs')
+        .select('role, hidden_items');
+      return (data as Array<{ role: string; hidden_items: string[] | null }>) ?? [];
+    },
+  });
+
+  const hiddenForRole = new Set(
+    prefs.find((p) => p.role === role)?.hidden_items ?? []
+  );
+
+  const savePref = useMutation({
+    mutationFn: async (nextHidden: string[]) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const claims = session?.user?.app_metadata as Record<string, unknown> | undefined;
+      const tenantId = (claims?.tenant_id as string | undefined)
+        ?? (session?.user?.user_metadata as any)?.tenant_id;
+      if (!tenantId) throw new Error('No tenant in session');
+      const { error } = await supabase
+        .from('gw_tenant_nav_prefs')
+        .upsert({
+          tenant_id: tenantId,
+          role,
+          hidden_items: nextHidden,
+          updated_by: session?.user?.id,
+        }, { onConflict: 'tenant_id,role' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['nav-prefs-all'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-nav-prefs'] });
+    },
+    onError: (e: any) => toast.error(e?.message || 'Save failed.'),
+  });
+
+  const toggleItem = (path: string, currentlyHidden: boolean) => {
+    const nextHidden = new Set(hiddenForRole);
+    if (currentlyHidden) nextHidden.delete(path);
+    else nextHidden.add(path);
+    savePref.mutate([...nextHidden]);
+  };
+
+  // Group by section for display.
+  const bySection = NAV_CATALOG.reduce<Record<string, typeof NAV_CATALOG>>((acc, item) => {
+    (acc[item.section] ??= []).push(item);
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-4">
+      <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+        <CardContent className="p-5 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Navigation</h2>
+            <p className="text-sm text-muted-foreground">
+              Choose which sidebar items each type of user in your tenant sees.
+              You (as super-admin) always see everything.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium">Editing view for:</span>
+            {HIDEABLE_NAV_ROLES.map((r) => (
+              <Button
+                key={r.value}
+                size="sm"
+                variant={role === r.value ? 'default' : 'outline'}
+                onClick={() => setRole(r.value)}
+              >
+                {r.label}
+              </Button>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            {Object.entries(bySection).map(([section, items]) => (
+              <div key={section}>
+                <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">{section}</div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {items.map((item) => {
+                    const isHidden = hiddenForRole.has(item.path);
+                    return (
+                      <label
+                        key={item.path}
+                        className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-muted/30"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!isHidden}
+                          disabled={!canManage || savePref.isPending}
+                          onChange={() => toggleItem(item.path, isHidden)}
+                          className="h-4 w-4"
+                        />
+                        <span className={cn('text-sm', isHidden && 'text-muted-foreground line-through')}>
+                          {item.label}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>

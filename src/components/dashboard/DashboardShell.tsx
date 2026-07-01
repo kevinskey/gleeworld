@@ -65,6 +65,7 @@ import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { getOrgName } from '@/lib/orgName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
+import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -223,6 +224,8 @@ function Sidebar() {
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
   const { hasAccess: hasTourManager } = useModuleAccess('tour');
   const { hasAccess: hasLiturgyPlanner } = useModuleAccess('liturgy_planner');
+  const { hasAccess: hasStudio } = useModuleAccess('studio');
+  const hiddenNav = useTenantNavPrefs();
 
   // Grouped nav. Sections render their entries under a small uppercase
   // label; sections with zero visible entries are hidden entirely so the
@@ -279,7 +282,7 @@ function Sidebar() {
     {
       label: 'Make',
       items: [
-        { to: '/studio',                label: 'Studio',      icon: Disc3,  tourId: 'nav-studio',      tone: 'bg-sky-50 text-sky-600' },
+        ...(hasStudio ? [{ to: '/studio', label: 'Studio', icon: Disc3, tourId: 'nav-studio', tone: 'bg-sky-50 text-sky-600' }] : []),
         { to: '/video',                 label: 'Video',       icon: Film,   tourId: 'nav-video',       tone: 'bg-pink-50 text-pink-600' },
         { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tourId: 'nav-music-tools', tone: 'bg-cyan-50 text-cyan-600' },
       ],
@@ -300,6 +303,7 @@ function Sidebar() {
         ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tourId: 'nav-fan-page', tone: 'bg-rose-50 text-rose-700' }] : []),
         ...(hasFeeds ? [{ to: '/dashboard/feeds', label: 'Feeds', icon: Newspaper, tourId: 'nav-feeds', tone: 'bg-blue-50 text-blue-600' }] : []),
         ...(hasMerch ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tourId: 'nav-shop',  tone: 'bg-amber-50 text-amber-600' }] : []),
+        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tourId: 'nav-alumni', tone: 'bg-teal-50 text-teal-600' }] : []),
       ],
     },
     {
@@ -313,7 +317,6 @@ function Sidebar() {
       label: 'People',
       items: [
         { to: '/dashboard/users', label: 'People', icon: Users, tourId: 'nav-people', tone: 'bg-cyan-50 text-cyan-600' },
-        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tourId: 'nav-alumni', tone: 'bg-teal-50 text-teal-600' }] : []),
       ],
     },
     {
@@ -328,7 +331,13 @@ function Sidebar() {
         ...(isPlatformAdmin ? [{ to: '/admin/tenants', label: 'Tenants', icon: Sparkles, tourId: 'nav-platform-tenants', tone: 'bg-indigo-50 text-indigo-700' }] : []),
       ],
     },
-  ];
+  ].map((section) => ({
+    ...section,
+    // Tenant super-admin has an empty set from useTenantNavPrefs, so
+    // this is a no-op for them. Lower-role users see their tenant's
+    // hidden_items filtered out here.
+    items: section.items.filter((it) => !hiddenNav.has(it.to)),
+  }));
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -483,6 +492,8 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
   const { hasAccess: hasTourManager } = useModuleAccess('tour');
   const { hasAccess: hasLiturgyPlanner } = useModuleAccess('liturgy_planner');
+  const { hasAccess: hasStudio } = useModuleAccess('studio');
+  const hiddenNav = useTenantNavPrefs();
 
   // Verb-grouped to match the desktop sidebar (Today / Music / Teach /
   // Make / Plan / Reach / Money / People / Admin). Empty sections drop
@@ -520,7 +531,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     {
       label: 'Make',
       items: [
-        { to: '/studio',                label: 'Studio',      icon: Disc3,  tone: 'bg-sky-50 text-sky-600' },
+        ...(hasStudio ? [{ to: '/studio', label: 'Studio', icon: Disc3, tone: 'bg-sky-50 text-sky-600' }] : []),
         { to: '/video',                 label: 'Video',       icon: Film,   tone: 'bg-pink-50 text-pink-600' },
         { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tone: 'bg-cyan-50 text-cyan-600' },
       ],
@@ -541,6 +552,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tone: 'bg-rose-50 text-rose-700' }] : []),
         ...(hasFeeds ? [{ to: '/dashboard/feeds', label: 'Feeds', icon: Newspaper, tone: 'bg-blue-50 text-blue-600' }] : []),
         ...(hasMerch ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tone: 'bg-amber-50 text-amber-600' }] : []),
+        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
       ],
     },
     {
@@ -554,7 +566,6 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
       label: 'People',
       items: [
         { to: '/dashboard/users', label: 'People', icon: Users, tone: 'bg-cyan-50 text-cyan-600' },
-        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
       ],
     },
     {
@@ -566,7 +577,10 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         ...(isPlatformAdmin ? [{ to: '/admin/tenants', label: 'Tenants', icon: Sparkles, tone: 'bg-indigo-50 text-indigo-700' }] : []),
       ],
     },
-  ];
+  ].map((section) => ({
+    ...section,
+    items: section.items.filter((it) => !hiddenNav.has(it.to)),
+  }));
 
   return (
     <div className="flex flex-col h-full">
