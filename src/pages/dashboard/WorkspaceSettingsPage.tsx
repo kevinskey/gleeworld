@@ -502,6 +502,13 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nav-prefs-all'] });
       queryClient.invalidateQueries({ queryKey: ['tenant-nav-prefs'] });
+      // Auto-engage Preview so a super-admin sees the sidebar effect
+      // of their edit immediately. Without this, a super-admin edits
+      // in the dark — their own sidebar is never filtered, so clicking
+      // Hide looks like a no-op and they'll click again (accidentally
+      // toggling back on). Only fires the first time; if the user has
+      // already picked a preview role we leave it alone.
+      if (!getPreviewRole()) setPreviewRole(role);
     },
     onError: (e: any) => toast.error(e?.message || 'Save failed.'),
   });
