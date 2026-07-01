@@ -56,7 +56,13 @@ import {
   Route as RouteIcon,
   Sparkles,
   Church,
+  Eye,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/nav/navCatalog';
+import { setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useMessenger } from '@/contexts/MessengerContext';
@@ -627,6 +633,83 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 
 // ── Top bar ─────────────────────────────────────────────────────────────────
 
+// Views switcher — visible only to tenant super-admins. Lets them
+// preview the command-center sidebar as any lower-privilege role
+// without signing out. "Home" restores their own super-admin view.
+// Backed by the shared navPreview module (sessionStorage-persisted so
+// the preview survives a route change but auto-clears on tab close,
+// preventing a super-admin from getting trapped with a hidden
+// Settings link across sessions).
+function ViewsSwitcher() {
+  const { user } = useAuth();
+  const preview = usePreviewRole();
+
+  // Is this user a tenant super-admin? The nav-prefs write policy
+  // uses the same table + column, so the answer here matches the
+  // one useTenantNavPrefs computes.
+  const { data: isTenantSuperAdmin = false } = useQuery({
+    queryKey: ['views-switcher-role', user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase
+        .from('gw_tenant_members')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return (data?.role as string | undefined) === 'super_admin';
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+
+  if (!isTenantSuperAdmin) return null;
+
+  const label = preview
+    ? HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? 'Preview'
+    : 'Views';
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            'hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-xs font-medium transition-colors',
+            preview
+              ? 'bg-amber-100 text-amber-900 hover:bg-amber-200'
+              : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+          )}
+          title={preview ? `Previewing as ${label}` : 'Preview other user views'}
+        >
+          <Eye className="w-3.5 h-3.5" />
+          {label}
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>Preview command center as</DropdownMenuLabel>
+        <DropdownMenuItem
+          onClick={() => setPreviewRole(null)}
+          className={cn('cursor-pointer', !preview && 'font-semibold')}
+        >
+          <UserIcon className="mr-2 h-4 w-4" />
+          Home (my view)
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {HIDEABLE_NAV_ROLES.map((r) => (
+          <DropdownMenuItem
+            key={r.value}
+            onClick={() => setPreviewRole(r.value as NavRole)}
+            className={cn('cursor-pointer', preview === r.value && 'font-semibold')}
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            {r.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function TopBar() {
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
@@ -792,6 +875,9 @@ function TopBar() {
       >
         <Plus className="w-6 h-6" />
       </button>
+
+      {/* Views switcher — tenant super-admins only */}
+      <ViewsSwitcher />
 
       {/* Notification bell — opens messenger panel, shows unread count badge */}
       <button

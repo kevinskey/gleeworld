@@ -1755,6 +1755,8 @@ function AppleFooter() {
           <a href="#pricing" className="hover:text-slate-700 transition-colors">Pricing</a>
           <a href="/terms" className="hover:text-slate-700 transition-colors">Terms</a>
           <a href="/privacy" className="hover:text-slate-700 transition-colors">Privacy</a>
+          <a href="/security" className="hover:text-slate-700 transition-colors">Trust Center</a>
+          <a href="/dpa" className="hover:text-slate-700 transition-colors">DPA (Schools)</a>
           <a href={MAILTO_BUY} className="hover:text-slate-700 transition-colors">
             <Mail className="inline h-3 w-3 mr-1" />kevin@gleeworld.org
           </a>

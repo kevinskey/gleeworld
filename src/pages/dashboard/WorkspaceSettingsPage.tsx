@@ -21,6 +21,7 @@ import {
   Plug, Save, Building2, Lock, Sparkles, Users, Menu,
 } from 'lucide-react';
 import { NAV_CATALOG, HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/nav/navCatalog';
+import { getPreviewRole, setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +30,7 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
 };
 
-const TAB_VALUES = new Set(['plan', 'modules', 'branding', 'billing', 'general']);
+const TAB_VALUES = new Set(['plan', 'modules', 'navigation', 'branding', 'billing', 'general']);
 
 export default function WorkspaceSettingsPage() {
   const { isSuperAdmin, isAdmin } = useUserRole();
@@ -403,34 +404,47 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                         const sandboxPending = sandboxToggle.isPending && sandboxToggle.variables?.moduleId === m.id;
                         const directPending  = directToggle.isPending  && directToggle.variables?.moduleId  === m.id;
                         const checkoutPending = checkout.isPending && checkout.variables === m.id;
+                        // Compact grey pill styling. Consistent across
+                        // all three action variants (sandbox / Stripe /
+                        // direct DB) so the card row stays visually
+                        // even regardless of tenant type.
+                        const pill =
+                          'inline-flex items-center justify-center h-6 px-3 rounded-full text-[11px] font-medium ' +
+                          'bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors ' +
+                          'disabled:opacity-60 disabled:cursor-not-allowed';
                         if (isDemo) {
                           return (
-                            <Button
-                              size="sm"
-                              variant={isActive ? 'outline' : 'default'}
+                            <button
+                              type="button"
+                              className={pill}
                               onClick={() => sandboxToggle.mutate({ moduleId: m.id, active: !isActive })}
                               disabled={sandboxPending}
                             >
-                              {sandboxPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isActive ? 'Turn off' : 'Turn on'}
-                            </Button>
+                              {sandboxPending ? <Loader2 className="w-3 h-3 animate-spin" /> : isActive ? 'Turn off' : 'Turn on'}
+                            </button>
                           );
                         }
                         if (needsStripe) {
                           return (
-                            <Button size="sm" onClick={() => checkout.mutate(m.id)} disabled={checkoutPending}>
-                              {checkoutPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Activate'}
-                            </Button>
+                            <button
+                              type="button"
+                              className={pill}
+                              onClick={() => checkout.mutate(m.id)}
+                              disabled={checkoutPending}
+                            >
+                              {checkoutPending ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Activate'}
+                            </button>
                           );
                         }
                         return (
-                          <Button
-                            size="sm"
-                            variant={isActive ? 'outline' : 'default'}
+                          <button
+                            type="button"
+                            className={pill}
                             onClick={() => directToggle.mutate({ moduleId: m.id, active: !isActive })}
                             disabled={directPending}
                           >
-                            {directPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isActive ? 'Deactivate' : 'Activate'}
-                          </Button>
+                            {directPending ? <Loader2 className="w-3 h-3 animate-spin" /> : isActive ? 'Deactivate' : 'Activate'}
+                          </button>
                         );
                       })()}
                     </div>
@@ -465,8 +479,11 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
     prefs.find((p) => p.role === role)?.hidden_items ?? []
   );
 
+  // Mutation carries the toggled `path` in its variables so we can
+  // scope the pending spinner to just the clicked card — using
+  // `savePref.isPending` alone would spin every button on the tab.
   const savePref = useMutation({
-    mutationFn: async (nextHidden: string[]) => {
+    mutationFn: async ({ nextHidden }: { path: string; nextHidden: string[] }) => {
       const { data: { session } } = await supabase.auth.getSession();
       const claims = session?.user?.app_metadata as Record<string, unknown> | undefined;
       const tenantId = (claims?.tenant_id as string | undefined)
@@ -493,7 +510,23 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
     const nextHidden = new Set(hiddenForRole);
     if (currentlyHidden) nextHidden.delete(path);
     else nextHidden.add(path);
-    savePref.mutate([...nextHidden]);
+    savePref.mutate({ path, nextHidden: [...nextHidden] });
+  };
+
+  // Live preview — reflects immediately in the sidebar via the shared
+  // navPreview module (only affects super-admins). When the settings
+  // user picks a different role, keep preview in sync automatically
+  // so what they see in their own nav matches what they're editing.
+  const preview = usePreviewRole();
+  const togglePreview = (r: NavRole) => {
+    setPreviewRole(preview === r ? null : r);
+  };
+  // If the user changes the "Editing view for:" role while preview is
+  // on, follow the edit target so the sidebar mirrors what's being
+  // configured. Off is off.
+  const changeRole = (r: NavRole) => {
+    setRole(r);
+    if (getPreviewRole()) setPreviewRole(r);
   };
 
   // Group by section for display.
@@ -502,55 +535,114 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
     return acc;
   }, {});
 
+  // Compact grey pill styling — same recipe used for Add-ons so the
+  // two tabs read as one settings surface.
+  const pill =
+    'inline-flex items-center justify-center h-6 px-3 rounded-full text-[11px] font-medium ' +
+    'bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors ' +
+    'disabled:opacity-60 disabled:cursor-not-allowed';
+
   return (
     <div className="space-y-4">
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5 space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold mb-1">Navigation</h2>
-            <p className="text-sm text-muted-foreground">
-              Choose which sidebar items each type of user in your tenant sees.
-              You (as super-admin) always see everything.
-            </p>
-          </div>
+        <CardContent className="p-5">
+          <h2 className="text-lg font-semibold mb-1">Navigation</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Choose which sidebar items each type of user in your tenant sees.
+            You (as super-admin) always see everything.
+          </p>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium">Editing view for:</span>
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            <span className="text-sm font-medium mr-1">Editing view for:</span>
             {HIDEABLE_NAV_ROLES.map((r) => (
-              <Button
+              <button
                 key={r.value}
-                size="sm"
-                variant={role === r.value ? 'default' : 'outline'}
-                onClick={() => setRole(r.value)}
+                type="button"
+                onClick={() => changeRole(r.value)}
+                className={cn(
+                  'inline-flex items-center justify-center h-7 px-3 rounded-full text-xs font-medium transition-colors',
+                  role === r.value
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                )}
               >
                 {r.label}
-              </Button>
+              </button>
             ))}
           </div>
 
-          <div className="space-y-4">
+          <div className="flex items-center gap-2 flex-wrap mb-4 rounded-lg bg-slate-50 border px-3 py-2">
+            <span className="text-xs text-muted-foreground mr-1">Preview my sidebar as:</span>
+            <button
+              type="button"
+              onClick={() => setPreviewRole(null)}
+              className={cn(
+                'inline-flex items-center justify-center h-6 px-3 rounded-full text-[11px] font-medium transition-colors',
+                !preview
+                  ? 'bg-slate-900 text-white hover:bg-slate-800'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+              )}
+            >
+              Super-admin (me)
+            </button>
+            {HIDEABLE_NAV_ROLES.map((r) => (
+              <button
+                key={r.value}
+                type="button"
+                onClick={() => togglePreview(r.value)}
+                className={cn(
+                  'inline-flex items-center justify-center h-6 px-3 rounded-full text-[11px] font-medium transition-colors',
+                  preview === r.value
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                )}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-6">
             {Object.entries(bySection).map(([section, items]) => (
               <div key={section}>
-                <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">{section}</div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                <div className="text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase mb-2">
+                  {section}
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {items.map((item) => {
                     const isHidden = hiddenForRole.has(item.path);
+                    // Scope pending state to the clicked card only —
+                    // React Query's `.variables` holds whatever we
+                    // passed to .mutate() while the mutation is in
+                    // flight.
+                    const pending = savePref.isPending && savePref.variables?.path === item.path;
                     return (
-                      <label
-                        key={item.path}
-                        className="flex items-center gap-2 rounded-md border p-2 cursor-pointer hover:bg-muted/30"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={!isHidden}
-                          disabled={!canManage || savePref.isPending}
-                          onChange={() => toggleItem(item.path, isHidden)}
-                          className="h-4 w-4"
-                        />
-                        <span className={cn('text-sm', isHidden && 'text-muted-foreground line-through')}>
-                          {item.label}
-                        </span>
-                      </label>
+                      <div key={item.path} className="rounded-xl border p-4 flex flex-col">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="font-semibold text-base">{item.label}</div>
+                          {!isHidden && (
+                            <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 mr-1" /> Visible
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">{item.path}</p>
+                        <div className="mt-auto flex items-center justify-between">
+                          <div className="text-xs text-muted-foreground">
+                            {isHidden ? 'Hidden' : 'Shown'}
+                          </div>
+                          {canManage && (
+                            <button
+                              type="button"
+                              className={pill}
+                              onClick={() => toggleItem(item.path, isHidden)}
+                              disabled={pending}
+                            >
+                              {pending ? <Loader2 className="w-3 h-3 animate-spin" /> : isHidden ? 'Show' : 'Hide'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>

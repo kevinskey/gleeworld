@@ -7,6 +7,7 @@ import { lazy, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
+import { usePreviewRole } from '@/lib/nav/navPreview';
 
 const InstructorWorkshop = lazy(() => import('@/components/officehours/InstructorWorkshop'));
 const StudentBooking = lazy(() => import('@/components/officehours/StudentBooking'));
@@ -14,7 +15,15 @@ const StudentBooking = lazy(() => import('@/components/officehours/StudentBookin
 export default function OfficeHoursPage() {
   const { profile } = useProfile();
   const { isSuperAdmin, isAdmin } = useUserRole();
-  const isInstructor = isSuperAdmin() || isAdmin() || profile?.role === 'instructor';
+  const preview = usePreviewRole();
+
+  // If the current user is a super-admin previewing as a non-admin
+  // role, honor the preview and show the student booking surface.
+  // Otherwise fall back to the real-role logic.
+  const realIsInstructor = isSuperAdmin() || isAdmin() || profile?.role === 'instructor';
+  const isInstructor = preview
+    ? preview === 'admin'          // only 'admin' preview keeps the workshop view
+    : realIsInstructor;
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-6 space-y-5">

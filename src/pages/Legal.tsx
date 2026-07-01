@@ -45,9 +45,11 @@ function LegalShell({ title, lastUpdated, children }: { title: string; lastUpdat
       <footer className="py-12 border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <span>&copy; {new Date().getFullYear()} GleeWorld</span>
-          <div className="flex gap-6">
+          <div className="flex gap-6 flex-wrap">
             <Link to="/terms" className="hover:text-slate-700">Terms</Link>
             <Link to="/privacy" className="hover:text-slate-700">Privacy</Link>
+            <Link to="/security" className="hover:text-slate-700">Trust Center</Link>
+            <Link to="/dpa" className="hover:text-slate-700">DPA</Link>
             <a href="mailto:kevin@gleeworld.org" className="hover:text-slate-700">kevin@gleeworld.org</a>
           </div>
         </div>

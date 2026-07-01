@@ -65,21 +65,48 @@ public final class StudioNativeEngine {
     public var onState: ((StudioEngineState) -> Void)?
     private var positionTimer: Timer?
 
-    // Metronome — short square-wave clicks scheduled per beat between
-    // `pausedAt` and `session.length_seconds`. Routed through a dedicated
-    // AVAudioPlayerNode → master mixer so it shares the master FX/output
-    // path but bypasses the per-track strips.
+    // Metronome — sample-accurate scheduling on a dedicated player node.
+    //
+    // Architecture:
+    //   • Player node connected to masterMixer once, then left in
+    //     .play() state for its entire lifetime. Never .stop() unless
+    //     the whole engine is torn down — stop() invalidates the
+    //     player's sample clock and every subsequent scheduleBuffer(at:)
+    //     silently drops.
+    //   • Beats scheduled ahead via AVAudioTime(sampleTime:atRate:).
+    //     No Timer, no RunLoop.main dependency. A DispatchSourceTimer
+    //     on a dedicated queue wakes every ~50ms and pushes any beats
+    //     whose target sampleTime falls inside a 500ms lookahead
+    //     window. That way the audio thread always has enough
+    //     pre-scheduled buffers to survive UI stalls.
+    //   • scheduleBuffer called WITHOUT .interrupts. Overlapping late
+    //     clicks were what .interrupts was cancelling before.
     private var metronomeOn: Bool = false
     private var metronomeVolume: Float = 0.7
     private lazy var metronomePlayer = AVAudioPlayerNode()
     private var metronomeAttached = false
-    private var metronomeTimers: [Timer] = []
-    // Click buffers built lazily in the masterMixer's output format so
+    // Click buffers built lazily in the outputNode's input format so
     // the buffer's channel count + sample rate matches what the engine
     // expects. A mono 44.1kHz buffer fed into a stereo bus silently
     // drops on AVAudioPlayerNode — no error, just silence.
     private var metronomeBeatBuffer: AVAudioPCMBuffer?
     private var metronomeAccentBuffer: AVAudioPCMBuffer?
+    private var metronomeFormat: AVAudioFormat?
+
+    // Sample-accurate scheduler state.
+    private struct MetronomeSchedulerState {
+        let sampleRate: Double
+        let framesPerBeat: AVAudioFramePosition
+        let beatsPerBar: Int
+        var beatIndex: Int
+        var nextBeatSampleTime: AVAudioFramePosition
+        let sessionLengthFrames: AVAudioFramePosition
+    }
+    private var metronomeState: MetronomeSchedulerState?
+    private let metronomeQueue = DispatchQueue(label: "studio.metronome.scheduler", qos: .userInitiated)
+    private var metronomeSchedulerTimer: DispatchSourceTimer?
+    private let metronomeLookaheadSeconds: Double = 0.5
+    private var metronomeRouteChangeObserver: NSObjectProtocol?
 
     /// True once the master mixer has been connected to the engine's
     /// main output node. We defer that connection out of init() because
@@ -544,12 +571,17 @@ public final class StudioNativeEngine {
         if changed {
             if on {
                 ensureMetronomeAttached()
-                // One immediate click as a confirmation tone. Decouples
-                // the audio path from the Timer-driven scheduler — if
-                // the user hears this on toggle, any silence during
-                // playback is a scheduling bug, not an output-chain bug.
-                playClick(accent: true)
-                if isPlayingNow { scheduleMetronome(from: currentPositionSeconds()) }
+                if isPlayingNow {
+                    // Transport already running — the pump will hit the
+                    // next beat on schedule. No confirmation click:
+                    // firing it here would collide (or race) with the
+                    // first scheduled click when the beats are close.
+                    scheduleMetronome(from: currentPositionSeconds())
+                } else {
+                    // Transport idle — user wants an audible confirmation
+                    // that the toggle worked. Play one untimed click.
+                    playClick(accent: true)
+                }
             } else {
                 cancelMetronome()
             }
@@ -567,102 +599,208 @@ public final class StudioNativeEngine {
     }
 
     private func ensureMetronomeAttached() {
-        guard !metronomeAttached else { return }
+        // engine.start FIRST — outputNode's negotiated format isn't
+        // valid until the graph is running. Reading a stale format
+        // and connecting with it is how earlier builds silently
+        // produced no sound.
         if !engine.isRunning {
             do { try engine.start() }
             catch {
                 let msg = "engine.start failed: \(error.localizedDescription)"
                 NSLog("[Studio] ensureMetronomeAttached — \(msg)")
-                self.lastError = msg  // surface to UI toast
-                // Fall through and TRY to attach anyway. Some session
-                // errors throw here but the graph is still functional.
+                self.lastError = msg
             }
         }
-        // Now masterMixer.outputFormat reflects the real hardware
-        // sample rate + channel layout the OS negotiated.
-        let mixerFormat = masterMixer.outputFormat(forBus: 0)
-        NSLog("[Studio] metronome attach: mixer fmt sr=\(mixerFormat.sampleRate) ch=\(mixerFormat.channelCount)")
+
+        // Use the outputNode's inputFormat — this is what the engine
+        // is actually delivering to the speakers after route
+        // negotiation (headphones, Bluetooth, AirPods). masterMixer's
+        // outputFormat sometimes lags behind on route changes.
+        let format = engine.outputNode.inputFormat(forBus: 0)
+
+        if metronomeAttached {
+            // Already up. Rebuild buffers only if the format changed
+            // under us (e.g. AirPods just connected and the sample
+            // rate flipped from 48k to 24k).
+            if let cached = metronomeFormat,
+               cached.sampleRate == format.sampleRate,
+               cached.channelCount == format.channelCount {
+                return
+            }
+            NSLog("[Studio] metronome: format changed sr=\(format.sampleRate) ch=\(format.channelCount) — rebuilding buffers")
+            metronomeBeatBuffer = makeClickBuffer(format: format, frequency: 1000, durationMs: 30)
+            metronomeAccentBuffer = makeClickBuffer(format: format, frequency: 1500, durationMs: 30)
+            metronomeFormat = format
+            return
+        }
+
+        NSLog("[Studio] metronome attach: fmt sr=\(format.sampleRate) ch=\(format.channelCount)")
         if let err = StudioObjC.catchExceptions({
             self.engine.attach(self.metronomePlayer)
-            self.engine.connect(self.metronomePlayer, to: self.masterMixer, format: mixerFormat)
+            self.engine.connect(self.metronomePlayer, to: self.masterMixer, format: format)
         }) {
-            let msg = "metronome attach failed: \(err.localizedDescription) (fmt sr=\(mixerFormat.sampleRate) ch=\(mixerFormat.channelCount))"
+            let msg = "metronome attach failed: \(err.localizedDescription) (fmt sr=\(format.sampleRate) ch=\(format.channelCount))"
             NSLog("[Studio] \(msg)")
             self.lastError = msg
             return
         }
         metronomePlayer.volume = metronomeVolume
-        // Build the click buffers in the negotiated format so
-        // scheduleBuffer doesn't silently drop them.
-        metronomeBeatBuffer = makeClickBuffer(format: mixerFormat, frequency: 1000, durationMs: 30)
-        metronomeAccentBuffer = makeClickBuffer(format: mixerFormat, frequency: 1500, durationMs: 30)
+        metronomeBeatBuffer = makeClickBuffer(format: format, frequency: 1000, durationMs: 30)
+        metronomeAccentBuffer = makeClickBuffer(format: format, frequency: 1500, durationMs: 30)
+        metronomeFormat = format
+
+        // Start the player and leave it running for its whole lifetime.
+        // scheduleBuffer(at:) only works when the node's sample clock
+        // is advancing; calling stop() invalidates that clock and every
+        // subsequent at:AVAudioTime schedule silently drops. We stop
+        // the node only in the whole-engine teardown path.
+        if !metronomePlayer.isPlaying { metronomePlayer.play() }
+
         metronomeAttached = true
+
+        // Rebuild attach+buffers if the audio route changes mid-flight.
+        if metronomeRouteChangeObserver == nil {
+            metronomeRouteChangeObserver = NotificationCenter.default.addObserver(
+                forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil
+            ) { [weak self] _ in
+                guard let self else { return }
+                NSLog("[Studio] metronome: route change — rechecking format")
+                // Rebuild buffers in whatever format the OS negotiated.
+                self.ensureMetronomeAttached()
+                // If the transport is running with the metronome on,
+                // restart the pump so scheduling picks up the new
+                // sample rate.
+                if self.isPlayingNow && self.metronomeOn {
+                    self.scheduleMetronome(from: self.currentPositionSeconds())
+                }
+            }
+        }
     }
 
     private func scheduleMetronome(from currentSeconds: Double) {
-        guard let s = session, let anchor = startHostTime else { return }
+        guard let s = session else { return }
         ensureMetronomeAttached()
-        cancelMetronome()
-        // Single self-rescheduling Timer instead of pre-scheduling one
-        // per beat for the whole session. The previous version piled up
-        // hundreds of pending Timers, all owned by the run loop, all
-        // competing for main thread when they fired. That contention
-        // starved AVAudioEngine's buffer thread and audio glitched
-        // ~30s into playback.
+        cancelMetronomeScheduler()
+
+        // Node MUST be in .play() state before we can compute a valid
+        // sample time — lastRenderTime.isSampleTimeValid returns false
+        // until the graph has started rendering the node.
+        if !metronomePlayer.isPlaying { metronomePlayer.play() }
+
+        let format = metronomeFormat ?? engine.outputNode.inputFormat(forBus: 0)
+        let sampleRate = format.sampleRate
         let secondsPerBeat = 60.0 / max(20.0, s.tempo_bpm)
+        let framesPerBeat = AVAudioFramePosition(secondsPerBeat * sampleRate)
         let beatsPerBar = max(1, s.time_signature.numerator)
         let firstBeat = Int(ceil(currentSeconds / secondsPerBeat))
-        let nowAbs = mach_absolute_time()
-        let anchorReal = max(0, AVAudioTime.seconds(forHostTime: anchor.hostTime &- nowAbs))
-        let firstDelay = (Double(firstBeat) * secondsPerBeat - currentSeconds) + anchorReal
-        scheduleNextClick(after: max(0, firstDelay),
-                          beat: firstBeat,
-                          beatsPerBar: beatsPerBar,
-                          secondsPerBeat: secondsPerBeat,
-                          sessionLength: s.length_seconds)
-    }
+        let firstBeatSeconds = Double(firstBeat) * secondsPerBeat
+        // 100ms head-room so the first scheduled beat lands comfortably
+        // after the render thread's next callback; scheduling too close
+        // to `lastRenderTime.sampleTime` is a common "first click
+        // missing" cause.
+        let leadSeconds = (firstBeatSeconds - currentSeconds) + 0.1
+        let leadFrames = AVAudioFramePosition(leadSeconds * sampleRate)
 
-    private func scheduleNextClick(after delay: Double, beat: Int, beatsPerBar: Int,
-                                   secondsPerBeat: Double, sessionLength: Double) {
-        let accent = (beat % beatsPerBar) == 0
-        let timer = Timer(timeInterval: delay, repeats: false) { [weak self] _ in
-            guard let self, self.metronomeOn, self.isPlayingNow else { return }
-            self.playClick(accent: accent)
-            let nextBeat = beat + 1
-            let nextAbsSec = Double(nextBeat) * secondsPerBeat
-            if nextAbsSec >= sessionLength { return }
-            self.scheduleNextClick(after: secondsPerBeat,
-                                   beat: nextBeat,
-                                   beatsPerBar: beatsPerBar,
-                                   secondsPerBeat: secondsPerBeat,
-                                   sessionLength: sessionLength)
+        // Anchor scheduling to the player's current sample time. If
+        // the node hasn't rendered a frame yet (0 lastRenderTime),
+        // fall back to leadFrames from zero and rely on the OS to
+        // start ticking once the graph pulls its first buffer.
+        let currentSample: AVAudioFramePosition
+        if let last = metronomePlayer.lastRenderTime, last.isSampleTimeValid {
+            currentSample = last.sampleTime
+        } else {
+            currentSample = 0
         }
-        RunLoop.main.add(timer, forMode: .common)
-        metronomeTimers.append(timer)
+
+        metronomeState = MetronomeSchedulerState(
+            sampleRate: sampleRate,
+            framesPerBeat: framesPerBeat,
+            beatsPerBar: beatsPerBar,
+            beatIndex: firstBeat,
+            nextBeatSampleTime: currentSample + leadFrames,
+            sessionLengthFrames: AVAudioFramePosition(s.length_seconds * sampleRate)
+        )
+
+        startMetronomePump()
+        // Prime one scheduling pass immediately so the audio thread has
+        // pre-queued buffers by the time the pump wakes.
+        metronomeQueue.async { [weak self] in self?.pumpMetronomeLookahead() }
     }
 
-    private func cancelMetronome() {
-        for t in metronomeTimers { t.invalidate() }
-        metronomeTimers.removeAll()
-        if metronomePlayer.isPlaying { metronomePlayer.stop() }
+    private func startMetronomePump() {
+        let timer = DispatchSource.makeTimerSource(queue: metronomeQueue)
+        // 50ms wake — well below the 500ms lookahead so we always have
+        // several scheduling passes of headroom.
+        timer.schedule(deadline: .now(), repeating: .milliseconds(50), leeway: .milliseconds(5))
+        timer.setEventHandler { [weak self] in self?.pumpMetronomeLookahead() }
+        metronomeSchedulerTimer = timer
+        timer.resume()
     }
 
+    private func pumpMetronomeLookahead() {
+        guard metronomeOn, isPlayingNow else { return }
+        guard var state = metronomeState else { return }
+        guard let last = metronomePlayer.lastRenderTime, last.isSampleTimeValid else { return }
+
+        let currentSample = last.sampleTime
+        let horizon = currentSample + AVAudioFramePosition(metronomeLookaheadSeconds * state.sampleRate)
+
+        while state.nextBeatSampleTime <= horizon {
+            if state.nextBeatSampleTime >= state.sessionLengthFrames { break }
+
+            let accent = (state.beatIndex % state.beatsPerBar) == 0
+            guard let buf = accent ? metronomeAccentBuffer : metronomeBeatBuffer else { break }
+
+            let when = AVAudioTime(sampleTime: state.nextBeatSampleTime, atRate: state.sampleRate)
+            if let err = StudioObjC.catchExceptions({
+                // NO .interrupts — each click is a discrete scheduled
+                // buffer at its own sample time; letting them overlap
+                // in the mixer is what makes the click sound crisp
+                // instead of gated.
+                self.metronomePlayer.scheduleBuffer(buf, at: when, options: [], completionHandler: nil)
+            }) {
+                NSLog("[Studio] metronome scheduleBuffer raised \(err.localizedDescription)")
+                break
+            }
+
+            state.nextBeatSampleTime += state.framesPerBeat
+            state.beatIndex += 1
+        }
+        metronomeState = state
+    }
+
+    /// Stop the scheduler pump and clear pending scheduled buffers,
+    /// but leave the player node in .play() state so its sample clock
+    /// keeps advancing (a stopped player invalidates future
+    /// scheduleBuffer(at:) calls).
+    private func cancelMetronomeScheduler() {
+        metronomeSchedulerTimer?.cancel()
+        metronomeSchedulerTimer = nil
+        metronomeState = nil
+        if metronomePlayer.isPlaying {
+            metronomePlayer.reset()  // drops queued buffers but keeps the node ready to receive new ones
+        }
+    }
+
+    // Public alias — callers outside the metronome block use this name.
+    private func cancelMetronome() { cancelMetronomeScheduler() }
+
+    /// Fire one immediate click. Used ONLY for the toggle-on
+    /// confirmation when the transport is idle. During playback the
+    /// scheduler owns click timing and this must not run — an untimed
+    /// click can race the first scheduled beat.
     private func playClick(accent: Bool) {
         guard let buf = accent ? metronomeAccentBuffer : metronomeBeatBuffer else {
             NSLog("[Studio] metronome click: no buffer (attached=\(metronomeAttached))")
             return
         }
-        // The player can't produce audio if the engine isn't already
-        // running — bring it up here as a guard against the user
-        // toggling the metronome before pressing play.
         if !engine.isRunning {
             do { try engine.start() }
             catch { NSLog("[Studio] metronome click: engine.start failed: \(error.localizedDescription)"); return }
         }
-        NSLog("[Studio] metronome click: accent=\(accent) vol=\(metronomePlayer.volume) engineRunning=\(engine.isRunning) playerAttached=\(metronomeAttached)")
+        if !metronomePlayer.isPlaying { metronomePlayer.play() }
         if let err = StudioObjC.catchExceptions({
-            self.metronomePlayer.scheduleBuffer(buf, at: nil, options: [.interrupts], completionHandler: nil)
-            if !self.metronomePlayer.isPlaying { self.metronomePlayer.play() }
+            self.metronomePlayer.scheduleBuffer(buf, at: nil, options: [], completionHandler: nil)
         }) {
             NSLog("[Studio] metronome click raised \(err.localizedDescription)")
         }
