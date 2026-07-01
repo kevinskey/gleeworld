@@ -619,7 +619,20 @@ function TopBar() {
   const { toggleMessenger } = useMessenger();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { settings: branding } = useBrandingSettings();
   const [query, setQuery] = useState('');
+
+  // Sidebar is suppressed on immersive full-window routes (Studio
+  // session editor, Viewer reader). On those routes the tenant brand
+  // block would otherwise disappear entirely, leaving a nameless
+  // page header. Show a compact brand + Home link in the topbar's
+  // left slot to preserve the tenant identity.
+  const inImmersiveRoute =
+    /^\/studio\/sessions\/[^/]+/.test(location.pathname) ||
+    /^\/dashboard\/viewer\/[^/]+/.test(location.pathname);
+  const compactBrandName =
+    branding?.short_name || branding?.org_name || getOrgName();
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -678,6 +691,28 @@ function TopBar() {
           <MobileNav onNavigate={() => setMobileNavOpen(false)} />
         </SheetContent>
       </Sheet>
+
+      {/* Compact brand block — visible when the sidebar is hidden
+          (Studio session editor, Viewer reader) so the topbar still
+          shows tenant identity. On non-immersive routes this slot is
+          empty and the sidebar carries the brand. Click returns to
+          /dashboard. */}
+      {inImmersiveRoute && (
+        <Link
+          to="/dashboard"
+          className="hidden md:inline-flex items-center gap-2 shrink-0 pl-1 pr-2 py-1 rounded-md hover:bg-muted transition"
+          title={`Back to ${compactBrandName} dashboard`}
+        >
+          <BrandLogo
+            logoUrl={branding?.logo_url}
+            fallbackInitial={compactBrandName.charAt(0).toUpperCase()}
+            alt={compactBrandName}
+          />
+          <span className="font-bold text-base tracking-tight truncate max-w-[180px]">
+            {compactBrandName}
+          </span>
+        </Link>
+      )}
 
       {/* Spacer pushes the cluster to the right */}
       <div className="flex-1" />

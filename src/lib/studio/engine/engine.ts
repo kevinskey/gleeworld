@@ -54,6 +54,9 @@ export class StudioEngine {
   // Tone.Transport one-shot schedules registered during play() — kept
   // so stop() can clear ONLY them and leave nothing else dangling.
   private playScheduleIds: number[] = [];
+  // Handler registered on transport 'loop' event so we can re-schedule
+  // clip players when the transport wraps. Nulled when loop disabled.
+  private loopWrapHandler: (() => void) | null = null;
   // React subscribers + position-emit loop.
   private listeners = new Set<Listener>();
   private rafId: number | null = null;
@@ -264,6 +267,38 @@ export class StudioEngine {
       this.state.loopEnabled = args.loop.enabled;
       this.state.loopStartSeconds = args.loop.start;
       this.state.loopEndSeconds = args.loop.end;
+
+      // Tone.Transport.loop only wraps the transport clock — it does
+      // NOT re-fire scheduled events or restart Tone.Player instances
+      // when it wraps. Every clip Player.start() call plays its buffer
+      // exactly once and stops; the transport wrapping back to
+      // loopStart is invisible to it. Result: loop button visibly
+      // "on" but only the first pass plays.
+      //
+      // Fix: register a handler on the transport's 'loop' event that
+      // stops any in-flight players and reschedules every clip inside
+      // the loop window at the new (wrapped-back) position.
+      if (this.loopWrapHandler) {
+        try { t.off('loop', this.loopWrapHandler); } catch { /* noop */ }
+        this.loopWrapHandler = null;
+      }
+      if (args.loop.enabled) {
+        const handler = () => {
+          for (const id of this.playScheduleIds) t.clear(id);
+          this.playScheduleIds = [];
+          for (const track of this.tracks.values()) {
+            for (const pb of track.playbacks) {
+              try { pb.player.stop(); } catch { /* not playing */ }
+            }
+          }
+          const wrapPos = t.seconds;  // just wrapped back to loopStart
+          for (const track of this.tracks.values()) {
+            for (const pb of track.playbacks) this.schedulePlayback(pb, wrapPos);
+          }
+        };
+        t.on('loop', handler);
+        this.loopWrapHandler = handler;
+      }
     }
     this.emit();
   }
@@ -361,7 +396,28 @@ export class StudioEngine {
 
   play(): void {
     const transport = Tone.getTransport();
-    const pos = transport.seconds;
+    let pos = transport.seconds;
+
+    // Auto-rewind guard: if the transport has advanced past every
+    // clip's end (typical after playing a clip to completion +
+    // pressing Play again without seeking Home), snap back to 0 so
+    // the next Play actually plays something. Without this, play() 5+
+    // in a row silently do nothing because schedulePlayback returns
+    // early for every clip (clipEnd <= pos). Reproduced as "clip
+    // played 4 times, then no playback".
+    let latestClipEnd = 0;
+    for (const track of this.tracks.values()) {
+      for (const pb of track.playbacks) {
+        const end = pb.startSeconds + pb.durationSeconds;
+        if (end > latestClipEnd) latestClipEnd = end;
+      }
+    }
+    if (latestClipEnd > 0 && pos >= latestClipEnd) {
+      transport.seconds = 0;
+      pos = 0;
+      this.state.positionSeconds = 0;
+    }
+
     transport.start();
     // Clear any leftover schedules from a prior play() that didn't run
     // to completion, then re-register fresh schedules for every clip.

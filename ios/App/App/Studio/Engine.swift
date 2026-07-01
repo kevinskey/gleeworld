@@ -19,6 +19,13 @@ public struct StudioEngineState {
     public var positionSeconds: Double
     public var tempoBpm: Double
     public var metronomeOn: Bool
+    /// One-shot diagnostic message surfaced to the UI when the engine
+    /// encounters a recoverable failure (audio session activation
+    /// failure, format mismatch, connect exception, etc). JS-side
+    /// StudioEditor toasts this so device users can report failures
+    /// without needing Mac + Safari to read NSLog. Cleared to nil on
+    /// the next successful op.
+    public var lastError: String?
 }
 
 public final class StudioNativeEngine {
@@ -39,6 +46,13 @@ public final class StudioNativeEngine {
     /// Session currently bound. Read-only after loadSession; structural
     /// edits require a fresh loadSession.
     private(set) var session: Studio.Session?
+
+    /// Latest one-shot error surfaced to the UI. Set by any op that
+    /// wants to tell the user something failed (audio session
+    /// activation, connect exception, format mismatch). Cleared on
+    /// next successful emit. Read by snapshot() → JS via
+    /// notifyListeners → StudioEditor toast.
+    private var lastError: String?
 
     /// The audio render clock. AVAudioEngine doesn't expose a transport
     /// of its own, so we keep an explicit `startHostTime` + `pausedAt`
@@ -119,7 +133,11 @@ public final class StudioNativeEngine {
                 try session.setActive(true)
             } else {
                 try session.setCategory(.playback, mode: .default, options: [])
-                try session.setActive(true, options: [.notifyOthersOnDeactivation])
+                // NOTE: .notifyOthersOnDeactivation is a DEACTIVATION-only
+                // flag — passing it to setActive(true) throws an
+                // OSStatus error that aborts engine.start(), which was
+                // silently killing setMetronome / play() on builds 91/92.
+                try session.setActive(true)
             }
             NSLog("[Studio] engine.start: AVAudioSession active, category=\(session.category.rawValue), sampleRate=\(session.sampleRate), otherAudio=\(session.isOtherAudioPlaying)")
         } catch {
@@ -470,7 +488,8 @@ public final class StudioNativeEngine {
             isPlaying: isPlayingNow,
             positionSeconds: currentPositionSeconds(),
             tempoBpm: session?.tempo_bpm ?? 120,
-            metronomeOn: metronomeOn
+            metronomeOn: metronomeOn,
+            lastError: lastError
         )
     }
 
@@ -549,20 +568,14 @@ public final class StudioNativeEngine {
 
     private func ensureMetronomeAttached() {
         guard !metronomeAttached else { return }
-        // CRITICAL: bring the engine up FIRST so masterMixer is
-        // connected to mainMixerNode + the AVAudioSession is active
-        // before we read the master's outputFormat. Previously this
-        // function ran while masterMixer was still disconnected — it
-        // returned a stub 44.1 kHz default, we wired the metronome
-        // player with that format, then engine.start() later
-        // negotiated 48 kHz hardware → format mismatch, no sound.
-        // This was the "metronome silent on iOS" failure mode on
-        // builds 86–88.
         if !engine.isRunning {
             do { try engine.start() }
             catch {
-                NSLog("[Studio] ensureMetronomeAttached — engine.start failed: \(error.localizedDescription)")
-                return
+                let msg = "engine.start failed: \(error.localizedDescription)"
+                NSLog("[Studio] ensureMetronomeAttached — \(msg)")
+                self.lastError = msg  // surface to UI toast
+                // Fall through and TRY to attach anyway. Some session
+                // errors throw here but the graph is still functional.
             }
         }
         // Now masterMixer.outputFormat reflects the real hardware
@@ -573,7 +586,9 @@ public final class StudioNativeEngine {
             self.engine.attach(self.metronomePlayer)
             self.engine.connect(self.metronomePlayer, to: self.masterMixer, format: mixerFormat)
         }) {
-            NSLog("[Studio] metronome attach failed: \(err.localizedDescription)")
+            let msg = "metronome attach failed: \(err.localizedDescription) (fmt sr=\(mixerFormat.sampleRate) ch=\(mixerFormat.channelCount))"
+            NSLog("[Studio] \(msg)")
+            self.lastError = msg
             return
         }
         metronomePlayer.volume = metronomeVolume

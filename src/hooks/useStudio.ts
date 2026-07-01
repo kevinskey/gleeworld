@@ -303,6 +303,14 @@ export function useStudioEngine(session: Session | null) {
               metronomeOn: !!s.metronomeOn, metronomeVolumeDb: 0,
               peakDbL: -Infinity, peakDbR: -Infinity,
             });
+            // Surface any engine-side error as a toast so device users
+            // can report the failure without needing Mac + Safari console.
+            const err = (s as any)?.lastError;
+            if (typeof err === 'string' && err.length > 0) {
+              import('sonner').then(({ toast }) => {
+                toast.error('Studio audio error', { description: err });
+              }).catch(() => { /* toast unavailable */ });
+            }
           },
         });
         if (cancelled) { await close(); return; }

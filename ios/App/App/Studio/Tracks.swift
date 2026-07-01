@@ -207,7 +207,14 @@ public final class TrackBinding {
     }
 
     public func stopScheduling() {
-        for p in playerNodes { p.stop() }
+        for p in playerNodes {
+            p.stop()
+            // AVAudioPlayerNode.stop() doesn't reliably clear the
+            // scheduled-buffer queue across all iOS versions. Reset()
+            // does — it forces the node to its no-playback state and
+            // wipes anything queued.
+            p.reset()
+        }
         for t in midiTimers { t.invalidate() }
         midiTimers.removeAll()
     }

@@ -586,28 +586,37 @@ function Editor({
       }
       const { blob: uploadBlob, buf, ext } = await finalizeRecordingBlob(rawBlob);
       const peaks = computePeaks(buf);
-      const assetRaw = await uploadAudioAsset({
-        tenantId: session.tenant_id,
-        sessionId: session.id,
-        file: uploadBlob,
-        filename: `take-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`,
+      const filename = `take-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
+
+      // Optimistic insert: the take appears on the track the moment
+      // the tape stops, backed by an object URL of the finalized blob.
+      // The upload + real URL replacement happens in the background.
+      // Was: user waited 3–8s (upload + roundtrip) for the clip to
+      // appear — long enough to think Stop had frozen the app.
+      const provisionalId = `provisional-${newId()}`;
+      const localUrl = URL.createObjectURL(uploadBlob);
+      const provisionalAsset: AudioAsset = {
+        id: provisionalId,
+        filename,
+        format: (ext as AudioAsset['format']) ?? 'wav',
         duration_seconds: buf.duration,
         sample_rate: buf.sampleRate,
         channels: buf.numberOfChannels,
-      });
-      const asset: AudioAsset = { ...assetRaw, peaks };
-      const url = await getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset });
-      setAssetUrl(asset.id, url);
+        size_bytes: uploadBlob.size,
+        peaks,
+      };
+      setAssetUrl(provisionalId, localUrl);
 
       // Snapshot before the recording lands so ⌘Z restores pre-recording state.
       pushHistory(session);
 
+      const clipId = newId();
       update((s) => {
-        const nextAssets = [...s.assets, asset];
+        const nextAssets = [...s.assets, provisionalAsset];
         const nextTracks = s.tracks.map((t) => {
           if (!armed.includes(t.id) || !isAudioTrack(t)) return t;
           const clip: AudioClip = {
-            id: newId(), kind: 'audio', asset_id: asset.id,
+            id: clipId, kind: 'audio', asset_id: provisionalId,
             start_seconds: startSeconds, duration_seconds: buf.duration,
             offset_seconds: 0, gain_db: 0,
             fade_in_seconds: 0, fade_out_seconds: 0,
@@ -618,6 +627,45 @@ function Editor({
         return { ...s, assets: nextAssets, tracks: nextTracks };
       });
       toast.success(`Recorded ${elapsed.toFixed(1)}s`);
+
+      // Background upload — swap the provisional asset for the real
+      // one when the network round-trip finishes. The user can play +
+      // hear the take immediately in the meantime.
+      (async () => {
+        try {
+          const assetRaw = await uploadAudioAsset({
+            tenantId: session.tenant_id,
+            sessionId: session.id,
+            file: uploadBlob,
+            filename,
+            duration_seconds: buf.duration,
+            sample_rate: buf.sampleRate,
+            channels: buf.numberOfChannels,
+          });
+          const asset: AudioAsset = { ...assetRaw, peaks };
+          const remoteUrl = await getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset });
+          setAssetUrl(asset.id, remoteUrl);
+          update((s) => {
+            const nextAssets = s.assets
+              .filter((a) => a.id !== provisionalId)
+              .concat([asset]);
+            const nextTracks = s.tracks.map((t) => {
+              if (!isAudioTrack(t)) return t;
+              return {
+                ...t,
+                clips: t.clips.map((c) => c.id === clipId ? { ...c, asset_id: asset.id } : c),
+              } as Track;
+            });
+            return { ...s, assets: nextAssets, tracks: nextTracks };
+          });
+          // Local blob URL is no longer referenced — free it.
+          try { URL.revokeObjectURL(localUrl); } catch { /* ignore */ }
+        } catch (uploadErr) {
+          toast.error('Take upload failed — clip is playable locally but not saved', {
+            description: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+          });
+        }
+      })();
       // Park the playhead at the punch-in point so the user can press
       // Play (or hit Space) once and immediately hear the take. Auto-
       // play is intentionally NOT triggered here — the engine reload
@@ -2811,11 +2859,13 @@ function ClickTrackRow({
   const pxPerSecond = usePxPerSecond();
   const trackHeight = useTrackHeight();
   const scrollSync = useScrollSync();
-  // Click track is intentionally compact — about half the height of a
-  // regular row — but never taller than the regular rows. As the user
-  // drags rows shorter, the click row meets them and they end up equal.
-  const CLICK_MIN_HEIGHT = 30;
-  const clickHeight = Math.min(trackHeight, Math.max(CLICK_MIN_HEIGHT, Math.floor(trackHeight / 2)));
+  // Click track is intentionally a THIN strip — roughly one-third the
+  // height of a regular row (previously ~half — user asked for tinier).
+  // Floors at 22px so the controls remain tappable but the row reads
+  // as a subtle chrome strip, not a full track. As the user drags rows
+  // shorter, the click row meets them and they end up equal.
+  const CLICK_MIN_HEIGHT = 22;
+  const clickHeight = Math.min(trackHeight, Math.max(CLICK_MIN_HEIGHT, Math.floor(trackHeight / 3)));
   const numerator = session.time_signature.numerator;
   const secondsPerBeat = 60 / session.tempo_bpm;
   const totalWidth = session.length_seconds * pxPerSecond;
@@ -2863,15 +2913,16 @@ function ClickTrackRow({
         className="shrink-0 border-r border-border flex items-stretch bg-background relative"
         style={{ width: stripWidth }}
       >
-        <div className="w-1.5 bg-amber-400" />
-        {/* Single horizontal row — keeps the strip readable even when
-         * the row is at its compact ~30px height. */}
-        <div className="flex-1 px-2 flex items-center gap-1.5 min-w-0">
-          <Timer className="w-4 h-4 shrink-0 text-amber-500" />
-          <span className="text-base font-semibold">Click</span>
+        <div className="w-1 bg-amber-400" />
+        {/* Single horizontal row — sized to the ~22px strip height.
+         * Everything tightened: xs text, w-3 icon, h-1 slider, minimal
+         * padding. Reads as a chrome strip, not a track. */}
+        <div className="flex-1 px-1.5 flex items-center gap-1 min-w-0">
+          <Timer className="w-3 h-3 shrink-0 text-amber-500" />
+          <span className="text-xs font-semibold">Click</span>
           <button
             onClick={onToggle}
-            className={`text-sm font-bold px-1.5 py-0.5 rounded border shrink-0 ${metronomeOn ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+            className={`text-[10px] font-bold px-1 py-px rounded border shrink-0 ${metronomeOn ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
             title={metronomeOn ? 'Click is ON — tap to silence' : 'Click is OFF — tap to turn on (M)'}
           >
             {metronomeOn ? 'ON' : 'OFF'}
@@ -2882,7 +2933,7 @@ function ClickTrackRow({
             className="flex-1 min-w-0 h-1 accent-amber-500"
             title={`${metronomeVolumeDb.toFixed(1)} dB`}
           />
-          <span className="text-sm text-muted-foreground tabular-nums shrink-0">
+          <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
             {session.tempo_bpm} BPM
           </span>
         </div>
@@ -2908,7 +2959,7 @@ function ClickTrackRow({
                       ? metronomeOn ? 'bg-amber-500' : 'bg-amber-500/40'
                       : metronomeOn ? 'bg-amber-300' : 'bg-amber-300/30'
                   }`}
-                  style={{ width: isDownbeat ? 8 : 5, height: isDownbeat ? 8 : 5, marginLeft: isDownbeat ? -4 : -2.5 }}
+                  style={{ width: isDownbeat ? 5 : 3, height: isDownbeat ? 5 : 3, marginLeft: isDownbeat ? -2.5 : -1.5 }}
                 />
               </div>
             );
@@ -3026,11 +3077,12 @@ function DarkTrackRow({
             {isAudioTrack(track) && (
               <AudioImportIconButton track={track} onUpdate={onUpdate} />
             )}
-            <button onClick={onRemove} className="text-muted-foreground hover:text-rose-600" title="Delete track">
-              <Trash2 className="w-4 h-4" />
-            </button>
           </div>
-          {/* Row 2: M/S/R + volume slider */}
+          {/* Row 2: M/S/R + volume slider + persistent trash. Trash is
+           * on this row (not row 1) because row 1's color swatch +
+           * import + trash overflow-clip on narrow strip widths (user
+           * couldn't see delete). Keeping it on row 2 next to the
+           * transport controls guarantees it's always visible. */}
           <div className="flex items-center gap-1">
             <button onClick={() => setStrip({ mute: !track.mute })}
               className={`text-sm font-bold px-1.5 py-0.5 rounded border ${track.mute ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}>M</button>
@@ -3046,9 +3098,23 @@ function DarkTrackRow({
             <input
               type="range" min={-40} max={6} step={0.5} value={track.volume_db}
               onChange={(e) => setStrip({ volume_db: Number(e.target.value) })}
-              className="flex-1 h-1 accent-primary"
+              className="flex-1 h-1 accent-primary min-w-0"
               title={`${track.volume_db.toFixed(1)} dB`}
             />
+            <button
+              onClick={() => {
+                const clipCount = isAudioTrack(track) || isMidiTrack(track) ? track.clips.length : 0;
+                const msg = clipCount > 0
+                  ? `Delete "${track.name}"? ${clipCount} clip${clipCount === 1 ? '' : 's'} on this track will be removed. This can't be undone.`
+                  : `Delete "${track.name}"? This can't be undone.`;
+                if (confirm(msg)) onRemove();
+              }}
+              className="shrink-0 text-muted-foreground hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
+              title="Delete track"
+              aria-label={`Delete ${track.name}`}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
           {/* Row 3: only MIDI tracks need the instrument picker now.
            * Audio tracks use the Import icon next to the color swatch. */}
