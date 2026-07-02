@@ -122,3 +122,10 @@ ReactDOM.createRoot(rootElement).render(
 // Boot succeeded — re-arm the index.html watchdog's one-shot auto-reload
 // so a future transient script-load failure in this tab gets its retry.
 try { sessionStorage.removeItem('gw-boot-retried'); } catch { /* ignore */ }
+
+// Re-arm the stale-chunk auto-reload (BootErrorBoundary) only after the
+// app has been healthy for a while: clearing it immediately at boot could
+// turn a genuinely missing chunk into a reload loop.
+setTimeout(() => {
+  try { sessionStorage.removeItem('gw-chunk-retried'); } catch { /* ignore */ }
+}, 30_000);

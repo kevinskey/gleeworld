@@ -9,14 +9,40 @@ interface State {
 // during initial render white-screens the bundle — on native iOS/iPadOS
 // the WKWebView has no devtools surface for the end user, so the only way
 // to learn what crashed is to render the error message on screen.
+// A lazy route chunk failing to fetch usually means the tab is running a
+// bundle from before the latest deploy and the old hashed chunk no longer
+// exists on the server. A reload fetches the fresh index.html and fixes it —
+// do that once automatically (per-tab guard) instead of showing the crash
+// screen; if the retry also fails, the error is real and gets rendered.
+const isStaleChunkError = (e: Error) =>
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError/i
+    .test(e.message || '');
+
+const reloadOnceForStaleChunk = (): boolean => {
+  try {
+    if (sessionStorage.getItem('gw-chunk-retried')) return false;
+    sessionStorage.setItem('gw-chunk-retried', '1');
+    window.location.reload();
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export class BootErrorBoundary extends Component<{ children: ReactNode }, State> {
   state: State = { error: null, info: null };
 
   static getDerivedStateFromError(error: Error): Partial<State> {
+    if (isStaleChunkError(error) && reloadOnceForStaleChunk()) {
+      // Reload is underway — keep rendering children (they're already on
+      // screen) rather than flashing the crash UI for the last frame.
+      return { error: null };
+    }
     return { error };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    if (!this.state.error) return; // stale-chunk reload path
     this.setState({ info });
     try {
       console.error('[BootErrorBoundary]', error, info.componentStack);

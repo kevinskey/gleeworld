@@ -175,7 +175,10 @@
   /* True viewport-scaling so headlines stretch as page architecture
    * rather than reading as labels. 32→88px at 8vw, capped so a
    * 4K monitor doesn't blow up. */
-  h1 { font-size: clamp(2rem, 8vw, 5.5rem); font-weight: 800; letter-spacing: -0.025em; color: hsl(var(--foreground)); line-height: 1.02; }
+  /* line-height 1.02 collided wrapped lines in Bebas Neue (nearly zero
+     internal leading) — e.g. "AUDITIONS / MANAGEMENT" on phones. 1.12
+     keeps the architectural weight but separates multi-line titles. */
+  h1 { font-size: clamp(2rem, 8vw, 5.5rem); font-weight: 800; letter-spacing: -0.025em; color: hsl(var(--foreground)); line-height: 1.12; }
   h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 700; letter-spacing: -0.015em; color: hsl(var(--foreground)); line-height: 1.15; }
   h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 600; color: hsl(var(--foreground)); line-height: 1.25; }
   h4 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.3; }
