@@ -373,7 +373,7 @@ const Mus210SyllabusPage: React.FC = () => {
               Grading
             </h2>
             <Card className="bg-muted/30 border-0">
-              <CardContent className="p-4">
+              <CardContent className="p-4 overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-foreground/20">

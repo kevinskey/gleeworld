@@ -103,7 +103,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
           </CardTitle>
         </CardHeader>
         <CardContent className="px-3 pb-3 pt-0">
-          <div className="flex gap-3">
+          <div className="flex gap-3 overflow-hidden">
             <div className="flex-shrink-0 w-40 sm:w-48 h-32 bg-muted animate-pulse rounded-lg" />
             <div className="flex-shrink-0 w-40 sm:w-48 h-32 bg-muted animate-pulse rounded-lg" />
             <div className="flex-shrink-0 w-40 sm:w-48 h-32 bg-muted animate-pulse rounded-lg" />

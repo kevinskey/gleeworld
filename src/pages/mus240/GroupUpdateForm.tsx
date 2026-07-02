@@ -284,13 +284,13 @@ export default function GroupUpdateForm() {
       {showGuidelines && (
         <Rnd
           default={{
-            x: window.innerWidth / 2 - 400,
-            y: window.innerHeight / 2 - 300,
-            width: 800,
-            height: 600,
+            x: Math.max(8, window.innerWidth / 2 - Math.min(800, window.innerWidth - 16) / 2),
+            y: Math.max(8, window.innerHeight / 2 - Math.min(600, window.innerHeight - 32) / 2),
+            width: Math.min(800, window.innerWidth - 16),
+            height: Math.min(600, window.innerHeight - 32),
           }}
-          minWidth={400}
-          minHeight={400}
+          minWidth={Math.min(400, window.innerWidth - 16)}
+          minHeight={Math.min(400, window.innerHeight - 32)}
           bounds="window"
           dragHandleClassName="drag-handle"
           className="z-50"

@@ -62,7 +62,7 @@ export const DashboardHeroCarousel: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full">
+      <div className="w-full overflow-hidden">
         <div className="flex gap-3 sm:gap-4">
           <div className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[400px] aspect-video bg-muted animate-pulse rounded-xl border border-border" />
           <div className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[400px] aspect-video bg-muted animate-pulse rounded-xl border border-border" />

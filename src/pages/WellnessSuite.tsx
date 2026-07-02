@@ -19,7 +19,7 @@ const WellnessSuite = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
           <TabsTrigger value="wellness">Vocal Health</TabsTrigger>
           <TabsTrigger value="gear">Uniform & Gear</TabsTrigger>
           <TabsTrigger value="feedback">Rehearsal Feedback</TabsTrigger>

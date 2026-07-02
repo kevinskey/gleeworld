@@ -406,7 +406,7 @@ export const CSVImportDialog = ({ open, onOpenChange, onSuccess }: CSVImportDial
             </div>
 
             <ScrollArea className="h-64 border rounded">
-              <div className="p-4">
+              <div className="p-4 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">

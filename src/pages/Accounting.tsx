@@ -67,12 +67,12 @@ const Accounting = () => {
                 className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </Button>
-              <div className="h-6 w-px bg-gray-300" />
+              <div className="hidden sm:block h-6 w-px bg-gray-300" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Accounting</h1>
-                <p className="text-sm text-gray-500">Contract financial overview</p>
+                <p className="hidden sm:block text-sm text-gray-500">Contract financial overview</p>
               </div>
             </div>
             
@@ -98,7 +98,7 @@ const Accounting = () => {
                 </Button>
               </nav>
               
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="hidden lg:flex items-center space-x-2 text-sm text-gray-600">
                 <span>Welcome, {userProfile?.display_name || user?.email}</span>
               </div>
               

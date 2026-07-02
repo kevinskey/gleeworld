@@ -453,7 +453,7 @@ export const FeedbackDashboard = () => {
 
       {/* Dashboard Tabs */}
       <Tabs defaultValue="heatmap">
-        <TabsList>
+        <TabsList className="h-auto flex-wrap justify-start">
           <TabsTrigger value="heatmap">Category Heatmap</TabsTrigger>
           <TabsTrigger value="members">Member Summary</TabsTrigger>
           <TabsTrigger value="recent">Recent Feedback</TabsTrigger>

@@ -710,7 +710,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           </Button>
 
           {variantRows.length > 0 && (
-            <div className="border rounded-md overflow-hidden">
+            <div className="border rounded-md overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-xs uppercase">
                   <tr>

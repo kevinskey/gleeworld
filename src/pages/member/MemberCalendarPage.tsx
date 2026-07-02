@@ -69,7 +69,7 @@ const MemberCalendarPage = () => {
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main Calendar Events */}
-          <div className="lg:col-span-2">
+          <div className="min-w-0 lg:col-span-2">
             <Card>
               <CardHeader>
                 <CardTitle>Upcoming Events</CardTitle>
@@ -93,9 +93,9 @@ const MemberCalendarPage = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
-                            <div>
-                              <h4 className="font-semibold text-foreground">{event.title}</h4>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                            <div className="min-w-0">
+                              <h4 className="font-semibold text-foreground break-words">{event.title}</h4>
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
                                 <span className="flex items-center gap-1">
                                   <CalendarIcon className="h-3 w-3" />
                                   {new Date(event.start_date).toLocaleDateString()}

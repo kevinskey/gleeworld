@@ -389,7 +389,7 @@ export default function Groups() {
             </h1>
 
             {/* Link to Update Form */}
-            <div className="mt-6 flex gap-4 justify-center">
+            <div className="mt-6 flex flex-wrap gap-4 justify-center">
               <Link to="/mus-240/groups/update">
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg shadow-lg">
                   <FileText className="h-5 w-5 mr-2" />

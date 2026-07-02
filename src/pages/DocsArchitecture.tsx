@@ -99,7 +99,7 @@ export default function DocsArchitecture() {
                 </div>
 
                 <div className="mt-6 grid md:grid-cols-2 gap-4">
-                  <div>
+                  <div className="overflow-x-auto">
                     <h4 className="font-semibold mb-2">Primary Roles (mutually exclusive)</h4>
                     <table className="w-full text-sm border rounded">
                       <thead className="bg-muted">
@@ -114,7 +114,7 @@ export default function DocsArchitecture() {
                       </tbody>
                     </table>
                   </div>
-                  <div>
+                  <div className="overflow-x-auto">
                     <h4 className="font-semibold mb-2">Subscription Tiers</h4>
                     <table className="w-full text-sm border rounded">
                       <thead className="bg-muted">
@@ -370,7 +370,7 @@ CREATE TABLE course_enrollments (
               Summary: What Changed
             </h2>
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-6 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>

@@ -603,7 +603,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
             </Card>
           )}
 
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {isMus070 ? (
               <>
                 <QuickActionButton icon={Mic} label="Recordings" onClick={() => navigate(`/academy/${courseSlug}?tab=recordings`)} isMus070={isMus070} />

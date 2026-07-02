@@ -788,7 +788,7 @@ function DashboardMockup() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Members', val: '47', color: '#dbeafe' },
           { label: 'Classes', val: '4', color: '#fce7f3' },
@@ -803,7 +803,7 @@ function DashboardMockup() {
       </div>
 
       {/* Module tiles */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Academy', color: '#6366f1' },
           { label: 'Calendar', color: '#ec4899' },
@@ -841,6 +841,7 @@ function GradebookMockup() {
         </div>
         <div className="text-xs sm:text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-700 font-semibold">Class avg 92%</div>
       </div>
+      <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="text-xs sm:text-xs text-slate-500 border-b border-slate-200">
@@ -865,6 +866,7 @@ function GradebookMockup() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

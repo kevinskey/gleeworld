@@ -75,7 +75,7 @@ export default function CanvasCourseGrades() {
       </Card>
 
       <Card className="border-0 rounded-2xl bg-card shadow-sm">
-        <CardContent className="p-5">
+        <CardContent className="p-5 overflow-x-auto">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Assignments</h2>
           {assignments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No assignments yet.</p>

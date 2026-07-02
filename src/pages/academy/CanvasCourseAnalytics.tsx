@@ -77,7 +77,7 @@ function AnalyticsView({ data }: { data: import('@/hooks/useCanvasAcademy').Canv
 
         <TabsContent value="students" className="mt-4">
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 border-b border-border">
                   <tr>
@@ -111,7 +111,7 @@ function AnalyticsView({ data }: { data: import('@/hooks/useCanvasAcademy').Canv
 
         <TabsContent value="assignments" className="mt-4">
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 border-b border-border">
                   <tr>

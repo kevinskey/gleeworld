@@ -559,7 +559,7 @@ export const PhotoGallery: React.FC = () => {
 
       {/* Organization Tabs */}
       <Tabs value={organizeBy} onValueChange={(v) => setOrganizeBy(v as OrganizeBy)}>
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start h-auto flex-wrap">
           <TabsTrigger value="chronology" className="gap-2">
             <Clock className="h-4 w-4" />
             Chronology

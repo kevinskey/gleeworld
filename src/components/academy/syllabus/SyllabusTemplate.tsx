@@ -30,7 +30,7 @@ export const SyllabusTemplate: React.FC<SyllabusTemplateProps> = ({
   officeHours = '',
 }) => {
   return (
-    <div className="max-w-4xl mx-auto p-6 md:p-10 bg-background text-foreground print:p-8">
+    <div className="max-w-4xl mx-auto p-6 md:p-10 bg-background text-foreground break-words print:p-8">
       {/* Header */}
       <header className="text-center mb-8">
         <div className="flex justify-center mb-4">
@@ -151,7 +151,7 @@ export const SyllabusTemplate: React.FC<SyllabusTemplateProps> = ({
           Grading Policies
         </h2>
         <Card className="bg-muted/30 border-0">
-          <CardContent className="p-4">
+          <CardContent className="p-4 overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-foreground/20">
@@ -240,7 +240,7 @@ export const SyllabusTemplate: React.FC<SyllabusTemplateProps> = ({
           Course Schedule
         </h2>
         <Card className="bg-muted/30 border-0 overflow-hidden">
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-primary/10">

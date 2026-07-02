@@ -174,7 +174,7 @@ export const FanDashboardMonitor = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
             <Heart className="h-8 w-8" />
@@ -184,7 +184,7 @@ export const FanDashboardMonitor = () => {
             Monitor and manage what fans see on their dashboard
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm text-muted-foreground">
             Last updated: {lastRefresh.toLocaleTimeString()}
           </span>

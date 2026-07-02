@@ -67,7 +67,7 @@ const PracticeStudioPage: React.FC = () => {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Play className="h-4 w-4" />
               Practice Studio

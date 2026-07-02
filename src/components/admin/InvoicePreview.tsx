@@ -286,6 +286,7 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
           </div>
 
           {/* Line Items */}
+          <div className="overflow-x-auto">
           <table className="w-full mb-6">
             <thead>
               <tr className="bg-[#150d26] text-white">
@@ -306,6 +307,7 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
               ))}
             </tbody>
           </table>
+          </div>
 
           {/* Total */}
           <div className="flex justify-end mb-8">

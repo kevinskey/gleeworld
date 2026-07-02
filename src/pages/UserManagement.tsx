@@ -64,12 +64,12 @@ const UserManagement = () => {
       {/* Header Navigation */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-4">
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm" className="gap-2">
                   <ArrowLeft className="h-4 w-4" />
-                  Back to Dashboard
+                  <span className="hidden sm:inline">Back to Dashboard</span>
                 </Button>
               </Link>
               <div className="flex items-center gap-2 text-slate-600">
@@ -77,7 +77,7 @@ const UserManagement = () => {
                 <h1 className="text-xl font-semibold text-slate-800">User Management</h1>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowRosterImport(true)}>
                 <FileSpreadsheet className="h-4 w-4" />
                 Import Roster (CSV)
