@@ -26,7 +26,7 @@ export const CompletionStatus = ({ contract }: CompletionStatusProps) => {
       }, 1000);
       return () => clearTimeout(timer);
     } else if (contract?.status === 'completed' && redirectCountdown === 0) {
-      window.location.href = 'https://gleeworld.org';
+      window.location.href = window.location.origin;
     }
   }, [contract?.status, redirectCountdown]);
 
@@ -51,12 +51,12 @@ export const CompletionStatus = ({ contract }: CompletionStatusProps) => {
               </p>
               <div className="space-y-2">
                 <p className="text-sm text-green-600">
-                  Redirecting to gleeworld.org in {redirectCountdown} seconds...
+                  Redirecting in {redirectCountdown} seconds...
                 </p>
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => window.location.href = 'https://gleeworld.org'}
+                  onClick={() => window.location.href = window.location.origin}
                   className="border-green-300 text-green-700 hover:bg-green-100"
                 >
                   Go Now

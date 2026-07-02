@@ -25,6 +25,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 import gleeWorldLogoCircle from "@/assets/glee-world-logo-circle.png";
 
+// Pick black or white text for a given background by luminance, so a tenant's
+// chosen brand color always yields readable header text/icons. (Mirrors the
+// helper in public-site/blocks/header.tsx and UniversalHeader.)
+function readableForeground(hex: string): string {
+  const h = (hex || '').replace('#', '').trim();
+  if (h.length !== 6) return '#FFFFFF';
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 150 ? '#0f172a' : '#FFFFFF';
+}
+
 // ============================================================================
 // DESIGN CONSTANTS - Edit these to change the header appearance
 // ============================================================================
@@ -73,6 +86,14 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
   const tenantLogo = branding.logo_url || undefined;
   const tenantShortName = branding.short_name || undefined;
   const siteName = tenantShortName || tenantOrg || 'GleeWorld';
+
+  // Guest-facing chrome must reflect the tenant's chosen brand color, not a
+  // hardcoded platform navy — otherwise the "branded colors" the tenant paid
+  // for never appear on shared header/footer chrome. Fall back to the platform
+  // default only when the tenant hasn't set one. Text/icon color is derived by
+  // luminance so a dark or light brand color both stay readable.
+  const headerBg = branding.primary_color || HEADER_STYLES.backgroundColor;
+  const headerFg = readableForeground(headerBg);
 
   // Scale the header font down as the name gets longer so it always fits.
   // Tested against names up to ~35 chars on a 320px-wide phone.
@@ -123,7 +144,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
           className={`border-b border-border/40 shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}
           style={{
             paddingTop: 'var(--gw-safe-top)',
-            backgroundColor: HEADER_STYLES.backgroundColor,
+            backgroundColor: headerBg,
             // Ensure ALL headings (h1-h6) inside the public header use Cinzel
             // (GlobalDesignFixes uses --heading-font as the source of truth)
             ['--heading-font' as any]: 'Cinzel',
@@ -164,7 +185,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                 <span
                   style={{
                     fontFamily: "'Cinzel', serif",
-                    color: HEADER_STYLES.brandColor,
+                    color: headerFg,
                     fontSize: `clamp(0.9rem, ${1 + scale * 1.5}vw, ${parseFloat(HEADER_STYLES.titleSizes.desktop) * scale}rem)`,
                     fontWeight: 500,
                     letterSpacing: '0.02em',
@@ -182,7 +203,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                   ============================================================ */}
               <div 
                 className="hidden lg:flex flex-1 justify-center"
-                style={{ color: HEADER_STYLES.brandColor }}
+                style={{ color: headerFg }}
               >
                 <div className="[&_a]:!text-white [&_button]:!text-white [&_svg]:!text-white">
                   <ResponsiveNavigation variant="default" />
@@ -221,7 +242,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                       variant="ghost" 
                       size="default" 
                       className="hover:bg-muted/50 transition-all duration-200 p-2" 
-                      style={{ color: HEADER_STYLES.brandColor }}
+                      style={{ color: headerFg }}
                       onClick={() => setIsOpen(true)} 
                       aria-label="Toggle mobile menu"
                     >
@@ -231,7 +252,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                           <div 
                             key={i}
                             className="w-5 h-[2.5px] rounded-full transition-all duration-200"
-                            style={{ backgroundColor: HEADER_STYLES.brandColor }}
+                            style={{ backgroundColor: headerFg }}
                           />
                         ))}
                       </div>

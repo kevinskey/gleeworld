@@ -90,7 +90,7 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
                 <li>• Website and program photos</li>
                 <li>• Performance recordings and broadcasts</li>
                 <li>• Recruitment and promotional videos</li>
-                <li>• Alumni and historical documentation</li>
+                <li>• Graduate and historical documentation</li>
               </ul>
               <p className="text-sm text-muted-foreground">
                 I understand that I will not receive compensation for this usage and that these materials 

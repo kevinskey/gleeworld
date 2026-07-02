@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { PLAN_TIERS, DEFAULT_PLAN_TIER } from '@/lib/planTiers';
 import { Plus, Loader2, CheckCircle2, ExternalLink } from 'lucide-react';
 
 interface CreatedTenant {
@@ -40,7 +41,7 @@ export function CreateTenantDialog() {
   const [name, setName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [adminName, setAdminName] = useState('');
-  const [plan, setPlan] = useState('starter');
+  const [plan, setPlan] = useState<string>(DEFAULT_PLAN_TIER);
   const [customDomain, setCustomDomain] = useState('');
 
   const reset = () => {
@@ -254,9 +255,9 @@ export function CreateTenantDialog() {
                   <Select value={plan} onValueChange={setPlan}>
                     <SelectTrigger id="plan"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="starter">Starter</SelectItem>
-                      <SelectItem value="pro">Pro</SelectItem>
-                      <SelectItem value="enterprise">Enterprise</SelectItem>
+                      {PLAN_TIERS.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

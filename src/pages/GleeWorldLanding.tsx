@@ -1696,7 +1696,10 @@ function ApplePricing() {
                   ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
                   : { backgroundColor: '#0f172a' }}
               >
-                {t.cta}
+                {/* When a tier has no Stripe payment link yet (e.g. Conservatory),
+                    the button is a mailto — don't imply instant self-serve
+                    checkout; use an honest "Talk to us" label. */}
+                {STRIPE_LINKS[t.key] ? t.cta : 'Talk to us'}
                 <ArrowRight className="h-4 w-4" />
               </a>
             </div>
