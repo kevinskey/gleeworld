@@ -38,22 +38,33 @@ serve(async (req) => {
 
     let event: Stripe.Event;
 
-    // Verify webhook signature if secret is configured
-    if (webhookSecret && signature) {
-      try {
-        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-        logStep("Webhook signature verified");
-      } catch (err: any) {
-        logStep("Webhook signature verification failed", { error: err.message });
-        return new Response(JSON.stringify({ error: "Invalid signature" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } else {
-      // Parse without verification (for testing)
-      event = JSON.parse(body);
-      logStep("Webhook parsed without signature verification");
+    // ALWAYS require a verified signature. This endpoint is publicly reachable
+    // and its events drive privileged writes (subscription/plan activation,
+    // order paid/refunded), so an unverified fallback would let anyone forge
+    // events by simply omitting the stripe-signature header.
+    if (!webhookSecret) {
+      logStep("STRIPE_WEBHOOK_SECRET not configured — refusing to process");
+      return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!signature) {
+      logStep("Missing stripe-signature header");
+      return new Response(JSON.stringify({ error: "Missing signature" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
+      logStep("Webhook signature verified");
+    } catch (err: any) {
+      logStep("Webhook signature verification failed", { error: err.message });
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     logStep("Processing event", { type: event.type, id: event.id });

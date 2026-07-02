@@ -17,7 +17,17 @@ Deno.serve(async (req) => {
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
     if (!stripeKey) throw new Error('STRIPE_SECRET_KEY missing')
 
-    // Auth: decode the bearer token's claims (no need to call /auth/v1/user — JWT has the tenant_id)
+    // Service-role client — also used to verify the caller's token below.
+    const sb = createClient(
+      Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Auth: the edge-functions container runs with VERIFY_JWT=false, so the
+    // gateway does NOT check the token signature — we MUST verify it here.
+    // Without this a forged JWT (any tenant_id / tenant_role='super-admin',
+    // garbage signature) would be trusted and let an attacker open a module
+    // checkout against any tenant.
     const authHeader = req.headers.get('Authorization') ?? ''
     const accessToken = authHeader.replace(/^Bearer\s+/i, '')
     if (!accessToken) {
@@ -25,6 +35,13 @@ Deno.serve(async (req) => {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+    const { data: userData, error: authErr } = await sb.auth.getUser(accessToken)
+    if (authErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'invalid_token' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    // Signature verified — custom claims from the GoTrue hook are trustworthy.
     const payload = JSON.parse(atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
     const tenantId = payload.tenant_id
     const tenantRole = payload.tenant_role
@@ -39,12 +56,6 @@ Deno.serve(async (req) => {
 
     const { module_id, success_url, cancel_url } = await req.json()
     if (!module_id) throw new Error('module_id required')
-
-    // Look up module + price using service-role for trust
-    const sb = createClient(
-      Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
     const { data: mod, error: modErr } = await sb
       .from('gw_billing_modules')
       .select('id, name, tier, stripe_price_id, monthly_price_cents')

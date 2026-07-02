@@ -40,21 +40,37 @@ serve(async (req) => {
   const jwt = auth.replace(/^Bearer\s+/i, "");
   if (!jwt) return err(401, "unauthorized");
 
-  const payload = decodeJwtPayload(jwt);
-  // deno-lint-ignore no-explicit-any
-  const tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
-  if (!tenantId) return err(400, "no_tenant_in_jwt");
-
-  let body: { plan_id?: string; billing_cycle?: "monthly" | "annual"; success_url?: string; cancel_url?: string };
-  try { body = await req.json(); } catch { return err(400, "bad_json"); }
-  if (!body.plan_id) return err(400, "plan_id_required");
-  const cycle: "monthly" | "annual" = body.billing_cycle === "annual" ? "annual" : "monthly";
-
   const admin = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
+
+  // The edge-functions container runs with VERIFY_JWT=false, so the gateway
+  // does NOT check the token signature — we MUST verify it here. Without this
+  // a forged JWT (any tenant_id / tenant_role, garbage signature) would be
+  // trusted and let an attacker open a plan checkout against any tenant.
+  const { data: userData, error: authErr } = await admin.auth.getUser(jwt);
+  if (authErr || !userData?.user) return err(401, "invalid_token");
+
+  // Signature is now verified — the custom claims injected by the GoTrue hook
+  // are trustworthy. Read tenant_id / tenant_role from the verified payload.
+  const payload = decodeJwtPayload(jwt);
+  // deno-lint-ignore no-explicit-any
+  const tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
+  // deno-lint-ignore no-explicit-any
+  const tenantRole = (payload as any)?.tenant_role || (payload as any)?.app_metadata?.tenant_role;
+  if (!tenantId) return err(400, "no_tenant_in_jwt");
+  // Only a tenant admin may change the org's base plan (matches the role gate
+  // in create-module-checkout / create-course-checkout).
+  if (!["admin", "super-admin", "super_admin"].includes(String(tenantRole))) {
+    return err(403, "admin_only", "Only tenant admins can change the plan");
+  }
+
+  let body: { plan_id?: string; billing_cycle?: "monthly" | "annual"; success_url?: string; cancel_url?: string };
+  try { body = await req.json(); } catch { return err(400, "bad_json"); }
+  if (!body.plan_id) return err(400, "plan_id_required");
+  const cycle: "monthly" | "annual" = body.billing_cycle === "annual" ? "annual" : "monthly";
 
   // Look up the plan + tenant slug.
   const [{ data: plan, error: pErr }, { data: tenant }] = await Promise.all([

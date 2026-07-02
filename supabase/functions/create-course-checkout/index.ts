@@ -15,10 +15,24 @@ Deno.serve(async (req) => {
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
     if (!stripeKey) throw new Error('STRIPE_SECRET_KEY missing')
 
+    const sb = createClient(
+      Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // The edge-functions container runs with VERIFY_JWT=false, so the gateway
+    // does NOT check the token signature — verify it here before trusting any
+    // claim, otherwise a forged JWT could purchase against any tenant.
     const authHeader = req.headers.get('Authorization') ?? ''
     const accessToken = authHeader.replace(/^Bearer\s+/i, '')
     if (!accessToken) {
       return new Response(JSON.stringify({ error: 'Missing Authorization' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    const { data: userData, error: authErr } = await sb.auth.getUser(accessToken)
+    if (authErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'invalid_token' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
@@ -27,7 +41,7 @@ Deno.serve(async (req) => {
     const tenantRole = payload.tenant_role
     const userEmail = payload.email
     if (!tenantId) throw new Error('JWT missing tenant_id claim')
-    if (!['admin', 'super_admin'].includes(tenantRole)) {
+    if (!['admin', 'super-admin', 'super_admin'].includes(tenantRole)) {
       return new Response(JSON.stringify({ error: 'Only tenant admins can purchase courses' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -35,11 +49,6 @@ Deno.serve(async (req) => {
 
     const { sku, success_url, cancel_url } = await req.json()
     if (!sku) throw new Error('sku required')
-
-    const sb = createClient(
-      Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
     const { data: product, error: prodErr } = await sb
       .from('gw_course_product')
       .select('id, sku, name, price_cents, stripe_price_id, bundle_key, template_course_id')
