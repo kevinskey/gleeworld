@@ -226,11 +226,14 @@ export default function CourseShell() {
         {/* Left rail */}
         <nav className="lg:sticky lg:top-6 lg:self-start">
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            {/* Conditionally injected Practice tab — Student Practice courses only.
-                Built inline so we don't have to mutate the shared TABS array. */}
+            {/* Conditionally injected Practice tab — legacy Student Practice
+                courses (by course code). Courses that enable the
+                'student-practice' add-on get the tab via addonTabs below
+                instead, so skip the hardcoded one to avoid a duplicate. */}
             {[
               ...TABS,
-              ...(isPracticeCourse(course.course_code)
+              ...(isPracticeCourse(course.course_code) &&
+              !addonTabs.some((t) => t.slug === 'student-practice')
                 ? [{ key: "practice" as TabKey, label: "Practice", Icon: MicIcon }]
                 : []),
             ].map(({ key, label, Icon }) => {
@@ -2237,6 +2240,8 @@ function AddonDispatch({
       return <AiGradingAddon courseId={courseId} canEdit={canEdit} />;
     case 'ai-hub':
       return <EmbeddedWorkspaceModule label="AI Hub"><AIHubEmbed /></EmbeddedWorkspaceModule>;
+    case 'student-practice':
+      return <CoursePracticeTab courseId={courseId} canEdit={canEdit} />;
     default:
       return (
         <Card className="border-0 rounded-2xl bg-white p-8 text-center">

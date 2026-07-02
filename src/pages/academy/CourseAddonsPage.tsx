@@ -41,6 +41,7 @@ const ADDONS: AddonDef[] = [
   { slug: 'qr-attendance',        title: 'QR Attendance',          description: 'Generate codes students scan to check in.',                  icon: QrCode,     tone: 'bg-purple-50 text-purple-600' },
   { slug: 'polls',                title: 'Polls',                  description: 'Live or async polls inside this class.',                     icon: ListMusic,  tone: 'bg-amber-50 text-amber-600' },
   { slug: 'sight-reading',        title: 'Sight Reading',          description: 'Sight-singing drills + generator.',                          icon: Mic,        tone: 'bg-violet-50 text-violet-600' },
+  { slug: 'student-practice',     title: 'Practice',               description: 'Students record practice takes; teachers review and leave feedback.', icon: Music,  tone: 'bg-rose-50 text-rose-600' },
   { slug: 'wardrobe',             title: 'Wardrobe',               description: 'Concert attire requirements for performance ensembles.',     icon: Shirt,      tone: 'bg-pink-50 text-pink-600' },
   { slug: 'ai-grading',           title: 'AI Grading Assist',      description: 'AI rubric evaluation on submissions.',                       icon: Brain,      tone: 'bg-indigo-50 text-indigo-600' },
   { slug: 'ai-hub',               title: 'AI Hub',                 description: 'Course-specific assistants.',                                icon: Sparkles,   tone: 'bg-teal-50 text-teal-600' },

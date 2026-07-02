@@ -44,13 +44,12 @@ export function PracticeRecorder({ open, onClose, bpm, timeSig }: PracticeRecord
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Find the Practice course the user is actually enrolled in. We used
-  // to hardcode course_code = 'STUDENT-PRACTICE', but legacy tenants
-  // already have a seeded GLEE000 "Student Practice" course AND the
-  // migration created a parallel STUDENT-PRACTICE course — students
-  // enrolled in the wrong one would never see their own takes in the
-  // class UI. Look up by their actual enrollment instead so the saved
-  // course_id always matches the class shell they'll review them in.
+  // Find the Practice course the user is actually enrolled in. Preferred
+  // signal: an enrolled course with the 'student-practice' add-on enabled
+  // (gw_course_addons — the same switch that shows the Practice tab in
+  // CourseShell), so takes always land where the teacher reviews them.
+  // Fallback for legacy tenants that predate the add-on: the seeded
+  // GLEE000 / STUDENT-PRACTICE course-code + title heuristic.
   const { data: practiceCourse } = useQuery({
     queryKey: ['student-practice-course', user?.id],
     enabled: !!user,
@@ -61,6 +60,18 @@ export function PracticeRecorder({ open, onClose, bpm, timeSig }: PracticeRecord
         .eq('user_id', user!.id);
       const ids = (enrolls ?? []).map((e: any) => e.course_id).filter(Boolean);
       if (ids.length === 0) return null;
+
+      const { data: addonRows } = await supabase
+        .from('gw_course_addons')
+        .select('course_id')
+        .eq('addon_slug', 'student-practice')
+        .eq('is_enabled', true)
+        .in('course_id', ids)
+        .limit(1);
+      if (addonRows && addonRows.length > 0) {
+        return { id: addonRows[0].course_id };
+      }
+
       const { data: courses } = await supabase
         .from('gw_courses')
         .select('id, course_code, title')
