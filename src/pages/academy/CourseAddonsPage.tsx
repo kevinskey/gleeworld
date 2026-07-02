@@ -94,8 +94,24 @@ export default function CourseAddonsPage() {
         }, { onConflict: 'course_id,addon_slug' });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['course-addons', course?.id] }),
-    onError: (e: any) => toast.error(e?.message || 'Failed.'),
+    // Optimistic: flip the switch in the cache immediately so the UI
+    // doesn't wait for the write + refetch round trips; roll back on error.
+    onMutate: async ({ slug, enable }) => {
+      await qc.cancelQueries({ queryKey: ['course-addons', course?.id] });
+      const prev = qc.getQueryData(['course-addons', course?.id]);
+      qc.setQueryData(['course-addons', course?.id], (old: any) => {
+        const rows = Array.isArray(old) ? old : [];
+        return rows.some((r: any) => r.addon_slug === slug)
+          ? rows.map((r: any) => (r.addon_slug === slug ? { ...r, is_enabled: enable } : r))
+          : [...rows, { addon_slug: slug, is_enabled: enable, config: null }];
+      });
+      return { prev };
+    },
+    onError: (e: any, _vars, ctx) => {
+      qc.setQueryData(['course-addons', course?.id], ctx?.prev);
+      toast.error(e?.message || 'Failed.');
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['course-addons', course?.id] }),
   });
 
   if (courseLoading) {
@@ -151,7 +167,7 @@ export default function CourseAddonsPage() {
                 </div>
                 <Switch
                   checked={enabled}
-                  disabled={!canManage || toggle.isPending}
+                  disabled={!canManage}
                   onCheckedChange={(c) => toggle.mutate({ slug: a.slug, enable: c })}
                 />
               </CardContent>
