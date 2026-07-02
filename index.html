@@ -125,8 +125,27 @@
               String(msg).replace(/</g, '&lt;') + '</pre>';
           } catch (_) {}
         }
+        // A transient network failure on a boot-critical script (deploy in
+        // progress, flaky cellular, stale cached index.html referencing a
+        // replaced asset hash) would otherwise paint a permanent error
+        // screen. Retry with ONE automatic reload per tab session; the
+        // sessionStorage guard means a genuinely broken bundle still shows
+        // the error on the second pass. main.tsx clears the guard after a
+        // successful mount.
+        function retryOnce() {
+          try {
+            if (!sessionStorage.getItem('gw-boot-retried')) {
+              sessionStorage.setItem('gw-boot-retried', '1');
+              location.reload();
+              return true;
+            }
+          } catch (_) {}
+          return false;
+        }
         window.addEventListener('error', function (e) {
           var src = e.filename || e.target && e.target.src || '';
+          var isScriptLoad = e.target && e.target.tagName === 'SCRIPT';
+          if (isScriptLoad && retryOnce()) return;
           paint('Boot error: ' + (e.message || e.type) + (src ? ' (' + src + ')' : '') + '\n\n' + ((e.error && e.error.stack) || ''));
         }, true);
         window.addEventListener('unhandledrejection', function (e) {
@@ -136,6 +155,7 @@
         setTimeout(function () {
           var el = document.getElementById('root');
           if (el && !el.childElementCount) {
+            if (retryOnce()) return;
             paint('React did not mount within 20s.\n\nlocation=' + location.href + '\nUA=' + navigator.userAgent + '\n__TENANT_CONFIG__=' + JSON.stringify((window).__TENANT_CONFIG__ || null));
           }
         }, 20000);

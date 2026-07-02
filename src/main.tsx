@@ -118,3 +118,7 @@ ReactDOM.createRoot(rootElement).render(
     </BootErrorBoundary>
   </React.StrictMode>
 );
+
+// Boot succeeded — re-arm the index.html watchdog's one-shot auto-reload
+// so a future transient script-load failure in this tab gets its retry.
+try { sessionStorage.removeItem('gw-boot-retried'); } catch { /* ignore */ }
