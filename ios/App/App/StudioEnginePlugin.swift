@@ -103,13 +103,16 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             // we also emit from places like setMetronome() which run
             // on arbitrary queues — always hop to main here so it's
             // safe regardless of caller.
-            let payload: [String: Any] = [
+            var payload: [String: Any] = [
                 "isReady": state.isReady,
                 "isPlaying": state.isPlaying,
                 "positionSeconds": state.positionSeconds,
                 "tempoBpm": state.tempoBpm,
                 "metronomeOn": state.metronomeOn,
             ]
+            if let err = state.lastError, !err.isEmpty {
+                payload["lastError"] = err
+            }
             if Thread.isMainThread {
                 self?.notifyListeners("state", data: payload)
             } else {

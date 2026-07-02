@@ -972,7 +972,18 @@ function Editor({
           title="Record (R)">
           <Circle className={`w-3.5 h-3.5 ${isRecording ? 'fill-white text-white' : 'fill-rose-500 text-rose-500'}`} />
         </button>
-        <button onClick={async () => { await start(); setMetronome(!state?.metronomeOn); }}
+        <button onClick={() => {
+            // Do NOT await start() here — the native engine only needs
+            // to be running for playback, and setMetronome now just
+            // flips the flag on the native side. Awaiting start() has
+            // been observed to reject on some device audio session
+            // states, which then silently swallows the setMetronome
+            // call and leaves the button stuck grey. Kick start() in
+            // the background so the engine is warm when the user hits
+            // Play, but never gate the toggle on it.
+            void Promise.resolve(start?.()).catch(() => { /* engine will retry on play */ });
+            setMetronome(!state?.metronomeOn);
+          }}
           className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
           title="Metronome (M)">
           <Timer className="w-4 h-4" />
@@ -1278,10 +1289,13 @@ function Editor({
             stripWidth={effectiveStripWidth}
             metronomeOn={state?.metronomeOn ?? false}
             metronomeVolumeDb={state?.metronomeVolumeDb ?? 0}
-            onToggle={async () => {
-              // Unlock the audio context FIRST — the metronome won't be
-              // audible if the AudioContext is still suspended (Safari).
-              await start();
+            onToggle={() => {
+              // Same rationale as the toolbar metronome button: never
+              // gate the flag toggle on start() succeeding. Warm the
+              // engine in the background but always flip the flag so
+              // the ON/OFF pill reflects the request even if the audio
+              // graph is in a temporarily unusable state.
+              void Promise.resolve(start?.()).catch(() => { /* engine will retry on play */ });
               setMetronome(!(state?.metronomeOn ?? false));
             }}
             onVolume={(db) => engineState.setMetronomeVolume?.(db)}
