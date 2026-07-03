@@ -292,6 +292,22 @@ function Editor({
   // play (1..N then "GO"). null = no count-in in progress.
   const [countInBeat, setCountInBeat] = useState<number | null>(null);
 
+  // Tempo slider draft. While the user drags we only push the live
+  // engine tempo (cheap) and hold the value here; the session write —
+  // which changes the skeleton signature and triggers a full engine
+  // reload — happens once, on release. Committing per drag-tick would
+  // rebuild the native audio graph dozens of times per second.
+  const [tempoDraft, setTempoDraft] = useState<number | null>(null);
+  const commitTempoDraft = () => {
+    setTempoDraft((draft) => {
+      if (draft !== null) {
+        update((s) => ({ ...s, tempo_bpm: draft }));
+        updateTempo(draft);
+      }
+      return null;
+    });
+  };
+
   // Visual grid level. Independent of snap — you can have a 1/16 grid
   // but snap to 1/4 (or vice versa). "auto" follows the zoom.
   const [gridLevel, setGridLevel] = useState<GridLevel>('auto');
@@ -605,7 +621,27 @@ function Editor({
         size_bytes: uploadBlob.size,
         peaks,
       };
-      setAssetUrl(provisionalId, localUrl);
+      if (nativeTake) {
+        // iOS: the native engine reads assets with AVAudioFile, which
+        // can't open a WebView blob: object URL — caching one here left
+        // every fresh take silently absent from playback. Persist the
+        // finalized (latency-trimmed) WAV to the app tmp dir via the
+        // plugin and cache that file:// URL instead.
+        const { NativeStudio } = await import('@/plugins/studioEngine');
+        const bytes = new Uint8Array(await uploadBlob.arrayBuffer());
+        let bin = '';
+        const CHUNK = 0x8000;
+        for (let i = 0; i < bytes.length; i += CHUNK) {
+          bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+        }
+        const { localUrl: nativePath } = await NativeStudio.saveFinalizedTake({
+          base64: btoa(bin),
+          filename,
+        });
+        setAssetUrl(provisionalId, nativePath);
+      } else {
+        setAssetUrl(provisionalId, localUrl);
+      }
 
       // Snapshot before the recording lands so ⌘Z restores pre-recording state.
       pushHistory(session);
@@ -1063,16 +1099,32 @@ function Editor({
                   {countInBars === 0 ? 'Off' : `${countInBars} bar${countInBars > 1 ? 's' : ''}`}
                 </button>
               </div>
-              {/* BPM */}
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">BPM</span>
-                <input type="number" min={20} max={300} value={session.tempo_bpm}
+              {/* BPM — slider for touch, number input kept for precision. */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">BPM</span>
+                  <input type="number" min={20} max={300} value={tempoDraft ?? session.tempo_bpm}
+                    onChange={(e) => {
+                      const bpm = Number(e.target.value) || 120;
+                      update((s) => ({ ...s, tempo_bpm: bpm }));
+                      updateTempo(bpm);
+                    }}
+                    className="w-20 h-10 bg-background border border-border rounded text-center" />
+                </div>
+                <input
+                  type="range" min={40} max={240} step={1}
+                  value={tempoDraft ?? Math.min(240, Math.max(40, session.tempo_bpm))}
                   onChange={(e) => {
-                    const bpm = Number(e.target.value) || 120;
-                    update((s) => ({ ...s, tempo_bpm: bpm }));
+                    const bpm = Number(e.target.value);
+                    setTempoDraft(bpm);
                     updateTempo(bpm);
                   }}
-                  className="w-20 h-10 bg-background border border-border rounded text-center" />
+                  onPointerUp={commitTempoDraft}
+                  onTouchEnd={commitTempoDraft}
+                  onBlur={commitTempoDraft}
+                  className="w-full h-10 accent-sky-500"
+                  aria-label="Tempo (BPM)"
+                />
               </div>
               {/* Time signature */}
               <div className="flex items-center justify-between">

@@ -211,6 +211,15 @@ public final class StudioNativeEngine {
         // audio session, do it now so the rest of this method is safe.
         if !masterConnected { try start() }
 
+        // STOP the engine for the whole rebuild. Bulk graph surgery on
+        // a running AVAudioEngine is unreliable: connecting chains of
+        // virgin mixers live makes the engine silently drop neighboring
+        // connections (see the wiring note in TrackBinding.build). With
+        // the engine stopped, the graph negotiates once, atomically, at
+        // the restart below.
+        let wasRunning = engine.isRunning
+        if wasRunning { engine.stop() }
+
         // Tear down previous bindings.
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
@@ -219,20 +228,12 @@ public final class StudioNativeEngine {
 
         self.session = s
 
-        // Wire master FX chain in front of the engine's main mixer.
-        engine.disconnectNodeOutput(masterMixer)
-        let chain = FxChain.build(engine: engine, specs: s.master.fx)
-        if let chain {
-            engine.connect(masterMixer, to: chain.input, format: nil)
-            engine.connect(chain.output, to: engine.mainMixerNode, format: nil)
-            masterFxChain = chain
-        } else {
-            engine.connect(masterMixer, to: engine.mainMixerNode, format: nil)
-        }
-        // Apply master gain.
-        masterMixer.outputVolume = Float(dbToGain(s.master.volume_db))
-
-        // Build per-track bindings.
+        // Build per-track bindings FIRST, master wiring after. Track
+        // building connects inputs into masterMixer, and (before the
+        // explicit-format fix in TrackBinding.build) those connects
+        // re-negotiated masterMixer's format and silently dropped its
+        // output link — wiring the master last means nothing runs after
+        // it that could tear it down again.
         for tr in s.tracks {
             let binding = try await TrackBinding.build(
                 track: tr, engine: engine, master: masterMixer, assetLoader: assetLoader,
@@ -240,7 +241,59 @@ public final class StudioNativeEngine {
             tracks[binding.trackId] = binding
         }
 
+        // Wire master FX chain in front of the engine's main mixer.
+        // format: nil here (unlike the track wiring above) — masterMixer's
+        // format is already stabilized by the explicit-format track
+        // connects, and an explicit format on this reconnect raised an
+        // NSException out of AVAudioEngineGraph::_Connect on a running
+        // graph. Wrapped so a connect failure degrades to the play()-time
+        // self-heal instead of crashing loadSession.
+        engine.disconnectNodeOutput(masterMixer)
+        let chain = FxChain.build(engine: engine, specs: s.master.fx)
+        if let err = StudioObjC.catchExceptions({
+            if let chain {
+                self.engine.connect(self.masterMixer, to: chain.input, format: nil)
+                self.engine.connect(chain.output, to: self.engine.mainMixerNode, format: nil)
+                self.masterFxChain = chain
+            } else {
+                self.engine.connect(self.masterMixer, to: self.engine.mainMixerNode, format: nil)
+            }
+        }) {
+            NSLog("[Studio] loadSession master rewire raised \(err.localizedDescription)")
+        }
+        // Apply master gain.
+        masterMixer.outputVolume = Float(dbToGain(s.master.volume_db))
+
+        // Restart — the rebuilt graph negotiates formats here, in one
+        // shot, with every connection in place.
+        if wasRunning && !engine.isRunning {
+            do { try engine.start() }
+            catch {
+                NSLog("[Studio] loadSession: engine restart failed: \(error.localizedDescription)")
+                lastError = "engine restart failed: \(error.localizedDescription)"
+            }
+        }
+
         emit()
+    }
+
+    /// Self-heal: if anything re-negotiated masterMixer's format and
+    /// dropped its output link (route change, incremental connect on a
+    /// running graph), every bus goes silent with no error. Cheap to
+    /// check on each play().
+    private func ensureMasterWired() {
+        let pts = engine.outputConnectionPoints(for: masterMixer, outputBus: 0)
+        guard pts.isEmpty else { return }
+        NSLog("[Studio] masterMixer output was disconnected — rewiring")
+        if let err = StudioObjC.catchExceptions({
+            if let chain = self.masterFxChain {
+                self.engine.connect(self.masterMixer, to: chain.input, format: nil)
+            } else {
+                self.engine.connect(self.masterMixer, to: self.engine.mainMixerNode, format: nil)
+            }
+        }) {
+            NSLog("[Studio] masterMixer rewire raised \(err.localizedDescription)")
+        }
     }
 
     public func updateTrackStrip(id: String, volumeDb: Double?, pan: Double?, mute: Bool?) {
@@ -276,6 +329,7 @@ public final class StudioNativeEngine {
             }
         }
         if isPlayingNow { NSLog("[Studio] play: already playing, no-op"); return }
+        ensureMasterWired()
 
         // Use `mach_absolute_time()` directly as the host-time anchor
         // when the engine hasn't produced a render yet. Accessing
@@ -395,17 +449,60 @@ public final class StudioNativeEngine {
         }
 
         // Push-path (default, battle-tested AVAudioPlayerNode).
+        //
+        // Accept remote URLs too: after the background upload swaps a
+        // provisional take for the stored asset, the JS diff hands us
+        // the signed https URL. AVAudioFile can only read local files
+        // (despite an old comment upstream claiming otherwise), so
+        // download to tmp first — same approach as AssetLoader. Local
+        // paths keep the fast synchronous route.
+        if localFilePath.hasPrefix("http://") || localFilePath.hasPrefix("https://") {
+            guard let remote = URL(string: localFilePath) else {
+                self.clipLoadFailed(clip.id, "bad remote URL")
+                return
+            }
+            Task {
+                do {
+                    let (data, _) = try await URLSession.shared.data(from: remote)
+                    let tmp = FileManager.default.temporaryDirectory
+                        .appendingPathComponent("clip-\(clip.asset_id).wav")
+                    try data.write(to: tmp, options: .atomic)
+                    let file = try AVAudioFile(forReading: tmp)
+                    await MainActor.run {
+                        binding.addClip(clip: clip, file: file,
+                                        currentSeconds: self.currentPositionSeconds(),
+                                        anchor: self.startHostTime)
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.clipLoadFailed(clip.id, error.localizedDescription)
+                    }
+                }
+            }
+            return
+        }
+
         let url = URL(fileURLWithPath: localFilePath)
         let file: AVAudioFile
         do {
             file = try AVAudioFile(forReading: url)
         } catch {
-            NSLog("[Studio] addClipToTrack — AVAudioFile open failed for \(localFilePath): \(error.localizedDescription)")
+            clipLoadFailed(clip.id, "AVAudioFile open failed for \(localFilePath): \(error.localizedDescription)")
             return
         }
         binding.addClip(clip: clip, file: file,
                         currentSeconds: currentPositionSeconds(),
                         anchor: startHostTime)
+    }
+
+    /// Surface a clip-load failure to the UI (toast via lastError) —
+    /// a take that silently never joins the graph reads as "recording
+    /// is broken" with zero signal for anyone to act on.
+    private func clipLoadFailed(_ clipId: String, _ detail: String) {
+        let msg = "clip \(clipId) failed to load: \(detail)"
+        NSLog("[Studio] addClipToTrack — \(msg)")
+        lastError = msg
+        emit()
     }
 
     public func removeClipFromTrack(trackId: String, clipId: String) {
