@@ -72,6 +72,16 @@ public final class TrackBinding {
         muteGate.outputVolume = mute ? 0 : 1
 
         // Wire strip → muteGate → fx chain (if any) → master.
+        //
+        // NOTE: these connects are only safe while the engine is
+        // STOPPED. Bulk-connecting chains of freshly attached mixers on
+        // a running engine makes AVAudioEngine silently tear down
+        // neighboring links (verified via graph dumps 2026-07-03: with
+        // the engine live, `connect(muteGate → master)` dropped both
+        // `strip → muteGate` and `masterMixer → mainMixerNode`, leaving
+        // every track and the metronome bus disconnected — total
+        // silence, no error). Engine.loadSession stops the engine
+        // around the rebuild and restarts it after.
         engine.connect(strip, to: muteGate, format: nil)
         let fxChain = FxChain.build(engine: engine, specs: fxSpecs)
         if let chain = fxChain {

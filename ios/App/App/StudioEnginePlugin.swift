@@ -39,6 +39,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "updateTempo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setMetronome", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clickOnce", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "saveFinalizedTake", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStart", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mixdown", returnType: CAPPluginReturnPromise),
@@ -247,6 +248,33 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             self?.engine.clickOnce(accent: accent)
             call.resolve()
+        }
+    }
+
+    /// Persist a finalized (latency-trimmed) take from JS into the app's
+    /// tmp dir and return a file:// URL the native engine can read.
+    /// The JS recording flow previously cached a WebView-only blob: URL
+    /// for fresh takes — AVAudioFile can't open those, so every take was
+    /// silently absent from playback until the studio was reopened.
+    @objc func saveFinalizedTake(_ call: CAPPluginCall) {
+        guard let b64 = call.getString("base64") else {
+            call.reject("base64 required"); return
+        }
+        let filename = call.getString("filename") ?? "take-\(Int(Date().timeIntervalSince1970)).wav"
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let data = Data(base64Encoded: b64) else {
+                call.reject("base64 decode failed"); return
+            }
+            let dir = FileManager.default.temporaryDirectory
+                .appendingPathComponent("studio-takes", isDirectory: true)
+            do {
+                try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+                let url = dir.appendingPathComponent(filename)
+                try data.write(to: url, options: .atomic)
+                call.resolve(["localUrl": url.absoluteString])
+            } catch {
+                call.reject("write failed: \(error.localizedDescription)")
+            }
         }
     }
 

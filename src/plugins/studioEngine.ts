@@ -29,6 +29,9 @@ interface StudioEnginePluginShape {
   setMetronome(args: { on: boolean; volumeDb?: number }): Promise<void>;
   // One immediate click — drives the JS count-in pre-roll on iOS.
   clickOnce(args: { accent: boolean }): Promise<void>;
+  // Persist a finalized (latency-trimmed) take to the app tmp dir and
+  // return a file:// URL the native engine can open with AVAudioFile.
+  saveFinalizedTake(args: { base64: string; filename?: string }): Promise<{ localUrl: string }>;
   recordStart(): Promise<void>;
   recordStop(): Promise<{ localUrl: string; filename: string }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
