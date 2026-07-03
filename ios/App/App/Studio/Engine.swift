@@ -37,6 +37,21 @@ public final class StudioNativeEngine {
     // by which time the audio session has been configured.
     private lazy var engine = AVAudioEngine()
     private lazy var masterMixer = AVAudioMixerNode()
+    /// Peak limiter as the final stage before the hardware. The mix bus
+    /// is float internally, so summing several healthy takes runs the
+    /// signal past full scale (measured +6 dBFS with two 0 dBFS tracks)
+    /// and hard-clips at the DAC with no meters and no warning on iOS.
+    /// Apple's AUPeakLimiter (look-ahead, ~12 ms) transparently holds
+    /// program material and mixdown bounces at or under 0 dBFS — the
+    /// same protection GarageBand ships on its output bus.
+    private lazy var outputLimiter: AVAudioUnitEffect = {
+        let desc = AudioComponentDescription(
+            componentType: kAudioUnitType_Effect,
+            componentSubType: kAudioUnitSubType_PeakLimiter,
+            componentManufacturer: kAudioUnitManufacturer_Apple,
+            componentFlags: 0, componentFlagsMask: 0)
+        return AVAudioUnitEffect(audioComponentDescription: desc)
+    }()
     /// FX chain inserted in front of the engine's main output mixer.
     /// The masterMixer feeds the first FX node; the last FX node feeds
     /// the engine's `mainMixerNode`, which is connected to the output.
@@ -173,9 +188,11 @@ public final class StudioNativeEngine {
                 NSLog("[Studio] engine.start: attach raised \(err.localizedDescription)")
                 throw err
             }
-            NSLog("[Studio] engine.start: connecting master → mainMixerNode")
+            NSLog("[Studio] engine.start: connecting master → limiter → mainMixerNode")
             if let err = StudioObjC.catchExceptions({
-                self.engine.connect(self.masterMixer, to: self.engine.mainMixerNode, format: nil)
+                self.engine.attach(self.outputLimiter)
+                self.engine.connect(self.masterMixer, to: self.outputLimiter, format: nil)
+                self.engine.connect(self.outputLimiter, to: self.engine.mainMixerNode, format: nil)
             }) {
                 NSLog("[Studio] engine.start: connect raised \(err.localizedDescription)")
                 throw err
@@ -238,8 +255,13 @@ public final class StudioNativeEngine {
             let binding = try await TrackBinding.build(
                 track: tr, engine: engine, master: masterMixer, assetLoader: assetLoader,
                 allAssets: s.assets)
+            switch tr {
+            case .audio(let t): binding.userMute = t.mute; binding.userSolo = t.solo
+            case .midi(let t):  binding.userMute = t.mute; binding.userSolo = t.solo
+            }
             tracks[binding.trackId] = binding
         }
+        recomputeSolo()
 
         // Wire master FX chain in front of the engine's main mixer.
         // format: nil here (unlike the track wiring above) — masterMixer's
@@ -251,13 +273,18 @@ public final class StudioNativeEngine {
         engine.disconnectNodeOutput(masterMixer)
         let chain = FxChain.build(engine: engine, specs: s.master.fx)
         if let err = StudioObjC.catchExceptions({
+            // The output limiter stays the last node before mainMixer in
+            // both branches: master → [fx chain] → limiter → mainMixer.
+            self.engine.disconnectNodeInput(self.outputLimiter)
+            self.engine.disconnectNodeOutput(self.outputLimiter)
             if let chain {
                 self.engine.connect(self.masterMixer, to: chain.input, format: nil)
-                self.engine.connect(chain.output, to: self.engine.mainMixerNode, format: nil)
+                self.engine.connect(chain.output, to: self.outputLimiter, format: nil)
                 self.masterFxChain = chain
             } else {
-                self.engine.connect(self.masterMixer, to: self.engine.mainMixerNode, format: nil)
+                self.engine.connect(self.masterMixer, to: self.outputLimiter, format: nil)
             }
+            self.engine.connect(self.outputLimiter, to: self.engine.mainMixerNode, format: nil)
         }) {
             NSLog("[Studio] loadSession master rewire raised \(err.localizedDescription)")
         }
@@ -282,25 +309,45 @@ public final class StudioNativeEngine {
     /// running graph), every bus goes silent with no error. Cheap to
     /// check on each play().
     private func ensureMasterWired() {
-        let pts = engine.outputConnectionPoints(for: masterMixer, outputBus: 0)
-        guard pts.isEmpty else { return }
-        NSLog("[Studio] masterMixer output was disconnected — rewiring")
+        let masterPts = engine.outputConnectionPoints(for: masterMixer, outputBus: 0)
+        let limiterPts = engine.outputConnectionPoints(for: outputLimiter, outputBus: 0)
+        guard masterPts.isEmpty || limiterPts.isEmpty else { return }
+        NSLog("[Studio] master output chain was disconnected — rewiring")
         if let err = StudioObjC.catchExceptions({
-            if let chain = self.masterFxChain {
-                self.engine.connect(self.masterMixer, to: chain.input, format: nil)
-            } else {
-                self.engine.connect(self.masterMixer, to: self.engine.mainMixerNode, format: nil)
+            if masterPts.isEmpty {
+                if let chain = self.masterFxChain {
+                    self.engine.connect(self.masterMixer, to: chain.input, format: nil)
+                } else {
+                    self.engine.connect(self.masterMixer, to: self.outputLimiter, format: nil)
+                }
+            }
+            if limiterPts.isEmpty {
+                self.engine.connect(self.outputLimiter, to: self.engine.mainMixerNode, format: nil)
             }
         }) {
-            NSLog("[Studio] masterMixer rewire raised \(err.localizedDescription)")
+            NSLog("[Studio] master rewire raised \(err.localizedDescription)")
         }
     }
 
-    public func updateTrackStrip(id: String, volumeDb: Double?, pan: Double?, mute: Bool?) {
+    public func updateTrackStrip(id: String, volumeDb: Double?, pan: Double?, mute: Bool?, solo: Bool? = nil) {
         guard let t = tracks[id] else { return }
         if let v = volumeDb { t.setVolumeDb(v) }
         if let p = pan { t.setPan(Float(p)) }
-        if let m = mute { t.setMute(m) }
+        if let m = mute { t.userMute = m }
+        if let s = solo { t.userSolo = s }
+        recomputeSolo()
+    }
+
+    /// Solo override — when any track is soloed, every non-soloed track
+    /// is silenced regardless of its own mute flag. Mirrors the web
+    /// engine's recomputeSolo; before this, the S button did nothing on
+    /// iOS (updateStrip dropped the flag entirely).
+    private func recomputeSolo() {
+        var anySolo = false
+        for (_, t) in tracks where t.userSolo { anySolo = true; break }
+        for (_, t) in tracks {
+            t.setMute(anySolo ? !t.userSolo : t.userMute)
+        }
     }
 
     public func updateTempo(bpm: Double) {
@@ -330,6 +377,18 @@ public final class StudioNativeEngine {
         }
         if isPlayingNow { NSLog("[Studio] play: already playing, no-op"); return }
         ensureMasterWired()
+
+        // Auto-rewind: if the head is parked at/after the end of the
+        // last clip (typical after a take plays out), snap to 0 so Play
+        // makes sound instead of running silently past the material.
+        // Mirrors the web engine's guard; without it, "play after the
+        // song ended" reads as the app going dead.
+        var latestClipEnd: Double = 0
+        for (_, t) in tracks { latestClipEnd = max(latestClipEnd, t.latestClipEnd()) }
+        if latestClipEnd > 0 && pausedAt >= latestClipEnd {
+            NSLog("[Studio] play: head at \(pausedAt) past last clip end \(latestClipEnd) — auto-rewind to 0")
+            pausedAt = 0
+        }
 
         // Use `mach_absolute_time()` directly as the host-time anchor
         // when the engine hasn't produced a render yet. Accessing

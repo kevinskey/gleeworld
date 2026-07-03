@@ -435,7 +435,7 @@ export function useStudioEngine(session: Session | null) {
         updateTrackStrip: async (id: string, p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => {
           await NativeStudio.updateStrip({
             trackId: id,
-            volumeDb: p.volume_db, pan: p.pan, mute: p.mute,
+            volumeDb: p.volume_db, pan: p.pan, mute: p.mute, solo: p.solo,
           });
         },
         updateTempo: async (bpm: number) => { await NativeStudio.updateTempo({ bpm }); },
