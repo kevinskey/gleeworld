@@ -185,6 +185,16 @@ export function useStudioEngine(session: Session | null) {
   // clips to add or remove on the live graph.
   const lastAudioClipsRef = useRef<Map<string, Map<string, string>>>(new Map());
 
+  // Close the native engine exactly once, on unmount. Session-change
+  // effects must never do this (see cleanup note in the reload effect).
+  useEffect(() => {
+    if (!native) return;
+    return () => {
+      nativeCloseRef.current?.();
+      nativeCloseRef.current = null;
+    };
+  }, [native]);
+
   // Create the web engine once on mount (no-op on native).
   useEffect(() => {
     if (native) return;
@@ -346,7 +356,15 @@ export function useStudioEngine(session: Session | null) {
           }
         } catch { /* prewarm is best-effort */ }
       })();
-      return () => { cancelled = true; nativeCloseRef.current?.(); nativeCloseRef.current = null; };
+      // Cleanup cancels the in-flight open only. Closing the engine here
+      // would run on EVERY session edit (React re-runs cleanups per dep
+      // change): the first mute/volume/clip write after mount stopped
+      // the AVAudioEngine mid-playback and nulled nativeCloseRef, which
+      // in turn forced needsFullReload=true forever — the incremental
+      // path never ran and every edit cost a full multi-second reopen.
+      // The engine now closes on unmount (dedicated effect below) or is
+      // replaced by the next full reload, which awaits the old close.
+      return () => { cancelled = true; };
     }
 
     // Web path. Two flavors:

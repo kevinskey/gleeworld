@@ -636,18 +636,38 @@ function Editor({
         // every fresh take silently absent from playback. Persist the
         // finalized (latency-trimmed) WAV to the app tmp dir via the
         // plugin and cache that file:// URL instead.
-        const { NativeStudio } = await import('@/plugins/studioEngine');
-        const bytes = new Uint8Array(await uploadBlob.arrayBuffer());
-        let bin = '';
-        const CHUNK = 0x8000;
-        for (let i = 0; i < bytes.length; i += CHUNK) {
-          bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+        //
+        // base64 via FileReader — NOT String.fromCharCode(...spread):
+        // JavaScriptCore's spread-argument limit is low enough that a
+        // multi-MB take threw RangeError mid-finalize on device, which
+        // surfaced as "Could not finalize recording".
+        try {
+          const { NativeStudio } = await import('@/plugins/studioEngine');
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const fr = new FileReader();
+            fr.onload = () => {
+              const s = fr.result as string;
+              resolve(s.slice(s.indexOf(',') + 1));
+            };
+            fr.onerror = () => reject(fr.error ?? new Error('FileReader failed'));
+            fr.readAsDataURL(uploadBlob);
+          });
+          const { localUrl: nativePath } = await NativeStudio.saveFinalizedTake({
+            base64,
+            filename,
+          });
+          setAssetUrl(provisionalId, nativePath);
+        } catch (persistErr) {
+          // The take must never be lost to a persistence hiccup: fall
+          // back to the blob URL (native playback stays silent until
+          // the background upload lands and the https path takes over),
+          // and say so instead of failing the whole stop.
+          console.warn('[studio] saveFinalizedTake failed, using blob URL fallback', persistErr);
+          setAssetUrl(provisionalId, localUrl);
+          toast.error('Take saved, but instant playback may need a few seconds', {
+            description: persistErr instanceof Error ? persistErr.message : String(persistErr),
+          });
         }
-        const { localUrl: nativePath } = await NativeStudio.saveFinalizedTake({
-          base64: btoa(bin),
-          filename,
-        });
-        setAssetUrl(provisionalId, nativePath);
       } else {
         setAssetUrl(provisionalId, localUrl);
       }

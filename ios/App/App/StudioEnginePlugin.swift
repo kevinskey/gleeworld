@@ -315,6 +315,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
                 guard let self else { call.reject("plugin gone"); return }
                 do {
                     try self.recorder.start()
+                    self.engine.recordingActive = true
                     call.resolve()
                 } catch {
                     call.reject("record start failed: \(error.localizedDescription)")
@@ -341,6 +342,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func recordStop(_ call: CAPPluginCall) {
         wireEngineEvents()
+        engine.recordingActive = false
         guard let url = recorder.stop() else { call.reject("not recording"); return }
         // Return the local file path the JS layer reads + uploads.
         call.resolve(["localUrl": url.absoluteString, "filename": url.lastPathComponent])
