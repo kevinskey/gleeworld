@@ -487,14 +487,16 @@ async function handleCheckoutCompleted(session) {
   // Tag the PLAN subscription with the tenant so later lifecycle events
   // (renewal, past_due, cancellation) can find their tenant. Without this
   // the base plan is billing-orphaned and non-payment never suspends a site.
-  const tenantId = provisioned.body?.tenant?.id;
+  // (tenantId is already declared at the top of this function for the
+  // module-activation branch — this is the newly provisioned tenant's id.)
+  const provisionedTenantId = provisioned.body?.tenant?.id;
   const subscriptionId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id;
-  if (tenantId && subscriptionId) {
+  if (provisionedTenantId && subscriptionId) {
     try {
       await stripe.subscriptions.update(subscriptionId, {
-        metadata: { tenant_id: tenantId, gleeworld_plan: tier },
+        metadata: { tenant_id: provisionedTenantId, gleeworld_plan: tier },
       });
-      console.log(`✓ plan subscription ${subscriptionId} tagged with tenant ${tenantId}`);
+      console.log(`✓ plan subscription ${subscriptionId} tagged with tenant ${provisionedTenantId}`);
     } catch (e) {
       console.error('plan subscription tagging failed:', e.message);
     }
