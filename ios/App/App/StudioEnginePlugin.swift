@@ -38,6 +38,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "updateStrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateTempo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setMetronome", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "clickOnce", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStart", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mixdown", returnType: CAPPluginReturnPromise),
@@ -236,6 +237,15 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             if let db = db { self?.engine.setMetronomeVolume(db: db) }
             self?.engine.setMetronome(on: on)
+            call.resolve()
+        }
+    }
+
+    @objc func clickOnce(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        let accent = call.getBool("accent") ?? false
+        DispatchQueue.main.async { [weak self] in
+            self?.engine.clickOnce(accent: accent)
             call.resolve()
         }
     }

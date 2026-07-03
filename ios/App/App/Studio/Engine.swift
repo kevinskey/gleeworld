@@ -86,6 +86,14 @@ public final class StudioNativeEngine {
     private var metronomeAccentBuffer: AVAudioPCMBuffer?
     private var metronomeFormat: AVAudioFormat?
     private var metronomeTimers: [Timer] = []
+    // True whenever the click player needs a fresh play() call after the
+    // next scheduleBuffer. An AVAudioPlayerNode whose queue was emptied
+    // while nominally "playing" (initial state, or after reset()) keeps
+    // isPlaying == true but renders pure silence for every buffer
+    // scheduled `at: nil` — the only repair is play() issued AFTER a
+    // buffer is in the queue. isPlaying can't detect this state, so we
+    // track it explicitly. Verified via node taps 2026-07-03.
+    private var metronomeNeedsRestart = true
     private var metronomeRouteChangeObserver: NSObjectProtocol?
 
     /// True once the master mixer has been connected to the engine's
@@ -632,20 +640,14 @@ public final class StudioNativeEngine {
         metronomeAccentBuffer = makeClickBuffer(format: format, frequency: 1500, durationMs: 30)
         metronomeFormat = format
 
-        // Start the player and leave it running for its whole lifetime.
-        // Never .stop() outside whole-engine teardown — stop/play cycles
-        // on a live graph have crashed AVAudioEngine in the wild. When
-        // no buffer is scheduled the node renders silence, which is
-        // exactly the "off" state we want.
-        if let err = StudioObjC.catchExceptions({
-            if !self.metronomePlayer.isPlaying { self.metronomePlayer.play() }
-        }) {
-            let msg = "metronome player.play() raised \(err.localizedDescription)"
-            NSLog("[Studio] \(msg)")
-            self.lastError = msg
-            return
-        }
-
+        // Do NOT call play() here. Starting an AVAudioPlayerNode with an
+        // EMPTY queue corrupts its render anchor: isPlaying flips true,
+        // but every buffer scheduled afterwards with `at: nil` renders
+        // pure silence (verified via node tap — playerPeak stayed 0.0
+        // while scheduleBuffer succeeded). Because isPlaying is already
+        // true, playClick's schedule-then-play ordering never gets to
+        // issue the corrective play(). The first real click owns the
+        // schedule→play sequence instead (see playClick).
         metronomeAttached = true
 
         // Rebuild attach+buffers if the audio route changes mid-flight.
@@ -701,22 +703,33 @@ public final class StudioNativeEngine {
     private func cancelMetronome() {
         for t in metronomeTimers { t.invalidate() }
         metronomeTimers.removeAll()
-        // Do NOT call metronomePlayer.stop() here. Once the node is
-        // attached + started (see ensureMetronomeAttached), we leave it
-        // in .play() state for its lifetime; when no buffers are
-        // scheduled it renders silence. Calling .stop() then .play()
-        // in quick succession on a live AVAudioEngine has crashed the
-        // graph in the wild (build 100 report), and reset() drops
-        // queued events which is what we actually want here — just
-        // clear the timers so no new beats fire, and drop anything
-        // already queued so pausing is instant.
+        // stop(), not reset(). reset() empties the queue but leaves
+        // isPlaying == true — the exact silent-render state described on
+        // metronomeNeedsRestart's declaration, and a play() re-issued in
+        // that state is a no-op (verified via node taps 2026-07-03:
+        // pause→resume stayed at playerPeak=0.0 with the reset()+play()
+        // combination). stop() drops isPlaying so the next click's
+        // schedule→play sequence re-anchors the node for real. The old
+        // build-100 crash was a stop()/play() pair issued back-to-back;
+        // here the next play() only happens on a later beat timer with a
+        // buffer already queued, and both calls stay exception-wrapped.
         if let err = StudioObjC.catchExceptions({
             if self.metronomePlayer.isPlaying {
-                self.metronomePlayer.reset()
+                self.metronomePlayer.stop()
             }
         }) {
-            NSLog("[Studio] metronome reset raised \(err.localizedDescription)")
+            NSLog("[Studio] metronome stop raised \(err.localizedDescription)")
         }
+        metronomeNeedsRestart = true
+    }
+
+    /// Public single-click entry point — used by the JS count-in
+    /// pre-roll (StudioEditor drives the count-in cadence from its own
+    /// timer BEFORE play() starts the transport). Safe while the
+    /// transport is idle: attaches/builds buffers on first use.
+    public func clickOnce(accent: Bool) {
+        ensureMetronomeAttached()
+        playClick(accent: accent)
     }
 
     /// Fire one immediate click. Used ONLY for the toggle-on
@@ -753,7 +766,10 @@ public final class StudioNativeEngine {
         // callback rather than getting stuck behind the (empty) queue.
         if let err = StudioObjC.catchExceptions({
             self.metronomePlayer.scheduleBuffer(buf, at: nil, options: [.interrupts], completionHandler: nil)
-            if !self.metronomePlayer.isPlaying { self.metronomePlayer.play() }
+            if self.metronomeNeedsRestart || !self.metronomePlayer.isPlaying {
+                self.metronomePlayer.play()
+                self.metronomeNeedsRestart = false
+            }
         }) {
             let msg = "metronome click raised \(err.localizedDescription)"
             NSLog("[Studio] \(msg)")
