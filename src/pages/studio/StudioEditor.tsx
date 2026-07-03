@@ -458,6 +458,15 @@ function Editor({
     try {
       await start();                                  // unlock audio
 
+      // iOS: flip the audio session into .playAndRecord NOW, before the
+      // count-in. Doing it inside nativeRecordStart put a 100-500 ms
+      // category transition between the last count-in click and beat 1,
+      // so the metronome grid started late on recording runs.
+      if (engineState.native && engineState.nativeRecordStart) {
+        const { NativeStudio } = await import('@/plugins/studioEngine');
+        await NativeStudio.prepareRecordSession().catch(() => { /* recordStart will retry */ });
+      }
+
       // Optional count-in: if enabled, click for N bars before the mic
       // opens. The engine's metronome scheduleRepeat only fires while
       // the transport is running, so we drive the audible count via a

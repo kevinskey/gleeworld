@@ -24,7 +24,10 @@ interface StudioEnginePluginShape {
   pause(): Promise<void>;
   stop(): Promise<void>;
   seek(args: { seconds: number }): Promise<void>;
-  updateStrip(args: { trackId: string; volumeDb?: number; pan?: number; mute?: boolean }): Promise<void>;
+  updateStrip(args: { trackId: string; volumeDb?: number; pan?: number; mute?: boolean; solo?: boolean }): Promise<void>;
+  // Pre-arm the .playAndRecord audio session before the count-in so
+  // recordStart doesn't pay the category-flip latency mid-groove.
+  prepareRecordSession(): Promise<void>;
   updateTempo(args: { bpm: number }): Promise<void>;
   setMetronome(args: { on: boolean; volumeDb?: number }): Promise<void>;
   // One immediate click — drives the JS count-in pre-roll on iOS.

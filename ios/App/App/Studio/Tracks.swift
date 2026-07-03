@@ -13,6 +13,12 @@ import AVFoundation
 public final class TrackBinding {
     public let trackId: String
 
+    /// User-intent flags. `setMute` drives the actual gate; these hold
+    /// what the user asked for so the engine can compute the effective
+    /// mute when any track is soloed (solo overrides mute on others).
+    public var userMute = false
+    public var userSolo = false
+
     private let engine: AVAudioEngine
     private let master: AVAudioMixerNode
     private let strip: AVAudioMixerNode     // pan + vol
@@ -70,6 +76,7 @@ public final class TrackBinding {
         strip.outputVolume = Float(dbToGain(volumeDb))
         strip.pan = Float(pan)
         muteGate.outputVolume = mute ? 0 : 1
+        // solo intent is applied post-build by Engine.recomputeSolo().
 
         // Wire strip → muteGate → fx chain (if any) → master.
         //
@@ -140,6 +147,18 @@ public final class TrackBinding {
     }
 
     // MARK: - Mixer strip
+
+    /// End of the last clip on this track (seconds). 0 when empty.
+    public func latestClipEnd() -> Double {
+        var end: Double = 0
+        for (clip, _, _) in loadedClips {
+            end = max(end, clip.start_seconds + clip.duration_seconds)
+        }
+        for clip in midiClips {
+            end = max(end, clip.start_seconds + clip.duration_seconds)
+        }
+        return end
+    }
 
     public func setVolumeDb(_ db: Double) { strip.outputVolume = Float(dbToGain(db)) }
     public func setPan(_ p: Float) { strip.pan = max(-1, min(1, p)) }

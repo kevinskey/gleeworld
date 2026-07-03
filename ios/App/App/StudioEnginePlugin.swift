@@ -40,6 +40,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "setMetronome", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clickOnce", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "saveFinalizedTake", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "prepareRecordSession", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStart", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mixdown", returnType: CAPPluginReturnPromise),
@@ -220,7 +221,8 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             id: trackId,
             volumeDb: call.getDouble("volumeDb"),
             pan: call.getDouble("pan"),
-            mute: call.getBool("mute"))
+            mute: call.getBool("mute"),
+            solo: call.getBool("solo"))
         call.resolve()
     }
 
@@ -256,6 +258,29 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
     /// The JS recording flow previously cached a WebView-only blob: URL
     /// for fresh takes — AVAudioFile can't open those, so every take was
     /// silently absent from playback until the studio was reopened.
+    /// Flip the AVAudioSession into the recorder's category AHEAD of
+    /// time (the editor calls this before the count-in). On hardware the
+    /// .playAndRecord transition takes 100-500 ms; when it happened
+    /// inside recordStart — between count-in and beat 1 — the metronome
+    /// grid started audibly late on recording runs. Same options as
+    /// Recorder.start(), which then sees the category already set and
+    /// skips the transition.
+    @objc func prepareRecordSession(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            let session = AVAudioSession.sharedInstance()
+            do {
+                if session.category != .playAndRecord {
+                    try session.setCategory(.playAndRecord, mode: .default,
+                                            options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
+                }
+                try session.setActive(true)
+                call.resolve()
+            } catch {
+                call.reject("prepareRecordSession failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
     @objc func saveFinalizedTake(_ call: CAPPluginCall) {
         guard let b64 = call.getString("base64") else {
             call.reject("base64 required"); return
