@@ -453,7 +453,11 @@ export function useStudioEngine(session: Session | null) {
           // enough that re-sending `on` on every drag is fine.
           void NativeStudio.setMetronome({ on: true, volumeDb: db });
         },
-        triggerMetronomeClick: (_accent: boolean) => { /* native count-in not wired yet */ },
+        triggerMetronomeClick: (accent: boolean) => {
+          // Native single click — powers the count-in pre-roll clicks
+          // that StudioEditor fires before play() starts the transport.
+          void NativeStudio.clickOnce({ accent });
+        },
         /** iOS-only: kicks the AVAudioEngine input tap into a WAV file
          * in the app's tmp dir. Returns when the take stops. The
          * editor's startRecording dispatches here on iOS instead of

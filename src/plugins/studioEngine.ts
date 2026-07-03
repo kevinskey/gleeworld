@@ -27,6 +27,8 @@ interface StudioEnginePluginShape {
   updateStrip(args: { trackId: string; volumeDb?: number; pan?: number; mute?: boolean }): Promise<void>;
   updateTempo(args: { bpm: number }): Promise<void>;
   setMetronome(args: { on: boolean; volumeDb?: number }): Promise<void>;
+  // One immediate click — drives the JS count-in pre-roll on iOS.
+  clickOnce(args: { accent: boolean }): Promise<void>;
   recordStart(): Promise<void>;
   recordStop(): Promise<{ localUrl: string; filename: string }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
