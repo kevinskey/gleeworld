@@ -149,7 +149,9 @@ export default function AuthPage() {
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://gleeworld.org/reset-password`,
+        // Current origin, not gleeworld.org — a tenant admin resetting from
+        // theirchoir.gleeworld.org must land back on their own site.
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
       setResetEmailSent(true);
