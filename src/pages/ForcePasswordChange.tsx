@@ -49,7 +49,13 @@ const ForcePasswordChange: React.FC = () => {
     }
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      // Setting the password also clears must_change_password — the flag the
+      // superadmin API stamps on provisioned admins, which ProtectedRoute
+      // gates on until it's cleared here.
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+        data: { must_change_password: false },
+      });
 
       if (error) throw error;
 
@@ -83,6 +89,10 @@ const ForcePasswordChange: React.FC = () => {
       if (isSamePasswordError) {
         localStorage.setItem('password_changed_jan2026', 'true');
         sessionStorage.setItem('password_changed_jan2026', 'true');
+        // Still clear the provisioning flag or the gate loops forever.
+        await supabase.auth
+          .updateUser({ data: { must_change_password: false } })
+          .catch(() => {});
 
         toast({
           title: 'Password already updated',

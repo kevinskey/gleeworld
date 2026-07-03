@@ -1545,14 +1545,14 @@ function AppleVideo() {
 //   • Custom field "subdomain" (text, optional) — used as their site URL slug
 // Paste each Payment Link URL below. Until then the buttons gracefully fall
 // back to the contact email.
-// Keys correspond to the four base tiers. Old payment-link IDs are reused
-// where the price didn't change (ensemble/studio/university). Conservatory
-// is new — until its Stripe Payment Link exists, the button falls back to
-// the MAILTO_BUY contact email.
+// Keys correspond to the four base tiers. Every link carries canonical
+// metadata.gleeworld_tier (fixed 2026-07-03 — legacy links said
+// solo/school/institution) and required org_name + optional subdomain
+// custom fields. A null falls back to the MAILTO_BUY contact email.
 const STRIPE_LINKS: Record<string, string | null> = {
   ensemble:     "https://buy.stripe.com/14A14m2C8bir73qfqf4Vy00",
   studio:       "https://buy.stripe.com/6oUaEW7Ws0DN87u5PF4Vy01",
-  conservatory: null,
+  conservatory: "https://buy.stripe.com/28EeVcccI0DN87uemb4Vy03",
   university:   "https://buy.stripe.com/cNibJ00u0aen9bya5V4Vy02",
 };
 

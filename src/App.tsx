@@ -421,11 +421,20 @@ const ProtectedRoute = ({ children, skipProfileCheck = false }: { children: Reac
       return <Navigate to="/auth" replace />;
     }
     
+    // Provisioned admins arrive with a temp password: the superadmin API sets
+    // must_change_password at user creation and ForcePasswordChange clears it.
+    if (
+      user.user_metadata?.must_change_password === true &&
+      location.pathname !== '/force-password-change'
+    ) {
+      return <Navigate to="/force-password-change" replace />;
+    }
+
     // Skip profile check for specific pages
     if (skipProfileCheck) {
       return <>{children}</>;
     }
-  
+
     return <ProfileCompletionGuard>{children}</ProfileCompletionGuard>;
   } catch (error) {
     console.error('ProtectedRoute error:', error);

@@ -43,14 +43,18 @@ export function CreateTenantDialog() {
   const [adminName, setAdminName] = useState('');
   const [plan, setPlan] = useState<string>(DEFAULT_PLAN_TIER);
   const [customDomain, setCustomDomain] = useState('');
+  // 'gleeworld' → we design the site for them (setup gate pre-completed).
+  // 'self' → customer's first sign-in routes into the guided Site Setup.
+  const [deploymentPath, setDeploymentPath] = useState<'gleeworld' | 'self'>('gleeworld');
 
   const reset = () => {
     setSlug('');
     setName('');
     setAdminEmail('');
     setAdminName('');
-    setPlan('starter');
+    setPlan(DEFAULT_PLAN_TIER);
     setCustomDomain('');
+    setDeploymentPath('gleeworld');
     setCreated(null);
   };
 
@@ -100,6 +104,7 @@ export function CreateTenantDialog() {
           admin_name: adminName.trim() || adminEmail.trim().split('@')[0],
           plan,
           custom_domain: customDomain.trim() || null,
+          deployment_path: deploymentPath,
         }),
       });
 
@@ -153,8 +158,9 @@ export function CreateTenantDialog() {
                 Tenant created
               </DialogTitle>
               <DialogDescription>
-                {created.name} is provisioned. The admin will get a magic-link invite at{' '}
-                <strong>{created.admin_email}</strong>.
+                {created.name} is provisioned and verified. Credentials were emailed to{' '}
+                <strong>{created.admin_email}</strong> — they set their own password on first
+                sign-in.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 text-sm">
@@ -270,6 +276,17 @@ export function CreateTenantDialog() {
                     placeholder="acme.org"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="deployment-path">Site design</Label>
+                <Select value={deploymentPath} onValueChange={(v) => setDeploymentPath(v as 'gleeworld' | 'self')}>
+                  <SelectTrigger id="deployment-path"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gleeworld">We design it — customer never sees setup</SelectItem>
+                    <SelectItem value="self">Customer designs it — guided setup on first sign-in</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
