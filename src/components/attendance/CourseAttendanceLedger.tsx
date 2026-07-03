@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -506,6 +506,7 @@ export const CourseAttendanceLedger: React.FC = () => {
                         )}
                       </TableBody>
                     </Table>
+                    <ScrollBar orientation="horizontal" />
                   </ScrollArea>
                 </CardContent>
               </Card>
@@ -563,6 +564,7 @@ export const CourseAttendanceLedger: React.FC = () => {
                         )}
                       </TableBody>
                     </Table>
+                    <ScrollBar orientation="horizontal" />
                   </ScrollArea>
                 </CardContent>
               </Card>
@@ -612,6 +614,7 @@ export const CourseAttendanceLedger: React.FC = () => {
                         )}
                       </TableBody>
                     </Table>
+                    <ScrollBar orientation="horizontal" />
                   </ScrollArea>
                 </CardContent>
               </Card>

@@ -391,15 +391,15 @@ export default function ScheduleAnalytics() {
         <CardContent>
           <div className="space-y-4">
             {dayAnalysis.map((day) => (
-              <div key={day.day} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-4">
+              <div key={day.day} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg">
+                <div className="flex flex-wrap items-center gap-4">
                   <div className="font-semibold min-w-[100px]">{day.day_name}</div>
                   <Badge variant="secondary">{day.total_students_busy} students busy</Badge>
                   <span className="text-sm text-muted-foreground">
                     Avg: {day.avg_busy_hours}h
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-muted-foreground">Peak hours:</span>
                   {day.peak_hours.slice(0, 2).map((hour, index) => (
                     <Badge key={index} variant="outline" className="text-xs">

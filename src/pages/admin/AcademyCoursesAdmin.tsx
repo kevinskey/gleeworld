@@ -231,8 +231,8 @@ export default function AcademyCoursesAdmin() {
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="flex min-w-0 items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/glee-academy')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>

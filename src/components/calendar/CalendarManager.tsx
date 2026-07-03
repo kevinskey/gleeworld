@@ -214,14 +214,14 @@ export const CalendarManager = () => {
         {calendars.map(calendar => <Card key={calendar.id} className="relative">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded-full" style={{
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="w-4 h-4 shrink-0 rounded-full" style={{
                 backgroundColor: calendar.color
               }} />
-                  <CardTitle className="text-primary-foreground text-xl">{calendar.name}</CardTitle>
+                  <CardTitle className="text-primary-foreground text-xl truncate">{calendar.name}</CardTitle>
                   {calendar.is_default && <Badge variant="secondary">Default</Badge>}
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   <Button size="sm" variant="ghost" onClick={() => toggleVisibility(calendar)}>
                     {calendar.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </Button>

@@ -70,13 +70,13 @@ export const SchedulingDashboard = () => {
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
       <div className="bg-card border-b border-border p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" className="text-muted-foreground">
               ← Back to Agency Dashboard
             </Button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 bg-destructive rounded-full"></div>
               <span className="text-sm font-medium">Well-Launched</span>

@@ -1395,7 +1395,7 @@ function AppleHowItWorks() {
           {steps.map((s) => (
             <div key={s.num} className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-slate-100">
               <div
-                className="text-6xl font-bold mb-4"
+                className="text-5xl sm:text-6xl font-bold mb-4"
                 style={{ background: 'linear-gradient(135deg, #0071e3, #4f46e5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
               >
                 {s.num}

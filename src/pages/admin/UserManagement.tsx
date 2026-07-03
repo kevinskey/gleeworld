@@ -151,12 +151,12 @@ const updateUserRole = async (userId: string, newRole: string) => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold">User Management</h1>
           <p className="text-muted-foreground">Manage member accounts, roles, and permissions</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={() => setShowRosterImport(true)}>
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Import Roster (CSV)

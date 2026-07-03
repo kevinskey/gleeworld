@@ -51,7 +51,7 @@ export default function StudentOnboarding() {
       </header>
 
       <Tabs defaultValue="single">
-        <TabsList className="grid grid-cols-3 w-full">
+        <TabsList className="grid grid-cols-1 sm:grid-cols-3 h-auto w-full">
           <TabsTrigger value="single" className="gap-2"><Mail className="w-4 h-4" /> Single invite</TabsTrigger>
           <TabsTrigger value="roster" className="gap-2"><Upload className="w-4 h-4" /> Upload roster</TabsTrigger>
           <TabsTrigger value="code" className="gap-2"><Hash className="w-4 h-4" /> Join code</TabsTrigger>

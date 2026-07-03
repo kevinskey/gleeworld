@@ -259,7 +259,7 @@ export const DocumentLibrary = () => {
       {/* Header */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FolderOpen className="h-6 w-6" />
@@ -267,7 +267,7 @@ export const DocumentLibrary = () => {
               </CardTitle>
               <p className="text-gray-600 mt-1">Manage all documents across storage buckets</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button onClick={() => setShowCreateDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Upload Document

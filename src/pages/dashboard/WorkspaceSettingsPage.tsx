@@ -59,7 +59,7 @@ export default function WorkspaceSettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-6 max-w-3xl">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 h-auto max-w-3xl">
           <TabsTrigger value="plan"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
           <TabsTrigger value="modules"><Plug className="w-3.5 h-3.5 mr-1.5" />Add-ons</TabsTrigger>
           <TabsTrigger value="navigation"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>

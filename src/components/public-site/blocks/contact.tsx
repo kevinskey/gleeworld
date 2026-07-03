@@ -73,7 +73,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-center space-y-4">
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm" style={{ color: subFg }}>
           {email && (
-            <a href={`mailto:${email}`} className="inline-flex items-center gap-1.5 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>
+            <a href={`mailto:${email}`} className="inline-flex items-center gap-1.5 break-all hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>
               <Mail className="w-4 h-4" /> {email}
             </a>
           )}

@@ -122,7 +122,7 @@ export default function BoxOfficeEventPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Button asChild variant="ghost" size="sm">
           <Link to="/dashboard/box-office"><ArrowLeft className="w-4 h-4 mr-1.5" /> Box Office</Link>
         </Button>

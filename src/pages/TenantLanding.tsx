@@ -163,11 +163,11 @@ export default function TenantLanding() {
       {/* Header strip */}
       <header className="sticky top-0 z-50 bg-[hsl(var(--brand-navy))] text-white border-b border-white/10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt={orgName} className="h-9 sm:h-11 w-auto object-contain" />
-            <span className="font-bold text-base sm:text-lg tracking-tight">{settings.short_name ?? orgName}</span>
+          <Link to="/" className="flex min-w-0 flex-1 items-center gap-3">
+            <img src={logo} alt={orgName} className="h-9 sm:h-11 w-auto object-contain shrink-0" />
+            <span className="font-bold text-base sm:text-lg tracking-tight truncate">{settings.short_name ?? orgName}</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {(settings as any).show_enroll_cta && (
               <Button asChild size="sm" className="bg-white text-gray-900 hover:bg-white/90">
                 <Link to="/enroll">Enroll</Link>

@@ -99,7 +99,7 @@ export default function ListeningHub() {
           {/* Tabbed Content */}
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/30">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto mb-6">
                 <TabsTrigger value="weekly-listening" className="flex items-center gap-2">
                   <Music className="h-4 w-4" />
                   Weekly Listening
