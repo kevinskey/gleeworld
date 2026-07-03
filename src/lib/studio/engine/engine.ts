@@ -47,6 +47,10 @@ export class StudioEngine {
   private metronome: Tone.Synth;
   private metronomeAccent: Tone.Synth;
   private metronomeIntervalId: ReturnType<typeof setInterval> | null = null;
+  // Manual loop wrap timer. A setInterval (not the display RAF, which
+  // pauses in a backgrounded tab) so a looped region keeps wrapping even
+  // when the tab isn't focused.
+  private loopCheckIntervalId: ReturnType<typeof setInterval> | null = null;
   private metronomeBeatInBar = 0;
   // Tracks (audio + MIDI), built from the loaded Session.
   private tracks = new Map<string, EngineTrack>();
@@ -54,9 +58,6 @@ export class StudioEngine {
   // Tone.Transport one-shot schedules registered during play() — kept
   // so stop() can clear ONLY them and leave nothing else dangling.
   private playScheduleIds: number[] = [];
-  // Handler registered on transport 'loop' event so we can re-schedule
-  // clip players when the transport wraps. Nulled when loop disabled.
-  private loopWrapHandler: (() => void) | null = null;
   // React subscribers + position-emit loop.
   private listeners = new Set<Listener>();
   private rafId: number | null = null;
@@ -186,6 +187,7 @@ export class StudioEngine {
   dispose(): void {
     this.stopPositionLoop();
     this.stopMetronomeInterval();
+    this.stopLoopInterval();
     for (const t of this.tracks.values()) t.dispose();
     this.tracks.clear();
     this.metronome.dispose();
@@ -260,47 +262,40 @@ export class StudioEngine {
       }
     }
     if (args.loop) {
-      const t = Tone.getTransport();
-      t.loop = args.loop.enabled;
-      t.loopStart = args.loop.start;
-      t.loopEnd = args.loop.end;
+      // We do NOT use Tone.Transport.loop — in this app's audio graph its
+      // native wrap never fires (the transport runs straight past loopEnd;
+      // verified live). We loop manually instead: a background-safe timer
+      // (startLoopInterval) watches the position and, at loopEnd, wraps by
+      // stop()→seconds=loopStart→start(). That stop/seek/start sequence is
+      // the ONLY reliable way to reposition the Tone 15 transport — writing
+      // transport.seconds while it is *running* is silently a no-op.
+      Tone.getTransport().loop = false;
       this.state.loopEnabled = args.loop.enabled;
       this.state.loopStartSeconds = args.loop.start;
       this.state.loopEndSeconds = args.loop.end;
-
-      // Tone.Transport.loop only wraps the transport clock — it does
-      // NOT re-fire scheduled events or restart Tone.Player instances
-      // when it wraps. Every clip Player.start() call plays its buffer
-      // exactly once and stops; the transport wrapping back to
-      // loopStart is invisible to it. Result: loop button visibly
-      // "on" but only the first pass plays.
-      //
-      // Fix: register a handler on the transport's 'loop' event that
-      // stops any in-flight players and reschedules every clip inside
-      // the loop window at the new (wrapped-back) position.
-      if (this.loopWrapHandler) {
-        try { t.off('loop', this.loopWrapHandler); } catch { /* noop */ }
-        this.loopWrapHandler = null;
-      }
-      if (args.loop.enabled) {
-        const handler = () => {
-          for (const id of this.playScheduleIds) t.clear(id);
-          this.playScheduleIds = [];
-          for (const track of this.tracks.values()) {
-            for (const pb of track.playbacks) {
-              try { pb.player.stop(); } catch { /* not playing */ }
-            }
-          }
-          const wrapPos = t.seconds;  // just wrapped back to loopStart
-          for (const track of this.tracks.values()) {
-            for (const pb of track.playbacks) this.schedulePlayback(pb, wrapPos);
-          }
-        };
-        t.on('loop', handler);
-        this.loopWrapHandler = handler;
-      }
     }
     this.emit();
+  }
+
+  /** Reposition the transport to `seconds` and (re)start playback there,
+   *  rescheduling every clip. Uses stop()→seconds→start() because a bare
+   *  `transport.seconds = x` is ignored while the transport is running. */
+  private repositionAndPlay(seconds: number): void {
+    const transport = Tone.getTransport();
+    for (const id of this.playScheduleIds) transport.clear(id);
+    this.playScheduleIds = [];
+    for (const track of this.tracks.values()) {
+      for (const pb of track.playbacks) {
+        try { pb.player.stop(); } catch { /* not playing */ }
+      }
+    }
+    transport.stop();
+    transport.seconds = seconds;
+    transport.start();
+    this.state.positionSeconds = seconds;
+    for (const track of this.tracks.values()) {
+      for (const pb of track.playbacks) this.schedulePlayback(pb, seconds);
+    }
   }
 
   updateTrackStrip(trackId: string, patch: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }): void {
@@ -397,14 +392,28 @@ export class StudioEngine {
   play(): void {
     const transport = Tone.getTransport();
     let pos = transport.seconds;
+    const looping = this.state.loopEnabled && this.state.loopEndSeconds > this.state.loopStartSeconds;
 
-    // Auto-rewind guard: if the transport has advanced past every
-    // clip's end (typical after playing a clip to completion +
-    // pressing Play again without seeking Home), snap back to 0 so
-    // the next Play actually plays something. Without this, play() 5+
-    // in a row silently do nothing because schedulePlayback returns
-    // early for every clip (clipEnd <= pos). Reproduced as "clip
-    // played 4 times, then no playback".
+    // When looping, always begin at the region's left edge so every Play
+    // auditions the region. When the head sits outside a valid loop window
+    // we must reposition, and while not looping we auto-rewind if the head
+    // is parked past the last clip. Both cases require a real reposition
+    // (stop→seconds→start), since a bare transport.seconds write while the
+    // clock is running is a no-op in Tone 15.
+    if (looping) {
+      this.state.isPlaying = true;
+      this.repositionAndPlay(this.state.loopStartSeconds);
+      if (this.state.metronomeOn) this.startMetronomeInterval();
+      this.startLoopInterval();
+      this.emit();
+      this.startPositionLoop();
+      return;
+    }
+
+    // Auto-rewind guard: if the transport has advanced past every clip's
+    // end (typical after playing a clip to completion + pressing Play
+    // again without seeking Home), snap back to 0 so the next Play
+    // actually plays something.
     let latestClipEnd = 0;
     for (const track of this.tracks.values()) {
       for (const pb of track.playbacks) {
@@ -413,14 +422,17 @@ export class StudioEngine {
       }
     }
     if (latestClipEnd > 0 && pos >= latestClipEnd) {
-      transport.seconds = 0;
-      pos = 0;
-      this.state.positionSeconds = 0;
+      this.state.isPlaying = true;
+      this.repositionAndPlay(0);
+      if (this.state.metronomeOn) this.startMetronomeInterval();
+      this.emit();
+      this.startPositionLoop();
+      return;
     }
 
+    this.state.positionSeconds = pos;
+    // Plain start from the current clock position (no reposition needed).
     transport.start();
-    // Clear any leftover schedules from a prior play() that didn't run
-    // to completion, then re-register fresh schedules for every clip.
     for (const id of this.playScheduleIds) transport.clear(id);
     this.playScheduleIds = [];
     for (const track of this.tracks.values()) {
@@ -430,6 +442,27 @@ export class StudioEngine {
     if (this.state.metronomeOn) this.startMetronomeInterval();
     this.emit();
     this.startPositionLoop();
+  }
+
+  private startLoopInterval(): void {
+    if (this.loopCheckIntervalId !== null) return;
+    this.loopCheckIntervalId = setInterval(() => {
+      if (!this.state.isPlaying) return;
+      if (
+        this.state.loopEnabled &&
+        this.state.loopEndSeconds > this.state.loopStartSeconds &&
+        Tone.getTransport().seconds >= this.state.loopEndSeconds
+      ) {
+        this.repositionAndPlay(this.state.loopStartSeconds);
+      }
+    }, 25);
+  }
+
+  private stopLoopInterval(): void {
+    if (this.loopCheckIntervalId !== null) {
+      clearInterval(this.loopCheckIntervalId);
+      this.loopCheckIntervalId = null;
+    }
   }
 
   /** Schedule a single clip for the current play() run. Handles both
@@ -462,6 +495,7 @@ export class StudioEngine {
     Tone.getTransport().pause();
     this.state.isPlaying = false;
     this.stopMetronomeInterval();
+    this.stopLoopInterval();
     this.emit();
     this.stopPositionLoop();
   }
@@ -483,6 +517,7 @@ export class StudioEngine {
     this.state.isPlaying = false;
     this.state.positionSeconds = wherePaused;
     this.stopMetronomeInterval();
+    this.stopLoopInterval();
     this.emit();
     this.stopPositionLoop();
   }

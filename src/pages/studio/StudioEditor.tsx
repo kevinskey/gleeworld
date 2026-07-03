@@ -723,7 +723,10 @@ function Editor({
           (async () => {
             try {
               await start();
-              if (loopEnabled && loopRegion) engineState.seek?.(loopRegion.start);
+              // Don't seek to the loop start here — writing transport
+              // position before play() while looping freezes Tone's
+              // transport. play() now snaps to loopStart itself using an
+              // atomic start(offset).
               await play();
             } catch (e) {
               toast.error('Could not start playback', {
@@ -939,12 +942,10 @@ function Editor({
         <button onClick={async () => {
             try {
               await start();
-              // When a loop region is armed, every Play starts at the
-              // region's left edge — so the user can audition the region
-              // without manually rewinding first.
-              if (loopEnabled && loopRegion) {
-                engineState.seek?.(loopRegion.start);
-              }
+              // When a loop region is armed, play() snaps to the region's
+              // left edge itself (atomic start-with-offset). We must NOT
+              // seek here first — writing transport position before
+              // starting while looping freezes Tone's transport clock.
               await play();
             } catch (e) {
               toast.error('Could not start playback', {
