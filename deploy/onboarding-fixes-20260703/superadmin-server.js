@@ -211,9 +211,12 @@ async function runHealthCheck(tenantId) {
         if (tenantId) q = q.eq('tenant_id', tenantId);
         const { count, error } = await q;
         if (error) {
-          // tenant_id column might not exist on some shared tables (e.g. gw_modules);
-          // when scoping a tenant, those still count as "ok" if the unfiltered query works.
-          if (tenantId && /column .* tenant_id .* does not exist/i.test(error.message || '')) {
+          // tenant_id column might not exist on some shared tables (e.g. gw_modules,
+          // user_roles). These are HEAD requests, so PostgREST's error body is
+          // dropped and error.code/message are empty — the only reliable signal
+          // is to retry unfiltered: if that works, the table exists and just
+          // isn't tenant-scoped.
+          if (tenantId) {
             const { count: c2, error: e2 } = await sa.from(t).select('*', { head: true, count: 'exact' });
             if (e2) { tablesFailed++; reasons.push(`table ${t}: ${e2.code || e2.message}`); }
             else { tablesOk++; totalRows += c2 || 0; }
