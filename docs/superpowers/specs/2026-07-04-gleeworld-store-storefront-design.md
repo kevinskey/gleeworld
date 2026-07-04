@@ -49,7 +49,7 @@ Avoid the audit's unauthenticated order IDOR. Mirror Box Office's `access_token`
 
 ## Section 3 — Storefront (rewire)
 
-- **`/store`** (`Shop.tsx`): grid from `gw_products` (active, platform tenant `bb48609d…` via a public read RPC or an anon-safe view — since money tables are service-role-only, product reads need a public path: reuse the existing product-fetch or add a read-only `gw_products` policy for `anon` scoped to `is_active=true`). Physical/digital badges. `gleeworld-design` tokens; responsive to 375px.
+- **`/store`** (`Shop.tsx`): grid from a **read-only RPC** `gw_store_list_products()` (SECURITY DEFINER, returns only active platform-tenant products + variants/images/price — no PII, no money columns). No anon RLS policy is added to `gw_products`; the catalog is exposed *only* through this controlled function, and `EXECUTE` is granted to `anon`/`authenticated`. Physical/digital badges. `gleeworld-design` tokens; responsive to 375px.
 - **Cart**: `src/features/store/cart.ts` — localStorage, `{product_id, variant_id?, quantity}`; add/remove/qty; never stores price.
 - **Checkout** (`CheckoutPage.tsx`): collect `buyer_email` (+ shipping address when any item `requires_shipping`); POST to `store-checkout`; `window.location = url`. Repoint/delete the old `create-stripe-checkout`/`shop-checkout`/`verify-*` callers (`Checkout.tsx`, old `shop/Success.tsx` write path) — completes Core Task 7's deferred deletions.
 - **`/store/success`** (new page): reads `?order=&t=` via `store-order-status`; shows "Payment confirmed" / "Processing…" (poll a few times if still pending — webhook may lag a second); for digital items, render `store-download` links. Purely presentational.
@@ -60,7 +60,7 @@ Avoid the audit's unauthenticated order IDOR. Mirror Box Office's `access_token`
 - **`OrdersManager` / `OrderDetailDrawer`**: list/read `gw_store_orders` + items (status, buyer, amount, shipping).
 - **Refunds — `store-refund` edge fn** (new): `verifyJwtClaims` + admin role gate; calls Stripe refund on the order's `payment_intent` AND `gw_store_refund_order(order_id)` so Stripe and our DB stay in sync (status→refunded, stock restored). Idempotent.
 - `InventoryManager`/`PaymentsManager` repointed to the new tables. `DiscountsManager` left dormant (YAGNI).
-- **Product read for the public storefront**: add an `anon`/`authenticated` SELECT policy on `gw_products` limited to `is_active=true` (products aren't money rows; safe to expose the catalog). Money tables stay service-role-only.
+- **Product read for the public storefront**: exposed via the read-only `gw_store_list_products()` RPC (Section 3) — NOT an anon RLS policy on `gw_products`. Admin CRUD stays behind the existing admin-gated authenticated paths. Money tables stay service-role-only.
 
 ## Section 5 — Reconciliation (orphan pending orders)
 
