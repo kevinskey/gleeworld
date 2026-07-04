@@ -180,6 +180,9 @@ function assert(cond: boolean, msg: string) {
   assert(res.status === 403, `slug for a tenant without the store add-on -> 403 (got ${res.status})`);
   const b = await res.json();
   assert(b.error === 'Store add-on not enabled', `error names the add-on (got ${JSON.stringify(b)})`);
+
+  const orderPosts = calls.filter((c) => c.url.includes('/rest/v1/gw_store_orders') && c.method === 'POST');
+  assert(orderPosts.length === 0, `no add-on -> no gw_store_orders row is ever written (got ${orderPosts.length} POST(s))`);
 }
 
 // ---- (c) tenant has the sub but NULL stripe_account_id -> 400 'store not
@@ -195,6 +198,9 @@ function assert(cond: boolean, msg: string) {
   assert(res.status === 400, `sub active but no connected Stripe account -> 400 (got ${res.status})`);
   const b = await res.json();
   assert(b.error === 'store not ready', `error message is 'store not ready' (got ${JSON.stringify(b)})`);
+
+  const orderPosts = calls.filter((c) => c.url.includes('/rest/v1/gw_store_orders') && c.method === 'POST');
+  assert(orderPosts.length === 0, `no connected Stripe account -> no gw_store_orders row is ever written (got ${orderPosts.length} POST(s))`);
 }
 
 // ---- (d) guest tenant checkout with NO tenant_slug -> 401 (can't resolve

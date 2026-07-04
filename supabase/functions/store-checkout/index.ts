@@ -95,6 +95,9 @@ export async function handler(req: Request): Promise<Response> {
     }
     if (!tenantId) return j({ error: 'no tenant' }, 400);
 
+    // Which Stripe account collects — server-resolved. Stays null for the
+    // platform ('gleeworld') store_type.
+    let account: string | null = null;
     if (store_type === 'tenant') {
       // Add-on gate: require an active/trial 'store' module subscription.
       // Applies identically to guest and JWT tenant orders — re-checked
@@ -102,6 +105,15 @@ export async function handler(req: Request): Promise<Response> {
       const subs = await pg(`gw_tenant_subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&module_id=eq.store&select=status`);
       const ok = Array.isArray(subs) && subs.some((s: any) => ['active', 'trial'].includes(s.status));
       if (!ok) return j({ error: 'Store add-on not enabled' }, 403);
+
+      // Resolve the Connect account BEFORE any gw_store_orders/items rows are
+      // written. Doing this after order creation let an anonymous caller
+      // enumerate tenant slugs and spam pending orders for any tenant with an
+      // active add-on but no connected Stripe account — every such request
+      // would fail at 'store not ready', but only after the row existed.
+      const t = await pg(`gw_tenants?id=eq.${encodeURIComponent(tenantId)}&select=stripe_account_id`);
+      account = (Array.isArray(t) && t[0]?.stripe_account_id) || null;
+      if (!account) return j({ error: 'store not ready' }, 400);
     }
 
     // Server-side price lookup; client never sends amounts.
@@ -180,13 +192,6 @@ export async function handler(req: Request): Promise<Response> {
     for (const oi of orderItems) oi.order_id = order.id;
     await pg('gw_store_order_items', { method: 'POST', body: JSON.stringify(orderItems) });
 
-    // Which Stripe account collects — server-resolved.
-    let account: string | null = null;
-    if (store_type === 'tenant') {
-      const t = await pg(`gw_tenants?id=eq.${encodeURIComponent(tenantId)}&select=stripe_account_id`);
-      account = (Array.isArray(t) && t[0]?.stripe_account_id) || null;
-      if (!account) return j({ error: 'store not ready' }, 400);
-    }
     const origin = req.headers.get('origin') ?? 'https://gleeworld.org';
     const { url } = await createCheckout('stripe', {
       account,
