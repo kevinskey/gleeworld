@@ -813,7 +813,7 @@ export const COMPREHENSIVE_FUNCTIONS_LIST: PermissionFunction[] = [
     id: 'stripe_checkout',
     name: 'Stripe Checkout',
     description: 'Process payments via Stripe',
-    location: 'create-stripe-checkout function',
+    location: 'store-checkout function',
     isActive: true,
     category: 'Merchandise'
   },

@@ -106,12 +106,6 @@ verify_jwt = false
 [functions.square-oauth]
 verify_jwt = true
 
-[functions.create-stripe-checkout]
-verify_jwt = false
-
-[functions.verify-stripe-payment]
-verify_jwt = false
-
 [functions.create-payment]
 verify_jwt = false
 
