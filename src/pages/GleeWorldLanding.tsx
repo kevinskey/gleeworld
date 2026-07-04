@@ -513,6 +513,11 @@ const HEADING_STYLE = { fontFamily: SANS, textTransform: 'none' as const };
 
 const MAILTO_BUY =
   'mailto:kevin@gleeworld.org?subject=GleeWorld%20for%20my%20group&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20set%20up%20GleeWorld%20for%20my%20group.%0A%0AName%20of%20organization%3A%20%0ASize%20%28approx%20students%29%3A%20%0APreferred%20subdomain%3A%20%0AHow%20did%20you%20find%20us%3F%20%0A%0AThanks%21';
+// The Personal tier is billed to an individual musician, not a tenant — its
+// mailto body must never ask for an organization/subdomain (that's nonsense
+// for a solo signup). Same address as MAILTO_BUY, different subject/body.
+const MAILTO_PERSONAL =
+  'mailto:kevin@gleeworld.org?subject=GleeWorld%20Personal&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20sign%20up%20for%20GleeWorld%20Personal.%0A%0AName%3A%20%0AWhat%20I%27d%20use%20it%20for%3A%20%0A%0AThanks%21';
 const MAILTO_DEMO = 'mailto:kevin@gleeworld.org?subject=GleeWorld%20demo%20request';
 
 // "Get started" buttons across the marketing site open a single shared
@@ -1602,6 +1607,11 @@ function ApplePricing() {
             const featured = tier.id === 'director_60';
             const checkoutLink = PLAN_CHECKOUT_LINKS[tier.id];
             const priceLabel = tier.quote ? `From ${formatPrice(tier.monthlyCents)}` : formatPrice(tier.monthlyCents);
+            // Per-tier annual savings — the old copy claimed a blanket "2
+            // months free" for every tier, which is false for Personal
+            // (899×12=10788 vs 7900 ≈ 3.2 months, not 2). Compute it per
+            // tier instead so the number is always accurate.
+            const monthsFree = Math.round(12 - tier.annualCents / tier.monthlyCents);
 
             return (
               <div
@@ -1630,6 +1640,11 @@ function ApplePricing() {
                   </span>
                   <span className="text-base text-slate-600">/mo</span>
                 </div>
+                {monthsFree >= 1 && (
+                  <p className="text-xs text-slate-500 -mt-3 mb-5">
+                    Annual {formatPrice(tier.annualCents)} · {monthsFree} month{monthsFree === 1 ? '' : 's'} free
+                  </p>
+                )}
                 <ul className="space-y-2.5 mb-8 flex-grow">
                   {tier.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
@@ -1639,7 +1654,7 @@ function ApplePricing() {
                   ))}
                 </ul>
                 <a
-                  href={checkoutLink || MAILTO_BUY}
+                  href={checkoutLink || (isPersonal ? MAILTO_PERSONAL : MAILTO_BUY)}
                   className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
                   style={featured
                     ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
@@ -1648,10 +1663,16 @@ function ApplePricing() {
                   {/* PLAN_CHECKOUT_LINKS is all null until the launch gate (see
                       docs/superpowers/plans/2026-07-04-tiers-billing.md) creates
                       real Stripe Payment Links per PlanTierId. Institution is
-                      always quote-based. Until real links exist, every CTA is
-                      an honest "Talk to us" mailto — never imply self-serve
-                      checkout that doesn't exist yet. */}
-                  {checkoutLink && !tier.quote ? `Start with ${tier.label}` : 'Talk to us'}
+                      always quote-based. Until real links exist, non-quote
+                      tiers show an honest "Coming soon" label (self-serve
+                      checkout doesn't exist yet); the quote tier keeps its
+                      normal "Talk to us" since that's the real, permanent CTA
+                      for institutions regardless of launch gate. */}
+                  {checkoutLink && !tier.quote
+                    ? `Start with ${tier.label}`
+                    : tier.quote
+                      ? 'Talk to us'
+                      : 'Coming soon — talk to us'}
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
@@ -1660,7 +1681,7 @@ function ApplePricing() {
         </div>
 
         <p className="text-center text-sm text-slate-500 mt-10 max-w-2xl mx-auto">
-          Annual billing available on every tier (2 months free vs. paying monthly).
+          Annual billing available on every tier — see each card for exact savings.
           Educational institutions get 20% off all tiers. All plans include hosting, SSL,
           automatic backups, and ongoing platform updates.
         </p>
