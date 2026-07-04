@@ -29,6 +29,14 @@ public final class TrackBinding {
     // Audio-track resources (push path — default).
     private var playerNodes: [AVAudioPlayerNode] = []
     private var loadedClips: [(clip: Studio.AudioClip, file: AVAudioFile, player: AVAudioPlayerNode)] = []
+    /// Players whose clips were deleted while the engine was running.
+    /// Detaching a node from a LIVE AVAudioEngine can sever neighboring
+    /// graph links (same instability as the loadSession bulk-connect
+    /// problem — device-reported as "deleted a clip and the sound
+    /// stopped"). Deleted clips are stopped immediately (silent) and
+    /// the node is physically detached later, in dispose(), when the
+    /// graph is being torn down anyway.
+    private var retiredPlayers: [AVAudioPlayerNode] = []
 
     // Audio-track resources (pull path — opt-in via Engine flag).
     // When `pullRenderer` is non-nil, the track's audio is driven by a
@@ -315,16 +323,51 @@ public final class TrackBinding {
     }
 
     /// Remove a clip's player without touching the rest of the track.
+    /// See `retiredPlayers` — the node is only detached immediately when
+    /// the engine is stopped; on a live graph it is stopped (silent) and
+    /// parked for detach at dispose() time.
     public func removeClip(clipId: String) {
         guard let idx = loadedClips.firstIndex(where: { $0.clip.id == clipId }) else { return }
         let entry = loadedClips[idx]
-        entry.player.stop()
-        engine.disconnectNodeInput(entry.player)
-        engine.detach(entry.player)
+        if let err = StudioObjC.catchExceptions({ entry.player.stop() }) {
+            NSLog("[Studio] removeClip stop raised \(err.localizedDescription)")
+        }
+        if engine.isRunning {
+            retiredPlayers.append(entry.player)
+        } else {
+            engine.disconnectNodeInput(entry.player)
+            engine.detach(entry.player)
+        }
         if let pidx = playerNodes.firstIndex(of: entry.player) {
             playerNodes.remove(at: pidx)
         }
         loadedClips.remove(at: idx)
+    }
+
+    /// Re-assert this track's mixer chain. If a live-graph mutation
+    /// severed strip → muteGate or muteGate → master, every clip on the
+    /// track goes silent with no error; play() calls this as a cheap
+    /// self-heal. Only runs for tracks that actually hold clips —
+    /// zero-input mixers get pruned from the active render graph and
+    /// legitimately report no output connection.
+    public func verifyWiring() {
+        guard !loadedClips.isEmpty || instrument != nil else { return }
+        if engine.outputConnectionPoints(for: strip, outputBus: 0).isEmpty {
+            NSLog("[Studio] track \(trackId): strip output severed — rewiring")
+            if let err = StudioObjC.catchExceptions({
+                self.engine.connect(self.strip, to: self.muteGate, format: nil)
+            }) { NSLog("[Studio] strip rewire raised \(err.localizedDescription)") }
+        }
+        if engine.outputConnectionPoints(for: muteGate, outputBus: 0).isEmpty {
+            NSLog("[Studio] track \(trackId): muteGate output severed — rewiring")
+            if let err = StudioObjC.catchExceptions({
+                if let chain = self.fxChain {
+                    self.engine.connect(self.muteGate, to: chain.input, format: nil)
+                } else {
+                    self.engine.connect(self.muteGate, to: self.master, format: nil)
+                }
+            }) { NSLog("[Studio] muteGate rewire raised \(err.localizedDescription)") }
+        }
     }
 
     public func hasClip(clipId: String) -> Bool {
@@ -393,6 +436,11 @@ public final class TrackBinding {
             engine.disconnectNodeInput(p)
             engine.detach(p)
         }
+        for p in retiredPlayers {
+            engine.disconnectNodeInput(p)
+            engine.detach(p)
+        }
+        retiredPlayers.removeAll()
         playerNodes.removeAll()
         loadedClips.removeAll()
         if let inst = instrument { inst.dispose() }

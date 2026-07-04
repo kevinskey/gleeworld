@@ -16,7 +16,7 @@ import {
   Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download,
   Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
-  ChevronLeft, Repeat, SlidersHorizontal, X, MoreVertical,
+  ChevronLeft, Repeat, SlidersHorizontal, X, MoreVertical, Undo2,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -298,6 +298,10 @@ function Editor({
   // reload — happens once, on release. Committing per drag-tick would
   // rebuild the native audio graph dozens of times per second.
   const [tempoDraft, setTempoDraft] = useState<number | null>(null);
+  // Controlled so the phone tools row's BPM chip can open the settings
+  // sheet directly — the bare sliders icon wasn't discoverable enough
+  // ("no way to set tempo on mobile").
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const commitTempoDraft = () => {
     setTempoDraft((draft) => {
       if (draft !== null) {
@@ -480,51 +484,49 @@ function Editor({
       // count-in. Doing it inside nativeRecordStart put a 100-500 ms
       // category transition between the last count-in click and beat 1,
       // so the metronome grid started late on recording runs.
+      const startSec = state?.positionSeconds ?? 0;
+
+      // iOS: the ENTIRE count-in → recorder → transport sequence runs
+      // on one native clock (recordWithCountIn). Driving the count-in
+      // from JS and then crossing the bridge twice (recordStart, play)
+      // put 100-300 ms of serial latency between the last count-in
+      // click and grid beat 1 — the take's click grid always started
+      // audibly late off the pulse. JS keeps only the visual countdown.
       if (engineState.native && engineState.nativeRecordStart) {
         const { NativeStudio } = await import('@/plugins/studioEngine');
-        await NativeStudio.prepareRecordSession().catch(() => { /* recordStart will retry */ });
-      }
+        await NativeStudio.prepareRecordSession().catch(() => { /* recordWithCountIn will retry */ });
 
-      // Optional count-in: if enabled, click for N bars before the mic
-      // opens. The engine's metronome scheduleRepeat only fires while
-      // the transport is running, so we drive the audible count via a
-      // direct synth trigger here. The metronome toggle is NOT touched:
-      // count-in owns the pre-roll clicks, and whether the click keeps
-      // ticking through the take follows the user's metronome button —
-      // auto-arming it here meant every record run got a click the
-      // user never asked for.
-      if (countInBars > 0) {
         const secPerBeat = 60 / session.tempo_bpm;
         const numerator = session.time_signature.numerator;
         const totalBeats = countInBars * numerator;
-        let beatIdx = 0;
-        engineState.triggerMetronomeClick?.(true);
-        setCountInBeat(1);
-        const audioTimer = setInterval(() => {
-          beatIdx += 1;
-          if (beatIdx >= totalBeats) return; // last click already fired
-          engineState.triggerMetronomeClick?.(beatIdx % numerator === 0);
-          setCountInBeat(beatIdx + 1);
-        }, secPerBeat * 1000);
-        await new Promise<void>((resolve) => setTimeout(resolve, totalBeats * secPerBeat * 1000));
-        clearInterval(audioTimer);
-        setCountInBeat(null);
-      }
 
-      const startSec = state?.positionSeconds ?? 0;
-      const startedAt = performance.now();
-
-      // On iOS Capacitor we run the AVAudioEngine input tap instead of
-      // Tone.UserMedia / getUserMedia / MediaRecorder — MediaRecorder
-      // is too unreliable inside WKWebView to ship as the takes path.
-      if (engineState.native && engineState.nativeRecordStart) {
-        await engineState.nativeRecordStart();
+        // Visual-only countdown badge — audio clicks are native now.
+        let visualTimer: ReturnType<typeof setInterval> | null = null;
+        if (totalBeats > 0) {
+          let beatIdx = 0;
+          setCountInBeat(1);
+          visualTimer = setInterval(() => {
+            beatIdx += 1;
+            if (beatIdx >= totalBeats) return;
+            setCountInBeat(beatIdx + 1);
+          }, secPerBeat * 1000);
+        }
+        try {
+          await NativeStudio.recordWithCountIn({
+            countInBeats: totalBeats,
+            secondsPerBeat: secPerBeat,
+            beatsPerBar: numerator,
+          });
+        } finally {
+          if (visualTimer) clearInterval(visualTimer);
+          setCountInBeat(null);
+        }
+        const startedAt = performance.now();
         setRecording({
           recorder: null, native: true,
           startSeconds: startSec, startWallMs: startedAt,
           armedTrackIds, peaks: [],
         });
-        if (!state?.isPlaying) play();
         toast.success('Recording — click ● again to stop');
 
         // Subscribe to live peak-dB events from the native AVAudioRecorder
@@ -532,7 +534,6 @@ function Editor({
         // of the actual mic input — without this the waveform would be
         // empty for the duration of the take and only fill in after stop,
         // which the user saw as "10 seconds to appear".
-        const { NativeStudio } = await import('@/plugins/studioEngine');
         const peakHandle = await NativeStudio.addListener('recordPeak', (e: { db: number }) => {
           latestPeakDbRef.current = e.db;
         });
@@ -557,6 +558,27 @@ function Editor({
         recRafRef.current = requestAnimationFrame(nativeTick);
         return;
       }
+
+      // Web path: Tone.UserMedia + MediaRecorder. Count-in for web
+      // stays JS-driven (same-context audio, no bridge seam).
+      if (countInBars > 0) {
+        const secPerBeat = 60 / session.tempo_bpm;
+        const numerator = session.time_signature.numerator;
+        const totalBeats = countInBars * numerator;
+        let beatIdx = 0;
+        engineState.triggerMetronomeClick?.(true);
+        setCountInBeat(1);
+        const audioTimer = setInterval(() => {
+          beatIdx += 1;
+          if (beatIdx >= totalBeats) return;
+          engineState.triggerMetronomeClick?.(beatIdx % numerator === 0);
+          setCountInBeat(beatIdx + 1);
+        }, secPerBeat * 1000);
+        await new Promise<void>((resolve) => setTimeout(resolve, totalBeats * secPerBeat * 1000));
+        clearInterval(audioTimer);
+        setCountInBeat(null);
+      }
+      const startedAt = performance.now();
 
       // Web path: Tone.UserMedia + MediaRecorder.
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
@@ -981,7 +1003,7 @@ function Editor({
         {/* Go to start */}
         <button
           onClick={() => engineState.seek?.(0)}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Go to beginning (Home)">
           <SkipBack className="w-4 h-4" />
         </button>
@@ -1115,7 +1137,7 @@ function Editor({
         {/* Mobile-only: open a bottom sheet with all the secondary
          * controls (count-in, tempo, snap, grid, end) so the transport
          * bar can fit on a single phone-width row. */}
-        <Sheet>
+        <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
             <button
               className="sm:hidden ml-auto h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
@@ -1215,6 +1237,34 @@ function Editor({
             </div>
           </SheetContent>
         </Sheet>
+
+        {/* Phone tools row — always its own full-width line under the
+         * transport controls. Tempo, count-in, and undo were reported
+         * as unreachable on mobile: tempo/count-in hid behind an
+         * unlabeled icon and undo was keyboard-only. */}
+        <div className="sm:hidden w-full flex items-center gap-1.5 pt-1">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="h-10 px-3 rounded border border-border bg-muted hover:bg-muted/70 text-sm font-semibold tabular-nums"
+            aria-label="Set tempo"
+          >
+            {tempoDraft ?? session.tempo_bpm} BPM
+          </button>
+          <button
+            onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
+            className={`h-10 px-3 rounded border text-sm font-semibold ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground'}`}
+            aria-label="Count-in bars"
+          >
+            Count-in {countInBars === 0 ? 'off' : `${countInBars}`}
+          </button>
+          <button
+            onClick={undo}
+            className="h-10 px-3 rounded border border-border bg-muted hover:bg-muted/70 text-sm font-semibold inline-flex items-center gap-1.5 ml-auto"
+            aria-label="Undo"
+          >
+            <Undo2 className="w-4 h-4" /> Undo
+          </button>
+        </div>
 
         {/* Count-in cycle button: Off → 1 bar → 2 bars → Off. Lives in
          * the transport bar so it sits with the other recording controls. */}
@@ -3188,7 +3238,7 @@ function DarkTrackRow({
         {/* Right-edge resize handle (affects all strips uniformly) */}
         <div
           onPointerDown={onStripResize}
-          className="absolute top-0 bottom-0 right-0 w-1.5 cursor-ew-resize hover:bg-primary/20 z-20"
+          className="hidden sm:block absolute top-0 bottom-0 right-0 w-1.5 cursor-ew-resize hover:bg-primary/20 z-20"
           title="Drag to resize track strip"
         />
         {/* Color stripe */}
@@ -3215,10 +3265,10 @@ function DarkTrackRow({
             <Sheet>
               <SheetTrigger asChild>
                 <button
-                  className="sm:hidden shrink-0 h-8 w-8 rounded flex items-center justify-center text-muted-foreground hover:bg-muted"
+                  className="sm:hidden shrink-0 h-10 w-10 -mr-1 rounded flex items-center justify-center text-muted-foreground hover:bg-muted"
                   aria-label={`Track actions for ${track.name}`}
                 >
-                  <MoreVertical className="w-4 h-4" />
+                  <MoreVertical className="w-5 h-5" />
                 </button>
               </SheetTrigger>
               <SheetContent side="bottom" className="max-h-[70dvh] overflow-y-auto">
