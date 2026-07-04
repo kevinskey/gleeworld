@@ -105,6 +105,8 @@ interface IssueResult {
   tickets?: Array<{ id: string; token: string; tier_name: string }>;
 }
 
+import { verifyJwtClaims } from '../_shared/verifyJwt.ts'
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
@@ -117,7 +119,7 @@ Deno.serve(async (req) => {
     let tenantId: string | null = null
     let tenantRole: string | null = null
     try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+      const payload = (await verifyJwtClaims(accessToken)) ?? {}
       tenantId = payload.tenant_id ?? null
       tenantRole = payload.tenant_role ?? null
     } catch {

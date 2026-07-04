@@ -111,6 +111,8 @@ interface Ticket {
   holder_name: string | null
 }
 
+import { verifyJwtClaims } from '../_shared/verifyJwt.ts'
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
@@ -126,7 +128,7 @@ Deno.serve(async (req) => {
     let userId: string | null = null
     let tenantId: string | null = null
     try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+      const payload = (await verifyJwtClaims(accessToken)) ?? {}
       userId = payload.sub ?? null
       tenantId = payload.tenant_id ?? null
     } catch {

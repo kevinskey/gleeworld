@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,14 @@ serve(async (req) => {
   }
 
   try {
+    // POS is a staff register: line-item prices are entered by the cashier
+    // by design, so this MUST be gated to authenticated staff. Without it
+    // the endpoint was world-callable — anyone could mint Stripe payment
+    // links for arbitrary amounts against the live account.
+    const caller = await authenticateCaller(req);
+    if (!caller) return unauthorizedResponse(corsHeaders, 401);
+    if (!caller.internal && !caller.isAdmin) return unauthorizedResponse(corsHeaders, 403);
+
     const { cartItems, requiresShipping, shippingMode, shippingAddress, couponCode } = await req.json();
 
     if (!cartItems || cartItems.length === 0) {

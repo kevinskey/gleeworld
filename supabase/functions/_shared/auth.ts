@@ -38,6 +38,39 @@ export async function authenticateCaller(req: Request): Promise<Caller | null> {
   return { internal: false, userId: userData.user.id, isAdmin };
 }
 
+// Verify a user JWT's SIGNATURE via getUser(), then return its decoded
+// claims. Edge functions run behind VERIFY_JWT=false, so decoding claims
+// with a bare atob() (as several Box Office functions did) trusts any
+// self-signed token — a forged tenant_id/tenant_role is fully honored.
+// This gate makes the claims trustworthy: getUser() rejects any token not
+// signed by GoTrue before we ever read tenant_id/tenant_role.
+//
+// Returns the claims object on success, or null when the token is missing,
+// malformed, or fails signature verification.
+export async function verifyClaims(req: Request): Promise<Record<string, any> | null> {
+  const authHeader = req.headers.get('Authorization') || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  if (!token) return null;
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) return null;
+
+  try {
+    const claims = JSON.parse(
+      atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+    );
+    // Bind claims to the verified user so a valid-but-mismatched token
+    // can't be paired with a different body.
+    return { ...claims, sub: data.user.id, email: data.user.email };
+  } catch {
+    return null;
+  }
+}
+
 export function unauthorizedResponse(corsHeaders: Record<string, string>, status = 401): Response {
   return new Response(
     JSON.stringify({ error: status === 403 ? 'Admin role required' : 'Unauthorized' }),
