@@ -3188,7 +3188,7 @@ function DarkTrackRow({
         {/* Right-edge resize handle (affects all strips uniformly) */}
         <div
           onPointerDown={onStripResize}
-          className="absolute top-0 bottom-0 right-0 w-1.5 cursor-ew-resize hover:bg-primary/20 z-20"
+          className="hidden sm:block absolute top-0 bottom-0 right-0 w-1.5 cursor-ew-resize hover:bg-primary/20 z-20"
           title="Drag to resize track strip"
         />
         {/* Color stripe */}
@@ -3215,10 +3215,10 @@ function DarkTrackRow({
             <Sheet>
               <SheetTrigger asChild>
                 <button
-                  className="sm:hidden shrink-0 h-8 w-8 rounded flex items-center justify-center text-muted-foreground hover:bg-muted"
+                  className="sm:hidden shrink-0 h-10 w-10 -mr-1 rounded flex items-center justify-center text-muted-foreground hover:bg-muted"
                   aria-label={`Track actions for ${track.name}`}
                 >
-                  <MoreVertical className="w-4 h-4" />
+                  <MoreVertical className="w-5 h-5" />
                 </button>
               </SheetTrigger>
               <SheetContent side="bottom" className="max-h-[70dvh] overflow-y-auto">

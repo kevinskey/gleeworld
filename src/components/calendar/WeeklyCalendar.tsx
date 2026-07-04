@@ -234,6 +234,10 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
         </div>
       </div>
 
+      {/* Horizontal scroll wrapper: on phones the 7-day grid keeps ≥80px
+          columns and pans sideways; headers + body scroll together. */}
+      <div className="flex-1 min-h-0 overflow-x-auto">
+      <div className="flex h-full min-w-[616px] flex-col">
       {/* Day headers (sticky) */}
       <div className="grid shrink-0 border-b border-border bg-background" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
         {/* Gutter */}
@@ -405,6 +409,8 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
             </div>
           )}
         </div>
+      </div>
+      </div>
       </div>
 
       {/* Dialogs */}

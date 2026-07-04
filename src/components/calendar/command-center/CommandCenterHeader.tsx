@@ -50,7 +50,7 @@ export const CommandCenterHeader = ({
       {isMobile ? (
         <div className="flex flex-col gap-2.5">
           {/* Row 1: Month nav + Today + Add Event */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-y-2">
             <div className="flex items-center">
               <button 
                 onClick={() => onNavigateMonth('prev')} 
@@ -58,7 +58,7 @@ export const CommandCenterHeader = ({
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
-              <div className="min-w-[140px] text-center">
+              <div className="min-w-[88px] text-center">
                 <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-base uppercase">
                   {format(currentDate, 'MMM yyyy')}
                 </h1>
@@ -70,10 +70,10 @@ export const CommandCenterHeader = ({
                 <ChevronRight className="h-6 w-6" />
               </button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-2">
               <button 
                 onClick={onToday}
-                className="h-9 px-4 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
+                className="h-9 px-3 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
               >
                 Today
               </button>

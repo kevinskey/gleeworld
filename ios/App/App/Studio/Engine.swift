@@ -388,6 +388,7 @@ public final class StudioNativeEngine {
         }
         if isPlayingNow { NSLog("[Studio] play: already playing, no-op"); return }
         ensureMasterWired()
+        for (_, t) in tracks { t.verifyWiring() }
 
         // Auto-rewind: if the head is parked at/after the end of the
         // last clip (typical after a take plays out), snap to 0 so Play
