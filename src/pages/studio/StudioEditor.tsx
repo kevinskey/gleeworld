@@ -16,7 +16,7 @@ import {
   Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download,
   Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
-  ChevronLeft, Repeat, SlidersHorizontal,
+  ChevronLeft, Repeat, SlidersHorizontal, X, MoreVertical,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -319,6 +319,24 @@ function Editor({
 
   // Inspector for the currently-selected clip. null = no inspector.
   const [selectedClip, setSelectedClip] = useState<{ trackId: string; clipId: string } | null>(null);
+
+  // Shared by the desktop keyboard shortcut (Delete/Backspace) and the
+  // phone-only clip action bar — phones have no keyboard, which left
+  // clips undeletable on iPhone.
+  const deleteSelectedClip = () => {
+    if (!selectedClip) return;
+    pushHistory(session);
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => t.id !== selectedClip.trackId ? t : {
+        ...t,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        clips: (t as any).clips.filter((c: { id: string }) => c.id !== selectedClip.clipId),
+      } as Track),
+    }));
+    setSelectedClip(null);
+    toast.success('Clip deleted');
+  };
   // The session lives in the session hook (`sessionState`). Reach
   // inside to compute snapSeconds from tempo + time-sig before any
   // child needs it. If the session hasn't loaded yet, fall back to a
@@ -843,17 +861,7 @@ function Editor({
         engineState.seek?.(session.length_seconds);
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && !hasMod && selectedClip) {
         e.preventDefault();
-        pushHistory(session);
-        update((s) => ({
-          ...s,
-          tracks: s.tracks.map((t) => t.id !== selectedClip.trackId ? t : {
-            ...t,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clips: (t as any).clips.filter((c: { id: string }) => c.id !== selectedClip.clipId),
-          } as Track),
-        }));
-        setSelectedClip(null);
-        toast.success('Clip deleted');
+        deleteSelectedClip();
       } else if ((e.key === 'b' || e.key === 'B') && !hasMod && selectedClip) {
         // Logic-style split: slice the selected clip at the playhead
         // into two clips so the user can trim / fade each side.
@@ -1302,6 +1310,30 @@ function Editor({
         </div>
 
         <div className="flex-1 min-w-0 space-y-2">
+          {/* Phone-only clip action bar. Desktop deletes via the
+           * Delete/Backspace shortcut; a phone has no keyboard, so a
+           * selected clip gets an explicit destructive affordance here.
+           * Confirm before deleting — there is no Cmd-Z on a phone. */}
+          {selectedClip && (
+            <div className="sm:hidden flex items-center gap-2 bg-card border border-border rounded px-2 py-1.5">
+              <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate">Clip selected</span>
+              <button
+                onClick={() => {
+                  if (confirm("Delete this clip? This can't be undone.")) deleteSelectedClip();
+                }}
+                className="h-10 px-3 rounded border border-border text-destructive inline-flex items-center gap-1.5 text-sm font-semibold hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4" /> Delete clip
+              </button>
+              <button
+                onClick={() => setSelectedClip(null)}
+                className="h-10 w-10 rounded border border-border text-muted-foreground flex items-center justify-center"
+                aria-label="Deselect clip"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           {/* Add-track row */}
           <div className="flex items-center gap-2 text-sm">
             <button onClick={addAudioTrack} className="h-7 px-2 bg-card border border-border rounded hover:bg-muted inline-flex items-center gap-1">
@@ -3169,10 +3201,54 @@ function DarkTrackRow({
               onChange={(e) => setStrip({ name: e.target.value })}
               className="bg-transparent text-base font-semibold outline-none flex-1 min-w-0"
             />
-            <ColorSwatch color={track.color} onChange={(c) => onUpdate((t) => ({ ...t, color: c } as Track))} />
-            {isAudioTrack(track) && (
-              <AudioImportIconButton track={track} onUpdate={onUpdate} />
-            )}
+            <div className="hidden sm:flex items-center gap-1.5">
+              <ColorSwatch color={track.color} onChange={(c) => onUpdate((t) => ({ ...t, color: c } as Track))} />
+              {isAudioTrack(track) && (
+                <AudioImportIconButton track={track} onUpdate={onUpdate} />
+              )}
+            </div>
+            {/* Phone: the 132px strip clamp pushes the row-2 trash out
+             * of view and there's no room for swatch + import either —
+             * fold the overflow actions into a per-track bottom sheet. */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <button
+                  className="sm:hidden shrink-0 h-8 w-8 rounded flex items-center justify-center text-muted-foreground hover:bg-muted"
+                  aria-label={`Track actions for ${track.name}`}
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="max-h-[70dvh] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>{track.name}</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-4 text-sm pb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Track color</span>
+                    <ColorSwatch color={track.color} onChange={(c) => onUpdate((t) => ({ ...t, color: c } as Track))} />
+                  </div>
+                  {isAudioTrack(track) && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Import audio</span>
+                      <AudioImportIconButton track={track} onUpdate={onUpdate} />
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      const clipCount = isAudioTrack(track) || isMidiTrack(track) ? track.clips.length : 0;
+                      const msg = clipCount > 0
+                        ? `Delete "${track.name}"? ${clipCount} clip${clipCount === 1 ? '' : 's'} on this track will be removed. This can't be undone.`
+                        : `Delete "${track.name}"? This can't be undone.`;
+                      if (confirm(msg)) onRemove();
+                    }}
+                    className="w-full h-11 rounded border border-border text-destructive inline-flex items-center justify-center gap-2 font-semibold hover:bg-destructive/10"
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete track
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
           {/* Row 2: M/S/R + volume slider + persistent trash. Trash is
            * on this row (not row 1) because row 1's color swatch +
@@ -3205,7 +3281,7 @@ function DarkTrackRow({
                   : `Delete "${track.name}"? This can't be undone.`;
                 if (confirm(msg)) onRemove();
               }}
-              className="shrink-0 text-muted-foreground hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
+              className="hidden sm:block shrink-0 text-muted-foreground hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
               title="Delete track"
               aria-label={`Delete ${track.name}`}
             >
