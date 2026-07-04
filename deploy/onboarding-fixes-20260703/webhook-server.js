@@ -66,6 +66,11 @@ app.post('/stripe-webhook', express.raw({ type: 'application/json' }), async (re
   try {
     switch (event.type) {
       case 'checkout.session.completed':
+        // Store sale (GleeWorld Store on the platform account) — dispatch
+        // before the ticket/module branches (handled inside
+        // handleCheckoutCompleted) and stop; a store sale never carries
+        // gleeworld_tier/module_id metadata.
+        if (event.data.object.metadata?.store_type) { await handleStoreCheckoutCompleted(event.data.object); break; }
         await handleCheckoutCompleted(event.data.object);
         break;
       case 'customer.subscription.updated':
@@ -119,6 +124,10 @@ app.post('/stripe-connect-webhook', express.raw({ type: 'application/json' }), a
         await handleConnectAccountUpdated(event.data.object);
         break;
       case 'checkout.session.completed':
+        // Tenant Store sale (Connect account) — dispatch before the
+        // box-office ticket branch and stop; box-office orders never carry
+        // metadata.store_type.
+        if (event.data.object.metadata?.store_type) { await handleStoreCheckoutCompleted(event.data.object); break; }
         // payment_status is 'paid' once Stripe collected the funds. Some
         // checkout flows fire 'completed' before 'paid' (e.g. async PMs);
         // ignore those — we'll handle them on payment_intent.succeeded.
@@ -215,6 +224,24 @@ async function handleConnectCheckoutCompleted(session) {
   } catch (err) {
     console.error('ticket email send failed for order', orderId, err);
   }
+}
+
+// Store sale (GleeWorld Store on the platform account, or a Tenant Store on a
+// Connect account). Distinguished from tickets/modules by metadata.store_type.
+async function handleStoreCheckoutCompleted(session) {
+  const orderId = session.metadata?.order_id;
+  const storeType = session.metadata?.store_type;
+  if (!orderId || !storeType) return; // not a store sale
+  const pi = typeof session.payment_intent === 'string' ? session.payment_intent : (session.payment_intent?.id || '');
+  const sql = `SELECT public.gw_store_fulfill_order($$${orderId}$$::uuid, $$${session.id}$$, $$${pi}$$) AS result;`;
+  const raw = await runSqlReturn(sql);
+  const line = raw.split('\n').map(l => l.trim()).find(l => l.startsWith('{'));
+  const result = line ? JSON.parse(line) : null;
+  if (result?.ok) console.log('[store] fulfilled order', orderId, 'ents', (result.entitlements||[]).length);
+  else if (result?.already_paid) console.log('[store] order already paid (idempotent)', orderId);
+  else console.error('[store] fulfill error', orderId, result);
+  // Digital delivery + receipt email are issued by a follow-up (out of scope here);
+  // entitlements already exist in gw_store_entitlements for store-download to serve.
 }
 
 // Find the order by payment_intent and atomically void it (gw_tickets
