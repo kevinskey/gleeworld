@@ -125,6 +125,11 @@ checkout and flow to the existing shipping/order admin.
   through another tenant's or the platform's account.
 - Add-on entitlement enforced in API + RLS: no add-on → cannot create products or
   checkouts even by calling the endpoint directly.
+- **Add-on model = exactly Box Office's.** The Store add-on is a module row in
+  `gw_tenant_subscriptions` (status `active`/`trial`), provisioned by the existing
+  `module_id` checkout webhook and read via `useModuleAccess` — no new entitlement
+  system. Server-side gates re-check the same subscription row; UI gating alone is
+  never the boundary.
 - Never log full headers or webhook payloads.
 
 ## Deletions (dormant — 0 products, 0 orders in prod)
