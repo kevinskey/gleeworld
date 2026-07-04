@@ -18,6 +18,9 @@ describe('initials', () => {
     expect(initials({ ...base, full_name: 'Ada Lee' })).toBe('AL');
     expect(initials({ ...base, full_name: 'Cher' })).toBe('C');
   });
+  it('returns M when all fields null', () => {
+    expect(initials(base)).toBe('M');
+  });
 });
 
 describe('bestPhone / contactHrefs', () => {
@@ -32,6 +35,12 @@ describe('bestPhone / contactHrefs', () => {
     expect(h.sms).toBe('sms:+15551112222');
     expect(h.mailto).toBe('mailto:a@b.org');
     expect(contactHrefs(base)).toEqual({ tel: null, sms: null, mailto: null });
+  });
+  it('rejects phone_number with no digits', () => {
+    expect(contactHrefs({ ...base, phone_number: '+ -()' })).toEqual({ tel: null, sms: null, mailto: null });
+  });
+  it('rejects phone with no digits', () => {
+    expect(contactHrefs({ ...base, phone: '()- ' })).toEqual({ tel: null, sms: null, mailto: null });
   });
 });
 

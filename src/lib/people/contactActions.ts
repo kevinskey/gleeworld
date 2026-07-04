@@ -29,10 +29,11 @@ export function bestPhone(p: ContactablePerson): string | null {
 export function contactHrefs(p: ContactablePerson): { tel: string | null; sms: string | null; mailto: string | null } {
   const raw = bestPhone(p);
   const digits = raw ? raw.replace(/[^\d+]/g, '') : null;
+  const valid = digits && /\d/.test(digits) ? digits : null;
   const email = p.email?.trim() || null;
   return {
-    tel: digits ? `tel:${digits}` : null,
-    sms: digits ? `sms:${digits}` : null,
+    tel: valid ? `tel:${valid}` : null,
+    sms: valid ? `sms:${valid}` : null,
     mailto: email ? `mailto:${email}` : null,
   };
 }
