@@ -99,7 +99,7 @@ export const AgendaView = ({
         </div>
 
         {/* Date Selector Strip */}
-        <div className="flex items-center gap-1 justify-center">
+        <div className="flex items-center gap-1 justify-start sm:justify-center overflow-x-auto snap-x pb-1 -mx-1 px-1">
           {dateSelectorDays.map((day) => {
             const isDayToday = isSameDayET(day, new Date());
             const isSelected = isSameDayET(day, selectedDate);

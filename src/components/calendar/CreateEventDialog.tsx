@@ -1053,7 +1053,7 @@ export const CreateEventDialog = ({
           {/* Location */}
           <div className="mb-6">
             <Label className="text-sm font-bold mb-2 block">Location</Label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 value={formData.venue_name}
                 onChange={e => setFormData(prev => ({ ...prev, venue_name: e.target.value }))}
@@ -1125,7 +1125,7 @@ export const CreateEventDialog = ({
           {/* More Options Collapsible */}
           <Collapsible open={showMoreOptions} onOpenChange={setShowMoreOptions}>
             <CollapsibleContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                   <span className="text-sm">Public Event</span>
                   <Switch 
@@ -1153,7 +1153,7 @@ export const CreateEventDialog = ({
               {formData.recurrence_type === 'custom' && (
                 <div className="p-4 border rounded-lg space-y-3 bg-muted/20">
                   <Label className="text-sm font-medium">Custom Recurrence</Label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs text-muted-foreground">Repeat every</Label>
                       <div className="flex items-center gap-2 mt-1">
