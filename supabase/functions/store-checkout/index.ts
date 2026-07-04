@@ -51,17 +51,28 @@ const j = (b: unknown, s = 200) =>
 export async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
-    const claims = await verifyJwtClaims(req.headers.get('Authorization')?.replace(/^Bearer\s+/i, ''));
-    if (!claims) return j({ error: 'Unauthorized' }, 401);
+    const authHeader = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+    const claims = authHeader ? await verifyJwtClaims(authHeader) : null;
     const { store_type, items, buyer_email } = await req.json();
     if (!['gleeworld', 'tenant'].includes(store_type)) return j({ error: 'bad store_type' }, 400);
-    if (!Array.isArray(items) || items.length === 0) return j({ error: 'empty cart' }, 400);
+    // Guest checkout allowed ONLY for the public GleeWorld store. Tenant store still requires a verified JWT.
+    if (store_type === 'tenant' && !claims) return j({ error: 'Unauthorized' }, 401);
+    if (!Array.isArray(items) || items.length === 0 || items.length > 20) return j({ error: 'bad cart' }, 400);
     if (!buyer_email || typeof buyer_email !== 'string' || !buyer_email.includes('@')) {
       return j({ error: 'valid buyer_email required' }, 400);
     }
 
+    // Card-testing defense: rate-limit session creation per ip + email.
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
+    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const recent = await pg(
+      `gw_store_checkout_attempts?or=(ip.eq.${encodeURIComponent(ip)},email.eq.${encodeURIComponent(buyer_email)})&created_at=gte.${since}&select=id`,
+    );
+    if (Array.isArray(recent) && recent.length >= 5) return j({ error: 'too many attempts, try again later' }, 429);
+    await pg('gw_store_checkout_attempts', { method: 'POST', body: JSON.stringify({ ip, email: buyer_email }) });
+
     // Resolve owning tenant + account server-side.
-    const tenantId = store_type === 'gleeworld' ? PLATFORM_TENANT_ID : claims.tenant_id;
+    const tenantId = store_type === 'gleeworld' ? PLATFORM_TENANT_ID : claims!.tenant_id;
     if (!tenantId) return j({ error: 'no tenant' }, 400);
 
     if (store_type === 'tenant') {
@@ -101,6 +112,7 @@ export async function handler(req: Request): Promise<Response> {
     }
 
     // Pre-create the pending order + items.
+    const accessToken = crypto.getRandomValues(new Uint8Array(24)).reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
     const order = (
       await pg('gw_store_orders', {
         method: 'POST',
@@ -108,10 +120,11 @@ export async function handler(req: Request): Promise<Response> {
           tenant_id: tenantId,
           store_type,
           buyer_email,
-          buyer_user_id: claims.sub ?? null,
+          buyer_user_id: claims?.sub ?? null,
           amount_cents: amount,
           requires_shipping: requiresShipping,
           status: 'pending',
+          access_token: accessToken,
         }),
       })
     )[0];
@@ -132,10 +145,10 @@ export async function handler(req: Request): Promise<Response> {
       orderId: order.id,
       storeType: store_type,
       buyerEmail: buyer_email,
-      successUrl: `${origin}/store/success?order=${order.id}`,
+      successUrl: `${origin}/store/success?order=${order.id}&t=${accessToken}`,
       cancelUrl: `${origin}/store?canceled=1`,
     });
-    return j({ url, order_id: order.id });
+    return j({ url, order_id: order.id, access_token: accessToken });
   } catch (e) {
     console.error('[store-checkout]', (e as Error).message);
     return j({ error: 'checkout failed' }, 500);
