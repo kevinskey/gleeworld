@@ -39,6 +39,9 @@ const config: Config = {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        'status-warning-bg': 'hsl(var(--status-warning-bg))',
+        'status-warning-fg': 'hsl(var(--status-warning-fg))',
+        'status-warning-border': 'hsl(var(--status-warning-border))',
         muted: {
           DEFAULT: 'hsl(var(--muted))',
           foreground: 'hsl(var(--muted-foreground))',

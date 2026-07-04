@@ -255,28 +255,24 @@ function RecentAnnouncements({ rows, loading }: { rows: FeedRow[]; loading: bool
 // ── Needs Your Attention column ─────────────────────────────────────────────
 
 function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }) {
-  // Inline hex styles for the amber palette — Tailwind amber-* tokens can be
-  // overridden by per-tenant CSS variables, which made this card render as a
-  // solid gold block with invisible text on some tenants.
   return (
     <Card
       className={`h-full border-0 rounded-2xl ${CARD_HEIGHT_CAP}`}
-      style={{ ...SOFT_CARD_STYLE_AMBER, background: 'rgba(254,243,199,0.4)' }}
+      style={{ ...SOFT_CARD_STYLE_AMBER, background: 'hsl(var(--status-warning-bg) / 0.4)' }}
     >
       <CardContent className="p-4 sm:p-6 flex flex-col h-full overflow-hidden">
         <div className="flex items-center justify-between mb-3 sm:mb-5 shrink-0">
-          <h2 className="font-semibold text-lg" style={{ color: '#78350f' }}>Needs Your Attention</h2>
+          <h2 className="font-semibold text-lg text-status-warning-fg">Needs Your Attention</h2>
           <span
-            className="text-sm font-semibold rounded-full w-6 h-6 inline-flex items-center justify-center"
-            style={{ color: '#b45309', background: '#fef3c7' }}
+            className="text-sm font-semibold rounded-full w-6 h-6 inline-flex items-center justify-center text-status-warning-fg bg-status-warning-bg"
           >
             {rows.length}
           </span>
         </div>
         {loading ? (
-          <div className="text-center py-6"><Loader2 className="w-5 h-5 animate-spin inline-block" style={{ color: '#b45309' }} /></div>
+          <div className="text-center py-6"><Loader2 className="w-5 h-5 animate-spin inline-block text-status-warning-fg" /></div>
         ) : rows.length === 0 ? (
-          <p className="text-sm text-center py-6" style={{ color: '#92400e' }}>All caught up.</p>
+          <p className="text-sm text-center py-6 text-status-warning-fg">All caught up.</p>
         ) : (
           // max-h caps the visible window to ~3 rows so the card stays
           // compact in the 2-col iPad layout; overflow-y-auto lets the
@@ -294,16 +290,15 @@ function NeedsAttention({ rows, loading }: { rows: FeedRow[]; loading: boolean }
               const body = (
                 <>
                   <div
-                    className="w-10 h-10 rounded-md bg-white flex items-center justify-center shrink-0 border"
-                    style={{ borderColor: '#fde68a' }}
+                    className="w-10 h-10 rounded-md bg-white flex items-center justify-center shrink-0 border border-status-warning-border"
                   >
-                    <Icon className="w-5 h-5" style={{ color: '#b45309' }} />
+                    <Icon className="w-5 h-5 text-status-warning-fg" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-base font-semibold leading-snug truncate" style={{ color: '#78350f' }}>{t.title}</div>
-                    {t.detail && <div className="text-sm truncate mt-0.5" style={{ color: '#92400e' }}>{t.detail}</div>}
+                    <div className="text-base font-semibold leading-snug truncate text-status-warning-fg">{t.title}</div>
+                    {t.detail && <div className="text-sm truncate mt-0.5 text-status-warning-fg">{t.detail}</div>}
                   </div>
-                  <ChevronRight className="w-4 h-4 shrink-0" style={{ color: '#b45309' }} />
+                  <ChevronRight className="w-4 h-4 shrink-0 text-status-warning-fg" />
                 </>
               );
               return linkTo ? (
