@@ -20,15 +20,29 @@ export function useTenantGroups(): { data: TenantGroup[]; isLoading: boolean } {
   const { data, isLoading } = useQuery({
     queryKey: ['tenant-groups'],
     queryFn: async (): Promise<TenantGroup[]> => {
-      const [groupsRes, membersRes] = await Promise.all([
-        supabase
-          .from('gw_message_groups')
-          .select('id, name, group_type, created_at')
-          .neq('group_type', 'direct'),
-        supabase.from('gw_group_members').select('group_id, user_id'),
-      ]);
+      const groupsRes = await supabase
+        .from('gw_message_groups')
+        .select('id, name, group_type, created_at')
+        .neq('group_type', 'direct');
 
       if (groupsRes.error) throw groupsRes.error;
+
+      const groupIds = (groupsRes.data ?? []).map((group) => group.id);
+
+      // gw_group_members (like gw_message_groups) has no tenant_id column and
+      // its RLS policy currently lets any authenticated user read every row
+      // across every tenant. Until a platform migration adds tenant scoping
+      // to these tables, we bound this query to only the group ids we just
+      // fetched (`.in('group_id', groupIds)`) instead of selecting the whole
+      // table, and skip the query entirely when there are no groups. This
+      // does not fix the RLS gap — the groups themselves are still
+      // tenant-filtered downstream in PeopleHub (see GroupsList) by
+      // cross-referencing member ids against the tenant-scoped people
+      // directory.
+      const membersRes = groupIds.length
+        ? await supabase.from('gw_group_members').select('group_id, user_id').in('group_id', groupIds)
+        : { data: [], error: null };
+
       if (membersRes.error) throw membersRes.error;
 
       const membersByGroup = new Map<string, string[]>();

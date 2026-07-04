@@ -128,7 +128,7 @@ interface GroupsListProps {
 
 function GroupsList({ onOpenPerson }: GroupsListProps) {
   const navigate = useNavigate();
-  const { data: groups, isLoading } = useTenantGroups();
+  const { data: rawGroups, isLoading } = useTenantGroups();
   const { data: people } = usePeopleDirectory();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -139,6 +139,18 @@ function GroupsList({ onOpenPerson }: GroupsListProps) {
     }
     return map;
   }, [people]);
+
+  // gw_message_groups/gw_group_members have no tenant_id column and their RLS
+  // policy currently returns rows for every tenant to any authenticated user
+  // (see useTenantGroups). Until a platform migration adds real tenant
+  // scoping to those tables, contain the damage here: usePeopleDirectory is
+  // backed by a tenant-scoped DB view, so we only display a group if at
+  // least one of its members appears in this tenant's directory. Groups
+  // belonging entirely to other tenants have no overlap and are dropped.
+  const groups = useMemo(() => {
+    const dirIds = new Set(people.map((p) => p.user_id).filter(Boolean));
+    return rawGroups.filter((g) => g.member_ids.some((id) => dirIds.has(id)));
+  }, [rawGroups, people]);
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground py-8 text-center">Loading groups…</div>;
@@ -168,7 +180,7 @@ function GroupsList({ onOpenPerson }: GroupsListProps) {
               <Badge variant="outline" className="text-xs shrink-0">
                 {groupTypeLabel(group.group_type)}
               </Badge>
-              <span className="text-xs tabular-nums text-muted-foreground shrink-0 w-6 text-right">
+              <span className="text-xs tabular-nums text-muted-foreground shrink-0 min-w-6 text-right">
                 {group.member_count}
               </span>
             </button>
