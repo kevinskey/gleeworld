@@ -16,14 +16,21 @@ import {
   Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download,
   Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
-  ChevronLeft, Repeat, SlidersHorizontal, X, MoreVertical, Undo2,
+  ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useStudioSession, useStudioEngine, useMixdown, useUploadAudioAsset } from '@/hooks/useStudio';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
-import { isAudioTrack, isMidiTrack, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset } from '@/lib/studio/session';
+import { isAudioTrack, isMidiTrack, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
+import {
+  formatTime, formatBarBeat, formatSamples, nextCounterMode, type CounterMode,
+  preRollStartSeconds, postRollEndSeconds, punchTransition,
+  nextMarker, prevMarker, sortMarkers, defaultMarkerName, shuttleStepSeconds,
+} from '@/lib/studio/transport';
+import { MidiClockSender } from '@/lib/studio/midiClock';
+import type { EngineState } from '@/lib/studio/engine/engine';
 import { openMicRecorder, type MicRecorder } from '@/lib/studio/engine/recorder';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
@@ -214,6 +221,9 @@ interface RecordingSession {
   recorder: MicRecorder | null;
   /** true → finalize via NativeStudio.recordStop() instead of recorder.stop(). */
   native: boolean;
+  /** true → this take was dropped in by the auto punch flow; finalize
+   * must not yank the playhead back while the post-roll is playing. */
+  punch?: boolean;
   startSeconds: number;
   startWallMs: number;
   armedTrackIds: string[];
@@ -291,6 +301,38 @@ function Editor({
   // While the count-in is ticking, hold the bar number that's about to
   // play (1..N then "GO"). null = no count-in in progress.
   const [countInBeat, setCountInBeat] = useState<number | null>(null);
+
+  // Time counter mode — the LCD cycles Bars|Beats → Min:Sec → Samples
+  // on click, like tapping the counter in Logic.
+  const [counterMode, setCounterMode] = useState<CounterMode>(() => {
+    const v = localStorage.getItem('studio.counterMode');
+    return v === 'time' || v === 'samples' ? v : 'bars';
+  });
+  useEffect(() => { localStorage.setItem('studio.counterMode', counterMode); }, [counterMode]);
+
+  // Punch in/out — when armed, Record starts playback ahead of the
+  // punch range (pre-roll) and drops in/out of record automatically at
+  // the range edges. The punch range IS the loop region (drag the ruler).
+  const [punchEnabled, setPunchEnabled] = useState(false);
+  const [preRollBars, setPreRollBars] = useState<number>(() => {
+    const v = Number(localStorage.getItem('studio.preRollBars') ?? 1);
+    return [0, 1, 2, 4].includes(v) ? v : 1;
+  });
+  useEffect(() => { localStorage.setItem('studio.preRollBars', String(preRollBars)); }, [preRollBars]);
+  const [postRollBars, setPostRollBars] = useState<number>(() => {
+    const v = Number(localStorage.getItem('studio.postRollBars') ?? 0);
+    return [0, 1, 2].includes(v) ? v : 0;
+  });
+  useEffect(() => { localStorage.setItem('studio.postRollBars', String(postRollBars)); }, [postRollBars]);
+
+  // MIDI Clock sync out (web only, feature-detected in the settings UI).
+  const [midiSyncEnabled, setMidiSyncEnabled] = useState<boolean>(() =>
+    localStorage.getItem('studio.midiSyncEnabled') === '1');
+  useEffect(() => { localStorage.setItem('studio.midiSyncEnabled', midiSyncEnabled ? '1' : '0'); }, [midiSyncEnabled]);
+  const [midiSyncOutputId, setMidiSyncOutputId] = useState<string>(() =>
+    localStorage.getItem('studio.midiSyncOutputId') || '');
+  useEffect(() => { localStorage.setItem('studio.midiSyncOutputId', midiSyncOutputId); }, [midiSyncOutputId]);
+  useMidiClockSync(engineState.state, midiSyncEnabled && !engineState.native, midiSyncOutputId);
 
   // Tempo slider draft. While the user drags we only push the live
   // engine tempo (cheap) and hold the value here; the session write —
@@ -471,6 +513,57 @@ function Editor({
 
   const armedTrackIds = session.tracks.filter((t) => t.arm && isAudioTrack(t)).map((t) => t.id);
 
+  // ── Markers — named navigation points on the timeline ─────────────
+  const markers = session.markers ?? [];
+  const addMarkerAtPlayhead = () => {
+    const seconds = state?.positionSeconds ?? 0;
+    const marker: SessionMarker = { id: newId(), name: defaultMarkerName(markers), seconds };
+    update((s) => ({ ...s, markers: [...(s.markers ?? []), marker] }));
+    toast.success(`${marker.name} set at ${formatBarBeat(seconds, session.tempo_bpm, session.time_signature.numerator)}`);
+  };
+  const renameMarker = (id: string, name: string) => {
+    update((s) => ({ ...s, markers: (s.markers ?? []).map((mk) => mk.id === id ? { ...mk, name } : mk) }));
+  };
+  const deleteMarker = (id: string) => {
+    update((s) => ({ ...s, markers: (s.markers ?? []).filter((mk) => mk.id !== id) }));
+  };
+  const jumpPrevMarker = () => {
+    const mk = prevMarker(markers, state?.positionSeconds ?? 0);
+    if (mk) engineState.seek?.(mk.seconds); else engineState.seek?.(0);
+  };
+  const jumpNextMarker = () => {
+    const mk = nextMarker(markers, state?.positionSeconds ?? 0);
+    if (mk) engineState.seek?.(mk.seconds);
+  };
+  // Marker being renamed/deleted via the ruler-flag double-click dialog.
+  const [editingMarkerId, setEditingMarkerId] = useState<string | null>(null);
+  const editingMarker = markers.find((mk) => mk.id === editingMarkerId) ?? null;
+
+  /** Drive live waveform polling for a web take (native takes push
+   * peaks over the bridge instead). Shared by the manual record flow
+   * and the auto punch-in. */
+  const startWaveTick = (recorder: MicRecorder, startedAt: number) => {
+    const tick = () => {
+      const now = performance.now();
+      const wave = recorder.getWaveform();
+      let peak = 0;
+      for (let i = 0; i < wave.length; i++) {
+        const v = Math.abs(wave[i]);
+        if (v > peak) peak = v;
+      }
+      const since = now - startedAt;
+      const targetCount = Math.floor(since / 33);
+      setRecording((prev) => {
+        if (!prev) return prev;
+        while (prev.peaks.length < targetCount) prev.peaks.push(peak);
+        return prev;
+      });
+      forceRender((n) => n + 1);
+      recRafRef.current = requestAnimationFrame(tick);
+    };
+    recRafRef.current = requestAnimationFrame(tick);
+  };
+
   const startRecording = async () => {
     if (recording) return;
     if (armedTrackIds.length === 0) {
@@ -585,6 +678,7 @@ function Editor({
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
       const recorder = await openMicRecorder({ inputDeviceId, inputGainDb });
       await recorder.start();
+      engineState.setRecordingActive?.(true);
       setRecording({
         recorder, native: false,
         startSeconds: startSec, startWallMs: startedAt,
@@ -592,28 +686,7 @@ function Editor({
       });
       if (!state?.isPlaying) play();
       toast.success('Recording — click ● again to stop');
-
-      // Drive live waveform polling (web only — native take has no
-      // analyser hook into the AVAudioEngine input tap yet).
-      const tick = () => {
-        const now = performance.now();
-        const wave = recorder.getWaveform();
-        let peak = 0;
-        for (let i = 0; i < wave.length; i++) {
-          const v = Math.abs(wave[i]);
-          if (v > peak) peak = v;
-        }
-        const since = now - startedAt;
-        const targetCount = Math.floor(since / 33);
-        setRecording((prev) => {
-          if (!prev) return prev;
-          while (prev.peaks.length < targetCount) prev.peaks.push(peak);
-          return prev;
-        });
-        forceRender((n) => n + 1);
-        recRafRef.current = requestAnimationFrame(tick);
-      };
-      recRafRef.current = requestAnimationFrame(tick);
+      startWaveTick(recorder, startedAt);
     } catch (e) {
       toast.error('Could not start recording', { description: e instanceof Error ? e.message : String(e) });
     }
@@ -627,8 +700,9 @@ function Editor({
       nativePeakSubRef.current = null;
     }
     latestPeakDbRef.current = -Infinity;
-    const { recorder, native: nativeTake, startSeconds, startWallMs, armedTrackIds: armed } = recording;
+    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, armedTrackIds: armed } = recording;
     setRecording(null);
+    engineState.setRecordingActive?.(false);
     const elapsed = (performance.now() - startWallMs) / 1000;
     try {
       let rawBlob: Blob;
@@ -773,16 +847,146 @@ function Editor({
           });
         }
       })();
-      // Park the playhead at the punch-in point so the user can press
+      // Park the playhead at the take's start so the user can press
       // Play (or hit Space) once and immediately hear the take. Auto-
       // play is intentionally NOT triggered here — the engine reload
       // that follows the clip add tears down + rebuilds Players (or the
       // whole AVAudioEngine on iOS), which can take a couple seconds and
-      // makes auto-play race with the rebuild.
-      try { engineState.seek?.(startSeconds); } catch { /* ignore */ }
+      // makes auto-play race with the rebuild. Punch takes skip the
+      // park: their post-roll is still rolling and must not be yanked.
+      if (!punch) { try { engineState.seek?.(startSeconds); } catch { /* ignore */ } }
     } catch (e) {
       toast.error('Could not finalize recording', { description: e instanceof Error ? e.message : String(e) });
     }
+  };
+
+  // ── Punch in/out orchestration (web engine) ───────────────────────
+  //
+  // Arm: open the mic up front (getUserMedia costs hundreds of ms and
+  // must not eat into the punch moment), start playback at
+  // punch-in − pre-roll, then let the position watcher below drop the
+  // recorder in and out as the playhead crosses the range edges.
+  const punchRef = useRef<{ recorder: MicRecorder; phase: 'pre' | 'rec' | 'post' } | null>(null);
+  const prevPosRef = useRef(0);
+
+  const cancelPunch = () => {
+    const p = punchRef.current;
+    punchRef.current = null;
+    if (p && p.phase === 'pre') { try { p.recorder.dispose(); } catch { /* ignore */ } }
+    engineState.setRecordingActive?.(false);
+  };
+
+  const startPunchRecord = async () => {
+    if (recording || punchRef.current) return;
+    if (engineState.native) {
+      toast.info('Punch recording is available in the web Studio for now.');
+      return;
+    }
+    if (!loopRegion || loopRegion.end <= loopRegion.start) {
+      toast.error('Set a punch range first — drag across the bar ruler.');
+      return;
+    }
+    if (armedTrackIds.length === 0) {
+      toast.error('Arm at least one audio track first (red R button on the strip).');
+      return;
+    }
+    try {
+      await start();
+      // Cycle and punch fight over the transport (the loop wrap would
+      // yank the head mid-take) — punch wins while it runs.
+      if (loopEnabled) setLoopEnabled(false);
+      const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
+      const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
+      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb });
+      punchRef.current = { recorder, phase: 'pre' };
+      engineState.setRecordingActive?.(true);
+      const from = preRollStartSeconds(
+        loopRegion.start, preRollBars,
+        session.tempo_bpm, session.time_signature.numerator, session.time_signature.denominator,
+      );
+      prevPosRef.current = from;
+      engineState.playFrom?.(from);
+      toast.success(preRollBars > 0
+        ? `Punch armed — rolling ${preRollBars} bar${preRollBars > 1 ? 's' : ''} of pre-roll`
+        : 'Punch armed — recording starts at the punch-in point');
+    } catch (e) {
+      cancelPunch();
+      toast.error('Could not arm punch recording', { description: e instanceof Error ? e.message : String(e) });
+    }
+  };
+
+  const beginPunchTake = async (recorder: MicRecorder) => {
+    if (!loopRegion) return;
+    try {
+      await recorder.start();
+      const startedAt = performance.now();
+      setRecording({
+        recorder, native: false, punch: true,
+        startSeconds: loopRegion.start, startWallMs: startedAt,
+        armedTrackIds, peaks: [],
+      });
+      startWaveTick(recorder, startedAt);
+      toast.success('Punched in — recording');
+    } catch (e) {
+      cancelPunch();
+      toast.error('Punch-in failed', { description: e instanceof Error ? e.message : String(e) });
+    }
+  };
+
+  // Position watcher — fires the punch transitions off the engine's
+  // ~30Hz position stream.
+  useEffect(() => {
+    const cur = state?.positionSeconds ?? 0;
+    const prev = prevPosRef.current;
+    prevPosRef.current = cur;
+    const p = punchRef.current;
+    if (!p || !loopRegion) return;
+    const range = { inSeconds: loopRegion.start, outSeconds: loopRegion.end };
+    if (p.phase === 'pre') {
+      if (punchTransition(prev, cur, range) === 'in') {
+        p.phase = 'rec';
+        void beginPunchTake(p.recorder);
+      }
+    } else if (p.phase === 'rec') {
+      if (punchTransition(prev, cur, range) === 'out') {
+        p.phase = 'post';
+        void stopRecording();
+        if (postRollBars === 0) {
+          // No post-roll — take is done, transport keeps rolling.
+          punchRef.current = null;
+        }
+      }
+    } else if (p.phase === 'post') {
+      const end = postRollEndSeconds(
+        loopRegion.end, postRollBars,
+        session.tempo_bpm, session.time_signature.numerator, session.time_signature.denominator,
+      );
+      if (cur >= end) {
+        punchRef.current = null;
+        stop();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.positionSeconds]);
+
+  /** One handler for every Stop surface (button, S, Space) so a punch
+   * pass in any phase is cleaned up alongside the recording itself. */
+  const onStopPressed = () => {
+    if (punchRef.current) {
+      if (punchRef.current.phase === 'pre') cancelPunch();
+      else punchRef.current = null;
+    }
+    if (recording) stopRecording();
+    stop();
+  };
+
+  /** Record control: punch mode arms the auto punch pass; otherwise
+   * the classic manual take. A second press always stops the take. */
+  const onRecordPressed = () => {
+    if (recording) { stopRecording(); return; }
+    if (punchRef.current) { cancelPunch(); stop(); return; }
+    if (punchEnabled) void startPunchRecord();
+    else void startRecording();
   };
 
   const isRecording = recording !== null;
@@ -819,13 +1023,10 @@ function Editor({
       if (e.code === 'Space' && !hasMod) {
         e.preventDefault();
         // Spacebar = global play / stop toggle, mirroring the
-        // transport bar. If a take is in flight, finalize it first
-        // so one keystroke ends both the recording AND playback.
-        if (recording) {
-          stopRecording();
-          stop();
-        } else if (state?.isPlaying) {
-          stop();
+        // transport bar. If a take (or punch pass) is in flight,
+        // finalize it so one keystroke ends recording AND playback.
+        if (recording || punchRef.current || state?.isPlaying) {
+          onStopPressed();
         } else {
           (async () => {
             try {
@@ -844,8 +1045,7 @@ function Editor({
         }
       } else if (e.key === 's' && !hasMod) {
         e.preventDefault();
-        if (recording) stopRecording();
-        stop();
+        onStopPressed();
       } else if (hasMod && (e.key === 's' || e.key === 'S')) {
         e.preventDefault(); update((s) => ({ ...s, updated_at: new Date().toISOString() }));
       } else if (hasMod && (e.key === 'z' || e.key === 'Z')) {
@@ -866,7 +1066,17 @@ function Editor({
         // Bare R toggles recording. With a modifier (⌘R / Ctrl+R) we
         // let the browser refresh — never start a recording on refresh.
         e.preventDefault();
-        if (recording) stopRecording(); else startRecording();
+        onRecordPressed();
+      } else if ((e.key === 'k' || e.key === 'K') && !hasMod) {
+        // Drop a marker at the playhead.
+        e.preventDefault();
+        addMarkerAtPlayhead();
+      } else if (e.key === ',' && !hasMod) {
+        e.preventDefault();
+        jumpPrevMarker();
+      } else if (e.key === '.' && !hasMod) {
+        e.preventDefault();
+        jumpNextMarker();
       } else if (e.key === 'ArrowLeft' && !hasMod) {
         // Free-scrub by 0.25s per key press. Shift+arrow jumps a full bar
         // for those who want the old behavior.
@@ -947,7 +1157,7 @@ function Editor({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, start, play, pause, stop, setMetronome, update, recording, selectedClip, session, session.tempo_bpm, session.time_signature.numerator, session.length_seconds, loopEnabled, loopRegion?.start, loopRegion?.end]);
+  }, [state, start, play, pause, stop, setMetronome, update, recording, selectedClip, session, session.tempo_bpm, session.time_signature.numerator, session.length_seconds, loopEnabled, loopRegion?.start, loopRegion?.end, punchEnabled, markers]);
 
   const exportMix = async () => {
     try {
@@ -987,7 +1197,10 @@ function Editor({
           className="text-sm font-semibold bg-transparent border-0 px-2 h-6 focus-visible:ring-1 max-w-xs"
         />
         <div className="ml-auto flex items-center gap-2">
-          <AudioSettingsButton />
+          <AudioSettingsButton midiSync={engineState.native ? undefined : {
+            enabled: midiSyncEnabled, setEnabled: setMidiSyncEnabled,
+            outputId: midiSyncOutputId, setOutputId: setMidiSyncOutputId,
+          }} />
           <Button size="sm" variant="outline" onClick={exportMix} disabled={mixdown.isPending} title="Render to WAV" className="h-7 text-sm">
             {mixdown.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Download className="w-4 h-4 mr-1" />}
             Mixdown
@@ -1060,14 +1273,14 @@ function Editor({
           <Pause className="w-4 h-4" />
         </button>
         <button
-          onClick={() => { if (recording) stopRecording(); stop(); }}
+          onClick={onStopPressed}
           className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
           title="Stop (S) — also finalizes any active recording">
           <Square className="w-4 h-4" />
         </button>
-        <button onClick={() => recording ? stopRecording() : startRecording()}
+        <button onClick={onRecordPressed}
           className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
-          title="Record (R)">
+          title={punchEnabled ? 'Record (R) — punch mode: rolls pre-roll, then drops in/out at the punch range' : 'Record (R)'}>
           <Circle className={`w-3.5 h-3.5 ${isRecording ? 'fill-white text-white' : 'fill-rose-500 text-rose-500'}`} />
         </button>
         <button onClick={() => {
@@ -1126,10 +1339,42 @@ function Editor({
           <Repeat className="w-4 h-4" />
         </button>
 
-        {/* Bar.beat.tick LCD-style timecode */}
-        <div className="px-2 sm:px-3 py-1 bg-zinc-900 rounded text-emerald-400 text-sm sm:text-lg leading-none tabular-nums font-mono">
-          {formatBarBeat(state?.positionSeconds ?? 0, session.tempo_bpm, session.time_signature.numerator)}
-        </div>
+        {/* Markers — drop a flag at the playhead, hop between flags. */}
+        <button
+          onClick={addMarkerAtPlayhead}
+          className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+          title="Add marker at playhead (K)">
+          <Flag className="w-4 h-4 text-amber-500" />
+        </button>
+        <button
+          onClick={jumpPrevMarker}
+          disabled={markers.length === 0}
+          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          title="Previous marker (,)">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={jumpNextMarker}
+          disabled={markers.length === 0}
+          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          title="Next marker (.)">
+          <ChevronRight className="w-4 h-4" />
+        </button>
+
+        {/* LCD timecode — click to cycle Bars|Beats → Min:Sec → Samples. */}
+        <button
+          onClick={() => setCounterMode(nextCounterMode(counterMode))}
+          className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1.5 hover:bg-zinc-800"
+          title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
+          <span className="text-emerald-400 text-sm sm:text-lg">
+            {counterMode === 'bars' && formatBarBeat(state?.positionSeconds ?? 0, session.tempo_bpm, session.time_signature.numerator)}
+            {counterMode === 'time' && formatTime(state?.positionSeconds ?? 0)}
+            {counterMode === 'samples' && formatSamples(state?.positionSeconds ?? 0, state?.sampleRate ?? 48000)}
+          </span>
+          <span className="text-emerald-700 text-xs font-semibold">
+            {counterMode === 'bars' ? 'BAR' : counterMode === 'time' ? 'SEC' : 'SMP'}
+          </span>
+        </button>
         <div className="hidden sm:block text-muted-foreground text-sm tabular-nums font-mono">
           {formatTime(state?.positionSeconds ?? 0)} / {formatTime(session.length_seconds)}
         </div>
@@ -1227,6 +1472,41 @@ function Editor({
                   <option value="1/32">1/32</option>
                 </select>
               </div>
+              {/* Punch in/out */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Punch in/out</span>
+                <button
+                  onClick={() => {
+                    if (!punchEnabled && !loopRegion) {
+                      toast.info('Drag across the bar ruler to set the punch range first.');
+                      return;
+                    }
+                    setPunchEnabled((v) => !v);
+                  }}
+                  className={`h-10 px-4 rounded border text-sm font-bold ${punchEnabled ? 'bg-rose-500 border-rose-500 text-white' : 'bg-muted border-border text-muted-foreground'}`}>
+                  {punchEnabled ? 'On' : 'Off'}
+                </button>
+              </div>
+              {/* Pre-roll / post-roll */}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Pre-roll (bars)</span>
+                <select value={preRollBars} onChange={(e) => setPreRollBars(Number(e.target.value))}
+                  className="h-10 bg-background border border-border rounded px-2 min-w-[80px]">
+                  <option value={0}>0</option>
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={4}>4</option>
+                </select>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Post-roll (bars)</span>
+                <select value={postRollBars} onChange={(e) => setPostRollBars(Number(e.target.value))}
+                  className="h-10 bg-background border border-border rounded px-2 min-w-[80px]">
+                  <option value={0}>0</option>
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                </select>
+              </div>
               {/* End time */}
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">End (sec)</span>
@@ -1282,6 +1562,47 @@ function Editor({
             <span className="text-sm font-bold px-2 py-0.5 rounded bg-rose-500 text-white tabular-nums animate-pulse">
               {countInBeat}
             </span>
+          )}
+        </div>
+
+        {/* Punch in/out — auto drop in/out of record over the marked
+         * range (drag the bar ruler to set it). Pre/post-roll pickers
+         * appear only while punch is armed to keep the bar tight. */}
+        <div className="hidden sm:inline-flex ml-2 items-center gap-1.5">
+          <span className="text-sm text-muted-foreground">Punch</span>
+          <button
+            onClick={() => {
+              if (!punchEnabled && !loopRegion) {
+                toast.info('Drag across the bar ruler to set the punch range first.');
+                return;
+              }
+              setPunchEnabled((v) => !v);
+            }}
+            className={`h-9 px-2 rounded border text-sm font-bold ${punchEnabled ? 'bg-rose-500 border-rose-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+            title={punchEnabled
+              ? 'Punch is ON — Record rolls the pre-roll, drops in at the range start and out at the range end'
+              : 'Punch — auto drop in/out of record over the marked ruler range'}
+          >
+            {punchEnabled ? 'On' : 'Off'}
+          </button>
+          {punchEnabled && (
+            <>
+              <select value={preRollBars} onChange={(e) => setPreRollBars(Number(e.target.value))}
+                className="h-9 bg-background border border-border rounded text-sm px-1"
+                title="Pre-roll — bars of playback before the punch-in point">
+                <option value={0}>Pre 0</option>
+                <option value={1}>Pre 1</option>
+                <option value={2}>Pre 2</option>
+                <option value={4}>Pre 4</option>
+              </select>
+              <select value={postRollBars} onChange={(e) => setPostRollBars(Number(e.target.value))}
+                className="h-9 bg-background border border-border rounded text-sm px-1"
+                title="Post-roll — bars of playback after the punch-out point before the transport stops (0 keeps rolling)">
+                <option value={0}>Post 0</option>
+                <option value={1}>Post 1</option>
+                <option value={2}>Post 2</option>
+              </select>
+            </>
           )}
         </div>
 
@@ -1443,6 +1764,9 @@ function Editor({
                 loopEnabled={loopEnabled}
                 onLoopRegionChange={setLoopRegion}
                 onSeek={(s) => engineState.seek?.(s)}
+                markers={markers}
+                onMarkerJump={(s) => engineState.seek?.(s)}
+                onMarkerEdit={setEditingMarkerId}
               />
             </div>
           </div>
@@ -1524,13 +1848,43 @@ function Editor({
         />
       )}
 
+      {/* Marker rename / delete — opened by double-clicking a ruler flag. */}
+      <Dialog open={editingMarker !== null} onOpenChange={(o) => { if (!o) setEditingMarkerId(null); }}>
+        <DialogContent className="dark bg-card text-foreground border-border max-w-sm">
+          <DialogHeader><DialogTitle className="text-base">Edit marker</DialogTitle></DialogHeader>
+          {editingMarker && (
+            <div className="space-y-3 text-sm">
+              <div>
+                <Label className="text-xs">Name</Label>
+                <Input
+                  value={editingMarker.name}
+                  onChange={(e) => renameMarker(editingMarker.id, e.target.value)}
+                  className="h-8 text-sm"
+                  autoFocus
+                />
+              </div>
+              <div className="text-xs text-muted-foreground tabular-nums">
+                At {formatBarBeat(editingMarker.seconds, session.tempo_bpm, session.time_signature.numerator)}
+                {' · '}{formatTime(editingMarker.seconds)}
+              </div>
+              <div className="flex justify-between pt-1">
+                <Button size="sm" variant="destructive" onClick={() => { deleteMarker(editingMarker.id); setEditingMarkerId(null); }}>
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete
+                </Button>
+                <Button size="sm" onClick={() => setEditingMarkerId(null)}>Done</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="hidden sm:flex text-xs text-muted-foreground items-center justify-between pt-1">
         <div>
           {state?.isPlaying ? <span className="text-emerald-600">● Playing</span> : 'Stopped'}
           {isRecording && <span className="ml-2 text-rose-600">● Recording</span>}
           {engineState.warming && <span className="ml-2 text-amber-600">Loading assets…</span>}
         </div>
-        <span className="opacity-70">Space play/stop · R record · M metronome · ←/→ scrub · ⌘+/⌘− zoom · B split clip · Del delete · ⌘Z undo · ⌘S save</span>
+        <span className="opacity-70">Space play/stop · R record · M metronome · K marker · ,/. prev/next marker · ←/→ scrub · ⌘+/⌘− zoom · B split clip · Del delete · ⌘Z undo · ⌘S save</span>
       </div>
     </div>
     </div>
@@ -1539,12 +1893,6 @@ function Editor({
     </TrackHeightContext.Provider>
     </ZoomContext.Provider>
   );
-}
-
-function formatTime(s: number): string {
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${String(sec).padStart(2, '0')}`;
 }
 
 interface SelectedClip { trackId: string; clipId: string }
@@ -2883,6 +3231,7 @@ function CompactTimeSignaturePicker({
 function BarRuler({
   lengthSeconds, tempoBpm, numerator, positionSeconds = 0,
   loopRegion = null, loopEnabled = false, onLoopRegionChange, onSeek,
+  markers = [], onMarkerJump, onMarkerEdit,
 }: {
   lengthSeconds: number; tempoBpm: number; numerator: number;
   positionSeconds?: number;
@@ -2890,6 +3239,9 @@ function BarRuler({
   loopEnabled?: boolean;
   onLoopRegionChange?: (r: { start: number; end: number } | null) => void;
   onSeek?: (seconds: number) => void;
+  markers?: SessionMarker[];
+  onMarkerJump?: (seconds: number) => void;
+  onMarkerEdit?: (id: string) => void;
 }) {
   const pxPerSecond = usePxPerSecond();
   const gridLevel = useGridLevel();
@@ -2991,6 +3343,22 @@ function BarRuler({
           }}
         />
       )}
+      {/* Marker flags — Logic-style chips pinned to the ruler. Click
+       * jumps the playhead; pointer-down is stopped so the ruler's
+       * tap-to-seek / drag-to-loop doesn't also fire. */}
+      {sortMarkers(markers).map((mk) => (
+        <button
+          key={mk.id}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); onMarkerJump?.(mk.seconds); }}
+          onDoubleClick={(e) => { e.stopPropagation(); onMarkerEdit?.(mk.id); }}
+          className="absolute top-0 z-10 h-4 max-w-[96px] truncate rounded-sm bg-amber-500/90 hover:bg-amber-400 px-1 text-xs font-semibold leading-4 text-amber-950"
+          style={{ left: mk.seconds * pxPerSecond }}
+          title={`${mk.name} — click to jump · double-click to rename/delete`}
+        >
+          {mk.name}
+        </button>
+      ))}
       {/* Playhead chevron on the ruler — moves with transport position. */}
       <div
         className="absolute top-0 pointer-events-none"
@@ -3005,15 +3373,6 @@ function BarRuler({
       />
     </div>
   );
-}
-
-function formatBarBeat(seconds: number, tempoBpm: number, numerator: number): string {
-  const secondsPerBeat = 60 / tempoBpm;
-  const totalBeats = seconds / secondsPerBeat;
-  const bar = Math.floor(totalBeats / numerator) + 1;
-  const beat = Math.floor(totalBeats % numerator) + 1;
-  const ticks = Math.floor((totalBeats % 1) * 960);
-  return `${String(bar).padStart(3, '0')}.${beat}.${String(ticks).padStart(3, '0')}`;
 }
 
 // ── Click (metronome) track row ──────────────────────────────────────
@@ -4029,7 +4388,94 @@ function SmartControls({
 //   • Output: setSinkId() on the engine's main output element (Chrome
 //     only; Safari + Firefox don't yet support setSinkId on Web Audio)
 
-function AudioSettingsButton() {
+// ── MIDI Clock sync (web only) ───────────────────────────────────────
+//
+// Follows the engine transport: Play → SPP + Start/Continue + 24 PPQ
+// clock to the chosen Web MIDI output; Stop → MIDI Stop; tempo edits
+// retime the stream live. Feature-detected — browsers without Web MIDI
+// (Safari, Firefox) simply never show the controls.
+
+const midiAccessSupported = typeof navigator !== 'undefined' && 'requestMIDIAccess' in navigator;
+
+function useMidiClockSync(state: EngineState | null, enabled: boolean, outputId: string) {
+  const senderRef = useRef<MidiClockSender | null>(null);
+
+  useEffect(() => {
+    if (!enabled || !midiAccessSupported) return;
+    let cancelled = false;
+    (navigator as Navigator & { requestMIDIAccess: () => Promise<MIDIAccess> })
+      .requestMIDIAccess()
+      .then((access) => {
+        if (cancelled) return;
+        const outs = [...access.outputs.values()];
+        const out = outs.find((o) => o.id === outputId) ?? outs[0];
+        if (!out) { toast.info('MIDI sync is on, but no MIDI output device was found.'); return; }
+        senderRef.current = new MidiClockSender(out, 120);
+      })
+      .catch(() => toast.error('MIDI access was denied — sync stays off.'));
+    return () => {
+      cancelled = true;
+      senderRef.current?.stop();
+      senderRef.current?.dispose();
+      senderRef.current = null;
+    };
+  }, [enabled, outputId]);
+
+  useEffect(() => {
+    const sender = senderRef.current;
+    if (!sender) return;
+    if (state?.tempoBpm) sender.setBpm(state.tempoBpm);
+    if (state?.isPlaying && !sender.running) sender.start(state.positionSeconds);
+    else if (!state?.isPlaying && sender.running) sender.stop();
+  }, [state?.isPlaying, state?.tempoBpm, state?.positionSeconds, enabled]);
+}
+
+interface MidiSyncProps {
+  enabled: boolean;
+  setEnabled: (v: boolean) => void;
+  outputId: string;
+  setOutputId: (v: string) => void;
+}
+
+function MidiSyncSection({ enabled, setEnabled, outputId, setOutputId }: MidiSyncProps) {
+  const [outs, setOuts] = useState<Array<{ id: string; name: string }>>([]);
+  useEffect(() => {
+    if (!enabled || !midiAccessSupported) return;
+    (navigator as Navigator & { requestMIDIAccess: () => Promise<MIDIAccess> })
+      .requestMIDIAccess()
+      .then((access) => setOuts([...access.outputs.values()].map((o) => ({ id: o.id, name: o.name ?? o.id }))))
+      .catch(() => { /* denied — the sync hook already toasts */ });
+  }, [enabled]);
+
+  if (!midiAccessSupported) return null;
+  return (
+    <div className="border-t border-border pt-2">
+      <Label className="text-xs font-semibold">Synchronization — MIDI Clock out</Label>
+      <p className="text-xs text-muted-foreground mb-1.5">
+        Sends Start/Stop + 24 PPQ MIDI Clock to a MIDI output so hardware
+        and other DAWs follow this transport. (Ableton Link and SMPTE
+        chase aren't possible in a browser.)
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setEnabled(!enabled)}
+          className={`h-8 px-3 rounded border text-sm font-bold ${enabled ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+        >
+          {enabled ? 'On' : 'Off'}
+        </button>
+        {enabled && (
+          <select value={outputId} onChange={(e) => setOutputId(e.target.value)}
+            className="flex-1 h-8 bg-background border border-border rounded px-2 text-sm">
+            <option value="">First available output</option>
+            {outs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AudioSettingsButton({ midiSync }: { midiSync?: MidiSyncProps }) {
   const [open, setOpen] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [inputId, setInputId] = useState<string>(() => localStorage.getItem('studio.inputDeviceId') || '');
@@ -4148,6 +4594,7 @@ function AudioSettingsButton() {
               🔊 Play test beep
             </Button>
           </div>
+          {midiSync && <MidiSyncSection {...midiSync} />}
           <div className="flex justify-end gap-2 pt-2">
             <Button size="sm" variant="outline" onClick={refresh}>Refresh device list</Button>
             <Button size="sm" onClick={() => setOpen(false)}>Done</Button>
@@ -4190,7 +4637,13 @@ function ScrubButton({
     // Immediate small nudge so a quick tap moves the playhead at all.
     nudge(direction * 0.25);
     if (intervalRef.current !== null) return;
-    intervalRef.current = setInterval(() => nudge(direction * 0.08), 20);
+    // Shuttle acceleration: the longer the hold, the faster the scrub
+    // (~4×/s → ~12×/s → ~30×/s), like leaning on a jog wheel.
+    const heldSince = performance.now();
+    intervalRef.current = setInterval(
+      () => nudge(direction * shuttleStepSeconds(performance.now() - heldSince)),
+      20,
+    );
   };
   const stopScrub = () => {
     if (intervalRef.current !== null) {

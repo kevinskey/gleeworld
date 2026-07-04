@@ -312,6 +312,9 @@ export function useStudioEngine(session: Session | null) {
               // for `0`. Explicit `!!` removes ambiguity.
               metronomeOn: !!s.metronomeOn, metronomeVolumeDb: 0,
               peakDbL: -Infinity, peakDbR: -Infinity,
+              // AVAudioSession runs at 48k on modern devices; the value
+              // only feeds the Samples counter readout.
+              sampleRate: 48000,
             });
             // Surface any engine-side error as a toast so device users
             // can report the failure without needing Mac + Safari console.
@@ -447,6 +450,10 @@ export function useStudioEngine(session: Session | null) {
       return {
         start: async () => { await NativeStudio.start(); },
         play: async () => { await NativeStudio.play(); },
+        playFrom: async (s: number) => {
+          await NativeStudio.seek({ seconds: s });
+          await NativeStudio.play();
+        },
         pause: async () => { await NativeStudio.pause(); },
         stop: async () => { await NativeStudio.stop(); },
         seek: async (s: number) => { await NativeStudio.seek({ seconds: s }); },
@@ -485,11 +492,14 @@ export function useStudioEngine(session: Session | null) {
          * unreliable web fallback inside WKWebView. */
         nativeRecordStart: async () => { await NativeStudio.recordStart(); },
         nativeRecordStop: async () => NativeStudio.recordStop(),
+        // Loop is unwired on native, so there is no wrap to guard.
+        setRecordingActive: (_active: boolean) => { /* no-op on native */ },
       };
     }
     return {
       start: () => engineRef.current?.start(),
       play: () => engineRef.current?.play(),
+      playFrom: (s: number) => engineRef.current?.playFrom(s),
       pause: () => engineRef.current?.pause(),
       stop: () => engineRef.current?.stop(),
       seek: (s: number) => engineRef.current?.seek(s),
@@ -508,6 +518,7 @@ export function useStudioEngine(session: Session | null) {
        * flow when these return null. */
       nativeRecordStart: null as null | (() => Promise<void>),
       nativeRecordStop: null as null | (() => Promise<{ localUrl: string; filename: string }>),
+      setRecordingActive: (active: boolean) => engineRef.current?.setRecordingActive(active),
     };
   }, [native]);
 
