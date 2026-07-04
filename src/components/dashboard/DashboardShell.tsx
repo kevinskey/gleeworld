@@ -761,15 +761,16 @@ function TopBar() {
 
   return (
     <header
-      className="border-b border-border bg-card flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-30"
+      className="border-b border-border bg-card flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-30 h-14 lg:h-20"
       style={{
-        // Pin the topbar to exactly the same 80px the sidebar's brand
-        // block uses (h-[80px]) so the two visually meet at the same
-        // baseline instead of the topbar overhanging the brand row by
-        // ~18px. Safe-area inset is ADDED on top of the 80px so iOS
-        // notches still clear without growing the visible header.
+        // Height is class-based (h-14 / lg:h-20) so phones get a
+        // slimmer 56px bar; lg+ keeps the 80px that matches the
+        // sidebar's brand block (h-[80px]) so the two visually meet at
+        // the same baseline instead of the topbar overhanging the
+        // brand row. Safe-area inset is ADDED on top of the header
+        // height so iOS notches still clear without growing the
+        // visible header.
         paddingTop: 'env(safe-area-inset-top)',
-        height: '80px',
       }}
     >
       {/* Mobile menu (lg:hidden) — drawer with nav. State is controlled so
