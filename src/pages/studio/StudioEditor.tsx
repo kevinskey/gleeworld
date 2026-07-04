@@ -16,7 +16,7 @@ import {
   Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download,
   Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
-  ChevronLeft, Repeat, SlidersHorizontal, X, MoreVertical,
+  ChevronLeft, Repeat, SlidersHorizontal, X, MoreVertical, Undo2,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -298,6 +298,10 @@ function Editor({
   // reload — happens once, on release. Committing per drag-tick would
   // rebuild the native audio graph dozens of times per second.
   const [tempoDraft, setTempoDraft] = useState<number | null>(null);
+  // Controlled so the phone tools row's BPM chip can open the settings
+  // sheet directly — the bare sliders icon wasn't discoverable enough
+  // ("no way to set tempo on mobile").
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const commitTempoDraft = () => {
     setTempoDraft((draft) => {
       if (draft !== null) {
@@ -981,7 +985,7 @@ function Editor({
         {/* Go to start */}
         <button
           onClick={() => engineState.seek?.(0)}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Go to beginning (Home)">
           <SkipBack className="w-4 h-4" />
         </button>
@@ -1115,7 +1119,7 @@ function Editor({
         {/* Mobile-only: open a bottom sheet with all the secondary
          * controls (count-in, tempo, snap, grid, end) so the transport
          * bar can fit on a single phone-width row. */}
-        <Sheet>
+        <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SheetTrigger asChild>
             <button
               className="sm:hidden ml-auto h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
@@ -1215,6 +1219,34 @@ function Editor({
             </div>
           </SheetContent>
         </Sheet>
+
+        {/* Phone tools row — always its own full-width line under the
+         * transport controls. Tempo, count-in, and undo were reported
+         * as unreachable on mobile: tempo/count-in hid behind an
+         * unlabeled icon and undo was keyboard-only. */}
+        <div className="sm:hidden w-full flex items-center gap-1.5 pt-1">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="h-10 px-3 rounded border border-border bg-muted hover:bg-muted/70 text-sm font-semibold tabular-nums"
+            aria-label="Set tempo"
+          >
+            {tempoDraft ?? session.tempo_bpm} BPM
+          </button>
+          <button
+            onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
+            className={`h-10 px-3 rounded border text-sm font-semibold ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground'}`}
+            aria-label="Count-in bars"
+          >
+            Count-in {countInBars === 0 ? 'off' : `${countInBars}`}
+          </button>
+          <button
+            onClick={undo}
+            className="h-10 px-3 rounded border border-border bg-muted hover:bg-muted/70 text-sm font-semibold inline-flex items-center gap-1.5 ml-auto"
+            aria-label="Undo"
+          >
+            <Undo2 className="w-4 h-4" /> Undo
+          </button>
+        </div>
 
         {/* Count-in cycle button: Off → 1 bar → 2 bars → Off. Lives in
          * the transport bar so it sits with the other recording controls. */}
