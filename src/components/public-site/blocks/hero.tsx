@@ -167,7 +167,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section
       ref={sectionRef}
       id="top"
-      className={`relative overflow-hidden text-white max-w-6xl mx-auto px-4 sm:px-6 ${hasImage ? '' : 'min-h-[40vh]'}`}
+      className={`relative overflow-hidden text-white max-w-6xl mx-auto px-4 sm:px-6 ${hasImage ? 'min-h-[420px] sm:min-h-0' : 'min-h-[40vh]'}`}
       style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the
@@ -177,7 +177,12 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
         <img
           src={bgImage}
           alt=""
-          className="block w-full h-auto"
+          // Phones: a wide banner at its natural aspect collapses to a
+          // ~160px strip and the hero reads as a shrunken desktop page.
+          // Below sm the section takes a real min-height and the image
+          // crops as a cover behind it; from sm up the original
+          // natural-aspect flow (height comes from the image) is kept.
+          className="absolute inset-0 w-full h-full object-cover sm:static sm:inset-auto sm:h-auto sm:object-cover block"
           loading="eager"
           onError={() => setImgFailed(true)}
         />
