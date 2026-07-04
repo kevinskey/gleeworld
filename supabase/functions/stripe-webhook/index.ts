@@ -88,17 +88,46 @@ serve(async (req) => {
       const isDuplicate = dedupeErr.code === '23505'
         || /duplicate key value/i.test(dedupeErr.message || '');
       if (isDuplicate) {
-        logStep("Duplicate event — already processed, skipping side effects", { id: event.id });
-        return new Response(JSON.stringify({ received: true, duplicate: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
+        // A row for this event_id already exists. That alone doesn't mean
+        // fulfillment already succeeded — if a prior delivery's handler
+        // threw (network blip, transient DB error, etc.), the audit row was
+        // written with status 'processing' and never advanced to
+        // 'processed' (see the end-of-handler update below), because we
+        // returned 500 and never reached it. Stripe then retries the same
+        // event, hits this same unique conflict, and — if we always treated
+        // "conflict" as "already handled" — we'd permanently strand the
+        // event as 200'd-but-never-fulfilled. So: only short-circuit when
+        // the existing row says the previous attempt actually finished.
+        const { data: existing, error: lookupErr } = await supabase
+          .from('gw_webhook_events')
+          .select('status')
+          .eq('event_id', event.id)
+          .maybeSingle();
+        if (lookupErr) {
+          // Can't tell if it's safe to skip — fail closed and let Stripe
+          // retry rather than silently dropping a possibly-unfulfilled event.
+          logStep("Dedupe lookup failed after 23505 conflict — failing closed", { id: event.id, error: lookupErr.message });
+          throw new Error(`Webhook dedupe lookup failed: ${lookupErr.message}`);
+        }
+        if (existing?.status === 'processed') {
+          logStep("Duplicate event — already processed, skipping side effects", { id: event.id });
+          return new Response(JSON.stringify({ received: true, duplicate: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+        // status is 'processing' (or something else unrecognized) — a prior
+        // attempt started but never marked itself 'processed'. Fall through
+        // into fulfillment; every handler below is upsert/onConflict-based
+        // so re-running it is safe.
+        logStep("Duplicate event with a stranded non-processed row — retrying fulfillment", { id: event.id, priorStatus: existing?.status });
+      } else {
+        // Non-duplicate insert failure (e.g. audit table transiently
+        // unreachable) — log but don't block fulfillment; the prior code
+        // didn't check this error either, so we preserve that best-effort
+        // behavior for anything that isn't the dedupe conflict.
+        logStep("Webhook audit insert failed (non-duplicate) — continuing", { error: dedupeErr.message });
       }
-      // Non-duplicate insert failure (e.g. audit table transiently
-      // unreachable) — log but don't block fulfillment; the prior code
-      // didn't check this error either, so we preserve that best-effort
-      // behavior for anything that isn't the dedupe conflict.
-      logStep("Webhook audit insert failed (non-duplicate) — continuing", { error: dedupeErr.message });
     }
 
     // Handle different event types
@@ -173,6 +202,21 @@ serve(async (req) => {
   }
 });
 
+// As of the pinned API version "2025-08-27.basil", Stripe removed
+// current_period_end from the top-level Subscription object — it now lives
+// on each subscription item (subscription.items.data[n].current_period_end),
+// since each item can have its own billing period. The default
+// stripe.subscriptions.retrieve() / the object embedded in a webhook event
+// both include `items.data` (it's part of the Subscription's default
+// expansion set, not something that needs an explicit `expand`), so reading
+// item [0] here works without any extra fetch params. We still fall back to
+// the top-level field for older API versions / safety.
+function subscriptionPeriodEndEpoch(sub: Stripe.Subscription | null | undefined): number | null {
+  return (sub as any)?.items?.data?.[0]?.current_period_end
+    ?? (sub as any)?.current_period_end
+    ?? null;
+}
+
 // Fetch the Stripe Subscription's current_period_end for a checkout
 // session that just completed. Checkout Sessions carry only the
 // subscription ID (a string), not the Subscription object itself, so
@@ -184,9 +228,8 @@ async function fetchSubscriptionPeriodEnd(stripe: Stripe, session: Stripe.Checko
   if (!subscriptionId) return null;
   try {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    return subscription.current_period_end
-      ? new Date(subscription.current_period_end * 1000).toISOString()
-      : null;
+    const epoch = subscriptionPeriodEndEpoch(subscription);
+    return epoch ? new Date(epoch * 1000).toISOString() : null;
   } catch (e: any) {
     logStep("Failed to fetch subscription for period end", { subscriptionId, error: e?.message });
     return null;
@@ -366,10 +409,11 @@ async function handleSubscriptionChanged(supabase: any, subscription: Stripe.Sub
     return;
   }
 
+  const periodEndEpoch = subscriptionPeriodEndEpoch(subscription);
   const update: Record<string, unknown> = {
     status,
-    current_period_end: subscription.current_period_end
-      ? new Date(subscription.current_period_end * 1000).toISOString()
+    current_period_end: periodEndEpoch
+      ? new Date(periodEndEpoch * 1000).toISOString()
       : null,
     trial_ends_at: subscription.trial_end
       ? new Date(subscription.trial_end * 1000).toISOString()
