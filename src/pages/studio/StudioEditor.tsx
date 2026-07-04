@@ -488,10 +488,12 @@ function Editor({
       // Optional count-in: if enabled, click for N bars before the mic
       // opens. The engine's metronome scheduleRepeat only fires while
       // the transport is running, so we drive the audible count via a
-      // direct synth trigger here. Also auto-arm the metronome so it
-      // keeps ticking through the take after play() starts.
+      // direct synth trigger here. The metronome toggle is NOT touched:
+      // count-in owns the pre-roll clicks, and whether the click keeps
+      // ticking through the take follows the user's metronome button —
+      // auto-arming it here meant every record run got a click the
+      // user never asked for.
       if (countInBars > 0) {
-        if (!state?.metronomeOn) setMetronome(true);
         const secPerBeat = 60 / session.tempo_bpm;
         const numerator = session.time_signature.numerator;
         const totalBeats = countInBars * numerator;
