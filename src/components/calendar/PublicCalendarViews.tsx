@@ -65,7 +65,7 @@ export const PublicCalendarViews = () => {
       <div className="bg-white border-b border-neutral-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           {/* Month Navigation */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               variant="outline"
               size="icon"
@@ -75,8 +75,8 @@ export const PublicCalendarViews = () => {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             
-            <div className="min-w-[200px] text-center">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#150d26]">
+            <div className="min-w-[120px] text-center">
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-[#150d26]">
                 {format(currentDate, 'MMMM yyyy')}
               </h2>
             </div>
@@ -102,7 +102,7 @@ export const PublicCalendarViews = () => {
 
           {/* View Selector */}
           <div className="flex items-center gap-3">
-            <span className="text-sm text-white hidden sm:inline">
+            <span className="text-sm text-muted-foreground hidden sm:inline">
               {events.length} event{events.length !== 1 ? 's' : ''}
             </span>
             <CalendarViewSelector 
