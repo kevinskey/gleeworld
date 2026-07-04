@@ -467,9 +467,11 @@ export function useStudioEngine(session: Session | null) {
           void NativeStudio.setMetronome({ on });
         },
         setMetronomeVolume: (db: number) => {
-          // Send the new gain alongside the current on-state. Cheap
-          // enough that re-sending `on` on every drag is fine.
-          void NativeStudio.setMetronome({ on: true, volumeDb: db });
+          // Volume ONLY — never touch the on/off state here. This used
+          // to send `on: true` with every drag, so brushing the click
+          // volume slider silently armed the metronome and the next
+          // record/play clicked "on its own".
+          void NativeStudio.setMetronome({ volumeDb: db });
         },
         triggerMetronomeClick: (accent: boolean) => {
           // Native single click — powers the count-in pre-roll clicks

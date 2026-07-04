@@ -216,6 +216,13 @@ public final class StudioNativeEngine {
     }
 
     public func stopEngine() {
+        // The plugin holds this engine as a singleton, so state set in
+        // one Studio visit would otherwise leak into the next (an armed
+        // metronome kept clicking on the next session's first Play).
+        // Match the web engine, which is rebuilt per editor mount:
+        // disarm the click on teardown.
+        cancelMetronome()
+        metronomeOn = false
         positionTimer?.invalidate(); positionTimer = nil
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
