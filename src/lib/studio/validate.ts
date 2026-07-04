@@ -48,6 +48,18 @@ export function validateSession(raw: unknown): ValidateResult {
   if (!s.master) errors.push('master missing');
   else validateFxList(s.master.fx ?? [], 'master', errors);
 
+  // Markers are optional (older sessions omit them) but must be
+  // well-formed when present.
+  if (s.markers !== undefined) {
+    if (!Array.isArray(s.markers)) errors.push('markers must be an array');
+    else s.markers.forEach((mk, i) => {
+      if (!mk || typeof mk !== 'object') { errors.push(at('markers', i) + ' is not an object'); return; }
+      must(typeof mk.id === 'string', at('markers', i, 'id') + ' must be a string');
+      must(typeof mk.name === 'string', at('markers', i, 'name') + ' must be a string');
+      must(typeof mk.seconds === 'number' && mk.seconds >= 0, at('markers', i, 'seconds') + ' must be >= 0');
+    });
+  }
+
   // Assets keyed by id for clip cross-reference checks.
   const assetIds = new Set<string>();
   if (!Array.isArray(s.assets)) errors.push('assets must be an array');

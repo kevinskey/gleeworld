@@ -18,6 +18,7 @@ import type { Session, AudioAsset, AudioClip } from '../session';
 import { buildFxChain, type EngineFxChain } from './fx';
 import { buildTrack, type EngineTrack } from './tracks';
 import { setAssetUrl } from './assetUrlCache';
+import { shouldLoopWrap } from '../transport';
 
 export interface EngineState {
   isReady: boolean;
@@ -34,6 +35,8 @@ export interface EngineState {
   /** Master bus output level in dB (peak across L+R). Updated ~30Hz. */
   peakDbL: number;
   peakDbR: number;
+  /** AudioContext sample rate — drives the Samples time counter. */
+  sampleRate: number;
 }
 
 type Listener = (s: EngineState) => void;
@@ -52,6 +55,9 @@ export class StudioEngine {
   // when the tab isn't focused.
   private loopCheckIntervalId: ReturnType<typeof setInterval> | null = null;
   private metronomeBeatInBar = 0;
+  // While a take is in flight the loop watchdog stands down — a wrap
+  // mid-recording would mangle the take's clip placement.
+  private recordingActive = false;
   // Tracks (audio + MIDI), built from the loaded Session.
   private tracks = new Map<string, EngineTrack>();
   private session: Session | null = null;
@@ -94,6 +100,9 @@ export class StudioEngine {
       metronomeVolumeDb: 0,
       peakDbL: -Infinity,
       peakDbR: -Infinity,
+      sampleRate: (() => {
+        try { return Tone.getContext().sampleRate; } catch { return 48000; }
+      })(),
     };
   }
 
@@ -444,17 +453,24 @@ export class StudioEngine {
     this.startPositionLoop();
   }
 
+  /** Recording guard — StudioEditor flips this around every take so the
+   * loop watchdog can't wrap the transport mid-recording. */
+  setRecordingActive(active: boolean): void {
+    this.recordingActive = active;
+  }
+
   private startLoopInterval(): void {
     if (this.loopCheckIntervalId !== null) return;
     this.loopCheckIntervalId = setInterval(() => {
-      if (!this.state.isPlaying) return;
-      if (
-        this.state.loopEnabled &&
-        this.state.loopEndSeconds > this.state.loopStartSeconds &&
-        Tone.getTransport().seconds >= this.state.loopEndSeconds
-      ) {
-        this.repositionAndPlay(this.state.loopStartSeconds);
-      }
+      const wrap = shouldLoopWrap({
+        isPlaying: this.state.isPlaying,
+        loopEnabled: this.state.loopEnabled,
+        recordingActive: this.recordingActive,
+        positionSeconds: Tone.getTransport().seconds,
+        loopStartSeconds: this.state.loopStartSeconds,
+        loopEndSeconds: this.state.loopEndSeconds,
+      });
+      if (wrap) this.repositionAndPlay(this.state.loopStartSeconds);
     }, 25);
   }
 
@@ -489,6 +505,19 @@ export class StudioEngine {
       }, pb.startSeconds);
       this.playScheduleIds.push(id);
     }
+  }
+
+  /** Reposition and start playback at `seconds` in one atomic step.
+   * Used by the punch pre-roll, which must land exactly at
+   * punch-in − pre-roll — play()'s loop-snap and auto-rewind
+   * heuristics would move the head somewhere else. */
+  playFrom(seconds: number): void {
+    this.state.isPlaying = true;
+    this.repositionAndPlay(Math.max(0, seconds));
+    if (this.state.metronomeOn) this.startMetronomeInterval();
+    if (this.state.loopEnabled) this.startLoopInterval();
+    this.emit();
+    this.startPositionLoop();
   }
 
   pause(): void {

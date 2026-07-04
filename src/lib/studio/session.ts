@@ -26,6 +26,16 @@ export interface TimeSignature {
   denominator: number; // note value: 1, 2, 4, 8, 16
 }
 
+/** Named navigation point on the master timeline (Intro / Verse /
+ * Chorus …). Optional on Session for backward compatibility — sessions
+ * written before markers existed simply omit the array. */
+export interface SessionMarker {
+  id: string;
+  name: string;
+  seconds: number;   // position on the master timeline, >= 0
+  color?: string;    // hex e.g. '#f59e0b'
+}
+
 // ── FX nodes ─────────────────────────────────────────────────────────
 //
 // Each effect type is identified by `type`. `params` is a flat record so
@@ -165,6 +175,7 @@ export interface Session {
   tempo_bpm: number;                 // 120 default
   time_signature: TimeSignature;     // { numerator: 4, denominator: 4 }
   length_seconds: number;            // declared session length; engine clamps clips
+  markers?: SessionMarker[];         // named timeline markers (absent on older sessions)
 
   // Mix
   master: MasterBus;
