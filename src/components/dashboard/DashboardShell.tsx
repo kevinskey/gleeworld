@@ -225,6 +225,7 @@ function Sidebar() {
   const { hasAccess: hasAlumni } = useModuleAccess('alumni');
   const { hasAccess: hasFinance } = useModuleAccess('finance');
   const { hasAccess: hasMerch } = useModuleAccess('merch');
+  const { hasAccess: hasStore } = useModuleAccess('store');
   const { hasAccess: hasFeeds } = useModuleAccess('feeds');
   const { hasAccess: hasViewer } = useModuleAccess('viewer');
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
@@ -308,7 +309,7 @@ function Sidebar() {
         ...(hasPrHub ? [{ to: '/dashboard/pr-hub', label: 'PR Hub', icon: Megaphone, tourId: 'nav-pr-hub', tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
         ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tourId: 'nav-fan-page', tone: 'bg-rose-50 text-rose-700' }] : []),
         ...(hasFeeds ? [{ to: '/dashboard/feeds', label: 'Feeds', icon: Newspaper, tourId: 'nav-feeds', tone: 'bg-blue-50 text-blue-600' }] : []),
-        ...(hasMerch ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tourId: 'nav-shop',  tone: 'bg-amber-50 text-amber-600' }] : []),
+        ...(hasMerch || hasStore ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tourId: 'nav-shop',  tone: 'bg-amber-50 text-amber-600' }] : []),
         ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tourId: 'nav-alumni', tone: 'bg-teal-50 text-teal-600' }] : []),
       ],
     },
@@ -493,6 +494,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { hasAccess: hasAlumni } = useModuleAccess('alumni');
   const { hasAccess: hasFinance } = useModuleAccess('finance');
   const { hasAccess: hasMerch } = useModuleAccess('merch');
+  const { hasAccess: hasStore } = useModuleAccess('store');
   const { hasAccess: hasFeeds } = useModuleAccess('feeds');
   const { hasAccess: hasViewer } = useModuleAccess('viewer');
   const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
@@ -557,7 +559,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         ...(hasPrHub ? [{ to: '/dashboard/pr-hub', label: 'PR Hub', icon: Megaphone, tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
         ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tone: 'bg-rose-50 text-rose-700' }] : []),
         ...(hasFeeds ? [{ to: '/dashboard/feeds', label: 'Feeds', icon: Newspaper, tone: 'bg-blue-50 text-blue-600' }] : []),
-        ...(hasMerch ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tone: 'bg-amber-50 text-amber-600' }] : []),
+        ...(hasMerch || hasStore ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tone: 'bg-amber-50 text-amber-600' }] : []),
         ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
       ],
     },

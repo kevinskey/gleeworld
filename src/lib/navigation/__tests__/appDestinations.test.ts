@@ -4,11 +4,13 @@ import { getTabItems, getAppTiles, type ModuleFlags } from '../appDestinations';
 const allOn: ModuleFlags = {
   hasViewer: true, hasPartTracks: true, hasStudio: true, hasSightReading: true,
   hasBoxOffice: true, hasConcertPlanner: true, hasMerch: true, hasFinance: true, hasAcademy: true,
+  hasStore: true,
 };
 
 const allOff: ModuleFlags = {
   hasViewer: false, hasPartTracks: false, hasStudio: false, hasSightReading: false,
   hasBoxOffice: false, hasConcertPlanner: false, hasMerch: false, hasFinance: false, hasAcademy: false,
+  hasStore: false,
 };
 
 // Routes that are always available regardless of module flags (Home,

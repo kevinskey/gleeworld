@@ -1,8 +1,10 @@
 // Renders a published site payload (from get_public_site). Shared by the
 // /sites/:slug route and the tenant root landing when a site is published.
 import { useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BLOCK_REGISTRY, isBlockAvailable } from './registry';
 import { fontStack, safeConfig, themeSchema, type SiteBlock, type SiteRenderContext } from './types';
+import { StoreOrderConfirmation } from './StoreOrderConfirmation';
 
 export interface PublicSitePayload {
   slug: string;
@@ -99,6 +101,13 @@ export function PublicSiteView({
 
   const blocks = [...(data.blocks ?? [])].sort((a, b) => a.position - b.position);
 
+  // Store checkout success (Tenant Store add-on, Task 3): store-checkout's
+  // success_url redirects here with `?order=&t=`. Purely a display
+  // concern — see StoreOrderConfirmation for the token-gated status lookup.
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get('order');
+  const orderToken = searchParams.get('t');
+
   return (
     <div
       className="min-h-screen bg-white text-slate-900"
@@ -109,6 +118,7 @@ export function PublicSiteView({
         letterSpacing: `${theme.letterSpacing ?? 0}em`,
       }}
     >
+      {orderId && orderToken && <StoreOrderConfirmation order={orderId} token={orderToken} />}
       {blocks.map((block) => {
         const mod = BLOCK_REGISTRY[block.block_type];
         if (!mod || !block.is_visible) return null;
