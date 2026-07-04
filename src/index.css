@@ -245,6 +245,12 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Status colors — fixed semantics, NOT tenant-routed. Exist so status
+       surfaces stop hardcoding hex to dodge tenant overrides. */
+    --status-warning-bg: 48 96% 89%;
+    --status-warning-fg: 26 83% 27%;
+    --status-warning-border: 45 93% 76%;
+
     /* Border — bumped a step darker so 1px solids actually read against
      * the warm canvas (tactile-brutalism standard: precise, crisp
      * geometry instead of blurry shadows for elevation). */

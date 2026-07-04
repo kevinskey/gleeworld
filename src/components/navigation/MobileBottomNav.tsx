@@ -1,23 +1,57 @@
-import { Library, Home, MessageCircle, Disc3 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
-import { MusicalToolkit } from '@/components/musical-toolkit/MusicalToolkit';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useTenantModules } from '@/hooks/useModuleAccess';
+import { getTabItems, type ModuleFlags } from '@/lib/navigation/appDestinations';
+import { toModuleFlags } from '@/lib/navigation/moduleFlags';
 import { cn } from '@/lib/utils';
 
 interface MobileBottomNavProps {
   className?: string;
 }
 
+// Flagless-core tabs — always present regardless of role/module state.
+// Used as the render set while module data is loading so tabs only ever
+// APPEND when data lands, never swap identity (no Academy/Attendance flash).
+const CORE_TAB_KEYS = new Set(['home', 'messages', 'schedule']);
+
 export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  // Only the cheap layout check runs on every mount, including desktop.
+  // All data hooks (useUserRole, useTenantModules) live in PhoneTabBar
+  // below and only mount — and only then fetch — once we know we're on
+  // a phone, so desktop never pays for a duplicate profile/module fetch.
   const isPhone = useIsPhone();
 
   if (!isPhone) return null;
   if (typeof document === 'undefined') return null;
 
-  const isActive = (path: string) => location.pathname === path;
+  return <PhoneTabBar className={className} />;
+};
+
+const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { profile } = useUserRole();
+  const isFaculty = !!profile && (
+    profile.is_admin || profile.is_super_admin
+    || ['instructor', 'teacher', 'conductor'].includes((profile.role || '').toLowerCase())
+  );
+
+  // Single query (react-query dedupes/caches by key with any other
+  // useTenantModules()/useModuleAccess() callers on the page) — derive
+  // every flag from the one tenant module list rather than issuing a
+  // separate query per module_id.
+  const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
+  const flags: ModuleFlags = toModuleFlags(modules);
+  const allTabs = getTabItems(isFaculty ? 'faculty' : 'student', flags);
+  // While modules are still loading, `flags` defaults every gated slot to
+  // `false` (via `modules = []`), so `allTabs` would render the flag-off
+  // fallback set (e.g. Roster/Attendance instead of Academy) and then swap
+  // identity once data lands. Render only the stable flagless-core tabs
+  // until loading resolves so tabs only ever append, never swap.
+  const tabs = modulesLoading ? allTabs.filter((t) => CORE_TAB_KEYS.has(t.key)) : allTabs;
 
   // Portal to document.body so the bar is always anchored to the visual
   // viewport. If MobileBottomNav rendered inline inside DashboardShell,
@@ -46,70 +80,28 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
         transform: 'translateZ(0)',
       }}
     >
-      <div className="flex items-center justify-evenly w-full h-14 px-4 bg-background">
-        {/* Home / Command Center */}
-        <button
-          onClick={() => navigate('/dashboard')}
-          className={cn(
-            "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
-            isActive('/dashboard')
-              ? "text-primary bg-primary/10"
-              : "text-foreground hover:bg-muted"
-          )}
-          aria-label="Command Center"
-        >
-          <Home className="h-5 w-5" />
-        </button>
-
-        {/* Messenger */}
-        <button
-          onClick={() => navigate('/messenger')}
-          className={cn(
-            "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
-            location.pathname.startsWith('/messenger')
-              ? "text-primary bg-primary/10"
-              : "text-foreground hover:bg-muted"
-          )}
-          aria-label="Messenger"
-        >
-          <MessageCircle className="h-5 w-5" />
-        </button>
-
-        {/* Music Toolkit */}
-        <div className="flex items-center justify-center w-10 h-10 text-foreground">
-          <MusicalToolkit className="!p-0 [&_svg]:!h-6 [&_svg]:!w-6" />
-        </div>
-
-        {/* Viewer — the score reader (forScore-style). The library icon
-         * doubles as the entry into the viewer per UX: tap the books
-         * to open the reader, not the library index. */}
-        <button
-          onClick={() => navigate('/dashboard/viewer')}
-          className={cn(
-            "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
-            location.pathname.startsWith('/dashboard/viewer')
-              ? "text-primary bg-primary/10"
-              : "text-foreground hover:bg-muted"
-          )}
-          aria-label="Viewer"
-        >
-          <Library className="h-5 w-5" />
-        </button>
-
-        {/* Studio — multi-track recording / composition. Native AVAudio
-         * engine path on iOS, Tone.js fallback on web. */}
-        <button
-          onClick={() => navigate('/studio')}
-          className={cn(
-            "relative flex items-center justify-center w-10 h-10 rounded-full transition-all",
-            location.pathname.startsWith('/studio')
-              ? "text-primary bg-primary/10"
-              : "text-foreground hover:bg-muted"
-          )}
-          aria-label="Studio"
-        >
-          <Disc3 className="h-5 w-5" />
-        </button>
+      <div className="flex items-stretch w-full bg-background" style={{ minHeight: 56 }}>
+        {tabs.map((t) => {
+          const active = t.to === '/dashboard'
+            ? location.pathname === '/dashboard'
+            : location.pathname.startsWith(t.to);
+          const Icon = t.icon;
+          return (
+            <button
+              key={t.key}
+              onClick={() => navigate(t.to)}
+              aria-label={t.label}
+              aria-current={active ? 'page' : undefined}
+              className={cn(
+                'flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 min-h-[48px]',
+                active ? 'text-primary shadow-[inset_0_2px_0_hsl(var(--primary))] font-semibold' : 'text-muted-foreground',
+              )}
+            >
+              <Icon className="h-5 w-5" />
+              <span className="text-xs leading-none">{t.label}</span>
+            </button>
+          );
+        })}
       </div>
     </nav>,
     document.body,
