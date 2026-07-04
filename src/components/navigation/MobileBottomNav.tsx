@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
+import { isFacultyProfile } from '@/lib/roles';
 import { getTabItems, type ModuleFlags } from '@/lib/navigation/appDestinations';
 import { toModuleFlags } from '@/lib/navigation/moduleFlags';
 import { cn } from '@/lib/utils';
@@ -34,10 +35,7 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
   const location = useLocation();
 
   const { profile } = useUserRole();
-  const isFaculty = !!profile && (
-    profile.is_admin || profile.is_super_admin
-    || ['instructor', 'teacher', 'conductor'].includes((profile.role || '').toLowerCase())
-  );
+  const isFaculty = isFacultyProfile(profile);
 
   // Single query (react-query dedupes/caches by key with any other
   // useTenantModules()/useModuleAccess() callers on the page) — derive

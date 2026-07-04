@@ -1,21 +1,24 @@
 export type LedgerGlyph = 'note' | 'rest' | 'future';
 
-function isoDay(d: Date): string {
-  return d.toISOString().slice(0, 10);
+function localDayKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export function ledgerGlyphs(practicedISODates: string[], today: Date): LedgerGlyph[] {
   const practiced = new Set(
-    practicedISODates.map((s) => (s.length > 10 ? new Date(s).toISOString().slice(0, 10) : s)),
+    practicedISODates.map((s) => (s.length > 10 ? localDayKey(new Date(s)) : s)),
   );
-  const dow = (today.getUTCDay() + 6) % 7; // Monday = 0
+  const dow = (today.getDay() + 6) % 7; // Monday = 0
   const monday = new Date(today);
-  monday.setUTCDate(today.getUTCDate() - dow);
-  const todayKey = isoDay(today);
+  monday.setDate(today.getDate() - dow);
+  const todayKey = localDayKey(today);
   return Array.from({ length: 7 }, (_, i) => {
     const day = new Date(monday);
-    day.setUTCDate(monday.getUTCDate() + i);
-    const key = isoDay(day);
+    day.setDate(monday.getDate() + i);
+    const key = localDayKey(day);
     if (key > todayKey) return 'future';
     return practiced.has(key) ? 'note' : 'rest';
   });

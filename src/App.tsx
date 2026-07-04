@@ -273,6 +273,7 @@ const FanPageEditor = lazy(() => import("./pages/admin/FanPageEditor"));
 const FanPage = lazy(() => import("./pages/FanPage"));
 const PlatformTenantsPortal = lazy(() => import("./pages/admin/PlatformTenantsPortal"));
 const HouseHome = lazy(() => import("./pages/dashboard/HouseHome"));
+const PeopleHub = lazy(() => import("./pages/dashboard/PeopleHub"));
 const PracticeRecordingsReview = lazy(() => import("./pages/dashboard/PracticeRecordingsReview"));
 const MusicToolkitPage = lazy(() => import("./pages/dashboard/MusicToolkitPage"));
 const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
@@ -1305,6 +1306,16 @@ const App = () => {
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <HouseHome />
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/people"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <PeopleHub />
                       </UniversalLayout>
                     </ProtectedRoute>
                   }

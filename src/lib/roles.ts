@@ -3,6 +3,19 @@ import { useToast } from '@/hooks/use-toast';
 
 export type UserRole = 'super_admin' | 'admin' | 'member' | 'bowman_scholar' | 'student';
 
+const FACULTY_ROLES = new Set(['instructor', 'teacher', 'conductor', 'director']);
+
+// Shared faculty check for profile-shaped objects (e.g. useUserRole().profile).
+// Consumed by MobileBottomNav, HouseHome, and the Contacts & Groups work
+// (tasks 3-5) so the faculty/admin definition lives in exactly one place.
+export function isFacultyProfile(
+  p: { role?: string | null; is_admin?: boolean | null; is_super_admin?: boolean | null } | null | undefined,
+): boolean {
+  if (!p) return false;
+  if (p.is_admin || p.is_super_admin) return true;
+  return FACULTY_ROLES.has((p.role || '').toLowerCase());
+}
+
 // Check if user has a specific role
 export const hasRole = async (userId: string, role: UserRole): Promise<boolean> => {
   try {

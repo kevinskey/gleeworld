@@ -13,7 +13,7 @@ const allOff: ModuleFlags = {
 
 // Routes that are always available regardless of module flags (Home,
 // Messages, Schedule, and the flagless attendance/roster surface).
-const FLAGLESS_CORE_ROUTES = new Set(['/dashboard', '/messenger', '/dashboard/calendar', '/attendance']);
+const FLAGLESS_CORE_ROUTES = new Set(['/dashboard', '/messenger', '/dashboard/calendar', '/attendance', '/dashboard/people']);
 
 // Maps a destination route to the ModuleFlags key that gates it, when the
 // route is module-gated (used only by the sweep invariant test below).
@@ -60,6 +60,12 @@ describe('getTabItems', () => {
     expect(new Set(tabs.map((t) => t.to)).size).toBe(tabs.length);
   });
 
+  it('faculty Roster tab routes to the People hub, not the attendance page', () => {
+    const tabs = getTabItems('faculty', allOn);
+    const roster = tabs.find((t) => t.label === 'Roster');
+    expect(roster?.to).toBe('/dashboard/people');
+  });
+
   it('every hand-picked flag combo yields 3-5 distinct, flag-respecting, correctly-ordered tabs', () => {
     const flagKeys = Object.keys(allOn) as Array<keyof ModuleFlags>;
     const combos: ModuleFlags[] = [
@@ -102,7 +108,7 @@ const KNOWN_ROUTES = new Set([
   '/dashboard/viewer', '/dashboard/part-tracks', '/studio',
   '/dashboard/sight-reading', '/attendance', '/dashboard/academy',
   '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
-  '/store',
+  '/store', '/dashboard/people',
 ]);
 
 describe('getAppTiles', () => {
@@ -135,5 +141,11 @@ describe('getAppTiles', () => {
         expect(KNOWN_ROUTES.has(dest.to)).toBe(true);
       }
     }
+  });
+
+  it('faculty grid still surfaces an Attendance tile at /attendance now that Roster routes elsewhere', () => {
+    const { primary, overflow } = getAppTiles('faculty', allOn);
+    const attendance = [...primary, ...overflow].find((t) => t.label === 'Attendance');
+    expect(attendance?.to).toBe('/attendance');
   });
 });
