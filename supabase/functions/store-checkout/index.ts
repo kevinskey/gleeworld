@@ -152,8 +152,12 @@ export async function handler(req: Request): Promise<Response> {
       orderId: order.id,
       storeType: store_type,
       buyerEmail: buyer_email,
-      successUrl: `${origin}/store/success?order=${order.id}&t=${accessToken}`,
-      cancelUrl: `${origin}/store?canceled=1`,
+      // NOTE: the public storefront route is `/shop` (Shop.tsx) — `/store`
+      // is a pre-existing admin route behind auth, so both of these must
+      // point at `/shop`, never `/store`, or a guest checkout/cancel would
+      // 404 or hit an admin-gated page.
+      successUrl: `${origin}/shop/success?order=${order.id}&t=${accessToken}`,
+      cancelUrl: `${origin}/shop?canceled=1`,
     });
     return j({ url, order_id: order.id, access_token: accessToken });
   } catch (e) {
