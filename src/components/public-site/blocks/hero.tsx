@@ -221,7 +221,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
       )}
       {(showHeadline || showSubheadline) && (
         <div
-          className={`text-center ${hasImage ? 'absolute' : 'relative pt-20 sm:pt-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+          className={`text-center ${hasImage ? 'absolute max-sm:!left-1/2 max-sm:!w-[92%]' : 'relative pt-20 sm:pt-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
             draggable && hasImage ? (dragging === 'text' ? 'cursor-grabbing' : 'cursor-grab') : ''
           }`}
           style={
@@ -274,7 +274,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
       )}
       {showCta && (
         <div
-          className={`text-center ${hasImage ? 'absolute' : 'relative pb-20 sm:pb-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+          className={`text-center ${hasImage ? 'absolute max-sm:!left-1/2 max-sm:!w-[92%]' : 'relative pb-20 sm:pb-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
             draggable && hasImage ? (dragging === 'buttons' ? 'cursor-grabbing' : 'cursor-grab') : ''
           }`}
           style={
