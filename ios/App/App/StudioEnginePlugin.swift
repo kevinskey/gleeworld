@@ -235,11 +235,15 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func setMetronome(_ call: CAPPluginCall) {
         wireEngineEvents()
-        let on = call.getBool("on") ?? false
+        // `on` is OPTIONAL: volume-only calls must not touch the toggle.
+        // The old `?? false` default meant a volume-slider drag (which
+        // sent on:true from JS) or any partial payload could silently
+        // flip the metronome state out from under the user.
+        let on = call.getBool("on")
         let db = call.getDouble("volumeDb")
         DispatchQueue.main.async { [weak self] in
             if let db = db { self?.engine.setMetronomeVolume(db: db) }
-            self?.engine.setMetronome(on: on)
+            if let on = on { self?.engine.setMetronome(on: on) }
             call.resolve()
         }
     }

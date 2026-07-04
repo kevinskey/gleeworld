@@ -29,7 +29,7 @@ interface StudioEnginePluginShape {
   // recordStart doesn't pay the category-flip latency mid-groove.
   prepareRecordSession(): Promise<void>;
   updateTempo(args: { bpm: number }): Promise<void>;
-  setMetronome(args: { on: boolean; volumeDb?: number }): Promise<void>;
+  setMetronome(args: { on?: boolean; volumeDb?: number }): Promise<void>;
   // One immediate click — drives the JS count-in pre-roll on iOS.
   clickOnce(args: { accent: boolean }): Promise<void>;
   // Persist a finalized (latency-trimmed) take to the app tmp dir and
