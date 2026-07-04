@@ -71,6 +71,13 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   const [appleMusicArtworkUrl, setAppleMusicArtworkUrl] = useState<string | null>(null);
   const appleMusicInstanceRef = useRef<any>(null);
   const appleMusicProgressRef = useRef<number | null>(null);
+  // The last track/album the user asked for. loadAppleMusic bails out BEFORE
+  // setQueue when the user isn't signed in, so after a successful sign-in we
+  // must re-dispatch this — otherwise play() runs against an empty queue and
+  // silently does nothing (the "Apple Music never plays" field bug).
+  const pendingAppleInputRef = useRef<{
+    id: string; kind?: 'song' | 'album'; storefront?: string; title?: string; artworkUrl?: string | null;
+  } | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -119,6 +126,27 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
           if (typeof data.info.duration === 'number') {
             setDuration(data.info.duration);
           }
+          // The embed does NOT send discrete onStateChange events unless the
+          // full IFrame API JS registers them — with our raw postMessage
+          // handshake, play/pause/ended arrive only as infoDelivery.playerState.
+          // Without this mapping isPlaying never flips: audio plays but the
+          // button stays on ▶ and pause becomes impossible.
+          if (typeof data.info.playerState === 'number') {
+            const ps = data.info.playerState;
+            if (ps === 1) { // Playing
+              setIsPlaying(true);
+              setIsLoading(false);
+            } else if (ps === 2) { // Paused
+              setIsPlaying(false);
+            } else if (ps === 0) { // Ended
+              setIsPlaying(false);
+              setCurrentTime(0);
+            } else if (ps === -1 || ps === 5) { // Unstarted / cued
+              setIsPlaying(false);
+            }
+            // ps === 3 (buffering) intentionally ignored — see onStateChange
+            // note above.
+          }
         }
       } catch (e) {
         // Ignore non-JSON messages
@@ -139,6 +167,13 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     if (!win) return;
     try {
       win.postMessage(JSON.stringify({ event: 'listening' }), 'https://www.youtube.com');
+      // Explicitly register for state events. infoDelivery.playerState is the
+      // primary signal we consume, but registering costs nothing and restores
+      // the discrete onStateChange path where the embed honors it.
+      win.postMessage(
+        JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }),
+        'https://www.youtube.com',
+      );
       win.postMessage(
         JSON.stringify({ event: 'command', func: command, args: args || [] }),
         'https://www.youtube.com',
@@ -250,6 +285,20 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
           }
           setAppleMusicNeedsAuth(false);
           setAppleMusicAuthError(null);
+          // We only land in this branch when the track was picked while
+          // signed out — which means loadAppleMusic bailed before setQueue.
+          // Queue the pending pick now or play() below is a silent no-op.
+          const pending = pendingAppleInputRef.current;
+          if (pending) {
+            try {
+              if (pending.kind === 'album') await kit.setQueue({ album: pending.id });
+              else await kit.setQueue({ song: pending.id });
+              setPlayerReady(true);
+            } catch (err) {
+              console.error('[AudioContext] apple music re-queue after auth failed', err);
+              return;
+            }
+          }
         }
         try {
           if (isPlaying) await kit.pause();
@@ -335,6 +384,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
         appleMusicProgressRef.current = null;
       }
     }
+    pendingAppleInputRef.current = null;
     setAudioSource(null);
     setYoutubeVideoId(null);
     setAudioFileName(null);
@@ -373,6 +423,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   }, []);
 
   const loadAppleMusic = useCallback(async (input: { id: string; kind?: 'song' | 'album'; storefront?: string; title?: string; artworkUrl?: string | null }) => {
+    pendingAppleInputRef.current = input;
     setIsLoading(true);
     setAppleMusicAuthError(null);
 
@@ -448,6 +499,12 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       if (result.ok) {
         setAppleMusicNeedsAuth(false);
         toast.success('Signed in to Apple Music');
+        // The track the user originally picked was never queued (loadAppleMusic
+        // early-returns before setQueue when unauthenticated). Re-dispatch it
+        // now so sign-in flows straight into playback instead of leaving an
+        // empty queue behind a live-looking transport.
+        const pending = pendingAppleInputRef.current;
+        if (pending) void loadAppleMusic(pending);
         return true;
       }
       const msg = result.message ?? 'Sign-in failed.';
@@ -462,7 +519,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       toast.error('Apple Music sign-in failed', { description: msg });
       return false;
     }
-  }, []);
+  }, [loadAppleMusic]);
 
   // Half-speed practice / 1.5× preview. HTMLAudioElement preserves pitch by
   // default in Chrome/Safari/Firefox; YouTube does its own pitch correction.
