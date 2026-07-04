@@ -224,6 +224,11 @@ function assert(cond: boolean, msg: string) {
           { product_id: PRODUCT_ID, quantity: clientQuantity, price: 1, unit_price_cents: 1 },
         ],
         buyer_email: 'b@x.com',
+        // This fixture's product has requires_shipping: true (see below), so
+        // a shipping_address is required or the handler now 400s before ever
+        // reaching the pricing logic under test here (see guest_test.ts for
+        // the shipping_address-specific coverage).
+        shipping_address: { name: 'Jane Doe', line1: '123 Main St', city: 'Atlanta', state: 'GA', postal: '30301' },
       },
       { Authorization: `Bearer ${VALID_JWT}` },
     ),

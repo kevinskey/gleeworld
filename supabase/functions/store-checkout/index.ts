@@ -53,7 +53,7 @@ export async function handler(req: Request): Promise<Response> {
   try {
     const authHeader = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
     const claims = authHeader ? await verifyJwtClaims(authHeader) : null;
-    const { store_type, items, buyer_email } = await req.json();
+    const { store_type, items, buyer_email, shipping_address } = await req.json();
     if (!['gleeworld', 'tenant'].includes(store_type)) return j({ error: 'bad store_type' }, 400);
     // Guest checkout allowed ONLY for the public GleeWorld store. Tenant store still requires a verified JWT.
     if (store_type === 'tenant' && !claims) return j({ error: 'Unauthorized' }, 401);
@@ -118,6 +118,22 @@ export async function handler(req: Request): Promise<Response> {
       });
     }
 
+    // Physical items require a shipping address; the client (CheckoutPage.tsx)
+    // collects one whenever the cart has a requires_shipping product, but we
+    // never trust that it actually arrived intact — re-validate server-side.
+    // Digital-only carts ignore any shipping_address the client may have sent.
+    const sa = shipping_address as Record<string, unknown> | null | undefined;
+    const nonEmptyStr = (v: unknown) => typeof v === 'string' && v.trim().length > 0;
+    if (requiresShipping) {
+      const hasRequired = !!sa
+        && nonEmptyStr(sa.name)
+        && nonEmptyStr(sa.line1)
+        && nonEmptyStr(sa.city)
+        && nonEmptyStr(sa.state)
+        && nonEmptyStr(sa.postal);
+      if (!hasRequired) return j({ error: 'shipping address required for physical items' }, 400);
+    }
+
     // Pre-create the pending order + items.
     const accessToken = crypto.getRandomValues(new Uint8Array(24)).reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
     const order = (
@@ -132,6 +148,17 @@ export async function handler(req: Request): Promise<Response> {
           requires_shipping: requiresShipping,
           status: 'pending',
           access_token: accessToken,
+          ...(requiresShipping
+            ? {
+                ship_to_name: sa!.name,
+                ship_to_line1: sa!.line1,
+                ship_to_line2: (sa!.line2 as string | undefined) ?? null,
+                ship_to_city: sa!.city,
+                ship_to_state: sa!.state,
+                ship_to_postal: sa!.postal,
+                ship_to_country: (sa!.country as string | undefined) ?? null,
+              }
+            : {}),
         }),
       })
     )[0];

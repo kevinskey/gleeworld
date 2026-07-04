@@ -110,6 +110,24 @@ const HOODIE = {
   manage_stock: false,
   stock_quantity: null,
 };
+const EBOOK = {
+  id: PRODUCT_ID,
+  name: 'Songwriting Guide (PDF)',
+  price: 9.99,
+  sale_price: null,
+  requires_shipping: false,
+  manage_stock: false,
+  stock_quantity: null,
+};
+const VALID_SHIPPING = {
+  name: 'Jane Doe',
+  line1: '123 Main St',
+  line2: 'Apt 4',
+  city: 'Atlanta',
+  state: 'GA',
+  postal: '30301',
+  country: 'US',
+};
 
 let failures = 0;
 function assert(cond: boolean, msg: string) {
@@ -130,7 +148,12 @@ function assert(cond: boolean, msg: string) {
   calls.length = 0;
   const res = await handler(
     req(
-      { store_type: 'gleeworld', items: [{ product_id: PRODUCT_ID, quantity: 1, price: 1 }], buyer_email: 'guest@example.com' },
+      {
+        store_type: 'gleeworld',
+        items: [{ product_id: PRODUCT_ID, quantity: 1, price: 1 }],
+        buyer_email: 'guest@example.com',
+        shipping_address: VALID_SHIPPING,
+      },
       { 'x-forwarded-for': '9.9.9.9' },
     ),
   );
@@ -187,7 +210,12 @@ function assert(cond: boolean, msg: string) {
   calls.length = 0;
   const res = await handler(
     req(
-      { store_type: 'gleeworld', items: [{ product_id: PRODUCT_ID, quantity: 1 }], buyer_email: 'member@example.com' },
+      {
+        store_type: 'gleeworld',
+        items: [{ product_id: PRODUCT_ID, quantity: 1 }],
+        buyer_email: 'member@example.com',
+        shipping_address: VALID_SHIPPING,
+      },
       { Authorization: `Bearer ${VALID_JWT}`, 'x-forwarded-for': '5.5.5.5' },
     ),
   );
@@ -275,6 +303,92 @@ function assert(cond: boolean, msg: string) {
   );
   const post3 = calls.find((c) => c.url.includes('/rest/v1/gw_store_checkout_attempts') && c.method === 'POST');
   assert((post3?.body as any)?.ip === '77.77.77.77', `no x-real-ip -> falls back to the LAST X-Forwarded-For hop, not the spoofable first one (got ${JSON.stringify((post3?.body as any)?.ip)})`);
+}
+
+// ---- (h) shipping_address is persisted on the order when the cart
+//      requires shipping (Task 6 gap: `store-checkout` received
+//      shipping_address but never wrote ship_to_* to gw_store_orders). ----
+{
+  scenario = { authOk: true, product: HOODIE, attemptsCount: 0 };
+  calls.length = 0;
+  const res = await handler(
+    req(
+      {
+        store_type: 'gleeworld',
+        items: [{ product_id: PRODUCT_ID, quantity: 1 }],
+        buyer_email: 'ship@example.com',
+        shipping_address: VALID_SHIPPING,
+      },
+      { 'x-forwarded-for': '8.8.8.1' },
+    ),
+  );
+  assert(res.status === 200, `physical item + valid shipping_address -> 200 (got ${res.status}, body ${await res.clone().text()})`);
+  const orderPost = calls.find((c) => c.url.includes('/rest/v1/gw_store_orders') && c.method === 'POST');
+  const b = (orderPost?.body ?? {}) as any;
+  assert(b.ship_to_name === VALID_SHIPPING.name, `ship_to_name persisted (got ${JSON.stringify(b)})`);
+  assert(b.ship_to_line1 === VALID_SHIPPING.line1, `ship_to_line1 persisted (got ${JSON.stringify(b)})`);
+  assert(b.ship_to_line2 === VALID_SHIPPING.line2, `ship_to_line2 persisted (got ${JSON.stringify(b)})`);
+  assert(b.ship_to_city === VALID_SHIPPING.city, `ship_to_city persisted (got ${JSON.stringify(b)})`);
+  assert(b.ship_to_state === VALID_SHIPPING.state, `ship_to_state persisted (got ${JSON.stringify(b)})`);
+  assert(b.ship_to_postal === VALID_SHIPPING.postal, `ship_to_postal persisted (got ${JSON.stringify(b)})`);
+  assert(b.ship_to_country === VALID_SHIPPING.country, `ship_to_country persisted (got ${JSON.stringify(b)})`);
+  assert(b.requires_shipping === true, `requires_shipping is true on the order (got ${JSON.stringify(b)})`);
+}
+
+// ---- (i) physical item with NO shipping_address -> 400 -------------------
+{
+  scenario = { authOk: true, product: HOODIE, attemptsCount: 0 };
+  calls.length = 0;
+  const res = await handler(
+    req(
+      { store_type: 'gleeworld', items: [{ product_id: PRODUCT_ID, quantity: 1 }], buyer_email: 'noship@example.com' },
+      { 'x-forwarded-for': '8.8.8.2' },
+    ),
+  );
+  assert(res.status === 400, `physical item, no shipping_address -> 400 (got ${res.status})`);
+  const b = await res.json();
+  assert(b.error === 'shipping address required for physical items', `error names the requirement (got ${JSON.stringify(b)})`);
+  const orderPost = calls.find((c) => c.url.includes('/rest/v1/gw_store_orders') && c.method === 'POST');
+  assert(!orderPost, 'no order is created when a required shipping address is missing');
+}
+
+// ---- (i2) physical item with an INCOMPLETE shipping_address (missing
+//      city) -> 400, same as fully absent. ---------------------------------
+{
+  scenario = { authOk: true, product: HOODIE, attemptsCount: 0 };
+  calls.length = 0;
+  const res = await handler(
+    req(
+      {
+        store_type: 'gleeworld',
+        items: [{ product_id: PRODUCT_ID, quantity: 1 }],
+        buyer_email: 'partial@example.com',
+        shipping_address: { name: 'Jane Doe', line1: '123 Main St', state: 'GA', postal: '30301' },
+      },
+      { 'x-forwarded-for': '8.8.8.3' },
+    ),
+  );
+  assert(res.status === 400, `physical item, incomplete shipping_address (missing city) -> 400 (got ${res.status})`);
+  const orderPost = calls.find((c) => c.url.includes('/rest/v1/gw_store_orders') && c.method === 'POST');
+  assert(!orderPost, 'no order is created for an incomplete shipping address');
+}
+
+// ---- (j) digital-only cart -> 200, no shipping_address required, and no
+//      ship_to_* fields land on the order. ---------------------------------
+{
+  scenario = { authOk: true, product: EBOOK, attemptsCount: 0 };
+  calls.length = 0;
+  const res = await handler(
+    req(
+      { store_type: 'gleeworld', items: [{ product_id: PRODUCT_ID, quantity: 1 }], buyer_email: 'digital@example.com' },
+      { 'x-forwarded-for': '8.8.8.4' },
+    ),
+  );
+  assert(res.status === 200, `digital-only cart, no shipping_address -> 200 (got ${res.status}, body ${await res.clone().text()})`);
+  const orderPost = calls.find((c) => c.url.includes('/rest/v1/gw_store_orders') && c.method === 'POST');
+  const b = (orderPost?.body ?? {}) as any;
+  assert(b.requires_shipping === false, `requires_shipping is false for a digital-only order (got ${JSON.stringify(b)})`);
+  assert(b.ship_to_name == null, `no ship_to_name set for a digital order (got ${JSON.stringify(b)})`);
 }
 
 globalThis.fetch = origFetch;
