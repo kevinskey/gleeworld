@@ -1,23 +1,22 @@
-// create-plan-checkout — start a Stripe subscription for a tenant-scope
-// base plan (Director / Director+ / Institution — see gw_billing_plans
-// scope='tenant').
+// create-personal-checkout — start a Stripe subscription for the
+// individual "Personal" plan (gw_billing_plans.scope='user').
 //
 // Body:
-//   { planId: 'director_60', interval: 'monthly' | 'annual', success_url?, cancel_url? }
-//   Legacy body shape { plan_id, billing_cycle } is still accepted for the
-//   existing WorkspaceSettingsPage.tsx caller — see Task 7 of the
-//   tiers-billing plan; the frontend body-shape migration wasn't in scope.
+//   { planId?: 'personal', interval?: 'monthly' | 'annual', success_url?, cancel_url? }
 //
-// Mirrors create-module-checkout but writes metadata `kind: 'plan'`
-// so the webhook routes the event to gw_tenant_plans instead of
-// gw_tenant_subscriptions.
+// Sibling of create-plan-checkout, but the payer is the CALLER (resolved
+// from the verified JWT), not a tenant — there is no tenant_id/tenant_role
+// gate here, since "can this user buy their own Personal plan" only needs
+// a valid session, not an admin role. Writes metadata `kind: 'personal'`
+// + `user_id` so the webhook upserts gw_user_plans instead of
+// gw_tenant_plans (see Task 7 of the tiers-billing plan).
 //
-// Price resolution (Task 7): prefer the Stripe lookup_key columns
-// (stripe_lookup_key_monthly/annual, set by scripts/stripe-setup-tiers.mjs)
-// resolved live via GET /v1/prices?lookup_keys[]=X — this way rotating a
-// price in Stripe (transfer_lookup_key) doesn't require a DB write. Falls
-// back to the stored stripe_price_id_monthly/annual column when the
-// lookup_key is unset or Stripe returns no active price for it.
+// Price resolution mirrors create-plan-checkout: prefer the Stripe
+// lookup_key columns (stripe_lookup_key_monthly/annual, set by
+// scripts/stripe-setup-tiers.mjs) resolved live via
+// GET /v1/prices?lookup_keys[]=X, falling back to the stored
+// stripe_price_id_monthly/annual column when the lookup_key is unset or
+// Stripe returns no active price for it.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -28,14 +27,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
-  try {
-    const part = jwt.split(".")[1];
-    const padded = part + "===".slice((part.length + 3) % 4);
-    return JSON.parse(atob(padded.replace(/-/g, "+").replace(/_/g, "/")));
-  } catch { return null; }
-}
 
 function err(status: number, code: string, detail?: string) {
   return new Response(JSON.stringify({ error: code, detail }), {
@@ -79,26 +70,19 @@ serve(async (req) => {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
-  // The edge-functions container runs with VERIFY_JWT=false, so the gateway
-  // does NOT check the token signature — we MUST verify it here. Without this
-  // a forged JWT (any tenant_id / tenant_role, garbage signature) would be
-  // trusted and let an attacker open a plan checkout against any tenant.
+  // Same verification approach as create-plan-checkout: the edge-functions
+  // container runs with VERIFY_JWT=false, so the gateway does NOT check the
+  // token signature — we MUST verify it here. Without this a forged JWT
+  // would let an attacker open a Personal-plan checkout billed to (and
+  // fulfilled for) an arbitrary user_id.
   const { data: userData, error: authErr } = await admin.auth.getUser(jwt);
   if (authErr || !userData?.user) return err(401, "invalid_token");
 
-  // Signature is now verified — the custom claims injected by the GoTrue hook
-  // are trustworthy. Read tenant_id / tenant_role from the verified payload.
-  const payload = decodeJwtPayload(jwt);
-  // deno-lint-ignore no-explicit-any
-  const tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
-  // deno-lint-ignore no-explicit-any
-  const tenantRole = (payload as any)?.tenant_role || (payload as any)?.app_metadata?.tenant_role;
-  if (!tenantId) return err(400, "no_tenant_in_jwt");
-  // Only a tenant admin may change the org's base plan (matches the role gate
-  // in create-module-checkout / create-course-checkout).
-  if (!["admin", "super-admin", "super_admin"].includes(String(tenantRole))) {
-    return err(403, "admin_only", "Only tenant admins can change the plan");
-  }
+  // Signature is now verified — the user id/email on the returned user
+  // object are trustworthy. No tenant_id/tenant_role claim is needed: the
+  // Personal plan belongs to this individual, not to a gw_tenants row.
+  const userId = userData.user.id;
+  const userEmail = userData.user.email ?? undefined;
 
   let body: {
     planId?: string; plan_id?: string;
@@ -106,23 +90,21 @@ serve(async (req) => {
     success_url?: string; cancel_url?: string;
   };
   try { body = await req.json(); } catch { return err(400, "bad_json"); }
-  const planId = body.planId ?? body.plan_id;
-  if (!planId) return err(400, "plan_id_required");
+  // 'personal' is currently the only scope='user' row in gw_billing_plans;
+  // default to it so callers can omit planId entirely, but still validate
+  // whatever is passed against scope='user' below (future-proof if a
+  // second user-scope tier is ever added).
+  const planId = body.planId ?? body.plan_id ?? "personal";
   const cycleRaw = body.interval ?? body.billing_cycle;
   const cycle: "monthly" | "annual" = cycleRaw === "annual" ? "annual" : "monthly";
 
-  // Look up the plan (tenant-scope only — the Personal tier is
-  // scope='user' and goes through create-personal-checkout instead) + the
-  // tenant slug for the success/cancel redirect.
-  const [{ data: plan, error: pErr }, { data: tenant }] = await Promise.all([
-    admin.from("gw_billing_plans")
-      .select("id, name, scope, stripe_price_id_monthly, stripe_price_id_annual, stripe_lookup_key_monthly, stripe_lookup_key_annual")
-      .eq("id", planId)
-      .eq("scope", "tenant")
-      .eq("is_active", true)
-      .single(),
-    admin.from("gw_tenants").select("slug").eq("id", tenantId).single(),
-  ]);
+  const { data: plan, error: pErr } = await admin
+    .from("gw_billing_plans")
+    .select("id, name, scope, stripe_price_id_monthly, stripe_price_id_annual, stripe_lookup_key_monthly, stripe_lookup_key_annual")
+    .eq("id", planId)
+    .eq("scope", "user")
+    .eq("is_active", true)
+    .single();
   if (pErr || !plan) return err(404, "plan_not_found", pErr?.message);
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -137,23 +119,39 @@ serve(async (req) => {
       `Plan ${plan.id} has no ${cycle} Stripe price (lookup_key ${lookupKey ?? "unset"} not found via Stripe and no stored stripe_price_id_${cycle}). Run scripts/stripe-setup-tiers.mjs or set the column manually.`);
   }
 
+  // Reuse an existing Stripe customer id if this user already has (or
+  // previously had) a Personal plan row, so repeat/renewal checkouts don't
+  // create duplicate Stripe customers for the same person.
+  const { data: existing } = await admin
+    .from("gw_user_plans")
+    .select("stripe_customer_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
   const params = new URLSearchParams();
   params.set("mode", "subscription");
-  params.set("client_reference_id", String(tenantId));
+  params.set("client_reference_id", userId);
   params.set("line_items[0][price]", priceId);
   params.set("line_items[0][quantity]", "1");
-  params.set("metadata[tenant_id]", String(tenantId));
-  params.set("metadata[tenant_slug]", tenant?.slug ?? "");
+  params.set("metadata[user_id]", userId);
   params.set("metadata[plan_id]", plan.id);
   params.set("metadata[billing_cycle]", cycle);
-  params.set("metadata[kind]", "plan");
-  params.set("subscription_data[metadata][tenant_id]", String(tenantId));
+  params.set("metadata[kind]", "personal");
+  params.set("subscription_data[metadata][user_id]", userId);
   params.set("subscription_data[metadata][plan_id]", plan.id);
   params.set("subscription_data[metadata][billing_cycle]", cycle);
-  params.set("subscription_data[metadata][kind]", "plan");
-  const slug = tenant?.slug ?? "";
-  params.set("success_url", body.success_url ?? `https://${slug ? slug + "." : ""}gleeworld.org/dashboard/workspace?tab=plan&activated=${plan.id}`);
-  params.set("cancel_url",  body.cancel_url  ?? `https://${slug ? slug + "." : ""}gleeworld.org/dashboard/workspace?tab=plan&cancelled=${plan.id}`);
+  params.set("subscription_data[metadata][kind]", "personal");
+  // No tenant subdomain for a Personal plan — success/cancel land on the
+  // main app. Placeholder route pending the frontend CTA wiring (deferred
+  // out of Task 7's scope, same as the landing page's payment links);
+  // callers can override with success_url/cancel_url in the body.
+  params.set("success_url", body.success_url ?? `https://gleeworld.org/dashboard/workspace?tab=plan&activated=${plan.id}`);
+  params.set("cancel_url",  body.cancel_url  ?? `https://gleeworld.org/dashboard/workspace?tab=plan&cancelled=${plan.id}`);
+  if (existing?.stripe_customer_id) {
+    params.set("customer", existing.stripe_customer_id);
+  } else if (userEmail) {
+    params.set("customer_email", userEmail);
+  }
 
   const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
