@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
+import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations';
 import { toModuleFlags } from '@/lib/navigation/moduleFlags';
@@ -24,10 +25,7 @@ interface FeedRow {
 
 export default function HouseHome() {
   const { profile } = useUserRole();
-  const isFaculty = !!profile && (
-    profile.is_admin || profile.is_super_admin
-    || ['instructor', 'teacher', 'conductor'].includes((profile.role || '').toLowerCase())
-  );
+  const isFaculty = isFacultyProfile(profile);
   const firstName = (profile?.full_name || 'there').split(' ')[0];
 
   const { data: rows = [], isLoading } = useQuery<FeedRow[]>({

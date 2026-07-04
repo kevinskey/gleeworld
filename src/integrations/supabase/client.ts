@@ -51,7 +51,10 @@ const TENANT_HEADERS = {
 
 export const supabase: any = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    // Guard for non-browser contexts (unit tests run under Node without
+    // jsdom) — `localStorage` is a bare global with no `window.` prefix,
+    // so referencing it directly throws ReferenceError outside a browser.
+    storage: typeof localStorage !== 'undefined' ? localStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
