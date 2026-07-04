@@ -10,10 +10,27 @@ interface MobileBottomNavProps {
   className?: string;
 }
 
+// Flagless-core tabs — always present regardless of role/module state.
+// Used as the render set while module data is loading so tabs only ever
+// APPEND when data lands, never swap identity (no Academy/Attendance flash).
+const CORE_TAB_KEYS = new Set(['home', 'messages', 'schedule']);
+
 export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
+  // Only the cheap layout check runs on every mount, including desktop.
+  // All data hooks (useUserRole, useTenantModules) live in PhoneTabBar
+  // below and only mount — and only then fetch — once we know we're on
+  // a phone, so desktop never pays for a duplicate profile/module fetch.
+  const isPhone = useIsPhone();
+
+  if (!isPhone) return null;
+  if (typeof document === 'undefined') return null;
+
+  return <PhoneTabBar className={className} />;
+};
+
+const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isPhone = useIsPhone();
 
   const { profile } = useUserRole();
   const isFaculty = !!profile && (
@@ -25,7 +42,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   // useTenantModules()/useModuleAccess() callers on the page) — derive
   // every flag from the one tenant module list rather than issuing a
   // separate query per module_id.
-  const { data: modules = [] } = useTenantModules();
+  const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
   const hasModule = (moduleId: string) => modules.some((m) => m.module_id === moduleId);
   const flags: ModuleFlags = {
     hasViewer: hasModule('viewer'),
@@ -38,10 +55,13 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
     hasFinance: hasModule('finance'),
     hasAcademy: true, // Academy is core, not a gated add-on.
   };
-  const tabs = getTabItems(isFaculty ? 'faculty' : 'student', flags);
-
-  if (!isPhone) return null;
-  if (typeof document === 'undefined') return null;
+  const allTabs = getTabItems(isFaculty ? 'faculty' : 'student', flags);
+  // While modules are still loading, `flags` defaults every gated slot to
+  // `false` (via `modules = []`), so `allTabs` would render the flag-off
+  // fallback set (e.g. Roster/Attendance instead of Academy) and then swap
+  // identity once data lands. Render only the stable flagless-core tabs
+  // until loading resolves so tabs only ever append, never swap.
+  const tabs = modulesLoading ? allTabs.filter((t) => CORE_TAB_KEYS.has(t.key)) : allTabs;
 
   // Portal to document.body so the bar is always anchored to the visual
   // viewport. If MobileBottomNav rendered inline inside DashboardShell,
