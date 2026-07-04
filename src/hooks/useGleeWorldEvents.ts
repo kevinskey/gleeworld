@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,13 +53,205 @@ export interface GleeWorldEvent {
   };
 }
 
+const EVENTS_QUERY_KEY = 'glee-world-events';
+
+// One fetch for the whole app. Any component using the hook reads this
+// shared cache; react-query dedupes concurrent requests, so 28 consumers
+// cost one network round-trip instead of 28.
+async function fetchAllEvents(isAuthed: boolean): Promise<GleeWorldEvent[]> {
+  // Fetch events from gw_events table with calendar information
+  // Window to the last 18 months to keep payloads bounded
+  const windowStart = new Date();
+  windowStart.setMonth(windowStart.getMonth() - 18);
+  let eventsQuery = supabase
+    .from('gw_events')
+    .select(`
+      *,
+      gw_calendars (
+        name,
+        color,
+        is_visible
+      ),
+      gw_courses (
+        title,
+        course_code
+      )
+    `)
+    .gte('start_date', windowStart.toISOString())
+    .order('start_date', { ascending: true });
+
+  // If user is not authenticated, only show public events
+  if (!isAuthed) {
+    eventsQuery = eventsQuery.eq('is_public', true);
+  }
+
+  // Fetch appointments from gw_appointments table
+  const appointmentsQuery = supabase
+    .from('gw_appointments')
+    .select('*')
+    .gte('appointment_date', new Date().toISOString())
+    .neq('status', 'cancelled')
+    .order('appointment_date', { ascending: true });
+
+  const [eventsResult, appointmentsResult] = await Promise.all([
+    eventsQuery,
+    appointmentsQuery,
+  ]);
+
+  if (eventsResult.error) throw eventsResult.error;
+  if (appointmentsResult.error) throw appointmentsResult.error;
+
+  // Transform events to match the interface
+  // For course events without calendar info, provide a default purple color
+  const transformedEvents: GleeWorldEvent[] = (eventsResult.data || []).map(event => {
+    // If this is a course event without calendar info, add synthetic calendar styling
+    if (event.course_id && !event.gw_calendars) {
+      return {
+        ...event,
+        source: 'event' as const,
+        gw_calendars: {
+          name: event.gw_courses?.course_code || 'Class',
+          color: '#8b5cf6', // Purple for courses
+          is_visible: true
+        }
+      };
+    }
+    return {
+      ...event,
+      source: 'event' as const
+    };
+  });
+
+  // Transform appointments to match the interface (assign to a default calendar when possible)
+  const { data: defaultCalendar, error: defaultCalendarError } = await supabase
+    .from('gw_calendars')
+    .select('id')
+    .eq('is_default', true)
+    .maybeSingle();
+
+  if (defaultCalendarError) throw defaultCalendarError;
+
+  // Fallback if no default calendar exists
+  const { data: fallbackCalendar, error: fallbackCalendarError } = defaultCalendar?.id
+    ? { data: null, error: null }
+    : await supabase
+        .from('gw_calendars')
+        .select('id')
+        .eq('is_visible', true)
+        .order('name', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+  if (fallbackCalendarError) throw fallbackCalendarError;
+
+  const appointmentCalendarId = defaultCalendar?.id ?? fallbackCalendar?.id ?? '';
+
+  const transformedAppointments: GleeWorldEvent[] = (appointmentsResult.data || []).map((appointment) => ({
+    id: appointment.id,
+    title: appointment.title,
+    description: appointment.description,
+    event_type: appointment.appointment_type,
+    start_date: appointment.appointment_date,
+    is_appointment: true, // Flag to identify appointments
+    end_date: new Date(
+      new Date(appointment.appointment_date).getTime() + appointment.duration_minutes * 60000
+    ).toISOString(),
+    location: null,
+    venue_name: null,
+    address: null,
+    max_attendees: null,
+    registration_required: null,
+    is_public: false,
+    status: appointment.status,
+    image_url: null,
+    calendar_id: appointmentCalendarId,
+    created_by: appointment.created_by,
+    created_at: appointment.created_at,
+    updated_at: appointment.updated_at,
+    source: 'appointment' as const,
+  }));
+
+  // Combine and sort by start_date
+  return [...transformedEvents, ...transformedAppointments]
+    .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+}
+
+// ─── App-wide realtime singleton ────────────────────────────────────────
+// The old hook opened one websocket channel (5 table subscriptions) PER
+// mounted component, and every DB change made every instance refetch.
+// One module-level channel now serves every consumer; changes invalidate
+// the shared query once (debounced), and react-query refetches once.
+let rtChannel: RealtimeChannel | null = null;
+let rtRefCount = 0;
+let rtDebounce: ReturnType<typeof setTimeout> | null = null;
+let rtInvalidate: (() => void) | null = null;
+
+const REALTIME_TABLES = ['gw_events', 'events', 'gw_appointments', 'gw_calendars', 'gw_course_calendar'];
+
+function acquireRealtime(invalidate: () => void) {
+  rtInvalidate = invalidate;
+  rtRefCount++;
+  if (rtChannel) return;
+
+  const onChange = () => {
+    if (rtDebounce) clearTimeout(rtDebounce);
+    rtDebounce = setTimeout(() => rtInvalidate?.(), 500);
+  };
+
+  const channel = supabase.channel('gw-events-shared');
+  for (const table of REALTIME_TABLES) {
+    channel.on('postgres_changes', { event: '*', schema: 'public', table }, onChange);
+  }
+  rtChannel = channel;
+  channel.subscribe();
+}
+
+function releaseRealtime() {
+  rtRefCount = Math.max(0, rtRefCount - 1);
+  if (rtRefCount > 0) return;
+  if (rtDebounce) { clearTimeout(rtDebounce); rtDebounce = null; }
+  if (rtChannel) {
+    try { supabase.removeChannel(rtChannel); } catch { /* already gone */ }
+    rtChannel = null;
+  }
+}
+
 export const useGleeWorldEvents = () => {
-  const [events, setEvents] = useState<GleeWorldEvent[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
-  const channelRef = useRef<RealtimeChannel | null>(null);
-  const isSubscribedRef = useRef(false);
+  const queryClient = useQueryClient();
+
+  // Keyed by user id so logout/login never shows another user's cache.
+  const queryKey = [EVENTS_QUERY_KEY, user?.id ?? 'anon'];
+
+  const { data, isPending, isError } = useQuery({
+    queryKey,
+    queryFn: () => fetchAllEvents(!!user),
+    staleTime: 2 * 60 * 1000,   // instant paint from cache; background refresh after 2 min
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false, // realtime invalidation covers changes
+  });
+
+  const events = data ?? [];
+
+  useEffect(() => {
+    if (isError) {
+      console.error('Error fetching events');
+      toast({
+        title: "Error",
+        description: "Failed to load events and appointments",
+        variant: "destructive"
+      });
+    }
+  }, [isError, toast]);
+
+  // Shared realtime channel (see singleton above).
+  useEffect(() => {
+    acquireRealtime(() => {
+      queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] });
+    });
+    return () => releaseRealtime();
+  }, [queryClient]);
 
   // Update already-loaded events when a calendar color changes
   useEffect(() => {
@@ -66,259 +259,26 @@ export const useGleeWorldEvents = () => {
       const detail = (e as CustomEvent<{ calendarId: string; color: string }>).detail;
       if (!detail?.calendarId || !detail?.color) return;
 
-      setEvents((prev) =>
-        prev.map((ev) => {
-          if (ev.calendar_id !== detail.calendarId) return ev;
-          if (!ev.gw_calendars) return ev;
-          return {
-            ...ev,
-            gw_calendars: {
-              ...ev.gw_calendars,
-              color: detail.color,
-            },
-          };
-        }),
+      queryClient.setQueriesData<GleeWorldEvent[]>(
+        { queryKey: [EVENTS_QUERY_KEY] },
+        (prev) =>
+          prev?.map((ev) => {
+            if (ev.calendar_id !== detail.calendarId) return ev;
+            if (!ev.gw_calendars) return ev;
+            return {
+              ...ev,
+              gw_calendars: {
+                ...ev.gw_calendars,
+                color: detail.color,
+              },
+            };
+          }),
       );
     };
 
     window.addEventListener('gw:calendar-color-updated', handler);
     return () => window.removeEventListener('gw:calendar-color-updated', handler);
-  }, []);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch events from gw_events table with calendar information
-      // Window to the last 18 months to keep payloads bounded
-      const windowStart = new Date();
-      windowStart.setMonth(windowStart.getMonth() - 18);
-      let eventsQuery = supabase
-        .from('gw_events')
-        .select(`
-          *,
-          gw_calendars (
-            name,
-            color,
-            is_visible
-          ),
-          gw_courses (
-            title,
-            course_code
-          )
-        `)
-        .gte('start_date', windowStart.toISOString())
-        .order('start_date', { ascending: true });
-
-      // If user is not authenticated, only show public events
-      if (!user) {
-        eventsQuery = eventsQuery.eq('is_public', true);
-      }
-
-      // Fetch appointments from gw_appointments table
-      const appointmentsQuery = supabase
-        .from('gw_appointments')
-        .select('*')
-        .gte('appointment_date', new Date().toISOString())
-        .neq('status', 'cancelled')
-        .order('appointment_date', { ascending: true });
-
-      const [eventsResult, appointmentsResult] = await Promise.all([
-        eventsQuery,
-        appointmentsQuery,
-      ]);
-
-      if (eventsResult.error) throw eventsResult.error;
-      if (appointmentsResult.error) throw appointmentsResult.error;
-      
-
-      // Transform events to match the interface
-      // For course events without calendar info, provide a default purple color
-      const transformedEvents: GleeWorldEvent[] = (eventsResult.data || []).map(event => {
-        // If this is a course event without calendar info, add synthetic calendar styling
-        if (event.course_id && !event.gw_calendars) {
-          return {
-            ...event,
-            source: 'event' as const,
-            gw_calendars: {
-              name: event.gw_courses?.course_code || 'Class',
-              color: '#8b5cf6', // Purple for courses
-              is_visible: true
-            }
-          };
-        }
-        return {
-          ...event,
-          source: 'event' as const
-        };
-      });
-
-      // Transform appointments to match the interface (assign to a default calendar when possible)
-      const { data: defaultCalendar, error: defaultCalendarError } = await supabase
-        .from('gw_calendars')
-        .select('id')
-        .eq('is_default', true)
-        .maybeSingle();
-
-      if (defaultCalendarError) throw defaultCalendarError;
-
-      // Fallback if no default calendar exists
-      const { data: fallbackCalendar, error: fallbackCalendarError } = defaultCalendar?.id
-        ? { data: null, error: null }
-        : await supabase
-            .from('gw_calendars')
-            .select('id')
-            .eq('is_visible', true)
-            .order('name', { ascending: true })
-            .limit(1)
-            .maybeSingle();
-
-      if (fallbackCalendarError) throw fallbackCalendarError;
-
-      const appointmentCalendarId = defaultCalendar?.id ?? fallbackCalendar?.id ?? '';
-
-      const transformedAppointments: GleeWorldEvent[] = (appointmentsResult.data || []).map((appointment) => ({
-        id: appointment.id,
-        title: appointment.title,
-        description: appointment.description,
-        event_type: appointment.appointment_type,
-        start_date: appointment.appointment_date,
-        is_appointment: true, // Flag to identify appointments
-        end_date: new Date(
-          new Date(appointment.appointment_date).getTime() + appointment.duration_minutes * 60000
-        ).toISOString(),
-        location: null,
-        venue_name: null,
-        address: null,
-        max_attendees: null,
-        registration_required: null,
-        is_public: false,
-        status: appointment.status,
-        image_url: null,
-        calendar_id: appointmentCalendarId,
-        created_by: appointment.created_by,
-        created_at: appointment.created_at,
-        updated_at: appointment.updated_at,
-        source: 'appointment' as const,
-      }));
-
-      // Combine and sort by start_date
-      const allEvents = [...transformedEvents, ...transformedAppointments]
-        .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
-
-      setEvents(allEvents);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load events and appointments",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const setupRealtime = async () => {
-    // Prevent multiple subscriptions
-    if (isSubscribedRef.current || channelRef.current) {
-      console.log('Already subscribed or channel exists, skipping...');
-      return;
-    }
-
-    try {
-      // Create a new channel with unique identifier
-      const channelId = `events-changes-${Date.now()}-${Math.random()}`;
-      console.log('Creating new channel:', channelId);
-      const channel = supabase.channel(channelId);
-
-      // Add event listeners
-      channel
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'gw_events'
-          },
-          (payload) => {
-            console.log('Real-time event change:', payload);
-            fetchEvents();
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'events'
-          },
-          (payload) => {
-            console.log('Real-time events table change:', payload);
-            fetchEvents();
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'gw_appointments'
-          },
-          (payload) => {
-            console.log('Real-time appointment change:', payload);
-            fetchEvents();
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'gw_calendars'
-          },
-          (payload) => {
-            console.log('Real-time calendar change:', payload);
-            fetchEvents();
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'gw_course_calendar'
-          },
-          (payload) => {
-            console.log('Real-time course calendar change:', payload);
-            fetchEvents();
-          }
-        );
-
-      // Store the channel reference before subscribing
-      channelRef.current = channel;
-      
-      // Subscribe and track state
-      console.log('Subscribing to channel:', channelId);
-      const subscriptionResult = await channel.subscribe();
-      console.log('Subscription result:', subscriptionResult);
-      
-      isSubscribedRef.current = true;
-      console.log('Successfully subscribed to channel');
-    } catch (error) {
-      console.error('Failed to subscribe to realtime channel:', error);
-      isSubscribedRef.current = false;
-      // Clean up the failed channel
-      if (channelRef.current) {
-        try {
-          supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        } catch (cleanupError) {
-          console.error('Error cleaning up failed channel:', cleanupError);
-        }
-      }
-    }
-  };
+  }, [queryClient]);
 
   const getEventsByDateRange = (startDate: Date, endDate: Date) => {
     return events.filter(event => {
@@ -338,58 +298,14 @@ export const useGleeWorldEvents = () => {
     });
   };
 
-  useEffect(() => {
-    let isMounted = true;
-    
-    const initializeHook = async () => {
-      if (!isMounted) return;
-      
-      // Cleanup any existing subscription first
-      if (channelRef.current) {
-        console.log('Cleaning up existing channel before re-initialization');
-        try {
-          await supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-          isSubscribedRef.current = false;
-        } catch (error) {
-          console.error('Error cleaning up existing channel:', error);
-        }
-      }
-      
-      await fetchEvents();
-      
-      if (!isMounted) return;
-      
-      await setupRealtime();
-    };
-    
-    initializeHook();
-
-    // Cleanup function
-    return () => {
-      console.log('useGleeWorldEvents cleanup');
-      isMounted = false;
-      isSubscribedRef.current = false;
-      
-      if (channelRef.current) {
-        try {
-          supabase.removeChannel(channelRef.current);
-          channelRef.current = null;
-        } catch (error) {
-          console.error('Error during cleanup:', error);
-        }
-      }
-    };
-  }, [user?.id]); // Only depend on user.id to reduce re-runs
-
   // Make fetchEvents available for manual refresh after updates
   const refreshEvents = () => {
-    fetchEvents();
+    queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] });
   };
 
   return {
     events,
-    loading,
+    loading: isPending,
     fetchEvents: refreshEvents,
     getEventsByDateRange,
     getUpcomingEvents,
