@@ -10,7 +10,7 @@ import {
 export interface ModuleFlags {
   hasViewer: boolean; hasPartTracks: boolean; hasStudio: boolean;
   hasSightReading: boolean; hasBoxOffice: boolean; hasConcertPlanner: boolean;
-  hasMerch: boolean; hasFinance: boolean; hasAcademy: boolean;
+  hasMerch: boolean; hasFinance: boolean; hasAcademy: boolean; hasStore: boolean;
 }
 
 export interface Destination { key: string; to: string; label: string; icon: LucideIcon; }

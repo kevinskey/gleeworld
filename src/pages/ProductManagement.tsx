@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductManager } from '@/components/products/ProductManager';
 import { CategoryManager } from '@/components/products/CategoryManager';
@@ -14,10 +15,12 @@ import { StoreSettingsManager } from '@/components/products/StoreSettingsManager
 import { ShippingSettings } from '@/components/products/ShippingSettings';
 import { SubscriptionsManager } from '@/components/products/SubscriptionsManager';
 import { OrderDetailDrawer } from '@/components/products/OrderDetailDrawer';
+import { StoreConnectPrompt } from '@/components/products/StoreConnectPrompt';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store, ExternalLink, Plane } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useModuleAccess } from '@/hooks/useModuleAccess';
 
 // Feature flag for subscriptions
 const FEATURE_SUBSCRIPTIONS_ENABLED = false;
@@ -73,6 +76,7 @@ const tabs = [{
 export const ProductManagement = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
+  const { hasAccess: hasStore, isLoading: moduleLoading } = useModuleAccess('store');
   const handleViewOrder = (orderId: string) => {
     setSelectedOrderId(orderId);
     setIsOrderDrawerOpen(true);
@@ -81,6 +85,42 @@ export const ProductManagement = () => {
     setIsOrderDrawerOpen(false);
     setSelectedOrderId(null);
   };
+
+  if (moduleLoading) {
+    return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+  }
+
+  // Store builder is gated behind the `store` add-on. A tenant that
+  // reaches /dashboard/shop without it (stale link, sidebar hidden but
+  // URL bookmarked) gets an upsell instead of the full product/order
+  // management surface. Mirrors BoxOfficePage's !hasAccess state.
+  if (!hasStore) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+        <Card>
+          <CardHeader>
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-status-warning-bg text-status-warning-fg mb-2">
+              <Store className="w-6 h-6" />
+            </div>
+            <CardTitle>Store</CardTitle>
+            <CardDescription>
+              Sell merchandise and digital products from your own storefront. Order payments
+              land in your own Stripe account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              This add-on isn't enabled for your tenant yet. Activate it from the Modules page.
+            </p>
+            <Button asChild>
+              <Link to="/settings/modules">Open Modules</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return <div className="min-h-screen bg-muted/30">
       {/* Header */}
       <div className="bg-[#150d26] text-white">
@@ -107,6 +147,7 @@ export const ProductManagement = () => {
       </div>
       
       <div className="container mx-auto px-6 py-8 max-w-7xl">
+        <StoreConnectPrompt />
         <Tabs defaultValue="products" className="space-y-6">
           {/* Scrollable Tab Navigation */}
           <Card className="p-1.5 bg-white shadow-sm border-0">
