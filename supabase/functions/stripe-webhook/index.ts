@@ -69,14 +69,66 @@ serve(async (req) => {
 
     logStep("Processing event", { type: event.type, id: event.id });
 
-    // Store webhook event for audit
-    await supabase.from('gw_webhook_events').insert({
+    // Store webhook event for audit — AND use it as the idempotency guard.
+    // gw_webhook_events.event_id is UNIQUE (column-level UNIQUE NOT NULL in
+    // 20260112094123_8c3c027c…, reaffirmed idempotently in
+    // 20260704160000_stripe_hardening_rls_constraints.sql), so a re-delivery
+    // of an event we've already recorded hits a 23505 unique_violation here.
+    // Stripe retries aggressively (slow 2xx, network blips, etc.), so this
+    // MUST run — and be checked — before any of the switch/case side effects
+    // below (plan activation, order fulfillment, refunds, disputes...).
+    const { error: dedupeErr } = await supabase.from('gw_webhook_events').insert({
       provider: 'stripe',
       event_id: event.id,
       event_type: event.type,
       payload: event,
       status: 'processing'
     });
+    if (dedupeErr) {
+      const isDuplicate = dedupeErr.code === '23505'
+        || /duplicate key value/i.test(dedupeErr.message || '');
+      if (isDuplicate) {
+        // A row for this event_id already exists. That alone doesn't mean
+        // fulfillment already succeeded — if a prior delivery's handler
+        // threw (network blip, transient DB error, etc.), the audit row was
+        // written with status 'processing' and never advanced to
+        // 'processed' (see the end-of-handler update below), because we
+        // returned 500 and never reached it. Stripe then retries the same
+        // event, hits this same unique conflict, and — if we always treated
+        // "conflict" as "already handled" — we'd permanently strand the
+        // event as 200'd-but-never-fulfilled. So: only short-circuit when
+        // the existing row says the previous attempt actually finished.
+        const { data: existing, error: lookupErr } = await supabase
+          .from('gw_webhook_events')
+          .select('status')
+          .eq('event_id', event.id)
+          .maybeSingle();
+        if (lookupErr) {
+          // Can't tell if it's safe to skip — fail closed and let Stripe
+          // retry rather than silently dropping a possibly-unfulfilled event.
+          logStep("Dedupe lookup failed after 23505 conflict — failing closed", { id: event.id, error: lookupErr.message });
+          throw new Error(`Webhook dedupe lookup failed: ${lookupErr.message}`);
+        }
+        if (existing?.status === 'processed') {
+          logStep("Duplicate event — already processed, skipping side effects", { id: event.id });
+          return new Response(JSON.stringify({ received: true, duplicate: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+        // status is 'processing' (or something else unrecognized) — a prior
+        // attempt started but never marked itself 'processed'. Fall through
+        // into fulfillment; every handler below is upsert/onConflict-based
+        // so re-running it is safe.
+        logStep("Duplicate event with a stranded non-processed row — retrying fulfillment", { id: event.id, priorStatus: existing?.status });
+      } else {
+        // Non-duplicate insert failure (e.g. audit table transiently
+        // unreachable) — log but don't block fulfillment; the prior code
+        // didn't check this error either, so we preserve that best-effort
+        // behavior for anything that isn't the dedupe conflict.
+        logStep("Webhook audit insert failed (non-duplicate) — continuing", { error: dedupeErr.message });
+      }
+    }
 
     // Handle different event types
     switch (event.type) {
@@ -112,7 +164,7 @@ serve(async (req) => {
 
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        await handleCheckoutCompleted(supabase, session);
+        await handleCheckoutCompleted(supabase, stripe, session);
         break;
       }
 
@@ -150,16 +202,51 @@ serve(async (req) => {
   }
 });
 
+// As of the pinned API version "2025-08-27.basil", Stripe removed
+// current_period_end from the top-level Subscription object — it now lives
+// on each subscription item (subscription.items.data[n].current_period_end),
+// since each item can have its own billing period. The default
+// stripe.subscriptions.retrieve() / the object embedded in a webhook event
+// both include `items.data` (it's part of the Subscription's default
+// expansion set, not something that needs an explicit `expand`), so reading
+// item [0] here works without any extra fetch params. We still fall back to
+// the top-level field for older API versions / safety.
+function subscriptionPeriodEndEpoch(sub: Stripe.Subscription | null | undefined): number | null {
+  return (sub as any)?.items?.data?.[0]?.current_period_end
+    ?? (sub as any)?.current_period_end
+    ?? null;
+}
+
+// Fetch the Stripe Subscription's current_period_end for a checkout
+// session that just completed. Checkout Sessions carry only the
+// subscription ID (a string), not the Subscription object itself, so
+// period end always needs this follow-up GET /v1/subscriptions/:id
+// (via the Stripe SDK already instantiated in the caller) — there is no
+// "session already has it" fast path for an un-expanded session.
+async function fetchSubscriptionPeriodEnd(stripe: Stripe, session: Stripe.Checkout.Session): Promise<string | null> {
+  const subscriptionId = session.subscription as string | null;
+  if (!subscriptionId) return null;
+  try {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const epoch = subscriptionPeriodEndEpoch(subscription);
+    return epoch ? new Date(epoch * 1000).toISOString() : null;
+  } catch (e: any) {
+    logStep("Failed to fetch subscription for period end", { subscriptionId, error: e?.message });
+    return null;
+  }
+}
+
 // Module add-on checkout (create-module-checkout) — activates the tenant's
 // subscription row. Course add-on checkout (create-course-checkout) — writes
 // entitlement rows. Shop/order checkouts have neither metadata key and are skipped.
-async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.Session) {
+async function handleCheckoutCompleted(supabase: any, stripe: Stripe, session: Stripe.Checkout.Session) {
   const tenantId = session.metadata?.tenant_id || session.client_reference_id;
+  const userId   = session.metadata?.user_id;
   const moduleId = session.metadata?.module_id;
   const planId   = session.metadata?.plan_id;
-  const kind     = session.metadata?.kind;        // 'plan' | 'addon' | undefined
+  const kind     = session.metadata?.kind;        // 'plan' | 'personal' | 'addon' | undefined
   const courseSku = session.metadata?.course_sku;
-  logStep("Processing checkout.session.completed", { id: session.id, tenantId, moduleId, planId, kind, courseSku });
+  logStep("Processing checkout.session.completed", { id: session.id, tenantId, userId, moduleId, planId, kind, courseSku });
 
   if (tenantId && courseSku && session.mode === 'payment') {
     await handleCoursePurchase(supabase, session, tenantId, courseSku);
@@ -169,6 +256,7 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
   // ── Base plan subscription (create-plan-checkout) ─────────────────
   if (tenantId && planId && session.mode === 'subscription' && kind === 'plan') {
     const cycle = session.metadata?.billing_cycle === 'annual' ? 'annual' : 'monthly';
+    const currentPeriodEnd = await fetchSubscriptionPeriodEnd(stripe, session);
     const { error: planErr } = await supabase
       .from('gw_tenant_plans')
       .upsert({
@@ -178,6 +266,7 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
         status: 'active',
         stripe_subscription_id: (session.subscription as string) || null,
         stripe_customer_id: (session.customer as string) || null,
+        current_period_end: currentPeriodEnd,
         cancelled_at: null,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' });
@@ -193,6 +282,28 @@ async function handleCheckoutCompleted(supabase: any, session: Stripe.Checkout.S
         .eq('id', tenantId)
         .is('stripe_customer_id', null);
     }
+    return;
+  }
+
+  // ── Personal (user-scope) plan subscription (create-personal-checkout) ──
+  if (userId && planId && session.mode === 'subscription' && kind === 'personal') {
+    const currentPeriodEnd = await fetchSubscriptionPeriodEnd(stripe, session);
+    const { error: userPlanErr } = await supabase
+      .from('gw_user_plans')
+      .upsert({
+        user_id: userId,
+        plan_id: planId,
+        status: 'active',
+        stripe_subscription_id: (session.subscription as string) || null,
+        stripe_customer_id: (session.customer as string) || null,
+        current_period_end: currentPeriodEnd,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+    if (userPlanErr) {
+      logStep("Personal plan activation failed", { error: userPlanErr.message });
+      throw new Error(`Personal plan activation failed: ${userPlanErr.message}`);
+    }
+    logStep("Personal plan activated", { userId, planId });
     return;
   }
 
@@ -298,10 +409,11 @@ async function handleSubscriptionChanged(supabase: any, subscription: Stripe.Sub
     return;
   }
 
+  const periodEndEpoch = subscriptionPeriodEndEpoch(subscription);
   const update: Record<string, unknown> = {
     status,
-    current_period_end: subscription.current_period_end
-      ? new Date(subscription.current_period_end * 1000).toISOString()
+    current_period_end: periodEndEpoch
+      ? new Date(periodEndEpoch * 1000).toISOString()
       : null,
     trial_ends_at: subscription.trial_end
       ? new Date(subscription.trial_end * 1000).toISOString()
@@ -327,6 +439,90 @@ async function handleSubscriptionChanged(supabase: any, subscription: Stripe.Sub
     }
     logStep("Plan row updated", { tenantId, planId, status });
     return;
+  }
+
+  // Personal (user-scope) plan — gw_user_plans has a narrower status set
+  // (active/past_due/canceled, no 'trial') than gw_tenant_plans, so map
+  // separately rather than reuse `status`/`update` above.
+  const userId = subscription.metadata?.user_id;
+  if (kind === 'personal' && userId && planId) {
+    const userStatusMap: Record<string, string> = {
+      active: 'active',
+      trialing: 'active', // gw_user_plans has no trial state; treat as active until it resolves
+      past_due: 'past_due',
+      unpaid: 'past_due',
+      canceled: 'canceled',
+      incomplete_expired: 'canceled',
+    };
+    const userStatus = userStatusMap[subscription.status];
+    if (!userStatus) {
+      logStep("Ignoring transient personal-plan subscription status", { status: subscription.status });
+      return;
+    }
+    const { error } = await supabase
+      .from('gw_user_plans')
+      .update({
+        status: userStatus,
+        current_period_end: update.current_period_end,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
+    if (error) {
+      logStep("Personal plan subscription update failed", { error: error.message });
+      throw new Error(`Personal plan subscription update failed: ${error.message}`);
+    }
+    logStep("Personal plan row updated", { userId, planId, status: userStatus });
+    return;
+  }
+
+  // Fallback for events with no (or an unrecognized) kind metadata: resolve
+  // by stripe_subscription_id, trying gw_tenant_plans first, then
+  // gw_user_plans — covers plan/personal subscriptions whose metadata
+  // didn't round-trip for any reason, without disturbing the metadata-based
+  // fast paths above.
+  if (kind !== 'plan' && kind !== 'personal') {
+    const { data: tenantPlanMatch, error: tenantPlanErr } = await supabase
+      .from('gw_tenant_plans')
+      .update(update)
+      .eq('stripe_subscription_id', subscription.id)
+      .select('tenant_id');
+    if (tenantPlanErr) {
+      logStep("Tenant plan update failed (subscription id fallback)", { error: tenantPlanErr.message });
+      throw new Error(`Tenant plan update failed: ${tenantPlanErr.message}`);
+    }
+    if (tenantPlanMatch && tenantPlanMatch.length > 0) {
+      logStep("Tenant plan row updated via subscription id fallback", { subscriptionId: subscription.id, status });
+      return;
+    }
+
+    const userStatusMap: Record<string, string> = {
+      active: 'active',
+      trialing: 'active',
+      past_due: 'past_due',
+      unpaid: 'past_due',
+      canceled: 'canceled',
+      incomplete_expired: 'canceled',
+    };
+    const userStatus = userStatusMap[subscription.status];
+    if (userStatus) {
+      const { data: userPlanMatch, error: userPlanErr } = await supabase
+        .from('gw_user_plans')
+        .update({
+          status: userStatus,
+          current_period_end: update.current_period_end,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_subscription_id', subscription.id)
+        .select('user_id');
+      if (userPlanErr) {
+        logStep("Personal plan update failed (subscription id fallback)", { error: userPlanErr.message });
+        throw new Error(`Personal plan update failed: ${userPlanErr.message}`);
+      }
+      if (userPlanMatch && userPlanMatch.length > 0) {
+        logStep("Personal plan row updated via subscription id fallback", { subscriptionId: subscription.id, status: userStatus });
+        return;
+      }
+    }
   }
 
   const query = supabase.from('gw_tenant_subscriptions').update(update);

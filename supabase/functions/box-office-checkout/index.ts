@@ -3,8 +3,11 @@
 // Phase D of the Box Office spec.
 //
 // The session is created ON the tenant's Connected account (Stripe-Account
-// header), as a direct charge with NO application fee — GleeWorld never
-// custodies ticket money. We also pre-create a row in gw_ticket_orders
+// header), as a direct charge with a 1% application fee (see the pricing
+// page's "+1% of ticket sales" line) collected via
+// payment_intent_data[application_fee_amount] — GleeWorld never custodies
+// ticket money; Stripe splits the fee off at settlement. We also pre-create
+// a row in gw_ticket_orders
 // (status='pending') and stash the Stripe session id + our order id in
 // metadata so the fulfillment webhook (Phase E) can mint tickets
 // idempotently keyed on the session id.
@@ -197,13 +200,23 @@ Deno.serve(async (req) => {
     params.set('payment_intent_data[metadata][order_id]', order.id)
     params.set('payment_intent_data[metadata][tenant_id]', tenant.id)
 
+    // GleeWorld's 1% application fee (advertised on the pricing page as
+    // "+1% of ticket sales"), computed off the same server-resolved
+    // amountCents used above for line_items — never client input. Skip the
+    // field entirely for free/comp tickets: Stripe rejects a fee amount on
+    // a zero-value PaymentIntent.
+    if (amountCents > 0) {
+      const feeCents = Math.max(1, Math.round(amountCents * 0.01))
+      params.set('payment_intent_data[application_fee_amount]', String(feeCents))
+    }
+
     // Return URLs are on the tenant subdomain.
     const returnBase = `https://${tenant.slug}.gleeworld.org`
     params.set('success_url', `${returnBase}/tickets/${accessToken}?session_id={CHECKOUT_SESSION_ID}`)
     params.set('cancel_url', `${returnBase}/concert-tickets/${event.box_office_slug ?? ''}?cancelled=1`)
 
-    // Direct charge on the connected account. NO application_fee_amount —
-    // GleeWorld takes 0% of ticket revenue.
+    // Direct charge on the connected account, with the 1% application fee
+    // (if any) set above via payment_intent_data[application_fee_amount].
     const stripeRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {

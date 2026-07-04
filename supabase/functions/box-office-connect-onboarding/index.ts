@@ -9,9 +9,11 @@
 //      The frontend then redirects the user to Stripe's hosted flow.
 //
 // We deliberately use Standard accounts + direct charges (no destination
-// charges, no application_fee_amount). GleeWorld never custodies ticket
-// money — the platform Stripe secret key is only used here to provision
-// the Connected account and mint onboarding links.
+// charges). Box Office checkout collects GleeWorld's 1% application fee
+// via payment_intent_data[application_fee_amount] on each direct charge
+// (see box-office-checkout) — GleeWorld never custodies ticket money; the
+// platform Stripe secret key is only used here to provision the Connected
+// account and mint onboarding links.
 
 // Direct PostgREST calls instead of @supabase/supabase-js — the supabase-js
 // loader pulls in node:zlib + bufferutil which the self-hosted edge runtime

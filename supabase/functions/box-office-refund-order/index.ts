@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
       params.set('reason', 'requested_by_customer')
       params.set('metadata[order_id]', order.id)
       params.set('metadata[tenant_id]', tenantId)
+      params.set('refund_application_fee', 'true') // Return the platform's 1% fee on refunds — the tenant is never left covering GleeWorld's cut.
 
       const stripeRes = await fetch('https://api.stripe.com/v1/refunds', {
         method: 'POST',

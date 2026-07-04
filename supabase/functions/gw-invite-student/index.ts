@@ -56,7 +56,13 @@ serve(async (req) => {
     //     no new seat consumed)
     //   • the tenant has no paid plan (free trials and unconfigured
     //     workspaces aren't blocked)
-    //   • the plan's student_cap is null (University tier = unlimited)
+    //   • the plan's student_cap is null (Institution tier = unlimited;
+    //     verified 2026-07-04 against the reseeded gw_billing_plans rows —
+    //     gw_tenant_plan_usage joins bp.student_cap generically by plan_id
+    //     so it picks up institution's NULL cap with no code change, and
+    //     the `u.student_cap !== null` guard below already treats NULL as
+    //     "don't block". See docs/superpowers/runbooks/
+    //     2026-07-04-tier-launch-runbook.md for the verification query.)
     if (preflightTenantId) {
       const emailLower = body.email.toLowerCase().trim();
       const { data: existingProfile } = await supabase
