@@ -95,6 +95,16 @@ describe('getTabItems', () => {
   });
 });
 
+// Every route currently wired up in src/App.tsx for a grid destination.
+// Copied here (not imported) so this list only changes when someone
+// deliberately re-verifies it against App.tsx's <Route path="..."> entries.
+const KNOWN_ROUTES = new Set([
+  '/dashboard/viewer', '/dashboard/part-tracks', '/studio',
+  '/dashboard/sight-reading', '/attendance', '/dashboard/academy',
+  '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
+  '/store',
+]);
+
 describe('getAppTiles', () => {
   it('never returns more than 8 primary tiles', () => {
     const { primary } = getAppTiles('faculty', allOn);
@@ -111,6 +121,19 @@ describe('getAppTiles', () => {
     const gridRoutes = [...primary, ...overflow].map((t) => t.to);
     for (const route of gridRoutes) {
       expect(tabRoutes.has(route)).toBe(false);
+    }
+  });
+
+  // The tab sweep test above only walks getTabItems, so a grid-only
+  // destination (e.g. Merch) with a stale `to` (like the old, nonexistent
+  // '/dashboard/merch') would never be caught. Pin every grid destination's
+  // route to routes that actually exist in src/App.tsx.
+  it('every grid destination (all flags on, both roles) routes to a known, existing App.tsx path', () => {
+    for (const role of ['student', 'faculty'] as const) {
+      const { primary, overflow } = getAppTiles(role, allOn);
+      for (const dest of [...primary, ...overflow]) {
+        expect(KNOWN_ROUTES.has(dest.to)).toBe(true);
+      }
     }
   });
 });
