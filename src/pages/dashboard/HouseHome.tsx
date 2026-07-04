@@ -48,31 +48,44 @@ export default function HouseHome() {
     enabled: isFaculty,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: recs, error } = await supabase
         .from('gw_practice_recordings')
-        .select('id, title, created_at')
+        .select('id, user_id, title, created_at')
         .is('teacher_notes', null)
         .is('reviewed_at', null)
         .order('created_at', { ascending: false })
         .limit(20);
       if (error) throw error;
-      return (data ?? []).map((r: { id: string; title: string | null; created_at: string }) => ({
-        section: 'urgent_task', subtype: 'practice_recording', id: `practice:${r.id}`,
-        title: r.title || 'Practice recording', detail: 'Awaiting review',
-        event_at: r.created_at, severity: 'medium', meta: { recording_id: r.id },
-      }));
+      const userIds = Array.from(new Set((recs ?? []).map((r) => r.user_id)));
+      const nameMap = new Map<string, string>();
+      if (userIds.length > 0) {
+        const { data: profs } = await supabase
+          .from('gw_profiles_directory')
+          .select('user_id, full_name, email')
+          .in('user_id', userIds);
+        (profs ?? []).forEach((p: { user_id: string; full_name: string | null; email: string | null }) => {
+          const name = `${p.full_name ?? ''}`.trim() || p.email || 'A student';
+          nameMap.set(p.user_id, name);
+        });
+      }
+      return (recs ?? []).map((r: { id: string; user_id: string; title: string | null; created_at: string }) => {
+        const student = nameMap.get(r.user_id) ?? 'A student';
+        return {
+          section: 'urgent_task', subtype: 'practice_recording', id: `practice:${r.id}`,
+          title: `${student} — ${r.title || 'Practice recording'}`, detail: 'Awaiting review',
+          event_at: r.created_at, severity: 'medium', meta: { recording_id: r.id, user_id: r.user_id },
+        };
+      });
     },
   });
 
   // Student: own practice days this week for the ledger.
+  const uid = profile?.user_id ?? 'anon';
   const { data: myPracticeDates = [] } = useQuery<string[]>({
-    queryKey: ['house-home-my-practice'],
-    enabled: !isFaculty,
+    queryKey: ['house-home-my-practice', uid],
+    enabled: !isFaculty && uid !== 'anon',
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      const uid = auth.user?.id;
-      if (!uid) return [];
       const { data, error } = await supabase
         .from('gw_practice_recordings')
         .select('created_at')
@@ -168,9 +181,10 @@ export default function HouseHome() {
         ) : (
           <div className="bg-card border border-border p-3">
             <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Practice this week</div>
-            <div className="text-xl tracking-[0.35em] text-primary" aria-label="Practice days this week">
+            <div className="text-xl tracking-[0.35em] text-primary"
+              aria-label={`${glyphs.filter((g) => g === 'note').length} of 7 days practiced this week`}>
               {glyphs.map((g, i) => (
-                <span key={i} className={g === 'note' ? '' : 'text-muted-foreground/40'}>
+                <span key={i} aria-hidden="true" className={g === 'note' ? '' : 'text-muted-foreground/40'}>
                   {g === 'note' ? '♩' : g === 'rest' ? '𝄽' : '·'}
                 </span>
               ))}
