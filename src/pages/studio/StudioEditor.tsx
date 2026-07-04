@@ -484,51 +484,49 @@ function Editor({
       // count-in. Doing it inside nativeRecordStart put a 100-500 ms
       // category transition between the last count-in click and beat 1,
       // so the metronome grid started late on recording runs.
+      const startSec = state?.positionSeconds ?? 0;
+
+      // iOS: the ENTIRE count-in → recorder → transport sequence runs
+      // on one native clock (recordWithCountIn). Driving the count-in
+      // from JS and then crossing the bridge twice (recordStart, play)
+      // put 100-300 ms of serial latency between the last count-in
+      // click and grid beat 1 — the take's click grid always started
+      // audibly late off the pulse. JS keeps only the visual countdown.
       if (engineState.native && engineState.nativeRecordStart) {
         const { NativeStudio } = await import('@/plugins/studioEngine');
-        await NativeStudio.prepareRecordSession().catch(() => { /* recordStart will retry */ });
-      }
+        await NativeStudio.prepareRecordSession().catch(() => { /* recordWithCountIn will retry */ });
 
-      // Optional count-in: if enabled, click for N bars before the mic
-      // opens. The engine's metronome scheduleRepeat only fires while
-      // the transport is running, so we drive the audible count via a
-      // direct synth trigger here. The metronome toggle is NOT touched:
-      // count-in owns the pre-roll clicks, and whether the click keeps
-      // ticking through the take follows the user's metronome button —
-      // auto-arming it here meant every record run got a click the
-      // user never asked for.
-      if (countInBars > 0) {
         const secPerBeat = 60 / session.tempo_bpm;
         const numerator = session.time_signature.numerator;
         const totalBeats = countInBars * numerator;
-        let beatIdx = 0;
-        engineState.triggerMetronomeClick?.(true);
-        setCountInBeat(1);
-        const audioTimer = setInterval(() => {
-          beatIdx += 1;
-          if (beatIdx >= totalBeats) return; // last click already fired
-          engineState.triggerMetronomeClick?.(beatIdx % numerator === 0);
-          setCountInBeat(beatIdx + 1);
-        }, secPerBeat * 1000);
-        await new Promise<void>((resolve) => setTimeout(resolve, totalBeats * secPerBeat * 1000));
-        clearInterval(audioTimer);
-        setCountInBeat(null);
-      }
 
-      const startSec = state?.positionSeconds ?? 0;
-      const startedAt = performance.now();
-
-      // On iOS Capacitor we run the AVAudioEngine input tap instead of
-      // Tone.UserMedia / getUserMedia / MediaRecorder — MediaRecorder
-      // is too unreliable inside WKWebView to ship as the takes path.
-      if (engineState.native && engineState.nativeRecordStart) {
-        await engineState.nativeRecordStart();
+        // Visual-only countdown badge — audio clicks are native now.
+        let visualTimer: ReturnType<typeof setInterval> | null = null;
+        if (totalBeats > 0) {
+          let beatIdx = 0;
+          setCountInBeat(1);
+          visualTimer = setInterval(() => {
+            beatIdx += 1;
+            if (beatIdx >= totalBeats) return;
+            setCountInBeat(beatIdx + 1);
+          }, secPerBeat * 1000);
+        }
+        try {
+          await NativeStudio.recordWithCountIn({
+            countInBeats: totalBeats,
+            secondsPerBeat: secPerBeat,
+            beatsPerBar: numerator,
+          });
+        } finally {
+          if (visualTimer) clearInterval(visualTimer);
+          setCountInBeat(null);
+        }
+        const startedAt = performance.now();
         setRecording({
           recorder: null, native: true,
           startSeconds: startSec, startWallMs: startedAt,
           armedTrackIds, peaks: [],
         });
-        if (!state?.isPlaying) play();
         toast.success('Recording — click ● again to stop');
 
         // Subscribe to live peak-dB events from the native AVAudioRecorder
@@ -536,7 +534,6 @@ function Editor({
         // of the actual mic input — without this the waveform would be
         // empty for the duration of the take and only fill in after stop,
         // which the user saw as "10 seconds to appear".
-        const { NativeStudio } = await import('@/plugins/studioEngine');
         const peakHandle = await NativeStudio.addListener('recordPeak', (e: { db: number }) => {
           latestPeakDbRef.current = e.db;
         });
@@ -561,6 +558,27 @@ function Editor({
         recRafRef.current = requestAnimationFrame(nativeTick);
         return;
       }
+
+      // Web path: Tone.UserMedia + MediaRecorder. Count-in for web
+      // stays JS-driven (same-context audio, no bridge seam).
+      if (countInBars > 0) {
+        const secPerBeat = 60 / session.tempo_bpm;
+        const numerator = session.time_signature.numerator;
+        const totalBeats = countInBars * numerator;
+        let beatIdx = 0;
+        engineState.triggerMetronomeClick?.(true);
+        setCountInBeat(1);
+        const audioTimer = setInterval(() => {
+          beatIdx += 1;
+          if (beatIdx >= totalBeats) return;
+          engineState.triggerMetronomeClick?.(beatIdx % numerator === 0);
+          setCountInBeat(beatIdx + 1);
+        }, secPerBeat * 1000);
+        await new Promise<void>((resolve) => setTimeout(resolve, totalBeats * secPerBeat * 1000));
+        clearInterval(audioTimer);
+        setCountInBeat(null);
+      }
+      const startedAt = performance.now();
 
       // Web path: Tone.UserMedia + MediaRecorder.
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;

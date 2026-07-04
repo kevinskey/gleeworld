@@ -36,6 +36,9 @@ interface StudioEnginePluginShape {
   // return a file:// URL the native engine can open with AVAudioFile.
   saveFinalizedTake(args: { base64: string; filename?: string }): Promise<{ localUrl: string }>;
   recordStart(): Promise<void>;
+  // Count-in clicks + recorder start + transport start on one native
+  // clock. Resolves at grid start (recorder rolling, transport playing).
+  recordWithCountIn(args: { countInBeats: number; secondsPerBeat: number; beatsPerBar: number }): Promise<{ gridStartedAtMs: number }>;
   recordStop(): Promise<{ localUrl: string; filename: string }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
   // Splice a single clip onto a live track — pairs with useStudio's diff

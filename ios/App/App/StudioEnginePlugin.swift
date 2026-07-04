@@ -42,6 +42,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "saveFinalizedTake", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "prepareRecordSession", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStart", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "recordWithCountIn", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mixdown", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "addClipToTrack", returnType: CAPPluginReturnPromise),
@@ -304,6 +305,53 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             } catch {
                 call.reject("write failed: \(error.localizedDescription)")
             }
+        }
+    }
+
+    /// Count-in + recorder + transport on ONE native clock. Resolves at
+    /// grid start (recorder rolling, transport playing) so JS can stamp
+    /// its waveform timeline. The recorder is fully prepared BEFORE the
+    /// count-in begins; the grid-start callback only pays for
+    /// AVAudioRecorder.record().
+    @objc func recordWithCountIn(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        let beats = call.getInt("countInBeats") ?? 0
+        let secondsPerBeat = call.getDouble("secondsPerBeat") ?? 0.5
+        let beatsPerBar = call.getInt("beatsPerBar") ?? 4
+        let session = AVAudioSession.sharedInstance()
+        let proceed: () -> Void = { [weak self] in
+            DispatchQueue.main.async {
+                guard let self else { call.reject("plugin gone"); return }
+                do {
+                    try self.recorder.prepare()
+                } catch {
+                    call.reject("record prepare failed: \(error.localizedDescription)")
+                    return
+                }
+                self.engine.playWithCountIn(beats: beats, secondsPerBeat: secondsPerBeat,
+                                            beatsPerBar: beatsPerBar,
+                                            onCancelled: {
+                                                call.reject("count-in cancelled")
+                                            }) { [weak self] in
+                    guard let self else { return }
+                    do {
+                        try self.recorder.startPrepared()
+                        self.engine.recordingActive = true
+                        call.resolve(["gridStartedAtMs": Date().timeIntervalSince1970 * 1000])
+                    } catch {
+                        call.reject("record start failed: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+        switch session.recordPermission {
+        case .granted: proceed()
+        case .denied: call.reject("Microphone permission denied. Enable it in Settings → GleeWorld.")
+        case .undetermined:
+            session.requestRecordPermission { granted in
+                if granted { proceed() } else { call.reject("Microphone permission denied.") }
+            }
+        @unknown default: call.reject("Microphone permission state unknown.")
         }
     }
 

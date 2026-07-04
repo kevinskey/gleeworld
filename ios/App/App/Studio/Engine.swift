@@ -422,6 +422,7 @@ public final class StudioNativeEngine {
     }
 
     public func pause() {
+        cancelCountIn()
         guard isPlayingNow else { return }
         // Record where we paused so play() resumes from there.
         pausedAt = currentPositionSeconds()
@@ -433,6 +434,7 @@ public final class StudioNativeEngine {
     }
 
     public func stopTransport() {
+        cancelCountIn()
         for (_, t) in tracks { t.stopScheduling() }
         cancelMetronome()
         pausedAt = 0
@@ -714,6 +716,59 @@ public final class StudioNativeEngine {
         // reoccurs on a later op, the new lastError will fire a fresh
         // toast — which is what we want.
         lastError = nil
+    }
+
+    /// Pending count-in timers (clicks + the grid-start handoff), so a
+    /// Stop during the pre-roll cancels cleanly.
+    private var countInTimers: [Timer] = []
+    /// Invoked when a pending count-in is cancelled (Stop/Pause during
+    /// the pre-roll) so the plugin can reject its still-pending call
+    /// instead of leaving the JS await hanging forever.
+    private var countInCancelHandler: (() -> Void)?
+
+    /// Native-owned count-in: click `beats` pre-roll beats on Timers and
+    /// then, in the FINAL timer callback on the same clock, run
+    /// `onGridStart` (recorder trigger) and start the transport. The JS
+    /// flow previously drove the count-in and then crossed the bridge
+    /// twice (recordStart, play) before the grid began — 100-300 ms of
+    /// serial latency that made beat 1 land audibly late off the
+    /// count-in pulse. Here the handoff is one timer tick.
+    public func playWithCountIn(beats: Int, secondsPerBeat: Double,
+                                beatsPerBar: Int,
+                                onCancelled: (() -> Void)? = nil,
+                                onGridStart: (() -> Void)?) {
+        cancelCountIn()
+        countInCancelHandler = onCancelled
+        guard beats > 0 else {
+            onGridStart?()
+            play()
+            return
+        }
+        ensureMetronomeAttached()
+        for i in 0..<beats {
+            let accent = (i % max(1, beatsPerBar)) == 0
+            let t = Timer(timeInterval: Double(i) * secondsPerBeat, repeats: false) { [weak self] _ in
+                self?.playClick(accent: accent)
+            }
+            RunLoop.main.add(t, forMode: .common)
+            countInTimers.append(t)
+        }
+        let start = Timer(timeInterval: Double(beats) * secondsPerBeat, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            self.countInCancelHandler = nil
+            onGridStart?()
+            self.play()
+        }
+        RunLoop.main.add(start, forMode: .common)
+        countInTimers.append(start)
+    }
+
+    public func cancelCountIn() {
+        for t in countInTimers { t.invalidate() }
+        countInTimers.removeAll()
+        let handler = countInCancelHandler
+        countInCancelHandler = nil
+        handler?()
     }
 
     // MARK: - Metronome
