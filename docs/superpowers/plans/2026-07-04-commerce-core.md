@@ -275,6 +275,8 @@ git add supabase/migrations/20260705000100_commerce_core_fulfill.sql supabase/mi
 git commit -m "feat(commerce): atomic idempotent gw_store_fulfill_order + refund"
 ```
 
+> **IMPLEMENTATION NOTE (post-review correction — the code block above is NOT safe as written; the committed migration is the source of truth).** Review found two real oversell holes in the single-pass loop above: (1) PL/pgSQL `RETURN` does not roll back, so a later item's oversell left earlier items decremented and re-decremented them on every webhook retry; (2) per-line validation missed same-product multi-line orders (Small+Large of one shirt) driving stock negative. The shipped function uses **two passes with per-product aggregation**: Pass 1 `SELECT product_id, sum(quantity) ... GROUP BY product_id`, locks each product `FOR UPDATE`, NULL-guards, validates the summed quantity — **no writes**; Pass 2a decrements each product once by the aggregate, Pass 2b mints one entitlement per digital line. Both `SECURITY DEFINER` functions end with `REVOKE ALL ... FROM PUBLIC` + `GRANT EXECUTE ... TO service_role` (they bypass RLS; anon/authenticated must not call them directly).
+
 ---
 
 ## Task 3: Provider seam (`_shared/payments/`)
