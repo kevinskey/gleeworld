@@ -33,38 +33,55 @@ const D = {
 };
 
 // Module flag gating a given destination key, when the destination is
-// module-gated. Destinations absent from this map (e.g. attendance) are
-// always available and never skipped for being "off".
+// module-gated. Destinations absent from this map (e.g. attendance, roster)
+// are always available ("flagless-core") and never skipped for being "off".
 const SLOT_FLAG: Partial<Record<string, keyof ModuleFlags>> = {
   music: 'hasViewer', tracks: 'hasPartTracks', studio: 'hasStudio',
   sight: 'hasSightReading', academy: 'hasAcademy',
 };
 
-// Picks the first destination in `order` that is (a) module-enabled and
-// (b) not already used for another slot, falling back to Academy then
-// Attendance (which has no gating flag) so a slot is never left empty and
-// never collides with an already-chosen destination.
-function pickSlot(order: string[], flags: ModuleFlags, used: Set<string>): Destination {
+// getTabItems always returns 3-5 DISTINCT, live tabs: Home and Messages
+// first, Schedule last, with up to TAB_EXTRA_SLOTS slots in between filled
+// from a role preference order. A slot candidate is skipped (never
+// substituted) when its module flag is off, its key is already used, or its
+// route is already used — so the result never contains a duplicate or a
+// flag-off destination. If fewer than TAB_EXTRA_SLOTS candidates qualify,
+// the result simply has fewer tabs (down to the 3-tab flagless-core floor).
+const TAB_MAX = 5;
+const CORE_TAB_COUNT = 3; // Home, Messages, Schedule
+const TAB_EXTRA_SLOTS = TAB_MAX - CORE_TAB_COUNT;
+
+const STUDENT_TAB_ORDER = ['music', 'studio', 'tracks', 'sight', 'academy', 'attendance'];
+const FACULTY_TAB_ORDER = ['roster', 'music', 'academy', 'tracks'];
+
+function isSlotEnabled(key: string, flags: ModuleFlags): boolean {
+  const flagKey = SLOT_FLAG[key];
+  return flagKey ? flags[flagKey] : true;
+}
+
+// Walks `order` once, in preference order, collecting up to
+// TAB_EXTRA_SLOTS destinations that are enabled and not yet claimed (by key
+// or by route) by an earlier pick or by the flagless-core tabs.
+function fillTabSlots(order: string[], flags: ModuleFlags, usedKeys: Set<string>, usedRoutes: Set<string>): Destination[] {
+  const picked: Destination[] = [];
   for (const key of order) {
+    if (picked.length >= TAB_EXTRA_SLOTS) break;
+    if (!isSlotEnabled(key, flags)) continue;
     const dest = (D as Record<string, Destination>)[key];
-    const flagKey = SLOT_FLAG[key];
-    const enabled = flagKey ? flags[flagKey] : true;
-    if (enabled && !used.has(dest.key)) return dest;
+    if (usedKeys.has(dest.key) || usedRoutes.has(dest.to)) continue;
+    picked.push(dest);
+    usedKeys.add(dest.key);
+    usedRoutes.add(dest.to);
   }
-  if (flags.hasAcademy && !used.has(D.academy.key)) return D.academy;
-  return D.attendance;
+  return picked;
 }
 
 export function getTabItems(role: 'student' | 'faculty', flags: ModuleFlags): Destination[] {
-  if (role === 'faculty') {
-    return [D.home, D.messages, D.roster, flags.hasViewer ? D.music : D.academy, D.schedule];
-  }
-  const used = new Set([D.home.key, D.messages.key]);
-  const third = pickSlot(['music', 'tracks', 'academy'], flags, used);
-  used.add(third.key);
-  const fourth = pickSlot(['studio', 'tracks', 'sight', 'academy'], flags, used);
-  used.add(fourth.key);
-  return [D.home, D.messages, third, fourth, D.schedule];
+  const usedKeys = new Set([D.home.key, D.messages.key, D.schedule.key]);
+  const usedRoutes = new Set([D.home.to, D.messages.to, D.schedule.to]);
+  const order = role === 'faculty' ? FACULTY_TAB_ORDER : STUDENT_TAB_ORDER;
+  const filled = fillTabSlots(order, flags, usedKeys, usedRoutes);
+  return [D.home, D.messages, ...filled, D.schedule];
 }
 
 export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags):
