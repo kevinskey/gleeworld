@@ -14,6 +14,7 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { HeroSlider } from "@/components/hero/HeroSlider";
 import { useUniversalHeroSlides } from "@/hooks/useUniversalSlider";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { PLAN_TIERS, formatPrice, type PlanTierId } from "@/lib/planTiers";
 import {
   Calendar,
   MapPin,
@@ -1538,22 +1539,29 @@ function AppleVideo() {
 }
 
 // ── Stripe Payment Links ──────────────────────────────────────────────────
-// Create these in Stripe Dashboard → Payment Links. Each one wraps a
-// recurring price. Make sure the Stripe checkout has:
-//   • Collect customer email = required
-//   • Custom field "org_name" (text, required)
-//   • Custom field "subdomain" (text, optional) — used as their site URL slug
-// Paste each Payment Link URL below. Until then the buttons gracefully fall
-// back to the contact email.
-// Keys correspond to the four base tiers. Every link carries canonical
-// metadata.gleeworld_tier (fixed 2026-07-03 — legacy links said
-// solo/school/institution) and required org_name + optional subdomain
-// custom fields. A null falls back to the MAILTO_BUY contact email.
-const STRIPE_LINKS: Record<string, string | null> = {
-  ensemble:     "https://buy.stripe.com/14A14m2C8bir73qfqf4Vy00",
-  studio:       "https://buy.stripe.com/6oUaEW7Ws0DN87u5PF4Vy01",
-  conservatory: "https://buy.stripe.com/28EeVcccI0DN87uemb4Vy03",
-  university:   "https://buy.stripe.com/cNibJ00u0aen9bya5V4Vy02",
+// Create these in Stripe Dashboard → Payment Links, one per PlanTierId, once
+// the tier restructure (see docs/superpowers/plans/2026-07-04-tiers-billing.md)
+// reaches its launch gate. Each link should wrap the tier's monthly lookup_key
+// price and collect: customer email (required), custom field "org_name"
+// (text, required), custom field "subdomain" (text, optional).
+// Every value here is intentionally null for now — the old ensemble/studio/
+// conservatory/university links referenced retired tier ids and pricing, and
+// real replacements aren't created until the launch gate in the runbook
+// above. Until then every "Talk to us" CTA below falls back to MAILTO_BUY.
+const PLAN_CHECKOUT_LINKS: Record<PlanTierId, string | null> = {
+  personal: null,
+  director_60: null,
+  director_150: null,
+  institution: null,
+};
+
+// Card background per tier — purely presentational, keyed to PlanTierId so it
+// can't drift out of sync with PLAN_TIERS.
+const TIER_PASTELS: Record<PlanTierId, string> = {
+  personal: '#f0f9ff',
+  director_60: 'linear-gradient(180deg, #ede9fe 0%, #fce7f3 100%)',
+  director_150: '#fce7f3',
+  institution: '#fef3c7',
 };
 
 const ADDON_MODULES: { name: string; price: string; tagline: string }[] = [
@@ -1567,81 +1575,6 @@ const ADDON_MODULES: { name: string; price: string; tagline: string }[] = [
 ];
 
 function ApplePricing() {
-  const tiers = [
-    {
-      key: 'ensemble',
-      name: 'Ensemble',
-      price: '$49',
-      cadence: '/month',
-      tagline: 'Small church choirs, community ensembles, youth choirs.',
-      bullets: [
-        'Up to 40 students',
-        '25 GB storage',
-        'All 9 core features',
-        'Your subdomain (yourname.gleeworld.org)',
-        'Branded logo + colors',
-        'Email + chat support',
-      ],
-      cta: 'Start with Ensemble',
-      pastel: '#f0f9ff',
-      featured: false,
-    },
-    {
-      key: 'studio',
-      name: 'Studio',
-      price: '$99',
-      cadence: '/month',
-      tagline: 'High-school choirs, mid-sized parish music, community choruses.',
-      bullets: [
-        'Up to 100 students',
-        '100 GB storage',
-        'All 9 core features',
-        'Your subdomain + optional custom domain',
-        'Branded logo + colors + tagline',
-        'Priority support (24h)',
-        'Bulk roster import',
-      ],
-      cta: 'Most popular — start here',
-      pastel: 'linear-gradient(180deg, #ede9fe 0%, #fce7f3 100%)',
-      featured: true,
-    },
-    {
-      key: 'conservatory',
-      name: 'Conservatory',
-      price: '$179',
-      cadence: '/month',
-      tagline: 'Small university music depts, megachurch music ministries.',
-      bullets: [
-        'Up to 250 students',
-        '500 GB storage',
-        'Single Sign-On (SSO)',
-        'Custom domain included',
-        'Custom branding (logo, colors, fonts)',
-        'Priority support (12h business hours)',
-      ],
-      cta: 'Start with Conservatory',
-      pastel: '#fce7f3',
-      featured: false,
-    },
-    {
-      key: 'university',
-      name: 'University',
-      price: '$299',
-      cadence: '/month',
-      tagline: 'Universities, dioceses, multi-ensemble programs.',
-      bullets: [
-        'Unlimited students',
-        'Unlimited storage',
-        'SSO + custom branding',
-        'API access + SLA',
-        'Priority support (4h business hours)',
-        'Onboarding call + data migration',
-      ],
-      cta: 'Talk to us',
-      pastel: '#fef3c7',
-      featured: false,
-    },
-  ];
   return (
     <section id="pricing" className="py-16 sm:py-24 md:py-32 bg-white">
       <div className="max-w-6xl mx-auto px-6">
@@ -1657,58 +1590,79 @@ function ApplePricing() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
-          {tiers.map((t) => (
-            <div
-              key={t.name}
-              className={`relative rounded-3xl p-6 sm:p-8 flex flex-col ${t.featured ? 'shadow-2xl ring-2' : 'shadow-sm border border-slate-200'}`}
-              style={{
-                background: t.pastel,
-                ...(t.featured ? { ['--tw-ring-color' as any]: '#8b5cf6' } : {}),
-              }}
-            >
-              {t.featured && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full text-white"
-                     style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}>
-                  MOST POPULAR
-                </div>
-              )}
-              <h3 className="text-xl font-bold text-slate-900 mb-1" style={{ ...HEADING_STYLE, letterSpacing: '-0.015em' }}>
-                {t.name}
-              </h3>
-              <p className="text-sm text-slate-600 mb-5">{t.tagline}</p>
-              <div className="mb-5">
-                <span className="text-5xl font-bold text-slate-900" style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}>{t.price}</span>
-                <span className="text-base text-slate-600">{t.cadence}</span>
-              </div>
-              <ul className="space-y-2.5 mb-8 flex-grow">
-                {t.bullets.map((b) => (
-                  <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-                    <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#10b981' }} />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={STRIPE_LINKS[t.key] || MAILTO_BUY}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
-                style={t.featured
-                  ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
-                  : { backgroundColor: '#0f172a' }}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 items-start">
+          {PLAN_TIERS.map((tier) => {
+            // Personal is billed to an individual musician, not a tenant — it
+            // renders as a smaller, less prominent card ahead of the tenant
+            // tiers rather than competing with them visually.
+            const isPersonal = tier.id === 'personal';
+            // Director (director_60) is the default tenant tier (see
+            // DEFAULT_PLAN_TIER in planTiers.ts) and keeps the "most popular"
+            // treatment the old Studio tier had.
+            const featured = tier.id === 'director_60';
+            const checkoutLink = PLAN_CHECKOUT_LINKS[tier.id];
+            const priceLabel = tier.quote ? `From ${formatPrice(tier.monthlyCents)}` : formatPrice(tier.monthlyCents);
+
+            return (
+              <div
+                key={tier.id}
+                className={`relative rounded-3xl flex flex-col ${
+                  isPersonal ? 'p-5 sm:p-6' : 'p-6 sm:p-8'
+                } ${featured ? 'shadow-2xl ring-2' : 'shadow-sm border border-slate-200'}`}
+                style={{
+                  background: TIER_PASTELS[tier.id],
+                  ...(featured ? { ['--tw-ring-color' as any]: '#8b5cf6' } : {}),
+                }}
               >
-                {/* When a tier has no Stripe payment link yet (e.g. Conservatory),
-                    the button is a mailto — don't imply instant self-serve
-                    checkout; use an honest "Talk to us" label. */}
-                {STRIPE_LINKS[t.key] ? t.cta : 'Talk to us'}
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-          ))}
+                {featured && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full text-white"
+                       style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}>
+                    MOST POPULAR
+                  </div>
+                )}
+                <h3 className={`font-bold text-slate-900 mb-1 ${isPersonal ? 'text-lg' : 'text-xl'}`} style={{ ...HEADING_STYLE, letterSpacing: '-0.015em' }}>
+                  {tier.label}
+                </h3>
+                <p className="text-sm text-slate-600 mb-5">{tier.tagline}</p>
+                <div className="mb-5">
+                  <span className={`font-bold text-slate-900 ${isPersonal ? 'text-3xl' : 'text-5xl'}`} style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}>
+                    {priceLabel}
+                  </span>
+                  <span className="text-base text-slate-600">/mo</span>
+                </div>
+                <ul className="space-y-2.5 mb-8 flex-grow">
+                  {tier.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#10b981' }} />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={checkoutLink || MAILTO_BUY}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+                  style={featured
+                    ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
+                    : { backgroundColor: '#0f172a' }}
+                >
+                  {/* PLAN_CHECKOUT_LINKS is all null until the launch gate (see
+                      docs/superpowers/plans/2026-07-04-tiers-billing.md) creates
+                      real Stripe Payment Links per PlanTierId. Institution is
+                      always quote-based. Until real links exist, every CTA is
+                      an honest "Talk to us" mailto — never imply self-serve
+                      checkout that doesn't exist yet. */}
+                  {checkoutLink && !tier.quote ? `Start with ${tier.label}` : 'Talk to us'}
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+            );
+          })}
         </div>
 
         <p className="text-center text-sm text-slate-500 mt-10 max-w-2xl mx-auto">
-          Annual plans available (save 2 months). Educational institutions get 20% off all tiers.
-          All plans include hosting, SSL, automatic backups, and ongoing platform updates.
+          Annual billing available on every tier (2 months free vs. paying monthly).
+          Educational institutions get 20% off all tiers. All plans include hosting, SSL,
+          automatic backups, and ongoing platform updates.
         </p>
 
         {/* Add-on modules — same price at every tier. */}
