@@ -63,7 +63,13 @@ export async function handler(req: Request): Promise<Response> {
     }
 
     // Card-testing defense: rate-limit session creation per ip + email.
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
+    // Trusted client IP: nginx sets X-Real-IP to $remote_addr (overwrites any
+    // client value). Fall back to the LAST X-Forwarded-For hop (proxy-appended),
+    // never the client-controllable first entry.
+    const xff = req.headers.get('x-forwarded-for');
+    const ip = (req.headers.get('x-real-ip')
+      ?? (xff ? xff.split(',').map(s => s.trim()).filter(Boolean).pop() : '')
+      ?? '').trim();
     const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const recent = await pg(
       `gw_store_checkout_attempts?or=(ip.eq.${encodeURIComponent(ip)},email.eq.${encodeURIComponent(buyer_email)})&created_at=gte.${since}&select=id`,
@@ -72,6 +78,7 @@ export async function handler(req: Request): Promise<Response> {
     await pg('gw_store_checkout_attempts', { method: 'POST', body: JSON.stringify({ ip, email: buyer_email }) });
 
     // Resolve owning tenant + account server-side.
+    // invariant: store_type==='tenant' guaranteed claims non-null above
     const tenantId = store_type === 'gleeworld' ? PLATFORM_TENANT_ID : claims!.tenant_id;
     if (!tenantId) return j({ error: 'no tenant' }, 400);
 

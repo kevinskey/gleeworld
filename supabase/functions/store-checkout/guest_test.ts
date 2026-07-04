@@ -215,6 +215,68 @@ function assert(cond: boolean, msg: string) {
   assert(!!attemptsGet && attemptsGet.url.includes(encodeURIComponent(trickyEmail)), `email is present encodeURIComponent'd in the filter URL (got ${attemptsGet?.url})`);
 }
 
+// ---- (f) IP key must be the trusted x-real-ip, not a client-controllable
+//      X-Forwarded-For value. A card-tester rotates a spoofed left-most
+//      X-Forwarded-For entry per request while nginx's X-Real-IP (the real,
+//      unforgeable client IP) stays constant — both requests must still be
+//      keyed on the SAME ip bucket for the rate limiter to have any teeth.
+{
+  scenario = { authOk: true, product: HOODIE, attemptsCount: 0 };
+  calls.length = 0;
+  await handler(
+    req(
+      { store_type: 'gleeworld', items: [{ product_id: PRODUCT_ID, quantity: 1 }], buyer_email: 'card-test-1@example.com' },
+      { 'x-real-ip': '55.55.55.55', 'x-forwarded-for': '1.1.1.1, 55.55.55.55' },
+    ),
+  );
+  const get1 = calls.find((c) => c.url.includes('/rest/v1/gw_store_checkout_attempts') && c.method === 'GET');
+  const post1 = calls.find((c) => c.url.includes('/rest/v1/gw_store_checkout_attempts') && c.method === 'POST');
+
+  calls.length = 0;
+  await handler(
+    req(
+      { store_type: 'gleeworld', items: [{ product_id: PRODUCT_ID, quantity: 1 }], buyer_email: 'card-test-2@example.com' },
+      { 'x-real-ip': '55.55.55.55', 'x-forwarded-for': '2.2.2.2, 55.55.55.55' },
+    ),
+  );
+  const get2 = calls.find((c) => c.url.includes('/rest/v1/gw_store_checkout_attempts') && c.method === 'GET');
+  const post2 = calls.find((c) => c.url.includes('/rest/v1/gw_store_checkout_attempts') && c.method === 'POST');
+
+  assert(!!get1 && get1.url.includes(encodeURIComponent('55.55.55.55')), `rate-limit lookup keys on trusted x-real-ip, not spoofed x-forwarded-for[0] (got ${get1?.url})`);
+  assert(!!get1 && !get1.url.includes('1.1.1.1'), `spoofed x-forwarded-for first hop (1.1.1.1) is not used as the ip key (got ${get1?.url})`);
+  assert(!!get2 && !get2.url.includes('2.2.2.2'), `spoofed x-forwarded-for first hop (2.2.2.2) is not used as the ip key (got ${get2?.url})`);
+  assert(!!post1 && !!post2 && (post1.body as any)?.ip === (post2.body as any)?.ip, `both requests record the SAME ip bucket despite different spoofed X-Forwarded-For values (got ${JSON.stringify((post1?.body as any)?.ip)} vs ${JSON.stringify((post2?.body as any)?.ip)})`);
+  assert((post1?.body as any)?.ip === '55.55.55.55', `recorded ip is the trusted x-real-ip (got ${JSON.stringify((post1?.body as any)?.ip)})`);
+
+  // Same trusted ip, already at the 5-attempt ceiling -> throttled, even
+  // though this request's spoofed X-Forwarded-For first hop has never been
+  // seen before (a card-tester cannot reset their own bucket by rotating it).
+  scenario = { authOk: true, product: HOODIE, attemptsCount: 5 };
+  const throttled = await handler(
+    req(
+      { store_type: 'gleeworld', items: [{ product_id: PRODUCT_ID, quantity: 1 }], buyer_email: 'card-test-4@example.com' },
+      { 'x-real-ip': '55.55.55.55', 'x-forwarded-for': '3.3.3.3, 55.55.55.55' },
+    ),
+  );
+  assert(throttled.status === 429, `request throttled based on x-real-ip regardless of a fresh spoofed x-forwarded-for (got ${throttled.status})`);
+}
+
+// ---- (g) fallback: no x-real-ip header (e.g. direct-to-origin test
+//      traffic) -> use the LAST X-Forwarded-For hop (proxy-appended real
+//      IP), never the first (client-controllable) entry. ------------------
+{
+  scenario = { authOk: true, product: HOODIE, attemptsCount: 0 };
+  calls.length = 0;
+  await handler(
+    req(
+      { store_type: 'gleeworld', items: [{ product_id: PRODUCT_ID, quantity: 1 }], buyer_email: 'card-test-3@example.com' },
+      { 'x-forwarded-for': '6.6.6.6, 77.77.77.77' },
+    ),
+  );
+  const post3 = calls.find((c) => c.url.includes('/rest/v1/gw_store_checkout_attempts') && c.method === 'POST');
+  assert((post3?.body as any)?.ip === '77.77.77.77', `no x-real-ip -> falls back to the LAST X-Forwarded-For hop, not the spoofable first one (got ${JSON.stringify((post3?.body as any)?.ip)})`);
+}
+
 globalThis.fetch = origFetch;
 
 if (failures > 0) {
