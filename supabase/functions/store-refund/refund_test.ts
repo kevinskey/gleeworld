@@ -9,6 +9,7 @@
 
 Deno.env.set('SUPABASE_URL', Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000');
 Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? 'srk_test');
+Deno.env.set('SUPABASE_ANON_KEY', Deno.env.get('SUPABASE_ANON_KEY') ?? 'anon_test');
 Deno.env.set('STRIPE_SECRET_KEY', Deno.env.get('STRIPE_SECRET_KEY') ?? 'sk_test_dummy');
 
 const ORDER_ID = '11111111-1111-1111-1111-111111111111';
@@ -47,9 +48,27 @@ const tenantsById: Record<string, { stripe_account_id: string | null } | undefin
 
 // ---- caller scenario ------------------------------------------------------
 // authOk: whether /auth/v1/user resolves to a real user (i.e. a bearer
-// token was presented at all). isAdmin: the gw_profiles row's admin flags.
-type Scenario = { authOk: boolean; isAdmin: boolean };
-let scenario: Scenario = { authOk: true, isAdmin: true };
+// token was presented at all). isAdmin: the gw_profiles row's admin flags
+// (authenticateCaller's tenant-agnostic gate). tenantId: the signature-
+// verified `tenant_id` claim on the caller's own JWT (null for a
+// GleeWorld-platform-side caller) — this is what verifyJwtClaims hands
+// back and what the handler must match against the *order's* tenant_id
+// before ever touching Stripe/the RPC.
+type Scenario = { authOk: boolean; isAdmin: boolean; tenantId: string | null };
+let scenario: Scenario = { authOk: true, isAdmin: true, tenantId: null };
+
+// verifyJwtClaims decodes the JWT payload itself via atob() on the token's
+// middle segment (same as store-admin-orders/admin_orders_test.ts) — it
+// doesn't ask PostgREST for claims — so the stub needs a real-shaped (if
+// fake-signed) JWT whose payload carries `scenario.tenantId`.
+function fakeJwt(tenantId: string | null): string {
+  const b64url = (obj: unknown) =>
+    btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return `${b64url({ alg: 'none' })}.${b64url({ tenant_id: tenantId })}.sig`;
+}
+function bearerFor(tenantId: string | null): Record<string, string> {
+  return { Authorization: `Bearer ${fakeJwt(tenantId)}` };
+}
 
 const calls: { url: string; method: string; headers: Record<string, string>; body: unknown }[] = [];
 
@@ -141,19 +160,21 @@ function assert(cond: boolean, msg: string) {
 
 // ---- (b) authenticated but non-admin -> 403 ------------------------------
 {
-  scenario = { authOk: true, isAdmin: false };
+  scenario = { authOk: true, isAdmin: false, tenantId: null };
   calls.length = 0;
-  const res = await handler(req({ order_id: ORDER_ID }, { Authorization: 'Bearer user_token' }));
+  const res = await handler(req({ order_id: ORDER_ID }, bearerFor(null)));
   assert(res.status === 403, `non-admin caller -> 403 (got ${res.status})`);
   assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'no Stripe call made for a non-admin caller');
 }
 
-// ---- (c) admin caller, known paid order -> Stripe refund issued, then the
+// ---- (c) admin caller, known paid order, caller's own tenant_id matches
+//      the order's tenant_id (both null: a GleeWorld-platform-side admin
+//      refunding a GleeWorld-store order) -> Stripe refund issued, then the
 //      RPC is called, response is {ok:true}. -------------------------------
 {
-  scenario = { authOk: true, isAdmin: true };
+  scenario = { authOk: true, isAdmin: true, tenantId: null };
   calls.length = 0;
-  const res = await handler(req({ order_id: ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  const res = await handler(req({ order_id: ORDER_ID }, bearerFor(null)));
   assert(res.status === 200, `admin refund -> 200 (got ${res.status}, body ${await res.clone().text()})`);
   const outBody = await res.json();
   assert(outBody.ok === true, `response is {ok:true} (got ${JSON.stringify(outBody)})`);
@@ -177,9 +198,9 @@ function assert(cond: boolean, msg: string) {
 
 // ---- (d) unknown order_id -> 404, no Stripe/RPC calls --------------------
 {
-  scenario = { authOk: true, isAdmin: true };
+  scenario = { authOk: true, isAdmin: true, tenantId: null };
   calls.length = 0;
-  const res = await handler(req({ order_id: UNKNOWN_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  const res = await handler(req({ order_id: UNKNOWN_ORDER_ID }, bearerFor(null)));
   assert(res.status === 404, `unknown order -> 404 (got ${res.status})`);
   assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'no Stripe call for an unknown order');
 }
@@ -189,9 +210,9 @@ function assert(cond: boolean, msg: string) {
 //      RPC's own already_refunded idempotency covers the DB side) and the
 //      response is still {ok:true}. -----------------------------------------
 {
-  scenario = { authOk: true, isAdmin: true };
+  scenario = { authOk: true, isAdmin: true, tenantId: null };
   calls.length = 0;
-  const res = await handler(req({ order_id: REFUNDED_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  const res = await handler(req({ order_id: REFUNDED_ORDER_ID }, bearerFor(null)));
   assert(res.status === 200, `second call on an already-refunded order -> 200, not an error (got ${res.status}, body ${await res.clone().text()})`);
   const outBody = await res.json();
   assert(outBody.ok === true, `idempotent second call still returns {ok:true} (got ${JSON.stringify(outBody)})`);
@@ -201,9 +222,9 @@ function assert(cond: boolean, msg: string) {
 // ---- (f) malformed order_id (not a UUID) -> 400, rejected before any
 //      lookup/interpolation. ------------------------------------------------
 {
-  scenario = { authOk: true, isAdmin: true };
+  scenario = { authOk: true, isAdmin: true, tenantId: null };
   calls.length = 0;
-  const res = await handler(req({ order_id: "not-a-uuid; drop table gw_store_orders;" }, { Authorization: 'Bearer admin_token' }));
+  const res = await handler(req({ order_id: "not-a-uuid; drop table gw_store_orders;" }, bearerFor(null)));
   assert(res.status === 400, `non-UUID order_id -> 400 (got ${res.status})`);
   // Auth runs before body validation (calls to /auth/v1/user and
   // /rest/v1/gw_profiles are expected), but the bad id must never reach
@@ -217,9 +238,9 @@ function assert(cond: boolean, msg: string) {
 //      Stripe-Account header equal to the tenant's connected account
 //      (Connect direct charge; platform key alone can't see the PI). -------
 {
-  scenario = { authOk: true, isAdmin: true };
+  scenario = { authOk: true, isAdmin: true, tenantId: TENANT_ID };
   calls.length = 0;
-  const res = await handler(req({ order_id: TENANT_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  const res = await handler(req({ order_id: TENANT_ORDER_ID }, bearerFor(TENANT_ID)));
   assert(res.status === 200, `tenant-store refund -> 200 (got ${res.status}, body ${await res.clone().text()})`);
   const stripeCall = calls.find((c) => c.url.includes('api.stripe.com/v1/refunds'));
   assert(!!stripeCall, 'a Stripe refund POST was issued for a tenant-store order');
@@ -232,9 +253,9 @@ function assert(cond: boolean, msg: string) {
 // ---- (h) store_type='gleeworld' order -> Stripe refund issued on the
 //      platform account, NO Stripe-Account header. -------------------------
 {
-  scenario = { authOk: true, isAdmin: true };
+  scenario = { authOk: true, isAdmin: true, tenantId: null };
   calls.length = 0;
-  const res = await handler(req({ order_id: GLEEWORLD_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  const res = await handler(req({ order_id: GLEEWORLD_ORDER_ID }, bearerFor(null)));
   assert(res.status === 200, `gleeworld-store refund -> 200 (got ${res.status}, body ${await res.clone().text()})`);
   const stripeCall = calls.find((c) => c.url.includes('api.stripe.com/v1/refunds'));
   assert(!!stripeCall, 'a Stripe refund POST was issued for a gleeworld-store order');
@@ -244,9 +265,9 @@ function assert(cond: boolean, msg: string) {
 // ---- (i) tenant order whose tenant has no stripe_account_id on file ->
 //      400, no Stripe call. --------------------------------------------------
 {
-  scenario = { authOk: true, isAdmin: true };
+  scenario = { authOk: true, isAdmin: true, tenantId: NO_ACCOUNT_TENANT_ID };
   calls.length = 0;
-  const res = await handler(req({ order_id: NO_ACCOUNT_TENANT_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  const res = await handler(req({ order_id: NO_ACCOUNT_TENANT_ORDER_ID }, bearerFor(NO_ACCOUNT_TENANT_ID)));
   assert(res.status === 400, `tenant with no connected account -> 400 (got ${res.status})`);
   assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'no Stripe call when the tenant has no connected account');
 }
@@ -255,15 +276,60 @@ function assert(cond: boolean, msg: string) {
 //      NEITHER Stripe nor the RPC is called, even though a payment_intent
 //      is on file. --------------------------------------------------------
 {
-  scenario = { authOk: true, isAdmin: true };
+  scenario = { authOk: true, isAdmin: true, tenantId: null };
   calls.length = 0;
-  const res = await handler(req({ order_id: FAILED_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  const res = await handler(req({ order_id: FAILED_ORDER_ID }, bearerFor(null)));
   assert(res.status === 409, `non-paid, non-refunded order -> 409 (got ${res.status})`);
   const outBody = await res.json();
   assert(outBody.error === 'order not refundable', `error body says not refundable (got ${JSON.stringify(outBody)})`);
   assert(outBody.status === 'failed', `error body echoes the order's status (got ${JSON.stringify(outBody)})`);
   assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'no Stripe call for a non-refundable order');
   assert(!calls.some((c) => c.url.includes('rpc/gw_store_refund_order')), 'no RPC call for a non-refundable order');
+}
+
+// ---- (k) CROSS-TENANT: an admin whose verified JWT tenant_id does NOT
+//      match the order's tenant_id -> 403 forbidden, and NEITHER Stripe NOR
+//      the RPC is ever called. This is the actual hole being closed: a
+//      tenant-A admin (or a GleeWorld-platform-side admin with no
+//      tenant_id) must not be able to refund tenant-B's order just by
+//      knowing/guessing its order_id. isAdmin is tenant-agnostic (true for
+//      any admin), so this must be caught by the tenant_id comparison, not
+//      the admin-role gate. ---------------------------------------------
+{
+  scenario = { authOk: true, isAdmin: true, tenantId: NO_ACCOUNT_TENANT_ID };
+  calls.length = 0;
+  const res = await handler(req({ order_id: TENANT_ORDER_ID }, bearerFor(NO_ACCOUNT_TENANT_ID)));
+  assert(res.status === 403, `cross-tenant admin -> 403 (got ${res.status}, body ${await res.clone().text()})`);
+  const outBody = await res.json();
+  assert(
+    outBody.error === 'forbidden: order belongs to another tenant',
+    `error body names the forbidden reason (got ${JSON.stringify(outBody)})`,
+  );
+  assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'no Stripe call for a cross-tenant refund attempt');
+  assert(!calls.some((c) => c.url.includes('rpc/gw_store_refund_order')), 'no RPC call for a cross-tenant refund attempt');
+}
+
+// ---- (k2) CROSS-TENANT, platform order: a tenant admin (real tenant_id)
+//      must not be able to refund a GleeWorld-platform-store order
+//      (tenant_id: null) either -> 403, no Stripe/RPC. -------------------
+{
+  scenario = { authOk: true, isAdmin: true, tenantId: TENANT_ID };
+  calls.length = 0;
+  const res = await handler(req({ order_id: GLEEWORLD_ORDER_ID }, bearerFor(TENANT_ID)));
+  assert(res.status === 403, `tenant admin refunding a platform order -> 403 (got ${res.status})`);
+  assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'no Stripe call for a tenant admin on a platform order');
+  assert(!calls.some((c) => c.url.includes('rpc/gw_store_refund_order')), 'no RPC call for a tenant admin on a platform order');
+}
+
+// ---- (l) internal (service-role) caller bypasses the tenant check: an
+//      internal call has no user tenant_id of its own and must still be
+//      allowed to refund any tenant's order. -----------------------------
+{
+  scenario = { authOk: true, isAdmin: true, tenantId: null };
+  calls.length = 0;
+  const res = await handler(req({ order_id: TENANT_ORDER_ID }, { Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` }));
+  assert(res.status === 200, `internal/service-role caller -> 200 regardless of tenant (got ${res.status}, body ${await res.clone().text()})`);
+  assert(calls.some((c) => c.url.includes('api.stripe.com')), 'internal caller still triggers the Stripe refund');
 }
 
 globalThis.fetch = origFetch;

@@ -35,6 +35,7 @@
 // `Deno.serve(handler)` at the bottom keeps this file directly
 // deployable.
 import { authenticateCaller, unauthorizedResponse } from '../_shared/auth.ts';
+import { verifyJwtClaims } from '../_shared/verifyJwt.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -72,6 +73,26 @@ export async function handler(req: Request): Promise<Response> {
     if (!caller) return unauthorizedResponse(corsHeaders, 401);
     if (!caller.internal && !caller.isAdmin) return unauthorizedResponse(corsHeaders, 403);
 
+    // Tenant scoping (mirrors store-admin-orders/index.ts): authenticateCaller's
+    // isAdmin is a GLOBAL/tenant-agnostic flag (gw_profiles.is_admin /
+    // is_super_admin / role) — it proves the caller is *an* admin somewhere,
+    // not that they're an admin of the tenant that owns THIS order. Without a
+    // per-order tenant check, a tenant-A admin could refund tenant B's (or the
+    // GleeWorld platform store's) orders just by knowing/guessing an order_id.
+    // So pull the caller's own signature-verified `tenant_id` claim here (same
+    // helper + pattern store-admin-orders uses) and require it to match the
+    // order's `tenant_id` below, before any Stripe/RPC call. A `service_role`
+    // (`internal`) caller has no user tenant of its own and is exempt — it's
+    // GleeWorld-internal tooling, not a tenant admin.
+    let callerTenantId: string | null = null;
+    if (!caller.internal) {
+      const authHeader = req.headers.get('Authorization') ?? '';
+      const token = authHeader.replace(/^Bearer\s+/i, '');
+      const claims = await verifyJwtClaims(token);
+      if (!claims) return unauthorizedResponse(corsHeaders, 401);
+      callerTenantId = (claims.tenant_id as string | undefined) ?? null;
+    }
+
     const { order_id } = await req.json().catch(() => ({}));
     if (typeof order_id !== 'string' || !UUID_RE.test(order_id)) {
       return j({ error: 'order_id must be a UUID' }, 400);
@@ -82,6 +103,13 @@ export async function handler(req: Request): Promise<Response> {
     );
     const order = Array.isArray(rows) && rows[0];
     if (!order) return j({ error: 'order not found' }, 404);
+
+    // Cross-tenant guard: an order's `tenant_id` is null for GleeWorld-
+    // platform-store orders, so the comparison is deliberately `??`-normalized
+    // on both sides (a platform-side caller's claim has no tenant_id either).
+    if (!caller.internal && (order.tenant_id ?? null) !== callerTenantId) {
+      return j({ error: 'forbidden: order belongs to another tenant' }, 403);
+    }
 
     // Idempotency (DB-side is authoritative): if our own record already
     // shows this order refunded, skip the Stripe call — see the
