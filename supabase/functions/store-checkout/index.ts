@@ -53,10 +53,8 @@ export async function handler(req: Request): Promise<Response> {
   try {
     const authHeader = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
     const claims = authHeader ? await verifyJwtClaims(authHeader) : null;
-    const { store_type, items, buyer_email, shipping_address } = await req.json();
+    const { store_type, items, buyer_email, tenant_slug, shipping_address } = await req.json();
     if (!['gleeworld', 'tenant'].includes(store_type)) return j({ error: 'bad store_type' }, 400);
-    // Guest checkout allowed ONLY for the public GleeWorld store. Tenant store still requires a verified JWT.
-    if (store_type === 'tenant' && !claims) return j({ error: 'Unauthorized' }, 401);
     if (!Array.isArray(items) || items.length === 0 || items.length > 20) return j({ error: 'bad cart' }, 400);
     if (!buyer_email || typeof buyer_email !== 'string' || !buyer_email.includes('@')) {
       return j({ error: 'valid buyer_email required' }, 400);
@@ -78,13 +76,30 @@ export async function handler(req: Request): Promise<Response> {
     await pg('gw_store_checkout_attempts', { method: 'POST', body: JSON.stringify({ ip, email: buyer_email }) });
 
     // Resolve owning tenant + account server-side.
-    // invariant: store_type==='tenant' guaranteed claims non-null above
-    const tenantId = store_type === 'gleeworld' ? PLATFORM_TENANT_ID : claims!.tenant_id;
+    const SLUG_RE = /^[a-z0-9-]+$/;
+    let tenantId: string | null;
+    if (store_type === 'gleeworld') {
+      tenantId = PLATFORM_TENANT_ID;
+    } else {
+      // Tenant store: prefer a verified JWT's tenant_id; a guest slug is
+      // NEVER allowed to override a present JWT. Only when there is no JWT
+      // do we fall back to resolving the tenant from a guest-supplied slug.
+      if (claims) {
+        tenantId = claims.tenant_id;
+      } else {
+        if (!tenant_slug || !SLUG_RE.test(String(tenant_slug))) return j({ error: 'Unauthorized' }, 401);
+        const trows = await pg(`gw_tenants?slug=eq.${encodeURIComponent(tenant_slug)}&select=id`);
+        tenantId = (Array.isArray(trows) && trows[0]?.id) || null;
+        if (!tenantId) return j({ error: 'store not found' }, 404);
+      }
+    }
     if (!tenantId) return j({ error: 'no tenant' }, 400);
 
     if (store_type === 'tenant') {
-      // Add-on gate: require an active/trial 'store' module subscription. Re-checked server-side.
-      const subs = await pg(`gw_tenant_subscriptions?tenant_id=eq.${tenantId}&module_id=eq.store&select=status`);
+      // Add-on gate: require an active/trial 'store' module subscription.
+      // Applies identically to guest and JWT tenant orders — re-checked
+      // server-side regardless of how tenantId was resolved above.
+      const subs = await pg(`gw_tenant_subscriptions?tenant_id=eq.${encodeURIComponent(tenantId)}&module_id=eq.store&select=status`);
       const ok = Array.isArray(subs) && subs.some((s: any) => ['active', 'trial'].includes(s.status));
       if (!ok) return j({ error: 'Store add-on not enabled' }, 403);
     }
@@ -168,9 +183,9 @@ export async function handler(req: Request): Promise<Response> {
     // Which Stripe account collects — server-resolved.
     let account: string | null = null;
     if (store_type === 'tenant') {
-      const t = await pg(`gw_tenants?id=eq.${tenantId}&select=stripe_account_id`);
+      const t = await pg(`gw_tenants?id=eq.${encodeURIComponent(tenantId)}&select=stripe_account_id`);
       account = (Array.isArray(t) && t[0]?.stripe_account_id) || null;
-      if (!account) return j({ error: 'tenant has no connected Stripe account' }, 400);
+      if (!account) return j({ error: 'store not ready' }, 400);
     }
     const origin = req.headers.get('origin') ?? 'https://gleeworld.org';
     const { url } = await createCheckout('stripe', {
