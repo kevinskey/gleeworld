@@ -75,6 +75,10 @@ public final class StudioNativeEngine {
     private var startHostTime: AVAudioTime?
     private var pausedAt: Double = 0
     private var isPlayingNow: Bool = false
+    /// True while a take is rolling. play() must not auto-rewind under
+    /// a live recording — the take is stamped at the position the user
+    /// armed, and yanking the transport to 0 would misplace it.
+    public var recordingActive = false
 
     /// Position-tick callback bridged to JS via the plugin.
     public var onState: ((StudioEngineState) -> Void)?
@@ -385,7 +389,7 @@ public final class StudioNativeEngine {
         // song ended" reads as the app going dead.
         var latestClipEnd: Double = 0
         for (_, t) in tracks { latestClipEnd = max(latestClipEnd, t.latestClipEnd()) }
-        if latestClipEnd > 0 && pausedAt >= latestClipEnd {
+        if !recordingActive && latestClipEnd > 0 && pausedAt >= latestClipEnd {
             NSLog("[Studio] play: head at \(pausedAt) past last clip end \(latestClipEnd) — auto-rewind to 0")
             pausedAt = 0
         }
