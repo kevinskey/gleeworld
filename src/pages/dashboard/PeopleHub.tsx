@@ -29,7 +29,7 @@ function groupPeople(people: DirectoryPerson[]): PersonGroup[] {
   const other: DirectoryPerson[] = [];
 
   for (const person of people) {
-    if (isFacultyProfile({ role: person.role })) {
+    if (isFacultyProfile({ role: person.role, is_admin: person.is_admin, is_super_admin: person.is_super_admin })) {
       faculty.push(person);
       continue;
     }
@@ -121,12 +121,12 @@ export default function PeopleHub() {
                   {group.label}
                 </div>
                 <ul className="divide-y divide-border bg-card border border-border">
-                  {group.people.map((person) => {
+                  {group.people.map((person, index) => {
                     const name = displayName(person);
                     const section = sectionLabel(person.voice_part);
                     const avatarSrc = person.headshot_url || person.avatar_url || null;
                     return (
-                      <li key={person.user_id ?? name}>
+                      <li key={person.user_id ?? person.email ?? `row-${index}`}>
                         <button
                           type="button"
                           onClick={() => setSelected(person)}

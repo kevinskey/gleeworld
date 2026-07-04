@@ -8,6 +8,7 @@ describe('isFacultyProfile', () => {
     expect(isFacultyProfile({ role: 'Instructor' })).toBe(true);
     expect(isFacultyProfile({ role: 'conductor' })).toBe(true);
     expect(isFacultyProfile({ role: 'teacher' })).toBe(true);
+    expect(isFacultyProfile({ role: 'Director' })).toBe(true);
   });
   it('false for students, null, undefined', () => {
     expect(isFacultyProfile({ role: 'student' })).toBe(false);

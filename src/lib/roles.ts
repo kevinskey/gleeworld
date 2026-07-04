@@ -3,7 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export type UserRole = 'super_admin' | 'admin' | 'member' | 'bowman_scholar' | 'student';
 
-const FACULTY_ROLES = new Set(['instructor', 'teacher', 'conductor']);
+const FACULTY_ROLES = new Set(['instructor', 'teacher', 'conductor', 'director']);
 
 // Shared faculty check for profile-shaped objects (e.g. useUserRole().profile).
 // Consumed by MobileBottomNav, HouseHome, and the Contacts & Groups work

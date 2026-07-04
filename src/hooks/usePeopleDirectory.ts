@@ -18,10 +18,12 @@ export interface DirectoryPerson {
   phone_number: string | null;
   status: string | null;
   disabled: boolean;
+  is_admin: boolean;
+  is_super_admin: boolean;
 }
 
 const DIRECTORY_SELECT =
-  'user_id, email, full_name, display_name, first_name, last_name, avatar_url, headshot_url, role, title, is_section_leader, voice_part, phone, phone_number, status, disabled';
+  'user_id, email, full_name, display_name, first_name, last_name, avatar_url, headshot_url, role, title, is_section_leader, voice_part, phone, phone_number, status, disabled, is_admin, is_super_admin';
 
 export function usePeopleDirectory(): { data: DirectoryPerson[]; isLoading: boolean } {
   const { data, isLoading } = useQuery({
@@ -39,6 +41,8 @@ export function usePeopleDirectory(): { data: DirectoryPerson[]; isLoading: bool
           ...row,
           is_section_leader: Boolean(row.is_section_leader),
           disabled: Boolean(row.disabled),
+          is_admin: Boolean(row.is_admin),
+          is_super_admin: Boolean(row.is_super_admin),
         }))
         .filter((person) => person.status !== 'inactive' && !person.disabled);
     },
