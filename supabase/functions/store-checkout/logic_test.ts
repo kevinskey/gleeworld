@@ -240,6 +240,52 @@ function assert(cond: boolean, msg: string) {
     `order item unit_price_cents comes from the looked-up product, not the client (got ${JSON.stringify(itemsBody[0])})`,
   );
   assert(itemsBody[0]?.quantity === clientQuantity, 'order item quantity matches the request');
+  assert(
+    (orderPost?.body as any)?.buyer_user_id === 'user-1',
+    `pre-created order links to the verified JWT subject as buyer_user_id (got ${JSON.stringify(orderPost?.body)})`,
+  );
+}
+
+// ---- (e) non-UUID product_id -> 400 'bad product_id' -------------------
+// Regression guard for the raw-interpolation PostgREST filter hardening:
+// a malformed/malicious product_id must be rejected before it is ever
+// concatenated into a query string, not just fail a downstream lookup.
+{
+  scenario = { authOk: true, subs: [{ status: 'active' }], product: null, tenantStripeAccount: 'acct_test_123' };
+  const res = await handler(
+    req(
+      { store_type: 'tenant', items: [{ product_id: "not-a-uuid&tenant_id=eq.other", quantity: 1 }], buyer_email: 'b@x.com' },
+      { Authorization: `Bearer ${VALID_JWT}` },
+    ),
+  );
+  assert(res.status === 400, `non-UUID product_id -> 400 (got ${res.status})`);
+  const b = await res.json();
+  assert(b.error === 'bad product_id', `error message is 'bad product_id' (got ${JSON.stringify(b)})`);
+}
+
+// ---- (f) missing buyer_email -> 400 (not a 500 at insert) ---------------
+{
+  scenario = {
+    authOk: true,
+    subs: [{ status: 'active' }],
+    product: {
+      id: PRODUCT_ID,
+      name: 'Glee Hoodie',
+      price: 19.99,
+      sale_price: null,
+      requires_shipping: true,
+      manage_stock: false,
+      stock_quantity: null,
+    },
+    tenantStripeAccount: 'acct_test_123',
+  };
+  const res = await handler(
+    req(
+      { store_type: 'tenant', items: [{ product_id: PRODUCT_ID, quantity: 1 }], buyer_email: '' },
+      { Authorization: `Bearer ${VALID_JWT}` },
+    ),
+  );
+  assert(res.status === 400, `missing buyer_email -> 400, not 500 (got ${res.status})`);
 }
 
 globalThis.fetch = origFetch;

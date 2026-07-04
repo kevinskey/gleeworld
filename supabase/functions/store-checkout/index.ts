@@ -29,6 +29,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000';
 const SRK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const PLATFORM_TENANT_ID = Deno.env.get('GW_PLATFORM_TENANT_ID') ?? '';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function pg(path: string, init?: RequestInit) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -55,6 +56,9 @@ export async function handler(req: Request): Promise<Response> {
     const { store_type, items, buyer_email } = await req.json();
     if (!['gleeworld', 'tenant'].includes(store_type)) return j({ error: 'bad store_type' }, 400);
     if (!Array.isArray(items) || items.length === 0) return j({ error: 'empty cart' }, 400);
+    if (!buyer_email || typeof buyer_email !== 'string' || !buyer_email.includes('@')) {
+      return j({ error: 'valid buyer_email required' }, 400);
+    }
 
     // Resolve owning tenant + account server-side.
     const tenantId = store_type === 'gleeworld' ? PLATFORM_TENANT_ID : claims.tenant_id;
@@ -73,9 +77,11 @@ export async function handler(req: Request): Promise<Response> {
     let requiresShipping = false;
     const orderItems: any[] = [];
     for (const it of items) {
-      if (!it.product_id || !(it.quantity > 0)) return j({ error: 'bad item' }, 400);
+      if (!it.product_id || !Number.isInteger(it.quantity) || it.quantity < 1) return j({ error: 'bad item' }, 400);
+      if (!UUID_RE.test(String(it.product_id))) return j({ error: 'bad product_id' }, 400);
+      if (it.variant_id != null && !UUID_RE.test(String(it.variant_id))) return j({ error: 'bad variant_id' }, 400);
       const rows = await pg(
-        `gw_products?id=eq.${it.product_id}&tenant_id=eq.${tenantId}&is_active=eq.true&select=id,name,price,sale_price,requires_shipping,manage_stock,stock_quantity`,
+        `gw_products?id=eq.${encodeURIComponent(it.product_id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&is_active=eq.true&select=id,name,price,sale_price,requires_shipping,manage_stock,stock_quantity`,
       );
       const p = Array.isArray(rows) && rows[0];
       if (!p) return j({ error: `product not found: ${it.product_id}` }, 400);
@@ -102,6 +108,7 @@ export async function handler(req: Request): Promise<Response> {
           tenant_id: tenantId,
           store_type,
           buyer_email,
+          buyer_user_id: claims.sub ?? null,
           amount_cents: amount,
           requires_shipping: requiresShipping,
           status: 'pending',
