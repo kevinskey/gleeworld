@@ -33,6 +33,10 @@ const WHSEC = process.env.STRIPE_WEBHOOK_SECRET;
 const CONNECT_WHSEC = process.env.STRIPE_CONNECT_WEBHOOK_SECRET || '';
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const SENDER = process.env.SENDER_EMAIL || `welcome@${ROOT_DOMAIN}`;
+// Strict UUID match used to validate any caller-controlled id (e.g. Stripe
+// session metadata) before it is interpolated into a $$-quoted SQL literal.
+// A real UUID cannot contain "$$", so this closes the dollar-quote breakout.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 if (!SK || !WHSEC) {
   console.error('FATAL: STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be set.');
@@ -231,12 +235,19 @@ async function handleConnectCheckoutCompleted(session) {
 async function handleStoreCheckoutCompleted(session) {
   const orderId = session.metadata?.order_id;
   const storeType = session.metadata?.store_type;
-  if (!orderId || !storeType) return; // not a store sale
+  if (!orderId || !storeType) { console.warn('[store] checkout.session.completed flagged store but missing order_id/store_type; session=', session.id); return; }
+  if (!UUID_RE.test(orderId)) { console.warn('[store] checkout.session.completed with non-uuid order_id, ignoring:', orderId); return; }
   const pi = typeof session.payment_intent === 'string' ? session.payment_intent : (session.payment_intent?.id || '');
   const sql = `SELECT public.gw_store_fulfill_order($$${orderId}$$::uuid, $$${session.id}$$, $$${pi}$$) AS result;`;
   const raw = await runSqlReturn(sql);
-  const line = raw.split('\n').map(l => l.trim()).find(l => l.startsWith('{'));
-  const result = line ? JSON.parse(line) : null;
+  let result = null;
+  try {
+    const line = raw.split('\n').map(l => l.trim()).find(l => l.startsWith('{'));
+    result = line ? JSON.parse(line) : null;
+  } catch (e) {
+    console.error('[store] failed to parse fulfill result for order', orderId, e, raw);
+    return;
+  }
   if (result?.ok) console.log('[store] fulfilled order', orderId, 'ents', (result.entitlements||[]).length);
   else if (result?.already_paid) console.log('[store] order already paid (idempotent)', orderId);
   else console.error('[store] fulfill error', orderId, result);
