@@ -65,6 +65,11 @@ const productsById: Record<string, Record<string, unknown> | undefined> = {
 
 const calls: { url: string; method: string; body: unknown }[] = [];
 
+// When true, the fetch stub rejects the entitlements PATCH (simulating a
+// transient PostgREST failure) instead of returning 204. Used to prove the
+// evidence write is fire-and-forget and never blocks delivery.
+let failEvidencePatch = false;
+
 const origFetch = globalThis.fetch;
 globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
@@ -85,7 +90,10 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.includes('/rest/v1/gw_store_entitlements')) {
     // 204 is a null-body status; a "null" JSON string body would throw when
     // constructing the Response (matches PostgREST's real empty PATCH reply).
-    if (method === 'PATCH') return Promise.resolve(new Response(null, { status: 204 }));
+    if (method === 'PATCH') {
+      if (failEvidencePatch) return Promise.reject(new Error('simulated PostgREST 500'));
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
     // GET by download_token=eq.<token>
     const m = url.match(/download_token=eq\.([^&]+)/);
     const token = m ? decodeURIComponent(m[1]) : '';
@@ -160,6 +168,31 @@ function assert(cond: boolean, msg: string) {
   assert(patchBody.download_count === 3, `download_count incremented from 2 to 3 (got ${patchBody.download_count})`);
   assert(typeof patchBody.last_downloaded_at === 'string', 'last_downloaded_at timestamp recorded');
   assert('last_download_ip' in patchBody, 'last_download_ip recorded (empty string when no x-forwarded-for header)');
+
+  assert(
+    res.headers.get('Cache-Control') === 'no-store',
+    `redirect carries Cache-Control: no-store so intermediaries never cache/replay the live signed URL (got ${res.headers.get('Cache-Control')})`,
+  );
+}
+
+// ---- (e) evidence PATCH fails (transient PostgREST error) -> delivery is
+//         NOT blocked: the function must still return 302 with the signed
+//         Location. The evidence write is fire-and-forget.
+{
+  calls.length = 0;
+  failEvidencePatch = true;
+  let res: Response;
+  try {
+    res = await handler(req(`?token=${VALID_TOKEN}`));
+  } finally {
+    failEvidencePatch = false;
+  }
+  assert(
+    res.status === 302,
+    `valid token still -> 302 even when the evidence PATCH rejects (got ${res.status})`,
+  );
+  const location = res.headers.get('Location') ?? '';
+  assert(location.includes('X-Amz-Signature'), `redirect still carries a signed Location despite PATCH failure (got ${location})`);
 }
 
 // ---- (bonus, not required by the brief but cheap coverage) -------------

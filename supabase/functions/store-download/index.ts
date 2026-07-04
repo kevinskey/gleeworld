@@ -63,18 +63,28 @@ export async function handler(req: Request): Promise<Response> {
     const signed = await aws.sign(new Request(`${endpoint}?X-Amz-Expires=${ttl}`), { aws: { signQuery: true } });
 
     const ip = req.headers.get('x-forwarded-for') ?? '';
-    // Fire-and-record download evidence before redirecting; a failure here
-    // must not block delivery of an item the buyer already paid for.
-    await pg(`gw_store_entitlements?id=eq.${ent.id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({
-        download_count: (ent.download_count ?? 0) + 1,
-        last_downloaded_at: new Date().toISOString(),
-        last_download_ip: ip,
-      }),
-    });
+    // Record download evidence as a genuinely fire-and-forget side effect:
+    // it is isolated in its own try/catch so a transient PostgREST failure
+    // is logged but never blocks delivery of an item the buyer already
+    // paid for. Delivery only depends on the entitlement validation and
+    // presigned URL above, both already done by this point.
+    try {
+      await pg(`gw_store_entitlements?id=eq.${ent.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          download_count: (ent.download_count ?? 0) + 1,
+          last_downloaded_at: new Date().toISOString(),
+          last_download_ip: ip,
+        }),
+      });
+    } catch (evidenceErr) {
+      console.error('[store-download] evidence PATCH failed (non-blocking)', (evidenceErr as Error).message);
+    }
 
-    return Response.redirect(signed.url, 302);
+    // Explicit Response (not Response.redirect) so we can attach
+    // Cache-Control: no-store — the Location carries a live, short-TTL
+    // signed URL and must never be cached/replayed by an intermediary.
+    return new Response(null, { status: 302, headers: { Location: signed.url, 'Cache-Control': 'no-store' } });
   } catch (e) {
     console.error('[store-download]', (e as Error).message);
     return new Response('download failed', { status: 500 });
