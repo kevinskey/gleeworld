@@ -6,18 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  CreditCard, 
-  Truck, 
-  Lock, 
-  ArrowLeft, 
-  Mail, 
-  User,
+import { cart } from "@/features/store/cart";
+import {
+  Truck,
+  Lock,
+  ArrowLeft,
+  Mail,
   MapPin,
   Package
 } from "lucide-react";
@@ -65,12 +63,36 @@ interface CheckoutForm {
   shippingCountry: string;
 }
 
+// This route (`/checkout`) is shared by two independent shopping flows:
+//
+// 1. GraduatesShop.tsx (legacy) navigates here with `location.state.cartItems`
+//    — a full EasyPost-rated, taxed checkout against `gw_user_orders` /
+//    `shop-checkout`. That flow is untouched below (`LegacyCheckout`).
+// 2. Shop.tsx (Task 5, the GleeWorld Store storefront) uses the
+//    localStorage-backed cart in `src/features/store/cart.ts` and has no
+//    navigation state to read. Task 6 wires *that* flow to `store-checkout`
+//    (`StoreCheckout`, below) — server-resolved pricing, guest checkout
+//    allowed, no live shipping-rate shopping (the new backend doesn't do
+//    EasyPost rating; it only needs to know whether the cart requires
+//    shipping at all).
+//
+// `CheckoutPage` just decides which one to mount based on how the buyer got
+// here, so neither flow's hooks run conditionally inside a single component.
 export const CheckoutPage = () => {
+  const location = useLocation();
+  const legacyCartItems = (location.state as { cartItems?: CartItem[] } | null)?.cartItems;
+  if (legacyCartItems && legacyCartItems.length > 0) {
+    return <LegacyCheckout />;
+  }
+  return <StoreCheckout />;
+};
+
+const LegacyCheckout = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [subtotal, setSubtotal] = useState(0);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
@@ -82,7 +104,7 @@ export const CheckoutPage = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
-  
+
   const [form, setForm] = useState<CheckoutForm>({
     email: user?.email || "",
     firstName: "",
@@ -223,81 +245,6 @@ export const CheckoutPage = () => {
     }
   };
 
-  const createOrder = async () => {
-    try {
-      const orderNumber = `GW-${Date.now()}`;
-      
-      const { data: order, error: orderError } = await supabase
-        .from('gw_user_orders')
-        .insert({
-          user_id: user?.id || null,
-          guest_email: user ? null : form.email,
-          order_number: orderNumber,
-          status: 'pending',
-          payment_status: 'pending',
-          total_amount: total,
-          subtotal: subtotal,
-          tax_amount: tax,
-          shipping_amount: shippingCost,
-          currency: 'USD',
-          billing_address: {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            address_line_1: form.address1,
-            address_line_2: form.address2,
-            city: form.city,
-            state: form.state,
-            postal_code: form.postalCode,
-            country: form.country
-          },
-          shipping_address: form.sameAsBilling ? {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            address_line_1: form.address1,
-            address_line_2: form.address2,
-            city: form.city,
-            state: form.state,
-            postal_code: form.postalCode,
-            country: form.country
-          } : {
-            firstName: form.firstName,
-            lastName: form.lastName,
-            address_line_1: form.shippingAddress1,
-            address_line_2: form.shippingAddress2,
-            city: form.shippingCity,
-            state: form.shippingState,
-            postal_code: form.shippingPostalCode,
-            country: form.shippingCountry
-          }
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = cartItems.map(item => ({
-        order_id: order.id,
-        product_id: item.product.id,
-        quantity: item.quantity,
-        unit_price: item.product.price,
-        total_price: item.product.price * item.quantity,
-        product_title: item.product.title
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('gw_order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      return order;
-    } catch (error) {
-      console.error('Error creating order:', error);
-      throw error;
-    }
-  };
-
   const handlePayment = async () => {
     if (!validateForm()) return;
 
@@ -387,7 +334,7 @@ export const CheckoutPage = () => {
       });
       return false;
     }
-    
+
     // Skip the rate check entirely when nothing in the cart needs to
     // ship (digital-only orders).
     const physicalItems = cartItems.some(i => i.product.requires_shipping !== false);
@@ -409,8 +356,8 @@ export const CheckoutPage = () => {
     <PublicLayout>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => navigate('/shop')}
             className="mb-4"
           >
@@ -685,9 +632,306 @@ export const CheckoutPage = () => {
                       ? 'Pick a shipping rate first'
                       : `Pay $${total.toFixed(2)}`}
                 </Button>
-                
+
                 <div className="text-xs text-gray-500 text-center">
                   Your payment information is secure and encrypted
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </PublicLayout>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// GleeWorld Store checkout (Task 6). Cart lives in localStorage
+// (src/features/store/cart.ts) — never a price, only
+// { product_id, variant_id, quantity }. We re-fetch the public catalog to
+// display names/images/prices, but the actual charge amount is always
+// resolved server-side inside `store-checkout` from `gw_products`. Guest
+// checkout is allowed — no login required.
+// ---------------------------------------------------------------------------
+
+interface StoreCatalogProduct {
+  id: string;
+  name: string;
+  price: number;
+  sale_price: number | null;
+  requires_shipping: boolean;
+  images: string[] | null;
+}
+
+interface ShippingFields {
+  name: string;
+  line1: string;
+  city: string;
+  state: string;
+  postal: string;
+}
+
+const StoreCheckout = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
+  const [lines, setLines] = useState<{ productId: string; quantity: number; product: StoreCatalogProduct | null }[]>([]);
+  const [buyerEmail, setBuyerEmail] = useState(user?.email || "");
+  const [shipping, setShipping] = useState<ShippingFields>({ name: "", line1: "", city: "", state: "", postal: "" });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const items = cart.getItems();
+    if (items.length === 0) {
+      navigate('/shop');
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc('gw_store_list_products');
+      if (cancelled) return;
+      if (error) {
+        console.error('Error loading store catalog for checkout:', error);
+      }
+      const catalog: StoreCatalogProduct[] = (data as StoreCatalogProduct[]) || [];
+      const byId = new Map(catalog.map((p) => [p.id, p]));
+      setLines(items.map((item) => ({
+        productId: item.product_id,
+        quantity: item.quantity,
+        product: byId.get(item.product_id) ?? null,
+      })));
+      setLoadingCatalog(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
+  const displayPrice = (p: StoreCatalogProduct) =>
+    p.sale_price != null && p.sale_price < p.price ? p.sale_price : p.price;
+
+  const subtotal = lines.reduce(
+    (sum, line) => sum + (line.product ? displayPrice(line.product) * line.quantity : 0),
+    0,
+  );
+  const needsShipping = lines.some((line) => line.product?.requires_shipping);
+  const hasUnavailable = lines.some((line) => !line.product);
+
+  const handlePay = async () => {
+    if (!buyerEmail || !buyerEmail.includes('@')) {
+      toast({ title: "Email required", description: "Enter a valid email to receive your receipt.", variant: "destructive" });
+      return;
+    }
+    if (needsShipping && (!shipping.name || !shipping.line1 || !shipping.city || !shipping.state || !shipping.postal)) {
+      toast({ title: "Shipping address required", description: "Fill out the shipping address for the physical items in your cart.", variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('store-checkout', {
+        body: {
+          store_type: 'gleeworld',
+          items: cart.getItems(),
+          buyer_email: buyerEmail,
+          ...(needsShipping ? { shipping_address: shipping } : {}),
+        },
+      });
+
+      if (error) throw new Error(error.message || 'Checkout failed');
+      if (data?.error) throw new Error(data.error);
+      if (!data?.url) throw new Error('No checkout URL received');
+
+      // Cart is cleared on /shop/success once the order is confirmed
+      // 'paid' — not here, so a failed/abandoned Stripe session leaves the
+      // cart intact for the buyer to try again.
+      window.location.href = data.url;
+    } catch (e: any) {
+      toast({
+        title: "Checkout failed",
+        description: e?.message || "There was an error starting checkout.",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+    }
+  };
+
+  if (loadingCatalog) {
+    return (
+      <PublicLayout>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">Loading checkout…</p>
+        </div>
+      </PublicLayout>
+    );
+  }
+
+  return (
+    <PublicLayout>
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
+        <div className="mb-6">
+          <Button variant="ghost" onClick={() => navigate('/shop')} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to shop
+          </Button>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground">Checkout</h1>
+        </div>
+
+        {hasUnavailable && (
+          <div className="mb-6 border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            One or more items in your cart are no longer available and will be skipped at checkout.
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Mail className="h-4 w-4" />
+                  Contact information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="buyer-email">Email address</Label>
+                  <Input
+                    id="buyer-email"
+                    type="email"
+                    value={buyerEmail}
+                    onChange={(e) => setBuyerEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    disabled={!!user}
+                    required
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    We'll send your receipt and order updates here. No account required.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {needsShipping && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Truck className="h-4 w-4" />
+                    Shipping address
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="ship-name">Full name</Label>
+                    <Input
+                      id="ship-name"
+                      value={shipping.name}
+                      onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ship-line1">Address</Label>
+                    <Input
+                      id="ship-line1"
+                      value={shipping.line1}
+                      onChange={(e) => setShipping({ ...shipping, line1: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="ship-city">City</Label>
+                      <Input
+                        id="ship-city"
+                        value={shipping.city}
+                        onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ship-state">State</Label>
+                      <Input
+                        id="ship-state"
+                        value={shipping.state}
+                        onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="ship-postal">Postal code</Label>
+                    <Input
+                      id="ship-postal"
+                      value={shipping.postal}
+                      onChange={(e) => setShipping({ ...shipping, postal: e.target.value })}
+                      required
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <div>
+            <Card className="lg:sticky lg:top-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Package className="h-4 w-4" />
+                  Order summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  {lines.map((line, idx) => (
+                    <div key={`${line.productId}-${idx}`} className="flex gap-3">
+                      <div className="w-14 h-14 bg-muted overflow-hidden shrink-0">
+                        {line.product?.images?.[0] && (
+                          <img
+                            src={line.product.images[0]}
+                            alt={line.product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm text-foreground truncate">
+                          {line.product?.name ?? 'Item no longer available'}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Qty: {line.quantity}</div>
+                        {line.product && (
+                          <div className="font-medium text-sm text-foreground">
+                            ${(displayPrice(line.product) * line.quantity).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Separator />
+
+                <div className="flex justify-between font-semibold text-foreground">
+                  <span>Subtotal</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Final total (including any shipping) is calculated at checkout.
+                </p>
+
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={handlePay}
+                  disabled={submitting || lines.every((l) => !l.product)}
+                >
+                  <Lock className="h-4 w-4 mr-2" />
+                  {submitting ? 'Redirecting to payment…' : 'Continue to payment'}
+                </Button>
+
+                <div className="text-xs text-muted-foreground text-center">
+                  Your payment is processed securely by Stripe.
                 </div>
               </CardContent>
             </Card>

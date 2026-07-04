@@ -149,7 +149,7 @@ export const ProductManagement = () => {
             </TabsContent>
 
             <TabsContent value="orders" className="m-0">
-              <OrdersManager />
+              <OrdersManager onSelectOrder={handleViewOrder} />
             </TabsContent>
 
             <TabsContent value="customers" className="m-0">

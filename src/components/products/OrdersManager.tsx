@@ -7,43 +7,52 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  Package, Truck, Eye, Download, RefreshCw, 
+import {
+  Package, Truck, Eye, RefreshCw,
   CheckCircle, XCircle, Clock, Search
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { OrderDetailDrawer } from './OrderDetailDrawer';
 
-interface Order {
+// Commerce Core order — one row of `gw_store_orders` as returned by the
+// admin-gated `store-admin-orders` edge function. This table is NOT
+// readable directly via supabase-js: it carries a RESTRICTIVE tenant-
+// isolation policy with no permissive policy for `authenticated` (see
+// supabase/migrations/20260705000000_commerce_core_schema.sql), so a
+// normal admin session can never SELECT it over PostgREST. The edge
+// function re-authenticates the caller, admin-gates on their JWT's
+// tenant_role, and reads with the service role scoped to the caller's
+// own tenant_id.
+interface StoreOrder {
   id: string;
-  order_number: string;
-  customer_name: string;
-  customer_email: string;
-  status: string;
-  payment_status: string;
-  total_amount: number;
+  status: 'pending' | 'paid' | 'refunded' | 'failed';
+  store_type: 'gleeworld' | 'tenant';
+  buyer_email: string;
+  amount_cents: number;
+  currency: string;
   requires_shipping: boolean;
-  easypost_tracking_code: string | null;
-  easypost_label_url: string | null;
-  shipping_address: any;
+  ship_to_name: string | null;
+  ship_to_line1: string | null;
+  ship_to_line2: string | null;
+  ship_to_city: string | null;
+  ship_to_state: string | null;
+  ship_to_postal: string | null;
+  ship_to_country: string | null;
+  provider_payment_intent_id: string | null;
   created_at: string;
-  gw_order_items: OrderItem[];
+  updated_at: string;
 }
 
-interface OrderItem {
-  id: string;
-  product_title: string;
-  quantity: number;
-  unit_price: number;
+interface OrdersManagerProps {
+  onSelectOrder?: (orderId: string) => void;
 }
 
-export const OrdersManager = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
+export const OrdersManager = ({ onSelectOrder }: OrdersManagerProps = {}) => {
+  const [orders, setOrders] = useState<StoreOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [creatingLabel, setCreatingLabel] = useState<string | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [drawerOrderId, setDrawerOrderId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,20 +62,14 @@ export const OrdersManager = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('gw_orders')
-        .select(`
-          *,
-          gw_order_items (*)
-        `)
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await supabase.functions.invoke('store-admin-orders', { body: {} });
       if (error) throw error;
-      setOrders(data || []);
+      if (data?.error) throw new Error(data.error);
+      setOrders(data?.orders || []);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to fetch orders",
+        description: error.message || "Failed to fetch orders",
         variant: "destructive",
       });
     } finally {
@@ -74,80 +77,37 @@ export const OrdersManager = () => {
     }
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from('gw_orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Order status updated to ${newStatus}`,
-      });
-
-      fetchOrders();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const createShippingLabel = async (orderId: string) => {
-    setCreatingLabel(orderId);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-shipping-label', {
-        body: { order_id: orderId }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Shipping Label Created",
-        description: `Tracking: ${data.tracking_code}`,
-      });
-
-      fetchOrders();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create shipping label",
-        variant: "destructive",
-      });
-    } finally {
-      setCreatingLabel(null);
-    }
-  };
+  const formatMoney = (cents: number, currency: string) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: (currency || 'usd').toUpperCase() }).format((cents || 0) / 100);
 
   const filteredOrders = orders.filter(order => {
-    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus || order.payment_status === selectedStatus;
-    const matchesSearch = 
-      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer_email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
+    const matchesSearch =
+      order.buyer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.id.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
-  const getStatusBadge = (status: string, paymentStatus: string) => {
-    if (paymentStatus === 'pending') {
-      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700"><Clock className="w-3 h-3 mr-1" />Pending Payment</Badge>;
-    }
+  const getStatusBadge = (status: StoreOrder['status']) => {
     switch (status) {
+      case 'pending':
+        return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
       case 'paid':
-        return <Badge variant="default" className="bg-green-100 text-green-700"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>;
-      case 'shipped':
-        return <Badge variant="default" className="bg-blue-100 text-blue-700"><Truck className="w-3 h-3 mr-1" />Shipped</Badge>;
-      case 'delivered':
-        return <Badge variant="default" className="bg-emerald-100 text-emerald-700"><Package className="w-3 h-3 mr-1" />Delivered</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Cancelled</Badge>;
+        return <Badge variant="default"><CheckCircle className="w-3 h-3 mr-1" />Paid</Badge>;
+      case 'refunded':
+        return <Badge variant="secondary"><RefreshCw className="w-3 h-3 mr-1" />Refunded</Badge>;
+      case 'failed':
+        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Failed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const handleViewOrder = (orderId: string) => {
+    if (onSelectOrder) {
+      onSelectOrder(orderId);
+    } else {
+      setDrawerOrderId(orderId);
     }
   };
 
@@ -162,10 +122,10 @@ export const OrdersManager = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
+              <Clock className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold">{orders.filter(o => o.payment_status === 'pending').length}</p>
+                <p className="text-2xl font-bold">{orders.filter(o => o.status === 'pending').length}</p>
               </div>
             </div>
           </CardContent>
@@ -173,10 +133,10 @@ export const OrdersManager = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Paid</p>
-                <p className="text-2xl font-bold">{orders.filter(o => o.payment_status === 'paid' && o.status !== 'shipped').length}</p>
+                <p className="text-2xl font-bold">{orders.filter(o => o.status === 'paid').length}</p>
               </div>
             </div>
           </CardContent>
@@ -184,10 +144,10 @@ export const OrdersManager = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Truck className="h-5 w-5 text-blue-600" />
+              <RefreshCw className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Shipped</p>
-                <p className="text-2xl font-bold">{orders.filter(o => o.status === 'shipped').length}</p>
+                <p className="text-sm text-muted-foreground">Refunded</p>
+                <p className="text-2xl font-bold">{orders.filter(o => o.status === 'refunded').length}</p>
               </div>
             </div>
           </CardContent>
@@ -212,7 +172,7 @@ export const OrdersManager = () => {
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search orders..."
+                placeholder="Search by email or order id..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -224,11 +184,10 @@ export const OrdersManager = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Orders</SelectItem>
-                <SelectItem value="pending">Pending Payment</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="refunded">Refunded</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={fetchOrders}>
@@ -248,74 +207,36 @@ export const OrdersManager = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Order #</TableHead>
-                <TableHead>Customer</TableHead>
+                <TableHead>Order</TableHead>
+                <TableHead>Buyer</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Total</TableHead>
-                <TableHead>Shipping</TableHead>
+                <TableHead>Fulfillment</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-mono">{order.order_number}</TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{order.customer_name}</p>
-                      <p className="text-sm text-muted-foreground">{order.customer_email}</p>
-                    </div>
-                  </TableCell>
+                  <TableCell className="font-mono text-xs">{order.id.slice(0, 8)}</TableCell>
+                  <TableCell>{order.buyer_email}</TableCell>
                   <TableCell>{format(new Date(order.created_at), 'MMM d, yyyy')}</TableCell>
-                  <TableCell>{getStatusBadge(order.status, order.payment_status)}</TableCell>
-                  <TableCell>${order.total_amount?.toFixed(2)}</TableCell>
+                  <TableCell>{getStatusBadge(order.status)}</TableCell>
+                  <TableCell>{formatMoney(order.amount_cents, order.currency)}</TableCell>
                   <TableCell>
-                    {order.easypost_tracking_code ? (
-                      <a 
-                        href={order.easypost_label_url || '#'} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline text-sm"
-                      >
-                        {order.easypost_tracking_code}
-                      </a>
-                    ) : order.requires_shipping ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => createShippingLabel(order.id)}
-                        disabled={creatingLabel === order.id || order.payment_status !== 'paid'}
-                      >
-                        {creatingLabel === order.id ? 'Creating...' : 'Create Label'}
-                      </Button>
+                    {order.requires_shipping ? (
+                      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                        <Truck className="w-3.5 h-3.5" /> Ships to {order.ship_to_city || '—'}
+                      </span>
                     ) : (
                       <span className="text-sm text-muted-foreground">Digital</span>
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)}>
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Order Details: {order.order_number}</DialogTitle>
-                          </DialogHeader>
-                          <OrderDetails order={order} onStatusChange={updateOrderStatus} />
-                        </DialogContent>
-                      </Dialog>
-                      {order.easypost_label_url && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={order.easypost_label_url} target="_blank" rel="noopener noreferrer">
-                            <Download className="w-4 h-4" />
-                          </a>
-                        </Button>
-                      )}
-                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleViewOrder(order.id)}>
+                      <Eye className="w-4 h-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -329,90 +250,18 @@ export const OrdersManager = () => {
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-};
 
-interface OrderDetailsProps {
-  order: Order;
-  onStatusChange: (orderId: string, status: string) => void;
-}
-
-const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onStatusChange }) => {
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <h4 className="font-semibold mb-2">Customer Info</h4>
-          <p>{order.customer_name}</p>
-          <p className="text-sm text-muted-foreground">{order.customer_email}</p>
-        </div>
-        <div>
-          <h4 className="font-semibold mb-2">Shipping Address</h4>
-          {order.shipping_address ? (
-            <div className="text-sm">
-              <p>{order.shipping_address.street1}</p>
-              {order.shipping_address.street2 && <p>{order.shipping_address.street2}</p>}
-              <p>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zip}</p>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No shipping address</p>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <h4 className="font-semibold mb-2">Order Items</h4>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead>Qty</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Subtotal</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {order.gw_order_items?.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.product_title}</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell>${item.unit_price?.toFixed(2)}</TableCell>
-                <TableCell>${(item.quantity * item.unit_price).toFixed(2)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <div className="text-right mt-4">
-          <p className="text-lg font-bold">Total: ${order.total_amount?.toFixed(2)}</p>
-        </div>
-      </div>
-
-      <div>
-        <h4 className="font-semibold mb-2">Update Status</h4>
-        <Select 
-          value={order.status} 
-          onValueChange={(value) => onStatusChange(order.id, value)}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="shipped">Shipped</SelectItem>
-            <SelectItem value="delivered">Delivered</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {order.easypost_tracking_code && (
-        <div>
-          <h4 className="font-semibold mb-2">Tracking</h4>
-          <p className="font-mono">{order.easypost_tracking_code}</p>
-        </div>
+      {/* Only render our own drawer instance when the parent isn't already
+          managing one (ProductManagement.tsx owns its own OrderDetailDrawer
+          + selectedOrderId state) — avoids mounting two drawers for the
+          same order. */}
+      {!onSelectOrder && (
+        <OrderDetailDrawer
+          orderId={drawerOrderId}
+          isOpen={!!drawerOrderId}
+          onClose={() => setDrawerOrderId(null)}
+          onRefunded={fetchOrders}
+        />
       )}
     </div>
   );

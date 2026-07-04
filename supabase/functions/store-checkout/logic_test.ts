@@ -7,6 +7,11 @@
 // a stub keyed on request URL, so this exercises the exact code path in
 // index.ts, just against fixtures instead of a live stack.
 //
+// This predates Task 2 (guest checkout + rate limit + access_token); its
+// gw_store_checkout_attempts stub always reports "no recent attempts" so
+// the rate limiter never interferes with the tenant-store cases below.
+// See guest_test.ts for the guest/rate-limit/access_token coverage.
+//
 // Run: cd supabase/functions && STRIPE_SECRET_KEY=sk_test_dummy \
 //   SUPABASE_URL=http://kong:8000 SUPABASE_SERVICE_ROLE_KEY=srk \
 //   SUPABASE_ANON_KEY=anon GW_PLATFORM_TENANT_ID=00000000-0000-0000-0000-000000000000 \
@@ -72,6 +77,11 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
   }
   if (url.includes('/rest/v1/gw_tenant_subscriptions')) {
     return json(scenario.subs);
+  }
+  if (url.includes('/rest/v1/gw_store_checkout_attempts')) {
+    // Task 2's rate-limit check/record; not under test here — always "no
+    // recent attempts" so it never interferes with these auth/pricing cases.
+    return method === 'GET' ? json([]) : json([{ id: 'attempt-1' }]);
   }
   if (url.includes('/rest/v1/gw_products')) {
     return json(scenario.product ? [scenario.product] : []);
@@ -214,6 +224,11 @@ function assert(cond: boolean, msg: string) {
           { product_id: PRODUCT_ID, quantity: clientQuantity, price: 1, unit_price_cents: 1 },
         ],
         buyer_email: 'b@x.com',
+        // This fixture's product has requires_shipping: true (see below), so
+        // a shipping_address is required or the handler now 400s before ever
+        // reaching the pricing logic under test here (see guest_test.ts for
+        // the shipping_address-specific coverage).
+        shipping_address: { name: 'Jane Doe', line1: '123 Main St', city: 'Atlanta', state: 'GA', postal: '30301' },
       },
       { Authorization: `Bearer ${VALID_JWT}` },
     ),

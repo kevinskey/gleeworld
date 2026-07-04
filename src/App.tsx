@@ -165,6 +165,7 @@ const Shop = lazy(() => import("./pages/Shop").then(m => ({ default: m.Shop })))
 const PointOfSale = lazy(() => import("./pages/PointOfSale"));
 const GraduatesShop = lazy(() => import("./pages/GraduatesShop").then(m => ({ default: m.GraduatesShop })));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
+const StoreSuccess = lazy(() => import("./pages/StoreSuccess").then(m => ({ default: m.StoreSuccess })));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation").then(m => ({ default: m.OrderConfirmation })));
 const Payments = lazy(() => import("./pages/Payments"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -1931,16 +1932,24 @@ const App = () => {
                     </GraduatesRoute>
                   } 
                 />
-                <Route 
-                  path="/checkout" 
+                <Route
+                  path="/checkout"
                   element={
                     <PublicRoute>
                       <CheckoutPage />
                     </PublicRoute>
-                  } 
+                  }
                 />
-                <Route 
-                  path="/order-confirmation" 
+                <Route
+                  path="/shop/success"
+                  element={
+                    <PublicRoute>
+                      <StoreSuccess />
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/order-confirmation"
                   element={
                     <PublicRoute>
                       <OrderConfirmation />

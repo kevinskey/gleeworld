@@ -51,17 +51,35 @@ const j = (b: unknown, s = 200) =>
 export async function handler(req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
-    const claims = await verifyJwtClaims(req.headers.get('Authorization')?.replace(/^Bearer\s+/i, ''));
-    if (!claims) return j({ error: 'Unauthorized' }, 401);
-    const { store_type, items, buyer_email } = await req.json();
+    const authHeader = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+    const claims = authHeader ? await verifyJwtClaims(authHeader) : null;
+    const { store_type, items, buyer_email, shipping_address } = await req.json();
     if (!['gleeworld', 'tenant'].includes(store_type)) return j({ error: 'bad store_type' }, 400);
-    if (!Array.isArray(items) || items.length === 0) return j({ error: 'empty cart' }, 400);
+    // Guest checkout allowed ONLY for the public GleeWorld store. Tenant store still requires a verified JWT.
+    if (store_type === 'tenant' && !claims) return j({ error: 'Unauthorized' }, 401);
+    if (!Array.isArray(items) || items.length === 0 || items.length > 20) return j({ error: 'bad cart' }, 400);
     if (!buyer_email || typeof buyer_email !== 'string' || !buyer_email.includes('@')) {
       return j({ error: 'valid buyer_email required' }, 400);
     }
 
+    // Card-testing defense: rate-limit session creation per ip + email.
+    // Trusted client IP: nginx sets X-Real-IP to $remote_addr (overwrites any
+    // client value). Fall back to the LAST X-Forwarded-For hop (proxy-appended),
+    // never the client-controllable first entry.
+    const xff = req.headers.get('x-forwarded-for');
+    const ip = (req.headers.get('x-real-ip')
+      ?? (xff ? xff.split(',').map(s => s.trim()).filter(Boolean).pop() : '')
+      ?? '').trim();
+    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const recent = await pg(
+      `gw_store_checkout_attempts?or=(ip.eq.${encodeURIComponent(ip)},email.eq.${encodeURIComponent(buyer_email)})&created_at=gte.${since}&select=id`,
+    );
+    if (Array.isArray(recent) && recent.length >= 5) return j({ error: 'too many attempts, try again later' }, 429);
+    await pg('gw_store_checkout_attempts', { method: 'POST', body: JSON.stringify({ ip, email: buyer_email }) });
+
     // Resolve owning tenant + account server-side.
-    const tenantId = store_type === 'gleeworld' ? PLATFORM_TENANT_ID : claims.tenant_id;
+    // invariant: store_type==='tenant' guaranteed claims non-null above
+    const tenantId = store_type === 'gleeworld' ? PLATFORM_TENANT_ID : claims!.tenant_id;
     if (!tenantId) return j({ error: 'no tenant' }, 400);
 
     if (store_type === 'tenant') {
@@ -100,7 +118,24 @@ export async function handler(req: Request): Promise<Response> {
       });
     }
 
+    // Physical items require a shipping address; the client (CheckoutPage.tsx)
+    // collects one whenever the cart has a requires_shipping product, but we
+    // never trust that it actually arrived intact — re-validate server-side.
+    // Digital-only carts ignore any shipping_address the client may have sent.
+    const sa = shipping_address as Record<string, unknown> | null | undefined;
+    const nonEmptyStr = (v: unknown) => typeof v === 'string' && v.trim().length > 0;
+    if (requiresShipping) {
+      const hasRequired = !!sa
+        && nonEmptyStr(sa.name)
+        && nonEmptyStr(sa.line1)
+        && nonEmptyStr(sa.city)
+        && nonEmptyStr(sa.state)
+        && nonEmptyStr(sa.postal);
+      if (!hasRequired) return j({ error: 'shipping address required for physical items' }, 400);
+    }
+
     // Pre-create the pending order + items.
+    const accessToken = crypto.getRandomValues(new Uint8Array(24)).reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
     const order = (
       await pg('gw_store_orders', {
         method: 'POST',
@@ -108,10 +143,22 @@ export async function handler(req: Request): Promise<Response> {
           tenant_id: tenantId,
           store_type,
           buyer_email,
-          buyer_user_id: claims.sub ?? null,
+          buyer_user_id: claims?.sub ?? null,
           amount_cents: amount,
           requires_shipping: requiresShipping,
           status: 'pending',
+          access_token: accessToken,
+          ...(requiresShipping
+            ? {
+                ship_to_name: sa!.name,
+                ship_to_line1: sa!.line1,
+                ship_to_line2: (sa!.line2 as string | undefined) ?? null,
+                ship_to_city: sa!.city,
+                ship_to_state: sa!.state,
+                ship_to_postal: sa!.postal,
+                ship_to_country: (sa!.country as string | undefined) ?? null,
+              }
+            : {}),
         }),
       })
     )[0];
@@ -132,10 +179,14 @@ export async function handler(req: Request): Promise<Response> {
       orderId: order.id,
       storeType: store_type,
       buyerEmail: buyer_email,
-      successUrl: `${origin}/store/success?order=${order.id}`,
-      cancelUrl: `${origin}/store?canceled=1`,
+      // NOTE: the public storefront route is `/shop` (Shop.tsx) — `/store`
+      // is a pre-existing admin route behind auth, so both of these must
+      // point at `/shop`, never `/store`, or a guest checkout/cancel would
+      // 404 or hit an admin-gated page.
+      successUrl: `${origin}/shop/success?order=${order.id}&t=${accessToken}`,
+      cancelUrl: `${origin}/shop?canceled=1`,
     });
-    return j({ url, order_id: order.id });
+    return j({ url, order_id: order.id, access_token: accessToken });
   } catch (e) {
     console.error('[store-checkout]', (e as Error).message);
     return j({ error: 'checkout failed' }, 500);
