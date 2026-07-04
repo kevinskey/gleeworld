@@ -12,4 +12,22 @@ describe('ledgerGlyphs', () => {
     expect(ledgerGlyphs([], today))
       .toEqual(['rest', 'rest', 'rest', 'rest', 'future', 'future', 'future']);
   });
+
+  it('normalizes an offset timestamp to its UTC day', () => {
+    // '2026-07-06T23:30:00-05:00' is UTC 2026-07-07 (Tuesday), not 07-06
+    const g = ledgerGlyphs(['2026-07-06T23:30:00-05:00'], today);
+    expect(g).toEqual(['rest', 'note', 'rest', 'rest', 'future', 'future', 'future']);
+  });
+
+  it('handles Sunday as today (all rest, no future)', () => {
+    const sunday = new Date('2026-07-12T12:00:00Z');
+    expect(ledgerGlyphs([], sunday))
+      .toEqual(['rest', 'rest', 'rest', 'rest', 'rest', 'rest', 'rest']);
+  });
+
+  it('handles Monday as today (only day 0 is rest, rest are future)', () => {
+    const monday = new Date('2026-07-06T12:00:00Z');
+    expect(ledgerGlyphs([], monday))
+      .toEqual(['rest', 'future', 'future', 'future', 'future', 'future', 'future']);
+  });
 });

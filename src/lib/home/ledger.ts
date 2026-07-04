@@ -5,7 +5,9 @@ function isoDay(d: Date): string {
 }
 
 export function ledgerGlyphs(practicedISODates: string[], today: Date): LedgerGlyph[] {
-  const practiced = new Set(practicedISODates.map((s) => s.slice(0, 10)));
+  const practiced = new Set(
+    practicedISODates.map((s) => (s.length > 10 ? new Date(s).toISOString().slice(0, 10) : s)),
+  );
   const dow = (today.getUTCDay() + 6) % 7; // Monday = 0
   const monday = new Date(today);
   monday.setUTCDate(today.getUTCDate() - dow);
