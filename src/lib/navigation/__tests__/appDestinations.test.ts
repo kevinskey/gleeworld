@@ -20,6 +20,12 @@ describe('getTabItems', () => {
     expect(tabs).toHaveLength(5);
     expect(tabs.map((t) => t.label)).not.toContain('Studio');
   });
+  it('student without Viewer or Studio never resolves two slots to the same destination', () => {
+    const tabs = getTabItems('student', { ...allOn, hasViewer: false, hasStudio: false });
+    expect(tabs).toHaveLength(5);
+    expect(new Set(tabs.map((t) => t.key)).size).toBe(5);
+    expect(new Set(tabs.map((t) => t.to)).size).toBe(5);
+  });
 });
 
 describe('getAppTiles', () => {
@@ -31,5 +37,13 @@ describe('getAppTiles', () => {
     const { primary, overflow } = getAppTiles('student', { ...allOn, hasBoxOffice: false });
     const labels = [...primary, ...overflow].map((t) => t.label);
     expect(labels).not.toContain('Tickets');
+  });
+  it('never repeats a tab destination in the grid, even when keys differ but routes match', () => {
+    const tabRoutes = new Set(getTabItems('faculty', allOn).map((t) => t.to));
+    const { primary, overflow } = getAppTiles('faculty', allOn);
+    const gridRoutes = [...primary, ...overflow].map((t) => t.to);
+    for (const route of gridRoutes) {
+      expect(tabRoutes.has(route)).toBe(false);
+    }
   });
 });

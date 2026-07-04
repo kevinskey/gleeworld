@@ -32,18 +32,47 @@ const D = {
   merch:    { key: 'merch',    to: '/dashboard/merch',      label: 'Merch',    icon: Shirt } as Destination,
 };
 
+// Module flag gating a given destination key, when the destination is
+// module-gated. Destinations absent from this map (e.g. attendance) are
+// always available and never skipped for being "off".
+const SLOT_FLAG: Partial<Record<string, keyof ModuleFlags>> = {
+  music: 'hasViewer', tracks: 'hasPartTracks', studio: 'hasStudio',
+  sight: 'hasSightReading', academy: 'hasAcademy',
+};
+
+// Picks the first destination in `order` that is (a) module-enabled and
+// (b) not already used for another slot, falling back to Academy then
+// Attendance (which has no gating flag) so a slot is never left empty and
+// never collides with an already-chosen destination.
+function pickSlot(order: string[], flags: ModuleFlags, used: Set<string>): Destination {
+  for (const key of order) {
+    const dest = (D as Record<string, Destination>)[key];
+    const flagKey = SLOT_FLAG[key];
+    const enabled = flagKey ? flags[flagKey] : true;
+    if (enabled && !used.has(dest.key)) return dest;
+  }
+  if (flags.hasAcademy && !used.has(D.academy.key)) return D.academy;
+  return D.attendance;
+}
+
 export function getTabItems(role: 'student' | 'faculty', flags: ModuleFlags): Destination[] {
   if (role === 'faculty') {
     return [D.home, D.messages, D.roster, flags.hasViewer ? D.music : D.academy, D.schedule];
   }
-  const third = flags.hasViewer ? D.music : D.tracks;
-  const fourth = flags.hasStudio ? D.studio : (flags.hasPartTracks ? D.tracks : D.academy);
+  const used = new Set([D.home.key, D.messages.key]);
+  const third = pickSlot(['music', 'tracks', 'academy'], flags, used);
+  used.add(third.key);
+  const fourth = pickSlot(['studio', 'tracks', 'sight', 'academy'], flags, used);
+  used.add(fourth.key);
   return [D.home, D.messages, third, fourth, D.schedule];
 }
 
 export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags):
   { primary: Destination[]; overflow: Destination[] } {
-  const tabKeys = new Set(getTabItems(role, flags).map((t) => t.key));
+  // Dedupe against tab ROUTES, not keys — two distinct keys (e.g. Roster
+  // and Attendance) can point at the same route, and the grid must not
+  // repeat a destination the tab bar already surfaces.
+  const tabRoutes = new Set(getTabItems(role, flags).map((t) => t.to));
   const candidates: Array<[Destination, boolean]> = [
     [D.music, flags.hasViewer], [D.tracks, flags.hasPartTracks],
     [D.studio, flags.hasStudio], [D.sight, flags.hasSightReading],
@@ -52,7 +81,7 @@ export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags):
     [D.finance, flags.hasFinance], [D.merch, flags.hasMerch],
   ];
   const enabled = candidates
-    .filter(([d, on]) => on && !tabKeys.has(d.key))
+    .filter(([d, on]) => on && !tabRoutes.has(d.to))
     .map(([d]) => d);
   return { primary: enabled.slice(0, 8), overflow: enabled.slice(8) };
 }
