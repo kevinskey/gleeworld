@@ -4,6 +4,7 @@ import { useIsPhone } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { getTabItems, type ModuleFlags } from '@/lib/navigation/appDestinations';
+import { toModuleFlags } from '@/lib/navigation/moduleFlags';
 import { cn } from '@/lib/utils';
 
 interface MobileBottomNavProps {
@@ -43,18 +44,7 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
   // every flag from the one tenant module list rather than issuing a
   // separate query per module_id.
   const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
-  const hasModule = (moduleId: string) => modules.some((m) => m.module_id === moduleId);
-  const flags: ModuleFlags = {
-    hasViewer: hasModule('viewer'),
-    hasPartTracks: hasModule('part_tracks'),
-    hasStudio: hasModule('studio'),
-    hasSightReading: hasModule('sight_reading'),
-    hasBoxOffice: hasModule('box_office'),
-    hasConcertPlanner: hasModule('concert_planner'),
-    hasMerch: hasModule('merch'),
-    hasFinance: hasModule('finance'),
-    hasAcademy: true, // Academy is core, not a gated add-on.
-  };
+  const flags: ModuleFlags = toModuleFlags(modules);
   const allTabs = getTabItems(isFaculty ? 'faculty' : 'student', flags);
   // While modules are still loading, `flags` defaults every gated slot to
   // `false` (via `modules = []`), so `allTabs` would render the flag-off
