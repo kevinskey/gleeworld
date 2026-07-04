@@ -166,6 +166,16 @@ function assert(cond: boolean, msg: string) {
   // id, not the platform's) was looked up server-side for stripe_account_id.
   const tenantAcctLookup = calls.find((c) => c.url.includes('/rest/v1/gw_tenants') && c.url.includes(`id=eq.${TENANT_ID}`));
   assert(!!tenantAcctLookup, `the resolved tenant's stripe_account_id was looked up server-side (calls: ${JSON.stringify(calls.map(c => c.url))})`);
+
+  // A tenant-store buyer must return to the tenant's OWN site root — where
+  // Task 3's "Payment confirmed" banner lives in PublicSiteView.tsx — not
+  // the platform's /shop/success page, which the tenant's own domain never
+  // routes to a tenant-scoped banner.
+  const successUrl = new URLSearchParams(String(sessionCall?.body ?? '')).get('success_url') ?? '';
+  assert(!successUrl.includes('/shop/success'), `tenant order success_url does NOT point at /shop/success (got ${successUrl})`);
+  assert(successUrl.includes('?order='), `tenant order success_url carries ?order= (got ${successUrl})`);
+  assert(successUrl.includes('&t='), `tenant order success_url carries &t= (got ${successUrl})`);
+  assert(/\/\?order=[^&]+&t=[^&]+$/.test(successUrl), `tenant order success_url returns to the tenant origin ROOT (path is just "/", not "/shop/success") (got ${successUrl})`);
 }
 
 // ---- (b) tenant_slug for a tenant WITHOUT the store add-on -> 403 -------

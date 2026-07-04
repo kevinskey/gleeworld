@@ -175,6 +175,12 @@ function assert(cond: boolean, msg: string) {
   const sessionCall = calls.find((c) => c.url.includes('api.stripe.com/v1/checkout/sessions'));
   const sessionBody = String(sessionCall?.body ?? '');
   assert(sessionBody.includes(`t%3D${outBody.access_token}`) || sessionBody.includes(`t=${outBody.access_token}`), `Stripe success_url carries &t=<access_token> (body: ${sessionBody.slice(0, 300)})`);
+  // Regression: only tenant-store orders redirect to the tenant site root.
+  // The platform ('gleeworld') store must keep landing on /shop/success,
+  // which renders the platform's own success page (Shop.tsx), not
+  // PublicSiteView.tsx's tenant banner.
+  const successUrl = new URLSearchParams(sessionBody).get('success_url') ?? '';
+  assert(successUrl.includes('/shop/success'), `gleeworld order success_url still points at /shop/success (got ${successUrl})`);
 }
 
 // ---- (b) tenant store, no auth -> still 401 (guest checkout does NOT

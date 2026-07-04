@@ -193,18 +193,29 @@ export async function handler(req: Request): Promise<Response> {
     await pg('gw_store_order_items', { method: 'POST', body: JSON.stringify(orderItems) });
 
     const origin = req.headers.get('origin') ?? 'https://gleeworld.org';
+    // Where Stripe hands the buyer back depends on which storefront they
+    // bought from:
+    //  - 'tenant': the tenant's own site root (`${origin}/`) — that's where
+    //    PublicSiteView.tsx renders and shows the tenant's "Payment
+    //    confirmed" banner (gated on `?order=&t=` in the query string).
+    //    `/shop/success` is a platform-only route that a tenant's own
+    //    subdomain never serves, so a tenant buyer must NOT be sent there.
+    //  - 'gleeworld': unchanged — the public storefront route is `/shop`
+    //    (Shop.tsx); `/store` is a pre-existing admin route behind auth, so
+    //    both success/cancel must point at `/shop`, never `/store`, or a
+    //    guest checkout/cancel would 404 or hit an admin-gated page.
+    const successUrl = store_type === 'tenant'
+      ? `${origin}/?order=${order.id}&t=${accessToken}`
+      : `${origin}/shop/success?order=${order.id}&t=${accessToken}`;
+    const cancelUrl = store_type === 'tenant' ? `${origin}/` : `${origin}/shop?canceled=1`;
     const { url } = await createCheckout('stripe', {
       account,
       lineItems,
       orderId: order.id,
       storeType: store_type,
       buyerEmail: buyer_email,
-      // NOTE: the public storefront route is `/shop` (Shop.tsx) — `/store`
-      // is a pre-existing admin route behind auth, so both of these must
-      // point at `/shop`, never `/store`, or a guest checkout/cancel would
-      // 404 or hit an admin-gated page.
-      successUrl: `${origin}/shop/success?order=${order.id}&t=${accessToken}`,
-      cancelUrl: `${origin}/shop?canceled=1`,
+      successUrl,
+      cancelUrl,
     });
     return j({ url, order_id: order.id, access_token: accessToken });
   } catch (e) {
