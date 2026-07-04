@@ -761,7 +761,7 @@ function TopBar() {
 
   return (
     <header
-      className="border-b border-border bg-card flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-30 h-14 lg:h-20"
+      className="border-b border-border bg-card flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-30 h-14 md:h-20"
       style={{
         // Height is class-based (h-14 / lg:h-20) so phones get a
         // slimmer 56px bar; lg+ keeps the 80px that matches the
