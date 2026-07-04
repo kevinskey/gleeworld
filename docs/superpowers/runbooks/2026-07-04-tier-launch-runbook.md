@@ -142,8 +142,9 @@ investigate before any Stripe or live-tier work happens.
 database. It fabricates no tenant rows (gw_tenants' full column set isn't
 tracked in this migrations tree, so the test avoids inserting into it) —
 it instead asserts the seed data and the exact CASE expression from
-`gw_tenant_plan_usage()`'s body. Expect `NOTICE: plan_usage_null_cap_test: PASS`
-and no exceptions.
+`gw_tenant_plan_usage()`'s body. Success = the script completes with no
+errors (it signals failure by raising an exception under
+`ON_ERROR_STOP`; it prints no PASS message).
 
 ---
 
