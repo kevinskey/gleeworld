@@ -56,18 +56,30 @@ export default function ViewerPage() {
   const [search] = useSearchParams();
   const setlistId = search.get('setlist') ?? undefined;
 
-  // Render the reader chrome for BOTH the landing and a-score-is-open
-  // states. When no scoreId is in the URL, the reader shows a black
-  // empty surface (because the user hasn't picked a score yet) and
-  // auto-opens the library popout so they can choose one. This keeps
-  // the visual identity consistent — same pills, same drawer, no jarring
-  // jump between a list-style landing and a full-bleed reader.
+  // Two states, per this file's original design:
+  //   • No scoreId → the browsable landing (library / setlists /
+  //     bookmarks). Normal page flow, so the phone tab bar stays
+  //     visible and navigation works — the always-full-bleed variant
+  //     trapped phone users on a black surface with the tab bar
+  //     covered (reader is fixed inset-0 z-40 over the z-30 bar).
+  //   • scoreId in URL → the immersive full-bleed reader. Back returns
+  //     to the landing, not the dashboard, so the list is one tap away.
+  if (!scoreId) {
+    return (
+      <ViewerLanding
+        onOpenScore={(id, setlist) =>
+          navigate(`/dashboard/viewer/${id}${setlist ? `?setlist=${setlist}` : ''}`)
+        }
+      />
+    );
+  }
+
   return (
     <Suspense fallback={<FullScreenSpinner />}>
       <ViewerReader
         scoreId={scoreId}
         setlistId={setlistId}
-        onBack={() => navigate('/dashboard')}
+        onBack={() => navigate('/dashboard/viewer')}
       />
     </Suspense>
   );
@@ -150,7 +162,7 @@ function ViewerLanding({
   }, [filtered, sort]);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-4">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-24 sm:pb-6 space-y-4">
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
           <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Viewer</h1>
