@@ -57,7 +57,7 @@ async function pg(path: string, init?: RequestInit) {
       ...(init?.headers ?? {}),
     },
   });
-  if (!res.ok) throw new Error(`pg ${path} ${res.status} ${await res.text()}`);
+  if (!res.ok) throw new Error(`pg ${path} ${res.status}`);
   return res.status === 204 ? null : res.json();
 }
 
@@ -78,7 +78,7 @@ export async function handler(req: Request): Promise<Response> {
     }
 
     const rows = await pg(
-      `gw_store_orders?id=eq.${encodeURIComponent(order_id)}&select=provider_payment_intent_id,status`,
+      `gw_store_orders?id=eq.${encodeURIComponent(order_id)}&select=provider_payment_intent_id,status,store_type,tenant_id`,
     );
     const order = Array.isArray(rows) && rows[0];
     if (!order) return j({ error: 'order not found' }, 404);
@@ -90,9 +90,31 @@ export async function handler(req: Request): Promise<Response> {
     // call (the RPC itself short-circuits to {already_refunded:true}).
     const alreadyRefunded = order.status === 'refunded';
 
+    // Precondition: only a 'paid' order has money to refund. 'pending' and
+    // 'failed' (and anything else that isn't 'paid'/'refunded') never hit
+    // Stripe or the RPC — mirrors box-office-refund-order's status guard.
+    if (!alreadyRefunded && order.status !== 'paid') {
+      return j({ error: 'order not refundable', status: order.status }, 409);
+    }
+
     if (!alreadyRefunded) {
       const pi = order.provider_payment_intent_id;
       if (!pi) return j({ error: 'order has no payment intent on file' }, 409);
+
+      // Tenant-store orders are Stripe Connect direct charges on the
+      // tenant's own connected account, so the refund must be issued with
+      // Stripe-Account set to that account — a platform-key-only refund
+      // gets "No such payment_intent" (the platform can't see the PI).
+      // GleeWorld-store orders are on the platform account: no header.
+      let stripeAccountId: string | undefined;
+      if (order.store_type === 'tenant') {
+        const tenantRows = await pg(
+          `gw_tenants?id=eq.${encodeURIComponent(order.tenant_id)}&select=stripe_account_id`,
+        );
+        const tenant = Array.isArray(tenantRows) && tenantRows[0];
+        stripeAccountId = tenant?.stripe_account_id ?? undefined;
+        if (!stripeAccountId) return j({ error: 'tenant has no connected account' }, 400);
+      }
 
       const params = new URLSearchParams();
       params.set('payment_intent', pi);
@@ -103,6 +125,7 @@ export async function handler(req: Request): Promise<Response> {
           Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
           'Content-Type': 'application/x-www-form-urlencoded',
           'Idempotency-Key': `refund-${order_id}`,
+          ...(stripeAccountId ? { 'Stripe-Account': stripeAccountId } : {}),
         },
         body: params.toString(),
       });

@@ -14,12 +14,35 @@ Deno.env.set('STRIPE_SECRET_KEY', Deno.env.get('STRIPE_SECRET_KEY') ?? 'sk_test_
 const ORDER_ID = '11111111-1111-1111-1111-111111111111';
 const REFUNDED_ORDER_ID = '22222222-2222-2222-2222-222222222222';
 const UNKNOWN_ORDER_ID = '99999999-9999-9999-9999-999999999999';
+const TENANT_ORDER_ID = '33333333-3333-3333-3333-333333333333';
+const GLEEWORLD_ORDER_ID = '44444444-4444-4444-4444-444444444444';
+const FAILED_ORDER_ID = '55555555-5555-5555-5555-555555555555';
+const NO_ACCOUNT_TENANT_ORDER_ID = '66666666-6666-6666-6666-666666666666';
 const PAYMENT_INTENT = 'pi_test_abc123';
+const TENANT_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+const NO_ACCOUNT_TENANT_ID = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+const TENANT_STRIPE_ACCOUNT_ID = 'acct_test_connected123';
 
 // ---- seed "table" -------------------------------------------------------
-const ordersById: Record<string, { provider_payment_intent_id: string | null; status: string } | undefined> = {
-  [ORDER_ID]: { provider_payment_intent_id: PAYMENT_INTENT, status: 'paid' },
-  [REFUNDED_ORDER_ID]: { provider_payment_intent_id: PAYMENT_INTENT, status: 'refunded' },
+type OrderRow = {
+  provider_payment_intent_id: string | null;
+  status: string;
+  store_type: string;
+  tenant_id: string | null;
+};
+const ordersById: Record<string, OrderRow | undefined> = {
+  [ORDER_ID]: { provider_payment_intent_id: PAYMENT_INTENT, status: 'paid', store_type: 'gleeworld', tenant_id: null },
+  [REFUNDED_ORDER_ID]: { provider_payment_intent_id: PAYMENT_INTENT, status: 'refunded', store_type: 'gleeworld', tenant_id: null },
+  [TENANT_ORDER_ID]: { provider_payment_intent_id: PAYMENT_INTENT, status: 'paid', store_type: 'tenant', tenant_id: TENANT_ID },
+  [GLEEWORLD_ORDER_ID]: { provider_payment_intent_id: PAYMENT_INTENT, status: 'paid', store_type: 'gleeworld', tenant_id: null },
+  [FAILED_ORDER_ID]: { provider_payment_intent_id: PAYMENT_INTENT, status: 'failed', store_type: 'gleeworld', tenant_id: null },
+  [NO_ACCOUNT_TENANT_ORDER_ID]: { provider_payment_intent_id: PAYMENT_INTENT, status: 'paid', store_type: 'tenant', tenant_id: NO_ACCOUNT_TENANT_ID },
+};
+
+// ---- gw_tenants "table" ---------------------------------------------------
+const tenantsById: Record<string, { stripe_account_id: string | null } | undefined> = {
+  [TENANT_ID]: { stripe_account_id: TENANT_STRIPE_ACCOUNT_ID },
+  [NO_ACCOUNT_TENANT_ID]: { stripe_account_id: null },
 };
 
 // ---- caller scenario ------------------------------------------------------
@@ -64,6 +87,13 @@ globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const m = url.match(/[?&]id=eq\.([^&]+)/);
     const id = m ? decodeURIComponent(m[1]) : '';
     const row = ordersById[id];
+    return json(row ? [row] : []);
+  }
+  // tenant lookup (Connect account resolution for store_type='tenant' orders)
+  if (url.includes('/rest/v1/gw_tenants')) {
+    const m = url.match(/[?&]id=eq\.([^&]+)/);
+    const id = m ? decodeURIComponent(m[1]) : '';
+    const row = tenantsById[id];
     return json(row ? [row] : []);
   }
   // Stripe refund
@@ -181,6 +211,59 @@ function assert(cond: boolean, msg: string) {
   assert(!calls.some((c) => c.url.includes('/rest/v1/gw_store_orders')), 'malformed order_id never reaches the order lookup');
   assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'malformed order_id never reaches Stripe');
   assert(!calls.some((c) => c.url.includes('rpc/gw_store_refund_order')), 'malformed order_id never reaches the RPC');
+}
+
+// ---- (g) store_type='tenant' order -> Stripe refund carries a
+//      Stripe-Account header equal to the tenant's connected account
+//      (Connect direct charge; platform key alone can't see the PI). -------
+{
+  scenario = { authOk: true, isAdmin: true };
+  calls.length = 0;
+  const res = await handler(req({ order_id: TENANT_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  assert(res.status === 200, `tenant-store refund -> 200 (got ${res.status}, body ${await res.clone().text()})`);
+  const stripeCall = calls.find((c) => c.url.includes('api.stripe.com/v1/refunds'));
+  assert(!!stripeCall, 'a Stripe refund POST was issued for a tenant-store order');
+  assert(
+    stripeCall?.headers['stripe-account'] === TENANT_STRIPE_ACCOUNT_ID,
+    `Stripe call carries Stripe-Account: <tenant's connected account> (got ${stripeCall?.headers['stripe-account']})`,
+  );
+}
+
+// ---- (h) store_type='gleeworld' order -> Stripe refund issued on the
+//      platform account, NO Stripe-Account header. -------------------------
+{
+  scenario = { authOk: true, isAdmin: true };
+  calls.length = 0;
+  const res = await handler(req({ order_id: GLEEWORLD_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  assert(res.status === 200, `gleeworld-store refund -> 200 (got ${res.status}, body ${await res.clone().text()})`);
+  const stripeCall = calls.find((c) => c.url.includes('api.stripe.com/v1/refunds'));
+  assert(!!stripeCall, 'a Stripe refund POST was issued for a gleeworld-store order');
+  assert(!('stripe-account' in stripeCall!.headers), 'no Stripe-Account header on a platform (gleeworld) order refund');
+}
+
+// ---- (i) tenant order whose tenant has no stripe_account_id on file ->
+//      400, no Stripe call. --------------------------------------------------
+{
+  scenario = { authOk: true, isAdmin: true };
+  calls.length = 0;
+  const res = await handler(req({ order_id: NO_ACCOUNT_TENANT_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  assert(res.status === 400, `tenant with no connected account -> 400 (got ${res.status})`);
+  assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'no Stripe call when the tenant has no connected account');
+}
+
+// ---- (j) non-'paid', non-'refunded' order (e.g. 'failed') -> 409, and
+//      NEITHER Stripe nor the RPC is called, even though a payment_intent
+//      is on file. --------------------------------------------------------
+{
+  scenario = { authOk: true, isAdmin: true };
+  calls.length = 0;
+  const res = await handler(req({ order_id: FAILED_ORDER_ID }, { Authorization: 'Bearer admin_token' }));
+  assert(res.status === 409, `non-paid, non-refunded order -> 409 (got ${res.status})`);
+  const outBody = await res.json();
+  assert(outBody.error === 'order not refundable', `error body says not refundable (got ${JSON.stringify(outBody)})`);
+  assert(outBody.status === 'failed', `error body echoes the order's status (got ${JSON.stringify(outBody)})`);
+  assert(!calls.some((c) => c.url.includes('api.stripe.com')), 'no Stripe call for a non-refundable order');
+  assert(!calls.some((c) => c.url.includes('rpc/gw_store_refund_order')), 'no RPC call for a non-refundable order');
 }
 
 globalThis.fetch = origFetch;
