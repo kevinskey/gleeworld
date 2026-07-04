@@ -114,12 +114,12 @@ async function stripeFetch(method, path, { params, idempotencyKey } = {}) {
 }
 
 // Builds a query string, handling bracketed array/object keys the way
-// Stripe expects (e.g. `metadata['gw_tier_id']` or `lookup_keys[]`).
+// Stripe expects (e.g. `metadata['gw_tier_id']` or `lookup_keys[]` with bracket notation).
 function paramsToQuery(params) {
   const parts = [];
   for (const [key, value] of Object.entries(params || {})) {
     if (Array.isArray(value)) {
-      for (const v of value) parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`);
+      for (const v of value) parts.push(`${encodeURIComponent(key + '[]')}=${encodeURIComponent(v)}`);
     } else {
       parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
     }
@@ -185,9 +185,9 @@ async function ensureProduct(tier) {
 }
 
 async function findPriceByLookupKey(lookupKey) {
-  // Stripe's documented list-prices filter is the bracket-less repeated key
-  // `lookup_keys=a&lookup_keys=b` (up to 10) — paramsToQuery repeats the key
-  // for each array entry, which produces exactly that form.
+  // Stripe's documented list-prices filter requires bracket notation for array params:
+  // `lookup_keys[]=a&lookup_keys[]=b` (up to 10) per Stripe API curl form.
+  // paramsToQuery emits `key[]` for array entries, which produces the correct form.
   const res = await stripeFetch('GET', 'prices', {
     params: { lookup_keys: [lookupKey], limit: 1 },
   });
