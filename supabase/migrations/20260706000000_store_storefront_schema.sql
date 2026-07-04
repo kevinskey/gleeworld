@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.gw_store_checkout_attempts (
 CREATE INDEX IF NOT EXISTS idx_gw_store_attempts_ip ON public.gw_store_checkout_attempts(ip, created_at);
 CREATE INDEX IF NOT EXISTS idx_gw_store_attempts_email ON public.gw_store_checkout_attempts(email, created_at);
 ALTER TABLE public.gw_store_checkout_attempts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS service_role_only ON public.gw_store_checkout_attempts;
 CREATE POLICY service_role_only ON public.gw_store_checkout_attempts FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 CREATE OR REPLACE FUNCTION public.gw_store_list_products()
