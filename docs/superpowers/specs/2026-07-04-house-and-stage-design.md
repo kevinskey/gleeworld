@@ -95,8 +95,20 @@ Order, top to bottom — nothing else:
 - Fixes pre-existing bug: `MobileBottomNav.tsx` is not module-gated today.
 
 ### 5.3 Tonight mode (Phase 1.5)
-- Trigger: T−90 before any calendared performance/service → full-screen Stage room.
-  Auto-expires when the event ends. Dismissible to normal home; returns via up-next.
+- **Trigger control (decided 2026-07-04):** a per-event "Tonight mode" toggle in the
+  event editor. Defaults: ON for event types performance/service, OFF for rehearsals;
+  the event creator/admin can override either way. Org-level defaults per event type
+  configurable in the admin console.
+- **Personal scoping (decided):** Tonight mode is per-user, driven by the next
+  toggled-on event the user is CALLED to (roster/group membership) — not tenant-wide.
+  Members with no such event tonight see the normal home. Two+ events in the window:
+  nearest first, with a "Next: <time> <title>" chip to switch. This dependency is a
+  primary reason Contacts & Groups ships first.
+- **User-created events (decided):** any user with event-creation permission gets the
+  same toggle; the call sheet shows only to that event's invitees/group (a section
+  leader's sectional, a quartet's gig).
+- Activates T−90 → full-screen Stage room. Auto-expires when the event ends.
+  Dismissible to normal home; returns via up-next.
 - Content: call time (display font ~96pt, `--primary-stage` glow) · dress · location
   with map link · program order with per-piece links to scores/tracks · emergency
   contact button.
@@ -164,8 +176,8 @@ latter.
 
 ## 10. Open questions
 
-- Tonight mode trigger source of truth: event `type` values that count as
-  performance/service per tenant (needs a tenant-configurable set or sensible default).
+- ~~Tonight mode trigger~~ — resolved 2026-07-04, see §5.3 (per-event toggle,
+  per-user roster scoping, user-created events included).
 - Whether Viewer-in-performance-hours joins Stage in 1.5 or later.
 - Broadcast pricing/packaging (per-segment pass-through vs bundled) — product decision,
   not design.
