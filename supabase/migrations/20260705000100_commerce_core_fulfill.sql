@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION public.gw_store_fulfill_order(
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp
 AS $$
 DECLARE
-  v_order RECORD; v_item RECORD; v_prod RECORD;
+  v_order RECORD; v_item RECORD; v_prod RECORD; v_need RECORD;
   v_ents JSONB := '[]'::jsonb; v_token TEXT;
 BEGIN
   SELECT * INTO v_order FROM gw_store_orders WHERE id = p_order_id FOR UPDATE;
@@ -13,30 +13,46 @@ BEGIN
     RETURN jsonb_build_object('already_paid', true, 'order_id', v_order.id);
   END IF;
 
-  -- Pass 1: lock every line item's product and validate ONLY (no writes).
-  -- Locking + validating all items before any decrement makes a multi-item
-  -- oversell all-or-nothing: a later item's failure must not leave earlier
-  -- items partially decremented (PL/pgSQL RETURN does not roll back prior
-  -- statements within this still-open transaction), and because the order
-  -- stays 'pending' on failure, a webhook retry must not re-decrement items
-  -- that were never actually written.
-  FOR v_item IN SELECT * FROM gw_store_order_items WHERE order_id = v_order.id LOOP
-    SELECT * INTO v_prod FROM gw_products WHERE id = v_item.product_id FOR UPDATE;
+  -- Pass 1: lock every DISTINCT product and validate AGGREGATED quantity
+  -- ONLY (no writes). Stock is tracked per-product, not per-line-item, and
+  -- one order can have multiple line items for the same product_id
+  -- (different variant_id, e.g. Small + Large of one shirt). Validating
+  -- per-line-item against the un-decremented stock_quantity would let two
+  -- 1-unit lines both pass against a stock of 1, then Pass 2 would
+  -- decrement it twice into negative stock -- a real oversell. Grouping by
+  -- product_id here closes that hole. Locking + validating every product
+  -- before any decrement also makes a multi-product oversell all-or-nothing:
+  -- a later product's failure must not leave earlier products partially
+  -- decremented (PL/pgSQL RETURN does not roll back prior statements within
+  -- this still-open transaction), and because the order stays 'pending' on
+  -- failure, a webhook retry must not re-decrement products that were never
+  -- actually written.
+  FOR v_need IN
+    SELECT product_id, sum(quantity) AS total_qty
+      FROM gw_store_order_items WHERE order_id = v_order.id GROUP BY product_id
+  LOOP
+    SELECT * INTO v_prod FROM gw_products WHERE id = v_need.product_id FOR UPDATE;
     IF v_prod IS NULL THEN
-      RETURN jsonb_build_object('error','product_not_found','product_id',v_item.product_id);
+      RETURN jsonb_build_object('error','product_not_found','product_id',v_need.product_id);
     END IF;
-    IF v_prod.manage_stock AND v_prod.stock_quantity < v_item.quantity THEN
-      RETURN jsonb_build_object('error','over_capacity','product_id',v_item.product_id,
-        'available', v_prod.stock_quantity, 'requested', v_item.quantity);
+    IF v_prod.manage_stock AND v_prod.stock_quantity < v_need.total_qty THEN
+      RETURN jsonb_build_object('error','over_capacity','product_id',v_need.product_id,
+        'available', v_prod.stock_quantity, 'requested', v_need.total_qty);
     END IF;
   END LOOP;
 
-  -- Pass 2: every item is known-good; decrement stock + mint entitlements.
+  -- Pass 2a: every product is known-good; decrement stock ONCE PER PRODUCT
+  -- by the aggregated total across all of that product's line items.
+  FOR v_need IN
+    SELECT product_id, sum(quantity) AS total_qty
+      FROM gw_store_order_items WHERE order_id = v_order.id GROUP BY product_id
+  LOOP
+    UPDATE gw_products SET stock_quantity = stock_quantity - v_need.total_qty
+      WHERE id = v_need.product_id AND manage_stock;
+  END LOOP;
+
+  -- Pass 2b: mint entitlements per line item (unchanged from before).
   FOR v_item IN SELECT * FROM gw_store_order_items WHERE order_id = v_order.id LOOP
-    SELECT * INTO v_prod FROM gw_products WHERE id = v_item.product_id FOR UPDATE;
-    IF v_prod.manage_stock THEN
-      UPDATE gw_products SET stock_quantity = stock_quantity - v_item.quantity WHERE id = v_prod.id;
-    END IF;
     -- Mint one digital entitlement per digital line (quantity-agnostic: one grant per product per order).
     IF v_item.is_digital THEN
       v_token := encode(gen_random_bytes(24),'hex');

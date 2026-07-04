@@ -118,4 +118,67 @@ BEGIN
   RAISE NOTICE 'partial-decrement regression test passed';
 END $$;
 
+-- Same-product oversell regression: ONE order with TWO line items for the
+-- SAME product_id (e.g. Small + Large of one shirt), each qty 1, but the
+-- product only has 1 unit of stock. Per-line-item validation would check
+-- each line against the un-decremented stock_quantity=1 and let both pass,
+-- then decrement twice (1 -> 0 -> -1), a real oversell. Aggregated
+-- per-product validation must catch this and block the whole order.
+DO $$
+DECLARE v_tenant UUID; v_prod UUID; v_order UUID; r1 JSONB;
+BEGIN
+  SELECT id INTO v_tenant FROM gw_tenants LIMIT 1;
+  INSERT INTO gw_products (tenant_id, name, title, price, manage_stock, stock_quantity, requires_shipping)
+    VALUES (v_tenant,'Same-Product Tee','Same-Product Tee',20,true,1,true) RETURNING id INTO v_prod;
+
+  INSERT INTO gw_store_orders (tenant_id, store_type, buyer_email, amount_cents, status)
+    VALUES (v_tenant,'tenant','same-prod@x.com',4000,'pending') RETURNING id INTO v_order;
+  -- Two line items, same product_id, distinct (NULL) variant_id, qty 1 each.
+  INSERT INTO gw_store_order_items (tenant_id, order_id, product_id, variant_id, unit_price_cents, quantity, is_digital)
+    VALUES (v_tenant,v_order,v_prod,NULL,2000,1,false),(v_tenant,v_order,v_prod,NULL,2000,1,false);
+
+  r1 := public.gw_store_fulfill_order(v_order,'sess_same_prod','pi_same_prod');
+  IF (r1->>'error') IS DISTINCT FROM 'over_capacity' THEN
+    RAISE EXCEPTION 'expected over_capacity for same-product multi-line oversell, got: %', r1;
+  END IF;
+  IF (SELECT stock_quantity FROM gw_products WHERE id=v_prod) <> 1 THEN
+    RAISE EXCEPTION 'same-product oversell must NOT decrement stock, got %', (SELECT stock_quantity FROM gw_products WHERE id=v_prod);
+  END IF;
+  IF (SELECT status FROM gw_store_orders WHERE id=v_order) <> 'pending' THEN
+    RAISE EXCEPTION 'order should remain pending after same-product oversell block';
+  END IF;
+  RAISE NOTICE 'same-product oversell regression test passed';
+END $$;
+
+-- Same-product happy path: ONE order with TWO line items for the SAME
+-- product_id, each qty 1, and stock_quantity=2 (exactly enough in
+-- aggregate). Must succeed and decrement stock ONCE by the aggregated
+-- total (2), landing at 0 -- not double-decremented per line item to -0
+-- some other wrong value, and not blocked despite each individual line
+-- looking fine on its own.
+DO $$
+DECLARE v_tenant UUID; v_prod UUID; v_order UUID; r1 JSONB;
+BEGIN
+  SELECT id INTO v_tenant FROM gw_tenants LIMIT 1;
+  INSERT INTO gw_products (tenant_id, name, title, price, manage_stock, stock_quantity, requires_shipping)
+    VALUES (v_tenant,'Same-Product Tee 2','Same-Product Tee 2',20,true,2,true) RETURNING id INTO v_prod;
+
+  INSERT INTO gw_store_orders (tenant_id, store_type, buyer_email, amount_cents, status)
+    VALUES (v_tenant,'tenant','same-prod-ok@x.com',4000,'pending') RETURNING id INTO v_order;
+  INSERT INTO gw_store_order_items (tenant_id, order_id, product_id, variant_id, unit_price_cents, quantity, is_digital)
+    VALUES (v_tenant,v_order,v_prod,NULL,2000,1,false),(v_tenant,v_order,v_prod,NULL,2000,1,false);
+
+  r1 := public.gw_store_fulfill_order(v_order,'sess_same_prod_ok','pi_same_prod_ok');
+  IF (r1->>'ok') IS DISTINCT FROM 'true' THEN
+    RAISE EXCEPTION 'expected ok=true for same-product multi-line within capacity, got: %', r1;
+  END IF;
+  IF (SELECT stock_quantity FROM gw_products WHERE id=v_prod) <> 0 THEN
+    RAISE EXCEPTION 'same-product aggregated decrement should leave stock at 0, got %', (SELECT stock_quantity FROM gw_products WHERE id=v_prod);
+  END IF;
+  IF (SELECT status FROM gw_store_orders WHERE id=v_order) <> 'paid' THEN
+    RAISE EXCEPTION 'order should be paid after successful same-product fulfill';
+  END IF;
+  RAISE NOTICE 'same-product happy-path aggregation test passed';
+END $$;
+
 ROLLBACK;
