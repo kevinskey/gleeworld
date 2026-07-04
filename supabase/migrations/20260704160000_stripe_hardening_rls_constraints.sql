@@ -39,16 +39,24 @@ END $$;
 REVOKE ALL ON public.gw_webhook_events FROM anon, authenticated;
 
 -- Dedupe / upsert-target constraints (tables verified empty in prod).
-ALTER TABLE public.gw_webhook_events
-  ADD CONSTRAINT gw_webhook_events_event_id_key UNIQUE (event_id);
-ALTER TABLE public.gw_payments
-  ADD CONSTRAINT gw_payments_order_id_key UNIQUE (order_id);
-ALTER TABLE public.gw_refunds
-  ADD CONSTRAINT gw_refunds_stripe_refund_id_key UNIQUE (stripe_refund_id);
-ALTER TABLE public.gw_orders
-  ADD CONSTRAINT gw_orders_stripe_session_id_key UNIQUE (stripe_session_id);
-ALTER TABLE public.gw_orders
-  ADD CONSTRAINT gw_orders_stripe_payment_intent_id_key UNIQUE (stripe_payment_intent_id);
+-- Idempotent: skip any that already exist (some predate this migration).
+DO $$
+DECLARE c record;
+BEGIN
+  FOR c IN SELECT * FROM (VALUES
+    ('gw_webhook_events','gw_webhook_events_event_id_key','event_id'),
+    ('gw_payments','gw_payments_order_id_key','order_id'),
+    ('gw_refunds','gw_refunds_stripe_refund_id_key','stripe_refund_id'),
+    ('gw_orders','gw_orders_stripe_session_id_key','stripe_session_id'),
+    ('gw_orders','gw_orders_stripe_payment_intent_id_key','stripe_payment_intent_id')
+  ) AS v(tbl, con, col)
+  LOOP
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = c.con) THEN
+      EXECUTE format('ALTER TABLE public.%I ADD CONSTRAINT %I UNIQUE (%I)',
+                     c.tbl, c.con, c.col);
+    END IF;
+  END LOOP;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_gw_tenant_subs_stripe_sub
   ON public.gw_tenant_subscriptions (stripe_subscription_id);
