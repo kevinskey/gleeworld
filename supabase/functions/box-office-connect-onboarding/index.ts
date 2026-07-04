@@ -52,6 +52,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+import { verifyJwtClaims } from '../_shared/verifyJwt.ts'
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
@@ -68,7 +70,7 @@ Deno.serve(async (req) => {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-    const payload = JSON.parse(atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    const payload = (await verifyJwtClaims(accessToken)) ?? {}
     const tenantId = payload.tenant_id
     const tenantRole = payload.tenant_role
     const userEmail = payload.email

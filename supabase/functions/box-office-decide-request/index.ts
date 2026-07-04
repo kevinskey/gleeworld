@@ -130,6 +130,8 @@ interface MintResult {
   event_title?: string; tier_name?: string; quantity?: number;
 }
 
+import { verifyJwtClaims } from '../_shared/verifyJwt.ts'
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
   try {
@@ -142,7 +144,7 @@ Deno.serve(async (req) => {
     let tenantId: string | null = null
     let tenantRole: string | null = null
     try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+      const payload = (await verifyJwtClaims(accessToken)) ?? {}
       userId = payload.sub ?? null
       tenantId = payload.tenant_id ?? null
       tenantRole = payload.tenant_role ?? null

@@ -1562,7 +1562,7 @@ const ADDON_MODULES: { name: string; price: string; tagline: string }[] = [
   { name: 'Practice Studio', price: '$29', tagline: 'Student takes with built-in audio engine.' },
   { name: 'Sight Reading', price: '$15', tagline: 'Daily exercises with progress tracking.' },
   { name: 'Tour Manager', price: '$25', tagline: 'Routes, hotels, weather, manifests.' },
-  { name: 'Box Office', price: '$39', tagline: 'Ticketing + 1% of ticket sales.' },
+  { name: 'Box Office', price: '$39', tagline: 'Ticketing — you keep 100% of ticket sales.' },
   { name: 'Contracts & Finance', price: '$25', tagline: 'E-signed contracts and invoicing.' },
 ];
 

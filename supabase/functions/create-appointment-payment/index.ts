@@ -16,7 +16,9 @@ serve(async (req) => {
   try {
     console.log("=== Appointment Payment Function Started ===");
     console.log("Request method:", req.method);
-    console.log("Request headers:", Object.fromEntries(req.headers.entries()));
+    // Never log full headers — the Authorization bearer token and apikey
+    // would land in plaintext logs. Presence boolean only.
+    console.log("Has auth header:", req.headers.has("authorization"));
     
     // Get request body
     const body = await req.json();
