@@ -49,6 +49,8 @@ interface Product {
   is_featured: boolean;
   stock_quantity: number;
   manage_stock: boolean;
+  requires_shipping: boolean;
+  digital_object_key: string | null;
   weight: number;
   weight_oz?: number;
   length_in?: number;
@@ -370,9 +372,9 @@ export const ProductManager = () => {
                         {uploading ? 'Uploading...' : 'Upload Image'}
                       </Button>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      Stock: {product.stock_quantity}
-                    </Badge>
+                    {product.requires_shipping === false
+                      ? <Badge variant="secondary" className="text-xs">Digital</Badge>
+                      : <Badge variant="outline" className="text-xs">Stock: {product.stock_quantity}</Badge>}
                   </div>
                 </div>
               </div>
@@ -414,6 +416,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
     is_featured: product?.is_featured ?? false,
     stock_quantity: product?.stock_quantity || 0,
     manage_stock: product?.manage_stock ?? true,
+    requires_shipping: product?.requires_shipping ?? true,
+    digital_object_key: product?.digital_object_key || '',
     weight: product?.weight || 0,
     weight_oz: product?.weight_oz || 0,
     length_in: product?.length_in || 0,
@@ -476,6 +480,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
       const productData: Record<string, any> = {
         ...formData,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        // Digital delivery (store-download) keys off digital_object_key
+        // being non-null; a digital product also never needs shipping.
+        digital_object_key: formData.requires_shipping ? null : (formData.digital_object_key.trim() || null),
       };
 
       // Remove empty SKU to avoid unique constraint violations
@@ -660,6 +667,32 @@ const ProductForm: React.FC<ProductFormProps> = ({
             stock_quantity: parseInt(e.target.value) || 0
           })} />
             </div>}
+
+          {/* Digital delivery: a digital product never requires shipping and
+              instead resolves a DO Spaces object key at checkout fulfillment
+              (see store-download). Toggling this off clears the key so a
+              product can't be half-configured as both shipped and digital. */}
+          <div className="pt-2 border-t space-y-3">
+            <div className="flex items-center space-x-2">
+              <Switch id="is_digital" checked={!formData.requires_shipping} onCheckedChange={checked => setFormData({
+              ...formData,
+              requires_shipping: !checked,
+              digital_object_key: checked ? formData.digital_object_key : ''
+            })} />
+              <Label htmlFor="is_digital">Digital product (no shipping — delivered as a download)</Label>
+            </div>
+            {!formData.requires_shipping && <div>
+                <Label htmlFor="digital_object_key">DO Spaces object key</Label>
+                <Input id="digital_object_key" placeholder="digital/my-file.pdf" value={formData.digital_object_key} onChange={e => setFormData({
+              ...formData,
+              digital_object_key: e.target.value
+            })} />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Path to the file inside the storage bucket. Buyers get a short-lived signed
+                  download link after checkout — upload the file to that bucket first.
+                </p>
+              </div>}
+          </div>
 
           {/* Shipping dimensions — needed for EasyPost rate quotes at
               checkout. Weight in oz + dims in inches matches what every

@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +15,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
+import {
   Package, CreditCard, Truck, MapPin, Calendar,
-  ExternalLink, RefreshCw, Download, Loader2, AlertTriangle
+  RefreshCw, Loader2, AlertTriangle
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -27,76 +25,50 @@ interface OrderDetailDrawerProps {
   orderId: string | null;
   isOpen: boolean;
   onClose: () => void;
+  // Optional: lets a parent-owned orders list (e.g. OrdersManager) refresh
+  // itself after a refund changes this order's status.
+  onRefunded?: () => void;
 }
 
-interface Order {
+// Commerce Core order — see OrdersManager.tsx for why this reads through
+// the store-admin-orders edge function instead of supabase-js directly
+// (gw_store_orders has no permissive RLS policy for `authenticated`).
+interface StoreOrder {
   id: string;
-  order_number: string;
-  status: string;
-  payment_status: string;
-  total_amount: number;
-  subtotal: number;
-  shipping_cost: number;
-  tax_amount: number;
-  discount_amount: number;
+  status: 'pending' | 'paid' | 'refunded' | 'failed';
+  store_type: 'gleeworld' | 'tenant';
+  buyer_email: string;
+  amount_cents: number;
   currency: string;
-  shipping_address: any;
-  billing_address: any;
+  requires_shipping: boolean;
+  ship_to_name: string | null;
+  ship_to_line1: string | null;
+  ship_to_line2: string | null;
+  ship_to_city: string | null;
+  ship_to_state: string | null;
+  ship_to_postal: string | null;
+  ship_to_country: string | null;
+  provider_payment_intent_id: string | null;
   created_at: string;
   updated_at: string;
-  customer_name: string;
-  customer_email: string;
-  requires_shipping: boolean;
-  easypost_tracking_code: string | null;
-  easypost_label_url: string | null;
-  stripe_payment_intent_id: string | null;
 }
 
 interface OrderItem {
   id: string;
-  product_title: string;
-  variant_title: string | null;
+  product_id: string;
+  variant_id: string | null;
+  unit_price_cents: number;
   quantity: number;
-  unit_price: number;
-  total_price: number;
-  requires_shipping: boolean;
-  product_image: string | null;
+  is_digital: boolean;
+  gw_products?: { name: string } | null;
 }
 
-interface Shipment {
-  id: string;
-  carrier: string | null;
-  service: string | null;
-  tracking_code: string | null;
-  tracking_url: string | null;
-  label_url: string | null;
-  status: string;
-  cost: number | null;
-  shipped_at: string | null;
-  delivered_at: string | null;
-}
-
-interface Payment {
-  id: string;
-  stripe_payment_intent_id: string | null;
-  stripe_charge_id: string | null;
-  status: string;
-  amount: number;
-  currency: string;
-  receipt_url: string | null;
-  created_at: string;
-}
-
-export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawerProps) => {
-  const [order, setOrder] = useState<Order | null>(null);
+export const OrderDetailDrawer = ({ orderId, isOpen, onClose, onRefunded }: OrderDetailDrawerProps) => {
+  const [order, setOrder] = useState<StoreOrder | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
-  const [shipments, setShipments] = useState<Shipment[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [creatingShipment, setCreatingShipment] = useState(false);
   const [processingRefund, setProcessingRefund] = useState(false);
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
-  const [refundAmount, setRefundAmount] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -107,80 +79,21 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
 
   const fetchOrderDetails = async () => {
     if (!orderId) return;
-    
+
     setLoading(true);
     try {
-      const { data: orderData, error: orderError } = await supabase
-        .from('gw_orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
-
-      if (orderError) throw orderError;
-      
-      setOrder({
-        id: orderData.id,
-        order_number: orderData.order_number,
-        status: orderData.status,
-        payment_status: orderData.payment_status,
-        total_amount: orderData.total_amount || 0,
-        subtotal: orderData.subtotal || 0,
-        shipping_cost: orderData.shipping_cost || 0,
-        tax_amount: orderData.tax_amount || 0,
-        discount_amount: orderData.discount_amount || 0,
-        currency: orderData.currency || 'USD',
-        shipping_address: orderData.shipping_address,
-        billing_address: orderData.billing_address,
-        created_at: orderData.created_at,
-        updated_at: orderData.updated_at,
-        customer_name: orderData.customer_name || '',
-        customer_email: orderData.customer_email || '',
-        requires_shipping: orderData.requires_shipping || false,
-        easypost_tracking_code: orderData.easypost_tracking_code,
-        easypost_label_url: orderData.easypost_label_url,
-        stripe_payment_intent_id: orderData.stripe_payment_intent_id,
+      const { data, error } = await supabase.functions.invoke('store-admin-orders', {
+        body: { order_id: orderId },
       });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('gw_order_items')
-        .select('*')
-        .eq('order_id', orderId);
-
-      if (itemsError) throw itemsError;
-      
-      setItems((itemsData || []).map(item => ({
-        id: item.id,
-        product_title: item.product_title,
-        variant_title: item.variant_title,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
-        requires_shipping: item.requires_shipping,
-        product_image: item.product_image,
-      })));
-
-      const { data: shipmentsData, error: shipmentsError } = await supabase
-        .from('gw_shipments')
-        .select('*')
-        .eq('order_id', orderId);
-
-      if (!shipmentsError) {
-        setShipments(shipmentsData || []);
-      }
-
-      const { data: paymentsData, error: paymentsError } = await supabase
-        .from('gw_payments')
-        .select('*')
-        .eq('order_id', orderId);
-
-      if (!paymentsError) {
-        setPayments(paymentsData || []);
-      }
-
+      setOrder(data.order);
+      setItems(data.items || []);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to load order details",
+        description: error.message || "Failed to load order details",
         variant: "destructive",
       });
     } finally {
@@ -188,69 +101,26 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
     }
   };
 
-  const handleCreateShipment = async () => {
-    if (!order) return;
-    
-    setCreatingShipment(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-shipping-label', {
-        body: { order_id: order.id }
-      });
-
-      if (error) throw error;
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      toast({
-        title: "Shipment Created",
-        description: `Tracking: ${data.tracking_code} via ${data.carrier}`,
-      });
-
-      // Refresh order details
-      await fetchOrderDetails();
-    } catch (error: any) {
-      toast({
-        title: "Shipment Failed",
-        description: error.message || "Failed to create shipping label",
-        variant: "destructive",
-      });
-    } finally {
-      setCreatingShipment(false);
-    }
-  };
-
   const handleIssueRefund = async () => {
     if (!order) return;
-    
+
     setProcessingRefund(true);
     try {
-      const refundAmountCents = refundAmount 
-        ? Math.round(parseFloat(refundAmount) * 100)
-        : undefined;
-
-      const { data, error } = await supabase.functions.invoke('create-refund', {
-        body: { 
-          order_id: order.id,
-          amount: refundAmountCents,
-        }
+      const { data, error } = await supabase.functions.invoke('store-refund', {
+        body: { order_id: order.id },
       });
 
       if (error) throw error;
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Refund Issued",
-        description: `$${data.amount.toFixed(2)} refunded successfully`,
+        description: `${formatCurrency(order.amount_cents, order.currency)} refunded successfully`,
       });
 
       setRefundDialogOpen(false);
-      setRefundAmount('');
       await fetchOrderDetails();
+      onRefunded?.();
     } catch (error: any) {
       toast({
         title: "Refund Failed",
@@ -262,71 +132,38 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
     }
   };
 
-  const getStatusBadge = (status: string, type: 'order' | 'payment' | 'fulfillment') => {
-    const configs: Record<string, Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }>> = {
-      order: {
-        pending: { variant: 'secondary', label: 'Pending' },
-        paid: { variant: 'default', label: 'Paid' },
-        fulfilled: { variant: 'default', label: 'Fulfilled' },
-        shipped: { variant: 'default', label: 'Shipped' },
-        canceled: { variant: 'destructive', label: 'Canceled' },
-        cancelled: { variant: 'destructive', label: 'Cancelled' },
-        refunded: { variant: 'outline', label: 'Refunded' },
-        delivered: { variant: 'default', label: 'Delivered' },
-      },
-      payment: {
-        unpaid: { variant: 'secondary', label: 'Unpaid' },
-        pending: { variant: 'secondary', label: 'Pending' },
-        processing: { variant: 'secondary', label: 'Processing' },
-        paid: { variant: 'default', label: 'Paid' },
-        succeeded: { variant: 'default', label: 'Succeeded' },
-        refunded: { variant: 'outline', label: 'Refunded' },
-        partially_refunded: { variant: 'outline', label: 'Partial Refund' },
-        disputed: { variant: 'destructive', label: 'Disputed' },
-        failed: { variant: 'destructive', label: 'Failed' },
-      },
-      fulfillment: {
-        unfulfilled: { variant: 'secondary', label: 'Unfulfilled' },
-        partial: { variant: 'outline', label: 'Partial' },
-        fulfilled: { variant: 'default', label: 'Fulfilled' },
-      },
+  const getStatusBadge = (status: StoreOrder['status']) => {
+    const config: Record<StoreOrder['status'], { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
+      pending: { variant: 'outline', label: 'Pending' },
+      paid: { variant: 'default', label: 'Paid' },
+      refunded: { variant: 'secondary', label: 'Refunded' },
+      failed: { variant: 'destructive', label: 'Failed' },
     };
-    const config = configs[type]?.[status] || { variant: 'outline' as const, label: status };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    const c = config[status] || { variant: 'outline' as const, label: status };
+    return <Badge variant={c.variant}>{c.label}</Badge>;
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
-    }).format(amount);
-  };
+  const formatCurrency = (cents: number, currency: string = 'usd') =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: (currency || 'usd').toUpperCase() }).format((cents || 0) / 100);
 
-  const formatAddress = (address: any) => {
-    if (!address) return <span className="text-muted-foreground">No address provided</span>;
+  const formatAddress = (o: StoreOrder) => {
+    if (!o.ship_to_line1 && !o.ship_to_city) {
+      return <span className="text-muted-foreground">No shipping address on file</span>;
+    }
     return (
       <div className="text-sm">
-        {address.name && <p className="font-medium">{address.name}</p>}
-        {address.street1 && <p>{address.street1}</p>}
-        {address.street2 && <p>{address.street2}</p>}
-        {address.line1 && <p>{address.line1}</p>}
-        {address.line2 && <p>{address.line2}</p>}
+        {o.ship_to_name && <p className="font-medium">{o.ship_to_name}</p>}
+        {o.ship_to_line1 && <p>{o.ship_to_line1}</p>}
+        {o.ship_to_line2 && <p>{o.ship_to_line2}</p>}
         <p>
-          {address.city}{address.state ? `, ${address.state}` : ''} {address.zip || address.postal_code}
+          {o.ship_to_city}{o.ship_to_state ? `, ${o.ship_to_state}` : ''} {o.ship_to_postal}
         </p>
-        {address.country && <p>{address.country}</p>}
+        {o.ship_to_country && <p>{o.ship_to_country}</p>}
       </div>
     );
   };
 
-  const canRefund = order && 
-    order.payment_status === 'paid' && 
-    order.stripe_payment_intent_id;
-
-  const canCreateShipment = order && 
-    order.requires_shipping && 
-    !order.easypost_tracking_code && 
-    order.payment_status === 'paid';
+  const canRefund = order && order.status === 'paid';
 
   if (!isOpen) return null;
 
@@ -336,7 +173,7 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
         <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col">
           <SheetHeader className="pb-4">
             <SheetTitle className="flex items-center justify-between">
-              <span>Order {order?.order_number || '...'}</span>
+              <span className="font-mono text-base">Order {order?.id.slice(0, 8) || '...'}</span>
               <Button variant="outline" size="sm" onClick={fetchOrderDetails} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
@@ -353,8 +190,8 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
               <div className="space-y-6 pb-6">
                 {/* Status Summary */}
                 <div className="flex flex-wrap gap-2">
-                  {getStatusBadge(order.status, 'order')}
-                  {getStatusBadge(order.payment_status, 'payment')}
+                  {getStatusBadge(order.status)}
+                  <Badge variant="outline">{order.store_type === 'gleeworld' ? 'GleeWorld Store' : 'Tenant Store'}</Badge>
                 </div>
 
                 {/* Order Info */}
@@ -367,16 +204,16 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
                   </CardHeader>
                   <CardContent className="text-sm space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Customer</span>
-                      <span>{order.customer_name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Email</span>
-                      <span>{order.customer_email}</span>
+                      <span className="text-muted-foreground">Buyer</span>
+                      <span>{order.buyer_email}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Created</span>
                       <span>{format(new Date(order.created_at), 'MMM d, yyyy h:mm a')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Last updated</span>
+                      <span>{format(new Date(order.updated_at), 'MMM d, yyyy h:mm a')}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -394,33 +231,23 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
                       <p className="text-sm text-muted-foreground">No items</p>
                     ) : items.map((item) => (
                       <div key={item.id} className="flex justify-between items-start py-2 border-b last:border-0">
-                        <div className="flex gap-3">
-                          {item.product_image && (
-                            <img 
-                              src={item.product_image} 
-                              alt={item.product_title}
-                              className="w-12 h-12 object-cover rounded"
-                            />
-                          )}
-                          <div>
-                            <p className="font-medium">{item.product_title}</p>
-                            {item.variant_title && (
-                              <p className="text-xs text-muted-foreground">{item.variant_title}</p>
+                        <div>
+                          <p className="font-medium">{item.gw_products?.name || 'Product'}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              Qty: {item.quantity}
+                            </Badge>
+                            {item.is_digital && (
+                              <Badge variant="secondary" className="text-xs">Digital</Badge>
                             )}
-                            <div className="flex gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                Qty: {item.quantity}
-                              </Badge>
-                              {!item.requires_shipping && (
-                                <Badge variant="secondary" className="text-xs">Digital</Badge>
-                              )}
-                            </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">{formatCurrency(item.total_price, order.currency)}</p>
+                          <p className="font-medium">
+                            {formatCurrency(item.unit_price_cents * item.quantity, order.currency)}
+                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {formatCurrency(item.unit_price, order.currency)} each
+                            {formatCurrency(item.unit_price_cents, order.currency)} each
                           </p>
                         </div>
                       </div>
@@ -428,37 +255,18 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
                   </CardContent>
                 </Card>
 
-                {/* Totals */}
+                {/* Total */}
                 <Card>
-                  <CardContent className="pt-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>{formatCurrency(order.subtotal, order.currency)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span>{formatCurrency(order.shipping_cost, order.currency)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tax</span>
-                      <span>{formatCurrency(order.tax_amount, order.currency)}</span>
-                    </div>
-                    {order.discount_amount > 0 && (
-                      <div className="flex justify-between text-sm text-green-600">
-                        <span>Discount</span>
-                        <span>-{formatCurrency(order.discount_amount, order.currency)}</span>
-                      </div>
-                    )}
-                    <Separator />
+                  <CardContent className="pt-4">
                     <div className="flex justify-between font-bold">
                       <span>Total</span>
-                      <span>{formatCurrency(order.total_amount, order.currency)}</span>
+                      <span>{formatCurrency(order.amount_cents, order.currency)}</span>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Addresses */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Shipping Address (physical orders only) */}
+                {order.requires_shipping && (
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -467,21 +275,10 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {formatAddress(order.shipping_address)}
+                      {formatAddress(order)}
                     </CardContent>
                   </Card>
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        Billing Address
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {formatAddress(order.billing_address)}
-                    </CardContent>
-                  </Card>
-                </div>
+                )}
 
                 {/* Payment Info */}
                 <Card>
@@ -492,145 +289,46 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {order.stripe_payment_intent_id ? (
-                      <div className="text-sm space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Stripe Payment Intent</span>
-                          <span className="font-mono text-xs">{order.stripe_payment_intent_id}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Status</span>
-                          {getStatusBadge(order.payment_status, 'payment')}
-                        </div>
+                    <div className="text-sm space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Stripe Payment Intent</span>
+                        <span className="font-mono text-xs">{order.provider_payment_intent_id || '—'}</span>
                       </div>
-                    ) : payments.length > 0 ? (
-                      <div className="space-y-3">
-                        {payments.map((payment) => (
-                          <div key={payment.id} className="flex justify-between items-center py-2 border-b last:border-0">
-                            <div>
-                              <p className="font-medium">{formatCurrency(payment.amount, payment.currency)}</p>
-                              <p className="text-xs text-muted-foreground font-mono">
-                                {payment.stripe_payment_intent_id || payment.stripe_charge_id || 'N/A'}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {getStatusBadge(payment.status, 'payment')}
-                              {payment.receipt_url && (
-                                <Button variant="ghost" size="sm" asChild>
-                                  <a href={payment.receipt_url} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="w-4 h-4" />
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Status</span>
+                        {getStatusBadge(order.status)}
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No payment recorded</p>
-                    )}
+                    </div>
                     <div className="mt-4 flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => setRefundDialogOpen(true)}
                         disabled={!canRefund || processingRefund}
                       >
                         {processingRefund && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        Issue Refund
+                        Refund
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Shipments */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Truck className="w-4 h-4" />
-                      Shipping
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {order.easypost_tracking_code ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Tracking</span>
-                          <span className="font-mono">{order.easypost_tracking_code}</span>
-                        </div>
-                        {order.easypost_label_url && (
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={order.easypost_label_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-4 h-4 mr-1" />
-                              Download Label
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    ) : shipments.length > 0 ? (
-                      <div className="space-y-3">
-                        {shipments.map((shipment) => (
-                          <div key={shipment.id} className="py-2 border-b last:border-0">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium">
-                                  {shipment.carrier} - {shipment.service}
-                                </p>
-                                {shipment.tracking_code && (
-                                  <p className="text-xs font-mono text-muted-foreground">
-                                    {shipment.tracking_code}
-                                  </p>
-                                )}
-                                {shipment.cost && (
-                                  <p className="text-xs text-muted-foreground">
-                                    Cost: {formatCurrency(shipment.cost)}
-                                  </p>
-                                )}
-                              </div>
-                              <Badge variant="outline">{shipment.status}</Badge>
-                            </div>
-                            <div className="flex gap-2 mt-2">
-                              {shipment.tracking_url && (
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={shipment.tracking_url} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="w-4 h-4 mr-1" />
-                                    Track
-                                  </a>
-                                </Button>
-                              )}
-                              {shipment.label_url && (
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={shipment.label_url} target="_blank" rel="noopener noreferrer">
-                                    <Download className="w-4 h-4 mr-1" />
-                                    Label
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : order.requires_shipping ? (
-                      <p className="text-sm text-muted-foreground">No shipment created yet</p>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Digital order - no shipping required</p>
-                    )}
-                    {canCreateShipment && (
-                      <div className="mt-4 flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={handleCreateShipment}
-                          disabled={creatingShipment}
-                        >
-                          {creatingShipment && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                          <Truck className="w-4 h-4 mr-1" />
-                          Create Shipment
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                {order.requires_shipping && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Truck className="w-4 h-4" />
+                        Fulfillment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Shipping labels aren't wired up for the storefront yet — ship this order manually
+                        using the address above.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </ScrollArea>
           ) : (
@@ -646,44 +344,25 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose }: OrderDetailDrawe
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              Issue Refund
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Refund this order?
             </DialogTitle>
             <DialogDescription>
-              This will refund the customer via Stripe. This action cannot be undone.
+              This refunds the full order total via Stripe and restocks any managed inventory.
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Order Total</Label>
-              <p className="text-lg font-bold">
-                {order && formatCurrency(order.total_amount, order.currency)}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="refundAmount">Refund Amount (leave blank for full refund)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <Input
-                  id="refundAmount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max={order?.total_amount || 0}
-                  value={refundAmount}
-                  onChange={(e) => setRefundAmount(e.target.value)}
-                  placeholder={order?.total_amount?.toFixed(2) || '0.00'}
-                  className="pl-8"
-                />
-              </div>
-            </div>
+          <div className="py-2">
+            <p className="text-lg font-bold">
+              {order && formatCurrency(order.amount_cents, order.currency)}
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRefundDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleIssueRefund}
               disabled={processingRefund}
             >
