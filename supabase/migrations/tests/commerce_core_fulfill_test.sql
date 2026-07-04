@@ -88,4 +88,34 @@ BEGIN
   RAISE NOTICE 'refund test passed';
 END $$;
 
+-- Partial-decrement regression: multi-item order where item A has stock and
+-- item B oversells. Must be all-or-nothing: item A's stock must NOT move,
+-- and a retry after the block must still leave item A untouched (no
+-- unbounded re-decrement of already-validated items on each webhook retry).
+DO $$
+DECLARE v_tenant UUID; v_prod_a UUID; v_prod_b UUID; v_order UUID; r1 JSONB; r2 JSONB;
+BEGIN
+  SELECT id INTO v_tenant FROM gw_tenants LIMIT 1;
+  INSERT INTO gw_products (tenant_id, name, title, price, manage_stock, stock_quantity, requires_shipping)
+    VALUES (v_tenant,'Item A','Item A',10,true,5,true) RETURNING id INTO v_prod_a;
+  INSERT INTO gw_products (tenant_id, name, title, price, manage_stock, stock_quantity, requires_shipping)
+    VALUES (v_tenant,'Item B','Item B',10,true,0,true) RETURNING id INTO v_prod_b;
+
+  INSERT INTO gw_store_orders (tenant_id, store_type, buyer_email, amount_cents, status)
+    VALUES (v_tenant,'tenant','partial@x.com',2000,'pending') RETURNING id INTO v_order;
+  INSERT INTO gw_store_order_items (tenant_id, order_id, product_id, unit_price_cents, quantity, is_digital)
+    VALUES (v_tenant,v_order,v_prod_a,1000,1,false),(v_tenant,v_order,v_prod_b,1000,1,false);
+
+  r1 := public.gw_store_fulfill_order(v_order,'sess_partial','pi_partial');
+  IF (r1->>'error') IS DISTINCT FROM 'over_capacity' THEN RAISE EXCEPTION 'expected over_capacity on multi-item oversell: %', r1; END IF;
+  IF (SELECT stock_quantity FROM gw_products WHERE id=v_prod_a) <> 5 THEN RAISE EXCEPTION 'item A stock must be unchanged after blocked multi-item fulfill, got %', (SELECT stock_quantity FROM gw_products WHERE id=v_prod_a); END IF;
+  IF (SELECT status FROM gw_store_orders WHERE id=v_order) <> 'pending' THEN RAISE EXCEPTION 'order should remain pending after oversell block'; END IF;
+
+  -- Retry (as a webhook redelivery would do): must not re-decrement item A.
+  r2 := public.gw_store_fulfill_order(v_order,'sess_partial','pi_partial');
+  IF (r2->>'error') IS DISTINCT FROM 'over_capacity' THEN RAISE EXCEPTION 'expected over_capacity on retry: %', r2; END IF;
+  IF (SELECT stock_quantity FROM gw_products WHERE id=v_prod_a) <> 5 THEN RAISE EXCEPTION 'retry must not re-decrement item A stock, got %', (SELECT stock_quantity FROM gw_products WHERE id=v_prod_a); END IF;
+  RAISE NOTICE 'partial-decrement regression test passed';
+END $$;
+
 ROLLBACK;

@@ -13,13 +13,27 @@ BEGIN
     RETURN jsonb_build_object('already_paid', true, 'order_id', v_order.id);
   END IF;
 
-  -- Lock + decrement stock per line item; block oversell under lock.
+  -- Pass 1: lock every line item's product and validate ONLY (no writes).
+  -- Locking + validating all items before any decrement makes a multi-item
+  -- oversell all-or-nothing: a later item's failure must not leave earlier
+  -- items partially decremented (PL/pgSQL RETURN does not roll back prior
+  -- statements within this still-open transaction), and because the order
+  -- stays 'pending' on failure, a webhook retry must not re-decrement items
+  -- that were never actually written.
   FOR v_item IN SELECT * FROM gw_store_order_items WHERE order_id = v_order.id LOOP
     SELECT * INTO v_prod FROM gw_products WHERE id = v_item.product_id FOR UPDATE;
+    IF v_prod IS NULL THEN
+      RETURN jsonb_build_object('error','product_not_found','product_id',v_item.product_id);
+    END IF;
     IF v_prod.manage_stock AND v_prod.stock_quantity < v_item.quantity THEN
       RETURN jsonb_build_object('error','over_capacity','product_id',v_item.product_id,
         'available', v_prod.stock_quantity, 'requested', v_item.quantity);
     END IF;
+  END LOOP;
+
+  -- Pass 2: every item is known-good; decrement stock + mint entitlements.
+  FOR v_item IN SELECT * FROM gw_store_order_items WHERE order_id = v_order.id LOOP
+    SELECT * INTO v_prod FROM gw_products WHERE id = v_item.product_id FOR UPDATE;
     IF v_prod.manage_stock THEN
       UPDATE gw_products SET stock_quantity = stock_quantity - v_item.quantity WHERE id = v_prod.id;
     END IF;
@@ -59,3 +73,14 @@ BEGIN
   UPDATE gw_store_orders SET status='refunded', updated_at=now() WHERE id=v_order.id;
   RETURN jsonb_build_object('ok', true, 'order_id', v_order.id);
 END $$;
+
+-- Both functions are SECURITY DEFINER and bypass RLS. They must only be
+-- callable by the trusted webhook path (which runs as the DB superuser and
+-- is unaffected by these grants) — never directly by anon/authenticated via
+-- PostgREST RPC, or a caller could mark their own order paid for free or
+-- spam refunds onto other tenants' orders.
+REVOKE ALL ON FUNCTION public.gw_store_fulfill_order(uuid,text,text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.gw_store_fulfill_order(uuid,text,text) TO service_role;
+
+REVOKE ALL ON FUNCTION public.gw_store_refund_order(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.gw_store_refund_order(uuid) TO service_role;
