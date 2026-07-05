@@ -20,15 +20,18 @@
 //     the singleton pointer, so mixing styles on the same recorder "just
 //     works."
 //
-// Known gap (intentionally out of scope for Task 1): `constraints` is
-// accepted but not yet applied to the getUserMedia call. Tone.UserMedia's
-// `open()` hardcodes its own constraints (echoCancellation/noiseSuppression
-// off, sampleRate = context sample rate) and doesn't accept arbitrary
-// MediaTrackConstraints. Task 2 (Part Tracks' mono/48k/music-mode needs)
-// will have to either extend Tone.UserMedia's constraints or open the
-// stream manually via `navigator.mediaDevices.getUserMedia` and wrap it in
-// a `MediaStreamAudioSourceNode` feeding into the same Gain/Recorder/
-// Analyser graph built here.
+// `constraints` (Task 2): Tone.UserMedia's `open()` hardcodes its own
+// getUserMedia constraints (echoCancellation/noiseSuppression off,
+// sampleRate = context sample rate) and doesn't accept arbitrary
+// MediaTrackConstraints, so when a caller passes `constraints` we bypass
+// Tone.UserMedia entirely — open the stream ourselves via
+// `navigator.mediaDevices.getUserMedia`, wrap it in a
+// `MediaStreamAudioSourceNode` (via `Tone.getContext().createMediaStreamSource`,
+// the same call Tone.UserMedia itself makes internally — see
+// node_modules/tone's UserMedia.open()), and `Tone.connect()` it into the
+// same Gain/Recorder/Analyser graph built below. Studio never passes
+// `constraints`, so its path is untouched (still Tone.UserMedia) — bit-
+// identical per the plan's Global Constraints.
 
 import * as Tone from 'tone';
 
@@ -52,12 +55,20 @@ export interface MicRecorderOptions {
   /** Input gain in dB. Applied to a Gain node between the mic and
    * everything downstream (recorder + meter + waveform + monitor). */
   inputGainDb?: number;
-  /** Forwarded toward the getUserMedia call for callers (Part Tracks,
-   * Task 2) that need constraints Tone.UserMedia doesn't expose today
-   * (mono channel count, explicit sample rate, disabling AGC, etc.). Not
-   * yet wired up — see module header. Accepted now so the Task 2 call
-   * site can be written against a stable signature. */
+  /** Forwarded to a manual `getUserMedia` call for callers (Part Tracks,
+   * Task 2) that need constraints Tone.UserMedia doesn't expose
+   * (mono channel count, explicit sample rate, disabling AGC, etc.) — see
+   * module header for how this bypasses Tone.UserMedia. Omit (Studio's
+   * path) to keep using Tone.UserMedia.open() exactly as before. When
+   * both `constraints` and `inputDeviceId` are given, `inputDeviceId` is
+   * merged in as an exact `deviceId` constraint. */
   constraints?: MediaTrackConstraints;
+  /** Forwarded to `Tone.Recorder`'s `mimeType` option. Lets callers
+   * (Part Tracks, Task 2) probe `MediaRecorder.isTypeSupported` first
+   * (e.g. to pick a format Safari/iOS can actually play back) instead of
+   * accepting Tone.Recorder's unmanaged browser default. Omit (Studio's
+   * path) for identical behavior to before. */
+  mimeType?: string;
 }
 
 export interface MicRecorder {
@@ -91,41 +102,77 @@ let activeHandle: MicRecorder | null = null;
  * blob is what the caller uploads (or trims via `trimHeadLatency`) on
  * stop.
  *
- * Callers that only care about getUserMedia constraints pass them under
- * the `constraints` key of the options object, e.g.
- * `openMicRecorder({ constraints: { channelCount: 1 } })` (accepted but
- * not yet applied — see module header). */
+ * Callers that need getUserMedia constraints Tone.UserMedia doesn't
+ * expose (Part Tracks, Task 2) pass them under the `constraints` key of
+ * the options object, e.g. `openMicRecorder({ constraints: { channelCount:
+ * 1 } })` — see the module header for how this bypasses Tone.UserMedia.
+ * Omitting `constraints` (Studio's path) keeps using Tone.UserMedia
+ * exactly as before. */
 export async function openMicRecorder(
   args: MicRecorderOptions = {},
 ): Promise<MicRecorder> {
   // Audio context must be resumed before opening UserMedia.
   if (Tone.getContext().state !== 'running') await Tone.start();
 
-  const mic = new Tone.UserMedia();
-  try {
-    // Tone.UserMedia accepts a device id directly. Pass null/empty
-    // for browser default.
-    await mic.open(args.inputDeviceId || undefined);
-  } catch (e) {
-    throw new Error(`Mic open failed (permission denied or no input device?): ${e instanceof Error ? e.message : String(e)}`);
+  // Two ways to get the mic into the graph: Tone.UserMedia (Studio's
+  // original, untouched path) or a manual getUserMedia when the caller
+  // supplied `constraints` Tone.UserMedia can't express (Part Tracks,
+  // Task 2 — see module header). Both end up as a native audio node
+  // connected into `inputGain`, created afterward exactly like Studio's
+  // original ordering (mic acquired, then the gain node).
+  let mic: Tone.UserMedia | null = null;
+  let manualStream: MediaStream | null = null;
+  let manualSourceNode: MediaStreamAudioSourceNode | null = null;
+
+  if (args.constraints) {
+    const constraints: MediaTrackConstraints = { ...args.constraints };
+    if (args.inputDeviceId && args.inputDeviceId !== 'default') {
+      (constraints as { deviceId?: ConstrainDOMString }).deviceId = { exact: args.inputDeviceId };
+    }
+    try {
+      manualStream = await navigator.mediaDevices.getUserMedia({ audio: constraints, video: false });
+    } catch (e) {
+      const err = new Error(`Mic open failed (permission denied or no input device?): ${e instanceof Error ? e.message : String(e)}`);
+      // Preserve the original DOMException (NotAllowedError,
+      // NotFoundError, NotReadableError, OverconstrainedError, ...) so
+      // callers that want granular, per-reason UX (Part Tracks) can
+      // still get at it instead of parsing this message string.
+      (err as Error & { cause?: unknown }).cause = e;
+      throw err;
+    }
+    // Same call Tone.UserMedia.open() makes internally to wrap a raw
+    // MediaStream for the Web Audio graph.
+    manualSourceNode = Tone.getContext().createMediaStreamSource(manualStream);
+  } else {
+    mic = new Tone.UserMedia();
+    try {
+      // Tone.UserMedia accepts a device id directly. Pass null/empty
+      // for browser default.
+      await mic.open(args.inputDeviceId || undefined);
+    } catch (e) {
+      mic.dispose();
+      throw new Error(`Mic open failed (permission denied or no input device?): ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   // Shared input gain — sits between the mic and everything downstream
   // so a single slider boosts/cuts the recorded signal AND the meter.
   const inputDb = args.inputGainDb ?? 0;
   const inputGain = new Tone.Gain(Math.pow(10, inputDb / 20));
+  if (mic) mic.connect(inputGain);
+  else Tone.connect(manualSourceNode!, inputGain);
   const monitor = new Tone.Gain(args.monitorGain ?? 0); // default off to avoid feedback
-  // Let MediaRecorder pick the best supported type. Safari + iOS don't
-  // support audio/webm so forcing it makes recordings fail silently or
-  // produce unplayable files. The caller reads blob.type later to know
-  // the actual format.
-  const recorder = new Tone.Recorder();
+  // Let MediaRecorder pick the best supported type by default. Safari +
+  // iOS don't support audio/webm so forcing it makes recordings fail
+  // silently or produce unplayable files. Callers that already probed a
+  // supported type (Part Tracks) can pass it via `mimeType`; the caller
+  // reads blob.type after stop() either way to know the actual format.
+  const recorder = args.mimeType ? new Tone.Recorder({ mimeType: args.mimeType }) : new Tone.Recorder();
 
   // Time-domain analyser for waveform rendering.
   const waveAnalyser = new Tone.Analyser('waveform', 512);
   const meter = new Tone.Meter({ smoothing: 0.5 });
 
-  mic.connect(inputGain);
   inputGain.connect(monitor);
   if (args.monitorTo) monitor.connect(args.monitorTo);
   inputGain.connect(recorder);
@@ -158,8 +205,15 @@ export async function openMicRecorder(
     getPeakDb: () => meter.getValue() as number,
     dispose: () => {
       if (activeHandle === handle) activeHandle = null;
-      try { mic.close(); } catch { /* ignore */ }
-      mic.dispose(); inputGain.dispose(); monitor.dispose(); recorder.dispose();
+      if (mic) {
+        try { mic.close(); } catch { /* ignore */ }
+        mic.dispose();
+      }
+      if (manualStream) {
+        try { manualStream.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ }
+      }
+      try { manualSourceNode?.disconnect(); } catch { /* ignore */ }
+      inputGain.dispose(); monitor.dispose(); recorder.dispose();
       waveAnalyser.dispose(); meter.dispose();
     },
     close: () => handle.dispose(),
