@@ -463,7 +463,18 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             guard let self else { call.reject("plugin gone"); return }
             // Fresh recorder each prepare; tear down any prior one so a
             // prepare after an abandoned take can't leave a live tap.
-            self.externalRecorder?.teardown()
+            //
+            // N2: a prepare arriving while a PRIOR start is still in flight
+            // (capturing, or arming through its count-in) must SETTLE that
+            // call's promise, not silently drop it. teardown() drains the
+            // pending start WITHOUT firing onError, which would hang the
+            // earlier externalRecordStart forever. stop() settles it first
+            // ("capture stopped before it started"), then we replace.
+            if let existing = self.externalRecorder, existing.isCapturing || existing.isArming {
+                _ = existing.stop()
+            } else {
+                self.externalRecorder?.teardown()
+            }
             let rec = ExternalRecorder()
             rec.onPeak = { [weak self] db in
                 self?.notifyListeners("externalRecordPeak", data: ["db": Double(db)])
@@ -573,8 +584,20 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func externalRecordStop(_ call: CAPPluginCall) {
         DispatchQueue.main.async { [weak self] in
             guard let self else { call.reject("plugin gone"); return }
-            guard let rec = self.externalRecorder, rec.isCapturing else {
+            guard let rec = self.externalRecorder, rec.isCapturing || rec.isArming else {
                 call.reject("not recording")
+                return
+            }
+            // N1: a stop during the count-in (isArming, capture not yet
+            // rolling) must CANCEL cleanly. rec.stop() settles the still-
+            // pending externalRecordStart ("capture stopped before it
+            // started") and returns nil. Reject with a DISTINCT message so JS
+            // treats this as a user cancel (no error toast) rather than a
+            // failed take — without this the guard rejected outright and the
+            // count-in's pending start rolled on into a live recording.
+            if !rec.isCapturing {
+                _ = rec.stop()
+                call.reject("cancelled during count-in")
                 return
             }
             guard let result = rec.stop() else {
