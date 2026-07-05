@@ -269,9 +269,14 @@ export const DEFAULT_INPUT_LATENCY_MS = 700;
 /** Configured input latency in ms, read from `localStorage`
  * (`studio.inputLatencyMs`). Defaults to 700ms — the same default Studio
  * has always used. */
-export function getConfiguredInputLatencyMs(): number {
+export function getConfiguredInputLatencyMs(
+  storageKey: string = INPUT_LATENCY_STORAGE_KEY,
+): number {
   if (typeof localStorage === 'undefined') return DEFAULT_INPUT_LATENCY_MS;
-  const raw = localStorage.getItem(INPUT_LATENCY_STORAGE_KEY);
+  // Consumer-specific keys (e.g. Part Tracks) fall back to the studio
+  // key's value, then the default — so an ear-calibrated Studio setup
+  // seeds other surfaces until they're tuned independently.
+  const raw = localStorage.getItem(storageKey) ?? localStorage.getItem(INPUT_LATENCY_STORAGE_KEY);
   return raw !== null ? Number(raw) : DEFAULT_INPUT_LATENCY_MS;
 }
 

@@ -37,4 +37,5 @@ Shared helper `getAudioRoute()` (native: AVAudioSession currentRoute via new plu
 ### Task 6: Regression + on-device gate
 - Simulator: Studio smoke (metronome self-test harness), Part Tracks upload-file record path end-to-end with fake mic (Playwright recipe from the E2E memory works on web preview).
 - ON-DEVICE checklist (Kevin, TestFlight build): record over (a) uploaded mp3, (b) Apple Music, (c) YouTube — each with AirPods and with speaker; verify backing keeps playing, take aligns (clap test), Studio still records normally afterward.
+- WEB clap test too (desktop Chrome + iPhone Safari, uploaded-mp3 backing): Task 2's head-trim borrows Studio's 700ms default via a Part-Tracks-specific key ('partTracks.inputLatencyMs') — the clap test calibrates whether that constant fits this pipeline; adjust the default in audioEngine.ts if takes land early/late.
 - Final whole-branch review (opus) before PR.

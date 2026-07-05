@@ -662,7 +662,11 @@ export async function stopRecording(): Promise<Blob | null> {
   // head of every take before the caller uploads it. Falls back to the
   // raw blob untouched when decode fails or the take is shorter than the
   // trim (trimHeadLatency's own contract).
-  const trimMs = getConfiguredInputLatencyMs() + getOutputLatencyMs();
+  // Part Tracks has its own tunable key ('partTracks.inputLatencyMs');
+  // falls back to Studio's calibration, then the shared default. The
+  // right value for THIS pipeline is settled by the on-device clap test
+  // (plan Task 6) — the trim technique is proven, the constant is not.
+  const trimMs = getConfiguredInputLatencyMs('partTracks.inputLatencyMs') + getOutputLatencyMs();
   const finalBlob = await trimHeadLatency(rawBlob, trimMs);
   recordingMimeType = finalBlob.type || rawBlob.type || recordingMimeType;
   return finalBlob;
