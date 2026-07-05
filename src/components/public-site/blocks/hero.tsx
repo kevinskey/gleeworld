@@ -167,36 +167,25 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section
       ref={sectionRef}
       id="top"
-      className={`relative overflow-hidden text-white max-w-6xl mx-auto px-4 sm:px-6 ${hasImage ? 'min-h-[420px] sm:min-h-0' : 'min-h-[40vh]'}`}
+      className={`relative overflow-hidden text-white max-w-6xl mx-auto px-4 sm:px-6 ${hasImage ? '' : 'min-h-[40vh]'}`}
       style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the
           section's height comes from the image, never from the text overlay,
           so toggling text on/off can't crop the graphic. */}
       {hasImage && (
-        <>
-          {/* Phones: many tenants upload a wide banner with text/crest
-              baked into the graphic. object-cover center-crops it and
-              slices off that baked-in content, so below sm we show the
-              WHOLE image with object-contain and fill the letterbox with
-              a blurred, scaled copy of the same image — no crop, no solid
-              bars, and it works for photo heroes too. From sm up the
-              original natural-aspect flow is kept unchanged. */}
-          <img
-            src={bgImage}
-            alt=""
-            aria-hidden
-            className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl sm:hidden block"
-            loading="eager"
-          />
-          <img
-            src={bgImage}
-            alt=""
-            className="absolute inset-0 w-full h-full object-contain sm:static sm:inset-auto sm:h-auto sm:w-full sm:object-cover block"
-            loading="eager"
-            onError={() => setImgFailed(true)}
-          />
-        </>
+        // Natural aspect on every size — the section's height comes from
+        // the image, so a wide banner shows in full (no crop) and stays
+        // short on phones. Tenants that bake headline/crest into the
+        // graphic keep all of it visible; DOM text overlays still position
+        // over the image because it defines the section height.
+        <img
+          src={bgImage}
+          alt=""
+          className="block w-full h-auto"
+          loading="eager"
+          onError={() => setImgFailed(true)}
+        />
       )}
       {hasImage && showUnderlay && (
         <div
