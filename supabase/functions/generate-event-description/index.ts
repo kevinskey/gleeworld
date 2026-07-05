@@ -39,7 +39,7 @@ The description should be:
 - Engaging and professional
 - 2-3 sentences long
 - Include relevant details about what attendees can expect
-- Be appropriate for a music/performance performing-arts organization
+- Be appropriate for a performing-arts organization
 - Sound inviting and exciting
 
 Just return the description text, nothing else.`;

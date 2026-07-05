@@ -61,6 +61,8 @@ export function CalendarSelectWithCreate({
       setCreating(true);
       return;
     }
+    // Picking a real calendar closes the inline create row if it was open.
+    if (creating) cancelCreate();
     const selected = allCalendars.find((c) => c.id === id);
     onValueChange(id, selected);
   }

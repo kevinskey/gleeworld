@@ -8,7 +8,7 @@
 // function returning an error, invoke() throwing, or a malformed response —
 // we simply show no dropdown and no toast. The field is always a fully
 // usable plain-text input; autocomplete is a progressive enhancement only.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,10 @@ export function AddressAutocomplete({
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const blurCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (blurCloseRef.current) clearTimeout(blurCloseRef.current);
+  }, []);
 
   async function fetchSuggestions(query: string) {
     const trimmed = query.trim();
