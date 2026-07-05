@@ -466,6 +466,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
     setVariantRows(rows);
   };
   const [saving, setSaving] = useState(false);
+  // Images picked before the product exists (create flow) are staged here
+  // and uploaded right after the INSERT returns an id. For an existing
+  // product they upload immediately in handleFilePick instead.
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
   const {
     toast
   } = useToast();
@@ -473,6 +477,46 @@ const ProductForm: React.FC<ProductFormProps> = ({
     uploadProductImage,
     deleteProductImage
   } = useProductImageUpload();
+
+  // Upload one file and record it in BOTH image stores: gw_product_images
+  // (admin list/grid) and gw_products.images text[] (what the public
+  // storefront merch block actually renders). Returns the public URL.
+  const persistImage = async (file: File, productId: string): Promise<string | null> => {
+    const imageUrl = await uploadProductImage(file, productId);
+    if (!imageUrl) return null;
+    await supabase.from('gw_product_images').insert({
+      product_id: productId,
+      image_url: imageUrl,
+      alt_text: file.name,
+      is_primary: false,
+      sort_order: 0
+    });
+    return imageUrl;
+  };
+
+  const syncImagesArray = async (productId: string, urls: string[]) => {
+    if (urls.length === 0) return;
+    const { data: row } = await supabase.from('gw_products').select('images').eq('id', productId).single();
+    const merged = [...(row?.images ?? []), ...urls];
+    await supabase.from('gw_products').update({ images: merged }).eq('id', productId);
+  };
+
+  const handleFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ''; // allow re-picking the same file
+    if (files.length === 0) return;
+    if (!product) {
+      setPendingImages(prev => [...prev, ...files]);
+      return;
+    }
+    const urls: string[] = [];
+    for (const file of files) {
+      const url = await persistImage(file, product.id);
+      if (url) urls.push(url);
+    }
+    await syncImagesArray(product.id, urls);
+    if (urls.length > 0) onSave();
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -501,6 +545,24 @@ const ProductForm: React.FC<ProductFormProps> = ({
         const { data: newProduct, error } = await supabase.from('gw_products').insert(productData).select('id').single();
         if (error) throw error;
         productId = newProduct.id;
+      }
+
+      // Upload any images staged before the product existed.
+      if (productId && pendingImages.length > 0) {
+        const urls: string[] = [];
+        for (const file of pendingImages) {
+          const url = await persistImage(file, productId);
+          if (url) urls.push(url);
+        }
+        await syncImagesArray(productId, urls);
+        if (urls.length < pendingImages.length) {
+          toast({
+            title: "Some images failed",
+            description: `${urls.length} of ${pendingImages.length} images uploaded. You can retry the rest by editing the product.`,
+            variant: "destructive"
+          });
+        }
+        setPendingImages([]);
       }
 
       // Sync variant matrix — gw_product_variants stores size on option1
@@ -594,8 +656,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="category">Category</Label>
-              <Select value={formData.category_id} onValueChange={value => setFormData({
+              <Label htmlFor="category">Category (optional)</Label>
+              {categories.length === 0 ? <p className="text-sm text-muted-foreground border rounded-md px-3 py-2">
+                  No categories yet — add them in the <strong>Categories</strong> tab of the store admin. Products save fine without one.
+                </p> : <Select value={formData.category_id} onValueChange={value => setFormData({
               ...formData,
               category_id: value
             })}>
@@ -607,7 +671,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       {category.name}
                     </SelectItem>)}
                 </SelectContent>
-              </Select>
+              </Select>}
             </div>
             <div>
               <Label htmlFor="tags">Tags (comma separated)</Label>
@@ -640,14 +704,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="price">Regular Price ($) *</Label>
-              <Input id="price" type="number" step="0.01" value={formData.price} onChange={e => setFormData({
+              <Input id="price" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={formData.price || ''} onChange={e => setFormData({
               ...formData,
               price: parseFloat(e.target.value) || 0
             })} required />
             </div>
             <div>
               <Label htmlFor="sale_price">Sale Price ($)</Label>
-              <Input id="sale_price" type="number" step="0.01" value={formData.sale_price} onChange={e => setFormData({
+              <Input id="sale_price" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={formData.sale_price || ''} onChange={e => setFormData({
               ...formData,
               sale_price: parseFloat(e.target.value) || 0
             })} />
@@ -664,7 +728,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
           {formData.manage_stock && <div>
               <Label htmlFor="stock_quantity">Stock Quantity (base — variants override)</Label>
-              <Input id="stock_quantity" type="number" value={formData.stock_quantity} onChange={e => setFormData({
+              <Input id="stock_quantity" type="number" inputMode="numeric" placeholder="0" value={formData.stock_quantity || ''} onChange={e => setFormData({
             ...formData,
             stock_quantity: parseInt(e.target.value) || 0
           })} />
@@ -704,19 +768,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <Label htmlFor="weight_oz" className="text-xs">Weight (oz)</Label>
-                <Input id="weight_oz" type="number" step="0.1" value={formData.weight_oz} onChange={e => setFormData({ ...formData, weight_oz: parseFloat(e.target.value) || 0 })} />
+                <Input id="weight_oz" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.weight_oz || ''} onChange={e => setFormData({ ...formData, weight_oz: parseFloat(e.target.value) || 0 })} />
               </div>
               <div>
                 <Label htmlFor="length_in" className="text-xs">Length (in)</Label>
-                <Input id="length_in" type="number" step="0.1" value={formData.length_in} onChange={e => setFormData({ ...formData, length_in: parseFloat(e.target.value) || 0 })} />
+                <Input id="length_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.length_in || ''} onChange={e => setFormData({ ...formData, length_in: parseFloat(e.target.value) || 0 })} />
               </div>
               <div>
                 <Label htmlFor="width_in" className="text-xs">Width (in)</Label>
-                <Input id="width_in" type="number" step="0.1" value={formData.width_in} onChange={e => setFormData({ ...formData, width_in: parseFloat(e.target.value) || 0 })} />
+                <Input id="width_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.width_in || ''} onChange={e => setFormData({ ...formData, width_in: parseFloat(e.target.value) || 0 })} />
               </div>
               <div>
                 <Label htmlFor="height_in" className="text-xs">Height (in)</Label>
-                <Input id="height_in" type="number" step="0.1" value={formData.height_in} onChange={e => setFormData({ ...formData, height_in: parseFloat(e.target.value) || 0 })} />
+                <Input id="height_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.height_in || ''} onChange={e => setFormData({ ...formData, height_in: parseFloat(e.target.value) || 0 })} />
               </div>
             </div>
           </div>
@@ -776,12 +840,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
                         }} />
                       </td>
                       <td className="p-1">
-                        <Input className="h-8" type="number" step="0.01" placeholder={String(formData.price || 0)} value={row.price || ''} onChange={e => {
+                        <Input className="h-8" type="number" inputMode="decimal" step="0.01" placeholder={formData.price ? `${formData.price} (base)` : 'base price'} value={row.price || ''} onChange={e => {
                           const next = [...variantRows]; next[idx] = { ...row, price: parseFloat(e.target.value) || 0 }; setVariantRows(next);
                         }} />
                       </td>
                       <td className="p-1">
-                        <Input className="h-8" type="number" min="0" value={row.stock_quantity} onChange={e => {
+                        <Input className="h-8" type="number" inputMode="numeric" min="0" placeholder="0" value={row.stock_quantity || ''} onChange={e => {
                           const next = [...variantRows]; next[idx] = { ...row, stock_quantity: parseInt(e.target.value) || 0 }; setVariantRows(next);
                         }} />
                       </td>
@@ -815,6 +879,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     <Button variant="destructive" size="sm" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={async () => {
                 if (await deleteProductImage(image.image_url)) {
                   await supabase.from('gw_product_images').delete().eq('id', image.id);
+                  // Keep the storefront's images[] column in sync too.
+                  const { data: row } = await supabase.from('gw_products').select('images').eq('id', product.id).single();
+                  const remaining = (row?.images ?? []).filter((u: string) => u !== image.image_url);
+                  await supabase.from('gw_products').update({ images: remaining }).eq('id', product.id);
                   onSave(); // Refresh
                 }
               }}>
@@ -824,18 +892,26 @@ const ProductForm: React.FC<ProductFormProps> = ({
               </div>
             </div>}
 
+          {pendingImages.length > 0 && <div>
+              <Label>Ready to upload (saved with the product)</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                {pendingImages.map((file, idx) => <div key={`${file.name}-${idx}`} className="relative group">
+                    <img src={URL.createObjectURL(file)} alt={file.name} className="w-full aspect-square object-cover rounded border" />
+                    <Button type="button" variant="destructive" size="sm" className="absolute top-1 right-1" onClick={() => setPendingImages(pendingImages.filter((_, i) => i !== idx))}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>)}
+              </div>
+            </div>}
+
           <div>
             <Label>Upload New Image</Label>
             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-              <input type="file" accept="image/*" onChange={e => {
-              if (product) {
-                // Handle upload for existing product
-              }
-            }} className="hidden" id="image-upload" />
+              <input type="file" accept="image/*" multiple onChange={handleFilePick} className="hidden" id="image-upload" />
               <label htmlFor="image-upload" className="cursor-pointer">
                 <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Click to upload or drag and drop
+                  {product ? 'Tap to upload — images save immediately' : 'Tap to add images — they upload when you create the product'}
                 </p>
               </label>
             </div>
