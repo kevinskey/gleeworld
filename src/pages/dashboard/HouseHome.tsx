@@ -185,7 +185,10 @@ export default function HouseHome() {
               aria-label={`${glyphs.filter((g) => g === 'note').length} of 7 days practiced this week`}>
               {glyphs.map((g, i) => (
                 <span key={i} aria-hidden="true" className={g === 'note' ? '' : 'text-muted-foreground/40'}>
-                  {g === 'note' ? '♩' : g === 'rest' ? '𝄽' : '·'}
+                  {/* '○' rather than the quarter rest U+1D13D — the Musical
+                      Symbols block has no font coverage on Android and some
+                      desktop stacks, so it renders as tofu. */}
+                  {g === 'note' ? '♩' : g === 'rest' ? '○' : '·'}
                 </span>
               ))}
             </div>

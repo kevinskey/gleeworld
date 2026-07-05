@@ -123,16 +123,16 @@ export const ProductManagement = () => {
 
   return <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <div className="bg-[#150d26] text-white">
+      <div className="bg-card border-b border-border">
         <div className="container mx-auto px-6 py-6 max-w-7xl">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/10 rounded-lg">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
                 <Store className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-primary-foreground">Merch Store Management</h1>
-                <p className="text-sm text-primary-foreground pt-[15px]">Manage products, orders, and customers</p>
+                <h1 className="text-2xl font-bold text-foreground">Merch Store Management</h1>
+                <p className="text-sm text-muted-foreground pt-[15px]">Manage products, orders, and customers</p>
               </div>
             </div>
             <Button asChild variant="secondary" size="sm" className="shrink-0">
