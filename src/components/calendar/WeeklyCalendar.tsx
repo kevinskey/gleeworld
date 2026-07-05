@@ -46,6 +46,8 @@ const getEventTypeColor = (type: string | null): string => {
       return 'bg-sky-500/90 text-white border-sky-600';
     case 'assignment':
       return 'bg-amber-500/90 text-white border-amber-600';
+    case 'service':
+      return 'bg-violet-500/90 text-white border-violet-600';
     default:
       return 'bg-slate-500/90 text-white border-slate-600';
   }

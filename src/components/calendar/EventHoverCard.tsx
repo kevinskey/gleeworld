@@ -27,6 +27,8 @@ export const EventHoverCard = ({ event, children, canEdit }: EventHoverCardProps
         return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
       case 'audition':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'service':
+        return 'bg-event-service text-event-service-fg';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
     }

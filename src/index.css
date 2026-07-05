@@ -307,6 +307,8 @@
     --event-rehearsal-fg: 142 76% 25%; /* Dark green text */
     --event-sectional: 267 57% 92%; /* Light purple background */
     --event-sectional-fg: 267 57% 25%; /* Dark purple text */
+    --event-service: 267 60% 92%; /* Light violet background — Church Service / Mass */
+    --event-service-fg: 267 60% 30%; /* Dark violet text */
     --event-meeting: 34 100% 92%; /* Light orange background */
     --event-meeting-fg: 34 100% 25%; /* Dark orange text */
     --event-member-meeting: 142 76% 92%; /* Light green background */

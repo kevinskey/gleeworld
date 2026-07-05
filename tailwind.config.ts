@@ -42,6 +42,41 @@ const config: Config = {
         'status-warning-bg': 'hsl(var(--status-warning-bg))',
         'status-warning-fg': 'hsl(var(--status-warning-fg))',
         'status-warning-border': 'hsl(var(--status-warning-border))',
+        // Event-type chip tokens. These CSS custom properties already existed
+        // in src/index.css but were never registered here, so every
+        // `bg-event-*` / `text-event-*-fg` class referencing them across the
+        // app (colorUtils.ts, EventDetailDialog, EventsList, etc.) was a
+        // no-op — Tailwind never generated the utility. Registering them
+        // makes those existing classes render for the first time, plus adds
+        // the new 'service' (Church Service / Mass) pair.
+        event: {
+          performance: 'hsl(var(--event-performance))',
+          'performance-fg': 'hsl(var(--event-performance-fg))',
+          rehearsal: 'hsl(var(--event-rehearsal))',
+          'rehearsal-fg': 'hsl(var(--event-rehearsal-fg))',
+          sectional: 'hsl(var(--event-sectional))',
+          'sectional-fg': 'hsl(var(--event-sectional-fg))',
+          meeting: 'hsl(var(--event-meeting))',
+          'meeting-fg': 'hsl(var(--event-meeting-fg))',
+          'member-meeting': 'hsl(var(--event-member-meeting))',
+          'member-meeting-fg': 'hsl(var(--event-member-meeting-fg))',
+          'exec-meeting': 'hsl(var(--event-exec-meeting))',
+          'exec-meeting-fg': 'hsl(var(--event-exec-meeting-fg))',
+          'voice-lesson': 'hsl(var(--event-voice-lesson))',
+          'voice-lesson-fg': 'hsl(var(--event-voice-lesson-fg))',
+          tutorial: 'hsl(var(--event-tutorial))',
+          'tutorial-fg': 'hsl(var(--event-tutorial-fg))',
+          social: 'hsl(var(--event-social))',
+          'social-fg': 'hsl(var(--event-social-fg))',
+          workshop: 'hsl(var(--event-workshop))',
+          'workshop-fg': 'hsl(var(--event-workshop-fg))',
+          audition: 'hsl(var(--event-audition))',
+          'audition-fg': 'hsl(var(--event-audition-fg))',
+          general: 'hsl(var(--event-general))',
+          'general-fg': 'hsl(var(--event-general-fg))',
+          service: 'hsl(var(--event-service))',
+          'service-fg': 'hsl(var(--event-service-fg))',
+        },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
           foreground: 'hsl(var(--muted-foreground))',
