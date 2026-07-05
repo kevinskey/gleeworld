@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import {
   liturgicalDayFor, usccbReadingsUrl, type SundayCycle, type LiturgicalSeason,
 } from '@/lib/liturgy/calendar';
+import { searchAppleMusic, type AppleMusicSongHit } from '@/lib/musicKit';
 
 interface MassRow {
   id: string;
@@ -897,35 +898,58 @@ function cleanHymnQuery(raw: string): string {
     .trim() || raw.trim();
 }
 
-// ── In-app YouTube search modal ──────────────────────────────────────
+// ── In-app song search modal (YouTube + Apple Music) ─────────────────
 
 interface YtHit {
   videoId: string; title: string; channelTitle: string;
   publishedAt: string; description: string; thumbnail: string; url: string;
 }
 
+type SearchSource = 'youtube' | 'appleMusic';
+
+// Apple Music songs open in the Music app / music.apple.com; full-track
+// playback needs the listener's own subscription, so a picked Apple
+// Music track is a link (like YouTube) — it just plays for subscribers,
+// not everyone. YouTube stays the default for universal playback.
+function appleMusicSongUrl(hit: AppleMusicSongHit): string {
+  return `https://music.apple.com/${hit.storefront}/song/${hit.id}`;
+}
+
 function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
   open: boolean; onClose: () => void; initialQuery: string;
   onPick: (url: string, title: string) => void;
 }) {
+  const [source, setSource] = useState<SearchSource>('youtube');
   const [q, setQ] = useState(initialQuery);
   const [hits, setHits] = useState<YtHit[]>([]);
+  const [appleHits, setAppleHits] = useState<AppleMusicSongHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { if (open) setQ(initialQuery); }, [open, initialQuery]);
+  useEffect(() => { if (open) { setQ(initialQuery); setSource('youtube'); } }, [open, initialQuery]);
 
-  // Auto-search the title when modal opens.
+  // Auto-search the title when the modal opens or the source switches.
   useEffect(() => {
     if (!open) return;
     if (!q.trim()) return;
     runSearch(q.trim());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, source]);
 
   const runSearch = async (rawQuery: string) => {
     const query = cleanHymnQuery(rawQuery);
-    setLoading(true); setError(null); setHits([]);
+    setLoading(true); setError(null); setHits([]); setAppleHits([]);
+    if (source === 'appleMusic') {
+      try {
+        const { songs } = await searchAppleMusic(query);
+        setAppleHits(songs);
+      } catch (e: any) {
+        setError(e?.message || 'Apple Music search failed');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
     const { data, error: fnErr } = await supabase.functions.invoke('youtube-search', {
       body: { q: query, maxResults: 12 },
     });
@@ -941,9 +965,29 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-extrabold tracking-tight text-xl">
-            Search YouTube
+            Find a recording
           </DialogTitle>
         </DialogHeader>
+
+        {/* Source toggle. YouTube is the default — it plays for everyone;
+            Apple Music needs the listener's own subscription for full
+            playback. */}
+        <div className="flex gap-1 pt-2">
+          {([['youtube', 'YouTube'], ['appleMusic', 'Apple Music']] as const).map(([val, label]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setSource(val)}
+              className={`px-3 h-8 text-sm font-semibold border transition-colors ${
+                source === val
+                  ? 'border-foreground bg-foreground text-background'
+                  : 'border-border text-muted-foreground hover:border-foreground/40'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         <form
           onSubmit={(e) => { e.preventDefault(); runSearch(q.trim()); }}
@@ -968,7 +1012,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
           </div>
         )}
 
-        {hits.length > 0 && (
+        {source === 'youtube' && hits.length > 0 && (
           <ul className="space-y-1.5 pt-3">
             {hits.map((h) => (
               <li key={h.videoId}>
@@ -996,7 +1040,37 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
           </ul>
         )}
 
-        {!loading && !error && hits.length === 0 && q.trim() && (
+        {source === 'appleMusic' && appleHits.length > 0 && (
+          <>
+            <p className="text-[11px] text-muted-foreground pt-3">
+              Full playback requires the listener's Apple Music subscription.
+            </p>
+            <ul className="space-y-1.5 pt-1.5">
+              {appleHits.map((h) => (
+                <li key={h.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPick(appleMusicSongUrl(h), `${h.title}${h.artist ? ` — ${h.artist}` : ''}`)}
+                    className="w-full flex gap-3 p-2 border border-border bg-card hover:border-foreground/40 hover:bg-muted/30 text-left transition-colors"
+                  >
+                    {h.artworkUrl ? (
+                      <img src={h.artworkUrl} alt="" width={60} height={60} className="shrink-0 object-cover bg-muted" loading="lazy" />
+                    ) : (
+                      <div className="shrink-0 w-[60px] h-[60px] bg-muted" />
+                    )}
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="text-sm font-semibold leading-tight line-clamp-2">{h.title}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-1">{h.artist}</div>
+                      {h.album && <div className="text-[11px] text-muted-foreground line-clamp-1">{h.album}</div>}
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {!loading && !error && (source === 'youtube' ? hits.length === 0 : appleHits.length === 0) && q.trim() && (
           <p className="text-sm text-muted-foreground text-center py-6">
             No results. Try a different query.
           </p>
