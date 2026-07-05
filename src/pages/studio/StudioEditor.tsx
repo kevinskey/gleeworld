@@ -32,6 +32,7 @@ import {
 import { MidiClockSender } from '@/lib/studio/midiClock';
 import type { EngineState } from '@/lib/studio/engine/engine';
 import { openMicRecorder, type MicRecorder } from '@/lib/studio/engine/recorder';
+import { getConfiguredInputLatencyMs, getOutputLatencyMs, msToSamples } from '@/lib/audio/sharedRecorder';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
 import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
@@ -166,7 +167,13 @@ function computePeaks(buffer: AudioBuffer, target = 300): number[] {
  * Reads `studio.inputLatencyMs` (default 700) + the AudioContext's
  * output latency and cuts that many ms off the head of the recording.
  * Returns the trimmed AudioBuffer plus a freshly encoded WAV blob.
- * If the recording is shorter than the trim, the original is kept. */
+ * If the recording is shorter than the trim, the original is kept.
+ *
+ * The latency configuration + ms→samples math are shared with Part
+ * Tracks via src/lib/audio/sharedRecorder.ts (see
+ * docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md, Task
+ * 1); the decode/copy/re-encode steps below are unchanged from before
+ * that extraction. */
 async function finalizeRecordingBlob(
   rawBlob: Blob,
 ): Promise<{ blob: Blob; buf: AudioBuffer; ext: 'webm' | 'mp4' | 'm4a' | 'mp3' | 'wav' | 'ogg' }> {
@@ -174,18 +181,15 @@ async function finalizeRecordingBlob(
   const rawBuf = await ctx.decodeAudioData(await rawBlob.arrayBuffer());
   await ctx.close();
 
-  const rawLatency = localStorage.getItem('studio.inputLatencyMs');
-  const inputLatencyMs = rawLatency !== null ? Number(rawLatency) : 700;
-  const outputLatencySec = (typeof AudioContext !== 'undefined')
-    ? (new AudioContext()).outputLatency || 0
-    : 0;
-  const compensationSec = Math.max(0, (inputLatencyMs / 1000) + outputLatencySec);
+  const inputLatencyMs = getConfiguredInputLatencyMs();
+  const outputLatencyMs = getOutputLatencyMs();
+  const compensationMs = Math.max(0, inputLatencyMs + outputLatencyMs);
 
-  if (compensationSec === 0) {
+  if (compensationMs === 0) {
     return { blob: rawBlob, buf: rawBuf, ext: extFromMime(rawBlob.type) };
   }
 
-  const skipSamples = Math.min(rawBuf.length, Math.floor(compensationSec * rawBuf.sampleRate));
+  const skipSamples = Math.min(rawBuf.length, msToSamples(compensationMs, rawBuf.sampleRate));
   const newLen = rawBuf.length - skipSamples;
   if (newLen <= 0) {
     // Recording shorter than the latency — nothing to trim. Use raw.
