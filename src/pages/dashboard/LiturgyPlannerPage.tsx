@@ -11,7 +11,7 @@
 // tab — frictionless way to find a video. If a URL is pasted, the
 // button becomes a direct link.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -278,18 +278,21 @@ function ReadingRow({
 
 // ── Editor page ──────────────────────────────────────────────────────
 
-const SONG_SLOTS = [
-  { key: 'setting',      label: 'Mass Setting Used' },
-  { key: 'prelude',      label: 'Call to Worship / Prelude' },
-  { key: 'opening',      label: 'Opening Hymn / Song' },
-  { key: 'psalm',        label: 'Responsorial Psalm (full)' },
-  { key: 'preparation',  label: 'Preparation Song' },
-  { key: 'communion_1',  label: 'Communion Song 1' },
-  { key: 'communion_2',  label: 'Communion Song 2' },
-  { key: 'praise',       label: 'Song of Praise' },
-  { key: 'closing',      label: 'Closing Hymn / Song' },
-] as const;
-type SlotKey = (typeof SONG_SLOTS)[number]['key'];
+// Numbered step in the Order of Mass listing — the sequence a Mass
+// actually follows, with readings inline at their liturgical position
+// (not in a separate section below the music).
+function OrderItem({ n, children }: { n: number; children: ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="mt-1.5 w-6 h-6 shrink-0 rounded-full bg-primary/10 text-primary text-xs font-bold inline-flex items-center justify-center">
+        {n}
+      </span>
+      <div className="flex-1 min-w-0 space-y-2">{children}</div>
+    </div>
+  );
+}
+
+// (Song slots are laid out inline in the Order of Mass card below.)
 
 function LiturgyEditor({ massId }: { massId: string }) {
   const navigate = useNavigate();
@@ -469,67 +472,153 @@ function LiturgyEditor({ massId }: { massId: string }) {
         </CardContent>
       </Card>
 
-      {/* Song slots */}
+      {/* Order of Mass — music and readings interleaved in the order the
+          liturgy actually follows. "Pull from Universalis" fills the
+          reading rows below in place. */}
       <Card>
-        <CardContent className="p-4 space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Music</h2>
-          {SONG_SLOTS.map((slot) => (
-            <SongSlot
-              key={slot.key}
-              label={slot.label}
-              title={(row as any)[`${slot.key}_title`] ?? ''}
-              youtube={(row as any)[`${slot.key}_youtube`] ?? ''}
-              onTitle={(v) => update({ [`${slot.key}_title`]: v || null } as Partial<MassRow>)}
-              onYouTube={(v) => update({ [`${slot.key}_youtube`]: v || null } as Partial<MassRow>)}
-            />
-          ))}
-          <Field label="Responsorial Psalm — full text (verses)">
-            <Textarea rows={3} value={row.psalm_full ?? ''}
-              onChange={(e) => update({ psalm_full: e.target.value || null })}
-              placeholder="Paste or type the full Psalm refrain + verses…" />
-          </Field>
-        </CardContent>
-      </Card>
+        <CardContent className="p-4 space-y-5">
+          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Order of Mass</h2>
 
-      {/* Readings (free text for v1) */}
-      <Card>
-        <CardContent className="p-4 space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Readings</h2>
-          <ReadingRow
-            label="First Reading"
-            value={row.first_reading}
-            onChange={(v) => update({ first_reading: v })}
-            placeholder="e.g. Isaiah 55:1-3"
-            block={pickBlock(readingBlocks, ['first reading', 'reading 1', '^reading$'])}
+          <SongSlot
+            label="Mass Setting Used"
+            title={row.setting_title ?? ''}
+            youtube={row.setting_youtube ?? ''}
+            onTitle={(v) => update({ setting_title: v || null })}
+            onYouTube={(v) => update({ setting_youtube: v || null })}
           />
-          <ReadingRow
-            label="Responsorial Psalm (citation)"
-            value={row.responsorial_psalm}
-            onChange={(v) => update({ responsorial_psalm: v })}
-            placeholder="e.g. Psalm 145"
-            block={pickBlock(readingBlocks, ['responsorial psalm'])}
-          />
-          <ReadingRow
-            label="Second Reading"
-            value={row.second_reading}
-            onChange={(v) => update({ second_reading: v })}
-            placeholder="e.g. Romans 8:35, 37-39"
-            block={pickBlock(readingBlocks, ['second reading', 'reading 2'])}
-          />
-          <ReadingRow
-            label="Gospel Acclamation"
-            value={row.gospel_acclamation}
-            onChange={(v) => update({ gospel_acclamation: v })}
-            placeholder="Alleluia verse"
-            block={pickBlock(readingBlocks, ['gospel acclamation', 'verse before the gospel', 'alleluia'])}
-          />
-          <ReadingRow
-            label="Gospel"
-            value={row.gospel}
-            onChange={(v) => update({ gospel: v })}
-            placeholder="e.g. Matthew 14:13-21"
-            block={pickBlock(readingBlocks, ['^gospel$'])}
-          />
+          <div className="border-t border-border" />
+
+          <OrderItem n={1}>
+            <SongSlot
+              label="Call to Worship / Prelude"
+              title={row.prelude_title ?? ''}
+              youtube={row.prelude_youtube ?? ''}
+              onTitle={(v) => update({ prelude_title: v || null })}
+              onYouTube={(v) => update({ prelude_youtube: v || null })}
+            />
+          </OrderItem>
+
+          <OrderItem n={2}>
+            <SongSlot
+              label="Opening Hymn / Song"
+              title={row.opening_title ?? ''}
+              youtube={row.opening_youtube ?? ''}
+              onTitle={(v) => update({ opening_title: v || null })}
+              onYouTube={(v) => update({ opening_youtube: v || null })}
+            />
+          </OrderItem>
+
+          <OrderItem n={3}>
+            <ReadingRow
+              label="First Reading"
+              value={row.first_reading}
+              onChange={(v) => update({ first_reading: v })}
+              placeholder="e.g. Isaiah 55:1-3"
+              block={pickBlock(readingBlocks, ['first reading', 'reading 1', '^reading$'])}
+            />
+          </OrderItem>
+
+          <OrderItem n={4}>
+            <ReadingRow
+              label="Responsorial Psalm (citation)"
+              value={row.responsorial_psalm}
+              onChange={(v) => update({ responsorial_psalm: v })}
+              placeholder="e.g. Psalm 145"
+              block={pickBlock(readingBlocks, ['responsorial psalm'])}
+            />
+            <SongSlot
+              label="Responsorial Psalm — sung setting"
+              title={row.psalm_title ?? ''}
+              youtube={row.psalm_youtube ?? ''}
+              onTitle={(v) => update({ psalm_title: v || null })}
+              onYouTube={(v) => update({ psalm_youtube: v || null })}
+            />
+            <Field label="Psalm full text (refrain + verses)">
+              <Textarea rows={3} value={row.psalm_full ?? ''}
+                onChange={(e) => update({ psalm_full: e.target.value || null })}
+                placeholder="Paste or type the full Psalm refrain + verses…" />
+            </Field>
+          </OrderItem>
+
+          <OrderItem n={5}>
+            <ReadingRow
+              label="Second Reading"
+              value={row.second_reading}
+              onChange={(v) => update({ second_reading: v })}
+              placeholder="e.g. Romans 8:35, 37-39"
+              block={pickBlock(readingBlocks, ['second reading', 'reading 2'])}
+            />
+          </OrderItem>
+
+          <OrderItem n={6}>
+            <ReadingRow
+              label="Gospel Acclamation"
+              value={row.gospel_acclamation}
+              onChange={(v) => update({ gospel_acclamation: v })}
+              placeholder="Alleluia verse"
+              block={pickBlock(readingBlocks, ['gospel acclamation', 'verse before the gospel', 'alleluia'])}
+            />
+          </OrderItem>
+
+          <OrderItem n={7}>
+            <ReadingRow
+              label="Gospel"
+              value={row.gospel}
+              onChange={(v) => update({ gospel: v })}
+              placeholder="e.g. Matthew 14:13-21"
+              block={pickBlock(readingBlocks, ['^gospel$'])}
+            />
+          </OrderItem>
+
+          <OrderItem n={8}>
+            <SongSlot
+              label="Preparation Song"
+              title={row.preparation_title ?? ''}
+              youtube={row.preparation_youtube ?? ''}
+              onTitle={(v) => update({ preparation_title: v || null })}
+              onYouTube={(v) => update({ preparation_youtube: v || null })}
+            />
+          </OrderItem>
+
+          <OrderItem n={9}>
+            <SongSlot
+              label="Communion Song 1"
+              title={row.communion_1_title ?? ''}
+              youtube={row.communion_1_youtube ?? ''}
+              onTitle={(v) => update({ communion_1_title: v || null })}
+              onYouTube={(v) => update({ communion_1_youtube: v || null })}
+            />
+          </OrderItem>
+
+          <OrderItem n={10}>
+            <SongSlot
+              label="Communion Song 2"
+              title={row.communion_2_title ?? ''}
+              youtube={row.communion_2_youtube ?? ''}
+              onTitle={(v) => update({ communion_2_title: v || null })}
+              onYouTube={(v) => update({ communion_2_youtube: v || null })}
+            />
+          </OrderItem>
+
+          <OrderItem n={11}>
+            <SongSlot
+              label="Song of Praise"
+              title={row.praise_title ?? ''}
+              youtube={row.praise_youtube ?? ''}
+              onTitle={(v) => update({ praise_title: v || null })}
+              onYouTube={(v) => update({ praise_youtube: v || null })}
+            />
+          </OrderItem>
+
+          <OrderItem n={12}>
+            <SongSlot
+              label="Closing Hymn / Song"
+              title={row.closing_title ?? ''}
+              youtube={row.closing_youtube ?? ''}
+              onTitle={(v) => update({ closing_title: v || null })}
+              onYouTube={(v) => update({ closing_youtube: v || null })}
+            />
+          </OrderItem>
         </CardContent>
       </Card>
 
