@@ -88,7 +88,14 @@
     padding: 0 !important;
     width: 100%;
     max-width: 100%;
+    /* Kill sideways scroll WITHOUT creating a scroll container.
+       overflow-x: hidden promotes body to the page scroller on iOS
+       Safari, which demotes position:fixed children (the mobile tab
+       bar) to absolute and opens phantom scroll space below the
+       content ("eternal scroll"). clip has no such side effect;
+       hidden stays first as the fallback for pre-16 Safari. */
     overflow-x: hidden;
+    overflow-x: clip;
     /* Page background should follow the active theme (solid/gradient/image). */
     background: var(--theme-background);
     background-color: hsl(var(--background));
@@ -2203,7 +2210,9 @@ label.required::after {
 }
 
 html, body {
+  /* clip, not hidden — see the base-layer html/body comment. */
   overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100vw;
 }
 

@@ -312,7 +312,9 @@ export default function InstructorConsole() {
 function SummaryStat({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number }) {
   return (
     <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-      <CardContent className="p-4 flex items-center gap-3">
+      {/* Stacked below sm — three-up at 390px leaves ~30px for the
+          label in the row layout, which clipped "Assignments". */}
+      <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-left">
         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
           <Icon className="w-5 h-5 text-primary" />
         </div>
