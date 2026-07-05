@@ -2,7 +2,10 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+// DeepSeek's chat API is OpenAI-compatible, so the request shape below is
+// unchanged from the previous OpenAI integration — only the base URL,
+// model, and key differ.
+const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,9 +18,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openaiApiKey) {
-    return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+  if (!deepseekApiKey) {
+    return new Response(JSON.stringify({ error: 'DeepSeek API key not configured' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -27,19 +29,9 @@ serve(async (req) => {
     const caller = await authenticateCaller(req);
     if (!caller) return unauthorizedResponse(corsHeaders);
 
-    // Check if OpenAI API key is available
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not found in environment variables');
-      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const { title, eventType, venue, maxAttendees } = await req.json();
 
     console.log('Generating description for event:', { title, eventType, venue, maxAttendees });
-    console.log('OpenAI API key available:', !!openAIApiKey);
 
     const prompt = `Generate a compelling and informative event description for a ${eventType} event titled "${title}"${venue ? ` at ${venue}` : ''}${maxAttendees ? ` for up to ${maxAttendees} attendees` : ''}. 
 
@@ -47,19 +39,19 @@ The description should be:
 - Engaging and professional
 - 2-3 sentences long
 - Include relevant details about what attendees can expect
-- Be appropriate for a music/performance organization called Glee World
+- Be appropriate for a music/performance performing-arts organization
 - Sound inviting and exciting
 
 Just return the description text, nothing else.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${deepseekApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'deepseek-chat',
         messages: [
           { 
             role: 'system', 
@@ -74,8 +66,8 @@ Just return the description text, nothing else.`;
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('DeepSeek API error:', errorData);
+      throw new Error(`DeepSeek API error: ${response.status}`);
     }
 
     const data = await response.json();
