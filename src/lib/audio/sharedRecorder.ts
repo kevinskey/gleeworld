@@ -91,9 +91,10 @@ let activeHandle: MicRecorder | null = null;
  * blob is what the caller uploads (or trims via `trimHeadLatency`) on
  * stop.
  *
- * Also accepts a bare `MediaTrackConstraints` object (matching the
- * plan's `openMicRecorder(constraints?)` shape) for callers that only
- * care about constraints, e.g. `openMicRecorder({ channelCount: 1 })`. */
+ * Callers that only care about getUserMedia constraints pass them under
+ * the `constraints` key of the options object, e.g.
+ * `openMicRecorder({ constraints: { channelCount: 1 } })` (accepted but
+ * not yet applied — see module header). */
 export async function openMicRecorder(
   args: MicRecorderOptions = {},
 ): Promise<MicRecorder> {
@@ -205,7 +206,11 @@ export function getActivePeakDb(): number {
 // ── Latency configuration ──────────────────────────────────────────────
 
 const INPUT_LATENCY_STORAGE_KEY = 'studio.inputLatencyMs';
-const DEFAULT_INPUT_LATENCY_MS = 700;
+/** Studio's long-standing default head-trim when no
+ * `studio.inputLatencyMs` override is stored. Exported so other callers
+ * (Part Tracks, Task 2) reference this constant instead of minting
+ * another literal 700. */
+export const DEFAULT_INPUT_LATENCY_MS = 700;
 
 /** Configured input latency in ms, read from `localStorage`
  * (`studio.inputLatencyMs`). Defaults to 700ms — the same default Studio
@@ -339,24 +344,50 @@ export function trimDecodedBufferHead(
   return trimmed ? { buffer: trimmed, trimmed: true } : { buffer: buf, trimmed: false };
 }
 
+/** Decode step signature for `trimHeadLatency`. The default
+ * implementation decodes via a throwaway `AudioContext`; tests (and any
+ * caller that already has decoded PCM) can inject their own to exercise
+ * the full trim→encode composition without Web Audio globals. */
+export type BlobDecoder = (blob: Blob) => Promise<AudioBufferLike>;
+
+/** Default decoder: `AudioContext.decodeAudioData` on a throwaway
+ * context. Throws when `AudioContext` is unavailable or the blob can't
+ * be decoded — `trimHeadLatency` turns any decode failure into a
+ * return-the-original-blob fallback. */
+const decodeWithAudioContext: BlobDecoder = async (blob) => {
+  if (typeof AudioContext === 'undefined') {
+    throw new Error('AudioContext unavailable — cannot decode');
+  }
+  const ctx = new AudioContext();
+  try {
+    return await ctx.decodeAudioData(await blob.arrayBuffer());
+  } finally {
+    ctx.close().catch(() => { /* ignore */ });
+  }
+};
+
 /** Sample-accurate head-trim of a recorded blob by `ms` milliseconds.
  * Decodes the blob, cuts `ms` off the head, and re-encodes as WAV —
  * preserving channel count and sample rate. Returns the *original* blob
  * unchanged when `ms <= 0`, decoding fails (unsupported format,
- * corrupted data), or the recording is shorter than the requested trim. */
-export async function trimHeadLatency(blob: Blob, ms: number): Promise<Blob> {
+ * corrupted data, no AudioContext), or the recording is shorter than the
+ * requested trim.
+ *
+ * `decode` defaults to the AudioContext path; inject a custom decoder to
+ * run the full decode→trim→encode composition in environments without
+ * Web Audio (unit tests), or to reuse an existing decode result. */
+export async function trimHeadLatency(
+  blob: Blob,
+  ms: number,
+  decode: BlobDecoder = decodeWithAudioContext,
+): Promise<Blob> {
   if (!(ms > 0)) return blob;
-  if (typeof AudioContext === 'undefined') return blob;
-
-  const ctx = new AudioContext();
   try {
-    const rawBuf = await ctx.decodeAudioData(await blob.arrayBuffer());
+    const rawBuf = await decode(blob);
     const { buffer, trimmed } = trimDecodedBufferHead(rawBuf, ms);
     if (!trimmed) return blob;
     return encodeWavFromBufferLike(buffer);
   } catch {
     return blob;
-  } finally {
-    ctx.close().catch(() => { /* ignore */ });
   }
 }

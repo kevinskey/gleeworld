@@ -4,9 +4,10 @@
 // src/lib/studio/engine/__tests__/engine.test.ts's header comment for
 // the same rationale). trimBufferHeadSamples/encodeWavFromBufferLike are
 // deliberately pure functions over a duck-typed AudioBufferLike so they
-// can be exercised directly here; trimHeadLatency's thin decode wrapper
-// is covered separately for its short-circuit contracts (ms<=0, no
-// AudioContext in this environment == "decode unavailable").
+// can be exercised directly here; trimHeadLatency's full
+// decode→trim→encode composition is exercised via an injected decoder
+// (its default decoder is the AudioContext path), and its short-circuit
+// contracts (ms<=0, decode failure/unavailable) are covered separately.
 
 import { describe, test, expect } from 'vitest';
 import {
@@ -17,6 +18,7 @@ import {
   trimHeadLatency,
   getConfiguredInputLatencyMs,
   getOutputLatencyMs,
+  DEFAULT_INPUT_LATENCY_MS,
   type AudioBufferLike,
 } from '../sharedRecorder';
 
@@ -175,19 +177,75 @@ describe('trimHeadLatency (blob in/out)', () => {
   test('returns the original blob unchanged when decoding is unavailable (no AudioContext)', async () => {
     // This repo's vitest suite runs in the plain 'node' environment
     // (see engine.test.ts's header), so AudioContext is genuinely
-    // undefined here — the same guard this exercises protects against
-    // decode failures in a real browser too.
+    // undefined here — the default decoder throws, and the same fallback
+    // this exercises protects against decode failures in a real browser.
     expect(typeof AudioContext).toBe('undefined');
     const blob = new Blob([new Uint8Array([1, 2, 3, 4])], { type: 'audio/webm' });
     const out = await trimHeadLatency(blob, 700);
     expect(out).toBe(blob);
   });
+
+  test('returns the original blob unchanged when the injected decoder throws (decode failure)', async () => {
+    const blob = new Blob([new Uint8Array([9, 9, 9])], { type: 'audio/webm' });
+    const out = await trimHeadLatency(blob, 500, async () => {
+      throw new Error('corrupt data');
+    });
+    expect(out).toBe(blob);
+  });
+
+  test('FULL composition: decode→trim→encode produces exact expected WAV samples', async () => {
+    // Synthesized "decoded recording": stereo, 1000 Hz sample rate so
+    // 1 sample == 1ms, with recognizable ramps per channel. Injecting
+    // the decoder runs trimHeadLatency's real success path end-to-end
+    // (everything except the browser-only decodeAudioData call).
+    const left = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+    const right = [-0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8];
+    const decoded = fixtureBuffer([left, right], 1000);
+    const rawBlob = new Blob([new Uint8Array([1, 2, 3])], { type: 'audio/webm' });
+
+    let decodedFrom: Blob | null = null;
+    const out = await trimHeadLatency(rawBlob, 3, async (b) => {
+      decodedFrom = b;
+      return decoded;
+    });
+
+    expect(decodedFrom).toBe(rawBlob); // decoder received the input blob
+    expect(out).not.toBe(rawBlob);
+    expect(out.type).toBe('audio/wav');
+
+    const bytes = new DataView(await out.arrayBuffer());
+    // Header: stereo, original sample rate preserved.
+    expect(bytes.getUint16(22, true)).toBe(2);
+    expect(bytes.getUint32(24, true)).toBe(1000);
+    // 3ms @ 1000Hz == 3 samples trimmed → 5 frames × 2ch × 2 bytes.
+    const expectedFrames = left.length - 3;
+    expect(bytes.getUint32(40, true)).toBe(expectedFrames * 2 * 2);
+    expect(out.size).toBe(44 + expectedFrames * 2 * 2);
+
+    // Exact interleaved samples: the surviving tail, quantized the same
+    // way encodeWavFromBufferLike quantizes (x*0x7fff / x*0x8000, then
+    // setInt16's truncation toward zero).
+    const q = (x: number) => Math.trunc(x < 0 ? x * 0x8000 : x * 0x7fff);
+    const expected: number[] = [];
+    for (let i = 3; i < left.length; i++) expected.push(q(left[i]), q(right[i]));
+    const actual: number[] = [];
+    for (let i = 0; i < expected.length; i++) actual.push(bytes.getInt16(44 + i * 2, true));
+    expect(actual).toEqual(expected);
+  });
+
+  test('FULL composition falls back to the original blob when the decoded take is shorter than the trim', async () => {
+    const decoded = fixtureBuffer([[0.5, 0.5]], 1000); // 2 samples == 2ms
+    const rawBlob = new Blob([new Uint8Array([7])], { type: 'audio/webm' });
+    const out = await trimHeadLatency(rawBlob, 10, async () => decoded);
+    expect(out).toBe(rawBlob);
+  });
 });
 
 describe('getConfiguredInputLatencyMs / getOutputLatencyMs', () => {
-  test('input latency defaults to 700ms when localStorage is unavailable', () => {
+  test('input latency defaults to DEFAULT_INPUT_LATENCY_MS (700) when localStorage is unavailable', () => {
     expect(typeof localStorage).toBe('undefined');
-    expect(getConfiguredInputLatencyMs()).toBe(700);
+    expect(DEFAULT_INPUT_LATENCY_MS).toBe(700);
+    expect(getConfiguredInputLatencyMs()).toBe(DEFAULT_INPUT_LATENCY_MS);
   });
 
   test('input latency respects a stored override', () => {
