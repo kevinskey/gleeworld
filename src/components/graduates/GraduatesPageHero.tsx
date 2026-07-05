@@ -85,7 +85,7 @@
            <Button
              variant="ghost"
              size="icon"
-             className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+             className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
              onClick={(e) => { e.preventDefault(); prevSlide(); }}
            >
              <ChevronLeft className="h-6 w-6" />
@@ -93,7 +93,7 @@
            <Button
              variant="ghost"
              size="icon"
-             className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
+             className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
              onClick={(e) => { e.preventDefault(); nextSlide(); }}
            >
              <ChevronRight className="h-6 w-6" />

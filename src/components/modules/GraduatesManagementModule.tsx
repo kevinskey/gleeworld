@@ -61,7 +61,7 @@ export const GraduatesManagementModule = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         {isFullPage ? <div className="space-y-2">
-            <h1 className="text-4xl font-bold text-primary">Graduates Page Management</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">Graduates Page Management</h1>
             <p className="text-lg text-muted-foreground">
               Comprehensive CMS for building and managing the /graduates page with drag-and-drop page builder, media uploads, forms, and user management
             </p>
@@ -76,7 +76,7 @@ export const GraduatesManagementModule = ({
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">

@@ -105,7 +105,7 @@ export const GraduatesHero = () => {
         }}
       />
       
-      <div className="container mx-auto px-6 py-16 md:py-24 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 py-16 md:py-24 relative z-10">
         <div className="flex flex-col items-center text-center space-y-6">
           {/* Icon with metallic glow */}
           <div className="relative">
@@ -120,7 +120,7 @@ export const GraduatesHero = () => {
             style={titleStyle}
             className={titleFormatting
               ? "drop-shadow-2xl"
-              : "text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent drop-shadow-2xl"}
+              : "text-3xl sm:text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent drop-shadow-2xl"}
           >
             {getOrgName()}
           </h1>

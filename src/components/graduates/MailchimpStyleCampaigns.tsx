@@ -417,9 +417,9 @@ export const MailchimpStyleCampaigns = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold flex items-center gap-2">
+          <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
             <Mail className="h-8 w-8 text-primary" />
             Email Campaigns
           </h2>
@@ -844,7 +844,7 @@ export const MailchimpStyleCampaigns = () => {
                     return (
                       <div key={campaign.id} className="border-b pb-4 last:border-0">
                         <h4 className="font-medium mb-2">{campaign.name}</h4>
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           <div>
                             <p className="text-sm text-muted-foreground">Sent</p>
                             <p className="text-lg font-semibold">{campaign.stats?.sent}</p>

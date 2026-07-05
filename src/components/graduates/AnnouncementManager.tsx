@@ -217,7 +217,7 @@ export const AnnouncementManager = () => {
               {announcements.map((announcement, index) => (
                 <div
                   key={announcement.id}
-                  className="flex items-start gap-4 p-4 border rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 p-4 border rounded-lg"
                 >
                   <div className="flex-1">
                     <h4 className="font-semibold">{announcement.title}</h4>

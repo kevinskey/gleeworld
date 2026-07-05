@@ -340,12 +340,12 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
               />
             )}
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Select
                 value={block.style?.alignment}
                 onValueChange={(value) => updateBlockStyle(block.id, { alignment: value as any })}
               >
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Align" />
                 </SelectTrigger>
                 <SelectContent>
@@ -360,7 +360,7 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
                   value={block.style?.size}
                   onValueChange={(value) => updateBlockStyle(block.id, { size: value as any })}
                 >
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Size" />
                   </SelectTrigger>
                   <SelectContent>
@@ -393,7 +393,7 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
           </CardDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Editor Panel */}
           <div className="space-y-4">
             <div>
@@ -499,7 +499,7 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
           </div>
 
           {/* Preview Panel */}
-          <div className="border-l pl-6">
+          <div className="border-l-0 lg:border-l pl-0 lg:pl-6">
             <div className="flex items-center justify-between mb-4">
               <Label className="text-lg">Preview</Label>
               <Button

@@ -130,7 +130,7 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold">Global Title Formatting</h2>
           <p className="text-muted-foreground">Apply consistent formatting to all section titles</p>
@@ -295,7 +295,7 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
           <div className="pt-6 border-t">
             <h3 className="text-lg font-semibold mb-4">Preview</h3>
             <div
-              className="bg-muted p-8 rounded-lg"
+              className="bg-muted p-4 sm:p-8 rounded-lg"
               style={{
                 // Expose design tokens so global heading styles can use them
                 ['--heading-font' as any]: formatting.fontFamily || 'inherit',

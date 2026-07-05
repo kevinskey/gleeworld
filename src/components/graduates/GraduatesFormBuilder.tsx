@@ -188,7 +188,7 @@ export const GraduatesFormBuilder = () => {
               {formData.form_schema.map((field, index) => (
                 <Card key={field.id}>
                   <CardContent className="pt-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <Label className="text-xs">Label</Label>
                         <Input

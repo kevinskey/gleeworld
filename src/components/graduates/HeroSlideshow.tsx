@@ -146,12 +146,12 @@ export const HeroSlideshow = () => {
 
       {/* Content Overlay */}
       {(slide.title || slide.description) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-white text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 text-white text-center">
           {slide.title && (
             <h2
               className="mb-4 text-white font-bold drop-shadow-lg"
               style={titleFormatting ? {
-                fontSize: `${titleFormatting.fontSize}px`,
+                fontSize: `clamp(1.5rem, 6vw, ${titleFormatting.fontSize}px)`,
                 fontWeight: titleFormatting.fontWeight || '700',
                 textAlign: titleFormatting.textAlign as any || 'center',
                 color: '#ffffff',
@@ -185,7 +185,7 @@ export const HeroSlideshow = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
             onClick={prevSlide}
           >
             <ChevronLeft className="h-6 w-6" />
@@ -193,7 +193,7 @@ export const HeroSlideshow = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
             onClick={nextSlide}
           >
             <ChevronRight className="h-6 w-6" />

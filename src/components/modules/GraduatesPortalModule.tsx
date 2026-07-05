@@ -290,7 +290,7 @@ export function GraduatesPortalModule({ user, isFullPage, onNavigate }: ModulePr
     <ModuleWrapper title="Graduates Portal Content Management" icon={Layout}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold text-primary">Content Management</h2>
             <p className="text-muted-foreground">
@@ -366,7 +366,7 @@ export function GraduatesPortalModule({ user, isFullPage, onNavigate }: ModulePr
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="display_order">Display Order</Label>
                       <Input
@@ -408,13 +408,15 @@ export function GraduatesPortalModule({ user, isFullPage, onNavigate }: ModulePr
 
         {/* Content Sections */}
         <Tabs defaultValue="all" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="all">All Content</TabsTrigger>
-            <TabsTrigger value="landing_page_hero">Hero</TabsTrigger>
-            <TabsTrigger value="announcement">Announcements</TabsTrigger>
-            <TabsTrigger value="portal_banner">Banners</TabsTrigger>
-            <TabsTrigger value="alumnae_users">Graduates</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4">
+            <TabsList className="inline-flex w-auto min-w-full">
+              <TabsTrigger value="all">All Content</TabsTrigger>
+              <TabsTrigger value="landing_page_hero">Hero</TabsTrigger>
+              <TabsTrigger value="announcement">Announcements</TabsTrigger>
+              <TabsTrigger value="portal_banner">Banners</TabsTrigger>
+              <TabsTrigger value="alumnae_users">Graduates</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="all">
             <div className="space-y-6">

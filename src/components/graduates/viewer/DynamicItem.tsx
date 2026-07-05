@@ -26,7 +26,7 @@ export const DynamicItem = ({ item }: DynamicItemProps) => {
         return (
           <div className="prose prose-sm max-w-none">
             {item.title && <h3 className="text-xl font-semibold mb-3">{item.title}</h3>}
-            <p className="whitespace-pre-wrap">{item.content}</p>
+            <p className="whitespace-pre-wrap break-words">{item.content}</p>
           </div>
         );
 

@@ -309,7 +309,7 @@ export const GraduatesShop = () => {
                           Exclusive
                         </Badge>
                       </div>
-                      <Button variant="ghost" size="sm" className="p-1">
+                      <Button variant="ghost" size="sm" className="p-1 min-h-[44px] min-w-[44px]">
                         <Heart className="h-4 w-4" />
                       </Button>
                     </div>
@@ -389,7 +389,7 @@ export const GraduatesShop = () => {
                     <div className="space-y-2">
                       <div className="flex items-start justify-between">
                         <h3 className="font-semibold text-gray-900 text-sm">{product.title}</h3>
-                        <Button variant="ghost" size="sm" className="p-1 h-auto">
+                        <Button variant="ghost" size="sm" className="p-1 h-auto min-h-[44px] min-w-[44px]">
                           <Heart className="h-3 w-3" />
                         </Button>
                       </div>

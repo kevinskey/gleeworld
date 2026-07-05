@@ -146,7 +146,7 @@ export default function GraduatesMessages() {
               <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
               <p className="text-muted-foreground mb-6">
                 Messaging features are exclusively for verified {getOrgName()} graduates.
-                Please contact an administrator to verify your alumni status.
+                Please contact an administrator to verify your graduate status.
               </p>
               <Button onClick={() => navigate('/graduates')}>
                 Return to Graduates Landing
@@ -163,7 +163,7 @@ export default function GraduatesMessages() {
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-serif text-primary">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif text-primary">
             Messages to Current Members
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">

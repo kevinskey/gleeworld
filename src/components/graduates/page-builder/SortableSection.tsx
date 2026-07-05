@@ -32,13 +32,13 @@ export const SortableSection = ({ section, onEdit, onDelete }: SortableSectionPr
     <div ref={setNodeRef} style={style}>
       <Card className={!section.is_active ? 'opacity-60' : ''}>
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
               <GripVertical className="h-5 w-5 text-muted-foreground" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold">{section.title || 'Untitled Section'}</h3>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 gap-y-1">
+                <h3 className="font-semibold truncate min-w-0">{section.title || 'Untitled Section'}</h3>
                 <Badge variant="outline">{section.section_type}</Badge>
                 <Badge variant="secondary">{section.layout_type}</Badge>
                 {!section.is_active && (

@@ -236,8 +236,8 @@ export const NewsletterSection = () => {
                       alt={slide.title} 
                       className="w-full h-full object-contain" 
                     />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 text-white">
-                      <h2 className="text-3xl md:text-4xl font-bold mb-2">{slide.title}</h2>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 sm:p-6 md:p-8 text-white">
+                      <h2 className="text-lg sm:text-2xl md:text-4xl font-bold mb-2 line-clamp-2">{slide.title}</h2>
                       {slide.description && <p className="text-lg">{slide.description}</p>}
                     </div>
                   </div>
@@ -314,8 +314,8 @@ export const NewsletterSection = () => {
         {/* Newsletter Details */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 truncate min-w-0">
                 <BookOpen className="h-5 w-5" />
                 {getMonthName(newsletter.month)} {newsletter.year} Newsletter
               </CardTitle>
@@ -345,9 +345,9 @@ export const NewsletterSection = () => {
             </div>
 
             {securePdfUrl && (
-              <div className="flex gap-3">
-                <Button 
-                  variant="default" 
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  variant="default"
                   className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                   onClick={() => {
                     // Download the PDF using the secure blob URL

@@ -21,7 +21,7 @@ export const GraduatesBulkImport = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'alumnae_import_template.csv';
+    a.download = 'graduates_import_template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
     toast.success('Template downloaded');

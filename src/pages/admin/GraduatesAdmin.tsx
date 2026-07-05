@@ -320,7 +320,7 @@ export default function GraduatesAdmin() {
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-serif text-primary flex items-center justify-center gap-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif text-primary flex items-center justify-center gap-2">
             <Shield className="h-8 w-8" />
             Graduates Administration
           </h1>
@@ -446,7 +446,7 @@ export default function GraduatesAdmin() {
           <TabsContent value="content">
             <Card>
               <CardHeader className="pt-4 md:pt-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-0.5">
                     <CardTitle className="text-base md:text-lg flex items-center gap-1">
                       <Layout className="h-4 w-4" />
