@@ -12,7 +12,11 @@
 //   │  tenant)   │                                        │
 //   └────────────┴────────────────────────────────────────┘
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+const UserNotificationsSection = lazy(() =>
+  import('@/components/notifications/UserNotificationsSection').then(m => ({ default: m.UserNotificationsSection }))
+);
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { ProductTour } from '@/components/tour/ProductTour';
 import {
@@ -56,7 +60,6 @@ import {
   Route as RouteIcon,
   Sparkles,
   Church,
-  Eye,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -721,6 +724,7 @@ function TopBar() {
   const location = useLocation();
   const { settings: branding } = useBrandingSettings();
   const [query, setQuery] = useState('');
+  const [notifOpen, setNotifOpen] = useState(false);
 
   // Sidebar is suppressed on immersive full-window routes (Studio
   // session editor, Viewer reader). On those routes the tenant brand
@@ -883,11 +887,12 @@ function TopBar() {
       {/* Views switcher — tenant super-admins only */}
       <ViewsSwitcher />
 
-      {/* Notification bell — goes to the notifications list (the unread
-          badge counts gw_notifications). Composing lives on the + button;
-          the two used to open the same messenger panel. */}
+      {/* Notification bell — opens the personal notifications inbox
+          (matches the unread badge, which counts gw_notifications).
+          /notifications is the ADMIN send tool, not an inbox — don't
+          link the bell there. Composing lives on the + button. */}
       <button
-        onClick={() => navigate('/notifications')}
+        onClick={() => setNotifOpen(true)}
         title="Notifications"
         aria-label="Notifications"
         className="relative w-11 h-11 rounded-full inline-flex items-center justify-center hover:bg-muted transition"
@@ -899,6 +904,15 @@ function TopBar() {
           </span>
         )}
       </button>
+
+      {/* Personal notifications inbox — slide-in panel */}
+      <Sheet open={notifOpen} onOpenChange={setNotifOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0 overflow-y-auto">
+          <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading notifications…</div>}>
+            {notifOpen && <UserNotificationsSection />}
+          </Suspense>
+        </SheetContent>
+      </Sheet>
 
       {/* Avatar dropdown */}
       <DropdownMenu>
