@@ -60,7 +60,7 @@ serve(async (req: Request) => {
   }
   const html = await upstream.text();
 
-  const parsed = parseUniversalisReadings(html);
+  const parsed = parseUniversalisReadings(html, yyyymmdd);
   const body: RespOk = { date, sourceUrl, ...parsed };
   return json(body, 200);
 });
@@ -88,8 +88,8 @@ function json(body: unknown, status: number): Response {
  * We split on <hr class="shortrule"/> so each chunk is one logical
  * reading block, then pull heading / citation / summary / body.
  */
-function parseUniversalisReadings(html: string): { liturgicalTitle: string | null; readings: ReadingBlock[] } {
-  const liturgicalTitle = extractTitle(html);
+function parseUniversalisReadings(html: string, yyyymmdd: string): { liturgicalTitle: string | null; readings: ReadingBlock[] } {
+  const liturgicalTitle = extractTitle(html, yyyymmdd);
 
   const chunks = html.split(/<hr\s+class="shortrule"\s*\/?>/i);
   chunks.shift();
@@ -103,7 +103,24 @@ function parseUniversalisReadings(html: string): { liturgicalTitle: string | nul
   return { liturgicalTitle, readings };
 }
 
-function extractTitle(html: string): string | null {
+function extractTitle(html: string, yyyymmdd: string): string | null {
+  // Universalis renders the day's own name in the anchor that links back
+  // to this same date, e.g.
+  //   <a class="optmem" href="/20260704/mass.htm">Saturday of week 13 in Ordinary Time<br>…
+  //   <a class="feast" href="/20260705/mass.htm">14th Sunday in Ordinary Time</a>
+  // Take the text up to the first <br> or </a>. This covers ordinary
+  // weekdays/Sundays that the <title> tag ("Readings at Mass") does not.
+  const anchor = new RegExp(
+    `<a[^>]*href="/${yyyymmdd}/mass\\.htm"[^>]*>([\\s\\S]*?)(?:<br|</a>)`,
+    'i',
+  );
+  const m = html.match(anchor);
+  if (m) {
+    const t = decode(stripTags(m[1])).replace(/\s+/g, ' ').trim();
+    if (t && !/^readings at mass$/i.test(t)) return t;
+  }
+  // Fallback: the older "Mass (Name)" <title> form (solemnities/feasts
+  // whose page title carries the celebration name in parentheses).
   const titleTag = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (titleTag) {
     const t = decode(titleTag[1]).trim();
