@@ -18,6 +18,24 @@ import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 
 const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', '2XL'] as const;
 
+// Self-hosted storage exposes fresh uploads only after a once-a-minute
+// flatten pass, so an image shown seconds after upload 404s. Retry the
+// load with a cache-buster until the object becomes reachable (~80s max).
+const RetryImage = ({ src, alt, className }: { src: string; alt?: string; className?: string }) => {
+  const [attempt, setAttempt] = useState(0);
+  const timerRef = useRef<number>();
+  useEffect(() => {
+    setAttempt(0);
+    return () => window.clearTimeout(timerRef.current);
+  }, [src]);
+  const url = attempt === 0 ? src : `${src}${src.includes('?') ? '&' : '?'}r=${attempt}`;
+  return <img src={url} alt={alt} className={className} onError={() => {
+    if (attempt < 8) {
+      timerRef.current = window.setTimeout(() => setAttempt(a => a + 1), 3000 + attempt * 2000);
+    }
+  }} />;
+};
+
 interface SizeVariant {
   size: string;
   stock_quantity: number;
@@ -288,13 +306,7 @@ export const ProductManager = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map(product => <Card key={product.id} className="overflow-hidden">
             <div className="aspect-square relative bg-muted">
-              {product.images?.[0] ? <img src={product.images[0].image_url} alt={product.images[0].alt_text} className="w-full h-full object-cover" onError={e => {
-            console.error('Failed to load image:', product.images?.[0]?.image_url);
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-          }} onLoad={() => {
-            console.log('Successfully loaded image:', product.images?.[0]?.image_url);
-          }} /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              {product.images?.[0] ? <RetryImage src={product.images[0].image_url} alt={product.images[0].alt_text} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                   No Image
                 </div>}
               
@@ -942,7 +954,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <Label>Product Images</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                 {product.images?.map(image => <div key={image.id} className="relative group">
-                    <img src={image.image_url} alt={image.alt_text} className="w-full aspect-square object-cover rounded border" />
+                    <RetryImage src={image.image_url} alt={image.alt_text} className="w-full aspect-square object-cover rounded border" />
                     <Button variant="destructive" size="sm" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={async () => {
                 if (await deleteProductImage(image.image_url)) {
                   const { error: rowError } = await supabase.from('gw_product_images').delete().eq('id', image.id);

@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cart } from "@/features/store/cart";
 import { ShoppingBag, Package, Download, Music } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 // Row shape returned by the `gw_store_list_products()` RPC (Task 1). This
 // is a read-only catalog view — price lives here and ONLY here on the
@@ -24,6 +24,8 @@ interface StoreProduct {
 
 export const Shop = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const fromAdmin = searchParams.get("from") === "admin";
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -80,6 +82,18 @@ export const Shop = () => {
   return (
     <PublicLayout>
       <div className="min-h-screen bg-background">
+        {fromAdmin && (
+          <div className="bg-muted/60 border-b border-border">
+            <div className="container mx-auto px-4 py-2">
+              <Link
+                to="/product-management"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-link hover:text-link-hover"
+              >
+                ← Back to Store admin
+              </Link>
+            </div>
+          </div>
+        )}
         <div className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-6 sm:py-8 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
