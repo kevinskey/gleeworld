@@ -111,8 +111,8 @@ export const AgendaView = ({
                 onClick={() => onDateSelect(day)}
                 className={cn(
                   "flex flex-col items-center py-2 px-3 rounded-lg transition-all min-w-[44px]",
-                  isSelected 
-                    ? "bg-primary text-foreground" 
+                  isSelected
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted hover:bg-muted"
                 )}
               >

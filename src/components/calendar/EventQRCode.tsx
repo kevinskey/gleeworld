@@ -27,6 +27,9 @@ export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCod
   const [loading, setLoading] = useState(false);
   const [autoRotate, setAutoRotate] = useState(false);
   const [isRotating, setIsRotating] = useState(false);
+  // When the event is a Glee Academy class (linked class session), QR codes are
+  // session-based so scans land in the academy attendance records.
+  const [isClassSession, setIsClassSession] = useState(false);
   
   const rotationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -49,36 +52,71 @@ export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCod
 
     setLoading(true);
     try {
-      const { data, error } = await (supabase.rpc as any)('generate_rotating_qr_code', {
-        p_event_id: eventId,
-        p_created_by: user.id,
-        p_rotate_interval_seconds: autoRotate ? ROTATE_INTERVAL : 3600, // 1 hour if not rotating
-        p_time_window_enabled: false,
-        p_time_window_minutes: 15,
-        p_geofence_enabled: false,
-        p_geofence_latitude: null,
-        p_geofence_longitude: null,
-        p_geofence_radius_meters: 100
-      });
+      // If this calendar event is a linked academy class session, use the
+      // session-based QR system so scans record academy attendance.
+      const { data: classSession } = await supabase
+        .from('gw_course_class_sessions')
+        .select('id')
+        .eq('gw_event_id', eventId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (error) throw error;
+      let data: any;
+      if (classSession?.id) {
+        setIsClassSession(true);
+        const { data: ensured, error: ensureError } = await (supabase.rpc as any)(
+          'ensure_attendance_session_for_class',
+          { p_class_session_id: classSession.id }
+        );
+        if (ensureError) throw ensureError;
+        if (!ensured || typeof ensured !== 'string') {
+          throw new Error('Could not resolve the attendance session for this class');
+        }
+        const { data: sessionQR, error: sessionError } = await (supabase.rpc as any)(
+          'generate_session_qr_code',
+          {
+            p_session_id: ensured,
+            p_generated_by: user.id,
+            p_expires_in_minutes: autoRotate ? 2 : 480,
+          }
+        );
+        if (sessionError) throw sessionError;
+        data = sessionQR;
+      } else {
+        setIsClassSession(false);
+        const { data: eventQR, error } = await (supabase.rpc as any)('generate_rotating_qr_code', {
+          p_event_id: eventId,
+          p_created_by: user.id,
+          p_rotate_interval_seconds: autoRotate ? ROTATE_INTERVAL : 3600, // 1 hour if not rotating
+          p_time_window_enabled: false,
+          p_time_window_minutes: 15,
+          p_geofence_enabled: false,
+          p_geofence_latitude: null,
+          p_geofence_longitude: null,
+          p_geofence_radius_meters: 100
+        });
+        if (error) throw error;
+        data = eventQR;
+      }
 
-      console.log('generate_rotating_qr_code raw response:', JSON.stringify(data));
-      
-      // The RPC returns a JSON object with qr_token, pin_code, qr_id, expires_at
-      const result = (typeof data === 'string' ? JSON.parse(data) : data) as { qr_token: string; pin_code: string; qr_id: string; expires_at: string; token?: string };
-      
+      // Both RPCs return a JSON object with qr_token / qr_id / expires_at;
+      // only the event-based generator includes pin_code.
+      const result = (typeof data === 'string' ? JSON.parse(data) : data) as { success?: boolean; error?: string; qr_token: string; pin_code?: string; qr_id: string; expires_at: string; token?: string };
+
+      if (result?.success === false) {
+        throw new Error(result.error || 'QR generation failed');
+      }
+
       // Support both field names for safety
       const tokenValue = result.qr_token || result.token;
-      
+
       if (!tokenValue) {
         console.error('No token found in QR generation response:', result);
         throw new Error('QR token generation failed - no token in response');
       }
-      
-      console.log('QR token extracted:', tokenValue.substring(0, 20) + '...');
-      
-      setPinCode(result.pin_code);
+
+      setPinCode(result.pin_code || '');
       setExpiresAt(new Date(result.expires_at));
       
       // Generate QR image pointing to secure attendance route
@@ -250,11 +288,13 @@ export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCod
         <body>
           <h1>${eventTitle}</h1>
           <img src="${qrCodeUrl}" alt="Event Check-in QR Code" />
+          ${pinCode ? `
           <div class="pin-container">
             <div class="pin-label">Backup PIN Code</div>
             <div class="pin-code">${pinCode}</div>
           </div>
-          <p>Scan QR code or enter PIN to check in</p>
+          <p>Scan QR code or enter PIN to check in</p>` : `
+          <p>Scan QR code to check in</p>`}
         </body>
       </html>
     `);
@@ -276,12 +316,13 @@ export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCod
             <QrCode className="h-4 w-4 text-slate-600" />
           </button>
         ) : (
-          <Button 
+          <Button
             variant="outline"
-            className="h-auto py-4 flex-col gap-2 hover:bg-secondary/80"
+            size="sm"
+            className="h-8 px-2.5 gap-1.5 text-xs font-medium"
           >
-            <QrCode className="h-5 w-5 text-muted-foreground" />
-            <span className="font-medium">QR Code</span>
+            <QrCode className="h-4 w-4 text-muted-foreground" />
+            QR Check-In
           </Button>
         )}
       </DialogTrigger>
@@ -318,15 +359,23 @@ export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCod
                 </div>
               </div>
               
-              {/* PIN Code Display */}
-              <div className="flex flex-col items-center">
-                <span className="text-xs text-muted-foreground mb-1">Backup PIN</span>
-                <div className="bg-secondary px-6 py-3 rounded-lg">
-                  <span className="text-3xl font-mono font-bold tracking-[0.3em]">
-                    {pinCode}
-                  </span>
+              {/* PIN Code Display (event-based QRs only) */}
+              {pinCode && (
+                <div className="flex flex-col items-center">
+                  <span className="text-xs text-muted-foreground mb-1">Backup PIN</span>
+                  <div className="bg-secondary px-6 py-3 rounded-lg">
+                    <span className="text-3xl font-mono font-bold tracking-[0.3em]">
+                      {pinCode}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {isClassSession && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Class session — scans record academy course attendance.
+                </p>
+              )}
               
               {/* Auto-rotate toggle and countdown */}
               <div className="flex items-center justify-between px-4 py-3 bg-muted/50 rounded-lg">

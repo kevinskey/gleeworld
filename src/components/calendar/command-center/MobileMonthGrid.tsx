@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
 import { EventQRCode } from "../EventQRCode";
 import { OfficeHoursBooking } from "../OfficeHoursBooking";
+import { EventAttendanceDialog } from "./EventAttendanceDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, ClipboardCheck } from "lucide-react";
 
 const isSameDayET = (date1: Date, date2: Date): boolean => {
   const tz = 'America/New_York';
@@ -38,6 +39,7 @@ export const MobileMonthGrid = ({
 }: MobileMonthGridProps) => {
   const { user } = useAuth();
   const [canManageAttendance, setCanManageAttendance] = useState(false);
+  const [attendanceEvent, setAttendanceEvent] = useState<GleeWorldEvent | null>(null);
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -121,8 +123,8 @@ export const MobileMonthGrid = ({
             >
               <span className={cn(
                 "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold",
-                isToday && "bg-card border-b border-border text-foreground",
-                isSelected && !isToday && "bg-primary text-foreground",
+                isToday && "bg-primary text-primary-foreground",
+                isSelected && !isToday && "bg-primary/15 text-foreground",
                 !isToday && !isSelected && isCurrentMonth && "text-slate-800",
               )}>
                 {format(day, 'd')}
@@ -194,10 +196,17 @@ export const MobileMonthGrid = ({
                     </div>
                   </div>
 
-                  {/* Compact QR button */}
+                  {/* Compact QR + attendance buttons */}
                   {canManageAttendance && (
-                    <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       <EventQRCode eventId={event.id} eventTitle={event.title} compact />
+                      <button
+                        className="h-8 w-8 rounded-md bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+                        title="Attendance"
+                        onClick={() => setAttendanceEvent(event)}
+                      >
+                        <ClipboardCheck className="h-4 w-4 text-slate-600" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -206,6 +215,13 @@ export const MobileMonthGrid = ({
           )}
         </div>
       </div>
+
+      {/* Attendance dialog for the selected event */}
+      <EventAttendanceDialog
+        event={attendanceEvent}
+        open={!!attendanceEvent}
+        onOpenChange={(open) => { if (!open) setAttendanceEvent(null); }}
+      />
     </div>
   );
 };

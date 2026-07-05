@@ -34,6 +34,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   excused: { label: "Excused", color: "#ca8a04", bg: "#fefce8" },
   late: { label: "Late", color: "#2563eb", bg: "#eff6ff" },
   checked_in: { label: "Present", color: "#16a34a", bg: "#f0fdf4" },
+  in_rehearsal: { label: "Checked In", color: "#2563eb", bg: "#eff6ff" },
 };
 
 const getStatusConfig = (status: string) =>
@@ -79,6 +80,43 @@ export const EventAttendanceDialog = ({
     setLoading(true);
 
     try {
+      // Academy class sessions linked to this calendar event: their scans live
+      // in gw_attendance_records (session-based), not gw_event_attendance.
+      const { data: classSessions } = await supabase
+        .from("gw_course_class_sessions")
+        .select("id")
+        .eq("gw_event_id", event.id);
+
+      let sessionRecords: {
+        id: string;
+        status: string;
+        marked_at: string | null;
+        student_profile_id: string;
+      }[] = [];
+      let sessionProfiles: Record<string, any> = {};
+      if (classSessions && classSessions.length > 0) {
+        const { data: attSessions } = await supabase
+          .from("gw_attendance_sessions")
+          .select("id")
+          .in("class_session_id", classSessions.map((s) => s.id));
+        if (attSessions && attSessions.length > 0) {
+          const { data: recs } = await supabase
+            .from("gw_attendance_records")
+            .select("id, status, marked_at, student_profile_id")
+            .in("attendance_session_id", attSessions.map((s) => s.id));
+          sessionRecords = recs || [];
+          if (sessionRecords.length > 0) {
+            const { data: profiles } = await supabase
+              .from("gw_profiles_directory")
+              .select("id, user_id, display_name, first_name, last_name, email")
+              .in("id", sessionRecords.map((r) => r.student_profile_id));
+            for (const p of profiles || []) {
+              if (p.id) sessionProfiles[p.id] = p;
+            }
+          }
+        }
+      }
+
       // Fetch from gw_event_attendance joined with profiles
       const [gwResult, legacyResult] = await Promise.all([
         supabase
@@ -99,6 +137,23 @@ export const EventAttendanceDialog = ({
 
       const seenUserIds = new Set<string>();
       const combined: AttendeeRecord[] = [];
+
+      // Academy session records first — for class events these are the source
+      // of truth (two-step QR check-in/checkout).
+      for (const r of sessionRecords) {
+        const profile = sessionProfiles[r.student_profile_id];
+        const userId = profile?.user_id || r.student_profile_id;
+        if (seenUserIds.has(userId)) continue;
+        seenUserIds.add(userId);
+        combined.push({
+          id: r.id,
+          user_id: userId,
+          status: r.status,
+          check_in_time: r.marked_at,
+          notes: null,
+          display_name: resolveDisplayName(profile),
+        });
+      }
 
       // Process gw_event_attendance records first (newer system)
       for (const r of gwResult.data || []) {
@@ -141,7 +196,7 @@ export const EventAttendanceDialog = ({
 
   // Compute stats
   const stats = {
-    present: attendees.filter((a) => ["present", "checked_in"].includes(a.status?.toLowerCase())).length,
+    present: attendees.filter((a) => ["present", "checked_in", "in_rehearsal"].includes(a.status?.toLowerCase())).length,
     absent: attendees.filter((a) => a.status?.toLowerCase() === "absent").length,
     excused: attendees.filter((a) => a.status?.toLowerCase() === "excused").length,
     late: attendees.filter((a) => a.status?.toLowerCase() === "late").length,
@@ -150,10 +205,10 @@ export const EventAttendanceDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
-        {/* Navy header */}
-        <div className="bg-card border-b border-border  text-foreground px-5 py-4">
+        {/* Header */}
+        <div className="bg-card border-b border-border text-foreground px-5 py-4">
           <DialogHeader>
-            <DialogTitle className="text-white text-lg font-bold flex items-center gap-2">
+            <DialogTitle className="text-foreground text-lg font-bold flex items-center gap-2">
               <ClipboardCheck className="h-5 w-5" />
               Attendance
             </DialogTitle>

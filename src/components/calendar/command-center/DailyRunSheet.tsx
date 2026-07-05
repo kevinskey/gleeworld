@@ -66,6 +66,40 @@ export const DailyRunSheet = ({
       for (const row of data || []) {
         counts[row.event_id] = (counts[row.event_id] || 0) + 1;
       }
+
+      // Academy class events record attendance session-based; fold those in.
+      const { data: classSessions } = await supabase
+        .from("gw_course_class_sessions")
+        .select("id, gw_event_id")
+        .in("gw_event_id", eventIds);
+      if (classSessions && classSessions.length > 0) {
+        const classToEvent: Record<string, string> = {};
+        for (const cs of classSessions) {
+          if (cs.gw_event_id) classToEvent[cs.id] = cs.gw_event_id;
+        }
+        const { data: attSessions } = await supabase
+          .from("gw_attendance_sessions")
+          .select("id, class_session_id")
+          .in("class_session_id", classSessions.map((s) => s.id));
+        if (attSessions && attSessions.length > 0) {
+          const sessionToEvent: Record<string, string> = {};
+          for (const s of attSessions) {
+            if (s.class_session_id && classToEvent[s.class_session_id]) {
+              sessionToEvent[s.id] = classToEvent[s.class_session_id];
+            }
+          }
+          const { data: recs } = await supabase
+            .from("gw_attendance_records")
+            .select("attendance_session_id")
+            .in("attendance_session_id", attSessions.map((s) => s.id))
+            .in("status", ["present", "in_rehearsal", "late"]);
+          for (const r of recs || []) {
+            const eventId = sessionToEvent[r.attendance_session_id];
+            if (eventId) counts[eventId] = (counts[eventId] || 0) + 1;
+          }
+        }
+      }
+
       setAttendanceCounts(counts);
     };
     fetchCounts();
@@ -169,7 +203,7 @@ export const DailyRunSheet = ({
                   className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: action.color }}
                 >
-                  <Icon className="h-3.5 w-3.5 text-foreground" />
+                  <Icon className="h-3.5 w-3.5 text-white" />
                 </div>
                 <span className="text-xs font-medium text-slate-700 truncate">
                   {action.label}
