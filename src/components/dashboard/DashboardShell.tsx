@@ -600,7 +600,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         />
         <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
       </div>
-      <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-1.5">
+      <nav className="flex-1 overflow-y-auto pt-2 px-2 space-y-1.5 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         {sections.map((section) => (
           section.items.length === 0 ? null : (
             <div key={section.label} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
