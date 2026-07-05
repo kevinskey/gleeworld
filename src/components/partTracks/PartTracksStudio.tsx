@@ -1087,7 +1087,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // The native external-record session mode (.videoRecording, set by
       // prepareExternalRecordSession below) always disables the speech
       // DSP, so echo cancellation is off on this path unconditionally.
-      await maybeShowBleedWarning(backing !== 'none', true);
+      void maybeShowBleedWarning(backing !== 'none', true);
 
       // Unlock the web audio graph inside the user gesture — the local mix
       // (other recorded parts + any local-file backing) still rides it.
@@ -1271,7 +1271,13 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     // the fallback when native capture can't get a record route under a
     // MusicKit-owned session (opts.fallbackFromNative), and the path for all
     // non-iOS platforms.
-    if (isNativeStudioAvailable() && !opts?.fallbackFromNative) {
+    // Apple Music goes straight to web capture: MPMusicPlayerController owns
+    // the audio session, so the native recorder's watchdog would reject after
+    // ~1.5s, stop/restart the Music playback, and re-run the count-in before
+    // landing here anyway. (Device-gate experiment for later: establishing a
+    // .playAndRecord session BEFORE MusicKit playback may enable the native
+    // path — see plan Task 6.)
+    if (isNativeStudioAvailable() && !opts?.fallbackFromNative && getBackingKind() !== 'appleMusic') {
       await startNativeRecordForTrack(track);
       return;
     }
@@ -1285,7 +1291,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // mode is on (audioEngine.ts's startRecording sets
       // `echoCancellation: !musicMode`), so that's the aecOff gate here
       // (unlike the native path, which is always AEC-off).
-      await maybeShowBleedWarning(getBackingKind() !== 'none', isMusicModeEnabled());
+      void maybeShowBleedWarning(getBackingKind() !== 'none', isMusicModeEnabled());
 
       // On iOS Capacitor, switch the system audio session into
       // recording mode. This bypasses iOS's speech-DSP path so the
