@@ -146,7 +146,8 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         // Env-gated self-test (set GLEE_EXTERNAL_RECORD_SELFTEST=1 in the
         // Xcode scheme's Run > Arguments > Environment Variables). Runs the
         // external-record cycle + Studio's prepareRecordSession back-to-back
-        // to prove no cross-contamination. No-op in normal builds.
+        // to prove no cross-contamination. Debug builds only.
+        #if DEBUG
         if ProcessInfo.processInfo.environment["GLEE_EXTERNAL_RECORD_SELFTEST"] == "1" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 self?.runExternalRecordSelfTest { summary in
@@ -154,6 +155,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
                 }
             }
         }
+        #endif
     }
 
     @objc func start(_ call: CAPPluginCall) {
@@ -299,7 +301,15 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async {
             let session = AVAudioSession.sharedInstance()
             do {
-                if session.category != .playAndRecord {
+                // Guard on category AND mode. An external-coexistence take
+                // (prepareExternalRecordSession) leaves the session in
+                // .playAndRecord/.videoRecording — a category-only guard
+                // would skip setCategory here and Studio would record in
+                // .videoRecording mode. Pure-Studio flows arrive as either
+                // not-.playAndRecord or .playAndRecord/.default, so this
+                // widened guard changes nothing for them (the Global
+                // Constraint on Studio's behavior is preserved).
+                if session.category != .playAndRecord || session.mode != .default {
                     try session.setCategory(.playAndRecord, mode: .default,
                                             options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
                 }
@@ -485,6 +495,11 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
                 try? session.setPreferredSampleRate(48_000.0)
                 try? session.setPreferredInputNumberOfChannels(1)
                 try? session.setPreferredIOBufferDuration(0.005)
+                // No options on setActive(true): .notifyOthersOnDeactivation
+                // is a DEACTIVATION-only flag — passing it to an activation
+                // throws an OSStatus error (see Engine.swift:170-174, where
+                // that exact mistake silently killed engine.start on
+                // builds 91/92).
                 try session.setActive(true)
                 NSLog("[ExternalRecorder] prepare: session=.playAndRecord/.videoRecording active")
                 call.resolve(["sessionConfigured": true])
@@ -517,7 +532,10 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
                     self.externalRecorder = r
                     return r
                 }()
-                guard !rec.isCapturing else {
+                // Reject double-start during the count-in too (isArming):
+                // a second start mid-pre-roll would otherwise leak a hung
+                // Capacitor call and tear the live take's engine state.
+                guard !rec.isCapturing && !rec.isArming else {
                     call.reject("external record already in progress")
                     return
                 }
@@ -574,10 +592,15 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
     /// cycle, logs file size + latency, then runs Studio's own
     /// prepareRecordSession path to prove no cross-contamination. Also
     /// callable directly from JS for manual verification on a device.
+    /// Debug builds only — rejects in release.
     @objc func externalRecordSelfTest(_ call: CAPPluginCall) {
+        #if DEBUG
         runExternalRecordSelfTest { summary in
             call.resolve(summary)
         }
+        #else
+        call.reject("externalRecordSelfTest is only available in Debug builds")
+        #endif
     }
 
     @objc func mixdown(_ call: CAPPluginCall) {
@@ -771,6 +794,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
     /// This requires a real mic + a live audio session, so it produces
     /// meaningful output only on a device — in the simulator the input node
     /// may be silent/absent and the error paths log accordingly.
+    #if DEBUG
     private func runExternalRecordSelfTest(_ done: @escaping ([String: Any]) -> Void) {
         DispatchQueue.main.async { [weak self] in
             guard let self else { done(["ok": false, "error": "plugin gone"]); return }
@@ -796,25 +820,30 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
 
             let finish: (Bool, String) -> Void = { ok, note in
                 // Step 3 (always): flip to Studio's prepareRecordSession
-                // category to prove the external cycle left the session in a
-                // state Studio can still take over cleanly.
-                var studioOk = false
+                // recipe (same widened category-OR-mode guard as the real
+                // method) and then ASSERT the resulting category + mode —
+                // the external cycle leaves .videoRecording behind, so the
+                // meaningful check is that Studio's flip lands the session
+                // back on .playAndRecord/.default, not merely that
+                // setActive didn't throw.
                 let s = AVAudioSession.sharedInstance()
                 do {
-                    if s.category != .playAndRecord {
+                    if s.category != .playAndRecord || s.mode != .default {
                         try s.setCategory(.playAndRecord, mode: .default,
                                           options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
                     }
                     try s.setActive(true)
-                    studioOk = true
                 } catch {
                     NSLog("[ExternalRecorder][selftest] Studio prepareRecordSession flip failed: \(error.localizedDescription)")
                 }
+                let studioOk = (s.category == .playAndRecord && s.mode == .default)
                 let summary: [String: Any] = [
                     "ok": ok,
                     "note": note,
                     "hardwareLatencyMs": latencyMs,
                     "studioPrepareRecordSessionOk": studioOk,
+                    "studioCategoryAfterFlip": s.category.rawValue,
+                    "studioModeAfterFlip": s.mode.rawValue,
                 ]
                 NSLog("[ExternalRecorder][selftest] summary=\(summary)")
                 done(summary)
@@ -844,4 +873,5 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             )
         }
     }
+    #endif
 }

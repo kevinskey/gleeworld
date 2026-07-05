@@ -17,6 +17,13 @@
 // Engine.swift) on the native clock. Live peaks stream out at ~30Hz for
 // the JS waveform, mirroring StudioNativeRecorder's peak-timer pattern.
 //
+// Start semantics: the start callback resolves from the FIRST TAP BUFFER,
+// not at tap-install time. Installing a tap can "succeed" against a dead
+// input (e.g. the session has no record route because MusicKit owns it and
+// it was never record-capable) — the tap simply never fires. A 1.5s
+// watchdog converts that silence into a clean error instead of a hung
+// Capacitor call that reads as a successful-but-empty take.
+//
 // The AVAudioSession is configured by the plugin BEFORE start() runs
 // (prepareExternalRecordSession) — or deliberately left untouched when
 // MusicKit owns it. start() only starts the dedicated engine + tap.
@@ -34,13 +41,27 @@ public final class ExternalRecorder {
     private var clickAttached = false
     private var clickNeedsRestart = true
 
+    /// Main-thread handle to the capture file, used ONLY for length /
+    /// format reads in stop(). The tap closure holds its OWN strong
+    /// reference (captured at install time) so the audio thread never
+    /// reads this property — no cross-thread file-handle race.
     private var file: AVAudioFile?
     private(set) public var outputUrl: URL?
     private(set) public var isCapturing = false
+    /// True from start() entry until the first tap buffer resolves the
+    /// start callback (or a failure path clears it). Guards against a
+    /// mid-count-in double-start leaking a second engine/tap under the
+    /// live take.
+    private(set) public var isArming = false
     private var tapInstalled = false
+    /// When the tap went in — used to distinguish "stopped instantly"
+    /// from "ran a while but captured zero frames" (dead input).
+    private var tapInstalledAt: Date?
 
     /// Pre-roll timers (count-in clicks + the capture-start handoff).
     private var countInTimers: [Timer] = []
+    /// Fires if the input tap never delivers a buffer after install.
+    private var watchdogTimer: Timer?
 
     /// Latest mic peak (dBFS, negative) written by the audio-thread tap,
     /// read by the main-thread peak timer. Guarded by an unfair lock —
@@ -50,6 +71,13 @@ public final class ExternalRecorder {
     private var peakLock = os_unfair_lock_s()
     private var peakTimer: Timer?
 
+    /// One-shot start callbacks, drained by exactly one of: the first tap
+    /// buffer (success), the watchdog (dead input), or stop()/teardown()
+    /// (caller bailed early). Guarded by startLock — the audio thread and
+    /// main thread race for it.
+    private var pendingStart: (started: (Double) -> Void, failed: (String) -> Void)?
+    private var startLock = os_unfair_lock_s()
+
     /// Fires ~30Hz on the main run loop with the latest peak power so the
     /// JS waveform can draw the live envelope. Wired by the plugin to a
     /// dedicated 'externalRecordPeak' event (kept separate from Studio's
@@ -58,11 +86,18 @@ public final class ExternalRecorder {
 
     public init() {}
 
+    deinit {
+        // Last-resort cleanup if the plugin drops its reference while a
+        // tap/engine is live (abandoned prepare, plugin teardown).
+        teardown()
+    }
+
     // MARK: - Capture lifecycle
 
     /// Run the count-in (if any) on the native clock, then start the tap
-    /// capturing to a WAV file. Calls `onStarted(epochMs)` once capture is
-    /// rolling, or `onError` on any failure (fully torn down first).
+    /// capturing to a WAV file. Calls `onStarted(epochMs)` once the FIRST
+    /// input buffer has arrived (capture demonstrably rolling), or
+    /// `onError` on any failure (fully torn down first).
     ///
     /// MUST be called on the main thread (schedules Timers on RunLoop.main
     /// and mutates the engine graph).
@@ -71,10 +106,11 @@ public final class ExternalRecorder {
                       clickVolume: Float,
                       onStarted: @escaping (_ epochMs: Double) -> Void,
                       onError: @escaping (_ message: String) -> Void) {
-        guard !isCapturing else {
+        guard !isCapturing && !isArming else {
             onError("external record already in progress")
             return
         }
+        isArming = true
 
         // Bring up the dedicated engine + click player. Any of these can
         // raise a raw NSException on a bad audio-session/format state
@@ -141,9 +177,13 @@ public final class ExternalRecorder {
         countInTimers.append(startTimer)
     }
 
-    /// Install the input tap → WAV file and start streaming peaks. The
-    /// resolve payload's epoch is stamped here (best estimate of the first
-    /// captured sample) right as the tap goes live.
+    /// Install the input tap → WAV file. The start callback resolves from
+    /// the FIRST tap buffer with an epoch stamp derived from that buffer's
+    /// AVAudioTime — the wall-clock time the first captured sample was
+    /// actually taken by the hardware, accurate even on Bluetooth /
+    /// large-buffer routes where an install-time stamp runs early. If no
+    /// buffer arrives within 1.5s (dead input: session has no record
+    /// route), the watchdog tears down and errors.
     private func beginCapture(onStarted: @escaping (_ epochMs: Double) -> Void,
                               onError: @escaping (_ message: String) -> Void) {
         clearCountInTimers()
@@ -165,34 +205,72 @@ public final class ExternalRecorder {
         // On-disk: 16-bit little-endian PCM WAV (universal, Web-Audio
         // decodable, matches StudioNativeRecorder). processingFormat stays
         // float32 to equal the tap buffer's format, so file.write converts
-        // float → int16 internally.
+        // float → int16 internally. Strip the non-interleaved flag the
+        // input format's settings may carry — it describes the tap's
+        // in-memory layout, and leaking it into the FILE settings would
+        // ask AVAudioFile for a non-interleaved WAV (invalid container).
         var settings = inFormat.settings
         settings[AVFormatIDKey] = kAudioFormatLinearPCM
         settings[AVLinearPCMBitDepthKey] = 16
         settings[AVLinearPCMIsFloatKey] = false
         settings[AVLinearPCMIsBigEndianKey] = false
+        settings.removeValue(forKey: AVLinearPCMIsNonInterleaved)
+        let outFile: AVAudioFile
         do {
-            file = try AVAudioFile(forWriting: url,
-                                   settings: settings,
-                                   commonFormat: inFormat.commonFormat,
-                                   interleaved: inFormat.isInterleaved)
+            outFile = try AVAudioFile(forWriting: url,
+                                      settings: settings,
+                                      commonFormat: inFormat.commonFormat,
+                                      interleaved: inFormat.isInterleaved)
         } catch {
             teardown()
             onError("could not open capture file: \(error.localizedDescription)")
             return
         }
+        file = outFile
 
+        // Arm the one-shot start callbacks BEFORE the tap goes in — the
+        // first buffer can land on the audio thread immediately.
+        os_unfair_lock_lock(&startLock)
+        pendingStart = (started: onStarted, failed: onError)
+        os_unfair_lock_unlock(&startLock)
+
+        // NOTE: the closure captures `outFile` STRONGLY — the audio thread
+        // writes to its own reference and never touches self.file, so a
+        // main-thread `file = nil` can't yank the handle mid-write. The
+        // file closes when the last reference dies after removeTap.
         if let err = StudioObjC.catchExceptions({
-            inputNode.installTap(onBus: 0, bufferSize: 4096, format: inFormat) { [weak self] buffer, _ in
+            inputNode.installTap(onBus: 0, bufferSize: 4096, format: inFormat) { [weak self] buffer, when in
                 guard let self else { return }
                 // Write on the audio thread — AVAudioFile.write is
                 // real-time-unsafe in theory but is what Apple's own
                 // capture samples do; the file is buffered.
-                try? self.file?.write(from: buffer)
+                try? outFile.write(from: buffer)
                 let db = ExternalRecorder.peakDb(buffer)
                 os_unfair_lock_lock(&self.peakLock)
                 self.latestPeakDb = db
                 os_unfair_lock_unlock(&self.peakLock)
+
+                // First buffer → resolve the start callback with an epoch
+                // stamp back-computed from the buffer's host time: now,
+                // minus how long ago the buffer's first sample was taken.
+                // Drain under the lock so the watchdog / stop() can't
+                // double-fire the callbacks.
+                os_unfair_lock_lock(&self.startLock)
+                let handler = self.pendingStart
+                self.pendingStart = nil
+                os_unfair_lock_unlock(&self.startLock)
+                if let handler {
+                    let nowHost = mach_absolute_time()
+                    var ageSec = 0.0
+                    if when.isHostTimeValid && nowHost > when.hostTime {
+                        ageSec = AVAudioTime.seconds(forHostTime: nowHost - when.hostTime)
+                    }
+                    let epochMs = Date().timeIntervalSince1970 * 1000.0 - ageSec * 1000.0
+                    DispatchQueue.main.async {
+                        self.isArming = false
+                        handler.started(epochMs)
+                    }
+                }
             }
         }) {
             teardown()
@@ -200,51 +278,101 @@ public final class ExternalRecorder {
             return
         }
         tapInstalled = true
+        tapInstalledAt = Date()
         isCapturing = true
         startPeakTimer()
+        NSLog("[ExternalRecorder] tap installed → \(filename); awaiting first buffer")
 
-        // Best estimate of the first captured sample's wall-clock time.
-        // The Task-4 consumer subtracts hardwareLatencyMs from this to
-        // anchor record_offset_sec.
-        let epochMs = Date().timeIntervalSince1970 * 1000.0
-        NSLog("[ExternalRecorder] capture started → \(filename)")
-        onStarted(epochMs)
+        // Watchdog: a tap against a dead input installs fine and then
+        // never fires (a MusicKit-owned session with no record route is
+        // the expected culprit). Convert that into a clean error instead
+        // of a hung start call + silently empty take.
+        watchdogTimer?.invalidate()
+        let wd = Timer(timeInterval: 1.5, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            os_unfair_lock_lock(&self.startLock)
+            let handler = self.pendingStart
+            self.pendingStart = nil
+            os_unfair_lock_unlock(&self.startLock)
+            guard let handler else { return }  // first buffer already arrived
+            NSLog("[ExternalRecorder] watchdog: no input buffers after 1.5s — tearing down")
+            self.teardown()
+            handler.failed("no input buffers delivered — session has no record route")
+        }
+        RunLoop.main.add(wd, forMode: .common)
+        watchdogTimer = wd
     }
 
     /// Stop the tap, close the file, tear down the dedicated engine.
-    /// Returns (fileUri, durationSec) or nil if we weren't capturing.
+    /// Returns (url, durationSec), or nil when there is nothing usable —
+    /// never started, or the input was dead (ran >0.2s yet captured zero
+    /// frames) — so the caller rejects instead of resolving an empty take.
     public func stop() -> (url: URL, durationSec: Double)? {
+        // Drain a still-pending start (stop before the first buffer /
+        // during count-in) so the caller's start promise fails instead of
+        // hanging forever.
+        os_unfair_lock_lock(&startLock)
+        let pendingHandler = pendingStart
+        pendingStart = nil
+        os_unfair_lock_unlock(&startLock)
+
         guard isCapturing, let url = outputUrl else {
             // Not capturing — still clean up any half-built state.
             teardown()
+            pendingHandler?.failed("capture stopped before it started")
             return nil
         }
+        watchdogTimer?.invalidate(); watchdogTimer = nil
         peakTimer?.invalidate(); peakTimer = nil
+        // Read length/format BEFORE removing the tap — per the file-handle
+        // contract the main thread only reads metadata; writes belong to
+        // the tap closure's own strong reference.
+        let frames = file?.length ?? 0
+        let sampleRate = file?.processingFormat.sampleRate ?? 48_000
         if tapInstalled {
             captureEngine.inputNode.removeTap(onBus: 0)
             tapInstalled = false
         }
-        let frames = file?.length ?? 0
-        let sampleRate = file?.processingFormat.sampleRate ?? 48_000
-        let durationSec = sampleRate > 0 ? Double(frames) / sampleRate : 0
-        file = nil  // close the file
+        // Drop the main-thread reference; the file actually closes when
+        // the tap closure's strong reference is released post-removeTap.
+        file = nil
         isCapturing = false
+        isArming = false
         stopEngine()
+        pendingHandler?.failed("capture stopped before first input buffer")
+
+        let durationSec = sampleRate > 0 ? Double(frames) / sampleRate : 0
+        let ranSec = tapInstalledAt.map { Date().timeIntervalSince($0) } ?? 0
+        tapInstalledAt = nil
+        if frames == 0 && ranSec > 0.2 {
+            // The tap ran but nothing arrived — dead input. An empty WAV
+            // resolved as success would upload a zero-length take.
+            NSLog("[ExternalRecorder] stop: zero frames after \(String(format: "%.2f", ranSec))s — treating as failed capture")
+            return nil
+        }
         NSLog("[ExternalRecorder] capture stopped → \(url.lastPathComponent) (\(durationSec)s)")
         return (url, durationSec)
     }
 
     /// Full teardown for failure paths — remove tap, stop engine, drop the
-    /// file handle and any pending count-in timers. Idempotent.
+    /// file handle and any pending count-in timers. Drains (silently) any
+    /// pending start callbacks: error-path callers invoke onError
+    /// themselves. Idempotent.
     public func teardown() {
+        os_unfair_lock_lock(&startLock)
+        pendingStart = nil
+        os_unfair_lock_unlock(&startLock)
         clearCountInTimers()
+        watchdogTimer?.invalidate(); watchdogTimer = nil
         peakTimer?.invalidate(); peakTimer = nil
         if tapInstalled {
             captureEngine.inputNode.removeTap(onBus: 0)
             tapInstalled = false
         }
         file = nil
+        tapInstalledAt = nil
         isCapturing = false
+        isArming = false
         stopEngine()
     }
 
