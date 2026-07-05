@@ -236,14 +236,14 @@ export default function GraduatesLanding() {
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card/95 to-muted/40 border-2 border-border shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5" />
           
-          <div className="relative p-8 md:p-12">
+          <div className="relative p-4 sm:p-8 md:p-12">
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="flex items-center gap-3">
-                <GraduationCap className="h-12 w-12 text-primary" />
-                <h1 className="text-4xl md:text-6xl font-display text-foreground tracking-tight">
+              <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+                <GraduationCap className="h-8 w-8 md:h-12 md:w-12 text-primary" />
+                <h1 className="text-3xl sm:text-4xl md:text-6xl font-display text-foreground tracking-tight min-w-0">
                   Welcome Back, {userProfile?.first_name || 'Graduate'}
                 </h1>
-                <Sparkles className="h-12 w-12 text-accent" />
+                <Sparkles className="h-8 w-8 md:h-12 md:w-12 text-accent" />
               </div>
               
               <div className="flex items-center gap-3">
@@ -382,16 +382,16 @@ export default function GraduatesLanding() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { icon: Users, label: 'Alumni Directory' },
+                { icon: Users, label: 'Graduates Directory' },
                 { icon: Camera, label: 'Memory Wall' },
                 { icon: Calendar, label: 'Plan Reunion' },
                 { icon: Heart, label: 'Give Back' },
                 { icon: Network, label: 'Professional Network' },
                 { icon: Music, label: 'Share Performance' },
                 { icon: BookOpen, label: 'Update Profile' },
-                { icon: Star, label: 'Nominate Alumni' }
+                { icon: Star, label: 'Nominate a Graduate' }
               ].map(({ icon: Icon, label }) => (
                 <Button 
                   key={label}

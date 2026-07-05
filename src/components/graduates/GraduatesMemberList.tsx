@@ -160,7 +160,7 @@ export const GraduatesMemberList = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <CardTitle className="flex items-center gap-2">
               <UserCheck className="h-5 w-5" />
@@ -292,8 +292,8 @@ export const GraduatesMemberList = () => {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                    <span>{member.email}</span>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
+                    <span className="truncate max-w-[200px]">{member.email}</span>
                     {member.graduation_year && (
                       <span>Class of '{member.graduation_year.toString().slice(-2)}</span>
                     )}

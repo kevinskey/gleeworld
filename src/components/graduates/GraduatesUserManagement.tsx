@@ -310,15 +310,15 @@ export const GraduatesUserManagement = () => {
       
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <CardTitle className="text-lg">Graduates User Management</CardTitle>
-              
+
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-background">
                 <Search className="h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search by name, email, major, employer..." value={search} onChange={e => setSearch(e.target.value)} className="w-64 border-0 p-0 focus-visible:ring-0" />
+                <Input placeholder="Search by name, email, major, employer..." value={search} onChange={e => setSearch(e.target.value)} className="w-full md:w-64 border-0 p-0 focus-visible:ring-0" />
               </div>
               <Tabs value={viewMode} onValueChange={v => setViewMode(v as 'table' | 'cards')} className="w-auto">
                 <TabsList>
@@ -345,11 +345,11 @@ export const GraduatesUserManagement = () => {
                   Assign the "graduate" role to users in the main User Management to see them here.
                 </p>}
             </div> : <>
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-muted-foreground">
                   Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} {search ? 'filtered' : ''} graduates ({totalCount} total)
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Items per page:</span>
                     <Select value={itemsPerPage.toString()} onValueChange={handlePageSizeChange}>
@@ -363,7 +363,7 @@ export const GraduatesUserManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Button
                       variant="outline"
                       size="sm"
@@ -371,7 +371,7 @@ export const GraduatesUserManagement = () => {
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
-                      Previous
+                      <span className="hidden sm:inline">Previous</span>
                     </Button>
                     <span className="text-sm text-muted-foreground">
                       Page {currentPage} of {totalPages}
@@ -382,7 +382,7 @@ export const GraduatesUserManagement = () => {
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
                     >
-                      Next
+                      <span className="hidden sm:inline">Next</span>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>

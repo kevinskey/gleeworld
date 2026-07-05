@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { DynamicItem } from './DynamicItem';
 import { supabase } from '@/integrations/supabase/client';
 import WebFont from 'webfontloader';
+import { useIsPhone } from '@/hooks/use-mobile';
 interface DynamicSectionProps {
   section: any;
 }
@@ -19,6 +20,7 @@ interface TitleFormatting {
 
 export const DynamicSection = ({ section }: DynamicSectionProps) => {
   const [titleFormatting, setTitleFormatting] = useState<TitleFormatting | null>(null);
+  const isPhone = useIsPhone();
 
   useEffect(() => {
     fetchGlobalTitleFormatting();
@@ -95,11 +97,11 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
 
   const renderItems = () => {
     return (
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-6">
         {activeItems.map((item: any) => {
           const span = Math.max(1, Math.min(12, Math.round(((item.width_percentage || 100) / 100) * 12)));
           return (
-            <div key={item.id} style={{ gridColumn: `span ${span} / span ${span}` }}>
+            <div key={item.id} style={isPhone ? undefined : { gridColumn: `span ${span} / span ${span}` }}>
               <DynamicItem item={item} />
             </div>
           );
