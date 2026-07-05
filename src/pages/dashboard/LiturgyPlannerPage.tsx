@@ -336,15 +336,16 @@ function LiturgyEditor({ massId }: { massId: string }) {
   // Calls the universalis proxy and merges the parsed citations into
   // the row's reading fields. `overwrite=true` replaces whatever's
   // there; `false` keeps user-edited values and only fills blanks.
-  async function fetchReadingsAndApply(iso: string, overwrite: boolean) {
+  async function fetchReadingsAndApply(iso: string, overwrite: boolean): Promise<{ liturgicalTitle: string | null }> {
     setPullingReadings(true);
     try {
       const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
         body: { date: iso },
       });
       if (fnErr) throw new Error(fnErr.message);
+      const liturgicalTitle = ((resp as any)?.liturgicalTitle as string | null) ?? null;
       const blocks = ((resp as any)?.readings as Array<{ heading: string; citation: string | null; html: string }>) || [];
-      if (!blocks.length) return;
+      if (!blocks.length) return { liturgicalTitle };
       setReadingBlocks(blocks);
       const mapped = mapReadingBlocksToFields(blocks);
       setRow((cur) => {
@@ -356,8 +357,10 @@ function LiturgyEditor({ massId }: { massId: string }) {
         }
         return Object.keys(next).length ? { ...cur, ...next } : cur;
       });
+      return { liturgicalTitle };
     } catch (e: any) {
       if (overwrite) toast.error(`Couldn't fetch readings: ${e?.message || e}`);
+      return { liturgicalTitle: null };
     } finally {
       setPullingReadings(false);
     }
@@ -378,20 +381,29 @@ function LiturgyEditor({ massId }: { massId: string }) {
   // fields for the new date.
   const onDateChange = (iso: string) => {
     const day = liturgicalDayFor(parseISODate(iso));
+    // Keep a manually-typed observation; otherwise seed from the local
+    // feast table (covers solemnities/major feasts offline).
+    const userCustomized = !!row.observation && !isAutoObservation(row.observation);
     update({
       mass_date: iso,
       sunday_cycle: day.cycle,
       liturgical_season: day.season,
-      // Only overwrite observation if the user hasn't already typed
-      // something OR if it matches the prior auto-fill.
-      observation: row.observation && !isAutoObservation(row.observation)
-        ? row.observation
-        : (day.observation ?? null),
+      observation: userCustomized ? row.observation : (day.observation ?? null),
     });
-    // Readings are inherently a function of the date — when the user
-    // picks a new date, replace whatever was there with the new date's
-    // citations. If they want bespoke text they can edit after.
-    void fetchReadingsAndApply(iso, /*overwrite=*/true);
+    // Readings are a function of the date — replace them for the new
+    // date. The same pull carries the day's liturgical title, which
+    // Universalis names for ordinary weekdays/Sundays the local table
+    // doesn't (e.g. "Saturday of week 13 in Ordinary Time"). Fill the
+    // observation from it when the user hasn't customized it and the
+    // local table had no feast.
+    void fetchReadingsAndApply(iso, /*overwrite=*/true).then(({ liturgicalTitle }) => {
+      if (userCustomized || !liturgicalTitle) return;
+      setRow((cur) => {
+        if (!cur || cur.mass_date !== iso) return cur; // date changed again mid-fetch
+        if (cur.observation && !isAutoObservation(cur.observation)) return cur;
+        return { ...cur, observation: liturgicalTitle };
+      });
+    });
   };
 
   const save = async () => {
@@ -1118,9 +1130,15 @@ function formatTime(t: string): string {
 
 function isAutoObservation(s: string | null): boolean {
   if (!s) return true;
-  // Anything that looks like a Sunday-of-the-month-in-Year-X label is
-  // probably one we auto-filled, not a user customization.
-  return /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Solemnity|Ash|Palm|Good|Easter|Pentecost|Christmas|All Saints|Assumption|Immaculate)/i.test(s);
+  // Labels that match our local feast table OR Universalis's ordinary
+  // weekday/Sunday naming ("Saturday of week 13 in Ordinary Time",
+  // "14th Sunday in Ordinary Time") are auto-fills, not user text — so a
+  // later date change is free to replace them.
+  return (
+    /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Solemnity|Ash|Palm|Good|Easter|Pentecost|Christmas|All Saints|Assumption|Immaculate)/i.test(s) ||
+    /\b(in Ordinary Time|week \d+|\d+(st|nd|rd|th) (Sunday|Week))\b/i.test(s) ||
+    /^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) of\b/i.test(s)
+  );
 }
 
 // ── Route entry ──────────────────────────────────────────────────────
