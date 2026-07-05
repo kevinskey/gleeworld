@@ -45,7 +45,14 @@ public final class StudioNativeRecorder {
         isRecording = false
 
         let session = AVAudioSession.sharedInstance()
-        if session.category != .playAndRecord {
+        // Guard on category AND mode: an external-coexistence take
+        // (ExternalRecorder / prepareExternalRecordSession) leaves the
+        // session in .playAndRecord/.videoRecording, and a category-only
+        // guard would skip the transition and record Studio takes in
+        // .videoRecording mode. Pure-Studio flows arrive here as either
+        // not-.playAndRecord or .playAndRecord/.default, so their skip
+        // behavior is unchanged.
+        if session.category != .playAndRecord || session.mode != .default {
             try session.setCategory(.playAndRecord, mode: .default,
                                     options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
         }
@@ -127,11 +134,14 @@ public final class StudioNativeRecorder {
         // on the main thread.
 
         // Switch the session into a mic-capable category just-in-time.
-        // Skip the transition if we're already in playAndRecord —
+        // Skip the transition if we're already in playAndRecord/.default —
         // redundant setCategory while a take just finalized can
         // collide with the underlying CoreAudio session state machine.
+        // The mode check matters after an external-coexistence take
+        // (ExternalRecorder), which leaves .videoRecording behind; a
+        // category-only guard would record Studio takes in that mode.
         let session = AVAudioSession.sharedInstance()
-        if session.category != .playAndRecord {
+        if session.category != .playAndRecord || session.mode != .default {
             try session.setCategory(.playAndRecord, mode: .default,
                                     options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
         }
