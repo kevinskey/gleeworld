@@ -40,6 +40,67 @@ interface StudioEnginePluginShape {
   // clock. Resolves at grid start (recorder rolling, transport playing).
   recordWithCountIn(args: { countInBeats: number; secondsPerBeat: number; beatsPerBar: number }): Promise<{ gridStartedAtMs: number }>;
   recordStop(): Promise<{ localUrl: string; filename: string }>;
+  // --- External-source coexistence record mode (Part Tracks, iOS) ---
+  // Capture the mic OVER an external backing source (Apple Music / YouTube
+  // / uploaded file) that keeps playing. Runs on a DEDICATED AVAudioEngine,
+  // so Studio's record path + exclusive-focus session are never touched.
+  //
+  // prepareExternalRecordSession: configure the AVAudioSession for
+  // coexistence — UNLESS MusicKit owns it (musicKitOwnsSession), in which
+  // case the session is left completely untouched (any category change
+  // interrupts MPMusicPlayerController playback). Resolves `sessionConfigured`
+  // = false in the MusicKit case, true when we reconfigured the session.
+  //
+  // MUSICKIT CAVEAT: when sessionConfigured is false, nothing has made the
+  // session record-capable. The mic tap only delivers audio if a
+  // record-capable session (.playAndRecord) was already in place BEFORE
+  // MusicKit playback started; otherwise externalRecordStart's watchdog
+  // rejects with "no input buffers delivered" after ~1.5s. Callers on the
+  // Apple Music path must either establish the record session up front
+  // (before starting MusicKit playback) or fall back to web capture when
+  // sessionConfigured is false and externalRecordStart rejects.
+  prepareExternalRecordSession(args: {
+    mixWithOthers?: boolean;
+    musicKitOwnsSession: boolean;
+  }): Promise<{ sessionConfigured: boolean }>;
+  // externalRecordStart: native count-in clicks then start capture on the
+  // dedicated engine. Resolves AFTER count-in completes and the FIRST input
+  // buffer has arrived (capture demonstrably rolling — a dead input rejects
+  // via a 1.5s watchdog instead of resolving). `startedAtEpochMs` = epoch of
+  // the first captured sample, back-computed from that buffer's host time;
+  // `hardwareLatencyMs` = input+output+ioBuffer.
+  externalRecordStart(args: {
+    countInBeats: number;
+    secondsPerBeat: number;
+    clickVolume?: number;
+  }): Promise<{ startedAtEpochMs: number; hardwareLatencyMs: number }>;
+  // externalRecordStop: stop the dedicated capture, close the WAV, and
+  // return a file:// URI (readable via Capacitor Filesystem) + duration.
+  // NOTE (Task 4): the WAV is written in the input node's native channel
+  // count — usually mono, but multi-channel interfaces (USB, some BT) can
+  // yield N-channel WAVs. Decode-side code must not assume 1 channel.
+  externalRecordStop(): Promise<{ fileUri: string; durationSec: number }>;
+  // Env-gated debug self-test — also directly invokable for on-device
+  // verification (Debug builds only; rejects in release). Runs the
+  // external-record cycle then Studio's own prepareRecordSession flip and
+  // asserts the resulting category/mode to prove no cross-contamination.
+  externalRecordSelfTest(): Promise<{
+    ok: boolean;
+    note: string;
+    hardwareLatencyMs: number;
+    studioPrepareRecordSessionOk: boolean;
+    studioCategoryAfterFlip: string;
+    studioModeAfterFlip: string;
+  }>;
+  // --- Task 5: Headphone/bleed guard ---
+  // Read the current AVAudioSession output route so the record flow (both
+  // Studio and Part Tracks) can decide whether to warn that a backing
+  // track will bleed into an open mic. `outputs` are the raw
+  // AVAudioSession.Port rawValues for every port in
+  // `currentRoute.outputs` (e.g. "Headphones", "Speaker",
+  // "BluetoothA2DPOutput") — see `classifyRouteOutputs` below for how
+  // they're interpreted into `isHeadphones`.
+  getAudioRoute(): Promise<{ outputs: string[]; isHeadphones: boolean }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
   // Splice a single clip onto a live track — pairs with useStudio's diff
   // path so a fresh recording doesn't trigger a full engine teardown.
@@ -75,6 +136,10 @@ interface StudioEnginePluginShape {
   getHardwareLatency(): Promise<{ latencyMs: number }>;
   addListener(eventName: 'state', listener: (s: NativeEngineState) => void): Promise<PluginListenerHandle>;
   addListener(eventName: 'recordPeak', listener: (e: { db: number }) => void): Promise<PluginListenerHandle>;
+  // Live mic peaks (~30Hz, dBFS) from the external-source coexistence
+  // recorder — a SEPARATE event from 'recordPeak' so Part Tracks can draw
+  // its waveform without colliding with Studio's peak listener.
+  addListener(eventName: 'externalRecordPeak', listener: (e: { db: number }) => void): Promise<PluginListenerHandle>;
 }
 
 const Native = registerPlugin<StudioEnginePluginShape>('StudioEngine');
@@ -113,3 +178,48 @@ export async function openNativeStudio(args: {
 }
 
 export const NativeStudio = Native;
+
+// ── Task 5: Headphone/bleed guard (native route classification) ───────
+
+/** AVAudioSession.Port raw values that count as "private listening" for
+ * the headphone/bleed guard — wired headphones/earbuds, a Bluetooth
+ * headset/earbuds/speaker-in-hand, a USB audio interface (assumed to be
+ * feeding headphones, matching Studio's existing latency-calibration
+ * assumption), or CarPlay/car audio (cabin listening, not a room mic
+ * picking up a loudspeaker). `builtInSpeaker`/`builtInReceiver` and
+ * anything unrecognized are NOT included, so they read as "not
+ * headphones" — the conservative choice for a bleed warning.
+ *
+ * Exported + pure so the mapping is unit-testable without a device —
+ * the actual route read (`StudioEnginePlugin.swift`'s `getAudioRoute`)
+ * isn't covered by this repo's vitest suite. `getNativeAudioRoute` below
+ * ORs this against the native `isHeadphones` field, so a naming drift
+ * between the two implementations still resolves to "show the warning"
+ * rather than silently suppressing it. */
+const HEADPHONE_ISH_PORT_TYPES = new Set<string>([
+  'Headphones',
+  'BluetoothA2DPOutput',
+  'BluetoothHFP',
+  'BluetoothLE',
+  'USBAudio',
+  'CarAudio',
+]);
+
+/** Pure classification: does this list of AVAudioSession port-type raw
+ * values (as returned by `getAudioRoute`'s `outputs`) indicate private
+ * (headphone-ish) listening? */
+export function classifyRouteOutputs(outputs: string[]): boolean {
+  return outputs.some((o) => HEADPHONE_ISH_PORT_TYPES.has(o));
+}
+
+/** Read the current AVAudioSession output route on iOS. Returns `null`
+ * off iOS — callers fall back to the web heuristic,
+ * `getLikelyAudioRoute` in `src/lib/audio/sharedRecorder.ts`. */
+export async function getNativeAudioRoute(): Promise<{ outputs: string[]; isHeadphones: boolean } | null> {
+  if (!isNativeStudioAvailable()) return null;
+  const route = await Native.getAudioRoute();
+  return {
+    outputs: route.outputs,
+    isHeadphones: route.isHeadphones || classifyRouteOutputs(route.outputs),
+  };
+}

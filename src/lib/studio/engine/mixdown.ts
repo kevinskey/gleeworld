@@ -7,6 +7,7 @@ import type { Session } from '../session';
 import { buildFxChain } from './fx';
 import { buildTrack } from './tracks';
 import { dbToGain } from './engine';
+import { encodeWavFromBufferLike } from '@/lib/audio/sharedRecorder';
 
 const TAIL_SECONDS = 1.5;
 
@@ -39,51 +40,13 @@ export async function renderSessionToWav(session: Session): Promise<Blob> {
 }
 
 // ── AudioBuffer → 16-bit PCM WAV blob ─────────────────────────────────
+// Implementation now lives in the shared web recording engine
+// (src/lib/audio/sharedRecorder.ts, encodeWavFromBufferLike) — the exact
+// same header layout / interleave / clamp math this file used to inline.
+// A real AudioBuffer structurally satisfies AudioBufferLike, so this is
+// a pure delegation; the export name stays for existing call sites
+// (StudioEditor, renderSessionToWav above).
 
 export function audioBufferToWavBlob(buf: AudioBuffer): Blob {
-  const numCh = buf.numberOfChannels;
-  const sampleRate = buf.sampleRate;
-  const length = buf.length;
-  const bytesPerSample = 2; // 16-bit
-  const dataSize = length * numCh * bytesPerSample;
-  const headerSize = 44;
-  const out = new ArrayBuffer(headerSize + dataSize);
-  const view = new DataView(out);
-
-  // RIFF header
-  writeString(view, 0, 'RIFF');
-  view.setUint32(4, 36 + dataSize, true);
-  writeString(view, 8, 'WAVE');
-
-  // fmt sub-chunk
-  writeString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true);             // PCM chunk size
-  view.setUint16(20, 1, true);              // format = PCM
-  view.setUint16(22, numCh, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numCh * bytesPerSample, true); // byte rate
-  view.setUint16(32, numCh * bytesPerSample, true);              // block align
-  view.setUint16(34, 16, true);             // bits per sample
-
-  // data sub-chunk
-  writeString(view, 36, 'data');
-  view.setUint32(40, dataSize, true);
-
-  // Interleave + clamp to 16-bit.
-  const channels: Float32Array[] = [];
-  for (let c = 0; c < numCh; c++) channels.push(buf.getChannelData(c));
-
-  let offset = headerSize;
-  for (let i = 0; i < length; i++) {
-    for (let c = 0; c < numCh; c++) {
-      const s = Math.max(-1, Math.min(1, channels[c][i]));
-      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-      offset += 2;
-    }
-  }
-  return new Blob([out], { type: 'audio/wav' });
-}
-
-function writeString(view: DataView, offset: number, str: string) {
-  for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  return encodeWavFromBufferLike(buf);
 }

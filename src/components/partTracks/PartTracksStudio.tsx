@@ -15,7 +15,7 @@ import {
   Play, Pause, Square, Mic, MicOff, Volume2, VolumeX, Trash2, Plus, Upload, Circle,
   Music, ArrowLeft, Headphones, Sparkles, Loader2, Youtube, Settings2,
   Wrench, AudioWaveform, AudioLines, Star, MicVocal, CircleDot,
-  Scissors, BarChart3, Wand2,
+  Scissors, BarChart3, Wand2, X,
 } from 'lucide-react';
 import { AccompanimentPicker } from './AccompanimentPicker';
 import { DeviceSettings, isMusicModeEnabled } from './DeviceSettings';
@@ -30,6 +30,8 @@ import {
 import {
   startRecordingActivity, endRecordingActivity,
 } from '@/plugins/recordingLiveActivity';
+import { NativeStudio, isNativeStudioAvailable, getNativeAudioRoute } from '@/plugins/studioEngine';
+import type { PluginListenerHandle } from '@capacitor/core';
 import { FloatingScorePanel } from './FloatingScorePanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useAudioDevices } from '@/hooks/useAudioDevices';
@@ -43,10 +45,17 @@ import {
   unlockAudio, loadTrack, loadTrackFromBlob, unloadTrack, setTrackVolume, setTrackPan,
   startPlayback, stopPlayback, getCurrentTime, getMaxDuration,
   startRecording, stopRecording, setTrackRecordOffset,
-  getRecordingExtension, getRecordingMimeType,
+  getRecordingMimeType, extensionForMimeType,
   getTrackBuffer, playCountIn,
 } from './audioEngine';
 import { bufferToWav, trimSilence, normalize, reduceNoise } from './audioProcessing';
+import { getLikelyAudioRoute } from '@/lib/audio/sharedRecorder';
+
+// Task 5 (headphone/bleed guard): once dismissed, the "wear headphones"
+// warning stays suppressed for the rest of the browser tab's session —
+// module-level (not component state) so it survives track switches and
+// remounts of PartTracksStudio within the same session.
+let bleedWarningDismissedForSession = false;
 
 interface ScoreMeta {
   id: string;
@@ -115,11 +124,46 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
   // capture state at schedule-time but need to compare against the
   // current value when they fire.
   const recordingTrackIdRef = useRef<string | null>(null);
+  // --- Native (iOS) external-recorder state (Task 4) ---
+  // When the take is live on the native AVAudioEngine path, this holds the
+  // info the stop/save flow needs: the offset captured at record-start,
+  // the count-in lead the external backing ran ahead by, and the hardware
+  // latency reported by externalRecordStart (all used to place
+  // record_offset_sec). null on the web path.
+  const nativeRecRef = useRef<{
+    trackId: string;
+    capturedOffset: number;
+    // Seconds the Apple Music / YouTube backing advanced DURING the native
+    // count-in. The offset is stamped pre-count-in but those sources keep
+    // playing through the pre-roll, so capture actually begins this much
+    // later on the backing's timeline. 0 for file/none backing (the local
+    // mix starts post-count-in, already aligned).
+    countInLeadSec: number;
+    hardwareLatencyMs: number;
+  } | null>(null);
+  // True from just before externalRecordStart until it resolves/rejects —
+  // i.e. through the native count-in, when capture isn't rolling yet but
+  // the transport shows a stoppable take. Lets the stop button cancel a
+  // count-in.
+  const nativeArmingRef = useRef(false);
+  // Set the instant the user asks to stop a native take so the in-flight
+  // externalRecordStart's rejection (settled by stop() on the plugin side)
+  // is recognized as a user cancel, not an error, and cleanup runs once.
+  const nativeStopRequestedRef = useRef(false);
+  // Live-peak subscription handle for the native 'externalRecordPeak'
+  // event; removed on stop + unmount.
+  const externalPeakSubRef = useRef<PluginListenerHandle | null>(null);
   // Punch in/out: timeline seconds. When set, the transport Record
   // button arms with these markers — recording auto-starts at punchIn
   // and auto-stops at punchOut.
   const [punchIn, setPunchIn] = useState<number | null>(null);
   const [punchOut, setPunchOut] = useState<number | null>(null);
+  // Task 5 (headphone/bleed guard): shown near the transport when a take
+  // is about to start with a backing track playing, the route is
+  // confirmed NOT headphones, and echo cancellation is off — so the mic
+  // would otherwise pick up the backing and bleed into the recording.
+  // Warn-only; never blocks the record flow.
+  const [bleedWarning, setBleedWarning] = useState(false);
   // Set of track IDs currently being processed by an audio tool so the
   // button can show a spinner + block double-clicks.
   const [processingTrackIds, setProcessingTrackIds] = useState<Set<string>>(new Set());
@@ -252,6 +296,12 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     stopPlayback();
     tracks.forEach((t) => unloadTrack(t.id));
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    // Drop any live native peak subscription on unmount so it can't fire
+    // into a torn-down component.
+    if (externalPeakSubRef.current) {
+      void externalPeakSubRef.current.remove();
+      externalPeakSubRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
@@ -560,45 +610,26 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     await startRecordingForTrack(track);
   };
 
-  // Internal helpers used by both the per-track and the transport flow.
-  const stopRecordingForTrack = async (track: PartTrack) => {
-      const blob = await stopRecording();
-      // End the Live Activity so the lock screen / Dynamic Island
-      // returns to normal. iOS-only, web no-ops.
-      void endRecordingActivity();
-      // Restore the default ambient session so background apps (Apple
-      // Music outside the studio, etc.) get their normal audio routing
-      // back. No-op on web.
-      void restoreDefaultAudioSession();
-      setRecordingTrackId(null);
-      recordingTrackIdRef.current = null;
-      // End the playback session too. Standard DAW behaviour: hitting
-      // Stop also stops the backing track so the user can tap Play to
-      // preview their take without it racing the still-running source.
-      // Unconditionally tear down the external accompaniment — even if
-      // React `playing` state somehow flipped off mid-take, the backing
-      // (Apple Music / YouTube) should never outlive the recording.
-      stopPlayback();
-      stopExternalAccompaniment();
-      if (playing) setPlaying(false);
-      // Park the playhead back at the START of this take. Otherwise
-      // the rAF loop leaves currentTime at the END of the recording —
-      // and the next Play starts from there, which means the engine's
-      // `localOffsetInBuffer >= t.durationSec` short-circuit silently
-      // skips the just-recorded source. Result: "can't hear my
-      // recording, only the accompaniment."
-      const takeStart = recordStartOffsetRef.current;
-      setCurrentTime(takeStart);
-      setProgressByTrack({});
-      // Clear live peaks now that the take has ended. The full saved
-      // waveform replaces them once loadTrackFromBlob returns peaks.
-      livePeaksRef.current = [];
-      setLivePeaks([]);
-      if (!blob || blob.size === 0) {
-        toast.error('Recording failed — no audio was captured. Check your microphone.');
-        return;
-      }
-      const offsetSec = recordStartOffsetRef.current;
+  // Read a native take's WAV (written by the external recorder to the app
+  // tmp dir) into a Blob for the shared downstream. WKWebView can't fetch
+  // file:// URLs directly, so route the URI through Capacitor.convertFileSrc
+  // — the same recipe Studio's finalized-take path uses (StudioEditor.tsx).
+  // Force audio/wav: the recorder writes 16-bit PCM WAV, but the fetched
+  // blob's type comes back empty on some WebView versions.
+  const readNativeTakeBlob = async (fileUri: string): Promise<Blob> => {
+    const { Capacitor } = await import('@capacitor/core');
+    const fetchable = Capacitor.convertFileSrc(fileUri);
+    const res = await fetch(fetchable);
+    const raw = await res.blob();
+    return raw.type === 'audio/wav' ? raw : new Blob([raw], { type: 'audio/wav' });
+  };
+
+  // Persist a finished take (web OR native) the SAME way: upload to the
+  // sheet-music bucket, write the history row, point the track at it,
+  // load from the in-memory blob for instant playback, and arm Undo.
+  // Extension follows the FINAL blob's type (native = wav, web = the
+  // recorder's probed/trimmed type) so the upload path/contentType match.
+  const saveTakeBlob = async (track: PartTrack, blob: Blob, offsetSec: number) => {
       // Snapshot pre-save state so Undo can restore it. We capture this
       // BEFORE any mutation runs so React Query refetches don't race us.
       const prevAudioUrl = track.audio_url;
@@ -606,8 +637,8 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       const prevWaveform = waveformByTrack[track.id] ?? track.waveform_peaks ?? null;
       const prevDuration = durationByTrack[track.id] ?? track.duration_sec ?? 0;
       try {
-        const ext = getRecordingExtension();
-        const contentType = blob.type || getRecordingMimeType() || `audio/${ext}`;
+        const contentType = blob.type || getRecordingMimeType() || 'audio/webm';
+        const ext = extensionForMimeType(contentType);
         const path = `part-tracks/${project!.id}/${track.id}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from('sheet-music').upload(path, blob, { contentType, upsert: true });
@@ -677,6 +708,131 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         console.error('[PartTracks] Save take failed', e);
         toast.error(e?.message ?? 'Failed to save take');
       }
+  };
+
+  // Stop + persist a NATIVE (iOS) external-recorder take. Mirrors the web
+  // stop path's transport teardown, but finalizes via externalRecordStop()
+  // and reads the WAV back through Capacitor instead of the web recorder.
+  const stopNativeRecordForTrack = async (track: PartTrack) => {
+    // Mark the stop so the in-flight externalRecordStart rejection (settled
+    // by the plugin's stop()) is recognized as a user cancel, not an error.
+    nativeStopRequestedRef.current = true;
+    const wasArming = nativeArmingRef.current && !nativeRecRef.current;
+    const rec = nativeRecRef.current;
+
+    // Common transport + UI teardown (same shape as the web stop path).
+    void endRecordingActivity();
+    if (externalPeakSubRef.current) {
+      try { await externalPeakSubRef.current.remove(); } catch { /* ignore */ }
+      externalPeakSubRef.current = null;
+    }
+    setRecordingTrackId(null);
+    recordingTrackIdRef.current = null;
+    stopPlayback();
+    stopExternalAccompaniment();
+    if (playing) setPlaying(false);
+    // Placed offset: where the take actually begins on the master timeline.
+    // capturedOffset was stamped BEFORE the native count-in, but an external
+    // backing (Apple Music / YouTube) kept advancing through it — so add the
+    // count-in lead back — then subtract the hardware round-trip latency.
+    const placedOffset = rec
+      ? Math.max(0, rec.capturedOffset + rec.countInLeadSec - rec.hardwareLatencyMs / 1000)
+      : recordStartOffsetRef.current;
+    // Park the playhead at the take's placed start (same reasoning as the
+    // web path: leaving it at the end silently skips the fresh source).
+    setCurrentTime(placedOffset);
+    setProgressByTrack({});
+    livePeaksRef.current = [];
+    setLivePeaks([]);
+
+    let stopResult: { fileUri: string; durationSec: number } | null = null;
+    try {
+      stopResult = await NativeStudio.externalRecordStop();
+    } catch (e: any) {
+      const msg = e?.message ?? String(e);
+      nativeRecRef.current = null;
+      nativeArmingRef.current = false;
+      // "cancelled during count-in" (N1) is a deliberate user cancel — the
+      // count-in was aborted before capture rolled. No error toast.
+      if (/cancelled during count-in/i.test(msg) || wasArming) {
+        // silent — backing already stopped above
+      } else {
+        console.error('[PartTracks] Native external record stop failed', e);
+        toast.error(msg || 'Failed to stop recording.');
+      }
+      return;
+    }
+    nativeRecRef.current = null;
+    nativeArmingRef.current = false;
+
+    if (!stopResult || !stopResult.fileUri) {
+      toast.error('Recording failed — no audio was captured. Check your microphone.');
+      return;
+    }
+    let blob: Blob;
+    try {
+      blob = await readNativeTakeBlob(stopResult.fileUri);
+    } catch (e: any) {
+      console.error('[PartTracks] Could not read native take file', e);
+      toast.error('Take recorded but could not be read back from disk.');
+      return;
+    }
+    if (!blob || blob.size === 0) {
+      toast.error('Recording failed — no audio was captured. Check your microphone.');
+      return;
+    }
+    // NOTE: do NOT trimHeadLatency here — the native path already subtracts
+    // the hardware round-trip latency from the placed offset (computed
+    // above). Trimming again would double-compensate.
+    await saveTakeBlob(track, blob, placedOffset);
+  };
+
+  // Internal helpers used by both the per-track and the transport flow.
+  const stopRecordingForTrack = async (track: PartTrack) => {
+      // iOS native path: the take lives on the AVAudioEngine external
+      // recorder, not the web MediaRecorder. Route stop through the plugin.
+      if (nativeRecRef.current || nativeArmingRef.current) {
+        await stopNativeRecordForTrack(track);
+        return;
+      }
+      const blob = await stopRecording();
+      // End the Live Activity so the lock screen / Dynamic Island
+      // returns to normal. iOS-only, web no-ops.
+      void endRecordingActivity();
+      // Restore the default ambient session so background apps (Apple
+      // Music outside the studio, etc.) get their normal audio routing
+      // back. No-op on web.
+      void restoreDefaultAudioSession();
+      setRecordingTrackId(null);
+      recordingTrackIdRef.current = null;
+      // End the playback session too. Standard DAW behaviour: hitting
+      // Stop also stops the backing track so the user can tap Play to
+      // preview their take without it racing the still-running source.
+      // Unconditionally tear down the external accompaniment — even if
+      // React `playing` state somehow flipped off mid-take, the backing
+      // (Apple Music / YouTube) should never outlive the recording.
+      stopPlayback();
+      stopExternalAccompaniment();
+      if (playing) setPlaying(false);
+      // Park the playhead back at the START of this take. Otherwise
+      // the rAF loop leaves currentTime at the END of the recording —
+      // and the next Play starts from there, which means the engine's
+      // `localOffsetInBuffer >= t.durationSec` short-circuit silently
+      // skips the just-recorded source. Result: "can't hear my
+      // recording, only the accompaniment."
+      const takeStart = recordStartOffsetRef.current;
+      setCurrentTime(takeStart);
+      setProgressByTrack({});
+      // Clear live peaks now that the take has ended. The full saved
+      // waveform replaces them once loadTrackFromBlob returns peaks.
+      livePeaksRef.current = [];
+      setLivePeaks([]);
+      if (!blob || blob.size === 0) {
+        toast.error('Recording failed — no audio was captured. Check your microphone.');
+        return;
+      }
+      const offsetSec = recordStartOffsetRef.current;
+      await saveTakeBlob(track, blob, offsetSec);
   };
 
   // Restore a track to its pre-recording state. Called from the Undo
@@ -849,11 +1005,293 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     }
   };
 
-  const startRecordingForTrack = async (track: PartTrack) => {
+  // Append one normalized peak (0..1) to the rolling live-waveform buffer,
+  // downsampling when it grows past the cap. Shared by the web `onLevel`
+  // tick and the native 'externalRecordPeak' listener so both draw the
+  // same live waveform. Cap: ~16 peaks/sec, so 2048 is ~2min before the
+  // resolution halves.
+  const appendLivePeak = (peak: number) => {
+    const arr = livePeaksRef.current;
+    arr.push(peak);
+    if (arr.length > 2048) {
+      // Halve resolution by averaging adjacent pairs. The odd-length case
+      // is handled explicitly: the trailing unpaired sample is copied
+      // straight across, no off-by-one games.
+      const outLen = Math.ceil(arr.length / 2);
+      const next: number[] = new Array(outLen);
+      for (let j = 0; j < outLen; j++) {
+        const a = arr[j * 2];
+        const b = arr[j * 2 + 1];
+        next[j] = b === undefined ? a : (a + b) / 2;
+      }
+      livePeaksRef.current = next;
+    }
+    setLivePeaks(livePeaksRef.current.slice());
+  };
+
+  // Which external backing source this project uses — drives whether the
+  // native record session must cede to MusicKit ('appleMusic') or can mix
+  // over the source ('youtube'/'file').
+  const getBackingKind = (): 'appleMusic' | 'youtube' | 'file' | 'none' => {
+    const k = project?.accompaniment_kind;
+    if (k === 'apple_music' || k === 'apple_music_album') return 'appleMusic';
+    if (k === 'youtube') return 'youtube';
+    if (project?.accompaniment_url || k === 'file') return 'file';
+    return 'none';
+  };
+
+  // Task 5 (headphone/bleed guard). Called just before capture begins on
+  // BOTH the native and web record-start paths. Warns only when ALL of:
+  //  - a backing source will be audible during this take (willPlayBacking)
+  //  - the route is CONFIRMED not headphones — `false`, not `null`/unknown
+  //    (native `getNativeAudioRoute`, or the web heuristic
+  //    `getLikelyAudioRoute` in sharedRecorder.ts; `null` means "don't
+  //    know" and is treated as "don't warn", not "warn")
+  //  - echo cancellation is off (`aecOff`) — always true on the native
+  //    path (the .videoRecording session mode used by
+  //    prepareExternalRecordSession disables the speech DSP), or gated by
+  //    isMusicModeEnabled() on the web path (audioEngine.ts's
+  //    startRecording sets `echoCancellation: !musicMode`).
+  // Never blocks recording — this only flips UI state. Any failure
+  // reading the route (native call rejects, enumerateDevices throws) is
+  // swallowed: better to skip a warning than to fail a record-start over
+  // a diagnostic check.
+  const maybeShowBleedWarning = async (willPlayBacking: boolean, aecOff: boolean): Promise<void> => {
+    if (bleedWarningDismissedForSession || !willPlayBacking || !aecOff) return;
+    try {
+      const isHeadphones = isNativeStudioAvailable()
+        ? (await getNativeAudioRoute())?.isHeadphones ?? null
+        : (await getLikelyAudioRoute()).isHeadphones;
+      if (isHeadphones === false) setBleedWarning(true);
+    } catch {
+      /* best-effort — see comment above */
+    }
+  };
+
+  const dismissBleedWarning = () => {
+    bleedWarningDismissedForSession = true;
+    setBleedWarning(false);
+  };
+
+  // iOS native record flow (Task 4). Captures the mic on the shared native
+  // AVAudioEngine (StudioEnginePlugin.externalRecord*) OVER the backing
+  // source, with hardware-latency-compensated placement. Replaces the web
+  // getUserMedia + playCountIn + startRecording path on iOS. Falls back to
+  // the web path when MusicKit owns the session and native capture can't
+  // get a record route.
+  const startNativeRecordForTrack = async (track: PartTrack): Promise<void> => {
+    const backing = getBackingKind();
+    nativeStopRequestedRef.current = false;
+    try {
+      // Task 5 (headphone/bleed guard) — checked before capture begins.
+      // The native external-record session mode (.videoRecording, set by
+      // prepareExternalRecordSession below) always disables the speech
+      // DSP, so echo cancellation is off on this path unconditionally.
+      void maybeShowBleedWarning(backing !== 'none', true);
+
+      // Unlock the web audio graph inside the user gesture — the local mix
+      // (other recorded parts + any local-file backing) still rides it.
+      await unlockAudio();
+
+      // prepareExternalRecordSession SUPERSEDES AudioSessionConfigPlugin's
+      // configureForMusicRecording on this path: it sets .playAndRecord +
+      // .mixWithOthers when we own the session, or (Apple Music) leaves the
+      // MusicKit-owned session untouched and resolves sessionConfigured=false.
+      let prepared: { sessionConfigured: boolean };
+      try {
+        prepared = await NativeStudio.prepareExternalRecordSession({
+          musicKitOwnsSession: backing === 'appleMusic',
+          mixWithOthers: true,
+        });
+      } catch (e: any) {
+        // Nothing has started yet — fully recoverable. Surface + bail.
+        console.error('[PartTracks] prepareExternalRecordSession failed', e);
+        toast.error(e?.message ?? 'Could not prepare the recording session.');
+        return;
+      }
+
+      lastUndoableRef.current = null;
+
+      // Punch-in seeks the transport to the in-mark before we capture the
+      // offset, so the take starts exactly there.
+      if (punchIn !== null) seekTo(punchIn);
+
+      // Capture the master-timeline position the instant we begin the take.
+      recordStartOffsetRef.current = playing ? getCurrentTime() : (punchIn ?? 0);
+      livePeaksRef.current = [];
+      setLivePeaks([]);
+
+      // Start the backing source FIRST (unchanged path) and await it audible
+      // — the native count-in then runs over it. No-op for file/none backing
+      // (that plays through the local mix, started post-capture below).
+      if (!playing) {
+        await startExternalAccompaniment(recordStartOffsetRef.current);
+      }
+
+      // Live waveform: native mic peaks arrive as dBFS on 'externalRecordPeak'.
+      // Convert to a 0..1 amplitude to match the web onLevel scale.
+      externalPeakSubRef.current = await NativeStudio.addListener(
+        'externalRecordPeak',
+        ({ db }) => {
+          const amp = !Number.isFinite(db) || db <= -160 ? 0 : Math.min(1, Math.pow(10, db / 20));
+          appendLivePeak(amp);
+        },
+      );
+
+      // Count-in timing mirrors playCountIn: interval = 60 / clamped BPM.
+      const bpm = project?.tempo_bpm ?? 100;
+      const secondsPerBeat = 60 / Math.max(20, Math.min(300, bpm));
+
+      // Optimistically show the take as live so the transport Stop can cancel
+      // the count-in — externalRecordStart hasn't resolved yet. armingRef
+      // routes stopRecordingForTrack to the native stop during this window.
+      nativeArmingRef.current = true;
+      setRecordingTrackId(track.id);
+      recordingTrackIdRef.current = track.id;
+      setArmedTrackId(track.id);
+      void startRecordingActivity(project?.title ?? 'Part Tracks', track.label);
+
+      let started: { startedAtEpochMs: number; hardwareLatencyMs: number };
+      try {
+        started = await NativeStudio.externalRecordStart({
+          countInBeats,
+          secondsPerBeat,
+          clickVolume: 0.7,
+        });
+      } catch (e: any) {
+        nativeArmingRef.current = false;
+        const msg = e?.message ?? String(e);
+        // A concurrent user-stop settled this start via the plugin's stop()
+        // ("capture stopped before it started"). stopNativeRecordForTrack
+        // owns all teardown in that case — do nothing here.
+        if (nativeStopRequestedRef.current || /capture stopped before/i.test(msg)) {
+          return;
+        }
+        // Detach the peak sub before either branch below.
+        if (externalPeakSubRef.current) {
+          try { await externalPeakSubRef.current.remove(); } catch { /* ignore */ }
+          externalPeakSubRef.current = null;
+        }
+        // FALLBACK: MusicKit owned the session (sessionConfigured=false) and
+        // the dead-input watchdog rejected ("no record route"). Fall back to
+        // the Task-2 web capture path, which re-establishes its own mic graph.
+        if (prepared.sessionConfigured === false) {
+          console.info('[PartTracks] Native external record unavailable under MusicKit-owned session — falling back to web capture path.');
+          // Clean the optimistic native state + backing so the web path can
+          // start fresh (it re-arms its own session, count-in, and backing).
+          nativeRecRef.current = null;
+          setRecordingTrackId(null);
+          recordingTrackIdRef.current = null;
+          stopExternalAccompaniment();
+          setPlaying(false);
+          void endRecordingActivity();
+          await startRecordingForTrack(track, { fallbackFromNative: true });
+          return;
+        }
+        // Genuine failure — leave the UI recoverable: clear the take, stop
+        // the backing, end the Live Activity.
+        console.error('[PartTracks] externalRecordStart failed', e);
+        setRecordingTrackId(null);
+        recordingTrackIdRef.current = null;
+        stopExternalAccompaniment();
+        if (playing) setPlaying(false);
+        void endRecordingActivity();
+        toast.error(msg || 'Could not start recording.');
+        return;
+      }
+
+      // Capture rolling. Record the anchor for the stop/save flow: the
+      // placed offset adds the count-in lead and subtracts hardware latency
+      // at save time (see stopNativeRecordForTrack).
+      //
+      // countInLeadSec: the offset above was stamped BEFORE the native
+      // count-in ran, but an EXTERNAL backing (Apple Music / YouTube)
+      // keeps playing through the pre-roll — capture actually starts
+      // countInBeats*secondsPerBeat later on that backing's timeline, so
+      // the take must be placed that much later or it lands exactly the
+      // count-in early. File/none backing stays 0: the local mix starts
+      // AFTER the count-in (startPlayback below), already aligned.
+      const countInLeadSec = (backing === 'appleMusic' || backing === 'youtube')
+        ? countInBeats * secondsPerBeat
+        : 0;
+      nativeArmingRef.current = false;
+      nativeRecRef.current = {
+        trackId: track.id,
+        capturedOffset: recordStartOffsetRef.current,
+        countInLeadSec,
+        hardwareLatencyMs: started.hardwareLatencyMs,
+      };
+
+      // Start the local mix (other recorded parts + any local-file backing)
+      // now that native capture is rolling — mirrors the web path's
+      // post-recorder startPlayback so parts stay aligned with the take.
+      startPlayback(recordStartOffsetRef.current);
+      setPlaying(true);
+
+      // Punch-out safety net (same as web).
+      if (punchOut !== null && punchOut > recordStartOffsetRef.current) {
+        const ms = (punchOut - recordStartOffsetRef.current) * 1000;
+        setTimeout(() => {
+          if (recordingTrackIdRef.current === track.id) {
+            void stopRecordingForTrack(track);
+          }
+        }, ms);
+      }
+
+      const msg = recordStartOffsetRef.current > 0
+        ? `Recording ${track.label} from ${recordStartOffsetRef.current.toFixed(1)}s.`
+        : backing !== 'none'
+          ? `Recording ${track.label} — accompaniment playing.`
+          : `Recording ${track.label}.`;
+      toast.message(msg);
+    } catch (e: any) {
+      // Rare post-backing-start throw (e.g. addListener rejecting): make
+      // sure the backing doesn't keep playing with no recording, the peak
+      // sub doesn't leak, and the record button is usable again.
+      nativeArmingRef.current = false;
+      nativeRecRef.current = null;
+      if (externalPeakSubRef.current) {
+        try { await externalPeakSubRef.current.remove(); } catch { /* ignore */ }
+        externalPeakSubRef.current = null;
+      }
+      stopExternalAccompaniment();
+      setRecordingTrackId(null);
+      recordingTrackIdRef.current = null;
+      void endRecordingActivity();
+      console.error('[PartTracks] Native start recording failed', e);
+      toast.error(e?.message ?? 'Could not start recording.');
+    }
+  };
+
+  const startRecordingForTrack = async (
+    track: PartTrack,
+    opts?: { fallbackFromNative?: boolean },
+  ) => {
+    // iOS uses the native external recorder (Task 4). The web path below is
+    // the fallback when native capture can't get a record route under a
+    // MusicKit-owned session (opts.fallbackFromNative), and the path for all
+    // non-iOS platforms.
+    // Apple Music goes straight to web capture: MPMusicPlayerController owns
+    // the audio session, so the native recorder's watchdog would reject after
+    // ~1.5s, stop/restart the Music playback, and re-run the count-in before
+    // landing here anyway. (Device-gate experiment for later: establishing a
+    // .playAndRecord session BEFORE MusicKit playback may enable the native
+    // path — see plan Task 6.)
+    if (isNativeStudioAvailable() && !opts?.fallbackFromNative && getBackingKind() !== 'appleMusic') {
+      await startNativeRecordForTrack(track);
+      return;
+    }
     try {
       // Unlock audio context inside the user gesture so iOS permits
       // both the mic stream AND the playback graph below to start.
       await unlockAudio();
+
+      // Task 5 (headphone/bleed guard) — checked before capture begins.
+      // On this web path echo cancellation is off exactly when music
+      // mode is on (audioEngine.ts's startRecording sets
+      // `echoCancellation: !musicMode`), so that's the aecOff gate here
+      // (unlike the native path, which is always AEC-off).
+      void maybeShowBleedWarning(getBackingKind() !== 'none', isMusicModeEnabled());
 
       // On iOS Capacitor, switch the system audio session into
       // recording mode. This bypasses iOS's speech-DSP path so the
@@ -864,6 +1302,8 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // even `.mixWithOthers` on our `.playAndRecord` interrupt
       // pauses its playback. With Apple Music backing we let the
       // Music session stay primary and accept the default mic DSP.
+      // (This guard is preserved for the native→web fallback, which only
+      // fires under an Apple-Music-owned session.)
       const isAppleMusicBacking =
         project?.accompaniment_kind === 'apple_music' ||
         project?.accompaniment_kind === 'apple_music_album';
@@ -911,28 +1351,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       await startRecording({
         inputDeviceId,
         musicMode: isMusicModeEnabled(),
-        onLevel: (peak) => {
-          // Append to the rolling buffer + commit to state every tick.
-          // Cap the array so a marathon take doesn't bloat memory — at
-          // ~16 peaks/sec a 1024 cap is ~64s before downsampling kicks in.
-          const arr = livePeaksRef.current;
-          arr.push(peak);
-          if (arr.length > 2048) {
-            // Halve resolution by averaging adjacent pairs. The odd-
-            // length case is handled explicitly: the trailing
-            // unpaired sample is copied straight across, no
-            // off-by-one games.
-            const outLen = Math.ceil(arr.length / 2);
-            const next: number[] = new Array(outLen);
-            for (let j = 0; j < outLen; j++) {
-              const a = arr[j * 2];
-              const b = arr[j * 2 + 1];
-              next[j] = b === undefined ? a : (a + b) / 2;
-            }
-            livePeaksRef.current = next;
-          }
-          setLivePeaks(livePeaksRef.current.slice());
-        },
+        onLevel: appendLivePeak,
       });
       setRecordingTrackId(track.id);
       recordingTrackIdRef.current = track.id;
@@ -1394,6 +1813,22 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         className="sticky bottom-12 md:bottom-0 inset-x-0 bg-card border-t border-border backdrop-blur"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
+        {/* Task 5 (headphone/bleed guard). Dismissible — the X suppresses
+            this for the rest of the session (module-level flag), it never
+            reappears on its own. Warn-only: doesn't block Record. */}
+        {bleedWarning && (
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3 bg-status-warning-bg text-status-warning-fg text-sm">
+            <span>Wear headphones — without them the backing track will bleed into your recording.</span>
+            <button
+              type="button"
+              onClick={dismissBleedWarning}
+              aria-label="Dismiss"
+              className="shrink-0 p-1 hover:opacity-70"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
           <div className="text-xs text-muted-foreground uppercase tracking-wider tabular-nums">
             {fmtTime(currentTime)} / {fmtTime(maxDuration)}
