@@ -94,9 +94,9 @@ export const GraduatesProfileEditor = ({ user, open, onOpenChange, onSuccess }: 
 
         <Tabs defaultValue="basic" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="academic">Academic</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="basic" className="text-xs sm:text-sm">Basic Info</TabsTrigger>
+            <TabsTrigger value="academic" className="text-xs sm:text-sm">Academic</TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="basic" className="space-y-4 mt-4">

@@ -89,7 +89,7 @@ export const ItemEditor = ({ item, onSave, onCancel }: ItemEditorProps) => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <CardTitle>{formData.id ? 'Edit Item' : 'Add Item'}</CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" onClick={onCancel}>
@@ -186,7 +186,7 @@ export const ItemEditor = ({ item, onSave, onCancel }: ItemEditorProps) => {
           </>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Column Position</Label>
             <Input
