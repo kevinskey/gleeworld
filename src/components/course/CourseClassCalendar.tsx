@@ -19,7 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { CONFIRMED_SCHEDULES } from '@/utils/updateCourseMeetingPatterns';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addHours, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
 import conductingImage from '@/assets/conducting-class-event.jpg';
 interface ClassSession {
@@ -394,43 +394,18 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       } = await supabase.from('gw_course_class_sessions').insert(sessionsToCreate).select();
       if (error) throw error;
 
-      // Auto-generate QR codes for all created sessions
+      // Create corresponding gw_events for main calendar visibility.
+      // QR codes are generated on demand (per session) via the QR dialog so
+      // they go through the secure session-based RPC instead of being
+      // pre-created with weak tokens that expire before class.
       if (createdSessions) {
-        const qrCodesToCreate = createdSessions.map(session => ({
-          event_id: session.id,
-          qr_token: crypto.randomUUID(),
-          generated_by: user.id,
-          expires_at: addHours(parseISO(session.session_date + 'T' + session.end_time), 2).toISOString(),
-          is_active: true,
-          course_id: courseId,
-          course_code: courseCode,
-          context_type: 'course_session',
-          custom_data: {
-            session_id: session.id,
-            session_title: session.title
-          }
-        }));
-        const {
-          data: qrCodes
-        } = await supabase.from('gw_attendance_qr_codes').insert(qrCodesToCreate).select();
-
-        // Update sessions with QR code IDs
-        if (qrCodes) {
-          for (const qr of qrCodes) {
-            await supabase.from('gw_course_class_sessions').update({
-              qr_code_id: qr.id
-            }).eq('id', qr.event_id);
-          }
-        }
-
-        // Create corresponding gw_events for main calendar visibility
         for (const session of createdSessions) {
           await createGwEvent(session);
         }
       }
       toast({
         title: 'Sessions Generated',
-        description: `Created ${sessionDates.length} class sessions with QR codes for ${activeSemester.name}`
+        description: `Created ${sessionDates.length} class sessions for ${activeSemester.name}`
       });
       fetchSessions();
     } catch (error) {
@@ -517,43 +492,16 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         } = await supabase.from('gw_course_class_sessions').insert(sessionsToCreate).select();
         if (error) throw error;
 
-        // Auto-generate QR codes for all created sessions
-        if (createdSessions && user) {
-          const qrCodesToCreate = createdSessions.map(session => ({
-            event_id: session.id,
-            qr_token: crypto.randomUUID(),
-            generated_by: user.id,
-            expires_at: addHours(parseISO(session.session_date + 'T' + session.end_time), 2).toISOString(),
-            is_active: true,
-            course_id: courseId,
-            course_code: courseCode,
-            context_type: 'course_session',
-            custom_data: {
-              session_id: session.id,
-              session_title: session.title
-            }
-          }));
-          const {
-            data: qrCodes
-          } = await supabase.from('gw_attendance_qr_codes').insert(qrCodesToCreate).select();
-
-          // Update sessions with QR code IDs
-          if (qrCodes) {
-            for (const qr of qrCodes) {
-              await supabase.from('gw_course_class_sessions').update({
-                qr_code_id: qr.id
-              }).eq('id', qr.event_id);
-            }
-          }
-
-          // Create corresponding gw_events for main calendar visibility
+        // Create corresponding gw_events for main calendar visibility.
+        // QR codes are generated on demand via the QR dialog (session-based RPC).
+        if (createdSessions) {
           for (const session of createdSessions) {
             await createGwEvent(session);
           }
         }
         toast({
           title: 'Success',
-          description: `Created ${sessionsToCreate.length} recurring sessions with QR codes`
+          description: `Created ${sessionsToCreate.length} recurring sessions`
         });
       } else {
         // Single session
@@ -575,38 +523,14 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
         }).select().single();
         if (error) throw error;
 
-        // Auto-generate QR code for the session
-        if (createdSession && user) {
-          const token = crypto.randomUUID();
-          const expiresAt = addHours(parseISO(createdSession.session_date + 'T' + createdSession.end_time), 2);
-          const {
-            data: qrCode
-          } = await supabase.from('gw_attendance_qr_codes').insert({
-            event_id: createdSession.id,
-            qr_token: token,
-            generated_by: user.id,
-            expires_at: expiresAt.toISOString(),
-            is_active: true,
-            course_id: courseId,
-            course_code: courseCode,
-            context_type: 'course_session',
-            custom_data: {
-              session_id: createdSession.id,
-              session_title: createdSession.title
-            }
-          }).select().single();
-          if (qrCode) {
-            await supabase.from('gw_course_class_sessions').update({
-              qr_code_id: qrCode.id
-            }).eq('id', createdSession.id);
-          }
-
-          // Create corresponding gw_event for main calendar visibility
+        // Create corresponding gw_event for main calendar visibility.
+        // QR codes are generated on demand via the QR dialog (session-based RPC).
+        if (createdSession) {
           await createGwEvent(createdSession);
         }
         toast({
           title: 'Success',
-          description: 'Class session created with QR code'
+          description: 'Class session created'
         });
       }
       setCreateDialogOpen(false);
@@ -751,7 +675,9 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
   };
   const viewDays = getViewDays();
 
-  // Generate QR Code for session
+  // Generate QR Code for session — routed through the shared attendance-session
+  // system so scans land in gw_attendance_records (visible to the academy
+  // attendance grids AND the calendar attendance dialog).
   const generateQRCode = async (session: ClassSession) => {
     if (!user) return;
     try {
@@ -759,52 +685,65 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
       setSelectedSession(session);
       setQrDialogOpen(true);
 
-      // Check for existing active QR code
-      const {
-        data: existingQR
-      } = await supabase.from('gw_attendance_qr_codes').select('*').eq('course_id', courseId).eq('context_type', 'course_session').eq('custom_data->>session_id', session.id).eq('is_active', true).gt('expires_at', new Date().toISOString()).maybeSingle();
+      // Find-or-create the gw_attendance_sessions row linked to this class session
+      const { data: ensured, error: ensureError } = await (supabase.rpc as any)(
+        'ensure_attendance_session_for_class',
+        { p_class_session_id: session.id }
+      );
+      if (ensureError) throw ensureError;
+      const attendanceSessionId = (typeof ensured === 'string' ? ensured : null);
+      if (!attendanceSessionId) throw new Error('Could not resolve attendance session for this class');
+
+      // Reuse an unexpired active QR for this attendance session
+      const { data: existingQR } = await supabase
+        .from('gw_attendance_qr_codes')
+        .select('*')
+        .eq('attendance_session_id', attendanceSessionId)
+        .eq('is_active', true)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       if (existingQR) {
         setQrCode(existingQR as QRCodeData);
         await generateQRImage(existingQR.qr_token);
-        await fetchAttendanceCount(session.id);
+        await fetchAttendanceCount(attendanceSessionId);
         setGeneratingQR(false);
         return;
       }
 
-      // Generate new QR code - use session.id as event_id since it's required
-      const token = crypto.randomUUID();
-      const expiresAt = addHours(new Date(), 4);
-      const {
-        data: newQR,
-        error
-      } = await supabase.from('gw_attendance_qr_codes').insert({
-        event_id: session.id,
-        // Use session ID as event reference
-        qr_token: token,
-        generated_by: user.id,
-        expires_at: expiresAt.toISOString(),
-        is_active: true,
-        course_id: courseId,
-        course_code: courseCode,
-        context_type: 'course_session',
-        custom_data: {
-          session_id: session.id,
-          session_title: session.title
-        }
-      }).select().single();
-      if (error) throw error;
+      // Generate via RPC (secure token; deactivates stale codes for the session)
+      const { data: qrResult, error: qrError } = await supabase.rpc('generate_session_qr_code', {
+        p_session_id: attendanceSessionId,
+        p_generated_by: user.id,
+        p_expires_in_minutes: 480,
+      });
+      if (qrError) throw qrError;
+      const qrData = typeof qrResult === 'string' ? JSON.parse(qrResult) : qrResult;
+      if (!qrData?.success || !qrData?.qr_token) {
+        throw new Error(qrData?.error || 'QR generation failed');
+      }
 
-      // Update session with QR code ID
+      // Link the QR code to the class session
       await supabase.from('gw_course_class_sessions').update({
-        qr_code_id: newQR.id
+        qr_code_id: qrData.qr_id
       }).eq('id', session.id);
-      setQrCode(newQR as QRCodeData);
-      await generateQRImage(token);
-    } catch (error) {
+
+      setQrCode({
+        id: qrData.qr_id || '',
+        qr_token: qrData.qr_token,
+        generated_at: new Date().toISOString(),
+        expires_at: qrData.expires_at,
+        scan_count: 0,
+        is_active: true
+      });
+      await generateQRImage(qrData.qr_token);
+      await fetchAttendanceCount(attendanceSessionId);
+    } catch (error: any) {
       console.error('Error generating QR:', error);
       toast({
         title: 'Error',
-        description: 'Failed to generate QR code',
+        description: error.message || 'Failed to generate QR code',
         variant: 'destructive'
       });
     } finally {
@@ -824,13 +763,13 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     });
     setQrImageData(qrDataURL);
   };
-  const fetchAttendanceCount = async (sessionId: string) => {
+  const fetchAttendanceCount = async (attendanceSessionId: string) => {
     const {
       count
-    } = await supabase.from('gw_course_attendance').select('*', {
+    } = await supabase.from('gw_attendance_records').select('*', {
       count: 'exact',
       head: true
-    }).eq('course_id', courseId);
+    }).eq('attendance_session_id', attendanceSessionId);
     setAttendanceCount(count || 0);
   };
   const downloadQR = () => {

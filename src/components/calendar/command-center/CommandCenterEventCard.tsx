@@ -181,20 +181,20 @@ export const CommandCenterEventCard = ({
     >
       {/* Header with icon and title */}
       <div className="flex items-start gap-3 p-3 pb-2">
-        <div 
+        <div
           className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
           style={{ backgroundColor: categoryColor }}
         >
-          <Icon className="h-4 w-4 text-foreground" />
+          <Icon className="h-4 w-4" style={{ color: textColor }} />
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="font-semibold text-slate-900 text-sm leading-tight group-hover:text-foreground transition-colors">
             {event.title}
           </h4>
           {event.gw_calendars?.name && (
-            <span 
-              className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium text-foreground"
-              style={{ backgroundColor: categoryColor }}
+            <span
+              className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium"
+              style={{ backgroundColor: categoryColor, color: textColor }}
             >
               {event.gw_calendars.name}
             </span>
@@ -218,15 +218,16 @@ export const CommandCenterEventCard = ({
           </div>
         )}
         {isMobile && canEdit && (
-          <div className="pt-2 flex flex-wrap items-stretch gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="pt-1.5 flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
             <EventQRCode eventId={event.id} eventTitle={event.title} />
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setShowAttendanceDialog(true)}
-              className="h-auto py-4 flex-col gap-2 hover:bg-secondary/80"
+              className="h-8 px-2.5 gap-1.5 text-xs font-medium"
             >
-              <ClipboardCheck className="h-5 w-5 text-muted-foreground" />
-              <span className="font-medium">Attendance</span>
+              <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+              Attendance
             </Button>
           </div>
         )}
