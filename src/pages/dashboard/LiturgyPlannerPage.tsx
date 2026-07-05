@@ -762,6 +762,40 @@ function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
   );
 }
 
+// ── Hymnal autocomplete ──────────────────────────────────────────────
+// Searches the platform hymnal index (gw_hymn_index: LMGM, LMGM II,
+// Gather, Baptist Hymnal — titles/numbers only, no texts) as the user
+// types in a song-slot title field. Picking a hit fills the field as
+// "Title — LMGM II #291" so the hymnal + number travel with the plan.
+interface HymnHit {
+  id: string;
+  number: string;
+  title: string;
+  tune_title: string | null;
+  hymnal: { short_name: string } | null;
+}
+
+function useHymnSearch(q: string) {
+  const [hits, setHits] = useState<HymnHit[]>([]);
+  useEffect(() => {
+    const term = q.trim();
+    // Skip once the user has picked (field already carries "— … #n")
+    if (term.length < 2 || /—\s.+#/.test(term)) { setHits([]); return; }
+    let alive = true;
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from('gw_hymn_index')
+        .select('id, number, title, tune_title, hymnal:gw_hymnals(short_name)')
+        .or(`title.ilike.%${term}%,first_line.ilike.%${term}%`)
+        .order('title')
+        .limit(8);
+      if (alive) setHits((data as unknown as HymnHit[]) ?? []);
+    }, 250);
+    return () => { alive = false; clearTimeout(t); };
+  }, [q]);
+  return hits;
+}
+
 function SongSlot({ label, title, youtube, onTitle, onYouTube }: {
   label: string; title: string; youtube: string;
   onTitle: (v: string) => void; onYouTube: (v: string) => void;
@@ -769,12 +803,45 @@ function SongSlot({ label, title, youtube, onTitle, onYouTube }: {
   const hasUrl = /^https?:\/\//i.test(youtube.trim());
   const disabled = !title.trim() && !hasUrl;
   const [searchOpen, setSearchOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const hymnHits = useHymnSearch(focused ? title : '');
 
   return (
     <div className="space-y-1.5">
       <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">{label}</div>
       <div className="flex gap-2">
-        <Input value={title} onChange={(e) => onTitle(e.target.value)} placeholder="Title / hymn name…" className="flex-1" />
+        <div className="relative flex-1">
+          <Input
+            value={title}
+            onChange={(e) => onTitle(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 150)}
+            placeholder="Title / hymn name…"
+            className="w-full"
+          />
+          {focused && hymnHits.length > 0 && (
+            <div className="absolute z-40 top-full left-0 right-0 mt-1 bg-popover border border-border shadow-lg max-h-64 overflow-y-auto">
+              {hymnHits.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  // onMouseDown so the pick lands before the input's blur
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onTitle(`${h.title} — ${h.hymnal?.short_name ?? ''} #${h.number}`.trim());
+                    setFocused(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-baseline justify-between gap-2"
+                >
+                  <span className="min-w-0 truncate">{h.title}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {h.hymnal?.short_name} #{h.number}{h.tune_title ? ` · ${h.tune_title}` : ''}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => {
