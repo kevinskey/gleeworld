@@ -112,6 +112,21 @@ public final class ExternalRecorder {
         }
         isArming = true
 
+        // Arm the one-shot start callbacks IMMEDIATELY — before the
+        // count-in timers are scheduled. If a stop()/teardown() (user
+        // cancel, or a re-prepare) lands DURING the count-in, stop()
+        // must find these handlers and settle the caller's promise;
+        // arming only in beginCapture (post-count-in) left pendingStart
+        // nil through the whole pre-roll, so the timers holding onError
+        // were invalidated and the Capacitor call never settled.
+        // beginCapture re-arms the same pair harmlessly. Every early
+        // error path below settles exactly once: teardown() drains
+        // pendingStart SILENTLY, then the path invokes its onError
+        // parameter directly.
+        os_unfair_lock_lock(&startLock)
+        pendingStart = (started: onStarted, failed: onError)
+        os_unfair_lock_unlock(&startLock)
+
         // Bring up the dedicated engine + click player. Any of these can
         // raise a raw NSException on a bad audio-session/format state
         // (e.g. input unavailable because MusicKit owns the session on a
@@ -228,8 +243,10 @@ public final class ExternalRecorder {
         }
         file = outFile
 
-        // Arm the one-shot start callbacks BEFORE the tap goes in — the
-        // first buffer can land on the audio thread immediately.
+        // Re-arm the one-shot start callbacks BEFORE the tap goes in — the
+        // first buffer can land on the audio thread immediately. (start()
+        // already armed the same pair pre-count-in so a mid-pre-roll stop
+        // settles the caller; this re-arm is a harmless overwrite.)
         os_unfair_lock_lock(&startLock)
         pendingStart = (started: onStarted, failed: onError)
         os_unfair_lock_unlock(&startLock)

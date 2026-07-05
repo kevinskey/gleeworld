@@ -119,12 +119,19 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
   const recordingTrackIdRef = useRef<string | null>(null);
   // --- Native (iOS) external-recorder state (Task 4) ---
   // When the take is live on the native AVAudioEngine path, this holds the
-  // info the stop/save flow needs: the offset captured at record-start and
-  // the hardware latency reported by externalRecordStart (both used to
-  // place record_offset_sec). null on the web path.
+  // info the stop/save flow needs: the offset captured at record-start,
+  // the count-in lead the external backing ran ahead by, and the hardware
+  // latency reported by externalRecordStart (all used to place
+  // record_offset_sec). null on the web path.
   const nativeRecRef = useRef<{
     trackId: string;
     capturedOffset: number;
+    // Seconds the Apple Music / YouTube backing advanced DURING the native
+    // count-in. The offset is stamped pre-count-in but those sources keep
+    // playing through the pre-roll, so capture actually begins this much
+    // later on the backing's timeline. 0 for file/none backing (the local
+    // mix starts post-count-in, already aligned).
+    countInLeadSec: number;
     hardwareLatencyMs: number;
   } | null>(null);
   // True from just before externalRecordStart until it resolves/rejects —
@@ -711,8 +718,16 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     stopPlayback();
     stopExternalAccompaniment();
     if (playing) setPlaying(false);
-    const takeStart = rec?.capturedOffset ?? recordStartOffsetRef.current;
-    setCurrentTime(takeStart);
+    // Placed offset: where the take actually begins on the master timeline.
+    // capturedOffset was stamped BEFORE the native count-in, but an external
+    // backing (Apple Music / YouTube) kept advancing through it — so add the
+    // count-in lead back — then subtract the hardware round-trip latency.
+    const placedOffset = rec
+      ? Math.max(0, rec.capturedOffset + rec.countInLeadSec - rec.hardwareLatencyMs / 1000)
+      : recordStartOffsetRef.current;
+    // Park the playhead at the take's placed start (same reasoning as the
+    // web path: leaving it at the end silently skips the fresh source).
+    setCurrentTime(placedOffset);
     setProgressByTrack({});
     livePeaksRef.current = [];
     setLivePeaks([]);
@@ -754,12 +769,9 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       return;
     }
     // NOTE: do NOT trimHeadLatency here — the native path already subtracts
-    // the hardware round-trip latency from the placed offset (see
-    // startNativeRecordForTrack). Trimming again would double-compensate.
-    const offsetSec = rec
-      ? Math.max(0, rec.capturedOffset - rec.hardwareLatencyMs / 1000)
-      : recordStartOffsetRef.current;
-    await saveTakeBlob(track, blob, offsetSec);
+    // the hardware round-trip latency from the placed offset (computed
+    // above). Trimming again would double-compensate.
+    await saveTakeBlob(track, blob, placedOffset);
   };
 
   // Internal helpers used by both the per-track and the transport flow.
@@ -1137,12 +1149,24 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       }
 
       // Capture rolling. Record the anchor for the stop/save flow: the
-      // placed offset subtracts hardware latency at save time (see
-      // stopNativeRecordForTrack).
+      // placed offset adds the count-in lead and subtracts hardware latency
+      // at save time (see stopNativeRecordForTrack).
+      //
+      // countInLeadSec: the offset above was stamped BEFORE the native
+      // count-in ran, but an EXTERNAL backing (Apple Music / YouTube)
+      // keeps playing through the pre-roll — capture actually starts
+      // countInBeats*secondsPerBeat later on that backing's timeline, so
+      // the take must be placed that much later or it lands exactly the
+      // count-in early. File/none backing stays 0: the local mix starts
+      // AFTER the count-in (startPlayback below), already aligned.
+      const countInLeadSec = (backing === 'appleMusic' || backing === 'youtube')
+        ? countInBeats * secondsPerBeat
+        : 0;
       nativeArmingRef.current = false;
       nativeRecRef.current = {
         trackId: track.id,
         capturedOffset: recordStartOffsetRef.current,
+        countInLeadSec,
         hardwareLatencyMs: started.hardwareLatencyMs,
       };
 
@@ -1169,7 +1193,19 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
           : `Recording ${track.label}.`;
       toast.message(msg);
     } catch (e: any) {
+      // Rare post-backing-start throw (e.g. addListener rejecting): make
+      // sure the backing doesn't keep playing with no recording, the peak
+      // sub doesn't leak, and the record button is usable again.
       nativeArmingRef.current = false;
+      nativeRecRef.current = null;
+      if (externalPeakSubRef.current) {
+        try { await externalPeakSubRef.current.remove(); } catch { /* ignore */ }
+        externalPeakSubRef.current = null;
+      }
+      stopExternalAccompaniment();
+      setRecordingTrackId(null);
+      recordingTrackIdRef.current = null;
+      void endRecordingActivity();
       console.error('[PartTracks] Native start recording failed', e);
       toast.error(e?.message ?? 'Could not start recording.');
     }
