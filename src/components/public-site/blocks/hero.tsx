@@ -174,18 +174,29 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           section's height comes from the image, never from the text overlay,
           so toggling text on/off can't crop the graphic. */}
       {hasImage && (
-        <img
-          src={bgImage}
-          alt=""
-          // Phones: a wide banner at its natural aspect collapses to a
-          // ~160px strip and the hero reads as a shrunken desktop page.
-          // Below sm the section takes a real min-height and the image
-          // crops as a cover behind it; from sm up the original
-          // natural-aspect flow (height comes from the image) is kept.
-          className="absolute inset-0 w-full h-full object-cover sm:static sm:inset-auto sm:h-auto sm:object-cover block"
-          loading="eager"
-          onError={() => setImgFailed(true)}
-        />
+        <>
+          {/* Phones: many tenants upload a wide banner with text/crest
+              baked into the graphic. object-cover center-crops it and
+              slices off that baked-in content, so below sm we show the
+              WHOLE image with object-contain and fill the letterbox with
+              a blurred, scaled copy of the same image — no crop, no solid
+              bars, and it works for photo heroes too. From sm up the
+              original natural-aspect flow is kept unchanged. */}
+          <img
+            src={bgImage}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl sm:hidden block"
+            loading="eager"
+          />
+          <img
+            src={bgImage}
+            alt=""
+            className="absolute inset-0 w-full h-full object-contain sm:static sm:inset-auto sm:h-auto sm:w-full sm:object-cover block"
+            loading="eager"
+            onError={() => setImgFailed(true)}
+          />
+        </>
       )}
       {hasImage && showUnderlay && (
         <div
