@@ -343,14 +343,17 @@ export const TourManagerDashboard = ({
       <header className="sticky top-0 z-50 bg-background border-b border-border">
         <div className="flex items-center justify-between px-3 lg:px-4 h-12 bg-brand-900">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0 text-primary-foreground" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            {/* text-white, not text-primary-foreground: the bar is fixed
+                bg-brand-900, and tenant themes may define
+                --primary-foreground as a dark color (dark-on-dark). */}
+            <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0 text-white" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <Menu className="w-6 h-6" />
             </Button>
-            <h1 className="font-medium truncate text-primary-foreground text-xl py-5 pl-5">
+            <h1 className="font-medium truncate text-white text-xl py-5 pl-5">
               {currentContent.title}
             </h1>
-            <span className="text-xs hidden sm:inline text-primary-foreground/70">—</span>
-            <span className="text-xs hidden sm:inline truncate text-primary-foreground/70">{currentContent.description}</span>
+            <span className="text-xs hidden sm:inline text-white/70">—</span>
+            <span className="text-xs hidden sm:inline truncate text-white/70">{currentContent.description}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative w-96 hidden md:block">
@@ -360,7 +363,7 @@ export const TourManagerDashboard = ({
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden h-8 w-8 text-primary-foreground"
+              className="lg:hidden h-8 w-8 text-white"
               onClick={() => navigate(homePath)}
             >
               <ArrowLeft className="w-5 h-5" />
