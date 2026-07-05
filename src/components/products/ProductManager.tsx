@@ -404,25 +404,28 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onSave,
   onCancel
 }) => {
+  // Numeric fields are kept as raw strings while editing so the input can
+  // show exactly what was typed (including a real "0" — `value={n || ''}`
+  // erases it) and parse once on submit. num() below does the conversion.
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
     short_description: product?.short_description || '',
     sku: product?.sku || '',
-    price: product?.price || 0,
-    sale_price: product?.sale_price || 0,
+    price: product?.price != null ? String(product.price) : '',
+    sale_price: product?.sale_price != null ? String(product.sale_price) : '',
     category_id: product?.category_id || '',
     is_active: product?.is_active ?? true,
     is_featured: product?.is_featured ?? false,
-    stock_quantity: product?.stock_quantity || 0,
+    stock_quantity: product?.stock_quantity != null ? String(product.stock_quantity) : '',
     manage_stock: product?.manage_stock ?? true,
     requires_shipping: product?.requires_shipping ?? true,
     digital_object_key: product?.digital_object_key || '',
-    weight: product?.weight || 0,
-    weight_oz: product?.weight_oz || 0,
-    length_in: product?.length_in || 0,
-    width_in: product?.width_in || 0,
-    height_in: product?.height_in || 0,
+    weight: product?.weight != null ? String(product.weight) : '',
+    weight_oz: product?.weight_oz != null ? String(product.weight_oz) : '',
+    length_in: product?.length_in != null ? String(product.length_in) : '',
+    width_in: product?.width_in != null ? String(product.width_in) : '',
+    height_in: product?.height_in != null ? String(product.height_in) : '',
     tags: product?.tags?.join(', ') || '',
   });
 
@@ -467,9 +470,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
   const [saving, setSaving] = useState(false);
   // Images picked before the product exists (create flow) are staged here
-  // and uploaded right after the INSERT returns an id. For an existing
+  // (with a stable object URL so previews don't leak one per render) and
+  // uploaded right after the INSERT returns an id. For an existing
   // product they upload immediately in handleFilePick instead.
-  const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const [pendingImages, setPendingImages] = useState<{ file: File; preview: string }[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  useEffect(() => () => {
+    pendingImages.forEach(p => URL.revokeObjectURL(p.preview));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const {
     toast
   } = useToast();
@@ -480,49 +489,99 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   // Upload one file and record it in BOTH image stores: gw_product_images
   // (admin list/grid) and gw_products.images text[] (what the public
-  // storefront merch block actually renders). Returns the public URL.
+  // storefront merch block actually renders). Returns the public URL, or
+  // null on any failure — if the DB row can't be written the stored file
+  // is removed again so the two stores never drift apart.
   const persistImage = async (file: File, productId: string): Promise<string | null> => {
     const imageUrl = await uploadProductImage(file, productId);
     if (!imageUrl) return null;
-    await supabase.from('gw_product_images').insert({
+    const { error } = await supabase.from('gw_product_images').insert({
       product_id: productId,
       image_url: imageUrl,
       alt_text: file.name,
       is_primary: false,
       sort_order: 0
     });
+    if (error) {
+      await deleteProductImage(imageUrl);
+      return null;
+    }
     return imageUrl;
   };
 
-  const syncImagesArray = async (productId: string, urls: string[]) => {
-    if (urls.length === 0) return;
+  const syncImagesArray = async (productId: string, urls: string[]): Promise<boolean> => {
+    if (urls.length === 0) return true;
     const { data: row } = await supabase.from('gw_products').select('images').eq('id', productId).single();
     const merged = [...(row?.images ?? []), ...urls];
-    await supabase.from('gw_products').update({ images: merged }).eq('id', productId);
+    const { error } = await supabase.from('gw_products').update({ images: merged }).eq('id', productId);
+    if (error) {
+      toast({
+        title: "Image not visible in store yet",
+        description: "The image uploaded but the product record couldn't be updated. Edit and re-save the product to retry.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
+
+  // Shared by handleFilePick (existing product) and handleSubmit (staged
+  // files for a new product): upload each file, sync the storefront
+  // column, toast about partial failures. Returns how many succeeded.
+  const uploadFiles = async (files: File[], productId: string): Promise<number> => {
+    const urls: string[] = [];
+    for (const file of files) {
+      try {
+        const url = await persistImage(file, productId);
+        if (url) urls.push(url);
+      } catch {
+        // keep going — the count below reports what didn't make it
+      }
+    }
+    await syncImagesArray(productId, urls);
+    if (urls.length < files.length) {
+      toast({
+        title: "Some images failed",
+        description: `${urls.length} of ${files.length} images uploaded. You can retry the rest by editing the product.`,
+        variant: "destructive"
+      });
+    }
+    return urls.length;
   };
 
   const handleFilePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     e.target.value = ''; // allow re-picking the same file
-    if (files.length === 0) return;
+    if (files.length === 0 || uploadingImages) return;
     if (!product) {
-      setPendingImages(prev => [...prev, ...files]);
+      setPendingImages(prev => [...prev, ...files.map(file => ({ file, preview: URL.createObjectURL(file) }))]);
       return;
     }
-    const urls: string[] = [];
-    for (const file of files) {
-      const url = await persistImage(file, product.id);
-      if (url) urls.push(url);
+    setUploadingImages(true);
+    try {
+      const okCount = await uploadFiles(files, product.id);
+      if (okCount > 0) onSave();
+    } finally {
+      setUploadingImages(false);
     }
-    await syncImagesArray(product.id, urls);
-    if (urls.length > 0) onSave();
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
+      const num = (s: string) => parseFloat(s) || 0;
+      const int = (s: string) => parseInt(s, 10) || 0;
+      const basePrice = num(formData.price);
       const productData: Record<string, any> = {
         ...formData,
+        price: basePrice,
+        sale_price: num(formData.sale_price),
+        stock_quantity: int(formData.stock_quantity),
+        weight: num(formData.weight),
+        weight_oz: num(formData.weight_oz),
+        length_in: num(formData.length_in),
+        width_in: num(formData.width_in),
+        height_in: num(formData.height_in),
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
         // Digital delivery (store-download) keys off digital_object_key
         // being non-null; a digital product also never needs shipping.
@@ -549,19 +608,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
       // Upload any images staged before the product existed.
       if (productId && pendingImages.length > 0) {
-        const urls: string[] = [];
-        for (const file of pendingImages) {
-          const url = await persistImage(file, productId);
-          if (url) urls.push(url);
-        }
-        await syncImagesArray(productId, urls);
-        if (urls.length < pendingImages.length) {
-          toast({
-            title: "Some images failed",
-            description: `${urls.length} of ${pendingImages.length} images uploaded. You can retry the rest by editing the product.`,
-            variant: "destructive"
-          });
-        }
+        await uploadFiles(pendingImages.map(p => p.file), productId);
+        pendingImages.forEach(p => URL.revokeObjectURL(p.preview));
         setPendingImages([]);
       }
 
@@ -583,7 +631,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 : formData.name,
               option1: r.size || null,
               option2: r.color || null,
-              price: r.price > 0 ? r.price : formData.price,
+              price: r.price > 0 ? r.price : basePrice,
               inventory_quantity: r.stock_quantity ?? 0,
               sku: r.sku?.trim() || null,
             };
@@ -704,16 +752,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="price">Regular Price ($) *</Label>
-              <Input id="price" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={formData.price || ''} onChange={e => setFormData({
+              <Input id="price" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={formData.price} onChange={e => setFormData({
               ...formData,
-              price: parseFloat(e.target.value) || 0
+              price: e.target.value
             })} required />
             </div>
             <div>
               <Label htmlFor="sale_price">Sale Price ($)</Label>
-              <Input id="sale_price" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={formData.sale_price || ''} onChange={e => setFormData({
+              <Input id="sale_price" type="number" inputMode="decimal" step="0.01" placeholder="0.00" value={formData.sale_price} onChange={e => setFormData({
               ...formData,
-              sale_price: parseFloat(e.target.value) || 0
+              sale_price: e.target.value
             })} />
             </div>
           </div>
@@ -728,9 +776,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
           {formData.manage_stock && <div>
               <Label htmlFor="stock_quantity">Stock Quantity (base — variants override)</Label>
-              <Input id="stock_quantity" type="number" inputMode="numeric" placeholder="0" value={formData.stock_quantity || ''} onChange={e => setFormData({
+              <Input id="stock_quantity" type="number" inputMode="numeric" placeholder="0" value={formData.stock_quantity} onChange={e => setFormData({
             ...formData,
-            stock_quantity: parseInt(e.target.value) || 0
+            stock_quantity: e.target.value
           })} />
             </div>}
 
@@ -768,19 +816,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <Label htmlFor="weight_oz" className="text-xs">Weight (oz)</Label>
-                <Input id="weight_oz" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.weight_oz || ''} onChange={e => setFormData({ ...formData, weight_oz: parseFloat(e.target.value) || 0 })} />
+                <Input id="weight_oz" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.weight_oz} onChange={e => setFormData({ ...formData, weight_oz: e.target.value })} />
               </div>
               <div>
                 <Label htmlFor="length_in" className="text-xs">Length (in)</Label>
-                <Input id="length_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.length_in || ''} onChange={e => setFormData({ ...formData, length_in: parseFloat(e.target.value) || 0 })} />
+                <Input id="length_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.length_in} onChange={e => setFormData({ ...formData, length_in: e.target.value })} />
               </div>
               <div>
                 <Label htmlFor="width_in" className="text-xs">Width (in)</Label>
-                <Input id="width_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.width_in || ''} onChange={e => setFormData({ ...formData, width_in: parseFloat(e.target.value) || 0 })} />
+                <Input id="width_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.width_in} onChange={e => setFormData({ ...formData, width_in: e.target.value })} />
               </div>
               <div>
                 <Label htmlFor="height_in" className="text-xs">Height (in)</Label>
-                <Input id="height_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.height_in || ''} onChange={e => setFormData({ ...formData, height_in: parseFloat(e.target.value) || 0 })} />
+                <Input id="height_in" type="number" inputMode="decimal" step="0.1" placeholder="0" value={formData.height_in} onChange={e => setFormData({ ...formData, height_in: e.target.value })} />
               </div>
             </div>
           </div>
@@ -878,11 +926,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     <img src={image.image_url} alt={image.alt_text} className="w-full aspect-square object-cover rounded border" />
                     <Button variant="destructive" size="sm" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={async () => {
                 if (await deleteProductImage(image.image_url)) {
-                  await supabase.from('gw_product_images').delete().eq('id', image.id);
+                  const { error: rowError } = await supabase.from('gw_product_images').delete().eq('id', image.id);
                   // Keep the storefront's images[] column in sync too.
                   const { data: row } = await supabase.from('gw_products').select('images').eq('id', product.id).single();
                   const remaining = (row?.images ?? []).filter((u: string) => u !== image.image_url);
-                  await supabase.from('gw_products').update({ images: remaining }).eq('id', product.id);
+                  const { error: arrError } = await supabase.from('gw_products').update({ images: remaining }).eq('id', product.id);
+                  if (rowError || arrError) {
+                    toast({
+                      title: "Image may still show in the store",
+                      description: "The file was removed but the product record couldn't be fully updated. Re-save the product to finish.",
+                      variant: "destructive"
+                    });
+                  }
                   onSave(); // Refresh
                 }
               }}>
@@ -895,9 +950,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
           {pendingImages.length > 0 && <div>
               <Label>Ready to upload (saved with the product)</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                {pendingImages.map((file, idx) => <div key={`${file.name}-${idx}`} className="relative group">
-                    <img src={URL.createObjectURL(file)} alt={file.name} className="w-full aspect-square object-cover rounded border" />
-                    <Button type="button" variant="destructive" size="sm" className="absolute top-1 right-1" onClick={() => setPendingImages(pendingImages.filter((_, i) => i !== idx))}>
+                {pendingImages.map((p, idx) => <div key={p.preview} className="relative group">
+                    <img src={p.preview} alt={p.file.name} className="w-full aspect-square object-cover rounded border" />
+                    <Button type="button" variant="destructive" size="sm" className="absolute top-1 right-1" onClick={() => {
+                      URL.revokeObjectURL(p.preview);
+                      setPendingImages(pendingImages.filter((_, i) => i !== idx));
+                    }}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>)}
@@ -907,11 +965,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <div>
             <Label>Upload New Image</Label>
             <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
-              <input type="file" accept="image/*" multiple onChange={handleFilePick} className="hidden" id="image-upload" />
-              <label htmlFor="image-upload" className="cursor-pointer">
+              <input type="file" accept="image/*" multiple disabled={uploadingImages} onChange={handleFilePick} className="hidden" id="image-upload" />
+              <label htmlFor="image-upload" className={uploadingImages ? 'pointer-events-none opacity-60' : 'cursor-pointer'}>
                 <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  {product ? 'Tap to upload — images save immediately' : 'Tap to add images — they upload when you create the product'}
+                  {uploadingImages ? 'Uploading…' : product ? 'Tap to upload — images save immediately' : 'Tap to add images — they upload when you create the product'}
                 </p>
               </label>
             </div>
