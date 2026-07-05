@@ -75,6 +75,8 @@ export const UpcomingEventsWidget = ({
         return 'bg-orange-500';
       case 'audition':
         return 'bg-red-500';
+      case 'service':
+        return 'bg-violet-500';
       default:
         return 'bg-gray-500';
     }

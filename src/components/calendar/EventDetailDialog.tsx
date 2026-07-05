@@ -56,6 +56,8 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
         return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
       case 'meeting':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'service':
+        return 'bg-event-service text-event-service-fg';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
     }

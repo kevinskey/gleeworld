@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { EVENT_TYPES } from "@/constants/eventTypes";
+import { EVENT_TYPES, getEventTypeBadgeClasses } from "@/constants/eventTypes";
 import { Separator } from "@/components/ui/separator";
-import { AddressInput } from "@/components/shared/AddressInput";
+import { CalendarSelectWithCreate, CalendarOption } from "@/components/calendar/CalendarSelectWithCreate";
+import { AddressAutocomplete } from "@/components/calendar/AddressAutocomplete";
 import { 
   CalendarIcon, 
   MapPinIcon, 
@@ -63,7 +64,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [isAdminLike, setIsAdminLike] = useState(false);
-  const [calendars, setCalendars] = useState<{id: string; name: string; color: string}[]>([]);
+  const [calendars, setCalendars] = useState<CalendarOption[]>([]);
   const { data: categoryOptions = [] } = useEventCategories();
   const [formData, setFormData] = useState({
     title: '',
@@ -160,17 +161,25 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   }, [event]);
 
   // Fetch calendars
+  const fetchCalendars = async () => {
+    const { data } = await supabase
+      .from('gw_calendars')
+      .select('id, name, color')
+      .eq('is_visible', true)
+      .order('name');
+    setCalendars(data || []);
+  };
+
   useEffect(() => {
-    const fetchCalendars = async () => {
-      const { data } = await supabase
-        .from('gw_calendars')
-        .select('id, name, color')
-        .eq('is_visible', true)
-        .order('name');
-      setCalendars(data || []);
-    };
     fetchCalendars();
   }, []);
+
+  // After creating a new calendar from the "＋ New calendar…" row, refetch
+  // via the existing load function and auto-select the new calendar.
+  const handleCalendarCreated = async (newCalendar: CalendarOption) => {
+    await fetchCalendars();
+    setFormData(prev => ({ ...prev, calendar_id: newCalendar.id }));
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -468,8 +477,12 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   // Check if event is part of a recurring series
   const isRecurringEvent = event?.is_recurring || event?.parent_event_id;
 
+  // Note: EVENT_TYPES.color holds a short color name (e.g. 'violet'), not a
+  // className — getEventTypeBadgeClasses maps it to a real bg/text pair so
+  // this badge (and the Select dot below) actually render colored instead
+  // of falling back to an unstyled/gray default for every event type.
   const getEventTypeColor = (type: string) => {
-    return eventTypes.find(t => t.value === type)?.color || 'bg-gray-100 text-gray-800';
+    return getEventTypeBadgeClasses(type);
   };
 
   const getStatusColor = (status: string) => {
@@ -539,7 +552,7 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                       {eventTypes.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${type.color.split(' ')[0]}`} />
+                            <div className={`w-2 h-2 rounded-full ${getEventTypeBadgeClasses(type.value).split(' ')[0]}`} />
                             {type.label}
                           </div>
                         </SelectItem>
@@ -573,27 +586,14 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
 
                 <div className="space-y-2">
                   <Label htmlFor="calendar_id" className="text-sm font-medium">Calendar</Label>
-                  <Select
+                  <CalendarSelectWithCreate
+                    calendars={calendars}
                     value={formData.calendar_id}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, calendar_id: value }))}
-                  >
-                    <SelectTrigger className="animate-fade-in">
-                      <SelectValue placeholder="Select calendar" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {calendars.map((cal) => (
-                        <SelectItem key={cal.id} value={cal.id}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-sm flex-shrink-0" 
-                              style={{ backgroundColor: cal.color }}
-                            />
-                            {cal.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(id) => setFormData(prev => ({ ...prev, calendar_id: id }))}
+                    onCalendarCreated={handleCalendarCreated}
+                    placeholder="Select calendar"
+                    triggerClassName="animate-fade-in w-full"
+                  />
                 </div>
               </div>
 
@@ -757,19 +757,23 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
                 />
               </div>
 
-              <AddressInput
-                id="address"
-                label="Full Address"
-                value={formData.address}
-                onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
-                placeholder="Complete street address"
-                className="animate-fade-in"
-                onPlaceSelect={(place) => {
-                  if (place.formatted_address) {
-                    setFormData(prev => ({ ...prev, address: place.formatted_address || '' }));
-                  }
-                }}
-              />
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-sm font-medium">Full Address</Label>
+                <AddressAutocomplete
+                  id="address"
+                  value={formData.address}
+                  onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
+                  placeholder="Complete street address"
+                  className="animate-fade-in"
+                  onSelect={(description, name) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      address: description,
+                      venue_name: prev.venue_name || name || prev.venue_name,
+                    }));
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
 

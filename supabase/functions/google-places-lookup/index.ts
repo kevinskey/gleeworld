@@ -29,22 +29,35 @@ serve(async (req) => {
       );
     }
 
-    const { query } = await req.json();
-    
+    const { query, kind } = await req.json();
+
     if (!query || query.trim().length < 2) {
       return new Response(
-        JSON.stringify({ predictions: [] }), 
+        JSON.stringify({ predictions: [] }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
     }
 
-    console.log('Looking up cities for query:', query);
+    // 'address' mode is used by the event-editor address field (generic
+    // free-text address search). The default mode is unchanged and still
+    // powers useGooglePlaces.ts's city/locality lookup.
+    const isAddressMode = kind === 'address';
+    console.log(`Looking up ${isAddressMode ? 'addresses' : 'cities'} for query:`, query);
 
     // Use Google Places API (New) Text Search
     const url = new URL('https://places.googleapis.com/v1/places:searchText');
-    
+
+    const searchBody: Record<string, unknown> = {
+      textQuery: query,
+      maxResultCount: 5,
+      languageCode: 'en'
+    };
+    if (!isAddressMode) {
+      searchBody.includedType = 'locality'; // Focus on cities/localities
+    }
+
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
@@ -52,12 +65,7 @@ serve(async (req) => {
         'X-Goog-Api-Key': googleMapsApiKey,
         'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.location,places.types,places.addressComponents'
       },
-      body: JSON.stringify({
-        textQuery: query,
-        includedType: 'locality', // Focus on cities/localities
-        maxResultCount: 5,
-        languageCode: 'en'
-      }),
+      body: JSON.stringify(searchBody),
     });
 
     if (!response.ok) {
@@ -69,48 +77,58 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Google Places API response:', JSON.stringify(data, null, 2));
 
-    // Transform the response to match our needs
-    const predictions = data.places?.map((place: any) => {
-      // Extract city, state, country from address components
-      let city = '';
-      let state = '';
-      let country = '';
-      
-      if (place.addressComponents) {
-        for (const component of place.addressComponents) {
-          if (component.types.includes('locality')) {
-            city = component.longText;
-          } else if (component.types.includes('administrative_area_level_1')) {
-            state = component.shortText;
-          } else if (component.types.includes('country')) {
-            country = component.longText;
+    let predictions;
+
+    if (isAddressMode) {
+      // Generic address search — no locality-only filtering, minimal shape.
+      predictions = data.places?.map((place: any) => ({
+        description: place.formattedAddress || place.displayName?.text || '',
+        name: place.displayName?.text || ''
+      })) || [];
+    } else {
+      // Transform the response to match our needs (unchanged city/locality path)
+      predictions = data.places?.map((place: any) => {
+        // Extract city, state, country from address components
+        let city = '';
+        let state = '';
+        let country = '';
+
+        if (place.addressComponents) {
+          for (const component of place.addressComponents) {
+            if (component.types.includes('locality')) {
+              city = component.longText;
+            } else if (component.types.includes('administrative_area_level_1')) {
+              state = component.shortText;
+            } else if (component.types.includes('country')) {
+              country = component.longText;
+            }
           }
         }
-      }
 
-      return {
-        place_id: place.displayName?.text || '',
-        description: place.formattedAddress || place.displayName?.text || '',
-        structured_formatting: {
-          main_text: city || place.displayName?.text || '',
-          secondary_text: [state, country].filter(Boolean).join(', ')
-        },
-        geometry: place.location ? {
-          location: {
-            lat: place.location.latitude,
-            lng: place.location.longitude
-          }
-        } : null,
-        city_name: city || place.displayName?.text || '',
-        state: state,
-        country: country
-      };
-    }) || [];
+        return {
+          place_id: place.displayName?.text || '',
+          description: place.formattedAddress || place.displayName?.text || '',
+          structured_formatting: {
+            main_text: city || place.displayName?.text || '',
+            secondary_text: [state, country].filter(Boolean).join(', ')
+          },
+          geometry: place.location ? {
+            location: {
+              lat: place.location.latitude,
+              lng: place.location.longitude
+            }
+          } : null,
+          city_name: city || place.displayName?.text || '',
+          state: state,
+          country: country
+        };
+      }) || [];
+    }
 
     console.log('Transformed predictions:', predictions);
 
     return new Response(
-      JSON.stringify({ predictions }), 
+      JSON.stringify({ predictions }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }

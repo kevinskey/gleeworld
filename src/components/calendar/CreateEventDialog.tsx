@@ -17,7 +17,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EVENT_TYPES } from "@/constants/eventTypes";
 import { useUsers } from "@/hooks/useUsers";
-import { AddressInput } from "@/components/shared/AddressInput";
+import { CalendarSelectWithCreate, CalendarOption } from "@/components/calendar/CalendarSelectWithCreate";
+import { AddressAutocomplete } from "@/components/calendar/AddressAutocomplete";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -120,7 +121,7 @@ export const CreateEventDialog = ({
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [calendars, setCalendars] = useState<{ id: string; name: string; color: string; isCourse?: boolean }[]>([]);
+  const [calendars, setCalendars] = useState<CalendarOption[]>([]);
   const [selectedCalendarId, setSelectedCalendarId] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const { users, loading: usersLoading } = useUsers();
@@ -265,6 +266,15 @@ export const CreateEventDialog = ({
         variant: "destructive"
       });
     }
+  };
+
+  // After creating a new calendar from the "＋ New calendar…" row, refetch
+  // via the existing load function (so courses etc. stay in sync) and then
+  // auto-select the newly created calendar.
+  const handleCalendarCreated = async (newCalendar: CalendarOption) => {
+    await loadCalendars();
+    setSelectedCalendarId(newCalendar.id);
+    setSelectedCourseId(null);
   };
 
   useEffect(() => {
@@ -937,51 +947,19 @@ export const CreateEventDialog = ({
                   </SelectContent>
                 </Select>
               )}
-              {calendars.length > 0 && (
-                <Select 
-                  value={selectedCalendarId} 
-                  onValueChange={(value) => {
-                    const selected = calendars.find(c => c.id === value);
-                    setSelectedCalendarId(value);
-                    // Track if this is a course selection
-                    setSelectedCourseId(selected?.isCourse ? value : null);
-                  }}
-                >
-                  <SelectTrigger className="w-48 h-10">
-                    <SelectValue placeholder="Calendar" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50 max-h-[300px]">
-                    {/* Regular calendars first */}
-                    {calendars.filter(c => !c.isCourse).length > 0 && (
-                      <>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Calendars</div>
-                        {calendars.filter(c => !c.isCourse).map(calendar => (
-                          <SelectItem key={calendar.id} value={calendar.id}>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: calendar.color }} />
-                              <span>{calendar.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </>
-                    )}
-                    {/* Courses section */}
-                    {calendars.filter(c => c.isCourse).length > 0 && (
-                      <>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground mt-1 border-t pt-2">Classes</div>
-                        {calendars.filter(c => c.isCourse).map(calendar => (
-                          <SelectItem key={calendar.id} value={calendar.id}>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: calendar.color }} />
-                              <span className="truncate max-w-[160px]">{calendar.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-              )}
+              <CalendarSelectWithCreate
+                calendars={calendars.filter(c => !c.isCourse)}
+                courses={calendars.filter(c => c.isCourse)}
+                value={selectedCalendarId}
+                onValueChange={(id, selected) => {
+                  setSelectedCalendarId(id);
+                  // Track if this is a course selection
+                  setSelectedCourseId(selected?.isCourse ? id : null);
+                }}
+                onCalendarCreated={handleCalendarCreated}
+                placeholder="Calendar"
+                triggerClassName="w-48 h-10"
+              />
             </div>
           </div>
 
@@ -1069,12 +1047,17 @@ export const CreateEventDialog = ({
               />
             </div>
             <div className="mt-2">
-              <AddressInput
+              <AddressAutocomplete
                 value={formData.address}
                 onChange={value => setFormData(prev => ({ ...prev, address: value }))}
                 placeholder="Full address"
-                onPlaceSelect={place => {
-                  if (place.formatted_address) setFormData(prev => ({ ...prev, address: place.formatted_address || '' }));
+                className="h-10"
+                onSelect={(description, name) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    address: description,
+                    venue_name: prev.venue_name || name || prev.venue_name,
+                  }));
                 }}
               />
             </div>

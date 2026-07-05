@@ -7,6 +7,8 @@ export const getEventTypeColor = (type: string) => {
       return 'bg-event-rehearsal text-event-rehearsal-fg';
     case 'sectionals':
       return 'bg-event-rehearsal text-event-rehearsal-fg';
+    case 'service':
+      return 'bg-event-service text-event-service-fg';
     case 'meeting':
     case 'audition':
       return 'bg-event-meeting text-event-meeting-fg';
