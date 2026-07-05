@@ -9,7 +9,7 @@
 // (its default decoder is the AudioContext path), and its short-circuit
 // contracts (ms<=0, decode failure/unavailable) are covered separately.
 
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import {
   msToSamples,
   trimBufferHeadSamples,
@@ -19,6 +19,8 @@ import {
   getConfiguredInputLatencyMs,
   getOutputLatencyMs,
   DEFAULT_INPUT_LATENCY_MS,
+  isLikelyHeadphoneLabel,
+  getLikelyAudioRoute,
   type AudioBufferLike,
 } from '../sharedRecorder';
 
@@ -266,5 +268,112 @@ describe('getConfiguredInputLatencyMs / getOutputLatencyMs', () => {
   test('output latency is 0 when AudioContext is unavailable', () => {
     expect(typeof AudioContext).toBe('undefined');
     expect(getOutputLatencyMs()).toBe(0);
+  });
+});
+
+describe('isLikelyHeadphoneLabel', () => {
+  test('matches headphone-ish labels case-insensitively', () => {
+    expect(isLikelyHeadphoneLabel('AirPods Pro')).toBe(true);
+    expect(isLikelyHeadphoneLabel('Bose QuietComfort Headphones')).toBe(true);
+    expect(isLikelyHeadphoneLabel('bluetooth headset')).toBe(true);
+    expect(isLikelyHeadphoneLabel('Wireless Earbuds')).toBe(true);
+    expect(isLikelyHeadphoneLabel('Jabra BLUETOOTH Speaker')).toBe(true);
+  });
+
+  test('does not match speaker/default labels', () => {
+    expect(isLikelyHeadphoneLabel('MacBook Pro Speakers')).toBe(false);
+    expect(isLikelyHeadphoneLabel('Default')).toBe(false);
+    expect(isLikelyHeadphoneLabel('External Speakers (USB Audio)')).toBe(false);
+    expect(isLikelyHeadphoneLabel('')).toBe(false);
+  });
+});
+
+describe('getLikelyAudioRoute', () => {
+  // This repo's vitest suite runs in a plain Node environment (see the
+  // module header comment above), which itself may or may not expose a
+  // bare `navigator` global (Node 21+ does, but with no `mediaDevices`) —
+  // either way it's not a real browser's, so every case here stubs
+  // `navigator` explicitly via `vi.stubGlobal` rather than mutating the
+  // real global directly (which throws on Node's getter-only `navigator`).
+  function withMediaDevices<T>(
+    devices: Array<Pick<MediaDeviceInfo, 'kind' | 'label' | 'deviceId'>> | 'throw' | 'unavailable',
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    const stub = devices === 'unavailable'
+      ? {}
+      : {
+        mediaDevices: {
+          enumerateDevices:
+            devices === 'throw'
+              ? async () => { throw new Error('permission denied'); }
+              : async () => devices,
+        },
+      };
+    vi.stubGlobal('navigator', stub);
+    return fn().finally(() => vi.unstubAllGlobals());
+  }
+
+  test('returns null (unknown) when mediaDevices.enumerateDevices is unavailable', async () => {
+    await withMediaDevices('unavailable', async () => {
+      expect(await getLikelyAudioRoute()).toEqual({ isHeadphones: null });
+    });
+  });
+
+  test('returns null (unknown) when enumerateDevices throws', async () => {
+    await withMediaDevices('throw', async () => {
+      expect(await getLikelyAudioRoute()).toEqual({ isHeadphones: null });
+    });
+  });
+
+  test('returns null (unknown) when there are no audiooutput devices', async () => {
+    await withMediaDevices(
+      [{ kind: 'audioinput', label: 'Built-in Mic', deviceId: 'default' }],
+      async () => {
+        expect(await getLikelyAudioRoute()).toEqual({ isHeadphones: null });
+      },
+    );
+  });
+
+  test('returns null (unknown) when output labels are blank (no permission granted yet)', async () => {
+    await withMediaDevices(
+      [{ kind: 'audiooutput', label: '', deviceId: 'default' }],
+      async () => {
+        expect(await getLikelyAudioRoute()).toEqual({ isHeadphones: null });
+      },
+    );
+  });
+
+  test('true when the default output is labeled like headphones', async () => {
+    await withMediaDevices(
+      [
+        { kind: 'audiooutput', label: 'MacBook Pro Speakers', deviceId: 'not-default-id' },
+        { kind: 'audiooutput', label: 'AirPods Pro', deviceId: 'default' },
+      ],
+      async () => {
+        expect(await getLikelyAudioRoute()).toEqual({ isHeadphones: true });
+      },
+    );
+  });
+
+  test('false when the default/communications outputs are speakers, even if a non-default output looks like headphones', async () => {
+    await withMediaDevices(
+      [
+        { kind: 'audiooutput', label: 'Built-in Speakers', deviceId: 'default' },
+        { kind: 'audiooutput', label: 'Built-in Speakers', deviceId: 'communications' },
+        { kind: 'audiooutput', label: 'AirPods Pro', deviceId: 'some-other-id' },
+      ],
+      async () => {
+        expect(await getLikelyAudioRoute()).toEqual({ isHeadphones: false });
+      },
+    );
+  });
+
+  test('falls back to checking all outputs when neither default nor communications markers are present (Firefox/Safari)', async () => {
+    await withMediaDevices(
+      [{ kind: 'audiooutput', label: 'Bluetooth Headset', deviceId: 'some-opaque-id' }],
+      async () => {
+        expect(await getLikelyAudioRoute()).toEqual({ isHeadphones: true });
+      },
+    );
   });
 });

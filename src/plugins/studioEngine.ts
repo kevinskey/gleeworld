@@ -92,6 +92,15 @@ interface StudioEnginePluginShape {
     studioCategoryAfterFlip: string;
     studioModeAfterFlip: string;
   }>;
+  // --- Task 5: Headphone/bleed guard ---
+  // Read the current AVAudioSession output route so the record flow (both
+  // Studio and Part Tracks) can decide whether to warn that a backing
+  // track will bleed into an open mic. `outputs` are the raw
+  // AVAudioSession.Port rawValues for every port in
+  // `currentRoute.outputs` (e.g. "Headphones", "Speaker",
+  // "BluetoothA2DPOutput") — see `classifyRouteOutputs` below for how
+  // they're interpreted into `isHeadphones`.
+  getAudioRoute(): Promise<{ outputs: string[]; isHeadphones: boolean }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
   // Splice a single clip onto a live track — pairs with useStudio's diff
   // path so a fresh recording doesn't trigger a full engine teardown.
@@ -169,3 +178,48 @@ export async function openNativeStudio(args: {
 }
 
 export const NativeStudio = Native;
+
+// ── Task 5: Headphone/bleed guard (native route classification) ───────
+
+/** AVAudioSession.Port raw values that count as "private listening" for
+ * the headphone/bleed guard — wired headphones/earbuds, a Bluetooth
+ * headset/earbuds/speaker-in-hand, a USB audio interface (assumed to be
+ * feeding headphones, matching Studio's existing latency-calibration
+ * assumption), or CarPlay/car audio (cabin listening, not a room mic
+ * picking up a loudspeaker). `builtInSpeaker`/`builtInReceiver` and
+ * anything unrecognized are NOT included, so they read as "not
+ * headphones" — the conservative choice for a bleed warning.
+ *
+ * Exported + pure so the mapping is unit-testable without a device —
+ * the actual route read (`StudioEnginePlugin.swift`'s `getAudioRoute`)
+ * isn't covered by this repo's vitest suite. `getNativeAudioRoute` below
+ * ORs this against the native `isHeadphones` field, so a naming drift
+ * between the two implementations still resolves to "show the warning"
+ * rather than silently suppressing it. */
+const HEADPHONE_ISH_PORT_TYPES = new Set<string>([
+  'Headphones',
+  'BluetoothA2DPOutput',
+  'BluetoothHFP',
+  'BluetoothLE',
+  'USBAudio',
+  'CarAudio',
+]);
+
+/** Pure classification: does this list of AVAudioSession port-type raw
+ * values (as returned by `getAudioRoute`'s `outputs`) indicate private
+ * (headphone-ish) listening? */
+export function classifyRouteOutputs(outputs: string[]): boolean {
+  return outputs.some((o) => HEADPHONE_ISH_PORT_TYPES.has(o));
+}
+
+/** Read the current AVAudioSession output route on iOS. Returns `null`
+ * off iOS — callers fall back to the web heuristic,
+ * `getLikelyAudioRoute` in `src/lib/audio/sharedRecorder.ts`. */
+export async function getNativeAudioRoute(): Promise<{ outputs: string[]; isHeadphones: boolean } | null> {
+  if (!isNativeStudioAvailable()) return null;
+  const route = await Native.getAudioRoute();
+  return {
+    outputs: route.outputs,
+    isHeadphones: route.isHeadphones || classifyRouteOutputs(route.outputs),
+  };
+}

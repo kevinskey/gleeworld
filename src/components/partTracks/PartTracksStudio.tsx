@@ -15,7 +15,7 @@ import {
   Play, Pause, Square, Mic, MicOff, Volume2, VolumeX, Trash2, Plus, Upload, Circle,
   Music, ArrowLeft, Headphones, Sparkles, Loader2, Youtube, Settings2,
   Wrench, AudioWaveform, AudioLines, Star, MicVocal, CircleDot,
-  Scissors, BarChart3, Wand2,
+  Scissors, BarChart3, Wand2, X,
 } from 'lucide-react';
 import { AccompanimentPicker } from './AccompanimentPicker';
 import { DeviceSettings, isMusicModeEnabled } from './DeviceSettings';
@@ -30,7 +30,7 @@ import {
 import {
   startRecordingActivity, endRecordingActivity,
 } from '@/plugins/recordingLiveActivity';
-import { NativeStudio, isNativeStudioAvailable } from '@/plugins/studioEngine';
+import { NativeStudio, isNativeStudioAvailable, getNativeAudioRoute } from '@/plugins/studioEngine';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { FloatingScorePanel } from './FloatingScorePanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -49,6 +49,13 @@ import {
   getTrackBuffer, playCountIn,
 } from './audioEngine';
 import { bufferToWav, trimSilence, normalize, reduceNoise } from './audioProcessing';
+import { getLikelyAudioRoute } from '@/lib/audio/sharedRecorder';
+
+// Task 5 (headphone/bleed guard): once dismissed, the "wear headphones"
+// warning stays suppressed for the rest of the browser tab's session —
+// module-level (not component state) so it survives track switches and
+// remounts of PartTracksStudio within the same session.
+let bleedWarningDismissedForSession = false;
 
 interface ScoreMeta {
   id: string;
@@ -151,6 +158,12 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
   // and auto-stops at punchOut.
   const [punchIn, setPunchIn] = useState<number | null>(null);
   const [punchOut, setPunchOut] = useState<number | null>(null);
+  // Task 5 (headphone/bleed guard): shown near the transport when a take
+  // is about to start with a backing track playing, the route is
+  // confirmed NOT headphones, and echo cancellation is off — so the mic
+  // would otherwise pick up the backing and bleed into the recording.
+  // Warn-only; never blocks the record flow.
+  const [bleedWarning, setBleedWarning] = useState(false);
   // Set of track IDs currently being processed by an audio tool so the
   // button can show a spinner + block double-clicks.
   const [processingTrackIds, setProcessingTrackIds] = useState<Set<string>>(new Set());
@@ -1027,6 +1040,39 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     return 'none';
   };
 
+  // Task 5 (headphone/bleed guard). Called just before capture begins on
+  // BOTH the native and web record-start paths. Warns only when ALL of:
+  //  - a backing source will be audible during this take (willPlayBacking)
+  //  - the route is CONFIRMED not headphones — `false`, not `null`/unknown
+  //    (native `getNativeAudioRoute`, or the web heuristic
+  //    `getLikelyAudioRoute` in sharedRecorder.ts; `null` means "don't
+  //    know" and is treated as "don't warn", not "warn")
+  //  - echo cancellation is off (`aecOff`) — always true on the native
+  //    path (the .videoRecording session mode used by
+  //    prepareExternalRecordSession disables the speech DSP), or gated by
+  //    isMusicModeEnabled() on the web path (audioEngine.ts's
+  //    startRecording sets `echoCancellation: !musicMode`).
+  // Never blocks recording — this only flips UI state. Any failure
+  // reading the route (native call rejects, enumerateDevices throws) is
+  // swallowed: better to skip a warning than to fail a record-start over
+  // a diagnostic check.
+  const maybeShowBleedWarning = async (willPlayBacking: boolean, aecOff: boolean): Promise<void> => {
+    if (bleedWarningDismissedForSession || !willPlayBacking || !aecOff) return;
+    try {
+      const isHeadphones = isNativeStudioAvailable()
+        ? (await getNativeAudioRoute())?.isHeadphones ?? null
+        : (await getLikelyAudioRoute()).isHeadphones;
+      if (isHeadphones === false) setBleedWarning(true);
+    } catch {
+      /* best-effort — see comment above */
+    }
+  };
+
+  const dismissBleedWarning = () => {
+    bleedWarningDismissedForSession = true;
+    setBleedWarning(false);
+  };
+
   // iOS native record flow (Task 4). Captures the mic on the shared native
   // AVAudioEngine (StudioEnginePlugin.externalRecord*) OVER the backing
   // source, with hardware-latency-compensated placement. Replaces the web
@@ -1037,6 +1083,12 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     const backing = getBackingKind();
     nativeStopRequestedRef.current = false;
     try {
+      // Task 5 (headphone/bleed guard) — checked before capture begins.
+      // The native external-record session mode (.videoRecording, set by
+      // prepareExternalRecordSession below) always disables the speech
+      // DSP, so echo cancellation is off on this path unconditionally.
+      await maybeShowBleedWarning(backing !== 'none', true);
+
       // Unlock the web audio graph inside the user gesture — the local mix
       // (other recorded parts + any local-file backing) still rides it.
       await unlockAudio();
@@ -1227,6 +1279,13 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // Unlock audio context inside the user gesture so iOS permits
       // both the mic stream AND the playback graph below to start.
       await unlockAudio();
+
+      // Task 5 (headphone/bleed guard) — checked before capture begins.
+      // On this web path echo cancellation is off exactly when music
+      // mode is on (audioEngine.ts's startRecording sets
+      // `echoCancellation: !musicMode`), so that's the aecOff gate here
+      // (unlike the native path, which is always AEC-off).
+      await maybeShowBleedWarning(getBackingKind() !== 'none', isMusicModeEnabled());
 
       // On iOS Capacitor, switch the system audio session into
       // recording mode. This bypasses iOS's speech-DSP path so the
@@ -1748,6 +1807,22 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         className="sticky bottom-12 md:bottom-0 inset-x-0 bg-card border-t border-border backdrop-blur"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
+        {/* Task 5 (headphone/bleed guard). Dismissible — the X suppresses
+            this for the rest of the session (module-level flag), it never
+            reappears on its own. Warn-only: doesn't block Record. */}
+        {bleedWarning && (
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-3 bg-status-warning-bg text-status-warning-fg text-sm">
+            <span>Wear headphones — without them the backing track will bleed into your recording.</span>
+            <button
+              type="button"
+              onClick={dismissBleedWarning}
+              aria-label="Dismiss"
+              className="shrink-0 p-1 hover:opacity-70"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
           <div className="text-xs text-muted-foreground uppercase tracking-wider tabular-nums">
             {fmtTime(currentTime)} / {fmtTime(maxDuration)}

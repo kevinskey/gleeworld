@@ -388,6 +388,62 @@ function writeString(view: DataView, offset: number, str: string) {
   for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
 }
 
+// ── Task 5: Headphone/bleed guard (web route heuristic) ───────────────
+
+/** Output-device label substrings that suggest private listening
+ * (wired/Bluetooth headphones, earbuds, or a headset) rather than open
+ * room speakers. Case-insensitive. Pure — operates on an already-fetched
+ * label string — so it's directly unit-testable without
+ * `navigator.mediaDevices`. */
+const HEADPHONE_LABEL_RE = /headphone|airpod|earbud|headset|bluetooth/i;
+
+/** Pure classification: does this `MediaDeviceInfo.label` look like a
+ * headphone-ish output? Exported so `getLikelyAudioRoute` below and its
+ * unit tests share one definition. */
+export function isLikelyHeadphoneLabel(label: string): boolean {
+  return HEADPHONE_LABEL_RE.test(label);
+}
+
+/** Best-effort guess at whether the browser is currently routing audio to
+ * headphones. Unlike native iOS (`getAudioRoute` in
+ * `src/plugins/studioEngine.ts`), the Web Audio / MediaDevices APIs have
+ * no direct "what's the active output route" query — this is a
+ * heuristic over `navigator.mediaDevices.enumerateDevices()`: does any
+ * `audiooutput` device that's actually in the route (deviceId `default`
+ * or `communications` — Chrome's markers for the device the system is
+ * currently using, as opposed to merely present in the device list) have
+ * a label matching {@link isLikelyHeadphoneLabel}? Falls back to
+ * checking all `audiooutput` devices when neither marker is present
+ * (Firefox/Safari don't expose them).
+ *
+ * Returns `{ isHeadphones: null }` — unknown, deliberately NOT "false" —
+ * when there's nothing to classify: `enumerateDevices` is unavailable,
+ * the call throws, there are no `audiooutput` devices, or every label is
+ * blank (labels stay empty until a mic/speaker permission has been
+ * granted at least once). Callers should treat `null` the same as
+ * "don't warn" — this is a best-effort heuristic, not a confirmed
+ * not-headphones reading. */
+export async function getLikelyAudioRoute(): Promise<{ isHeadphones: boolean | null }> {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) {
+    return { isHeadphones: null };
+  }
+  let devices: MediaDeviceInfo[];
+  try {
+    devices = await navigator.mediaDevices.enumerateDevices();
+  } catch {
+    return { isHeadphones: null };
+  }
+  const outputs = devices.filter((d) => d.kind === 'audiooutput');
+  if (outputs.length === 0 || outputs.every((d) => !d.label)) {
+    return { isHeadphones: null };
+  }
+  const routeCandidates = outputs.filter(
+    (d) => d.deviceId === 'default' || d.deviceId === 'communications',
+  );
+  const pool = routeCandidates.length > 0 ? routeCandidates : outputs;
+  return { isHeadphones: pool.some((d) => isLikelyHeadphoneLabel(d.label)) };
+}
+
 /** Trim an already-decoded buffer's head by `ms` milliseconds. Pure
  * (modulo the caller having decoded the blob already) — used internally
  * by `trimHeadLatency` below, and directly by Studio's

@@ -56,6 +56,14 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "addClipToTrack", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "removeClipFromTrack", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getHardwareLatencyMs", returnType: CAPPluginReturnPromise),
+        // Task 5 (headphone/bleed guard): current AVAudioSession output
+        // route, so the record flow can warn when a backing track will
+        // bleed into an open mic (speakers, not headphones) with echo
+        // cancellation off. Additive — read-only, doesn't touch the
+        // session. See TS-side classifyRouteOutputs in
+        // src/plugins/studioEngine.ts for the unit-tested mirror of the
+        // classification below.
+        CAPPluginMethod(name: "getAudioRoute", returnType: CAPPluginReturnPromise),
         // API-shape aliases — flatter parameters, linear-volume input,
         // separate "latencyMs" return key. These delegate to the same
         // engine internals as the canonical methods above; supporting
@@ -686,6 +694,32 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func getHardwareLatencyMs(_ call: CAPPluginCall) {
         call.resolve(["ms": engine.getHardwareLatencyMs()])
+    }
+
+    /// Task 5 (headphone/bleed guard): report the current AVAudioSession
+    /// output route. Read-only — never reconfigures or activates the
+    /// session, so it's safe to call from either the Studio or the
+    /// external-record (Part Tracks) path, MusicKit-owned or not.
+    ///
+    /// `outputs` are the raw `AVAudioSession.Port` rawValues for every
+    /// port in `currentRoute.outputs` (usually one, but AirPlay / wired +
+    /// Bluetooth simultaneous routes can report more than one).
+    /// `isHeadphones` is true when ANY of those ports is a private-
+    /// listening port (wired headphones, a Bluetooth headset/earbuds/
+    /// speaker-in-hand, USB audio, or CarPlay/car audio) — built-in
+    /// speaker/receiver and anything unrecognized read as false, the
+    /// conservative choice for a bleed warning.
+    @objc func getAudioRoute(_ call: CAPPluginCall) {
+        let session = AVAudioSession.sharedInstance()
+        let outputs = session.currentRoute.outputs
+        let headphoneIshPorts: Set<AVAudioSession.Port> = [
+            .headphones, .bluetoothA2DP, .bluetoothHFP, .bluetoothLE, .usbAudio, .carAudio,
+        ]
+        let isHeadphones = outputs.contains { headphoneIshPorts.contains($0.portType) }
+        call.resolve([
+            "outputs": outputs.map { $0.portType.rawValue },
+            "isHeadphones": isHeadphones,
+        ])
     }
 
     // MARK: - API-shape aliases
