@@ -12,8 +12,9 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   GraduationCap, Home, BookOpen, ClipboardCheck, BarChart3, Store, Award,
-  LogOut, ChevronDown, User as UserIcon, ArrowLeft, Settings,
+  LogOut, ChevronDown, User as UserIcon, ArrowLeft, Settings, Menu,
 } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -23,17 +24,52 @@ const NAV_INACTIVE = 'text-foreground/80 hover:bg-muted hover:text-foreground';
 const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 
 export function AcademyShell({ children }: { children: ReactNode }) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return (
     <div className="flex min-h-screen bg-[var(--gw-cream,#fbf9f5)]">
       <AcademySidebar />
       <div className="flex-1 min-w-0">
+        {/* Mobile topbar — the sidebar (with its Back to Workspace exit)
+            is lg-only, so below lg every Academy page needs its own way
+            out and into the academy nav. */}
+        <div className="lg:hidden sticky top-0 z-30 flex items-center gap-1 h-12 px-2 bg-card border-b border-border">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 px-2 h-10 text-sm font-medium text-muted-foreground hover:text-foreground"
+            aria-label="Back to Workspace"
+          >
+            <ArrowLeft className="w-4 h-4" /> Workspace
+          </Link>
+          <div className="flex-1 text-center text-sm font-semibold inline-flex items-center justify-center gap-1.5 min-w-0">
+            <GraduationCap className="w-4 h-4 text-primary shrink-0" /> Academy
+          </div>
+          <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="w-11 h-11 inline-flex items-center justify-center rounded-full hover:bg-muted transition"
+                aria-label="Open Academy navigation"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-[85vw] max-w-xs">
+              {/* Close on any nav click so the page changes are visible */}
+              <div className="h-full" onClick={(e) => {
+                const t = e.target as HTMLElement;
+                if (t.closest('a')) setMobileNavOpen(false);
+              }}>
+                <AcademySidebar inSheet />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
         {children}
       </div>
     </div>
   );
 }
 
-function AcademySidebar() {
+function AcademySidebar({ inSheet = false }: { inSheet?: boolean } = {}) {
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { settings: branding } = useBrandingSettings();
@@ -72,7 +108,7 @@ function AcademySidebar() {
   const initials = displayName.split(/\s+/).map((n: string) => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U';
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card h-screen sticky top-0">
+    <aside className={inSheet ? 'flex flex-col w-full h-full bg-card' : 'hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card h-screen sticky top-0'}>
       {/* Workspace pill (top) */}
       <Link to="/dashboard" className="flex items-center gap-2.5 px-4 h-14 border-b border-border hover:bg-muted/40 transition group">
         <GraduationCap className="w-5 h-5 text-primary shrink-0" />
@@ -92,7 +128,7 @@ function AcademySidebar() {
       </button>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+      <nav className={`flex-1 overflow-y-auto pt-3 px-3 space-y-0.5 ${inSheet ? 'pb-[calc(env(safe-area-inset-bottom)+6rem)]' : 'pb-3'}`}>
         {/* Primary */}
         <NavLink to="/academy" end className={({ isActive }) => `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`}>
           <Home className="w-4 h-4" />
