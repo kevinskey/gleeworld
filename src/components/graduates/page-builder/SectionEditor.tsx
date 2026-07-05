@@ -25,7 +25,7 @@ export const SectionEditor = ({ section, onSave, onCancel }: SectionEditorProps)
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="text-2xl font-bold">
           {formData.id ? 'Edit Section' : 'Create Section'}
         </h2>
@@ -63,7 +63,7 @@ export const SectionEditor = ({ section, onSave, onCancel }: SectionEditorProps)
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="section_type">Section Type</Label>
                   <Select

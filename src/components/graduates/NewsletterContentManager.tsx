@@ -145,7 +145,7 @@ export const NewsletterContentManager = ({ newsletterId }: NewsletterContentMana
     <Card>
       <CardHeader>
         <CardTitle>Newsletter Content</CardTitle>
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-4">
           <Button
             variant={activeTab === 'hero' ? 'default' : 'outline'}
             size="sm"

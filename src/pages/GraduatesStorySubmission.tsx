@@ -94,7 +94,7 @@ export default function GraduatesStorySubmission() {
               <h2 className="text-2xl font-bold mb-4">Access Restricted</h2>
               <p className="text-muted-foreground mb-6">
                 Story submission is exclusively for verified {getOrgName()} graduates.
-                Please contact an administrator to verify your alumni status.
+                Please contact an administrator to verify your graduate status.
               </p>
               <Button onClick={() => navigate('/graduates')}>
                 Return to Graduates Landing
@@ -111,7 +111,7 @@ export default function GraduatesStorySubmission() {
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-serif text-primary">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif text-primary">
             Share Your Glee Club Story
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -172,9 +172,9 @@ export default function GraduatesStorySubmission() {
                     key={story.id}
                     className="border rounded-lg p-6 space-y-4"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div className="space-y-2">
-                        <h3 className="text-xl font-semibold">{story.title}</h3>
+                        <h3 className="text-xl font-semibold truncate min-w-0">{story.title}</h3>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>
                             Submitted {format(new Date(story.created_at), 'MMM dd, yyyy')}

@@ -436,7 +436,7 @@ export const HeroManager = () => {
               {slides.map((slide, index) => (
                 <div
                   key={slide.id}
-                  className="flex items-center gap-4 p-4 border rounded-lg"
+                  className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 border rounded-lg"
                 >
                   <div className="flex-shrink-0">
                     <img
@@ -466,7 +466,7 @@ export const HeroManager = () => {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"

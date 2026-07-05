@@ -115,7 +115,7 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
 
   const titleStyle: React.CSSProperties = titleFormatting
     ? {
-        fontSize: `${titleFormatting.fontSize}px`,
+        fontSize: titleFormatting.fontSize > 28 ? `clamp(28px, 8vw, ${titleFormatting.fontSize}px)` : `${titleFormatting.fontSize}px`,
         fontWeight: titleFormatting.fontWeight,
         textAlign: titleFormatting.textAlign as any,
         color: titleFormatting.color || 'inherit',
