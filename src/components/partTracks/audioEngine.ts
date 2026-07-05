@@ -1,10 +1,26 @@
 // Audio engine for the Part Tracks Studio.
 //
-// One shared AudioContext drives playback of every loaded track + the
-// live MediaRecorder for capturing a new take. Each track gets its own
-// gain + panner so the mixer can mute / solo / pan in real time. The
-// engine intentionally avoids a heavy library (Tone.js, WaveSurfer) so
-// the studio loads fast and runs on iPad WKWebView without quirks.
+// One shared AudioContext drives playback of every loaded track. Each
+// track gets its own gain + panner so the mixer can mute / solo / pan in
+// real time. Playback intentionally avoids a heavy library (Tone.js,
+// WaveSurfer) so the studio loads fast and runs on iPad WKWebView without
+// quirks.
+//
+// Recording is the one exception: capture goes through the shared web
+// recording engine (src/lib/audio/sharedRecorder.ts) so Part Tracks gets
+// the same hardened mic-capture + latency-trim pipeline Studio uses (see
+// docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md, Task 2).
+// That module runs on its own Tone.js AudioContext, entirely separate
+// from the raw `audioCtx` below — the mic graph and the playback graph
+// are independent audio pipelines that both happen to render to the
+// system's default output, which browsers handle fine running
+// concurrently.
+
+import {
+  openMicRecorder, startTake as sharedStartTake, stopTake as sharedStopTake,
+  closeMicRecorder, getActiveWaveform,
+  trimHeadLatency, getConfiguredInputLatencyMs, getOutputLatencyMs,
+} from '@/lib/audio/sharedRecorder';
 
 interface LoadedTrack {
   id: string;
@@ -476,18 +492,27 @@ function computePeaks(buffer: AudioBuffer, bucketCount: number): number[] {
   return peaks;
 }
 
-// MediaRecorder wrapper for capturing a new take.
-let recorder: MediaRecorder | null = null;
-let recordedChunks: Blob[] = [];
-let recordingStream: MediaStream | null = null;
+// Recording — capture via the shared web recorder (Task 2 of
+// docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md). Part
+// Tracks used to run its own getUserMedia + MediaRecorder here directly;
+// it now opens the same Tone.js-backed mic graph Studio uses
+// (src/lib/audio/sharedRecorder.ts), passing Part Tracks' own
+// constraints (mono, 48k best-effort, sampleSize 16, music-mode AEC/NS/AGC
+// toggle) through `openMicRecorder`'s `constraints` option, and its own
+// mime-type probe through the `mimeType` option. Every finished take is
+// head-trimmed for input + output latency (`trimHeadLatency`) before the
+// caller (PartTracksStudio.tsx) uploads it — latency compensation Part
+// Tracks never had with the old MediaRecorder path.
+let recordingActive = false;
 let recordingMimeType: string = 'audio/webm';
-let levelAnalyser: AnalyserNode | null = null;
-let levelSource: MediaStreamAudioSourceNode | null = null;
 let levelRaf: number | null = null;
 
 // iOS Safari only supports audio/mp4; Chrome/Firefox prefer webm/opus.
 // Probe so the resulting blob is actually playable on the originating
-// device and the upload path/contentType match the container.
+// device and the upload path/contentType match the container. Fed to
+// sharedRecorder's `mimeType` option (→ `new Tone.Recorder({ mimeType })`)
+// since Tone.Recorder otherwise falls back to the browser's unmanaged
+// default, which isn't always the one Safari/iOS can play back.
 function pickRecorderMimeType(): string {
   const candidates = [
     'audio/webm;codecs=opus',
@@ -504,14 +529,45 @@ function pickRecorderMimeType(): string {
   return '';
 }
 
+/** Pure mapping from a take's actual MIME type to a file extension for
+ *  the upload path + contentType. `trimHeadLatency` re-encodes
+ *  successfully-trimmed takes to WAV, so the extension has to follow the
+ *  FINAL blob's type, not the pre-recording probe — this is what makes
+ *  that swap safe. No DOM/Web Audio dependency, so it's directly unit
+ *  tested (see docs/.../part-tracks-shared-engine.md, Task 2). */
+export function extensionForMimeType(mimeType: string): string {
+  const type = (mimeType || '').toLowerCase();
+  if (type.startsWith('audio/wav') || type.startsWith('audio/wave') || type.startsWith('audio/x-wav')) return 'wav';
+  if (type.startsWith('audio/mp4') || type.startsWith('audio/aac')) return 'm4a';
+  return 'webm';
+}
+
 export function getRecordingExtension(): string {
-  return recordingMimeType.startsWith('audio/mp4') || recordingMimeType.startsWith('audio/aac')
-    ? 'm4a'
-    : 'webm';
+  return extensionForMimeType(recordingMimeType);
 }
 
 export function getRecordingMimeType(): string {
   return recordingMimeType;
+}
+
+// sharedRecorder's manual-getUserMedia path (used whenever we pass
+// `constraints`, which Part Tracks always does) stashes the original
+// DOMException on `.cause` of the Error it throws so callers can still
+// give a specific reason instead of parsing its generic wrapper message.
+// Mirrors the granular messages Part Tracks has always shown.
+function mapMicError(e: any): Error {
+  const original = e?.cause ?? e;
+  const name = original?.name ?? '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') {
+    return new Error('Microphone permission was denied. Allow mic access for this site and try again.');
+  }
+  if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+    return new Error('No microphone was found. Connect one and try again.');
+  }
+  if (name === 'NotReadableError') {
+    return new Error('Microphone is in use by another app. Close it and try again.');
+  }
+  return new Error(original?.message ?? e?.message ?? 'Could not access the microphone.');
 }
 
 export async function startRecording(opts?: {
@@ -522,22 +578,18 @@ export async function startRecording(opts?: {
   onLevel?: (peak: number) => void;
   /** When true, requests a clean signal-chain suitable for music:
    *  no echo cancellation / noise suppression / auto-gain (these are
-   *  voice-call DSPs that smear vocals), 48kHz sample rate, and a
-   *  higher MediaRecorder bitrate (256 kbps). When false / unset we
-   *  keep echo cancellation on to suppress speaker bleed for users
-   *  monitoring without headphones. */
+   *  voice-call DSPs that smear vocals) and a 48kHz sample rate. When
+   *  false / unset we keep echo cancellation on to suppress speaker
+   *  bleed for users monitoring without headphones. */
   musicMode?: boolean;
 }): Promise<void> {
   await unlockAudio();
-  if (recorder) return;
-  if (typeof (window as any).MediaRecorder === 'undefined') {
-    throw new Error('This browser does not support audio recording (MediaRecorder unavailable).');
-  }
+  if (recordingActive) return;
   if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
     throw new Error('Microphone access is not available in this browser.');
   }
   const musicMode = !!opts?.musicMode;
-  const audioConstraints: MediaTrackConstraints = {
+  const constraints: MediaTrackConstraints = {
     echoCancellation: !musicMode, // music mode: off (clean vocal capture)
     noiseSuppression: false,
     autoGainControl: false,
@@ -547,119 +599,71 @@ export async function startRecording(opts?: {
     sampleSize: 16,
     channelCount: 1, // mono — better SNR for a single vocal mic
   } as MediaTrackConstraints;
-  if (opts?.inputDeviceId && opts.inputDeviceId !== 'default') {
-    (audioConstraints as any).deviceId = { exact: opts.inputDeviceId };
-  }
+
+  const preferredMimeType = pickRecorderMimeType();
+
   try {
-    recordingStream = await navigator.mediaDevices.getUserMedia({
-      audio: audioConstraints,
-      video: false,
+    await openMicRecorder({
+      inputDeviceId: opts?.inputDeviceId,
+      constraints,
+      mimeType: preferredMimeType || undefined,
     });
   } catch (e: any) {
-    const name = e?.name ?? '';
-    if (name === 'NotAllowedError' || name === 'SecurityError') {
-      throw new Error('Microphone permission was denied. Allow mic access for this site and try again.');
-    }
-    if (name === 'NotFoundError' || name === 'OverconstrainedError') {
-      throw new Error('No microphone was found. Connect one and try again.');
-    }
-    if (name === 'NotReadableError') {
-      throw new Error('Microphone is in use by another app. Close it and try again.');
-    }
-    throw new Error(e?.message ?? 'Could not access the microphone.');
+    throw mapMicError(e);
   }
-  recordedChunks = [];
-  const preferred = pickRecorderMimeType();
-  // Only pass a mimeType option when probe found something. An empty
-  // string here triggers undefined behavior in some browsers
-  // (Firefox throws NotSupportedError, Safari has historically accepted
-  // it but then producing a blob whose own .mimeType field is empty too,
-  // wrecking the contentType we send on upload).
-  // Bitrate: 256 kbps for opus/aac is roughly transparent for a single
-  // vocal mic and a step up from MediaRecorder's ~96 kbps default.
-  // Drop to 128 kbps when music mode is off (voice still sounds great
-  // and uploads are smaller).
-  const audioBitsPerSecond = musicMode ? 256_000 : 128_000;
-  try {
-    recorder = preferred
-      ? new MediaRecorder(recordingStream, { mimeType: preferred, audioBitsPerSecond })
-      : new MediaRecorder(recordingStream, { audioBitsPerSecond });
-  } catch (e: any) {
-    // Some browsers reject the bitrate option — retry without it before
-    // giving up so the recorder still starts.
-    try {
-      recorder = preferred
-        ? new MediaRecorder(recordingStream, { mimeType: preferred })
-        : new MediaRecorder(recordingStream);
-    } catch (e2: any) {
-      recordingStream.getTracks().forEach((t) => t.stop());
-      recordingStream = null;
-      throw new Error(e2?.message ?? e?.message ?? 'Could not start the recorder.');
-    }
-  }
-  // Resolve to the browser's actual choice when both probe + recorder
-  // report empty — neutral default that matches what most browsers
-  // produce when left to their own devices.
-  const resolved = recorder.mimeType && recorder.mimeType.length > 0
-    ? recorder.mimeType
-    : preferred;
-  recordingMimeType = resolved || 'audio/webm';
-  recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
-  recorder.start();
 
-  // Wire a live-level tap into the shared AudioContext so the studio can
-  // render the waveform as the take rolls in. Throttled to ~60ms via rAF
-  // skip-counting so it costs almost nothing.
-  if (opts?.onLevel && recordingStream) {
-    const ctx = ensureCtx();
-    try {
-      levelSource = ctx.createMediaStreamSource(recordingStream);
-      levelAnalyser = ctx.createAnalyser();
-      levelAnalyser.fftSize = 2048;
-      levelSource.connect(levelAnalyser);
-      const data = new Uint8Array(levelAnalyser.fftSize);
-      let lastEmit = 0;
-      const tick = () => {
-        if (!levelAnalyser) return;
-        const now = performance.now();
-        if (now - lastEmit >= 60) {
-          levelAnalyser.getByteTimeDomainData(data);
-          // Convert 0..255 (with 128 = silence) to a 0..1 peak amplitude.
-          let peak = 0;
-          for (let i = 0; i < data.length; i++) {
-            const v = Math.abs(data[i] - 128) / 128;
-            if (v > peak) peak = v;
-          }
-          opts.onLevel!(peak);
-          lastEmit = now;
+  try {
+    await sharedStartTake();
+  } catch (e) {
+    // Mic opened but the recorder itself failed to start — close the
+    // stream/handle instead of leaking it (mirrors the old path's
+    // `recordingStream.getTracks().forEach(t => t.stop())` cleanup on a
+    // MediaRecorder-construction failure).
+    closeMicRecorder();
+    throw e;
+  }
+  recordingActive = true;
+
+  // Wire a live-level tap off the shared recorder's own analyser so the
+  // studio can render the waveform as the take rolls in. Throttled to
+  // ~60ms via rAF skip-counting, same cadence as before.
+  if (opts?.onLevel) {
+    let lastEmit = 0;
+    const tick = () => {
+      if (!recordingActive) return;
+      const now = performance.now();
+      if (now - lastEmit >= 60) {
+        const samples = getActiveWaveform();
+        let peak = 0;
+        for (let i = 0; i < samples.length; i++) {
+          const v = Math.abs(samples[i]);
+          if (v > peak) peak = v;
         }
-        levelRaf = requestAnimationFrame(tick);
-      };
+        opts.onLevel!(peak);
+        lastEmit = now;
+      }
       levelRaf = requestAnimationFrame(tick);
-    } catch (e) {
-      console.warn('[audioEngine] live-level tap failed', e);
-    }
+    };
+    levelRaf = requestAnimationFrame(tick);
   }
 }
 
 export async function stopRecording(): Promise<Blob | null> {
-  if (!recorder) return null;
-  return new Promise((resolve) => {
-    recorder!.onstop = () => {
-      const type = recorder?.mimeType || recordingMimeType || 'audio/webm';
-      const blob = new Blob(recordedChunks, { type });
-      recordingStream?.getTracks().forEach((t) => t.stop());
-      if (levelRaf !== null) cancelAnimationFrame(levelRaf);
-      try { levelSource?.disconnect(); } catch {}
-      try { levelAnalyser?.disconnect(); } catch {}
-      levelSource = null;
-      levelAnalyser = null;
-      levelRaf = null;
-      recorder = null;
-      recordingStream = null;
-      recordedChunks = [];
-      resolve(blob);
-    };
-    recorder!.stop();
-  });
+  if (!recordingActive) return null;
+  recordingActive = false;
+  if (levelRaf !== null) { cancelAnimationFrame(levelRaf); levelRaf = null; }
+
+  const rawBlob = await sharedStopTake();
+  closeMicRecorder();
+  if (!rawBlob || rawBlob.size === 0) return rawBlob ?? null;
+
+  // Latency compensation Part Tracks never had with the old MediaRecorder
+  // path: trim the configured input + measured output latency off the
+  // head of every take before the caller uploads it. Falls back to the
+  // raw blob untouched when decode fails or the take is shorter than the
+  // trim (trimHeadLatency's own contract).
+  const trimMs = getConfiguredInputLatencyMs() + getOutputLatencyMs();
+  const finalBlob = await trimHeadLatency(rawBlob, trimMs);
+  recordingMimeType = finalBlob.type || rawBlob.type || recordingMimeType;
+  return finalBlob;
 }
