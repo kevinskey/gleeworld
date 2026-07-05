@@ -874,7 +874,7 @@ function SongSlot({ label, title, youtube, onTitle, onYouTube }: {
       <YouTubeSearchModal
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
-        initialQuery={title}
+        initialQuery={cleanHymnQuery(title)}
         onPick={(url, pickedTitle) => {
           onYouTube(url);
           // Only overwrite the title if the user hasn't typed one.
@@ -884,6 +884,17 @@ function SongSlot({ label, title, youtube, onTitle, onYouTube }: {
       />
     </div>
   );
+}
+
+// The autocomplete stores a hymn as "Title — LMGM II #291". That catalog
+// tail turns a YouTube search into a junk query (it matches vinyl 45s by
+// catalog number). Strip the " — <hymnal> #<number>" suffix (and any bare
+// trailing "#num") so we search on the actual song title.
+function cleanHymnQuery(raw: string): string {
+  return raw
+    .replace(/\s*[—–-]\s*[^#]*#\s*\S+\s*$/u, '') // "Title — LMGM II #291"
+    .replace(/\s*#\s*\S+\s*$/u, '')                // bare "Title #291"
+    .trim() || raw.trim();
 }
 
 // ── In-app YouTube search modal ──────────────────────────────────────
@@ -912,7 +923,8 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const runSearch = async (query: string) => {
+  const runSearch = async (rawQuery: string) => {
+    const query = cleanHymnQuery(rawQuery);
     setLoading(true); setError(null); setHits([]);
     const { data, error: fnErr } = await supabase.functions.invoke('youtube-search', {
       body: { q: query, maxResults: 12 },
