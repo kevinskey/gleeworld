@@ -483,6 +483,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
         // Digital delivery (store-download) keys off digital_object_key
         // being non-null; a digital product also never needs shipping.
         digital_object_key: formData.requires_shipping ? null : (formData.digital_object_key.trim() || null),
+        // "" is not a valid uuid — "No category" must reach Postgres as NULL.
+        category_id: formData.category_id || null,
       };
 
       // Remove empty SKU to avoid unique constraint violations
