@@ -50,14 +50,25 @@ interface StudioEnginePluginShape {
   // case the session is left completely untouched (any category change
   // interrupts MPMusicPlayerController playback). Resolves `sessionConfigured`
   // = false in the MusicKit case, true when we reconfigured the session.
+  //
+  // MUSICKIT CAVEAT: when sessionConfigured is false, nothing has made the
+  // session record-capable. The mic tap only delivers audio if a
+  // record-capable session (.playAndRecord) was already in place BEFORE
+  // MusicKit playback started; otherwise externalRecordStart's watchdog
+  // rejects with "no input buffers delivered" after ~1.5s. Callers on the
+  // Apple Music path must either establish the record session up front
+  // (before starting MusicKit playback) or fall back to web capture when
+  // sessionConfigured is false and externalRecordStart rejects.
   prepareExternalRecordSession(args: {
-    mixWithOthers: boolean;
+    mixWithOthers?: boolean;
     musicKitOwnsSession: boolean;
   }): Promise<{ sessionConfigured: boolean }>;
   // externalRecordStart: native count-in clicks then start capture on the
-  // dedicated engine. Resolves AFTER count-in completes and capture is
-  // rolling. `startedAtEpochMs` = best estimate of the first captured
-  // sample's wall-clock time; `hardwareLatencyMs` = input+output+ioBuffer.
+  // dedicated engine. Resolves AFTER count-in completes and the FIRST input
+  // buffer has arrived (capture demonstrably rolling — a dead input rejects
+  // via a 1.5s watchdog instead of resolving). `startedAtEpochMs` = epoch of
+  // the first captured sample, back-computed from that buffer's host time;
+  // `hardwareLatencyMs` = input+output+ioBuffer.
   externalRecordStart(args: {
     countInBeats: number;
     secondsPerBeat: number;
@@ -65,15 +76,21 @@ interface StudioEnginePluginShape {
   }): Promise<{ startedAtEpochMs: number; hardwareLatencyMs: number }>;
   // externalRecordStop: stop the dedicated capture, close the WAV, and
   // return a file:// URI (readable via Capacitor Filesystem) + duration.
+  // NOTE (Task 4): the WAV is written in the input node's native channel
+  // count — usually mono, but multi-channel interfaces (USB, some BT) can
+  // yield N-channel WAVs. Decode-side code must not assume 1 channel.
   externalRecordStop(): Promise<{ fileUri: string; durationSec: number }>;
   // Env-gated debug self-test — also directly invokable for on-device
-  // verification. Runs the external-record cycle then Studio's own
-  // prepareRecordSession flip to prove no cross-contamination.
+  // verification (Debug builds only; rejects in release). Runs the
+  // external-record cycle then Studio's own prepareRecordSession flip and
+  // asserts the resulting category/mode to prove no cross-contamination.
   externalRecordSelfTest(): Promise<{
     ok: boolean;
     note: string;
     hardwareLatencyMs: number;
     studioPrepareRecordSessionOk: boolean;
+    studioCategoryAfterFlip: string;
+    studioModeAfterFlip: string;
   }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
   // Splice a single clip onto a live track — pairs with useStudio's diff
