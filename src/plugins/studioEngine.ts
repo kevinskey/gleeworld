@@ -40,6 +40,41 @@ interface StudioEnginePluginShape {
   // clock. Resolves at grid start (recorder rolling, transport playing).
   recordWithCountIn(args: { countInBeats: number; secondsPerBeat: number; beatsPerBar: number }): Promise<{ gridStartedAtMs: number }>;
   recordStop(): Promise<{ localUrl: string; filename: string }>;
+  // --- External-source coexistence record mode (Part Tracks, iOS) ---
+  // Capture the mic OVER an external backing source (Apple Music / YouTube
+  // / uploaded file) that keeps playing. Runs on a DEDICATED AVAudioEngine,
+  // so Studio's record path + exclusive-focus session are never touched.
+  //
+  // prepareExternalRecordSession: configure the AVAudioSession for
+  // coexistence — UNLESS MusicKit owns it (musicKitOwnsSession), in which
+  // case the session is left completely untouched (any category change
+  // interrupts MPMusicPlayerController playback). Resolves `sessionConfigured`
+  // = false in the MusicKit case, true when we reconfigured the session.
+  prepareExternalRecordSession(args: {
+    mixWithOthers: boolean;
+    musicKitOwnsSession: boolean;
+  }): Promise<{ sessionConfigured: boolean }>;
+  // externalRecordStart: native count-in clicks then start capture on the
+  // dedicated engine. Resolves AFTER count-in completes and capture is
+  // rolling. `startedAtEpochMs` = best estimate of the first captured
+  // sample's wall-clock time; `hardwareLatencyMs` = input+output+ioBuffer.
+  externalRecordStart(args: {
+    countInBeats: number;
+    secondsPerBeat: number;
+    clickVolume?: number;
+  }): Promise<{ startedAtEpochMs: number; hardwareLatencyMs: number }>;
+  // externalRecordStop: stop the dedicated capture, close the WAV, and
+  // return a file:// URI (readable via Capacitor Filesystem) + duration.
+  externalRecordStop(): Promise<{ fileUri: string; durationSec: number }>;
+  // Env-gated debug self-test — also directly invokable for on-device
+  // verification. Runs the external-record cycle then Studio's own
+  // prepareRecordSession flip to prove no cross-contamination.
+  externalRecordSelfTest(): Promise<{
+    ok: boolean;
+    note: string;
+    hardwareLatencyMs: number;
+    studioPrepareRecordSessionOk: boolean;
+  }>;
   mixdown(): Promise<{ localUrl: string; filename: string }>;
   // Splice a single clip onto a live track — pairs with useStudio's diff
   // path so a fresh recording doesn't trigger a full engine teardown.
@@ -75,6 +110,10 @@ interface StudioEnginePluginShape {
   getHardwareLatency(): Promise<{ latencyMs: number }>;
   addListener(eventName: 'state', listener: (s: NativeEngineState) => void): Promise<PluginListenerHandle>;
   addListener(eventName: 'recordPeak', listener: (e: { db: number }) => void): Promise<PluginListenerHandle>;
+  // Live mic peaks (~30Hz, dBFS) from the external-source coexistence
+  // recorder — a SEPARATE event from 'recordPeak' so Part Tracks can draw
+  // its waveform without colliding with Studio's peak listener.
+  addListener(eventName: 'externalRecordPeak', listener: (e: { db: number }) => void): Promise<PluginListenerHandle>;
 }
 
 const Native = registerPlugin<StudioEnginePluginShape>('StudioEngine');
