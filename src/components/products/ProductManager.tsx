@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useProductImageUpload } from '@/hooks/useProductImageUpload';
@@ -475,9 +475,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // product they upload immediately in handleFilePick instead.
   const [pendingImages, setPendingImages] = useState<{ file: File; preview: string }[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  // Ref mirrors the state so the unmount cleanup sees the CURRENT list,
+  // not the first render's empty array (stale closure).
+  const pendingImagesRef = useRef(pendingImages);
+  pendingImagesRef.current = pendingImages;
   useEffect(() => () => {
-    pendingImages.forEach(p => URL.revokeObjectURL(p.preview));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    pendingImagesRef.current.forEach(p => URL.revokeObjectURL(p.preview));
   }, []);
   const {
     toast
@@ -511,7 +514,17 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const syncImagesArray = async (productId: string, urls: string[]): Promise<boolean> => {
     if (urls.length === 0) return true;
-    const { data: row } = await supabase.from('gw_products').select('images').eq('id', productId).single();
+    const { data: row, error: readError } = await supabase.from('gw_products').select('images').eq('id', productId).single();
+    if (readError) {
+      // Never merge against an unknown baseline — writing [...[], ...urls]
+      // after a failed read would clobber every pre-existing image.
+      toast({
+        title: "Image not visible in store yet",
+        description: "The image uploaded but the product record couldn't be read. Edit and re-save the product to retry.",
+        variant: "destructive"
+      });
+      return false;
+    }
     const merged = [...(row?.images ?? []), ...urls];
     const { error } = await supabase.from('gw_products').update({ images: merged }).eq('id', productId);
     if (error) {
@@ -561,6 +574,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
     try {
       const okCount = await uploadFiles(files, product.id);
       if (okCount > 0) onSave();
+    } catch {
+      toast({
+        title: "Upload failed",
+        description: "Something went wrong uploading images. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setUploadingImages(false);
     }
@@ -927,10 +946,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
                     <Button variant="destructive" size="sm" className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={async () => {
                 if (await deleteProductImage(image.image_url)) {
                   const { error: rowError } = await supabase.from('gw_product_images').delete().eq('id', image.id);
-                  // Keep the storefront's images[] column in sync too.
-                  const { data: row } = await supabase.from('gw_products').select('images').eq('id', product.id).single();
-                  const remaining = (row?.images ?? []).filter((u: string) => u !== image.image_url);
-                  const { error: arrError } = await supabase.from('gw_products').update({ images: remaining }).eq('id', product.id);
+                  // Keep the storefront's images[] column in sync too. If the
+                  // read fails, skip the write — filtering [] would wipe the
+                  // whole array, not just this image.
+                  const { data: row, error: readError } = await supabase.from('gw_products').select('images').eq('id', product.id).single();
+                  let arrError = readError;
+                  if (!readError) {
+                    const remaining = (row?.images ?? []).filter((u: string) => u !== image.image_url);
+                    ({ error: arrError } = await supabase.from('gw_products').update({ images: remaining }).eq('id', product.id));
+                  }
                   if (rowError || arrError) {
                     toast({
                       title: "Image may still show in the store",
