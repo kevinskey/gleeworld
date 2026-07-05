@@ -409,13 +409,14 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                         // direct DB) so the card row stays visually
                         // even regardless of tenant type.
                         const pill =
-                          'inline-flex items-center justify-center h-6 px-3 rounded-full text-[11px] font-medium ' +
+                          'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium ' +
                           'bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors ' +
                           'disabled:opacity-60 disabled:cursor-not-allowed';
                         if (isDemo) {
                           return (
                             <button
                               type="button"
+                              data-compact
                               className={pill}
                               onClick={() => sandboxToggle.mutate({ moduleId: m.id, active: !isActive })}
                               disabled={sandboxPending}
@@ -428,6 +429,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                           return (
                             <button
                               type="button"
+                              data-compact
                               className={pill}
                               onClick={() => checkout.mutate(m.id)}
                               disabled={checkoutPending}
@@ -439,7 +441,8 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                         return (
                           <button
                             type="button"
-                            className={pill}
+                            data-compact
+                              className={pill}
                             onClick={() => directToggle.mutate({ moduleId: m.id, active: !isActive })}
                             disabled={directPending}
                           >
@@ -545,7 +548,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
   // Compact grey pill styling — same recipe used for Add-ons so the
   // two tabs read as one settings surface.
   const pill =
-    'inline-flex items-center justify-center h-6 px-3 rounded-full text-[11px] font-medium ' +
+    'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium ' +
     'bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors ' +
     'disabled:opacity-60 disabled:cursor-not-allowed';
 
@@ -565,9 +568,10 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
               <button
                 key={r.value}
                 type="button"
+                data-compact
                 onClick={() => changeRole(r.value)}
                 className={cn(
-                  'inline-flex items-center justify-center h-7 px-3 rounded-full text-xs font-medium transition-colors',
+                  'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                   role === r.value
                     ? 'bg-slate-900 text-white hover:bg-slate-800'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
@@ -582,9 +586,10 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
             <span className="text-xs text-muted-foreground mr-1">Preview my sidebar as:</span>
             <button
               type="button"
+              data-compact
               onClick={() => setPreviewRole(null)}
               className={cn(
-                'inline-flex items-center justify-center h-6 px-3 rounded-full text-[11px] font-medium transition-colors',
+                'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                 !preview
                   ? 'bg-slate-900 text-white hover:bg-slate-800'
                   : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
@@ -596,9 +601,10 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
               <button
                 key={r.value}
                 type="button"
+                data-compact
                 onClick={() => togglePreview(r.value)}
                 className={cn(
-                  'inline-flex items-center justify-center h-6 px-3 rounded-full text-[11px] font-medium transition-colors',
+                  'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                   preview === r.value
                     ? 'bg-slate-900 text-white hover:bg-slate-800'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
@@ -641,6 +647,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                           {canManage && (
                             <button
                               type="button"
+                              data-compact
                               className={pill}
                               onClick={() => toggleItem(item.path, isHidden)}
                               disabled={pending}
