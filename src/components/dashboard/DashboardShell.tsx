@@ -874,6 +874,7 @@ function TopBar() {
       <button
         onClick={() => toggleMessenger()}
         title="Quick compose"
+        aria-label="Quick compose"
         className="w-11 h-11 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center hover:brightness-110 transition"
       >
         <Plus className="w-6 h-6" />
@@ -882,10 +883,13 @@ function TopBar() {
       {/* Views switcher — tenant super-admins only */}
       <ViewsSwitcher />
 
-      {/* Notification bell — opens messenger panel, shows unread count badge */}
+      {/* Notification bell — goes to the notifications list (the unread
+          badge counts gw_notifications). Composing lives on the + button;
+          the two used to open the same messenger panel. */}
       <button
-        onClick={() => toggleMessenger()}
+        onClick={() => navigate('/notifications')}
         title="Notifications"
+        aria-label="Notifications"
         className="relative w-11 h-11 rounded-full inline-flex items-center justify-center hover:bg-muted transition"
       >
         <Bell className="w-6 h-6 text-foreground" />
