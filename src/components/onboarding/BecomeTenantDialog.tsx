@@ -26,14 +26,15 @@ const SANS = "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif
 // Most-requested modules surfaced as checkboxes. Keep short — full module
 // set is discussed during follow-up so the form stays scannable.
 const MODULE_OPTIONS: { id: string; label: string }[] = [
+  { id: "academy", label: "Academy (course creation)" },
   { id: "music-library", label: "Music Library" },
-  { id: "sight-singing", label: "Sight-Singing" },
   { id: "studio", label: "Studio (Recording)" },
-  { id: "viewer", label: "Score Viewer" },
-  { id: "calendar", label: "Calendar / Scheduling" },
+  { id: "messaging", label: "Messaging" },
+  { id: "store", label: "Store" },
+  { id: "pdf-viewer", label: "PDF Viewer" },
   { id: "box-office", label: "Box Office (Tickets)" },
-  { id: "messenger", label: "Messenger" },
-  { id: "tour", label: "Tour Manager" },
+  { id: "program-creator", label: "Program Creator" },
+  { id: "google-calendar", label: "Google Calendar sync" },
 ];
 
 export function BecomeTenantDialog({ open, onClose }: BecomeTenantDialogProps) {
@@ -151,7 +152,7 @@ export function BecomeTenantDialog({ open, onClose }: BecomeTenantDialogProps) {
           </h2>
           <p className="mt-2 text-white/85 text-sm sm:text-base">
             {sent
-              ? "Kevin will reach out personally within one business day to walk you through pricing and modules."
+              ? "Kevin will reach out personally within one business day to walk you through pricing and features."
               : "Tell us a bit about your group. Kevin runs every onboarding personally and will be in touch within one business day."}
           </p>
         </div>
@@ -219,7 +220,7 @@ export function BecomeTenantDialog({ open, onClose }: BecomeTenantDialogProps) {
 
               <div>
                 <span className="block text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wider">
-                  Modules you're interested in
+                  Features you're interested in
                 </span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {MODULE_OPTIONS.map((m) => {
