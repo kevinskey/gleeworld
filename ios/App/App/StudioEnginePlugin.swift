@@ -44,6 +44,14 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "recordStart", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordWithCountIn", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStop", returnType: CAPPluginReturnPromise),
+        // External-source coexistence record mode (Part Tracks). Additive,
+        // fully separate from the Studio record path above — runs on a
+        // DEDICATED AVAudioEngine so Studio's exclusive-focus design and
+        // its recorder are never touched. See ExternalRecorder.swift.
+        CAPPluginMethod(name: "prepareExternalRecordSession", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "externalRecordStart", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "externalRecordStop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "externalRecordSelfTest", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mixdown", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "addClipToTrack", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "removeClipFromTrack", returnType: CAPPluginReturnPromise),
@@ -85,6 +93,12 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         }
         return r
     }()
+
+    // External-source coexistence recorder — dedicated AVAudioEngine,
+    // never shares state with `engine`/`recorder` above. Peaks stream on a
+    // SEPARATE 'externalRecordPeak' event so Part Tracks JS subscribes
+    // cleanly without colliding with Studio's 'recordPeak' listener.
+    private var externalRecorder: ExternalRecorder?
 
     // Capacitor 7 calls `load()` automatically on plugins discovered via
     // `CAPBridgedPlugin`. For plugins added via `registerPluginInstance`
@@ -129,6 +143,17 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
 
     public override func load() {
         wireEngineEvents()
+        // Env-gated self-test (set GLEE_EXTERNAL_RECORD_SELFTEST=1 in the
+        // Xcode scheme's Run > Arguments > Environment Variables). Runs the
+        // external-record cycle + Studio's prepareRecordSession back-to-back
+        // to prove no cross-contamination. No-op in normal builds.
+        if ProcessInfo.processInfo.environment["GLEE_EXTERNAL_RECORD_SELFTEST"] == "1" {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                self?.runExternalRecordSelfTest { summary in
+                    NSLog("[ExternalRecorder][selftest] DONE \(summary)")
+                }
+            }
+        }
     }
 
     @objc func start(_ call: CAPPluginCall) {
@@ -400,6 +425,161 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         call.resolve(["localUrl": url.absoluteString, "filename": url.lastPathComponent])
     }
 
+    // MARK: - External-source coexistence record mode (Part Tracks)
+    //
+    // These four methods let Part Tracks capture the mic OVER an external
+    // backing source (Apple Music / YouTube / uploaded file) that keeps
+    // playing. They are ADDITIVE and independent of the Studio record path
+    // above: capture runs on a dedicated AVAudioEngine (ExternalRecorder),
+    // so `engine`, `recorder`, and Studio's exclusive-focus session design
+    // are never touched. The AVAudioSession is configured here (or
+    // deliberately left alone when MusicKit owns it), matching the proven
+    // AudioSessionConfigPlugin recipe.
+
+    /// Configure the AVAudioSession for coexistence recording — UNLESS
+    /// MusicKit (MPMusicPlayerController) owns it, in which case we touch
+    /// nothing (any category change, even .mixWithOthers, interrupts its
+    /// playback per the PartTracksStudio guard). Either way we allocate a
+    /// fresh dedicated recorder so externalRecordStart is ready to roll.
+    /// Resolves { sessionConfigured } so JS knows whether the session was
+    /// reconfigured.
+    @objc func prepareExternalRecordSession(_ call: CAPPluginCall) {
+        let musicKitOwnsSession = call.getBool("musicKitOwnsSession") ?? false
+        // mixWithOthers is accepted for API symmetry / future use; the
+        // proven recipe always sets .mixWithOthers when we own the session,
+        // and never touches it when MusicKit does.
+        _ = call.getBool("mixWithOthers") ?? true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { call.reject("plugin gone"); return }
+            // Fresh recorder each prepare; tear down any prior one so a
+            // prepare after an abandoned take can't leave a live tap.
+            self.externalRecorder?.teardown()
+            let rec = ExternalRecorder()
+            rec.onPeak = { [weak self] db in
+                self?.notifyListeners("externalRecordPeak", data: ["db": Double(db)])
+            }
+            self.externalRecorder = rec
+
+            if musicKitOwnsSession {
+                // Do NOTHING to the AVAudioSession — MPMusicPlayerController
+                // owns it. Internal recorder state is prepared; the session
+                // stays exactly as MusicKit left it.
+                NSLog("[ExternalRecorder] prepare: musicKitOwnsSession → session untouched")
+                call.resolve(["sessionConfigured": false])
+                return
+            }
+
+            let session = AVAudioSession.sharedInstance()
+            do {
+                // Mirror AudioSessionConfigPlugin's proven recipe: the
+                // .videoRecording mode disables the speech DSP (echo
+                // cancel / NS / AGC) that muddies vocals while still
+                // letting background media (YouTube/WebView/uploaded) play.
+                try session.setCategory(
+                    .playAndRecord,
+                    mode: .videoRecording,
+                    options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothA2DP]
+                )
+                // Best-effort preferred format (iOS honors when it can) —
+                // same values Part Tracks relies on today.
+                try? session.setPreferredSampleRate(48_000.0)
+                try? session.setPreferredInputNumberOfChannels(1)
+                try? session.setPreferredIOBufferDuration(0.005)
+                try session.setActive(true)
+                NSLog("[ExternalRecorder] prepare: session=.playAndRecord/.videoRecording active")
+                call.resolve(["sessionConfigured": true])
+            } catch {
+                call.reject("prepareExternalRecordSession failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Run the native count-in, then start capturing the mic to a WAV file
+    /// on the dedicated engine. Resolves AFTER the count-in completes and
+    /// capture is rolling, with { startedAtEpochMs, hardwareLatencyMs }.
+    @objc func externalRecordStart(_ call: CAPPluginCall) {
+        let countInBeats = call.getInt("countInBeats") ?? 0
+        let secondsPerBeat = call.getDouble("secondsPerBeat") ?? 0.5
+        let clickVolume = Float(call.getDouble("clickVolume") ?? 0.7)
+        let session = AVAudioSession.sharedInstance()
+
+        let proceed: () -> Void = { [weak self] in
+            DispatchQueue.main.async {
+                guard let self else { call.reject("plugin gone"); return }
+                // Lazily create a recorder if prepare wasn't called (e.g.
+                // MusicKit path that skipped session config). Never touches
+                // the session here — prepare owns that decision.
+                let rec = self.externalRecorder ?? {
+                    let r = ExternalRecorder()
+                    r.onPeak = { [weak self] db in
+                        self?.notifyListeners("externalRecordPeak", data: ["db": Double(db)])
+                    }
+                    self.externalRecorder = r
+                    return r
+                }()
+                guard !rec.isCapturing else {
+                    call.reject("external record already in progress")
+                    return
+                }
+                let latencyMs = session.inputLatency + session.outputLatency + session.ioBufferDuration
+                rec.start(
+                    countInBeats: countInBeats,
+                    secondsPerBeat: secondsPerBeat,
+                    clickVolume: clickVolume,
+                    onStarted: { epochMs in
+                        call.resolve([
+                            "startedAtEpochMs": epochMs,
+                            "hardwareLatencyMs": latencyMs * 1000.0,
+                        ])
+                    },
+                    onError: { message in
+                        call.reject("externalRecordStart failed: \(message)")
+                    }
+                )
+            }
+        }
+
+        switch session.recordPermission {
+        case .granted: proceed()
+        case .denied: call.reject("Microphone permission denied. Enable it in Settings → GleeWorld.")
+        case .undetermined:
+            session.requestRecordPermission { granted in
+                if granted { proceed() } else { call.reject("Microphone permission denied.") }
+            }
+        @unknown default: call.reject("Microphone permission state unknown.")
+        }
+    }
+
+    /// Stop the dedicated capture, close the WAV, and resolve with a
+    /// file:// URI (readable via Capacitor Filesystem) + duration.
+    @objc func externalRecordStop(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { call.reject("plugin gone"); return }
+            guard let rec = self.externalRecorder, rec.isCapturing else {
+                call.reject("not recording")
+                return
+            }
+            guard let result = rec.stop() else {
+                call.reject("external record stop produced no file")
+                return
+            }
+            call.resolve([
+                "fileUri": result.url.absoluteString,
+                "durationSec": result.durationSec,
+            ])
+        }
+    }
+
+    /// Env-gated debug self-test — exercises the full external-record
+    /// cycle, logs file size + latency, then runs Studio's own
+    /// prepareRecordSession path to prove no cross-contamination. Also
+    /// callable directly from JS for manual verification on a device.
+    @objc func externalRecordSelfTest(_ call: CAPPluginCall) {
+        runExternalRecordSelfTest { summary in
+            call.resolve(summary)
+        }
+    }
+
     @objc func mixdown(_ call: CAPPluginCall) {
         wireEngineEvents()
         guard let session = engine.session else { call.reject("no session loaded"); return }
@@ -578,5 +758,90 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         }
         engine.prewarmAssets(entries)
         call.resolve(["queued": entries.count])
+    }
+
+    // MARK: - External-record self-test
+
+    /// Drive prepareExternalRecordSession(mixWithOthers) → externalRecordStart
+    /// (2-beat count-in) → ~1s capture → externalRecordStop, then run
+    /// Studio's own prepareRecordSession session flip to prove the two paths
+    /// don't corrupt each other. Logs file size + latency. Completes on the
+    /// main thread with a summary dictionary (also returned to JS callers).
+    ///
+    /// This requires a real mic + a live audio session, so it produces
+    /// meaningful output only on a device — in the simulator the input node
+    /// may be silent/absent and the error paths log accordingly.
+    private func runExternalRecordSelfTest(_ done: @escaping ([String: Any]) -> Void) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { done(["ok": false, "error": "plugin gone"]); return }
+            NSLog("[ExternalRecorder][selftest] begin")
+
+            // Step 1: prepare (own the session, mixWithOthers).
+            self.externalRecorder?.teardown()
+            let rec = ExternalRecorder()
+            rec.onPeak = { [weak self] db in
+                self?.notifyListeners("externalRecordPeak", data: ["db": Double(db)])
+            }
+            self.externalRecorder = rec
+
+            let session = AVAudioSession.sharedInstance()
+            do {
+                try session.setCategory(.playAndRecord, mode: .videoRecording,
+                                        options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothA2DP])
+                try session.setActive(true)
+            } catch {
+                NSLog("[ExternalRecorder][selftest] session config failed: \(error.localizedDescription)")
+            }
+            let latencyMs = (session.inputLatency + session.outputLatency + session.ioBufferDuration) * 1000.0
+
+            let finish: (Bool, String) -> Void = { ok, note in
+                // Step 3 (always): flip to Studio's prepareRecordSession
+                // category to prove the external cycle left the session in a
+                // state Studio can still take over cleanly.
+                var studioOk = false
+                let s = AVAudioSession.sharedInstance()
+                do {
+                    if s.category != .playAndRecord {
+                        try s.setCategory(.playAndRecord, mode: .default,
+                                          options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
+                    }
+                    try s.setActive(true)
+                    studioOk = true
+                } catch {
+                    NSLog("[ExternalRecorder][selftest] Studio prepareRecordSession flip failed: \(error.localizedDescription)")
+                }
+                let summary: [String: Any] = [
+                    "ok": ok,
+                    "note": note,
+                    "hardwareLatencyMs": latencyMs,
+                    "studioPrepareRecordSessionOk": studioOk,
+                ]
+                NSLog("[ExternalRecorder][selftest] summary=\(summary)")
+                done(summary)
+            }
+
+            // Step 2: start with a 2-beat count-in (0.3s/beat), capture ~1s.
+            rec.start(
+                countInBeats: 2,
+                secondsPerBeat: 0.3,
+                clickVolume: 0.7,
+                onStarted: { epochMs in
+                    NSLog("[ExternalRecorder][selftest] capture started epochMs=\(epochMs)")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        guard let result = rec.stop() else {
+                            finish(false, "stop produced no file")
+                            return
+                        }
+                        let size = (try? FileManager.default.attributesOfItem(atPath: result.url.path)[.size] as? Int) ?? nil
+                        NSLog("[ExternalRecorder][selftest] file=\(result.url.lastPathComponent) bytes=\(size ?? -1) durationSec=\(result.durationSec)")
+                        finish(true, "captured \(result.durationSec)s, \(size ?? -1) bytes")
+                    }
+                },
+                onError: { message in
+                    NSLog("[ExternalRecorder][selftest] start failed: \(message)")
+                    finish(false, "start failed: \(message)")
+                }
+            )
+        }
     }
 }

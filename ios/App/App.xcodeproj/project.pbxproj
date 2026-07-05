@@ -25,6 +25,7 @@
 		9FC224AE2381121D2FB58450 /* AssetLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED85A7982F21BD5123300ED4 /* AssetLoader.swift */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		C692FCC856285FEA81577B2C /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAAED23BD56BF3B55CC650A /* Recorder.swift */; };
+		B3E7A1C2D4F508192A3B4C5D /* ExternalRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E7A1C2D4F508192A3B4C5E /* ExternalRecorder.swift */; };
 		D4910ED7763D327934102420 /* Tracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71A15DBCA0F6701D171ED70 /* Tracks.swift */; };
 		E1A2B3C4D5E6F7081923A4B5 /* AudioConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4B6 /* AudioConverter.swift */; };
 		E1A2B3C4D5E6F7081923A4B7 /* PullRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4B8 /* PullRenderer.swift */; };
@@ -63,6 +64,7 @@
 		E1A2B3C4D5E6F7081923A4BE /* StudioBufferPool.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioBufferPool.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E6F7081923A4C0 /* RealtimeThread.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RealtimeThread.swift; sourceTree = "<group>"; };
 		ACAAED23BD56BF3B55CC650A /* Recorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
+		B3E7A1C2D4F508192A3B4C5E /* ExternalRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExternalRecorder.swift; sourceTree = "<group>"; };
 		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		C20BECA3F13EF2967946AC20 /* Engine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Engine.swift; sourceTree = "<group>"; };
@@ -153,6 +155,7 @@
 				90B41B6DB59A4EC515A3D916 /* Fx.swift */,
 				5FDD37EFA950FB969BF90C82 /* Instruments.swift */,
 				ACAAED23BD56BF3B55CC650A /* Recorder.swift */,
+				B3E7A1C2D4F508192A3B4C5E /* ExternalRecorder.swift */,
 				D93A915581BC73F5E718C6B9 /* Mixdown.swift */,
 				ED85A7982F21BD5123300ED4 /* AssetLoader.swift */,
 				E1A2B3C4D5E6F7081923A4B6 /* AudioConverter.swift */,
@@ -291,6 +294,7 @@
 				F3827DBA2B1BCFB65967AA84 /* Fx.swift in Sources */,
 				768412EC465E014A6BC6AFDE /* Instruments.swift in Sources */,
 				C692FCC856285FEA81577B2C /* Recorder.swift in Sources */,
+				B3E7A1C2D4F508192A3B4C5D /* ExternalRecorder.swift in Sources */,
 				ED56BC98FAF679C5E8E8460B /* Mixdown.swift in Sources */,
 				9FC224AE2381121D2FB58450 /* AssetLoader.swift in Sources */,
 				E1A2B3C4D5E6F7081923A4B5 /* AudioConverter.swift in Sources */,
