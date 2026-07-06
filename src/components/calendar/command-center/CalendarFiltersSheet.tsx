@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, CalendarPlus } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CalendarInfo } from "@/hooks/useCalendars";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ interface CalendarFiltersSheetProps {
   calendars: CalendarInfo[];
   activeCalendarFilters: string[];
   onToggleCalendar: (id: string) => void;
+  /** Admin-only: opens calendar management (settings dialog). */
+  onAddCalendar?: () => void;
 }
 
 /** Apple Calendar-style filter panel — slides out from the left with
@@ -26,6 +28,7 @@ export const CalendarFiltersSheet = ({
   calendars,
   activeCalendarFilters,
   onToggleCalendar,
+  onAddCalendar,
 }: CalendarFiltersSheetProps) => {
   const Row = ({
     label,
@@ -109,6 +112,18 @@ export const CalendarFiltersSheet = ({
             </>
           )}
         </div>
+        {onAddCalendar && (
+          <div className="border-t border-slate-200 px-2 py-2">
+            <button
+              type="button"
+              onClick={onAddCalendar}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-slate-100 transition-colors text-left"
+            >
+              <CalendarPlus className="w-5 h-5 text-muted-foreground" />
+              <span className="text-[15px] font-medium text-foreground">Add Calendar</span>
+            </button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

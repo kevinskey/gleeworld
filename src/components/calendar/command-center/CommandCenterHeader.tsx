@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, Plus, Search, Calendar, List, LayoutGrid, Settings, Filter } from "lucide-react";
+import { useRef } from "react";
+import { ChevronLeft, ChevronRight, Plus, Search, Calendar, CalendarDays, Inbox, List, LayoutGrid, Settings, Filter, Mic } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,10 @@ interface CommandCenterHeaderProps {
   onToggleCategoryFilter?: (id: CategoryFilter) => void;
   /** Opens the Apple-style left filters slide-out. */
   onOpenFilters?: () => void;
+  /** Opens the office-hours popout (booking for students, management for admins). */
+  onOpenOfficeHours?: () => void;
+  /** Opens the agenda/list popout. */
+  onOpenAgenda?: () => void;
 }
 
 export const CommandCenterHeader = ({
@@ -44,6 +49,8 @@ export const CommandCenterHeader = ({
   activeCategoryFilters,
   onToggleCategoryFilter,
   onOpenFilters,
+  onOpenOfficeHours,
+  onOpenAgenda,
 }: CommandCenterHeaderProps) => {
   const filtersAvailable = !!(categories && activeCategoryFilters && onToggleCategoryFilter);
   const filtersActive = filtersAvailable && categories && activeCategoryFilters!.length < categories.length;
@@ -53,6 +60,30 @@ export const CommandCenterHeader = ({
     day: 'Day', week: 'Week', month: 'Month', year: 'Year', agenda: 'List',
   };
   const VIEW_ORDER: ViewMode[] = ['day', 'week', 'month', 'year', 'agenda'];
+  const DESKTOP_VIEWS: ViewMode[] = ['day', 'week', 'month', 'year'];
+
+  // Search dictation: Web Speech API where available (Chrome/Edge); on
+  // iOS/WKWebView we focus the field so the keyboard's own mic takes over.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const startDictation = () => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      searchInputRef.current?.focus();
+      return;
+    }
+    try {
+      const rec = new SR();
+      rec.lang = 'en-US';
+      rec.interimResults = true;
+      rec.onresult = (e: any) => {
+        const transcript = Array.from(e.results).map((r: any) => r[0].transcript).join('');
+        onSearchChange(transcript);
+      };
+      rec.start();
+    } catch {
+      searchInputRef.current?.focus();
+    }
+  };
   const title = viewMode === 'year'
     ? format(currentDate, 'yyyy')
     : format(currentDate, isMobile ? 'MMM yyyy' : 'MMMM yyyy');
@@ -176,14 +207,32 @@ export const CommandCenterHeader = ({
                     "relative h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 transition-colors",
                     filtersActive ? "text-primary" : "text-foreground"
                   )}
-                  title="Filters"
+                  title="Calendars"
                 >
-                  <Filter className="h-4 w-4" />
+                  <CalendarDays className="h-4 w-4" />
                   {filtersActive && (
                     <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-1">
                       {activeCategoryFilters!.length}
                     </span>
                   )}
+                </button>
+              )}
+              {onOpenOfficeHours && (
+                <button
+                  onClick={onOpenOfficeHours}
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 text-foreground transition-colors"
+                  title="Office hours"
+                >
+                  <Inbox className="h-4 w-4" />
+                </button>
+              )}
+              {onOpenAgenda && (
+                <button
+                  onClick={onOpenAgenda}
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 text-foreground transition-colors"
+                  title="List"
+                >
+                  <List className="h-4 w-4" />
                 </button>
               )}
               {canManageEvents && (
@@ -208,7 +257,7 @@ export const CommandCenterHeader = ({
 
             <div className="flex-1 flex justify-center min-w-0">
               <div className="flex items-center bg-muted rounded-full p-1">
-                {VIEW_ORDER.map((m) => (
+                {DESKTOP_VIEWS.map((m) => (
                   <button
                     key={m}
                     onClick={() => onViewModeChange(m)}
@@ -228,12 +277,21 @@ export const CommandCenterHeader = ({
             <div className="relative flex-shrink-0 w-36 lg:w-56">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-9 h-9 w-full rounded-full bg-muted border-transparent text-sm text-foreground placeholder:text-muted-foreground focus:bg-white transition-all"
+                className="pl-9 pr-9 h-9 w-full rounded-full bg-muted border-transparent text-sm text-foreground placeholder:text-muted-foreground focus:bg-white transition-all"
               />
+              <button
+                type="button"
+                onClick={startDictation}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-slate-200 transition-colors"
+                title="Dictate search"
+              >
+                <Mic className="h-4 w-4" />
+              </button>
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, isSameDay, addMonths, subMonths, addDays, subDays, addYears, subYears, addWeeks, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -11,6 +11,14 @@ import { useIsMobile, useIsTabletOrNarrower } from "@/hooks/use-mobile";
 import { useCurrentProvider, useProviderAvailability, ProviderAvailability } from "@/hooks/useServiceProviders";
 import { CommandCenterHeader } from "./CommandCenterHeader";
 import { CalendarFiltersSheet } from "./CalendarFiltersSheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Loader2 } from "lucide-react";
+
+// Heavy popout content — loaded on first open, not with the calendar chunk.
+const AdminOfficeHoursDashboard = lazy(() =>
+  import("../../appointments/AdminOfficeHoursDashboard").then((m) => ({ default: m.AdminOfficeHoursDashboard }))
+);
+const StudentBooking = lazy(() => import("../../officehours/StudentBooking"));
 import { CommandCenterGrid } from "./CommandCenterGrid";
 import { WeeklyTimeGrid } from "./WeeklyTimeGrid";
 import { YearView } from "./YearView";
@@ -127,6 +135,8 @@ export const CommandCenterCalendar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showOfficeHours, setShowOfficeHours] = useState(false);
+  const [showAgenda, setShowAgenda] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'calendars' | 'categories'>('calendars');
   // Resizable right panel — persisted per-user via localStorage. Tight
@@ -384,6 +394,8 @@ export const CommandCenterCalendar = () => {
         activeCategoryFilters={activeCategoryFilters}
         onToggleCategoryFilter={toggleCategoryFilter}
         onOpenFilters={() => setShowFilters(true)}
+        onOpenOfficeHours={() => setShowOfficeHours(true)}
+        onOpenAgenda={() => setShowAgenda(true)}
       />
 
       {/* Filters — Apple Calendar-style left slide-out (replaces the old
@@ -397,7 +409,49 @@ export const CommandCenterCalendar = () => {
         calendars={calendars || []}
         activeCalendarFilters={activeCalendarFilters}
         onToggleCalendar={toggleCalendarFilter}
+        onAddCalendar={canManageEvents ? () => { setShowFilters(false); setSettingsTab('calendars'); setShowSettings(true); } : undefined}
       />
+
+      {/* Office hours — left popout. Students book; admins get the full
+          office-hours management surface. */}
+      <Sheet open={showOfficeHours} onOpenChange={setShowOfficeHours}>
+        <SheetContent side="left" className="w-[92vw] max-w-3xl p-0 flex flex-col">
+          <SheetHeader className="px-5 pt-5 pb-2 text-left border-b border-slate-200">
+            <SheetTitle className="text-lg font-bold">Office Hours</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-4">
+            {showOfficeHours && (
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              }>
+                {canManageEvents ? <AdminOfficeHoursDashboard /> : <StudentBooking />}
+              </Suspense>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* List (agenda) — left popout, removed from the desktop view switcher. */}
+      <Sheet open={showAgenda} onOpenChange={setShowAgenda}>
+        <SheetContent side="left" className="w-[92vw] max-w-md p-0 flex flex-col">
+          <SheetHeader className="px-5 pt-5 pb-2 text-left">
+            <SheetTitle className="text-lg font-bold">List</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 min-h-0 px-2 pb-3">
+            <AgendaView
+              events={filteredEvents}
+              selectedDate={selectedDate}
+              onDateSelect={(d) => { setSelectedDate(d); setCurrentDate(d); }}
+              onNavigateDay={navigateDay}
+              getCategoryForEvent={getCategoryForEvent}
+              categoryConfigs={CATEGORY_CONFIGS}
+              onEventDeleted={fetchEvents}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
