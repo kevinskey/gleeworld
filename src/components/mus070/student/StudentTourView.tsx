@@ -76,7 +76,7 @@ const eventTypeConfig: Record<string, { icon: React.ElementType; color: string; 
   performance: { icon: Music, color: 'bg-primary text-primary-foreground', label: 'Performance' },
   travel: { icon: Bus, color: 'bg-muted text-foreground/70', label: 'Travel Day' },
   free: { icon: Calendar, color: 'bg-accent text-accent-foreground', label: 'Free Day' },
-  rehearsal: { icon: Music, color: 'bg-secondary text-secondary-foreground', label: 'Rehearsal' },
+  rehearsal: { icon: Music, color: 'bg-event-rehearsal text-event-rehearsal-fg', label: 'Rehearsal' },
 };
 
 const timelineCategoryConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {

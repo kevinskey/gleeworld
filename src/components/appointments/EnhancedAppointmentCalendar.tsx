@@ -316,7 +316,7 @@ export const EnhancedAppointmentCalendar: React.FC<EnhancedAppointmentCalendarPr
                   className={cn(
                     'p-3 text-center border rounded-lg cursor-pointer transition-all',
                     isCurrentDay && 'bg-primary text-primary-foreground',
-                    isSelected && !isCurrentDay && 'bg-secondary',
+                    isSelected && !isCurrentDay && 'bg-[var(--tint)] text-[var(--tint-contrast)]',
                     'hover:bg-accent'
                   )}
                   onClick={() => handleDateClick(date)}

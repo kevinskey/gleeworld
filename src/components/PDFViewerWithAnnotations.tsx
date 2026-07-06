@@ -1830,7 +1830,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={() => setShowPiano(!showPiano)}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowPiano(!showPiano); }}
                   aria-label={showPiano ? "Hide piano" : "Show piano"}
-                  className={`h-7 w-7 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-secondary' : ''}`}
+                  className={`h-7 w-7 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-[var(--tint)] text-[var(--tint-contrast)]' : ''}`}
                 >
                   <Piano className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
                 </Button>
@@ -2167,7 +2167,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 onClick={() => setShowPiano(!showPiano)}
                 onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowPiano(!showPiano); }}
                 aria-label={showPiano ? "Hide piano" : "Show piano"}
-                className={`h-8 w-8 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-secondary' : ''}`}
+                className={`h-8 w-8 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-[var(--tint)] text-[var(--tint-contrast)]' : ''}`}
               >
                 <Piano className="h-4 w-4" />
               </Button>
