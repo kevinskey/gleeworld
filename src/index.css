@@ -22,6 +22,11 @@
 
 /* Full-bleed utility - extends background colors edge-to-edge while keeping content padded */
 @layer utilities {
+  /* Apple "Headline" — list/card item titles: body size, semibold. */
+  .font-headline {
+    font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px;
+  }
+
   /* Brand gradient — cyan → purple, matches the music-note logo */
   .bg-brand-gradient {
     background: linear-gradient(135deg, hsl(var(--brand-blue-light)) 0%, hsl(var(--brand-blue-dark)) 100%);
@@ -132,64 +137,28 @@
     transform: translateY(1px) scale(0.99);
   }
 
-  /* Typography scale — Kennedy's responsive guide, interaction-heavy app
-     profile. Body floor is 16px on mobile (iOS auto-zoom rule on inputs
-     also relies on this), lifts to 17px on desktop. Secondary text
-     (text-sm) sits 2px below body; tertiary (text-xs) sits 2 more below.
-     Headings use clamp() so they scale smoothly from phone to desktop:
-       h1 → 28–40 px  (page titles)
-       h2 → 22–30 px
-       h3 → 20–24 px
-       h4 → 18 px
-     The four-step scale (h1, body, text-sm, text-xs) is intentional —
-     the guide warns that using more than ~4 sizes makes a UI feel busy. */
+  /* Apple iOS 26 typography — HIG Dynamic Type "Large" (1pt = 1px CSS).
+     Real SF Pro on Apple devices via the system stack; Segoe/Roboto
+     elsewhere. Leading and tracking are explicit so layout holds on
+     non-SF platforms. Hierarchy comes from WEIGHT (regular body vs
+     semibold headline), not size drama. */
+  :root {
+    --font-ui: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
+      Roboto, "Helvetica Neue", sans-serif;
+  }
   html, body {
-    font-size: 16px;
-    line-height: 1.5;
-  }
-  p, label, li, td, th, dd, dt {
-    font-size: 1rem; /* 16px — body floor */
-    line-height: 1.55;
-  }
-  .text-xs {
-    font-size: 0.75rem !important;  /* 12px */
-    line-height: 1.4 !important;
-  }
-  .text-sm {
-    font-size: 0.875rem !important; /* 14px = 2px under body */
-    line-height: 1.5 !important;
-  }
-  @media (min-width: 1024px) {
-    html, body { font-size: 17px; }
-    p, label, li, td, th, dd, dt { font-size: 1.0625rem; /* 17px */ }
-    .text-xs { font-size: 0.8125rem !important; /* 13px */ }
-    .text-sm { font-size: 0.9375rem !important; /* 15px */ }
-  }
-  @media (min-width: 1536px) {
-    html, body { font-size: 18px; }
-    p, label, li, td, th, dd, dt { font-size: 1.125rem; /* 18px */ }
-    .text-sm { font-size: 1rem !important; /* 16px */ }
+    font-family: var(--font-ui);
+    font-size: 17px;
+    line-height: 22px;
+    letter-spacing: -0.43px;
   }
 
-  /* Heading sizes — single source of truth (the duplicate Bebas Neue
-     block lower in this file only overrides font-family/letter-spacing,
-     these sizes win). */
-  /* "Typography as architecture" — let large headers carry visible
-   * weight on big screens rather than relying on imagery or animation.
-   * Page titles (h1) scale 28→56px so a desktop dashboard reads as
-   * an editorial spread instead of a small label. Page-specific
-   * components can still opt out with !text-[Npx]. */
-  /* True viewport-scaling so headlines stretch as page architecture
-   * rather than reading as labels. 32→88px at 8vw, capped so a
-   * 4K monitor doesn't blow up. */
-  /* line-height 1.02 collided wrapped lines in Bebas Neue (nearly zero
-     internal leading) — e.g. "AUDITIONS / MANAGEMENT" on phones. 1.12
-     keeps the architectural weight but separates multi-line titles. */
-  h1 { font-size: clamp(2rem, 8vw, 5.5rem); font-weight: 800; letter-spacing: -0.025em; color: hsl(var(--foreground)); line-height: 1.12; }
-  h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 700; letter-spacing: -0.015em; color: hsl(var(--foreground)); line-height: 1.15; }
-  h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 600; color: hsl(var(--foreground)); line-height: 1.25; }
-  h4 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.3; }
-  h5, h6 { font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.4; }
+  /* iOS large-title hierarchy — HIG sizes/weights/tracking verbatim. */
+  h1 { font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: 0.4px;  color: hsl(var(--foreground)); }
+  h2 { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: 0.38px; color: hsl(var(--foreground)); }
+  h3 { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.26px; color: hsl(var(--foreground)); }
+  h4 { font-size: 20px; line-height: 25px; font-weight: 600; letter-spacing: -0.45px; color: hsl(var(--foreground)); }
+  h5, h6 { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px; color: hsl(var(--foreground)); }
 
   :root {
     /* High-Contrast Design System for GleeWorld */
@@ -721,7 +690,7 @@ html[data-theme="brand-blue"] h3,
 html[data-theme="brand-blue"] h4,
 html[data-theme="brand-blue"] h5,
 html[data-theme="brand-blue"] h6 {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+  font-family: var(--font-ui) !important;
   font-weight: 600 !important;
   letter-spacing: -0.01em !important;
   text-transform: none !important;
@@ -772,41 +741,6 @@ html[data-theme="brand-blue"] .bg-primary {
   --input: 0 0% 12%;
   --popover: 0 0% 8%;
   --popover-foreground: 45 65% 75%;
-}
-
-/* HBCU Theme Typography - Collegiate Styling */
-.hbcu-theme {
-  font-family: 'Bebas Neue', 'Oswald', sans-serif !important;
-}
-
-html.hbcu-theme h1,
-html.hbcu-theme h2,
-html.hbcu-theme h3,
-html.hbcu-theme h4,
-html.hbcu-theme h5,
-html.hbcu-theme h6,
-html[data-theme="hbcu"] h1,
-html[data-theme="hbcu"] h2,
-html[data-theme="hbcu"] h3,
-html[data-theme="hbcu"] h4,
-html[data-theme="hbcu"] h5,
-html[data-theme="hbcu"] h6 {
-  font-family: 'Graduate', 'Bebas Neue', sans-serif !important;
-  font-weight: 400 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.05em !important;
-  text-shadow: var(--heading-shadow, 2px 2px 0px hsl(0 0% 0%), 3px 3px 0px hsl(0 72% 42%));
-}
-
-.hbcu-theme p,
-.hbcu-theme span,
-.hbcu-theme div,
-.hbcu-theme button,
-.hbcu-theme a,
-.hbcu-theme label,
-.hbcu-theme input {
-  font-family: 'Bebas Neue', 'Oswald', sans-serif;
-  letter-spacing: 0.03em;
 }
 
 /* HBCU Button Variants - Uses theme tokens */
@@ -977,43 +911,12 @@ html[data-theme="hbcu"] h6 {
 
   body {
     @apply bg-background text-foreground min-h-screen;
-    font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+    font-family: var(--font-ui);
     /* font-size + line-height come from the base block above so we have a
        single source of truth for the type scale (Kennedy's responsive guide). */
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
   
-  /* HBCU Theme - Graduate Collegiate Font for Headings Only */
-  html.hbcu-theme h1,
-  html.hbcu-theme h2,
-  html.hbcu-theme h3,
-  html.hbcu-theme h4,
-  html.hbcu-theme h5,
-  html.hbcu-theme h6,
-  html[data-theme="hbcu"] h1,
-  html[data-theme="hbcu"] h2,
-  html[data-theme="hbcu"] h3,
-  html[data-theme="hbcu"] h4,
-  html[data-theme="hbcu"] h5,
-  html[data-theme="hbcu"] h6 {
-    font-family: 'Graduate', 'Bebas Neue', sans-serif !important;
-    letter-spacing: 0.05em !important;
-    text-transform: uppercase;
-  }
-  
-  /* GleeWorld heading family — sizes already set by the canonical block
-     above, this block only adds the brand font + letter-spacing + balanced
-     wrapping. NOTE: the Bebas Neue heading family was visually too wide
-     for body-style headings on dashboards; kept here for parity with the
-     original design system but consider trimming to h1–h2 only later. */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Bebas Neue', system-ui, sans-serif;
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    color: inherit;
-    text-wrap: balance;
-  }
-
   /* Body text - optimized for readability.
      Note: the 70ch max-width that used to live here applied to EVERY
      <p> tag, which left-anchored copyright lines and other short

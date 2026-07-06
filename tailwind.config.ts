@@ -6,6 +6,19 @@ const config: Config = {
   theme: {
     container: { center: true, padding: '2rem', screens: { '2xl': '1400px' } },
     extend: {
+      fontSize: {
+        // Apple HIG Dynamic Type (Large) — px on purpose: rem would ride
+        // the 17px body and break the 4px spacing grid.
+        '2xs': ['11px', { lineHeight: '13px' }],                              // Caption 2 — tab labels only
+        xs:   ['13px', { lineHeight: '18px', letterSpacing: '-0.08px' }],     // Footnote
+        sm:   ['15px', { lineHeight: '20px', letterSpacing: '-0.23px' }],     // Subhead
+        base: ['17px', { lineHeight: '22px', letterSpacing: '-0.43px' }],     // Body
+        lg:   ['20px', { lineHeight: '25px', letterSpacing: '-0.45px' }],     // Title 3
+        xl:   ['22px', { lineHeight: '28px', letterSpacing: '-0.26px' }],     // Title 2
+        '2xl': ['28px', { lineHeight: '34px', letterSpacing: '0.38px' }],     // Title 1
+        '3xl': ['34px', { lineHeight: '41px', letterSpacing: '0.4px' }],      // Large Title
+        // 4xl+ left at Tailwind defaults; hero surfaces get audited in Phase 2.
+      },
       colors: {
         brand: {
           50: 'hsl(var(--brand-50, 270 100% 97%))',
