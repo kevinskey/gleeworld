@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { Card, CardContent } from '@/components/ui/card';
@@ -289,8 +290,14 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
   const directToggle = useMutation({
     mutationFn: async ({ moduleId, active }: { moduleId: string; active: boolean }) => {
       const { data: { session } } = await supabase.auth.getSession();
-      const claims = session?.user?.app_metadata as Record<string, unknown> | undefined;
+      // tenant_id lives in the TOKEN PAYLOAD (GoTrue custom-claims
+      // hook), NOT in app_metadata — accounts created outside the
+      // invite flow (e.g. the platform owner) have no tenant_id there,
+      // which made this throw 'No tenant in session' on every call.
+      // Metadata reads stay as fallbacks for invite-flow accounts.
+      const claims = decodeJwtClaims(session?.access_token ?? '');
       const tenantId = (claims?.tenant_id as string | undefined)
+        ?? (session?.user?.app_metadata as any)?.tenant_id
         ?? (session?.user?.user_metadata as any)?.tenant_id;
       if (!tenantId) throw new Error('No tenant in session');
       if (active) {
@@ -487,8 +494,14 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
   const savePref = useMutation({
     mutationFn: async ({ nextHidden }: { path: string; nextHidden: string[] }) => {
       const { data: { session } } = await supabase.auth.getSession();
-      const claims = session?.user?.app_metadata as Record<string, unknown> | undefined;
+      // tenant_id lives in the TOKEN PAYLOAD (GoTrue custom-claims
+      // hook), NOT in app_metadata — accounts created outside the
+      // invite flow (e.g. the platform owner) have no tenant_id there,
+      // which made this throw 'No tenant in session' on every call.
+      // Metadata reads stay as fallbacks for invite-flow accounts.
+      const claims = decodeJwtClaims(session?.access_token ?? '');
       const tenantId = (claims?.tenant_id as string | undefined)
+        ?? (session?.user?.app_metadata as any)?.tenant_id
         ?? (session?.user?.user_metadata as any)?.tenant_id;
       if (!tenantId) throw new Error('No tenant in session');
       const { error } = await supabase
