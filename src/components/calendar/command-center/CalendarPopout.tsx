@@ -25,6 +25,7 @@ export function CalendarPopout({ open, onOpenChange, title, headerBorder, childr
       <SheetPortal>
         <SheetOverlay className="bg-black/30 motion-reduce:animate-none" />
         <SheetPrimitive.Content
+          data-calendar-popout=""
           className={cn(
             'fixed z-50 left-3 inset-y-3 w-[min(420px,calc(100vw-24px))]',
             'flex flex-col bg-background border border-border shadow-xl p-0',
