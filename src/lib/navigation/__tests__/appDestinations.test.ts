@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getTabItems, getAppTiles, type ModuleFlags } from '../appDestinations';
+import { getTabItems, getAppTiles, parseTileLayout, type ModuleFlags, type TileLayout } from '../appDestinations';
 
 const allOn: ModuleFlags = {
   hasViewer: true, hasPartTracks: true, hasStudio: true, hasSightReading: true,
@@ -149,5 +149,68 @@ describe('getAppTiles', () => {
     const { primary, overflow } = getAppTiles('faculty', allOn);
     const attendance = [...primary, ...overflow].find((t) => t.label === 'Attendance');
     expect(attendance?.to).toBe('/attendance');
+  });
+});
+
+describe('parseTileLayout', () => {
+  it('accepts a valid v1 layout', () => {
+    expect(parseTileLayout({ v: 1, order: ['tickets', 'studio'] }))
+      .toEqual({ v: 1, order: ['tickets', 'studio'] });
+  });
+  it('rejects null, non-objects, wrong version, and non-string entries', () => {
+    expect(parseTileLayout(null)).toBeNull();
+    expect(parseTileLayout('garbage')).toBeNull();
+    expect(parseTileLayout({ v: 2, order: ['tickets'] })).toBeNull();
+    expect(parseTileLayout({ v: 1, order: ['tickets', 7] })).toBeNull();
+    expect(parseTileLayout({ v: 1 })).toBeNull();
+  });
+  it('dedupes repeated keys so a corrupt blob cannot render duplicate tiles', () => {
+    expect(parseTileLayout({ v: 1, order: ['tickets', 'tickets', 'studio'] }))
+      .toEqual({ v: 1, order: ['tickets', 'studio'] });
+  });
+});
+
+describe('getAppTiles with a custom layout', () => {
+  const layout = (order: string[]): TileLayout => ({ v: 1, order });
+
+  it('null layout keeps the default slice-at-8 behavior', () => {
+    expect(getAppTiles('faculty', allOn, null)).toEqual(getAppTiles('faculty', allOn));
+  });
+  it('primary follows the saved order exactly; everything else enabled goes to overflow', () => {
+    const { primary, overflow } = getAppTiles('faculty', allOn, layout(['tickets', 'finance', 'attendance']));
+    expect(primary.map((t) => t.key)).toEqual(['tickets', 'finance', 'attendance']);
+    const overflowKeys = overflow.map((t) => t.key);
+    expect(overflowKeys).not.toContain('tickets');
+    // No duplicates and no losses versus the default enabled set.
+    const defaults = getAppTiles('faculty', allOn);
+    const allDefault = [...defaults.primary, ...defaults.overflow].map((t) => t.key).sort();
+    const allCustom = [...primary, ...overflow].map((t) => t.key).sort();
+    expect(allCustom).toEqual(allDefault);
+  });
+  it('silently drops stale keys (disabled module) without losing the rest', () => {
+    const { primary } = getAppTiles('faculty', { ...allOn, hasBoxOffice: false }, layout(['tickets', 'finance']));
+    expect(primary.map((t) => t.key)).toEqual(['finance']);
+  });
+  it('silently drops keys whose route the tab bar claims', () => {
+    // Student allOn tab bar contains Music and Studio (see getTabItems test).
+    const { primary, overflow } = getAppTiles('student', allOn, layout(['music', 'tickets']));
+    expect(primary.map((t) => t.key)).toEqual(['tickets']);
+    expect(overflow.map((t) => t.key)).not.toContain('music');
+  });
+  it('drops unknown keys from a corrupt-but-parseable order', () => {
+    const { primary } = getAppTiles('faculty', allOn, layout(['nonsense', 'tickets']));
+    expect(primary.map((t) => t.key)).toEqual(['tickets']);
+  });
+  it('empty order means empty primary and everything in overflow', () => {
+    const { primary, overflow } = getAppTiles('faculty', allOn, layout([]));
+    expect(primary).toEqual([]);
+    expect(overflow.length).toBeGreaterThan(0);
+  });
+  it('custom layouts are not capped at 8', () => {
+    const defaults = getAppTiles('faculty', allOn);
+    const everyKey = [...defaults.primary, ...defaults.overflow].map((t) => t.key);
+    const { primary, overflow } = getAppTiles('faculty', allOn, layout(everyKey));
+    expect(primary.map((t) => t.key)).toEqual(everyKey);
+    expect(overflow).toEqual([]);
   });
 });
