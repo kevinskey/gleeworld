@@ -20,6 +20,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { ServiceWorkerUpdateNotifier } from "@/components/pwa/ServiceWorkerUpdateNotifier";
+import { DemoBar } from "@/components/demo/DemoBar";
+import { installDemoWriteInterceptor } from "@/lib/demoSession";
+
+// Global fallback that converts read-only-demo RLS rejections into a
+// friendly DemoBar toast. No-ops for non-demo sessions (event has no listener).
+if (typeof window !== 'undefined') installDemoWriteInterceptor();
 
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
@@ -500,6 +506,7 @@ const App = () => {
                   <AuthenticatedGlobals />
                   <DesignSystemEnforcer />
                   <UsageTracker>
+                  <DemoBar />
                   <Suspense
                     fallback={
                       <div className="min-h-screen bg-background flex items-center justify-center">

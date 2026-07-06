@@ -1,0 +1,133 @@
+// Persistent chrome for prospect demo sessions (demo_viewer JWT claim).
+// Renders nothing for everyone else — safe to mount unconditionally in App.
+// Owns: role switcher, "Request your workspace" CTA, first-visit welcome
+// overlay, and the friendly toast for blocked writes.
+
+import { useEffect, useState } from 'react';
+import { ChevronDown, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  DEMO_HOME,
+  DEMO_ROLES,
+  DEMO_WRITE_BLOCKED_EVENT,
+  getDemoSessionRole,
+  startDemoSession,
+  type DemoRole,
+} from '@/lib/demoSession';
+import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
+import { DemoWelcomeOverlay } from '@/components/demo/DemoWelcomeOverlay';
+
+const ROLE_LABEL: Record<DemoRole, string> = {
+  director: 'Director',
+  student: 'Student',
+  fan: 'Fan',
+};
+
+const WELCOME_SEEN_KEY = 'gw-demo-welcome-seen';
+const WELCOME_PENDING_KEY = 'gw-demo-welcome-pending';
+
+export function DemoBar() {
+  const [role, setRole] = useState<DemoRole | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [switching, setSwitching] = useState<DemoRole | null>(null);
+  const [leadOpen, setLeadOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getDemoSessionRole().then((r) => {
+      if (cancelled || !r) return;
+      setRole(r);
+      const pending = sessionStorage.getItem(WELCOME_PENDING_KEY) === '1';
+      const seen = sessionStorage.getItem(WELCOME_SEEN_KEY) === '1';
+      if (pending || !seen) setShowWelcome(true);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Friendly fallback when an unguarded write hits the read-only RLS wall.
+  useEffect(() => {
+    if (!role) return;
+    const onBlocked = () => {
+      toast.info("This is a preview — in your own GleeWorld, that change would save.", {
+        id: 'demo-write-blocked', // dedupe bursts
+        action: { label: 'Request your workspace', onClick: () => setLeadOpen(true) },
+      });
+    };
+    window.addEventListener(DEMO_WRITE_BLOCKED_EVENT, onBlocked);
+    return () => window.removeEventListener(DEMO_WRITE_BLOCKED_EVENT, onBlocked);
+  }, [role]);
+
+  if (!role) return null;
+
+  const dismissWelcome = () => {
+    sessionStorage.setItem(WELCOME_SEEN_KEY, '1');
+    sessionStorage.removeItem(WELCOME_PENDING_KEY);
+    setShowWelcome(false);
+  };
+
+  const switchRole = async (next: DemoRole) => {
+    setMenuOpen(false);
+    if (next === role || switching) return;
+    setSwitching(next);
+    try {
+      await startDemoSession(next);
+      // Full reload: AuthContext, role hooks, and RLS-scoped queries all
+      // re-derive from the new JWT.
+      window.location.assign(DEMO_HOME[next]);
+    } catch (e) {
+      console.error('[demo-bar] role switch failed', e);
+      setSwitching(null);
+      toast.error("Couldn't switch views — try again in a moment.");
+    }
+  };
+
+  return (
+    <>
+      <div className="sticky top-0 z-40 bg-card border-b border-border px-3 sm:px-6 h-11 flex items-center gap-2 sm:gap-3">
+        <Sparkles className="w-4 h-4 text-primary shrink-0" />
+        <span className="text-xs sm:text-sm text-muted-foreground truncate">
+          You're exploring GleeWorld as
+        </span>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((o) => !o)}
+            className="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-foreground rounded-md border border-border px-2 py-1 hover:bg-muted transition-colors"
+          >
+            {switching ? `Switching…` : ROLE_LABEL[role]}
+            <ChevronDown className="w-4 h-4" />
+          </button>
+          {menuOpen && (
+            <div className="absolute left-0 top-full mt-1 w-36 rounded-lg border border-border bg-card shadow-lg py-1 z-50">
+              {DEMO_ROLES.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => switchRole(r)}
+                  className={`w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors ${
+                    r === role ? 'font-semibold text-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  {ROLE_LABEL[r]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex-1" />
+        <button
+          type="button"
+          onClick={() => setLeadOpen(true)}
+          className="text-xs sm:text-sm font-semibold text-white rounded-full px-3 sm:px-4 py-1.5 transition-transform hover:scale-[1.02] shrink-0"
+          style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)' }}
+        >
+          Request your workspace
+        </button>
+      </div>
+
+      <RequestWorkspaceDialog open={leadOpen} onClose={() => setLeadOpen(false)} />
+      {showWelcome && <DemoWelcomeOverlay onDismiss={dismissWelcome} />}
+    </>
+  );
+}
