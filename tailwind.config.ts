@@ -134,14 +134,9 @@ const config: Config = {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
-        // Wireframe-segregation pass: every fixed-pixel "large" radius
-        // utility (rounded-xl / 2xl / 3xl) is flattened to 0 so dialogs,
-        // stat tiles, and feature cards land in the same crisp
-        // geometry as the rest of the system. `rounded-full` is
-        // untouched so pills + avatars still pill.
-        xl: '0px',
-        '2xl': '0px',
-        '3xl': '0px',
+      },
+      boxShadow: {
+        card: 'var(--shadow-card)',
       },
       keyframes: {
         'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },

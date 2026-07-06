@@ -109,21 +109,6 @@
     background-repeat: no-repeat;
   }
 
-  /* Subtle film-grain overlay — code-generated SVG noise at very low
-   * opacity. Adds the "physical, high-end" tactility called for in
-   * 2026 standards without shipping a heavy texture image. Position
-   * fixed so it stays consistent across scroll; pointer-events:none
-   * so it never intercepts clicks. */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    opacity: 0.035;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  }
 
   /* Micro-interactions baseline — everything that the user can hit
    * gets a 150ms color+transform transition by default. Component
@@ -133,8 +118,10 @@
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+
+  /* iOS press feedback: plain controls dim, surfaces compress. */
   button:active:not(:disabled), [role="button"]:active:not(:disabled) {
-    transform: translateY(1px) scale(0.99);
+    opacity: 0.6;
   }
 
   /* Apple iOS 26 typography — HIG Dynamic Type "Large" (1pt = 1px CSS).
@@ -235,24 +222,14 @@
     --status-warning-fg: 26 83% 27%;
     --status-warning-border: 45 93% 76%;
 
-    /* Wireframe-segregation geometry: 0px corners everywhere shadcn's
-     * --radius cascades. Pills (rounded-full) still pill via their own
-     * utility; everything else goes square per 2026 tactile-brutalism. */
-    --radius: 0rem;
+    /* iOS 12px standard radius — white cards on gray canvas. */
+    --radius: 0.75rem;
 
-    /* Enhanced 3D Shadow System */
-    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
-    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    --shadow-depth-1: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-depth-2: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.12);
-    --shadow-depth-3: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.16);
-    --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.06);
-    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+    /* iOS depth: white-card-on-gray-canvas IS the elevation. One whisper. */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
     
     /* Animation Variables */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     /* Event chips — iOS Calendar-style pastels (fixed semantics) */
     --event-performance: 212 100% 93%;    --event-performance-fg: 212 100% 30%;   /* blue */
