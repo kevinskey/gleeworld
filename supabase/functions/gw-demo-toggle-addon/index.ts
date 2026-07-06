@@ -54,6 +54,13 @@ serve(async (req) => {
     return err(403, "demo_only", "This sandbox toggle is only available on the demo tenant.");
   }
 
+  // Read-only demo prospects must never flip modules — their sessions are
+  // anonymously mintable via /try, and this function writes with the
+  // service role (bypassing the demo_viewer RLS block).
+  if ((payload as any)?.demo_viewer === true) {
+    return err(403, "demo_viewer_readonly", "The demo preview is read-only.");
+  }
+
   let body: { module_id?: string; active?: boolean };
   try { body = await req.json(); } catch { return err(400, "bad_json"); }
   if (!body.module_id || typeof body.active !== "boolean") {

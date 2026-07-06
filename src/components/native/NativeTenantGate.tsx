@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { startDemoSession } from '@/lib/demoSession';
+import { startDemoSession, DEMO_WELCOME_PENDING_KEY } from '@/lib/demoSession';
 
 const KEY = 'gw_native_tenant';
 
@@ -65,7 +65,7 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
     try {
       // Server-minted read-only Director session — no credentials in the bundle.
       await startDemoSession('director');
-      sessionStorage.setItem('gw-demo-welcome-pending', '1');
+      sessionStorage.setItem(DEMO_WELCOME_PENDING_KEY, '1');
       selectTenant(demo); // persists tenant choice, then reloads
     } catch (e) {
       console.error('[native-demo] demo-login failed', e);

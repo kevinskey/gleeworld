@@ -5,8 +5,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { startDemoSession, DEMO_HOME, claimsToDemoRole, decodeJwtClaims } from '@/lib/demoSession';
+import {
+  startDemoSession,
+  DEMO_HOME,
+  claimsToDemoRole,
+  decodeJwtClaims,
+  DEMO_WELCOME_PENDING_KEY,
+} from '@/lib/demoSession';
 import { supabase } from '@/integrations/supabase/client';
+import { isDemoTenant } from '@/lib/demoTenant';
+import { isNativeApp } from '@/lib/nativeTenant';
 
 export default function TryDemo() {
   const started = useRef(false);
@@ -17,6 +25,13 @@ export default function TryDemo() {
     started.current = true;
     (async () => {
       try {
+        // /try only makes sense on the demo subdomain — on any other origin
+        // (marketing site, customer tenants) bounce to the real demo.
+        if (!isDemoTenant() && !isNativeApp()) {
+          window.location.replace('https://demo.gleeworld.org/try');
+          return;
+        }
+
         // Don't clobber a real signed-in session (e.g. the demo-admin curator):
         // only prospects (no session, or an existing demo-viewer session) get a
         // fresh demo login.
@@ -28,7 +43,7 @@ export default function TryDemo() {
         }
 
         await startDemoSession('director');
-        sessionStorage.setItem('gw-demo-welcome-pending', '1');
+        sessionStorage.setItem(DEMO_WELCOME_PENDING_KEY, '1');
         window.location.replace(DEMO_HOME.director);
       } catch (e) {
         console.error('[try-demo] failed', e);

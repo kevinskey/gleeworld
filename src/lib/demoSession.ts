@@ -21,6 +21,10 @@ export const DEMO_HOME: Record<DemoRole, string> = {
 
 export const DEMO_WRITE_BLOCKED_EVENT = 'gw-demo-write-blocked';
 
+// sessionStorage key shared by every demo entry point (web /try, native
+// tenant picker, sandbox tour) so DemoBar knows to show the welcome overlay.
+export const DEMO_WELCOME_PENDING_KEY = 'gw-demo-welcome-pending';
+
 export function decodeJwtClaims(jwt: string): Record<string, unknown> | null {
   try {
     const part = jwt.split('.')[1];

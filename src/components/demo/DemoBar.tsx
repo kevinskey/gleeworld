@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import {
   DEMO_HOME,
   DEMO_ROLES,
+  DEMO_WELCOME_PENDING_KEY,
   DEMO_WRITE_BLOCKED_EVENT,
   getDemoSessionRole,
   startDemoSession,
@@ -24,7 +25,7 @@ const ROLE_LABEL: Record<DemoRole, string> = {
 };
 
 const WELCOME_SEEN_KEY = 'gw-demo-welcome-seen';
-const WELCOME_PENDING_KEY = 'gw-demo-welcome-pending';
+const WELCOME_PENDING_KEY = DEMO_WELCOME_PENDING_KEY;
 
 export function DemoBar() {
   const [role, setRole] = useState<DemoRole | null>(null);

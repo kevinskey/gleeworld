@@ -43,6 +43,12 @@ for (const name of STUDENTS) {
   });
   if (error) throw new Error(`${email}: ${error.message}`);
   console.log(`created ${email} (${data.user.id})`);
+
+  const { error: flagErr } = await admin
+    .from('gw_profiles')
+    .update({ is_demo_viewer: true })
+    .eq('user_id', data.user.id);
+  if (flagErr) throw new Error(`${email} is_demo_viewer: ${flagErr.message}`);
 }
 
 console.log('done');
