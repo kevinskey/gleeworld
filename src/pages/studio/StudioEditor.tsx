@@ -13,7 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
-  Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download,
+  Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download, Scissors,
   Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
   ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
@@ -37,6 +37,9 @@ import { computeTakeAlignment } from '@/lib/audio/takeAlignment';
 import { Capacitor } from '@capacitor/core';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
+import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
+import { splitAudioClips, sliceClipChannels } from '@/lib/studio/clipOps';
+import { encodeMp3 } from '@/lib/audio/encodeMp3';
 import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
 import { toast } from 'sonner';
 
@@ -407,6 +410,110 @@ function Editor({
     }));
     setSelectedClip(null);
     toast.success('Clip deleted');
+  };
+
+  /** Logic-style split of the selected clip at the playhead. Shared by
+   * the B shortcut and the selection action bar (touch). */
+  const splitSelectedClipAtPlayhead = () => {
+    if (!selectedClip) return;
+    const pos = state?.positionSeconds ?? 0;
+    pushHistory(session);
+    let didSplit = false;
+    update((s) => {
+      const tracks = s.tracks.map((t) => {
+        if (t.id !== selectedClip.trackId) return t;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const clips: any[] = (t as any).clips;
+        const idx = clips.findIndex((c) => c.id === selectedClip.clipId);
+        if (idx < 0) return t;
+        const c = clips[idx];
+        if (c.kind === 'audio') {
+          const pair = splitAudioClips(clips, c.id, pos, newId);
+          if (!pair) return t;
+          const next = [...clips];
+          next.splice(idx, 1, pair[0], pair[1]);
+          didSplit = true;
+          return { ...t, clips: next } as Track;
+        }
+        const inside = pos > c.start_seconds && pos < c.start_seconds + c.duration_seconds;
+        if (!inside) return t;
+        const leftDur = pos - c.start_seconds;
+        const rightDur = c.duration_seconds - leftDur;
+        // MIDI: split notes by their absolute start time relative to the cut.
+        const leftNotes = c.notes.filter((n: { start_seconds: number }) => c.start_seconds + n.start_seconds < pos);
+        const rightNotes = c.notes
+          .filter((n: { start_seconds: number }) => c.start_seconds + n.start_seconds >= pos)
+          .map((n: { start_seconds: number }) => ({ ...n, start_seconds: n.start_seconds - leftDur }));
+        const left = { ...c, id: newId(), duration_seconds: leftDur, notes: leftNotes };
+        const right = { ...c, id: newId(), start_seconds: pos, duration_seconds: rightDur, notes: rightNotes };
+        const next = [...clips];
+        next.splice(idx, 1, left, right);
+        didSplit = true;
+        return { ...t, clips: next } as Track;
+      });
+      return { ...s, tracks };
+    });
+    if (didSplit) toast.success('Clip split at playhead');
+    else toast.error('Move the playhead inside the clip to split it');
+  };
+
+  /** True when the playhead currently intersects the selected clip —
+   * gates the Split button the same way the B handler's guard does. */
+  const playheadInsideSelectedClip = (() => {
+    if (!selectedClip) return false;
+    const t = session?.tracks.find((x) => x.id === selectedClip.trackId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const c = t && (t as any).clips?.find((x: any) => x.id === selectedClip.clipId);
+    if (!c) return false;
+    const pos = state?.positionSeconds ?? 0;
+    return pos > c.start_seconds && pos < c.start_seconds + c.duration_seconds;
+  })();
+
+  const [exportingClip, setExportingClip] = useState(false);
+  /** Export the selected AUDIO clip as a 320kbps MP3: slice the source
+   * asset (offset/duration), apply clip gain + fades (+reverse) at the
+   * sample level, encode in the shared worker. pitch/time_stretch are
+   * intentionally not applied (spec'd v1 non-goal). */
+  const exportSelectedClipMp3 = async () => {
+    if (!selectedClip || exportingClip) return;
+    const track = session.tracks.find((t) => t.id === selectedClip.trackId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clip: any = track && (track as any).clips?.find((c: any) => c.id === selectedClip.clipId);
+    if (!track || !clip) return;
+    if (clip.kind !== 'audio') { toast.error('MP3 export works on audio clips (MIDI export comes later).'); return; }
+    const asset = session.assets.find((a) => a.id === clip.asset_id);
+    if (!asset) { toast.error('Clip source not found.'); return; }
+    setExportingClip(true);
+    try {
+      const url = getAssetUrlSync(asset.id)
+        ?? await getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset });
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Could not load clip audio');
+      const ctx = new AudioContext();
+      const buf = await ctx.decodeAudioData(await res.arrayBuffer());
+      await ctx.close();
+      const channels = Array.from({ length: buf.numberOfChannels }, (_, i) => buf.getChannelData(i));
+      const sliced = sliceClipChannels(channels, buf.sampleRate, {
+        offset_seconds: clip.offset_seconds ?? 0,
+        duration_seconds: clip.duration_seconds,
+        gain_db: clip.gain_db ?? 0,
+        fade_in_seconds: clip.fade_in_seconds ?? 0,
+        fade_out_seconds: clip.fade_out_seconds ?? 0,
+        reverse: !!clip.reverse,
+      });
+      const blob = await encodeMp3(sliced, buf.sampleRate, 320);
+      const dlUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = `${track.name} — ${asset.filename.replace(/\.[^.]+$/, '')}`.replace(/[^\w\s—-]+/g, '').trim() + '.mp3';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(dlUrl), 30_000);
+      toast.success('Clip exported as MP3');
+    } catch (e) {
+      toast.error('Clip export failed', { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setExportingClip(false);
+    }
   };
   // The session lives in the session hook (`sessionState`). Reach
   // inside to compute snapSeconds from tempo + time-sig before any
@@ -1153,46 +1260,10 @@ function Editor({
         e.preventDefault();
         deleteSelectedClip();
       } else if ((e.key === 'b' || e.key === 'B') && !hasMod && selectedClip) {
-        // Logic-style split: slice the selected clip at the playhead
-        // into two clips so the user can trim / fade each side.
-        const pos = state?.positionSeconds ?? 0;
+        // Logic-style split — same path as the selection action bar.
         e.preventDefault();
-        pushHistory(session);
-        update((s) => {
-          const tracks = s.tracks.map((t) => {
-            if (t.id !== selectedClip.trackId) return t;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const clips: any[] = (t as any).clips;
-            const idx = clips.findIndex((c) => c.id === selectedClip.clipId);
-            if (idx < 0) return t;
-            const c = clips[idx];
-            const inside = pos > c.start_seconds && pos < c.start_seconds + c.duration_seconds;
-            if (!inside) return t;
-            const leftDur = pos - c.start_seconds;
-            const rightDur = c.duration_seconds - leftDur;
-            if (c.kind === 'audio') {
-              const left = { ...c, id: newId(), duration_seconds: leftDur, fade_out_seconds: Math.min(c.fade_out_seconds, leftDur / 2) };
-              const right = { ...c, id: newId(), start_seconds: pos, duration_seconds: rightDur, offset_seconds: c.offset_seconds + leftDur, fade_in_seconds: Math.min(c.fade_in_seconds, rightDur / 2) };
-              const next = [...clips];
-              next.splice(idx, 1, left, right);
-              return { ...t, clips: next } as Track;
-            } else {
-              // MIDI: split notes by their absolute start time relative to the cut.
-              const leftNotes = c.notes.filter((n: { start_seconds: number }) => c.start_seconds + n.start_seconds < pos);
-              const rightNotes = c.notes
-                .filter((n: { start_seconds: number }) => c.start_seconds + n.start_seconds >= pos)
-                .map((n: { start_seconds: number }) => ({ ...n, start_seconds: n.start_seconds - leftDur }));
-              const left = { ...c, id: newId(), duration_seconds: leftDur, notes: leftNotes };
-              const right = { ...c, id: newId(), start_seconds: pos, duration_seconds: rightDur, notes: rightNotes };
-              const next = [...clips];
-              next.splice(idx, 1, left, right);
-              return { ...t, clips: next } as Track;
-            }
-          });
-          return { ...s, tracks };
-        });
-        toast.success('Clip split at playhead');
-      } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && selectedClip) {
+        splitSelectedClipAtPlayhead();
+            } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && selectedClip) {
         // Alt+arrow nudges the selected clip ±50ms (or ±10ms with Shift),
         // perfect for slipping a take into the pocket after the fact.
         e.preventDefault();
@@ -1744,19 +1815,35 @@ function Editor({
            * selected clip gets an explicit destructive affordance here.
            * Confirm before deleting — there is no Cmd-Z on a phone. */}
           {selectedClip && (
-            <div className="sm:hidden flex items-center gap-2 bg-card border border-border rounded px-2 py-1.5">
-              <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate">Clip selected</span>
+            <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-xl border border-border/60 rounded-full px-2 py-1.5 overflow-x-auto">
+              <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate pl-2">Clip selected</span>
+              <button
+                onClick={splitSelectedClipAtPlayhead}
+                disabled={!playheadInsideSelectedClip}
+                title={playheadInsideSelectedClip ? 'Split at playhead (B)' : 'Move the playhead inside the clip to split'}
+                className="h-10 px-3 rounded-full border border-border inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--tint)] hover:bg-muted disabled:opacity-40 shrink-0"
+              >
+                <Scissors className="w-4 h-4" /> Split
+              </button>
+              <button
+                onClick={exportSelectedClipMp3}
+                disabled={exportingClip}
+                title="Export this clip as a 320kbps MP3"
+                className="h-10 px-3 rounded-full border border-border inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--tint)] hover:bg-muted disabled:opacity-40 shrink-0"
+              >
+                {exportingClip ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} MP3
+              </button>
               <button
                 onClick={() => {
                   if (confirm("Delete this clip? This can't be undone.")) deleteSelectedClip();
                 }}
-                className="h-10 px-3 rounded border border-border text-destructive inline-flex items-center gap-1.5 text-sm font-semibold hover:bg-destructive/10"
+                className="h-10 px-3 rounded-full border border-border text-destructive inline-flex items-center gap-1.5 text-sm font-semibold hover:bg-destructive/10 shrink-0"
               >
-                <Trash2 className="w-4 h-4" /> Delete clip
+                <Trash2 className="w-4 h-4" /> Delete
               </button>
               <button
                 onClick={() => setSelectedClip(null)}
-                className="h-10 w-10 rounded border border-border text-muted-foreground flex items-center justify-center"
+                className="h-10 w-10 rounded-full border border-border text-muted-foreground flex items-center justify-center shrink-0"
                 aria-label="Deselect clip"
               >
                 <X className="w-4 h-4" />
