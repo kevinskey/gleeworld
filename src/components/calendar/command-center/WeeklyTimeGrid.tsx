@@ -18,7 +18,8 @@ const isSameDayET = (date1: Date, date2: Date): boolean => {
          d1.getDate() === d2.getDate();
 };
 
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 7); // 7 AM to 10 PM
+const START_HOUR = 0;
+const HOURS = Array.from({ length: 24 }, (_, i) => i + START_HOUR); // full day, Apple style
 const HOUR_HEIGHT = 64; // px per hour
 
 // Get contrast color for text on colored background
@@ -101,7 +102,7 @@ export const WeeklyTimeGrid = ({
   // Scroll to ~8 AM on mount
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = HOUR_HEIGHT * 1; // 1 hour past 7 AM = 8 AM
+      scrollRef.current.scrollTop = HOUR_HEIGHT * (7 - START_HOUR); // land at 7 AM
     }
   }, []);
 
@@ -117,7 +118,7 @@ export const WeeklyTimeGrid = ({
       const startHour = startDate.getHours() + startDate.getMinutes() / 60;
       const endHour = endDate.getHours() + endDate.getMinutes() / 60;
 
-      const top = Math.max(0, (startHour - 7) * HOUR_HEIGHT);
+      const top = Math.max(0, (startHour - START_HOUR) * HOUR_HEIGHT);
       const height = Math.max(HOUR_HEIGHT * 0.4, (endHour - startHour) * HOUR_HEIGHT);
 
       const category = getCategoryForEvent(event);
@@ -157,7 +158,14 @@ export const WeeklyTimeGrid = ({
   const totalHeight = HOURS.length * HOUR_HEIGHT;
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
+    <div className={cn(
+      "flex flex-col bg-white overflow-hidden",
+      singleDay
+        ? "h-full"
+        // Week view bounds itself to the viewport so the 24h grid scrolls
+        // internally (initial scroll lands at 7 AM instead of midnight).
+        : "rounded-xl shadow-sm border border-slate-300 h-[calc(100dvh-215px)] min-h-[480px]",
+    )}>
       {/* Day Headers - sticky (hidden in single-day mode: the day view
           renders its own week strip above the grid) */}
       {!singleDay && (
@@ -200,12 +208,12 @@ export const WeeklyTimeGrid = ({
       <div ref={scrollRef} className="flex-1 overflow-auto">
         <div className="flex" style={{ height: totalHeight }}>
           {/* Time gutter */}
-          <div className="w-16 flex-shrink-0 relative bg-slate-50 border-r border-slate-200">
+          <div className={cn("w-16 flex-shrink-0 relative", singleDay ? "bg-white" : "bg-slate-50 border-r border-slate-200")}>
             {HOURS.map(hour => (
               <div
                 key={hour}
                 className="absolute w-full text-right pr-2 text-[11px] font-medium text-muted-foreground whitespace-nowrap"
-                style={{ top: (hour - 7) * HOUR_HEIGHT - 7 }}
+                style={{ top: (hour - START_HOUR) * HOUR_HEIGHT - 7 }}
               >
                 {hour === 0 ? '12 AM' : hour === 12 ? 'Noon' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`}
               </div>
@@ -219,15 +227,15 @@ export const WeeklyTimeGrid = ({
               <div
                 key={hour}
                 className="absolute left-0 right-0 border-t border-slate-200"
-                style={{ top: (hour - 7) * HOUR_HEIGHT }}
+                style={{ top: (hour - START_HOUR) * HOUR_HEIGHT }}
               />
             ))}
-            {/* Half-hour lines */}
-            {HOURS.map(hour => (
+            {/* Half-hour lines (week view only — Apple's day view is hairlines-only) */}
+            {!singleDay && HOURS.map(hour => (
               <div
                 key={`half-${hour}`}
                 className="absolute left-0 right-0 border-t border-slate-100"
-                style={{ top: (hour - 7) * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
+                style={{ top: (hour - START_HOUR) * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
               />
             ))}
 
@@ -237,10 +245,10 @@ export const WeeklyTimeGrid = ({
             {(() => {
               const now = new Date();
               const currentHour = now.getHours() + now.getMinutes() / 60;
-              if (currentHour >= 7 && currentHour <= 23) {
+              if (currentHour >= START_HOUR && currentHour <= 24) {
                 const todayIdx = days.findIndex(d => isSameDay(d, now));
                 if (todayIdx >= 0) {
-                  const topPx = (currentHour - 7) * HOUR_HEIGHT;
+                  const topPx = (currentHour - START_HOUR) * HOUR_HEIGHT;
                   const colCount = days.length;
                   return (
                     <>
@@ -285,48 +293,58 @@ export const WeeklyTimeGrid = ({
                   )}
                   onClick={() => onDateSelect(day)}
                 >
-                  {/* Events — pastel chips: colored time on top, dark title,
-                      muted location, accent left-border in the category color */}
+                  {/* Events — Apple Calendar style: upcoming events are solid
+                      blocks in the calendar color; past events fade to a
+                      pastel tint with the color moved onto the text. */}
                   {laid.map(({ event, top, height, color, col, totalCols }) => {
                     const widthPercent = 90 / totalCols;
                     const leftPercent = 4 + col * widthPercent;
-                    const startTime = format(new Date(event.start_date), 'h:mm a');
+                    const timeRange = event.end_date
+                      ? `${format(new Date(event.start_date), 'h:mm')} – ${format(new Date(event.end_date), 'h:mma').toLowerCase()}`
+                      : format(new Date(event.start_date), 'h:mm a');
                     const isShort = height < 40;
                     const canEdit = userPermissions?.isAdmin || user?.id === event.created_by;
+                    const eventEnd = event.end_date ? new Date(event.end_date) : new Date(event.start_date);
+                    const isPast = eventEnd.getTime() < Date.now();
+                    const solidText = getContrastTextColor(color);
 
                     return (
                       <div
                         key={event.id}
                         className={cn(
                           "absolute rounded-lg cursor-pointer hover:brightness-95 transition-all overflow-hidden z-10",
-                          selectedEventId === event.id && "ring-2 ring-primary z-[15]",
+                          selectedEventId === event.id && "ring-2 ring-foreground/30 z-[15]",
                         )}
                         style={{
                           top: top + 1,
                           height: Math.max(height - 2, 20),
                           left: `${leftPercent}%`,
                           width: `${widthPercent}%`,
-                          backgroundColor: `${color}1F`,
-                          borderLeft: `3px solid ${color}`,
+                          ...(isPast
+                            ? { backgroundColor: `${color}26`, borderLeft: `3px solid ${color}` }
+                            : { backgroundColor: color }),
                         }}
-                        title={`${event.title}\n${startTime}${event.location ? '\n' + event.location : ''}`}
+                        title={`${event.title}\n${timeRange}${event.location ? '\n' + event.location : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onEventSelect) { onEventSelect(event); return; }
                           if (canEdit) setEditingEvent(event); else setSelectedEvent(event);
                         }}
                       >
-                        <div className={cn("px-1.5 py-0.5 h-full flex min-w-0", isShort ? "items-center gap-1" : "flex-col")}>
-                          <span className="text-xs font-semibold leading-tight truncate text-foreground">
+                        <div
+                          className={cn("px-2 py-1 h-full flex min-w-0", isShort ? "items-center gap-1.5" : "flex-col gap-0.5")}
+                          style={{ color: isPast ? color : solidText }}
+                        >
+                          <span className="text-xs font-semibold leading-tight truncate">
                             {event.title}
                           </span>
                           {!isShort && (
-                            <span className="text-[11px] font-medium leading-tight whitespace-nowrap truncate" style={{ color }}>
-                              {startTime}
+                            <span className="text-[11px] font-medium leading-tight whitespace-nowrap truncate opacity-90">
+                              {timeRange}
                             </span>
                           )}
-                          {!isShort && height >= 56 && event.location && (
-                            <span className="text-[11px] truncate leading-tight text-muted-foreground mt-auto pb-0.5">
+                          {!isShort && height >= 72 && event.location && (
+                            <span className="text-[11px] truncate leading-tight opacity-80">
                               {event.location}
                             </span>
                           )}

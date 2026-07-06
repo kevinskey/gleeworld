@@ -15,9 +15,11 @@ interface EventQRCodeProps {
   eventTitle: string;
   eventQrToken?: string; // Legacy token, kept for backward compatibility
   compact?: boolean;
+  /** Custom trigger element (e.g. an Apple-style inspector row). */
+  trigger?: React.ReactNode;
 }
 
-export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCodeProps) => {
+export const EventQRCode = ({ eventId, eventTitle, compact = false, trigger }: EventQRCodeProps) => {
   const [open, setOpen] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [encodedUrl, setEncodedUrl] = useState('');
@@ -308,7 +310,9 @@ export const EventQRCode = ({ eventId, eventTitle, compact = false }: EventQRCod
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {compact ? (
+        {trigger ? (
+          trigger
+        ) : compact ? (
           <button
             className="h-8 w-8 rounded-md bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
             title="QR Code"
