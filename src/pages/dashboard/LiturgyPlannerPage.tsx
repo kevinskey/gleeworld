@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, Loader2, Plus, Trash2, X, Youtube,
+  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Paperclip, Plus, Search, Trash2, Upload, X, Youtube,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -39,15 +39,15 @@ interface MassRow {
   observation: string | null;
   sunday_cycle: SundayCycle | null;
   liturgical_season: LiturgicalSeason | null;
-  setting_title: string | null;       setting_youtube: string | null;
-  prelude_title: string | null;       prelude_youtube: string | null;
-  opening_title: string | null;       opening_youtube: string | null;
-  psalm_title: string | null;         psalm_youtube: string | null;       psalm_full: string | null;
-  preparation_title: string | null;   preparation_youtube: string | null;
-  communion_1_title: string | null;   communion_1_youtube: string | null;
-  communion_2_title: string | null;   communion_2_youtube: string | null;
-  praise_title: string | null;        praise_youtube: string | null;
-  closing_title: string | null;       closing_youtube: string | null;
+  setting_title: string | null;       setting_youtube: string | null;      setting_pdf: string | null;
+  prelude_title: string | null;       prelude_youtube: string | null;      prelude_pdf: string | null;
+  opening_title: string | null;       opening_youtube: string | null;      opening_pdf: string | null;
+  psalm_title: string | null;         psalm_youtube: string | null;        psalm_pdf: string | null;       psalm_full: string | null;
+  preparation_title: string | null;   preparation_youtube: string | null;  preparation_pdf: string | null;
+  communion_1_title: string | null;   communion_1_youtube: string | null;  communion_1_pdf: string | null;
+  communion_2_title: string | null;   communion_2_youtube: string | null;  communion_2_pdf: string | null;
+  praise_title: string | null;        praise_youtube: string | null;       praise_pdf: string | null;
+  closing_title: string | null;       closing_youtube: string | null;      closing_pdf: string | null;
   first_reading: string | null;
   responsorial_psalm: string | null;
   second_reading: string | null;
@@ -499,8 +499,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
             label="Mass Setting Used" slotKey="setting" playing={playingSlot === 'setting'} onPlayToggle={setPlayingSlot}
             title={row.setting_title ?? ''}
             youtube={row.setting_youtube ?? ''}
+            pdf={row.setting_pdf}
             onTitle={(v) => update({ setting_title: v || null })}
             onYouTube={(v) => update({ setting_youtube: v || null })}
+            onPdf={(v) => update({ setting_pdf: v })}
+            massId={row.id}
           />
           <div className="border-t border-border" />
 
@@ -509,8 +512,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
               label="Call to Worship / Prelude" slotKey="prelude" playing={playingSlot === 'prelude'} onPlayToggle={setPlayingSlot}
               title={row.prelude_title ?? ''}
               youtube={row.prelude_youtube ?? ''}
+              pdf={row.prelude_pdf}
               onTitle={(v) => update({ prelude_title: v || null })}
               onYouTube={(v) => update({ prelude_youtube: v || null })}
+              onPdf={(v) => update({ prelude_pdf: v })}
+              massId={row.id}
             />
           </OrderItem>
 
@@ -519,8 +525,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
               label="Opening Hymn / Song" slotKey="opening" playing={playingSlot === 'opening'} onPlayToggle={setPlayingSlot}
               title={row.opening_title ?? ''}
               youtube={row.opening_youtube ?? ''}
+              pdf={row.opening_pdf}
               onTitle={(v) => update({ opening_title: v || null })}
               onYouTube={(v) => update({ opening_youtube: v || null })}
+              onPdf={(v) => update({ opening_pdf: v })}
+              massId={row.id}
             />
           </OrderItem>
 
@@ -546,8 +555,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
               label="Responsorial Psalm — sung setting" slotKey="psalm" playing={playingSlot === 'psalm'} onPlayToggle={setPlayingSlot}
               title={row.psalm_title ?? ''}
               youtube={row.psalm_youtube ?? ''}
+              pdf={row.psalm_pdf}
               onTitle={(v) => update({ psalm_title: v || null })}
               onYouTube={(v) => update({ psalm_youtube: v || null })}
+              onPdf={(v) => update({ psalm_pdf: v })}
+              massId={row.id}
             />
             <Field label="Psalm full text (refrain + verses)">
               <Textarea rows={3} value={row.psalm_full ?? ''}
@@ -591,8 +603,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
               label="Preparation Song" slotKey="preparation" playing={playingSlot === 'preparation'} onPlayToggle={setPlayingSlot}
               title={row.preparation_title ?? ''}
               youtube={row.preparation_youtube ?? ''}
+              pdf={row.preparation_pdf}
               onTitle={(v) => update({ preparation_title: v || null })}
               onYouTube={(v) => update({ preparation_youtube: v || null })}
+              onPdf={(v) => update({ preparation_pdf: v })}
+              massId={row.id}
             />
           </OrderItem>
 
@@ -601,8 +616,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
               label="Communion Song 1" slotKey="communion1" playing={playingSlot === 'communion1'} onPlayToggle={setPlayingSlot}
               title={row.communion_1_title ?? ''}
               youtube={row.communion_1_youtube ?? ''}
+              pdf={row.communion_1_pdf}
               onTitle={(v) => update({ communion_1_title: v || null })}
               onYouTube={(v) => update({ communion_1_youtube: v || null })}
+              onPdf={(v) => update({ communion_1_pdf: v })}
+              massId={row.id}
             />
           </OrderItem>
 
@@ -611,8 +629,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
               label="Communion Song 2" slotKey="communion2" playing={playingSlot === 'communion2'} onPlayToggle={setPlayingSlot}
               title={row.communion_2_title ?? ''}
               youtube={row.communion_2_youtube ?? ''}
+              pdf={row.communion_2_pdf}
               onTitle={(v) => update({ communion_2_title: v || null })}
               onYouTube={(v) => update({ communion_2_youtube: v || null })}
+              onPdf={(v) => update({ communion_2_pdf: v })}
+              massId={row.id}
             />
           </OrderItem>
 
@@ -621,8 +642,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
               label="Song of Praise" slotKey="praise" playing={playingSlot === 'praise'} onPlayToggle={setPlayingSlot}
               title={row.praise_title ?? ''}
               youtube={row.praise_youtube ?? ''}
+              pdf={row.praise_pdf}
               onTitle={(v) => update({ praise_title: v || null })}
               onYouTube={(v) => update({ praise_youtube: v || null })}
+              onPdf={(v) => update({ praise_pdf: v })}
+              massId={row.id}
             />
           </OrderItem>
 
@@ -631,8 +655,11 @@ function LiturgyEditor({ massId }: { massId: string }) {
               label="Closing Hymn / Song" slotKey="closing" playing={playingSlot === 'closing'} onPlayToggle={setPlayingSlot}
               title={row.closing_title ?? ''}
               youtube={row.closing_youtube ?? ''}
+              pdf={row.closing_pdf}
               onTitle={(v) => update({ closing_title: v || null })}
               onYouTube={(v) => update({ closing_youtube: v || null })}
+              onPdf={(v) => update({ closing_pdf: v })}
+              massId={row.id}
             />
           </OrderItem>
         </CardContent>
@@ -812,11 +839,16 @@ function useHymnSearch(q: string) {
   return hits;
 }
 
-function SongSlot({ label, title, youtube, onTitle, onYouTube, slotKey, playing = false, onPlayToggle }: {
-  label: string; title: string; youtube: string;
-  onTitle: (v: string) => void; onYouTube: (v: string) => void;
+function SongSlot({
+  label, title, youtube, pdf, onTitle, onYouTube, onPdf, slotKey, massId,
+  playing = false, onPlayToggle,
+}: {
+  label: string; title: string; youtube: string; pdf: string | null;
+  onTitle: (v: string) => void; onYouTube: (v: string) => void; onPdf: (v: string | null) => void;
   // Inline playback: parent owns which slot is playing (one at a time).
   slotKey?: string; playing?: boolean; onPlayToggle?: (slotKey: string | null) => void;
+  // For upload paths — one PDF per (mass, slot) so re-uploads replace cleanly.
+  massId: string;
 }) {
   const hasUrl = /^https?:\/\//i.test(youtube.trim());
   const videoId = hasUrl ? getYouTubeId(youtube) : null;
@@ -900,6 +932,7 @@ function SongSlot({ label, title, youtube, onTitle, onYouTube, slotKey, playing 
         placeholder="YouTube URL (optional)"
         className="text-xs"
       />
+      <PdfAttachment pdf={pdf} onPdf={onPdf} massId={massId} slotKey={slotKey ?? label} />
       {playing && videoId && (
         <div className="rounded-xl overflow-hidden border border-border">
           <div className="flex items-center gap-1 px-3 py-1.5 bg-muted/50">
@@ -1189,6 +1222,227 @@ function isAutoObservation(s: string | null): boolean {
     /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Solemnity|Ash|Palm|Good|Easter|Pentecost|Christmas|All Saints|Assumption|Immaculate)/i.test(s) ||
     /\b(in Ordinary Time|week \d+|\d+(st|nd|rd|th) (Sunday|Week))\b/i.test(s) ||
     /^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) of\b/i.test(s)
+  );
+}
+
+// ── PDF attachment for a song slot ────────────────────────────────────
+//
+// Two ways to attach:
+//   1. Upload a PDF from the device → stored in the `sheet-music` Supabase
+//      Storage bucket at `liturgy/<massId>/<slotKey>.pdf` (upsert, so a
+//      re-upload replaces cleanly).
+//   2. Pick from the tenant's music library — searches `gw_sheet_music`
+//      for rows with `pdf_url` set and attaches that URL directly.
+//
+// Once attached, we show a pill with the filename, a "view" affordance
+// (opens the PDF in a new tab; a follow-up can route through
+// PDFViewerWithAnnotations for inline annotation), and a remove button.
+
+function PdfAttachment({ pdf, onPdf, massId, slotKey }: {
+  pdf: string | null;
+  onPdf: (v: string | null) => void;
+  massId: string;
+  slotKey: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Filename shown in the pill — decode the URL's final segment and
+  // strip our storage-path prefix so users see something like
+  // "call-him-up.pdf" instead of the raw Supabase URL.
+  const displayName = useMemo(() => {
+    if (!pdf) return '';
+    try {
+      const u = new URL(pdf);
+      const last = decodeURIComponent(u.pathname.split('/').pop() || 'attachment.pdf');
+      return last;
+    } catch { return 'attachment.pdf'; }
+  }, [pdf]);
+
+  const uploadFile = async (file: File) => {
+    if (!file) return;
+    if (file.type && !file.type.includes('pdf')) {
+      toast.error('That doesn\'t look like a PDF.');
+      return;
+    }
+    if (!massId) {
+      toast.error('Save the Mass details first before attaching a PDF.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const path = `liturgy/${massId}/${slotKey}.pdf`;
+      const { error: upErr } = await supabase.storage
+        .from('sheet-music')
+        .upload(path, file, { contentType: 'application/pdf', upsert: true });
+      if (upErr) throw upErr;
+      const url = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
+      // Cache-bust so replacing a PDF is reflected immediately for viewers.
+      onPdf(`${url}?v=${Date.now()}`);
+      toast.success('PDF attached.');
+    } catch (e: any) {
+      toast.error(e?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (pdf) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <span className="min-w-0 flex-1 truncate text-xs">{displayName}</span>
+        <a
+          href={pdf}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
+          title="Open PDF in a new tab"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+        <button
+          type="button"
+          onClick={() => onPdf(null)}
+          className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
+          title="Remove attachment"
+          aria-label="Remove PDF"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <label
+        className={`inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs font-medium cursor-pointer transition-colors ${
+          uploading
+            ? 'opacity-50 cursor-wait'
+            : 'text-muted-foreground hover:border-foreground/40 hover:text-foreground'
+        }`}
+      >
+        {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+        {uploading ? 'Uploading…' : 'Upload PDF'}
+        <input
+          type="file"
+          accept="application/pdf,.pdf"
+          className="hidden"
+          disabled={uploading}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) uploadFile(f);
+            e.currentTarget.value = '';
+          }}
+        />
+      </label>
+      <button
+        type="button"
+        onClick={() => setPickerOpen(true)}
+        className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:border-foreground/40 hover:text-foreground transition-colors"
+      >
+        <Paperclip className="h-3.5 w-3.5" />
+        From Music Library
+      </button>
+      <MusicLibraryPdfPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onPick={(url) => { onPdf(url); setPickerOpen(false); }}
+      />
+    </div>
+  );
+}
+
+// ── Music Library PDF picker ──────────────────────────────────────────
+//
+// Reads rows from `gw_sheet_music` that have a `pdf_url`. RLS scopes to
+// the current tenant, so users only see their own library.
+
+type LibraryPdf = { id: string; title: string; composer: string | null; pdf_url: string };
+
+function MusicLibraryPdfPicker({ open, onClose, onPick }: {
+  open: boolean; onClose: () => void; onPick: (url: string) => void;
+}) {
+  const [items, setItems] = useState<LibraryPdf[]>([]);
+  const [q, setQ] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoading(true);
+    supabase
+      .from('gw_sheet_music')
+      .select('id, title, composer, pdf_url')
+      .not('pdf_url', 'is', null)
+      .order('title', { ascending: true })
+      .limit(500)
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) toast.error('Could not load your music library.');
+        setItems(((data ?? []) as LibraryPdf[]).filter((r) => !!r.pdf_url));
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [open]);
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return items;
+    return items.filter((r) =>
+      r.title.toLowerCase().includes(s) || (r.composer ?? '').toLowerCase().includes(s)
+    );
+  }, [items, q]);
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Pick from Music Library</DialogTitle>
+        </DialogHeader>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search titles or composers…"
+            className="pl-9"
+            autoFocus
+          />
+        </div>
+        <div className="max-h-[420px] overflow-y-auto border border-border rounded-md">
+          {loading && (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+            </div>
+          )}
+          {!loading && filtered.length === 0 && (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              {items.length === 0
+                ? 'No PDFs in your music library yet.'
+                : 'No matches — try a different search.'}
+            </div>
+          )}
+          {!loading && filtered.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => onPick(r.pdf_url)}
+              className="w-full text-left px-3 py-2 border-b border-border last:border-b-0 hover:bg-muted transition-colors flex items-center gap-3"
+            >
+              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{r.title}</div>
+                {r.composer && (
+                  <div className="truncate text-xs text-muted-foreground">{r.composer}</div>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
