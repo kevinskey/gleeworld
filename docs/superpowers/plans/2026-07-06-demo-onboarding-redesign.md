@@ -920,7 +920,9 @@ git add src/components/demo/ src/App.tsx
 git commit -m "feat(demo): add DemoBar with role switcher, welcome overlay, write-blocked toast"
 ```
 
----### Task 7: Marketing CTA cleanup (`GleeWorldLanding.tsx`)
+---
+
+### Task 7: Marketing CTA cleanup (`GleeWorldLanding.tsx`)
 
 Collapse every prospect CTA to two: **Try the demo** (`https://demo.gleeworld.org/try`) and **Request your workspace** (`RequestWorkspaceDialog`). Remove the credentials popup and demo mailtos.
 
