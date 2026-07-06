@@ -2282,9 +2282,11 @@ html, body {
   }
 }
 
-/* Improve modal responsiveness */
+/* Improve modal responsiveness. Calendar pop-outs opt out: they own their
+   geometry (uniform 420px floating-inset panel), and this rule's !important
+   width/margin shifted them off their 12px inset on phones. */
 @media (max-width: 640px) {
-  [role="dialog"] {
+  [role="dialog"]:not([data-calendar-popout]) {
     width: calc(100vw - 2rem) !important;
     max-width: none !important;
     margin: 1rem !important;
