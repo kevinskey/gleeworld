@@ -72,11 +72,15 @@ for (const a of ACCOUNTS) {
   }
 
   // Profile: enforce final role + read-only flag + demo tenant.
-  const { error: profErr } = await admin
+  const { data: profRows, error: profErr } = await admin
     .from('gw_profiles')
     .update({ role: a.finalRole, is_demo_viewer: true, tenant_id: tenant.id, status: 'active' })
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .select('user_id');
   if (profErr) throw new Error(`profile ${a.email}: ${profErr.message}`);
+  if (!profRows?.length) {
+    throw new Error(`profile ${a.email}: update matched 0 rows — handle_new_user_profile trigger missing?`);
+  }
 
   // Membership: the trigger inserts one on signup; upsert covers repaired users.
   const { error: memErr } = await admin
@@ -87,4 +91,17 @@ for (const a of ACCOUNTS) {
   console.log(`  ✓ ${a.email} → role=${a.finalRole}, is_demo_viewer=true`);
 }
 
-console.log('done');
+// Verify final state — this script's whole job is guaranteeing these rows.
+const { data: check, error: checkErr } = await admin
+  .from('gw_profiles')
+  .select('email, role, is_demo_viewer, tenant_id, status')
+  .in('email', ACCOUNTS.map((a) => a.email));
+if (checkErr) throw new Error(`verification read failed: ${checkErr.message}`);
+for (const a of ACCOUNTS) {
+  const row = check?.find((r) => r.email === a.email);
+  if (!row || row.role !== a.finalRole || row.is_demo_viewer !== true ||
+      row.tenant_id !== tenant.id || row.status !== 'active') {
+    throw new Error(`verification failed for ${a.email}: ${JSON.stringify(row)}`);
+  }
+}
+console.log('done — all three accounts verified');
