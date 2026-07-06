@@ -21,5 +21,5 @@ check_absent "rounded-none"                 src/components/ui/card.tsx "square c
 check_present '\-apple-system'              src/index.css "system font stack"
 check_present "240 24% 96%"                 src/index.css "iOS systemGray6 canvas"
 check_present "font-size: 17px"             src/index.css "17px body"
-check_present "--tint"                      src/index.css "tint token"
+check_present '\-\-tint'                    src/index.css "tint token"
 exit $fail
