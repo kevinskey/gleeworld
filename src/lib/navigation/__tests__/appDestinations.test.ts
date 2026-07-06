@@ -158,7 +158,15 @@ describe('getAppTiles', () => {
   // '/dashboard/merch') would never be caught. Pin every grid destination's
   // route to routes that actually exist in src/App.tsx.
   it('every grid destination (all flags on, both roles, admin-open nav) routes to a known, existing App.tsx path', () => {
-    const adminNav = navFor(allOn, { isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true });
+    // hasModule: () => true (not navFor's flag-derived hasModule) so
+    // catalog entries gated on modules outside the 10 ModuleFlags keys
+    // (liturgy_planner, tour, auditions, pr_hub, feeds, alumni,
+    // librarian) actually resolve and get their routes pinned by this
+    // sweep, instead of silently never appearing.
+    const adminNav: NavContext = {
+      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true,
+      hiddenRoutes: new Set(),
+    };
     for (const role of ['student', 'faculty'] as const) {
       const { primary, overflow } = getAppTiles(role, allOn, adminNav);
       for (const dest of [...primary, ...overflow]) {
@@ -260,7 +268,14 @@ describe('getAppTiles catalog parity', () => {
   });
   it('parity invariant: every resolved grid-surface non-tab entry is a candidate', async () => {
     const { resolveNav, entrySurfaces } = await import('../navCatalog');
-    const nav = navFor(allOn, { isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true });
+    // Same rationale as the route-validity sweep above: use an
+    // always-true hasModule so every catalog entry (including the
+    // non-ModuleFlags-gated ones) is a real candidate here, keeping
+    // this invariant honest against the full catalog.
+    const nav: NavContext = {
+      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true,
+      hiddenRoutes: new Set(),
+    };
     const tabRoutes = new Set(getTabItems('faculty', allOn).map((t) => t.to));
     const expected = resolveNav(nav)
       .filter((e) => entrySurfaces(e).includes('grid') && !tabRoutes.has(e.to))

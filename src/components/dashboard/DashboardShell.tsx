@@ -229,7 +229,7 @@ function Sidebar() {
   // scheduling tools, and so on. Empty sections (no module access)
   // collapse out of the column.
   const navCtx: NavContext = {
-    hasModule: (k) => k === 'academy' || !!moduleAccess[k],
+    hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
     hiddenRoutes: hiddenNav,
   };
@@ -388,7 +388,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   // shared nav catalog. Empty sections drop out so a tenant without
   // box-office or finance modules doesn't see an empty "Money" header.
   const navCtx: NavContext = {
-    hasModule: (k) => k === 'academy' || !!moduleAccess[k],
+    hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
     hiddenRoutes: hiddenNav,
   };

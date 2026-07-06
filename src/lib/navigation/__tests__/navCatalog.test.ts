@@ -43,6 +43,11 @@ describe('resolveNav gates', () => {
     expect(out.find((e) => e.key === 'pr-hub')).toBeUndefined();
     expect(out.find((e) => e.key === 'feeds')).toBeDefined();
   });
+  it('box_office module off hides both the admin Box Office entry and the grid Tickets tile', () => {
+    const out = resolveNav(openCtx({ hasModule: (k) => k !== 'box_office' }));
+    expect(out.find((e) => e.key === 'box-office')).toBeUndefined();
+    expect(out.find((e) => e.key === 'tickets')).toBeUndefined();
+  });
   it('moduleAny keeps Store when either merch or store is on', () => {
     const only = (on: string) => openCtx({ hasModule: (k) => k === on });
     expect(resolveNav(only('merch')).find((e) => e.key === 'shop')).toBeDefined();
