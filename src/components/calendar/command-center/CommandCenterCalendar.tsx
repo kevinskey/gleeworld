@@ -19,7 +19,7 @@ import { DailyRunSheet } from "./DailyRunSheet";
 import { AgendaView } from "./AgendaView";
 import { MobileMonthGrid } from "./MobileMonthGrid";
 import { CreateEventDialog } from "../CreateEventDialog";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SuperAdminControlPanel } from "./SuperAdminControlPanel";
 import { CalendarSettingsDialog } from "./CalendarSettingsDialog";
@@ -371,8 +371,19 @@ export const CommandCenterCalendar = () => {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Page header — title only, compact */}
-      <div className="px-6 pt-3 pb-2">
+      {/* Page header — back to Command Center + title. The shell sidebar
+          is hidden on this route, so this is the way home. */}
+      <div className="px-3 md:px-6 pt-3 pb-2 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="inline-flex items-center gap-1 h-8 pl-1.5 pr-3 rounded-full text-sm font-medium text-primary hover:bg-primary/10 transition-colors -ml-1.5"
+          title="Back to Command Center"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          <span className="hidden sm:inline">Command Center</span>
+          <span className="sm:hidden">Back</span>
+        </button>
         <h1 className="font-sans normal-case font-bold leading-none text-xl tracking-tight">
           Calendar
         </h1>

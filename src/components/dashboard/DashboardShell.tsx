@@ -972,9 +972,14 @@ function TopBar() {
 // ── Shell ───────────────────────────────────────────────────────────────────
 
 export function DashboardShell({ children }: { children: ReactNode }) {
+  // The calendar runs full-bleed like a standalone app (Apple Calendar
+  // idiom): the shell sidebar hides and the page provides its own
+  // "back to Command Center" affordance.
+  const { pathname } = useLocation();
+  const isFullBleed = pathname.startsWith('/dashboard/calendar');
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <Sidebar />
+      {!isFullBleed && <Sidebar />}
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar />
         {/* pt-3 gives every page a small breath of space below the
