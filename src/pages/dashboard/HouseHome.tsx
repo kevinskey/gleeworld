@@ -13,7 +13,8 @@ import { useTenantModules } from '@/hooks/useModuleAccess';
 import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations';
-import { toModuleFlags } from '@/lib/navigation/moduleFlags';
+import { toModuleFlags, toModuleSet } from '@/lib/navigation/moduleFlags';
+import type { NavContext } from '@/lib/navigation/navCatalog';
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useHomeTileLayout } from '@/hooks/useHomeTileLayout';
@@ -123,10 +124,18 @@ export default function HouseHome() {
   // a moment later (mirrors the MobileBottomNav loading guard).
   const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
   const flags: ModuleFlags = toModuleFlags(modules);
+  // TEMPORARY most-restrictive ctx: Task 4 wires real admin/librarian/hidden
+  // state through. Until then this only affects overflow (never default
+  // primary), since default primary keys are all flagless or module-gated.
+  const nav: NavContext = {
+    hasModule: (k) => toModuleSet(modules).has(k),
+    isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false,
+    hiddenRoutes: new Set(),
+  };
   const { layout, layoutLoading, save: saveTileLayout } = useHomeTileLayout();
-  const { primary, overflow } = modulesLoading
+  const { primary, overflow } = modulesLoading || layoutLoading
     ? { primary: [], overflow: [] }
-    : getAppTiles(isFaculty ? 'faculty' : 'student', flags, layout);
+    : getAppTiles(isFaculty ? 'faculty' : 'student', flags, nav, layout);
 
   return (
     <DashboardShell>
