@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { EditEventDialog } from "../EditEventDialog";
 import { EventDetailDialog } from "../EventDetailDialog";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
+import { EventPeekPopover } from "./EventPeekPopover";
 
 // Determine if text should be white or dark based on background color luminance
 const getContrastTextColor = (hexColor: string): string => {
@@ -150,13 +151,9 @@ export const CommandCenterEventCard = ({
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onClick) {
-      onClick();
-    } else if (canEdit) {
-      setShowEditDialog(true);
-    } else {
-      setShowViewDialog(true);
-    }
+    // With no explicit onClick override, the EventPeekPopover wrapping this
+    // card opens on tap (Apple Calendar behavior) — nothing to do here.
+    onClick?.();
   };
 
   const textColor = getContrastTextColor(categoryColor);
@@ -242,9 +239,20 @@ export const CommandCenterEventCard = ({
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div>
-            <EventHoverCard event={event} canEdit={canEdit}>
-              {cardContent}
-            </EventHoverCard>
+            {onClick ? (
+              <EventHoverCard event={event} canEdit={canEdit}>
+                {cardContent}
+              </EventHoverCard>
+            ) : (
+              <EventPeekPopover
+                event={event}
+                color={categoryColor}
+                canEdit={!!canEdit}
+                onEventDeleted={onEventDeleted}
+              >
+                {cardContent}
+              </EventPeekPopover>
+            )}
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-48">

@@ -4,8 +4,7 @@ import { toZonedTime } from "date-fns-tz";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
 import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
-import { EventDetailDialog } from "../EventDetailDialog";
-import { EditEventDialog } from "../EditEventDialog";
+import { EventPeekPopover } from "./EventPeekPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -71,8 +70,6 @@ export const WeeklyTimeGrid = ({
 }: WeeklyTimeGridProps) => {
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
-  const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
   const [userPermissions, setUserPermissions] = useState<{isAdmin: boolean} | null>(null);
 
   useEffect(() => {
@@ -308,9 +305,8 @@ export const WeeklyTimeGrid = ({
                     const isPast = eventEnd.getTime() < Date.now();
                     const solidText = getContrastTextColor(color);
 
-                    return (
+                    const chip = (
                       <div
-                        key={event.id}
                         className={cn(
                           "absolute rounded-lg cursor-pointer hover:brightness-95 transition-all overflow-hidden z-10",
                           selectedEventId === event.id && "ring-2 ring-foreground/30 z-[15]",
@@ -327,8 +323,7 @@ export const WeeklyTimeGrid = ({
                         title={`${event.title}\n${timeRange}${event.location ? '\n' + event.location : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (onEventSelect) { onEventSelect(event); return; }
-                          if (canEdit) setEditingEvent(event); else setSelectedEvent(event);
+                          onEventSelect?.(event);
                         }}
                       >
                         <div
@@ -351,6 +346,19 @@ export const WeeklyTimeGrid = ({
                         </div>
                       </div>
                     );
+                    return onEventSelect ? (
+                      <span key={event.id}>{chip}</span>
+                    ) : (
+                      <EventPeekPopover
+                        key={event.id}
+                        event={event}
+                        color={color}
+                        canEdit={!!canEdit}
+                        onEventDeleted={onEventDeleted}
+                      >
+                        {chip}
+                      </EventPeekPopover>
+                    );
                   })}
                 </div>
               );
@@ -359,22 +367,6 @@ export const WeeklyTimeGrid = ({
         </div>
       </div>
 
-      {/* Dialogs */}
-      <EventDetailDialog
-        event={selectedEvent}
-        open={!!selectedEvent}
-        onOpenChange={(open) => !open && setSelectedEvent(null)}
-        onEventUpdated={onEventDeleted}
-      />
-      <EditEventDialog
-        event={editingEvent}
-        open={!!editingEvent}
-        onOpenChange={(open) => !open && setEditingEvent(null)}
-        onEventUpdated={() => {
-          setEditingEvent(null);
-          onEventDeleted?.();
-        }}
-      />
     </div>
   );
 };
