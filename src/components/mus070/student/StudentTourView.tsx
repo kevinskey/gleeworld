@@ -76,14 +76,14 @@ const eventTypeConfig: Record<string, { icon: React.ElementType; color: string; 
   performance: { icon: Music, color: 'bg-primary text-primary-foreground', label: 'Performance' },
   travel: { icon: Bus, color: 'bg-muted text-foreground/70', label: 'Travel Day' },
   free: { icon: Calendar, color: 'bg-accent text-accent-foreground', label: 'Free Day' },
-  rehearsal: { icon: Music, color: 'bg-secondary text-secondary-foreground', label: 'Rehearsal' },
+  rehearsal: { icon: Music, color: 'bg-event-rehearsal text-event-rehearsal-fg', label: 'Rehearsal' },
 };
 
 const timelineCategoryConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {
   call_time: { icon: AlertCircle, color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300', label: 'Call Time' },
   transport: { icon: Bus, color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300', label: 'Transport' },
   performance: { icon: Music, color: 'bg-primary/10 text-primary', label: 'Performance' },
-  rehearsal: { icon: Music, color: 'bg-secondary text-secondary-foreground', label: 'Rehearsal' },
+  rehearsal: { icon: Music, color: 'bg-event-rehearsal text-event-rehearsal-fg', label: 'Rehearsal' },
   meal: { icon: Utensils, color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', label: 'Meal' },
   lodging: { icon: Hotel, color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300', label: 'Lodging' },
   free_time: { icon: Calendar, color: 'bg-muted text-foreground/70', label: 'Free Time' },
