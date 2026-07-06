@@ -372,8 +372,9 @@ export const CommandCenterCalendar = () => {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Page header — back to Command Center + title. The shell sidebar
-          is hidden on this route, so this is the way home. */}
-      <div className="px-3 md:px-6 pt-3 pb-2 flex items-center gap-2">
+          is hidden on this route, so this is the way home. Fixed compact
+          height with the text vertically centered. */}
+      <div className="px-3 md:px-6 h-11 flex items-center gap-2 flex-shrink-0">
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
