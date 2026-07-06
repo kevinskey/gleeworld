@@ -733,7 +733,8 @@ function TopBar() {
   // left slot to preserve the tenant identity.
   const inImmersiveRoute =
     /^\/studio\/sessions\/[^/]+/.test(location.pathname) ||
-    /^\/dashboard\/viewer\/[^/]+/.test(location.pathname);
+    /^\/dashboard\/viewer\/[^/]+/.test(location.pathname) ||
+    location.pathname.startsWith('/dashboard/calendar');
   const compactBrandName =
     branding?.short_name || branding?.org_name || getOrgName();
 
@@ -987,7 +988,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             landing) add their own larger top padding on top of this.
             pb-20 sm:pb-0 reserves room for the MobileBottomNav strip
             (only rendered on phones; sm+ has no bottom nav). */}
-        <main className="flex-1 min-w-0 overflow-x-hidden pt-3 sm:pt-4 pb-20 sm:pb-0">{children}</main>
+        <main className={cn(
+          "flex-1 min-w-0 overflow-x-hidden pb-20 sm:pb-0",
+          // Full-bleed routes (calendar) manage their own compact header
+          // spacing — no extra breathing room below the topbar.
+          isFullBleed ? "pt-0" : "pt-3 sm:pt-4",
+        )}>{children}</main>
       </div>
       {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
           so it returns null on tablet/desktop — safe to mount globally. */}
