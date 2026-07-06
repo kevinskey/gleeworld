@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { InquiryDialog } from "@/components/landing/InquiryDialog";
-import { DemoCredsPopup } from "@/components/landing/DemoCredsPopup";
+import { RequestWorkspaceDialog } from "@/components/leads/RequestWorkspaceDialog";
 import { Link } from "react-router-dom";
 import { getDefaultEventImage } from "@/constants/images";
 import { Button } from "@/components/ui/button";
@@ -362,7 +361,7 @@ export const GleeWorldLanding = () => {
                     <ArrowRight className="h-5 w-5" />
                   </a>
                   <a
-                    href="mailto:kevin@gleeworld.org?subject=GleeWorld%20demo%20request"
+                    href={TRY_DEMO_URL}
                     className="inline-flex items-center justify-center rounded-lg font-semibold text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 transition-colors"
                     style={{
                       border: '2px solid rgba(255,255,255,0.4)',
@@ -370,7 +369,7 @@ export const GleeWorldLanding = () => {
                       backgroundColor: 'transparent',
                     }}
                   >
-                    Book a demo
+                    Try the demo
                   </a>
                 </div>
 
@@ -513,12 +512,7 @@ const HEADING_STYLE = { fontFamily: SANS, textTransform: 'none' as const };
 
 const MAILTO_BUY =
   'mailto:kevin@gleeworld.org?subject=GleeWorld%20for%20my%20group&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20set%20up%20GleeWorld%20for%20my%20group.%0A%0AName%20of%20organization%3A%20%0ASize%20%28approx%20students%29%3A%20%0APreferred%20subdomain%3A%20%0AHow%20did%20you%20find%20us%3F%20%0A%0AThanks%21';
-// The Personal tier is billed to an individual musician, not a tenant — its
-// mailto body must never ask for an organization/subdomain (that's nonsense
-// for a solo signup). Same address as MAILTO_BUY, different subject/body.
-const MAILTO_PERSONAL =
-  'mailto:kevin@gleeworld.org?subject=GleeWorld%20Personal&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20sign%20up%20for%20GleeWorld%20Personal.%0A%0AName%3A%20%0AWhat%20I%27d%20use%20it%20for%3A%20%0A%0AThanks%21';
-const MAILTO_DEMO = 'mailto:kevin@gleeworld.org?subject=GleeWorld%20demo%20request';
+const TRY_DEMO_URL = 'https://demo.gleeworld.org/try';
 
 // "Get started" buttons across the marketing site open a single shared
 // inquiry dialog (rather than mailto:) so we capture submissions server-side.
@@ -628,8 +622,7 @@ function MarketingSite() {
         <AppleTrustStrip />
         <AppleFinalCTA />
         <AppleFooter />
-        <InquiryDialog open={inquiryOpen} onClose={() => setInquiryOpen(false)} />
-        <DemoCredsPopup />
+        <RequestWorkspaceDialog open={inquiryOpen} onClose={() => setInquiryOpen(false)} />
       </div>
     </InquiryContext.Provider>
   );
@@ -669,7 +662,7 @@ function AppleNav() {
           <a href="#product" className="hover:text-slate-900 transition-colors">Product</a>
           <a href="#how" className="hover:text-slate-900 transition-colors">How it works</a>
           <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
-          <a href={MAILTO_DEMO} className="hover:text-slate-900 transition-colors">Demo</a>
+          <a href={TRY_DEMO_URL} className="hover:text-slate-900 transition-colors">Try the demo</a>
           <a href="/auth" className="hover:text-slate-900 transition-colors">Sign in</a>
           <button
             type="button"
@@ -742,13 +735,13 @@ function AppleHero() {
             <ArrowRight className="h-4 w-4" />
           </button>
           <a
-            href="https://demo.gleeworld.org"
+            href={TRY_DEMO_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold transition-colors backdrop-blur-sm"
             style={{ color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.10)' }}
           >
-            Watch a demo <ArrowRight className="h-4 w-4" />
+            Try the demo <ArrowRight className="h-4 w-4" />
           </a>
           </div>{/* /CTA inner */}
         </div>{/* /CTA outer */}
@@ -1467,11 +1460,11 @@ function AppleFinalCTA() {
             <ArrowRight className="h-4 w-4" />
           </button>
           <a
-            href={MAILTO_DEMO}
+            href={TRY_DEMO_URL}
             className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold"
             style={{ color: '#0071e3' }}
           >
-            Book a demo <ArrowRight className="h-4 w-4" />
+            Try the demo <ArrowRight className="h-4 w-4" />
           </a>
         </div>
       </div>
@@ -1516,7 +1509,7 @@ function AppleVideo() {
             />
           ) : (
             <a
-              href={MAILTO_DEMO}
+              href={TRY_DEMO_URL}
               className="w-full h-full flex flex-col items-center justify-center text-center px-6 hover:bg-slate-800 transition-colors"
             >
               <div
@@ -1534,7 +1527,7 @@ function AppleVideo() {
                 Want a live tour right now? Email us — we'll send you a private link
                 and a calendar invite within one business day.
               </div>
-              <div className="mt-6 text-sky-300 text-sm font-semibold">Book a live demo →</div>
+              <div className="mt-6 text-sky-300 text-sm font-semibold">Try the demo</div>
             </a>
           )}
         </div>
@@ -1654,7 +1647,7 @@ function ApplePricing() {
                   ))}
                 </ul>
                 <a
-                  href={checkoutLink || (isPersonal ? MAILTO_PERSONAL : MAILTO_BUY)}
+                  href={checkoutLink || MAILTO_BUY}
                   className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
                   style={featured
                     ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
