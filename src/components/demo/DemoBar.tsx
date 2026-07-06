@@ -3,7 +3,7 @@
 // Owns: role switcher, "Request your workspace" CTA, first-visit welcome
 // overlay, and the friendly toast for blocked writes.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -32,16 +32,19 @@ export function DemoBar() {
   const [switching, setSwitching] = useState<DemoRole | null>(null);
   const [leadOpen, setLeadOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    getDemoSessionRole().then((r) => {
-      if (cancelled || !r) return;
-      setRole(r);
-      const pending = sessionStorage.getItem(WELCOME_PENDING_KEY) === '1';
-      const seen = sessionStorage.getItem(WELCOME_SEEN_KEY) === '1';
-      if (pending || !seen) setShowWelcome(true);
-    });
+    getDemoSessionRole()
+      .then((r) => {
+        if (cancelled || !r) return;
+        setRole(r);
+        const pending = sessionStorage.getItem(WELCOME_PENDING_KEY) === '1';
+        const seen = sessionStorage.getItem(WELCOME_SEEN_KEY) === '1';
+        if (pending || !seen) setShowWelcome(true);
+      })
+      .catch(() => { /* no session readable — bar stays hidden */ });
     return () => { cancelled = true; };
   }, []);
 
@@ -57,6 +60,23 @@ export function DemoBar() {
     window.addEventListener(DEMO_WRITE_BLOCKED_EVENT, onBlocked);
     return () => window.removeEventListener(DEMO_WRITE_BLOCKED_EVENT, onBlocked);
   }, [role]);
+
+  // Close the role menu on outside click or Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuOpen]);
 
   if (!role) return null;
 
@@ -84,15 +104,18 @@ export function DemoBar() {
 
   return (
     <>
-      <div className="sticky top-0 z-40 bg-card border-b border-border px-3 sm:px-6 h-11 flex items-center gap-2 sm:gap-3">
+      {/* Static (not sticky): page headers below use sticky top-0 themselves; a sticky bar would fight them for the same slot. Role switches full-reload, so the bar reappears at the top of every page. */}
+      <div className="relative z-40 bg-card border-b border-border px-3 sm:px-6 h-11 flex items-center gap-2 sm:gap-3">
         <Sparkles className="w-4 h-4 text-primary shrink-0" />
         <span className="text-xs sm:text-sm text-muted-foreground truncate">
           You're exploring GleeWorld as
         </span>
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
             className="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-foreground rounded-md border border-border px-2 py-1 hover:bg-muted transition-colors"
           >
             {switching ? `Switching…` : ROLE_LABEL[role]}
