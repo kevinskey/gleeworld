@@ -123,7 +123,7 @@ export default function HouseHome() {
   // a moment later (mirrors the MobileBottomNav loading guard).
   const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
   const flags: ModuleFlags = toModuleFlags(modules);
-  const { layout, save: saveTileLayout } = useHomeTileLayout();
+  const { layout, layoutLoading, save: saveTileLayout } = useHomeTileLayout();
   const { primary, overflow } = modulesLoading
     ? { primary: [], overflow: [] }
     : getAppTiles(isFaculty ? 'faculty' : 'student', flags, layout);
@@ -218,7 +218,7 @@ export default function HouseHome() {
         </div>
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
-        {!modulesLoading && (
+        {!modulesLoading && !layoutLoading && (
           <HomeTileGrid primary={primary} overflow={overflow} onSave={saveTileLayout} />
         )}
       </div>

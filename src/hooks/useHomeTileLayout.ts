@@ -14,7 +14,7 @@ export function useHomeTileLayout() {
   const queryClient = useQueryClient();
   const uid = user?.id;
 
-  const { data: layout = null } = useQuery<TileLayout | null>({
+  const { data: layout = null, isLoading: layoutLoading } = useQuery<TileLayout | null>({
     queryKey: ['home-tile-layout', uid ?? 'anon'],
     enabled: !!uid,
     staleTime: 60 * 1000,
@@ -56,5 +56,5 @@ export function useHomeTileLayout() {
     }
   }, [uid, queryClient]);
 
-  return { layout, save };
+  return { layout, layoutLoading, save };
 }

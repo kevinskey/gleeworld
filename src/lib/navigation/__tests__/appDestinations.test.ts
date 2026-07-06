@@ -164,6 +164,10 @@ describe('parseTileLayout', () => {
     expect(parseTileLayout({ v: 1, order: ['tickets', 7] })).toBeNull();
     expect(parseTileLayout({ v: 1 })).toBeNull();
   });
+  it('dedupes repeated keys so a corrupt blob cannot render duplicate tiles', () => {
+    expect(parseTileLayout({ v: 1, order: ['tickets', 'tickets', 'studio'] }))
+      .toEqual({ v: 1, order: ['tickets', 'studio'] });
+  });
 });
 
 describe('getAppTiles with a custom layout', () => {

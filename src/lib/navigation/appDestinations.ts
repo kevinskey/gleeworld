@@ -86,7 +86,9 @@ export function getTabItems(role: 'student' | 'faculty', flags: ModuleFlags): De
 
 // Per-user home grid layout, stored in user_preferences.home_tile_layout
 // as versioned jsonb. Anything that isn't exactly {v:1, order: string[]}
-// parses to null (= default layout) — never throws.
+// parses to null (= default layout) — never throws. The returned order is
+// deduped and capped (64 entries) so a corrupt or hand-edited blob can't
+// render duplicate tiles or grow unbounded.
 // Spec: docs/superpowers/specs/2026-07-06-home-tile-customization-design.md
 export interface TileLayout { v: 1; order: string[] }
 
@@ -95,7 +97,7 @@ export function parseTileLayout(raw: unknown): TileLayout | null {
   const o = raw as Record<string, unknown>;
   if (o.v !== 1 || !Array.isArray(o.order)) return null;
   if (!o.order.every((k): k is string => typeof k === 'string')) return null;
-  return { v: 1, order: o.order };
+  return { v: 1, order: [...new Set(o.order as string[])].slice(0, 64) };
 }
 
 export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, layout?: TileLayout | null):

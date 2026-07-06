@@ -144,7 +144,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
         <span className="text-xs uppercase tracking-widest text-muted-foreground">Apps</span>
         {editing ? (
           <span className="flex items-center gap-3 text-sm">
-            <button type="button" onClick={() => setDraft(null)} disabled={saving} className="text-muted-foreground min-h-[44px]">
+            <button type="button" onClick={() => setDraft(null)} disabled={saving} className="text-muted-foreground min-h-[44px] disabled:opacity-50">
               Cancel
             </button>
             <button type="button" onClick={done} disabled={saving} className="font-semibold text-primary min-h-[44px]">
@@ -160,43 +160,45 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
       </div>
 
       {editing ? (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={draftPrimary.map((t) => t.key)} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-4 gap-2">
-              {draftPrimary.map((t, i) => (
-                <SortableTile key={t.key} tile={t} index={i}
-                  onRemove={(key) => setDraft((d) => (d ? d.filter((k) => k !== key) : d))} />
-              ))}
-            </div>
-          </SortableContext>
-          {draftPrimary.length === 0 && (
-            <p className="text-sm text-muted-foreground py-2">
-              Your grid is empty — add apps back from below.
-            </p>
-          )}
-          <div className="text-xs uppercase tracking-widest text-muted-foreground mt-4 mb-2">More</div>
-          {draftOverflow.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Everything is on your grid.</p>
-          ) : (
-            <div className="grid grid-cols-4 gap-2">
-              {draftOverflow.map((t, i) => (
-                <div key={t.key} className="relative">
-                  <button type="button"
-                    onClick={() => setDraft((d) => (d && !d.includes(t.key) ? [...d, t.key] : d))}
-                    aria-label={`Add ${t.label} to grid`}
-                    className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
-                    style={{ animationDelay: `${(i % 4) * 75}ms` }}>
-                    <KeycapFace tile={t} editing />
-                  </button>
-                  <span aria-hidden="true"
-                    className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-background border border-border flex items-center justify-center pointer-events-none">
-                    <Plus className="w-4 h-4 text-primary" />
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </DndContext>
+        <div className={saving ? 'pointer-events-none opacity-60' : undefined}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={draftPrimary.map((t) => t.key)} strategy={rectSortingStrategy}>
+              <div className="grid grid-cols-4 gap-2">
+                {draftPrimary.map((t, i) => (
+                  <SortableTile key={t.key} tile={t} index={i}
+                    onRemove={(key) => setDraft((d) => (d ? d.filter((k) => k !== key) : d))} />
+                ))}
+              </div>
+            </SortableContext>
+            {draftPrimary.length === 0 && (
+              <p className="text-sm text-muted-foreground py-2">
+                Your grid is empty — add apps back from below.
+              </p>
+            )}
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mt-4 mb-2">More</div>
+            {draftOverflow.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Everything is on your grid.</p>
+            ) : (
+              <div className="grid grid-cols-4 gap-2">
+                {draftOverflow.map((t, i) => (
+                  <div key={t.key} className="relative">
+                    <button type="button"
+                      onClick={() => setDraft((d) => (d && !d.includes(t.key) ? [...d, t.key] : d))}
+                      aria-label={`Add ${t.label} to grid`}
+                      className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
+                      style={{ animationDelay: `${(i % 4) * 75}ms` }}>
+                      <KeycapFace tile={t} editing />
+                    </button>
+                    <span aria-hidden="true"
+                      className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-background border border-border flex items-center justify-center pointer-events-none">
+                      <Plus className="w-4 h-4 text-primary" />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </DndContext>
+        </div>
       ) : (
         <>
           {primary.length === 0 ? (
