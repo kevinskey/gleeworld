@@ -263,7 +263,8 @@ export const UniversalHeader = ({
   return (
     <>
       <div
-        className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none"
+        className="w-full m-0 p-0 fixed left-0 right-0 z-50 overflow-hidden pointer-events-none"
+        style={{ top: 'var(--gw-demo-bar-h, 0px)' }}
       >
         <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0">
         <header

@@ -560,7 +560,7 @@ function TopBar() {
 
   return (
     <header
-      className="border-b border-border bg-card flex items-center gap-3 px-4 sm:px-6 sticky top-0 z-30 h-14 md:h-20"
+      className="border-b border-border bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 h-14 md:h-20"
       style={{
         // Height is class-based (h-14 / md:h-20) so phones get a
         // slimmer 56px bar; md+ keeps the 80px that matches the
@@ -570,6 +570,7 @@ function TopBar() {
         // height so iOS notches still clear without growing the
         // visible header.
         paddingTop: 'env(safe-area-inset-top)',
+        top: 'var(--gw-demo-bar-h, 0px)',
       }}
     >
       {/* Mobile menu (lg:hidden) — drawer with nav. State is controlled so

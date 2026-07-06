@@ -62,6 +62,13 @@ export function DemoBar() {
     return () => window.removeEventListener(DEMO_WRITE_BLOCKED_EVENT, onBlocked);
   }, [role]);
 
+  // Publish the bar's height so fixed/sticky page headers can sit below it.
+  useEffect(() => {
+    if (!role) return;
+    document.documentElement.style.setProperty('--gw-demo-bar-h', '2.75rem');
+    return () => document.documentElement.style.removeProperty('--gw-demo-bar-h');
+  }, [role]);
+
   // Close the role menu on outside click or Escape.
   useEffect(() => {
     if (!menuOpen) return;
@@ -105,8 +112,8 @@ export function DemoBar() {
 
   return (
     <>
-      {/* Static (not sticky): page headers below use sticky top-0 themselves; a sticky bar would fight them for the same slot. Role switches full-reload, so the bar reappears at the top of every page. */}
-      <div className="relative z-40 bg-card border-b border-border px-3 sm:px-6 h-11 flex items-center gap-2 sm:gap-3">
+      {/* Sticky: the bar publishes its height as --gw-demo-bar-h; fixed/sticky page headers offset themselves by that var so nothing overlaps. */}
+      <div className="sticky top-0 z-[60] bg-card border-b border-border px-3 sm:px-6 h-11 flex items-center gap-2 sm:gap-3">
         <Sparkles className="w-4 h-4 text-primary shrink-0" />
         <span className="text-xs sm:text-sm text-muted-foreground truncate">
           You're exploring GleeWorld as
