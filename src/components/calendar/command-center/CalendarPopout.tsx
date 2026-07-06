@@ -37,6 +37,7 @@ export function CalendarPopout({ open, onOpenChange, title, headerBorder, childr
         >
           <div className={cn('px-5 pt-5 pb-2 text-left', headerBorder && 'border-b border-border')}>
             <SheetPrimitive.Title className="text-lg font-bold">{title}</SheetPrimitive.Title>
+            <SheetPrimitive.Description className="sr-only">{title} panel</SheetPrimitive.Description>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">{children}</div>
           <SheetPrimitive.Close className="absolute right-3 top-3 z-50 flex items-center justify-center h-10 w-10 sm:h-8 sm:w-8 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
