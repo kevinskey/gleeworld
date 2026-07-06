@@ -84,16 +84,19 @@ export const CommandCenterGrid = ({
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
       {/* Day Headers */}
-      <div className="grid grid-cols-7 bg-card border-b border-border  text-foreground flex-shrink-0">
+      <div className="grid grid-cols-7 bg-white border-b border-slate-200 flex-shrink-0">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
           <div
             key={idx}
-            className="py-2.5 px-1 text-center text-sm font-semibold tracking-wide border-r border-border last:border-r-0 overflow-hidden"
+            className={cn(
+              "py-2 px-1 text-center text-sm font-semibold tracking-wide overflow-hidden",
+              idx === 0 || idx === 6 ? "text-muted-foreground" : "text-foreground",
+            )}
           >
             {/* Show full label on roomy screens; abbreviate to 1 letter
-                on iPad / cramped widths so they never touch each other. */}
-            <span className="hidden lg:inline">{day}</span>
-            <span className="lg:hidden">{day.charAt(0)}</span>
+                on cramped widths so they never touch each other. */}
+            <span className="hidden md:inline">{day}</span>
+            <span className="md:hidden">{day.charAt(0)}</span>
           </div>
         ))}
       </div>
@@ -111,35 +114,29 @@ export const CommandCenterGrid = ({
           const isSelected = isSameDayET(day, selectedDate);
           const hasEvents = dayEvents.length > 0;
           const hasAvailability = dayAvailability.length > 0;
+          const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
           return (
             <div
               key={day.toString()}
               onClick={() => onDateSelect(day)}
               className={cn(
-                "min-h-[100px] p-2 cursor-pointer transition-all border-b border-r border-slate-300 flex flex-col",
-                isCurrentMonth ? "bg-white" : "bg-slate-100",
-                isToday && "bg-amber-50 border-amber-300",
-                isSelected && "ring-2 ring-inset ring-[#003366] bg-blue-50",
-                "hover:bg-slate-50"
+                "min-h-[100px] p-1.5 cursor-pointer transition-all border-b border-r border-slate-200 flex flex-col",
+                !isCurrentMonth ? "bg-slate-50/80" : isWeekend ? "bg-slate-50" : "bg-white",
+                isSelected && "ring-2 ring-inset ring-primary/60",
+                "hover:bg-slate-100/60"
               )}
             >
-              {/* Date Number */}
-              <div className="flex items-center justify-between mb-1.5">
+              {/* Date Number — right-aligned like Apple Calendar */}
+              <div className="flex items-center justify-end mb-1">
                 <span className={cn(
-                  "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold",
-                  !isCurrentMonth && "text-muted-foreground",
-                  isCurrentMonth && !isToday && !isSelected && "text-slate-800",
-                  isToday && "bg-card border-b border-border text-foreground",
-                  isSelected && !isToday && "bg-primary text-foreground"
+                  "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold tabular-nums",
+                  !isCurrentMonth && "text-muted-foreground/60",
+                  isCurrentMonth && !isToday && "text-slate-800",
+                  isToday && "bg-primary text-primary-foreground font-bold"
                 )}>
                   {format(day, 'd')}
                 </span>
-                {hasEvents && (
-                  <span className="text-xs text-slate-600 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">
-                    {dayEvents.length}
-                  </span>
-                )}
               </div>
 
               {/* Availability blocks at 50% opacity */}

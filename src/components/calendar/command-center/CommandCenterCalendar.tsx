@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { format, isSameDay, addMonths, subMonths, addDays, subDays } from "date-fns";
+import { format, isSameDay, addMonths, subMonths, addDays, subDays, addYears, subYears, addWeeks, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useGleeWorldEvents, GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { useCalendars, CalendarInfo } from "@/hooks/useCalendars";
@@ -13,6 +13,8 @@ import { CommandCenterHeader } from "./CommandCenterHeader";
 import { CommandCenterFilterRail } from "./CommandCenterFilterRail";
 import { CommandCenterGrid } from "./CommandCenterGrid";
 import { WeeklyTimeGrid } from "./WeeklyTimeGrid";
+import { YearView } from "./YearView";
+import { DayViewPanel } from "./DayViewPanel";
 import { DailyRunSheet } from "./DailyRunSheet";
 import { AgendaView } from "./AgendaView";
 import { MobileMonthGrid } from "./MobileMonthGrid";
@@ -36,7 +38,7 @@ const isSameDayET = (date1: Date, date2: Date): boolean => {
          d1.getDate() === d2.getDate();
 };
 
-export type ViewMode = 'day' | 'week' | 'month' | 'agenda';
+export type ViewMode = 'day' | 'week' | 'month' | 'year' | 'agenda';
 export type CategoryFilter = 'glee' | 'courses' | 'liturgy' | 'performances' | 'leadership' | 'tour' | 'personal' | 'academic' | 'personal_google';
 
 export interface CategoryConfig {
@@ -298,8 +300,25 @@ export const CommandCenterCalendar = () => {
     );
   }, [filteredEvents, selectedDate]);
 
-  // Navigation handlers
+  // Navigation handlers — the header chevrons step by the active view's
+  // period (Apple Calendar behavior): day ±1d, week ±1w, month ±1M, year ±1y.
   const navigateMonth = (direction: 'prev' | 'next') => {
+    if (viewMode === 'year') {
+      setCurrentDate(direction === 'prev' ? subYears(currentDate, 1) : addYears(currentDate, 1));
+      return;
+    }
+    if (viewMode === 'week') {
+      const newDate = direction === 'prev' ? subWeeks(currentDate, 1) : addWeeks(currentDate, 1);
+      setCurrentDate(newDate);
+      setSelectedDate(newDate);
+      return;
+    }
+    if (viewMode === 'day') {
+      const newDate = direction === 'prev' ? subDays(selectedDate, 1) : addDays(selectedDate, 1);
+      setCurrentDate(newDate);
+      setSelectedDate(newDate);
+      return;
+    }
     setCurrentDate(direction === 'prev' ? subMonths(currentDate, 1) : addMonths(currentDate, 1));
   };
 
@@ -412,7 +431,25 @@ export const CommandCenterCalendar = () => {
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
           {/* Calendar Grid or Agenda */}
           <div className="flex-1 min-h-0 overflow-auto p-2 lg:p-4">
-            {isMobile && viewMode === 'month' ? (
+            {viewMode === 'year' ? (
+              <YearView
+                currentDate={currentDate}
+                onMonthSelect={(monthStart) => {
+                  setCurrentDate(monthStart);
+                  setSelectedDate(monthStart);
+                  setViewMode('month');
+                }}
+              />
+            ) : !isMobile && viewMode === 'day' ? (
+              <DayViewPanel
+                events={filteredEvents}
+                selectedDate={selectedDate}
+                onDateSelect={(d) => { setSelectedDate(d); setCurrentDate(d); }}
+                getCategoryForEvent={getCategoryForEvent}
+                categoryConfigs={CATEGORY_CONFIGS}
+                onEventDeleted={fetchEvents}
+              />
+            ) : isMobile && viewMode === 'month' ? (
               <MobileMonthGrid
                 events={filteredEvents}
                 currentDate={currentDate}

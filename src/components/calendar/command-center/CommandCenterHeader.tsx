@@ -44,6 +44,15 @@ export const CommandCenterHeader = ({
 }: CommandCenterHeaderProps) => {
   const filtersAvailable = !!(categories && activeCategoryFilters && onToggleCategoryFilter);
   const filtersActive = filtersAvailable && categories && activeCategoryFilters!.length < categories.length;
+
+  // Apple Calendar-style view switcher. 'agenda' reads as "List".
+  const VIEW_LABELS: Record<ViewMode, string> = {
+    day: 'Day', week: 'Week', month: 'Month', year: 'Year', agenda: 'List',
+  };
+  const VIEW_ORDER: ViewMode[] = ['day', 'week', 'month', 'year', 'agenda'];
+  const title = viewMode === 'year'
+    ? format(currentDate, 'yyyy')
+    : format(currentDate, isMobile ? 'MMM yyyy' : 'MMMM yyyy');
   return (
     <div className="bg-card border-b border-border  text-foreground px-3 md:px-6 py-3 flex-shrink-0">
       {/* Mobile / Tablet layout */}
@@ -59,8 +68,8 @@ export const CommandCenterHeader = ({
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <div className="min-w-[88px] text-center">
-                <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-base uppercase">
-                  {format(currentDate, 'MMM yyyy')}
+                <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-base">
+                  {title}
                 </h1>
               </div>
               <button 
@@ -158,19 +167,19 @@ export const CommandCenterHeader = ({
 
           {/* Row 2: View toggle + Search */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-muted rounded-lg p-0.5">
-              {(['day', 'week', 'month', 'agenda'] as const).map((m) => (
+            <div className="flex items-center bg-muted rounded-full p-0.5">
+              {VIEW_ORDER.map((m) => (
                 <button
                   key={m}
                   onClick={() => onViewModeChange(m)}
                   className={cn(
-                    "px-2 py-1.5 rounded-md text-xs font-medium transition-all",
+                    "px-2 py-1.5 rounded-full text-xs font-medium transition-all",
                     viewMode === m
-                      ? "bg-white text-foreground"
+                      ? "bg-white text-foreground font-semibold shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {m.charAt(0).toUpperCase() + m.slice(1)}
+                  {VIEW_LABELS[m]}
                 </button>
               ))}
             </div>
@@ -197,9 +206,16 @@ export const CommandCenterHeader = ({
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <div className="min-w-[160px] text-center">
-                <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-[15px]">
-                  {format(currentDate, 'MMMM yyyy')}
+              <div className="min-w-[180px] text-center">
+                <h1 className="font-sans normal-case tracking-tight leading-none text-xl">
+                  {viewMode === 'year' ? (
+                    <span className="font-bold">{title}</span>
+                  ) : (
+                    <>
+                      <span className="font-bold">{format(currentDate, 'MMMM')}</span>{' '}
+                      <span className="font-normal text-muted-foreground">{format(currentDate, 'yyyy')}</span>
+                    </>
+                  )}
                 </h1>
               </div>
               <button 
@@ -217,24 +233,21 @@ export const CommandCenterHeader = ({
             </button>
           </div>
 
-          <div className="flex items-center bg-muted rounded-lg p-1">
-            {(['day', 'week', 'month', 'agenda'] as const).map((m) => {
-              const label = m.charAt(0).toUpperCase() + m.slice(1);
-              return (
-                <button
-                  key={m}
-                  onClick={() => onViewModeChange(m)}
-                  className={cn(
-                    "px-3 h-7 rounded-md text-sm font-medium transition-all inline-flex items-center",
-                    viewMode === m
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
+          <div className="flex items-center bg-muted rounded-full p-1">
+            {VIEW_ORDER.map((m) => (
+              <button
+                key={m}
+                onClick={() => onViewModeChange(m)}
+                className={cn(
+                  "px-3.5 h-7 rounded-full text-sm font-medium transition-all inline-flex items-center",
+                  viewMode === m
+                    ? "bg-white text-foreground font-semibold shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {VIEW_LABELS[m]}
+              </button>
+            ))}
           </div>
 
           {filtersAvailable && (
