@@ -20,33 +20,13 @@ const UserNotificationsSection = lazy(() =>
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { ProductTour } from '@/components/tour/ProductTour';
 import {
-  Home,
-  Calendar,
-  GraduationCap,
-  MessageSquare,
-  Music,
   Eye,
   BookOpen,
   Glasses,
-  ScanEye,
-  Store,
-  Wrench,
-  Ticket,
-  Mic,
-  ScanLine,
-  LibraryBig,
-  Megaphone,
-  Images,
   Boxes,
   ChevronRight,
   ChevronDown,
-  ClipboardList,
-  DollarSign,
   ShoppingCart,
-  Newspaper,
-  Users,
-  TrendingUp,
-  CalendarClock,
   Settings,
   Search,
   Plus,
@@ -54,12 +34,7 @@ import {
   LogOut,
   Menu,
   User as UserIcon,
-  Heart,
-  Disc3,
-  Film,
-  Route as RouteIcon,
   Sparkles,
-  Church,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -89,6 +64,23 @@ import {
 } from '@/components/ui/sheet';
 import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { BecomeTenantDialog } from '@/components/onboarding/BecomeTenantDialog';
+import {
+  resolveNav, entrySurfaces, NAV_SECTION_LABELS,
+  type CatalogEntry, type NavContext, type NavSectionKey,
+} from '@/lib/navigation/navCatalog';
+
+const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
+
+// Groups resolved sidebar-surface entries into the render shape both nav
+// columns use. Sections with zero visible entries drop out (unchanged
+// behavior). label:'Today' historically rendered with its section label
+// like every other section.
+function buildNavSections(ctx: NavContext): Array<{ label: string; items: CatalogEntry[] }> {
+  const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
+  return SECTION_ORDER
+    .map((s) => ({ label: NAV_SECTION_LABELS[s], items: resolved.filter((e) => e.section === s) }))
+    .filter((s) => s.items.length > 0);
+}
 
 /** True when the current subdomain is the public demo. The platform owner
  * uses this to gate the "Become a tenant" CTA — paying tenants shouldn't
@@ -219,135 +211,29 @@ function Sidebar() {
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
 
   // Add-on modules — only render the nav entry if the tenant has access.
-  const { hasAccess: hasSightReading } = useModuleAccess('sight_reading');
-  const { hasAccess: hasBoxOffice } = useModuleAccess('box_office');
-  const { hasAccess: hasPartTracks } = useModuleAccess('part_tracks');
-  const { hasAccess: hasAuditions } = useModuleAccess('auditions');
-  const { hasAccess: hasLibrarian } = useModuleAccess('librarian');
-  const { hasAccess: hasPrHub } = useModuleAccess('pr_hub');
-  const { hasAccess: hasAlumni } = useModuleAccess('alumni');
-  const { hasAccess: hasFinance } = useModuleAccess('finance');
-  const { hasAccess: hasMerch } = useModuleAccess('merch');
-  const { hasAccess: hasStore } = useModuleAccess('store');
-  const { hasAccess: hasFeeds } = useModuleAccess('feeds');
-  const { hasAccess: hasViewer } = useModuleAccess('viewer');
-  const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
-  const { hasAccess: hasTourManager } = useModuleAccess('tour');
-  const { hasAccess: hasLiturgyPlanner } = useModuleAccess('liturgy_planner');
-  const { hasAccess: hasStudio } = useModuleAccess('studio');
+  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio'] as const;
+  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
+  const moduleAccess: Record<string, boolean> = {};
+  for (const key of MODULE_KEYS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
+    moduleAccess[key] = useModuleAccess(key).hasAccess;
+  }
   const hiddenNav = useTenantNavPrefs();
 
-  // Grouped nav. Sections render their entries under a small uppercase
-  // label; sections with zero visible entries are hidden entirely so the
-  // sidebar stays tight on tenants that haven't enabled add-ons.
-  // `tone` controls the icon-tile background+foreground so each entry
-  // carries a small color signal in the column.
-  type NavItem = {
-    to: string;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-    end?: boolean;
-    tourId: string;
-    tone: string;
-    /** Mark the entry as a "hero" — gets the primary-tinted row treatment
-     * to stand out among siblings (e.g. Academy as the central LMS surface). */
-    hero?: boolean;
-  };
-  type NavSection = { label: string | null; items: NavItem[] };
-
   // Verb-grouped nav (Today / Music / Teach / Make / Plan / Reach /
-  // Money / People / Admin). The sections describe what the user is
-  // *doing*, not what kind of object the feature is — so Studio +
-  // Video sit together as creation tools, Concert Planner + Tour
-  // Manager + Auditions sit together as scheduling tools, and so on.
-  // Empty sections (no module access) collapse out of the column.
-  const sections: NavSection[] = [
-    {
-      label: 'Today',
-      items: [
-        { to: '/dashboard',           label: 'Command Center', icon: Home,          end: true, tourId: 'nav-command-center', tone: 'bg-primary/10 text-primary' },
-        { to: '/dashboard/messenger', label: 'Messenger',      icon: MessageSquare,            tourId: 'nav-messenger',      tone: 'bg-cyan-50 text-cyan-600' },
-        { to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,                 tourId: 'nav-calendar',       tone: 'bg-purple-50 text-purple-600' },
-      ],
-    },
-    {
-      label: 'Music',
-      items: [
-        { to: '/dashboard/music-library', label: 'Music Library', icon: Music, tourId: 'nav-music-library', tone: 'bg-rose-50 text-rose-600' },
-        ...(hasViewer ? [{ to: '/dashboard/viewer', label: 'Viewer', icon: ScanEye, tourId: 'nav-viewer', tone: 'bg-amber-50 text-amber-700' }] : []),
-        ...(hasSightReading ? [{ to: '/dashboard/sight-reading', label: 'Sight Reading', icon: Eye, tourId: 'nav-sight-reading', tone: 'bg-violet-50 text-violet-600' }] : []),
-        ...(hasPartTracks ? [{ to: '/dashboard/part-tracks', label: 'Part Tracks', icon: Mic, tourId: 'nav-part-tracks', tone: 'bg-indigo-50 text-indigo-600' }] : []),
-        { to: '/dashboard/media-library', label: 'Media Library', icon: Images, tourId: 'nav-media-library', tone: 'bg-orange-50 text-orange-600' },
-        ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian', label: 'Librarian', icon: LibraryBig, tourId: 'nav-librarian', tone: 'bg-slate-50 text-slate-600' }] : []),
-      ],
-    },
-    {
-      label: 'Teach',
-      items: [
-        { to: '/dashboard/academy',      label: 'Academy',      icon: GraduationCap, tourId: 'nav-academy',      tone: 'bg-primary text-primary-foreground', hero: true },
-        { to: '/dashboard/office-hours', label: 'Office Hours', icon: CalendarClock, tourId: 'nav-office-hours', tone: 'bg-emerald-50 text-emerald-600' },
-        ...(isTenantAdmin ? [{ to: '/dashboard/practice-recordings', label: 'Practice', icon: Mic, tourId: 'nav-practice', tone: 'bg-teal-50 text-teal-700' }] : []),
-      ],
-    },
-    {
-      label: 'Make',
-      items: [
-        ...(hasStudio ? [{ to: '/studio', label: 'Studio', icon: Disc3, tourId: 'nav-studio', tone: 'bg-sky-50 text-sky-600' }] : []),
-        { to: '/video',                 label: 'Video',       icon: Film,   tourId: 'nav-video',       tone: 'bg-pink-50 text-pink-600' },
-        { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tourId: 'nav-music-tools', tone: 'bg-cyan-50 text-cyan-600' },
-      ],
-    },
-    {
-      label: 'Plan',
-      items: [
-        ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tourId: 'nav-concert-planner', tone: 'bg-emerald-50 text-emerald-700' }] : []),
-        ...(hasLiturgyPlanner ? [{ to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        tourId: 'nav-liturgy-planner', tone: 'bg-amber-50 text-amber-700' }] : []),
-        ...(hasTourManager   ? [{ to: '/tour-manager',               label: 'Tour Manager',    icon: RouteIcon,     tourId: 'nav-tour-manager',    tone: 'bg-blue-50 text-blue-600' }] : []),
-        ...(hasAuditions     ? [{ to: '/dashboard/auditions',        label: 'Auditions',       icon: ScanLine,      tourId: 'nav-auditions',       tone: 'bg-lime-50 text-lime-600' }] : []),
-      ],
-    },
-    {
-      label: 'Reach',
-      items: [
-        ...(hasPrHub ? [{ to: '/dashboard/pr-hub', label: 'PR Hub', icon: Megaphone, tourId: 'nav-pr-hub', tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
-        ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tourId: 'nav-fan-page', tone: 'bg-rose-50 text-rose-700' }] : []),
-        ...(hasFeeds ? [{ to: '/dashboard/feeds', label: 'Feeds', icon: Newspaper, tourId: 'nav-feeds', tone: 'bg-blue-50 text-blue-600' }] : []),
-        ...(hasMerch || hasStore ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tourId: 'nav-shop',  tone: 'bg-amber-50 text-amber-600' }] : []),
-        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tourId: 'nav-alumni', tone: 'bg-teal-50 text-teal-600' }] : []),
-      ],
-    },
-    {
-      label: 'Money',
-      items: [
-        ...(hasBoxOffice && isTenantAdmin ? [{ to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     tourId: 'nav-box-office', tone: 'bg-rose-50 text-rose-700' }] : []),
-        ...(hasFinance                    ? [{ to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, tourId: 'nav-finance',    tone: 'bg-emerald-50 text-emerald-600' }] : []),
-      ],
-    },
-    {
-      label: 'People',
-      items: [
-        { to: '/dashboard/users', label: 'People', icon: Users, tourId: 'nav-people', tone: 'bg-cyan-50 text-cyan-600' },
-      ],
-    },
-    {
-      label: 'Admin',
-      items: [
-        ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tourId: 'nav-site-setup', tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
-        { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp, tourId: 'nav-analytics', tone: 'bg-purple-50 text-purple-600' },
-        { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,   tourId: 'nav-settings',  tone: 'bg-muted text-muted-foreground' },
-        // Platform-owner only — provision/manage every tenant. Hidden
-        // for tenant super-admins (demo-admin, lincoln-hs admin, etc.)
-        // who don't have cross-tenant authority.
-        ...(isPlatformAdmin ? [{ to: '/admin/tenants', label: 'Tenants', icon: Sparkles, tourId: 'nav-platform-tenants', tone: 'bg-indigo-50 text-indigo-700' }] : []),
-      ],
-    },
-  ].map((section) => ({
-    ...section,
-    // Tenant super-admin has an empty set from useTenantNavPrefs, so
-    // this is a no-op for them. Lower-role users see their tenant's
-    // hidden_items filtered out here.
-    items: section.items.filter((it) => !hiddenNav.has(it.to)),
-  }));
+  // Money / People / Admin), built from the shared nav catalog so this
+  // sidebar and the mobile drawer can never drift out of sync. Sections
+  // describe what the user is *doing*, not what kind of object the
+  // feature is — so Studio + Video sit together as creation tools,
+  // Concert Planner + Tour Manager + Auditions sit together as
+  // scheduling tools, and so on. Empty sections (no module access)
+  // collapse out of the column.
+  const navCtx: NavContext = {
+    hasModule: (k) => k === 'academy' || !!moduleAccess[k],
+    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    hiddenRoutes: hiddenNav,
+  };
+  const sections = buildNavSections(navCtx);
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -488,110 +374,25 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
   const userCanLibrarian = canEditMusicLibrary();
-  const { hasAccess: hasSightReading } = useModuleAccess('sight_reading');
-  const { hasAccess: hasBoxOffice } = useModuleAccess('box_office');
-  const { hasAccess: hasPartTracks } = useModuleAccess('part_tracks');
-  const { hasAccess: hasAuditions } = useModuleAccess('auditions');
-  const { hasAccess: hasLibrarian } = useModuleAccess('librarian');
-  const { hasAccess: hasPrHub } = useModuleAccess('pr_hub');
-  const { hasAccess: hasAlumni } = useModuleAccess('alumni');
-  const { hasAccess: hasFinance } = useModuleAccess('finance');
-  const { hasAccess: hasMerch } = useModuleAccess('merch');
-  const { hasAccess: hasStore } = useModuleAccess('store');
-  const { hasAccess: hasFeeds } = useModuleAccess('feeds');
-  const { hasAccess: hasViewer } = useModuleAccess('viewer');
-  const { hasAccess: hasConcertPlanner } = useModuleAccess('concert_planner');
-  const { hasAccess: hasTourManager } = useModuleAccess('tour');
-  const { hasAccess: hasLiturgyPlanner } = useModuleAccess('liturgy_planner');
-  const { hasAccess: hasStudio } = useModuleAccess('studio');
+  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio'] as const;
+  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
+  const moduleAccess: Record<string, boolean> = {};
+  for (const key of MODULE_KEYS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
+    moduleAccess[key] = useModuleAccess(key).hasAccess;
+  }
   const hiddenNav = useTenantNavPrefs();
 
   // Verb-grouped to match the desktop sidebar (Today / Music / Teach /
-  // Make / Plan / Reach / Money / People / Admin). Empty sections drop
-  // out so a tenant without box-office or finance modules doesn't see
-  // an empty "Money" header.
-  type Item = { to: string; label: string; icon: React.ComponentType<{ className?: string }>; tone: string };
-  const sections: Array<{ label: string; items: Item[] }> = [
-    {
-      label: 'Today',
-      items: [
-        { to: '/dashboard',           label: 'Command Center', icon: Home,          tone: 'bg-primary/10 text-primary' },
-        { to: '/dashboard/messenger', label: 'Messenger',      icon: MessageSquare, tone: 'bg-cyan-50 text-cyan-600' },
-        { to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      tone: 'bg-purple-50 text-purple-600' },
-      ],
-    },
-    {
-      label: 'Music',
-      items: [
-        { to: '/dashboard/music-library', label: 'Music Library', icon: Music, tone: 'bg-rose-50 text-rose-600' },
-        ...(hasViewer ? [{ to: '/dashboard/viewer', label: 'Viewer', icon: ScanEye, tone: 'bg-amber-50 text-amber-700' }] : []),
-        ...(hasSightReading ? [{ to: '/dashboard/sight-reading', label: 'Sight Reading', icon: Eye, tone: 'bg-violet-50 text-violet-600' }] : []),
-        ...(hasPartTracks ? [{ to: '/dashboard/part-tracks', label: 'Part Tracks', icon: Mic, tone: 'bg-indigo-50 text-indigo-600' }] : []),
-        { to: '/dashboard/media-library', label: 'Media Library', icon: Images, tone: 'bg-orange-50 text-orange-600' },
-        ...((hasLibrarian && userCanLibrarian) ? [{ to: '/dashboard/librarian', label: 'Librarian', icon: LibraryBig, tone: 'bg-slate-50 text-slate-600' }] : []),
-      ],
-    },
-    {
-      label: 'Teach',
-      items: [
-        { to: '/dashboard/academy',      label: 'Academy',      icon: GraduationCap, tone: 'bg-primary text-primary-foreground' },
-        { to: '/dashboard/office-hours', label: 'Office Hours', icon: CalendarClock, tone: 'bg-emerald-50 text-emerald-600' },
-        ...(isTenantAdmin ? [{ to: '/dashboard/practice-recordings', label: 'Practice', icon: Mic, tone: 'bg-teal-50 text-teal-700' }] : []),
-      ],
-    },
-    {
-      label: 'Make',
-      items: [
-        ...(hasStudio ? [{ to: '/studio', label: 'Studio', icon: Disc3, tone: 'bg-sky-50 text-sky-600' }] : []),
-        { to: '/video',                 label: 'Video',       icon: Film,   tone: 'bg-pink-50 text-pink-600' },
-        { to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, tone: 'bg-cyan-50 text-cyan-600' },
-      ],
-    },
-    {
-      label: 'Plan',
-      items: [
-        ...(hasConcertPlanner ? [{ to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, tone: 'bg-emerald-50 text-emerald-700' }] : []),
-        ...(hasLiturgyPlanner ? [{ to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        tone: 'bg-amber-50 text-amber-700' }] : []),
-        ...(hasTourManager   ? [{ to: '/tour-manager',               label: 'Tour Manager',    icon: RouteIcon,     tone: 'bg-blue-50 text-blue-600' }] : []),
-        ...(hasAuditions     ? [{ to: '/dashboard/auditions',        label: 'Auditions',       icon: ScanLine,      tone: 'bg-lime-50 text-lime-600' }] : []),
-      ],
-    },
-    {
-      label: 'Reach',
-      items: [
-        ...(hasPrHub ? [{ to: '/dashboard/pr-hub', label: 'PR Hub', icon: Megaphone, tone: 'bg-fuchsia-50 text-fuchsia-600' }] : []),
-        ...(isTenantAdmin ? [{ to: '/admin/fan-page', label: 'Fan Page', icon: Heart, tone: 'bg-rose-50 text-rose-700' }] : []),
-        ...(hasFeeds ? [{ to: '/dashboard/feeds', label: 'Feeds', icon: Newspaper, tone: 'bg-blue-50 text-blue-600' }] : []),
-        ...(hasMerch || hasStore ? [{ to: '/dashboard/shop',  label: 'Store', icon: Store,     tone: 'bg-amber-50 text-amber-600' }] : []),
-        ...(hasAlumni ? [{ to: '/dashboard/alumni', label: 'Graduates', icon: GraduationCap, tone: 'bg-teal-50 text-teal-600' }] : []),
-      ],
-    },
-    {
-      label: 'Money',
-      items: [
-        ...(hasBoxOffice && isTenantAdmin ? [{ to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     tone: 'bg-rose-50 text-rose-700' }] : []),
-        ...(hasFinance                    ? [{ to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, tone: 'bg-emerald-50 text-emerald-600' }] : []),
-      ],
-    },
-    {
-      label: 'People',
-      items: [
-        { to: '/dashboard/users', label: 'People', icon: Users, tone: 'bg-cyan-50 text-cyan-600' },
-      ],
-    },
-    {
-      label: 'Admin',
-      items: [
-        ...(isTenantAdmin ? [{ to: '/admin/public-page', label: 'Site Setup', icon: Settings, tone: 'bg-fuchsia-50 text-fuchsia-700' }] : []),
-        { to: '/dashboard/analytics', label: 'Analytics', icon: TrendingUp, tone: 'bg-purple-50 text-purple-600' },
-        { to: '/dashboard/workspace', label: 'Settings',  icon: Settings,   tone: 'bg-muted text-muted-foreground' },
-        ...(isPlatformAdmin ? [{ to: '/admin/tenants', label: 'Tenants', icon: Sparkles, tone: 'bg-indigo-50 text-indigo-700' }] : []),
-      ],
-    },
-  ].map((section) => ({
-    ...section,
-    items: section.items.filter((it) => !hiddenNav.has(it.to)),
-  }));
+  // Make / Plan / Reach / Money / People / Admin), built from the same
+  // shared nav catalog. Empty sections drop out so a tenant without
+  // box-office or finance modules doesn't see an empty "Money" header.
+  const navCtx: NavContext = {
+    hasModule: (k) => k === 'academy' || !!moduleAccess[k],
+    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    hiddenRoutes: hiddenNav,
+  };
+  const sections = buildNavSections(navCtx);
 
   return (
     <div className="flex flex-col h-full">
