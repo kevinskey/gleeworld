@@ -131,12 +131,16 @@ export const CommandCenterEventCard = ({
       const { pushEventToGoogle } = await import('@/hooks/useGoogleConnection');
       await pushEventToGoogle(event.id, 'delete');
 
-      const { error } = await supabase
+      const { data: deleted, error } = await supabase
         .from('gw_events')
         .delete()
-        .eq('id', event.id);
+        .eq('id', event.id)
+        .select('id');
 
       if (error) throw error;
+      if (!deleted || deleted.length === 0) {
+        throw new Error('Not permitted to delete this event');
+      }
 
       toast.success('Event deleted successfully');
       onEventDeleted?.();

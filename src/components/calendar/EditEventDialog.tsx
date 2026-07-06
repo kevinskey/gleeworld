@@ -446,12 +446,16 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
         });
       } else {
         // Delete only this event
-        const { error } = await supabase
+        const { data: deleted, error } = await supabase
           .from('gw_events')
           .delete()
-          .eq('id', event.id);
+          .eq('id', event.id)
+          .select('id');
 
         if (error) throw error;
+        if (!deleted || deleted.length === 0) {
+          throw new Error('Not permitted to delete this event');
+        }
 
         toast({
           title: "Success",
