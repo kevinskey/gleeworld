@@ -41,8 +41,15 @@ import { toast } from 'sonner';
 const PX_PER_SECOND_DEFAULT = 40;
 const PX_PER_SECOND_MIN = 8;
 const PX_PER_SECOND_MAX = 240;
-const TRACK_HEIGHT_DEFAULT = 72;
-const TRACK_HEIGHT_MIN = 48;
+/* On coarse-pointer devices (iPad/phone) the global tap-target safety
+ * net in index.css bumps every custom <button> to min-height 44px, so
+ * the strip's M/S/R row alone needs ~44px + name row + padding ≈ 82px.
+ * A 72px row clips the transport chips (seen on iPad 2026-07-06). Give
+ * touch devices a taller floor instead of shrinking the tap targets. */
+const IS_COARSE_POINTER =
+  typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+const TRACK_HEIGHT_DEFAULT = IS_COARSE_POINTER ? 88 : 72;
+const TRACK_HEIGHT_MIN = IS_COARSE_POINTER ? 88 : 48;
 const TRACK_HEIGHT_MAX = 240;
 
 /** Zoom is one value (px per second of timeline) shared by the ruler,
