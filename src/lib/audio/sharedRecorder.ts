@@ -266,6 +266,20 @@ const INPUT_LATENCY_STORAGE_KEY = 'studio.inputLatencyMs';
  * another literal 700. */
 export const DEFAULT_INPUT_LATENCY_MS = 700;
 
+/** Residual HARDWARE latency for the web recording path (mic ADC +
+ * output DAC + Bluetooth). Startup delay (getUserMedia, transport
+ * start) is measured per take since 2026-07-06 — see
+ * src/lib/audio/takeAlignment.ts — so this dial no longer needs to
+ * cover it; hence the much smaller default than the legacy 700ms. */
+export const DEFAULT_DEVICE_LATENCY_MS = 150;
+const DEVICE_LATENCY_STORAGE_KEY = 'studio.deviceLatencyMs';
+
+export function getConfiguredDeviceLatencyMs(): number {
+  if (typeof localStorage === 'undefined') return DEFAULT_DEVICE_LATENCY_MS;
+  const raw = localStorage.getItem(DEVICE_LATENCY_STORAGE_KEY);
+  return raw !== null ? Number(raw) : DEFAULT_DEVICE_LATENCY_MS;
+}
+
 /** Configured input latency in ms, read from `localStorage`
  * (`studio.inputLatencyMs`). Defaults to 700ms — the same default Studio
  * has always used. */

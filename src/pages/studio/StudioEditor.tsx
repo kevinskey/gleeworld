@@ -32,7 +32,9 @@ import {
 import { MidiClockSender } from '@/lib/studio/midiClock';
 import type { EngineState } from '@/lib/studio/engine/engine';
 import { openMicRecorder, type MicRecorder } from '@/lib/studio/engine/recorder';
-import { getConfiguredInputLatencyMs, getOutputLatencyMs, msToSamples } from '@/lib/audio/sharedRecorder';
+import { getConfiguredInputLatencyMs, getConfiguredDeviceLatencyMs, getOutputLatencyMs, msToSamples, DEFAULT_DEVICE_LATENCY_MS, DEFAULT_INPUT_LATENCY_MS } from '@/lib/audio/sharedRecorder';
+import { computeTakeAlignment } from '@/lib/audio/takeAlignment';
+import { Capacitor } from '@capacitor/core';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
 import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
@@ -183,14 +185,19 @@ function computePeaks(buffer: AudioBuffer, target = 300): number[] {
  * that extraction. */
 async function finalizeRecordingBlob(
   rawBlob: Blob,
+  trimOverrideMs?: number,
 ): Promise<{ blob: Blob; buf: AudioBuffer; ext: 'webm' | 'mp4' | 'm4a' | 'mp3' | 'wav' | 'ogg' }> {
   const ctx = new AudioContext();
   const rawBuf = await ctx.decodeAudioData(await rawBlob.arrayBuffer());
   await ctx.close();
 
-  const inputLatencyMs = getConfiguredInputLatencyMs();
-  const outputLatencyMs = getOutputLatencyMs();
-  const compensationMs = Math.max(0, inputLatencyMs + outputLatencyMs);
+  // Web takes pass a per-take MEASURED trim (startup gap + device
+  // residual, see takeAlignment.ts). Native takes keep the legacy
+  // configured guess — their count-in/recorder/transport run on one
+  // native clock so the startup component doesn't apply.
+  const compensationMs = trimOverrideMs !== undefined
+    ? Math.max(0, trimOverrideMs)
+    : Math.max(0, getConfiguredInputLatencyMs() + getOutputLatencyMs());
 
   if (compensationMs === 0) {
     return { blob: rawBlob, buf: rawBuf, ext: extFromMime(rawBlob.type) };
@@ -237,6 +244,13 @@ interface RecordingSession {
   punch?: boolean;
   startSeconds: number;
   startWallMs: number;
+  /** Wall stamps for measured take alignment (web path only). Native
+   * takes never enter computeTakeAlignment (legacy configured trim);
+   * their stamps are recorded but unused — note pressWallMs is taken
+   * BEFORE the native count-in, so don't assume the three are equal. */
+  pressWallMs: number;
+  captureStartWallMs: number;
+  transportStartWallMs: number | null;
   armedTrackIds: string[];
   /** Sampled peak values (one per render frame) for the live waveform. */
   peaks: number[];
@@ -589,6 +603,7 @@ function Editor({
       // category transition between the last count-in click and beat 1,
       // so the metronome grid started late on recording runs.
       const startSec = state?.positionSeconds ?? 0;
+      const pressWallMs = performance.now();
 
       // iOS: the ENTIRE count-in → recorder → transport sequence runs
       // on one native clock (recordWithCountIn). Driving the count-in
@@ -629,6 +644,7 @@ function Editor({
         setRecording({
           recorder: null, native: true,
           startSeconds: startSec, startWallMs: startedAt,
+          pressWallMs, captureStartWallMs: startedAt, transportStartWallMs: startedAt,
           armedTrackIds, peaks: [],
         });
         toast.success('Recording — click ● again to stop');
@@ -689,13 +705,24 @@ function Editor({
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
       const recorder = await openMicRecorder({ inputDeviceId, inputGainDb });
       await recorder.start();
+      // Stamp the moment capture is actually live — getUserMedia +
+      // graph setup above is the variable startup cost that used to be
+      // guessed at inside the 700ms latency dial.
+      const captureStartWallMs = performance.now();
       engineState.setRecordingActive?.(true);
+      // Start the transport BEFORE registering the recording so we can
+      // stamp when playback began; null = it was already rolling.
+      let transportStartWallMs: number | null = null;
+      if (!state?.isPlaying) {
+        play();
+        transportStartWallMs = performance.now();
+      }
       setRecording({
         recorder, native: false,
         startSeconds: startSec, startWallMs: startedAt,
+        pressWallMs, captureStartWallMs, transportStartWallMs,
         armedTrackIds, peaks: [],
       });
-      if (!state?.isPlaying) play();
       toast.success('Recording — click ● again to stop');
       startWaveTick(recorder, startedAt);
     } catch (e) {
@@ -711,7 +738,7 @@ function Editor({
       nativePeakSubRef.current = null;
     }
     latestPeakDbRef.current = -Infinity;
-    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, armedTrackIds: armed } = recording;
+    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, transportStartWallMs, armedTrackIds: armed } = recording;
     setRecording(null);
     engineState.setRecordingActive?.(false);
     const elapsed = (performance.now() - startWallMs) / 1000;
@@ -736,7 +763,21 @@ function Editor({
       } else {
         throw new Error('no recorder source');
       }
-      const { blob: uploadBlob, buf, ext } = await finalizeRecordingBlob(rawBlob);
+      // Web takes: measured startup gap + device residual. Native takes:
+      // undefined → finalize falls back to the legacy configured trim.
+      let clipStartOffsetSec = 0;
+      let trimOverrideMs: number | undefined;
+      if (!nativeTake) {
+        const align = computeTakeAlignment({
+          pressWallMs, captureStartWallMs, transportStartWallMs,
+          // Live output latency (tracks Bluetooth device switches) +
+          // configured residual for the input side.
+          deviceLatencyMs: getConfiguredDeviceLatencyMs() + getOutputLatencyMs(),
+        });
+        trimOverrideMs = align.trimMs;
+        clipStartOffsetSec = align.clipStartOffsetSec;
+      }
+      const { blob: uploadBlob, buf, ext } = await finalizeRecordingBlob(rawBlob, trimOverrideMs);
       const peaks = computePeaks(buf);
       const filename = `take-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
 
@@ -809,7 +850,7 @@ function Editor({
           if (!armed.includes(t.id) || !isAudioTrack(t)) return t;
           const clip: AudioClip = {
             id: clipId, kind: 'audio', asset_id: provisionalId,
-            start_seconds: startSeconds, duration_seconds: buf.duration,
+            start_seconds: startSeconds + clipStartOffsetSec, duration_seconds: buf.duration,
             offset_seconds: 0, gain_db: 0,
             fade_in_seconds: 0, fade_out_seconds: 0,
             reverse: false, pitch_semitones: 0, time_stretch: 1,
@@ -865,7 +906,7 @@ function Editor({
       // whole AVAudioEngine on iOS), which can take a couple seconds and
       // makes auto-play race with the rebuild. Punch takes skip the
       // park: their post-roll is still rolling and must not be yanked.
-      if (!punch) { try { engineState.seek?.(startSeconds); } catch { /* ignore */ } }
+      if (!punch) { try { engineState.seek?.(startSeconds + clipStartOffsetSec); } catch { /* ignore */ } }
     } catch (e) {
       toast.error('Could not finalize recording', { description: e instanceof Error ? e.message : String(e) });
     }
@@ -934,6 +975,10 @@ function Editor({
       setRecording({
         recorder, native: false, punch: true,
         startSeconds: loopRegion.start, startWallMs: startedAt,
+        // Mic opened during pre-roll; capture goes live AT the punch
+        // moment, so anchor and capture coincide — alignment reduces to
+        // the configured device residual.
+        pressWallMs: startedAt, captureStartWallMs: startedAt, transportStartWallMs: null,
         armedTrackIds, peaks: [],
       });
       startWaveTick(recorder, startedAt);
@@ -4258,12 +4303,26 @@ function MicLevelTester() {
 }
 
 function RecordingLatencyControl() {
-  const [ms, setMs] = useState<number>(() =>
-    Number(localStorage.getItem('studio.inputLatencyMs') || 700),
-  );
+  // Native keeps the legacy semantics (one configured trim covers
+  // everything). Web now measures startup per take, so its dial covers
+  // only hardware I/O residual — different key, much smaller default.
+  // Mount-stable: isNativePlatform() is settled before first render, and
+  // freezing key/default here means the write effect can never fire from
+  // a key flip and clobber the other platform's calibrated value.
+  const [{ storageKey, defaultMs }] = useState(() => {
+    const isNative = Capacitor.isNativePlatform();
+    return {
+      storageKey: isNative ? 'studio.inputLatencyMs' : 'studio.deviceLatencyMs',
+      defaultMs: isNative ? DEFAULT_INPUT_LATENCY_MS : DEFAULT_DEVICE_LATENCY_MS,
+    };
+  });
+  const [ms, setMs] = useState<number>(() => {
+    const raw = localStorage.getItem(storageKey);
+    return raw !== null ? Number(raw) : defaultMs;
+  });
   useEffect(() => {
-    localStorage.setItem('studio.inputLatencyMs', String(ms));
-  }, [ms]);
+    localStorage.setItem(storageKey, String(ms));
+  }, [ms, storageKey]);
   return (
     <div className="border-t border-border pt-1.5 space-y-0.5">
       <div className="flex items-center justify-between text-xs">
@@ -4280,13 +4339,15 @@ function RecordingLatencyControl() {
           title="Shifts every new recording earlier by this many ms. Higher = clip moves further left."
         />
         <button
-          onClick={() => setMs(700)}
+          onClick={() => setMs(defaultMs)}
           className="text-xs font-semibold px-1.5 py-0.5 rounded border border-border bg-muted hover:bg-muted/70 tabular-nums"
-          title="Reset to default (700 ms)"
+          title={`Reset to default (${defaultMs} ms)`}
         >R</button>
       </div>
       <div className="text-[10px] text-muted-foreground italic">
-        Increase if takes land late, decrease if early. Use Snap to beat on a clip after a take.
+        {Capacitor.isNativePlatform()
+          ? 'Increase if takes land late, decrease if early. Use Snap to beat on a clip after a take.'
+          : 'Covers mic/speaker hardware latency only — startup delay is measured automatically per take. Increase if takes still land late.'}
       </div>
     </div>
   );
