@@ -2,13 +2,11 @@ import { ReactNode, useEffect, useState } from 'react';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { startDemoSession } from '@/lib/demoSession';
 
 const KEY = 'gw_native_tenant';
 
 const DEMO_SLUG = 'demo';
-// Public tap-to-explore account (also given to App Review) — not a secret.
-const DEMO_EMAIL = 'demo@gleeworld.org';
-const DEMO_PASSWORD = 'GleeDemo2026!';
 
 interface TenantOption {
   slug: string;
@@ -35,6 +33,7 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
   const [demo, setDemo] = useState<TenantOption | null>(null);
   const [error, setError] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [demoError, setDemoError] = useState(false);
 
   useEffect(() => {
     if (!needsPick) return;
@@ -62,11 +61,17 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
   const tryDemo = async () => {
     if (!demo || demoLoading) return;
     setDemoLoading(true);
-    // Sign in first so the session is persisted before the tenant-select reload.
-    await supabase.auth
-      .signInWithPassword({ email: DEMO_EMAIL, password: DEMO_PASSWORD })
-      .catch(() => {});
-    selectTenant(demo);
+    setDemoError(false);
+    try {
+      // Server-minted read-only Director session — no credentials in the bundle.
+      await startDemoSession('director');
+      sessionStorage.setItem('gw-demo-welcome-pending', '1');
+      selectTenant(demo); // persists tenant choice, then reloads
+    } catch (e) {
+      console.error('[native-demo] demo-login failed', e);
+      setDemoLoading(false);
+      setDemoError(true);
+    }
   };
 
   if (!needsPick) return <>{children}</>;
@@ -133,6 +138,11 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
                 <p className="text-xs text-white/60 mt-2">
                   Explore GleeWorld with sample data — no account needed.
                 </p>
+                {demoError && (
+                  <p className="text-xs text-amber-300 mt-2">
+                    Couldn't open the demo — check your connection and try again.
+                  </p>
+                )}
               </div>
             )}
           </div>
