@@ -244,8 +244,10 @@ interface RecordingSession {
   punch?: boolean;
   startSeconds: number;
   startWallMs: number;
-  /** Wall stamps for measured take alignment (web path). Native takes
-   * stamp all three equal and keep the legacy configured trim. */
+  /** Wall stamps for measured take alignment (web path only). Native
+   * takes never enter computeTakeAlignment (legacy configured trim);
+   * their stamps are recorded but unused — note pressWallMs is taken
+   * BEFORE the native count-in, so don't assume the three are equal. */
   pressWallMs: number;
   captureStartWallMs: number;
   transportStartWallMs: number | null;
@@ -768,7 +770,9 @@ function Editor({
       if (!nativeTake) {
         const align = computeTakeAlignment({
           pressWallMs, captureStartWallMs, transportStartWallMs,
-          deviceLatencyMs: getConfiguredDeviceLatencyMs(),
+          // Live output latency (tracks Bluetooth device switches) +
+          // configured residual for the input side.
+          deviceLatencyMs: getConfiguredDeviceLatencyMs() + getOutputLatencyMs(),
         });
         trimOverrideMs = align.trimMs;
         clipStartOffsetSec = align.clipStartOffsetSec;
@@ -902,7 +906,7 @@ function Editor({
       // whole AVAudioEngine on iOS), which can take a couple seconds and
       // makes auto-play race with the rebuild. Punch takes skip the
       // park: their post-roll is still rolling and must not be yanked.
-      if (!punch) { try { engineState.seek?.(startSeconds); } catch { /* ignore */ } }
+      if (!punch) { try { engineState.seek?.(startSeconds + clipStartOffsetSec); } catch { /* ignore */ } }
     } catch (e) {
       toast.error('Could not finalize recording', { description: e instanceof Error ? e.message : String(e) });
     }
@@ -4302,9 +4306,16 @@ function RecordingLatencyControl() {
   // Native keeps the legacy semantics (one configured trim covers
   // everything). Web now measures startup per take, so its dial covers
   // only hardware I/O residual — different key, much smaller default.
-  const isNative = Capacitor.isNativePlatform();
-  const storageKey = isNative ? 'studio.inputLatencyMs' : 'studio.deviceLatencyMs';
-  const defaultMs = isNative ? DEFAULT_INPUT_LATENCY_MS : DEFAULT_DEVICE_LATENCY_MS;
+  // Mount-stable: isNativePlatform() is settled before first render, and
+  // freezing key/default here means the write effect can never fire from
+  // a key flip and clobber the other platform's calibrated value.
+  const [{ storageKey, defaultMs }] = useState(() => {
+    const isNative = Capacitor.isNativePlatform();
+    return {
+      storageKey: isNative ? 'studio.inputLatencyMs' : 'studio.deviceLatencyMs',
+      defaultMs: isNative ? DEFAULT_INPUT_LATENCY_MS : DEFAULT_DEVICE_LATENCY_MS,
+    };
+  });
   const [ms, setMs] = useState<number>(() => {
     const raw = localStorage.getItem(storageKey);
     return raw !== null ? Number(raw) : defaultMs;
