@@ -73,7 +73,10 @@ export function sliceClipChannels(
     const n = Math.max(0, end - startSample);
     const out = new Float32Array(n);
     for (let i = 0; i < n; i++) {
-      const srcIdx = p.reverse ? end - 1 - i : startSample + i;
+      // Reverse matches playback semantics (Tone.Player.reverse flips the
+      // ENTIRE source buffer, then plays [offset, offset+duration) of the
+      // flipped buffer) — NOT a reversal of the forward window.
+      const srcIdx = p.reverse ? src.length - 1 - (startSample + i) : startSample + i;
       let v = src[srcIdx] * gain;
       if (fadeIn > 0 && i < fadeIn) v *= i / fadeIn;
       if (fadeOut > 0 && i >= n - fadeOut) v *= (n - i) / fadeOut;

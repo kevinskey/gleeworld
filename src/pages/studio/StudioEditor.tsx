@@ -505,12 +505,17 @@ function Editor({
       const dlUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = dlUrl;
-      a.download = `${track.name} — ${asset.filename.replace(/\.[^.]+$/, '')}`.replace(/[^\w\s—-]+/g, '').trim() + '.mp3';
+      a.download = `${track.name} — ${asset.filename.replace(/\.[^.]+$/, '')}`.replace(/[^\p{L}\p{N}\s—_-]+/gu, '').trim() + '.mp3';
       a.click();
       setTimeout(() => URL.revokeObjectURL(dlUrl), 30_000);
       toast.success('Clip exported as MP3');
     } catch (e) {
-      toast.error('Clip export failed', { description: e instanceof Error ? e.message : String(e) });
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/not found|Failed to fetch|load clip audio|decod/i.test(msg)) {
+        toast.error('Take is still processing, try again in a moment.');
+      } else {
+        toast.error('Clip export failed', { description: msg });
+      }
     } finally {
       setExportingClip(false);
     }
@@ -1263,7 +1268,7 @@ function Editor({
         // Logic-style split — same path as the selection action bar.
         e.preventDefault();
         splitSelectedClipAtPlayhead();
-            } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && selectedClip) {
+      } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && selectedClip) {
         // Alt+arrow nudges the selected clip ±50ms (or ±10ms with Shift),
         // perfect for slipping a take into the pocket after the fact.
         e.preventDefault();

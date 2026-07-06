@@ -56,13 +56,18 @@ describe('sliceClipChannels', () => {
     expect(out[0][100]).toBeCloseTo(1, 2);    // fade-in done exactly at 1s
     expect(out[0][150]).toBeCloseTo(0.5, 2);  // halfway through fade-out
   });
-  it('reverses when asked', () => {
-    const src = [Float32Array.from({ length: 300 }, (_, i) => i / 300)];
+  it('reverse matches playback: whole-buffer flip, then the offset window', () => {
+    // Tone.Player.reverse flips the ENTIRE buffer, then start(offset, dur)
+    // reads the window from the flipped buffer. offset 2s at 100Hz on a
+    // 1000-sample ramp: first exported sample = orig[999 - 200] = 0.799.
+    const src = [Float32Array.from({ length: 1000 }, (_, i) => i / 1000)];
     const out = sliceClipChannels(src, rate, {
-      offset_seconds: 0, duration_seconds: 3, gain_db: 0,
+      offset_seconds: 2, duration_seconds: 3, gain_db: 0,
       fade_in_seconds: 0, fade_out_seconds: 0, reverse: true,
     });
-    expect(out[0][0]).toBeCloseTo(299 / 300, 5);
+    expect(out[0].length).toBe(300);
+    expect(out[0][0]).toBeCloseTo(0.799, 5);
+    expect(out[0][299]).toBeCloseTo(0.5, 3);
   });
   it('clamps the slice to the source length', () => {
     const src = [new Float32Array(150).fill(1)];

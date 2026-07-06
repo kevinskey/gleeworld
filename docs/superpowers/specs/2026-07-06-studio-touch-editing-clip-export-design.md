@@ -25,7 +25,7 @@ Make the clip editing that already exists on desktop (split at playhead `B`, del
   2. **Export MP3** — see pipeline below. Shows a spinner in-place while rendering/encoding; disabled meanwhile.
   3. **Delete** — same path as the `Del` key handler (extract to `deleteSelectedClip()`); confirm dialog NOT required (undo via ⌘Z / existing history covers it — matches Logic behavior).
 - Keyboard shortcuts unchanged. Desktop sees the same bar (harmless, useful).
-- Bar must not overlap the transport or the Smart Controls drawer; position: fixed within the timeline card, top-center, offset below the ruler.
+- Bar placement (amended post-review): renders IN-FLOW above the add-track row (upgrading the pre-existing phone-only bar in place) rather than as a fixed overlay — avoids any overlap with the Inspector rail/Smart Controls and reuses shipped code; accepted trade-off is a small layout reflow on select/deselect.
 
 ### Per-clip MP3 export pipeline
 
