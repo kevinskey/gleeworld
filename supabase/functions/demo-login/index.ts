@@ -34,7 +34,13 @@ function rateLimited(ip: string): boolean {
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
   recent.push(now);
   hits.set(ip, recent);
-  if (hits.size > 10_000) hits.clear(); // unbounded-growth guard
+  if (hits.size > 10_000) {
+    // Evict stale buckets only — a full clear() would let a burst of spoofed
+    // IPs reset everyone's rate-limit state.
+    for (const [k, v] of hits) {
+      if (v.every((t) => now - t >= WINDOW_MS)) hits.delete(k);
+    }
+  }
   return recent.length > MAX_PER_WINDOW;
 }
 
@@ -79,6 +85,10 @@ serve(async (req: Request) => {
     return json(502, { error: "signin_failed" });
   }
   const session = await res.json();
+  if (!session?.access_token || !session?.refresh_token) {
+    console.error("[demo-login] grant returned no tokens");
+    return json(502, { error: "signin_failed" });
+  }
   return json(200, {
     access_token: session.access_token,
     refresh_token: session.refresh_token,
