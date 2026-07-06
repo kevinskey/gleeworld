@@ -162,15 +162,17 @@ export const CommandCenterEventCard = ({
   const textColor = getContrastTextColor(categoryColor);
 
   const cardContent = compact ? (
-    // Compact view for monthly grid — pastel chip
+    // Compact view for monthly grid — pastel chip. Title gets priority;
+    // the time only shows when the cell is wide enough (Apple month view).
     <div
       onClick={handleCardClick}
-      className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:brightness-95 transition-all"
+      className="flex items-center gap-1 px-1.5 py-0.5 rounded-md cursor-pointer hover:brightness-95 transition-all min-w-0"
       style={{ backgroundColor: `${categoryColor}1F`, borderLeft: `3px solid ${categoryColor}` }}
     >
-      <Icon className="h-3 w-3 flex-shrink-0" style={{ color: categoryColor }} />
-      <span className="text-xs font-medium truncate flex-1 text-foreground">{event.title}</span>
-      <span className="text-xs flex-shrink-0 font-semibold" style={{ color: categoryColor }}>{startTime}</span>
+      <span className="text-xs font-medium truncate flex-1 min-w-0 text-foreground">{event.title}</span>
+      <span className="text-[11px] flex-shrink-0 font-semibold whitespace-nowrap hidden xl:inline" style={{ color: categoryColor }}>
+        {startTime}
+      </span>
     </div>
   ) : (
     // Full view for agenda/run sheet

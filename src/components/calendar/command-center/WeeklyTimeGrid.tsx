@@ -39,6 +39,13 @@ interface WeeklyTimeGridProps {
   getCategoryForEvent: (event: GleeWorldEvent) => CategoryFilter;
   categoryConfigs: CategoryConfig[];
   onEventDeleted?: () => void;
+  /** Render a single day (Apple Calendar day view) instead of the full week. */
+  singleDay?: boolean;
+  /** When provided, tapping an event reports it here (inspector panel)
+      instead of opening the view/edit dialogs. */
+  onEventSelect?: (event: GleeWorldEvent) => void;
+  /** Highlights the event currently shown in the inspector. */
+  selectedEventId?: string | null;
 }
 
 interface PositionedEvent {
@@ -57,6 +64,9 @@ export const WeeklyTimeGrid = ({
   getCategoryForEvent,
   categoryConfigs,
   onEventDeleted,
+  singleDay = false,
+  onEventSelect,
+  selectedEventId,
 }: WeeklyTimeGridProps) => {
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -82,10 +92,11 @@ export const WeeklyTimeGrid = ({
   }, [user]);
 
   const days = useMemo(() => {
+    if (singleDay) return [selectedDate];
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
     const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
     return eachDayOfInterval({ start: weekStart, end: weekEnd });
-  }, [currentDate]);
+  }, [currentDate, selectedDate, singleDay]);
 
   // Scroll to ~8 AM on mount
   useEffect(() => {
@@ -147,58 +158,62 @@ export const WeeklyTimeGrid = ({
 
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
-      {/* Day Headers - sticky */}
-      <div className="flex flex-shrink-0 border-b border-slate-300">
-        {/* Time gutter */}
-        <div className="w-14 flex-shrink-0 bg-card border-b border-border border-r border-border" />
-        {/* Day columns */}
-        <div className="flex-1 grid grid-cols-7 bg-card border-b border-border text-foreground">
-          {days.map((day, idx) => {
-            const isToday = isSameDay(day, new Date());
-            const isSelected = isSameDay(day, selectedDate);
-            return (
-              <div
-                key={idx}
-                onClick={() => onDateSelect(day)}
-                className={cn(
-                  "py-2 text-center cursor-pointer transition-colors border-r border-border last:border-r-0",
-                  isToday && "bg-primary/10",
-                  isSelected && "bg-primary"
-                )}
-              >
-                <div className="text-xs font-medium opacity-80">
-                  {format(day, 'EEE')}
+      {/* Day Headers - sticky (hidden in single-day mode: the day view
+          renders its own week strip above the grid) */}
+      {!singleDay && (
+        <div className="flex flex-shrink-0 border-b border-slate-200">
+          {/* Time gutter */}
+          <div className="w-16 flex-shrink-0 bg-card border-r border-border" />
+          {/* Day columns */}
+          <div className="flex-1 grid grid-cols-7 bg-card text-foreground">
+            {days.map((day, idx) => {
+              const isToday = isSameDay(day, new Date());
+              const isSelected = isSameDay(day, selectedDate);
+              return (
+                <div
+                  key={idx}
+                  onClick={() => onDateSelect(day)}
+                  className="py-2 cursor-pointer transition-colors border-r border-border/50 last:border-r-0 flex items-center justify-center gap-1.5"
+                >
+                  <span className={cn(
+                    "text-sm font-semibold",
+                    isToday ? "text-foreground" : "text-muted-foreground",
+                  )}>
+                    {format(day, 'EEE')}
+                  </span>
+                  <span className={cn(
+                    "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold tabular-nums",
+                    isToday && "bg-primary text-primary-foreground",
+                    !isToday && isSelected && "bg-slate-200 text-foreground",
+                    !isToday && !isSelected && "text-foreground",
+                  )}>
+                    {format(day, 'd')}
+                  </span>
                 </div>
-                <div className={cn(
-                  "text-lg font-bold leading-tight",
-                  isToday && "text-white"
-                )}>
-                  {format(day, 'd')}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Scrollable time grid */}
       <div ref={scrollRef} className="flex-1 overflow-auto">
         <div className="flex" style={{ height: totalHeight }}>
           {/* Time gutter */}
-          <div className="w-14 flex-shrink-0 relative bg-slate-50 border-r border-slate-300">
+          <div className="w-16 flex-shrink-0 relative bg-slate-50 border-r border-slate-200">
             {HOURS.map(hour => (
               <div
                 key={hour}
-                className="absolute w-full text-right pr-2 text-sm font-medium text-muted-foreground"
+                className="absolute w-full text-right pr-2 text-[11px] font-medium text-muted-foreground whitespace-nowrap"
                 style={{ top: (hour - 7) * HOUR_HEIGHT - 7 }}
               >
-                {hour === 0 ? '12 AM' : hour <= 12 ? `${hour} AM` : `${hour - 12} PM`}
+                {hour === 0 ? '12 AM' : hour === 12 ? 'Noon' : hour < 12 ? `${hour} AM` : `${hour - 12} PM`}
               </div>
             ))}
           </div>
 
           {/* Day columns */}
-          <div className="flex-1 grid grid-cols-7 relative">
+          <div className={cn("flex-1 grid relative", singleDay ? "grid-cols-1" : "grid-cols-7")}>
             {/* Hour lines */}
             {HOURS.map(hour => (
               <div
@@ -216,7 +231,9 @@ export const WeeklyTimeGrid = ({
               />
             ))}
 
-            {/* Current time indicator */}
+            {/* Current time indicator — Apple style: faint line across the
+                whole row, solid segment on today's column, time bubble in
+                the gutter. */}
             {(() => {
               const now = new Date();
               const currentHour = now.getHours() + now.getMinutes() / 60;
@@ -224,17 +241,28 @@ export const WeeklyTimeGrid = ({
                 const todayIdx = days.findIndex(d => isSameDay(d, now));
                 if (todayIdx >= 0) {
                   const topPx = (currentHour - 7) * HOUR_HEIGHT;
+                  const colCount = days.length;
                   return (
-                    <div
-                      className="absolute h-0.5 bg-red-500 z-20"
-                      style={{
-                        top: topPx,
-                        left: `${(todayIdx / 7) * 100}%`,
-                        width: `${100 / 7}%`,
-                      }}
-                    >
-                      <div className="absolute -left-1 -top-1 w-2.5 h-2.5 rounded-full bg-red-500" />
-                    </div>
+                    <>
+                      <div className="absolute left-0 right-0 h-px bg-red-400/40 z-20" style={{ top: topPx }} />
+                      <div
+                        className="absolute h-0.5 bg-red-500 z-20"
+                        style={{
+                          top: topPx,
+                          left: `${(todayIdx / colCount) * 100}%`,
+                          width: `${100 / colCount}%`,
+                        }}
+                      >
+                        <div className="absolute -left-1 -top-1 w-2.5 h-2.5 rounded-full bg-red-500" />
+                      </div>
+                      {/* Time bubble overlaying the gutter */}
+                      <div
+                        className="absolute z-30 -translate-y-1/2 rounded-full bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 tabular-nums"
+                        style={{ top: topPx + 1, left: -60 }}
+                      >
+                        {format(now, 'h:mm')}
+                      </div>
+                    </>
                   );
                 }
               }
@@ -253,7 +281,7 @@ export const WeeklyTimeGrid = ({
                   key={day.toString()}
                   className={cn(
                     "relative border-r border-slate-200 last:border-r-0",
-                    isToday && "bg-amber-50/40"
+                    isToday && !singleDay && "bg-primary/[0.04]"
                   )}
                   onClick={() => onDateSelect(day)}
                 >
@@ -269,7 +297,10 @@ export const WeeklyTimeGrid = ({
                     return (
                       <div
                         key={event.id}
-                        className="absolute rounded-lg cursor-pointer hover:brightness-95 transition-all overflow-hidden z-10"
+                        className={cn(
+                          "absolute rounded-lg cursor-pointer hover:brightness-95 transition-all overflow-hidden z-10",
+                          selectedEventId === event.id && "ring-2 ring-primary z-[15]",
+                        )}
                         style={{
                           top: top + 1,
                           height: Math.max(height - 2, 20),
@@ -281,16 +312,21 @@ export const WeeklyTimeGrid = ({
                         title={`${event.title}\n${startTime}${event.location ? '\n' + event.location : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (onEventSelect) { onEventSelect(event); return; }
                           if (canEdit) setEditingEvent(event); else setSelectedEvent(event);
                         }}
                       >
-                        <div className={cn("px-2 py-1 h-full flex", isShort ? "items-center gap-1.5" : "flex-col")}>
-                          <span className="text-xs font-semibold leading-tight" style={{ color }}>{startTime}</span>
-                          <span className="text-sm font-semibold leading-tight truncate text-foreground">
+                        <div className={cn("px-1.5 py-0.5 h-full flex min-w-0", isShort ? "items-center gap-1" : "flex-col")}>
+                          <span className="text-xs font-semibold leading-tight truncate text-foreground">
                             {event.title}
                           </span>
-                          {!isShort && event.location && (
-                            <span className="text-xs truncate leading-tight text-muted-foreground mt-0.5">
+                          {!isShort && (
+                            <span className="text-[11px] font-medium leading-tight whitespace-nowrap truncate" style={{ color }}>
+                              {startTime}
+                            </span>
+                          )}
+                          {!isShort && height >= 56 && event.location && (
+                            <span className="text-[11px] truncate leading-tight text-muted-foreground mt-auto pb-0.5">
                               {event.location}
                             </span>
                           )}
