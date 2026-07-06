@@ -19,31 +19,41 @@ export function useHomeTileLayout() {
     enabled: !!uid,
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .select('home_tile_layout')
-        .eq('user_id', uid!)
-        .maybeSingle();
-      if (error) {
-        console.warn('[useHomeTileLayout] load failed:', error.message);
+      try {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('home_tile_layout')
+          .eq('user_id', uid!)
+          .maybeSingle();
+        if (error) {
+          console.warn('[useHomeTileLayout] load failed:', error.message);
+          return null;
+        }
+        return parseTileLayout(data?.home_tile_layout ?? null);
+      } catch (err) {
+        console.warn('[useHomeTileLayout] load failed:', err);
         return null;
       }
-      return parseTileLayout(data?.home_tile_layout ?? null);
     },
   });
 
   const save = useCallback(async (order: string[]): Promise<boolean> => {
     if (!uid) return false;
-    const next: TileLayout = { v: 1, order };
-    const { error } = await supabase
-      .from('user_preferences')
-      .upsert({ user_id: uid, home_tile_layout: next }, { onConflict: 'user_id' });
-    if (error) {
-      console.warn('[useHomeTileLayout] save failed:', error.message);
+    try {
+      const next: TileLayout = { v: 1, order };
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({ user_id: uid, home_tile_layout: next }, { onConflict: 'user_id' });
+      if (error) {
+        console.warn('[useHomeTileLayout] save failed:', error.message);
+        return false;
+      }
+      queryClient.setQueryData(['home-tile-layout', uid], next);
+      return true;
+    } catch (err) {
+      console.warn('[useHomeTileLayout] save failed:', err);
       return false;
     }
-    queryClient.setQueryData(['home-tile-layout', uid], next);
-    return true;
   }, [uid, queryClient]);
 
   return { layout, save };
