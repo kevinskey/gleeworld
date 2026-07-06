@@ -8,7 +8,7 @@
 // broadcast via a change event so hooks re-render immediately.
 
 import { useSyncExternalStore } from 'react';
-import type { NavRole } from './navCatalog';
+import type { NavRole } from '@/lib/navigation/navCatalog';
 
 const KEY = 'gw_nav_preview_role';
 const EVENT = 'gw:nav-preview-changed';

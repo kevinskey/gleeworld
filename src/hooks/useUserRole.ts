@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { USER_ROLES, isRoleAtLeast } from "@/constants/permissions";
@@ -168,13 +168,18 @@ export const useUserRole = () => {
   // (title/composer/voicing/copies/location), attaching audio. Students
   // (and below) can still open + annotate scores; annotations are RLS-
   // scoped to user_id so each student has their own personal markup.
-  const canEditMusicLibrary = (): boolean => {
+  // useCallback so consumers can treat this as a stable dependency —
+  // a fresh closure every render made downstream useMemos (HouseHome's
+  // NavContext) inert. isSuperAdmin/isAdmin only read `profile`, which
+  // is a dep, so the captured closures are never stale.
+  const canEditMusicLibrary = useCallback((): boolean => {
     if (!profile) return false;
     if (isSuperAdmin() || isAdmin()) return true;
     if (hasLibrarianAppRole) return true;
     if (profile.role === 'librarian') return true;
     return false;
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isSuperAdmin/isAdmin are render-scoped closures over `profile` only
+  }, [profile, hasLibrarianAppRole]);
 
   return {
     profile,

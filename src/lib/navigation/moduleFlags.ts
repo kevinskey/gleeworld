@@ -20,3 +20,10 @@ export function toModuleFlags(modules: TenantModule[]): ModuleFlags {
     hasAcademy: true, // Academy is core, not a gated add-on.
   };
 }
+
+// Set-of-active-module-ids view of the same rows, for NavContext.hasModule.
+export function toModuleSet(modules: TenantModule[]): Set<string> {
+  const set = new Set(modules.map((m) => m.module_id));
+  set.add('academy'); // Academy is core, mirrored from toModuleFlags.
+  return set;
+}

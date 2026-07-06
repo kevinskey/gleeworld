@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, isSameDay, addMonths, subMonths, addDays, subDays, addYears, subYears, addWeeks, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -10,7 +10,15 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile, useIsTabletOrNarrower } from "@/hooks/use-mobile";
 import { useCurrentProvider, useProviderAvailability, ProviderAvailability } from "@/hooks/useServiceProviders";
 import { CommandCenterHeader } from "./CommandCenterHeader";
-import { CommandCenterFilterRail } from "./CommandCenterFilterRail";
+import { CalendarFiltersSheet } from "./CalendarFiltersSheet";
+import { CalendarPopout } from "./CalendarPopout";
+import { Loader2 } from "lucide-react";
+
+// Heavy popout content — loaded on first open, not with the calendar chunk.
+const AdminOfficeHoursDashboard = lazy(() =>
+  import("../../appointments/AdminOfficeHoursDashboard").then((m) => ({ default: m.AdminOfficeHoursDashboard }))
+);
+const StudentBooking = lazy(() => import("../../officehours/StudentBooking"));
 import { CommandCenterGrid } from "./CommandCenterGrid";
 import { WeeklyTimeGrid } from "./WeeklyTimeGrid";
 import { YearView } from "./YearView";
@@ -126,39 +134,17 @@ export const CommandCenterCalendar = () => {
   const [activeCalendarFilters, setActiveCalendarFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showOfficeHours, setShowOfficeHours] = useState(false);
+  const [showAgenda, setShowAgenda] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'calendars' | 'categories'>('calendars');
-  const [isFilterRailCollapsed, setIsFilterRailCollapsed] = useState(isMobile || isNarrow);
-
-  // Resizable columns — persisted per-user via localStorage. Tight clamps so
-  // the layout can't be dragged into unusable territory.
-  const [filterRailWidth, setFilterRailWidth] = useState<number>(() => {
-    const saved = typeof window !== 'undefined' ? Number(localStorage.getItem('cal-filter-rail-w')) : 0;
-    return saved >= 180 && saved <= 400 ? saved : 224;
-  });
+  // Resizable right panel — persisted per-user via localStorage. Tight
+  // clamps so the layout can't be dragged into unusable territory.
   const [rightPanelWidth, setRightPanelWidth] = useState<number>(() => {
     const saved = typeof window !== 'undefined' ? Number(localStorage.getItem('cal-right-panel-w')) : 0;
     return saved >= 280 && saved <= 640 ? saved : 384;
   });
-
-  function startRailResize(e: React.PointerEvent<HTMLDivElement>) {
-    e.preventDefault();
-    const target = e.currentTarget;
-    const startX = e.clientX;
-    const startW = filterRailWidth;
-    target.setPointerCapture(e.pointerId);
-    const move = (ev: PointerEvent) => {
-      const next = Math.min(Math.max(startW + ev.clientX - startX, 180), 400);
-      setFilterRailWidth(next);
-    };
-    const up = () => {
-      target.removeEventListener('pointermove', move);
-      target.removeEventListener('pointerup', up);
-      setFilterRailWidth((w) => { localStorage.setItem('cal-filter-rail-w', String(Math.round(w))); return w; });
-    };
-    target.addEventListener('pointermove', move);
-    target.addEventListener('pointerup', up);
-  }
 
   function startRightResize(e: React.PointerEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -407,38 +393,58 @@ export const CommandCenterCalendar = () => {
         categories={liveCategories}
         activeCategoryFilters={activeCategoryFilters}
         onToggleCategoryFilter={toggleCategoryFilter}
+        onOpenFilters={() => setShowFilters(true)}
+        onOpenOfficeHours={() => setShowOfficeHours(true)}
+        onOpenAgenda={() => setShowAgenda(true)}
       />
+
+      {/* Filters — Apple Calendar-style left slide-out (replaces the old
+          docked filter rail). */}
+      <CalendarFiltersSheet
+        open={showFilters}
+        onOpenChange={setShowFilters}
+        categories={liveCategories}
+        activeCategoryFilters={activeCategoryFilters}
+        onToggleCategory={toggleCategoryFilter}
+        calendars={calendars || []}
+        activeCalendarFilters={activeCalendarFilters}
+        onToggleCalendar={toggleCalendarFilter}
+        onAddCalendar={canManageEvents ? () => { setShowFilters(false); setSettingsTab('calendars'); setShowSettings(true); } : undefined}
+      />
+
+      {/* Office hours — left popout. Students book; admins get the full
+          office-hours management surface. */}
+      <CalendarPopout open={showOfficeHours} onOpenChange={setShowOfficeHours} title="Office Hours" headerBorder>
+        <div className="flex-1 overflow-y-auto p-4">
+          {showOfficeHours && (
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            }>
+              {canManageEvents ? <AdminOfficeHoursDashboard /> : <StudentBooking />}
+            </Suspense>
+          )}
+        </div>
+      </CalendarPopout>
+
+      {/* List (agenda) — left popout, removed from the desktop view switcher. */}
+      <CalendarPopout open={showAgenda} onOpenChange={setShowAgenda} title="List">
+        <div className="flex-1 min-h-0 px-2 pb-3">
+          <AgendaView
+            events={filteredEvents}
+            selectedDate={selectedDate}
+            onDateSelect={(d) => { setSelectedDate(d); setCurrentDate(d); }}
+            onNavigateDay={navigateDay}
+            getCategoryForEvent={getCategoryForEvent}
+            categoryConfigs={CATEGORY_CONFIGS}
+            onEventDeleted={fetchEvents}
+          />
+        </div>
+      </CalendarPopout>
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left Filter Rail - Hidden on mobile */}
-        {!isMobile && (
-          <>
-            <CommandCenterFilterRail
-              categories={liveCategories}
-              calendars={calendars || []}
-              activeCategoryFilters={activeCategoryFilters}
-              activeCalendarFilters={activeCalendarFilters}
-              onToggleCategoryFilter={toggleCategoryFilter}
-              onToggleCalendarFilter={toggleCalendarFilter}
-              isCollapsed={isFilterRailCollapsed}
-              onToggleCollapse={() => setIsFilterRailCollapsed(!isFilterRailCollapsed)}
-              width={isFilterRailCollapsed ? undefined : filterRailWidth}
-              onAddCategory={canManageEvents ? () => { setSettingsTab('categories'); setShowSettings(true); } : undefined}
-              onAddCalendar={canManageEvents ? () => { setSettingsTab('calendars');  setShowSettings(true); } : undefined}
-            />
-            {!isFilterRailCollapsed && (
-              <div
-                onPointerDown={startRailResize}
-                className="w-1.5 -mx-0.5 shrink-0 cursor-col-resize touch-none flex items-stretch justify-center group z-10"
-                title="Drag to resize"
-              >
-                <div className="w-px bg-border group-hover:w-1 group-hover:bg-primary/50 transition-all" />
-              </div>
-            )}
-          </>
-        )}
-
         {/* Center Content */}
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
           {/* Calendar Grid or Agenda */}
