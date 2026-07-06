@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
-import { Calendar, Clock, MapPin, ClipboardCheck, Trash2, Loader2 } from "lucide-react";
+import { Calendar, QrCode, ClipboardCheck, Loader2, ChevronRight } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,8 +25,9 @@ interface DayViewPanelProps {
   onEventDeleted?: () => void;
 }
 
-/** Apple Calendar-style day view for iPad/desktop: week strip on top,
- *  single-day time grid on the left, event inspector panel on the right. */
+/** Apple Calendar iPad day view: week strip on top, single-day time grid on
+ *  the left, and the event inspector panel on the right — light gray panel,
+ *  white rounded rows, text-only red delete pill. */
 export const DayViewPanel = ({
   events,
   selectedDate,
@@ -110,11 +110,17 @@ export const DayViewPanel = ({
     }
   };
 
+  // Apple-style white rounded row
+  const row = "w-full rounded-2xl bg-white px-4 py-3 flex items-center justify-between text-left";
+
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      {/* Week strip */}
-      <div className="flex border-b border-slate-200 bg-card">
-        <div className="w-14 flex-shrink-0 border-r border-border" />
+    // Bounded to the viewport (topbar + page/calendar headers ≈ 215px) so the
+    // time grid scrolls internally and the initial position lands at 7 AM
+    // instead of midnight. min-h keeps short windows usable.
+    <div className="flex flex-col bg-white overflow-hidden h-[calc(100dvh-215px)] min-h-[480px]">
+      {/* Week strip — plain, hairline below, today circled */}
+      <div className="flex border-b border-slate-200 bg-white">
+        <div className="w-16 flex-shrink-0" />
         <div className="flex-1 grid grid-cols-7">
           {weekDays.map((day) => {
             const isToday = isSameDay(day, new Date());
@@ -124,19 +130,19 @@ export const DayViewPanel = ({
                 key={day.toISOString()}
                 type="button"
                 onClick={() => onDateSelect(day)}
-                className="py-2 flex items-center justify-center gap-1.5 transition-colors hover:bg-muted/50"
+                className="py-2.5 flex items-center justify-center gap-1.5 transition-colors hover:bg-slate-50"
               >
                 <span className={cn(
-                  "text-sm font-semibold",
-                  isToday || isSelected ? "text-foreground" : "text-muted-foreground",
+                  "text-[15px]",
+                  isToday || isSelected ? "font-semibold text-foreground" : "text-muted-foreground",
                 )}>
                   {format(day, 'EEE')}
                 </span>
                 <span className={cn(
-                  "inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold tabular-nums",
-                  isToday && "bg-primary text-primary-foreground",
-                  !isToday && isSelected && "bg-slate-800 text-white",
-                  !isToday && !isSelected && "text-foreground",
+                  "inline-flex items-center justify-center w-7 h-7 rounded-full text-[15px] tabular-nums",
+                  isToday && "bg-primary text-primary-foreground font-bold",
+                  !isToday && isSelected && "bg-slate-800 text-white font-semibold",
+                  !isToday && !isSelected && "text-muted-foreground",
                 )}>
                   {format(day, 'd')}
                 </span>
@@ -163,101 +169,112 @@ export const DayViewPanel = ({
           />
         </div>
 
-        {/* Inspector */}
-        <aside className="w-[300px] xl:w-[340px] flex-shrink-0 border-l border-slate-200 bg-slate-50 flex flex-col">
+        {/* Inspector — Apple: light gray panel, white rounded rows */}
+        <aside className="w-[34%] min-w-[300px] max-w-[420px] flex-shrink-0 bg-slate-100/90 flex flex-col">
           {selectedEvent ? (
             <>
-              <div className="p-5 flex-1 overflow-y-auto">
-                <div className="flex items-start justify-between gap-3 mb-1.5">
-                  <h2 className="text-xl font-bold leading-tight text-foreground">
+              <div className="px-5 pt-5 pb-4 flex-1 overflow-y-auto">
+                {/* Title + Edit */}
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h2 className="text-[22px] font-bold leading-tight text-foreground">
                     {selectedEvent.title}
                   </h2>
                   {canEditSelected && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
+                      type="button"
                       data-compact
-                      className="h-8 px-3.5 rounded-full text-xs font-semibold flex-shrink-0 bg-slate-200 text-foreground hover:bg-slate-300"
                       onClick={() => setShowEditDialog(true)}
+                      className="h-8 px-4 rounded-full text-[15px] font-medium bg-slate-200/90 text-foreground hover:bg-slate-300 transition-colors flex-shrink-0"
                     >
                       Edit
-                    </Button>
+                    </button>
                   )}
                 </div>
 
-                <div className="text-sm text-muted-foreground mb-4 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
-                    {format(new Date(selectedEvent.start_date), 'EEEE, MMM d, yyyy')}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                {/* Date left, time right — no icons, like Apple */}
+                <div className="flex items-baseline justify-between gap-2 text-[15px] text-foreground mb-1">
+                  <span>{format(new Date(selectedEvent.start_date), 'EEEE, MMM d, yyyy')}</span>
+                  <span className="whitespace-nowrap">
                     {format(new Date(selectedEvent.start_date), 'h:mm a')}
                     {selectedEvent.end_date && ` – ${format(new Date(selectedEvent.end_date), 'h:mm a')}`}
+                  </span>
+                </div>
+                {selectedEvent.location && (
+                  <div className="text-[15px] text-muted-foreground mb-1">
+                    {selectedEvent.location}
                   </div>
-                  {selectedEvent.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="truncate">{selectedEvent.location}</span>
+                )}
+
+                <div className="space-y-3 mt-5">
+                  {/* Calendar row */}
+                  <div className={row}>
+                    <span className="text-[15px] font-medium text-foreground">Calendar</span>
+                    <span className="flex items-center gap-2 text-[15px] text-muted-foreground">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: selectedConfig?.color || '#708090' }}
+                      />
+                      {selectedEvent.gw_calendars?.name || selectedConfig?.label || 'Events'}
+                    </span>
+                  </div>
+
+                  {/* GleeWorld actions as Apple-style rows */}
+                  {canEditSelected && (
+                    <>
+                      <EventQRCode
+                        eventId={selectedEvent.id}
+                        eventTitle={selectedEvent.title}
+                        trigger={
+                          <button type="button" data-compact className={row}>
+                            <span className="text-[15px] font-medium text-foreground flex items-center gap-2.5">
+                              <QrCode className="h-4 w-4 text-muted-foreground" />
+                              QR Check-In
+                            </span>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+                          </button>
+                        }
+                      />
+                      <button
+                        type="button"
+                        data-compact
+                        className={row}
+                        onClick={() => setShowAttendanceDialog(true)}
+                      >
+                        <span className="text-[15px] font-medium text-foreground flex items-center gap-2.5">
+                          <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                          Attendance
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+                      </button>
+                    </>
+                  )}
+
+                  {selectedEvent.description && (
+                    <div className="rounded-2xl bg-white px-4 py-3">
+                      <p className="text-[15px] text-foreground whitespace-pre-wrap">
+                        {selectedEvent.description}
+                      </p>
                     </div>
                   )}
                 </div>
-
-                {/* Calendar chip */}
-                <div className="rounded-xl bg-white border border-slate-200 px-4 py-3 mb-3 flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">Calendar</span>
-                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: selectedConfig?.color || '#708090' }}
-                    />
-                    {selectedEvent.gw_calendars?.name || selectedConfig?.label || 'Events'}
-                  </span>
-                </div>
-
-                {selectedEvent.description && (
-                  <div className="rounded-xl bg-white border border-slate-200 px-4 py-3 mb-3">
-                    <p className="text-sm text-foreground whitespace-pre-wrap">
-                      {selectedEvent.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* GleeWorld actions */}
-                {canEditSelected && (
-                  <div className="flex items-center gap-1.5 mt-4">
-                    <EventQRCode eventId={selectedEvent.id} eventTitle={selectedEvent.title} />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAttendanceDialog(true)}
-                      className="h-8 px-2.5 gap-1.5 text-xs font-medium"
-                    >
-                      <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-                      Attendance
-                    </Button>
-                  </div>
-                )}
               </div>
 
               {canEditSelected && (
-                <div className="p-4 border-t border-slate-200 flex justify-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 px-5 rounded-full text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 bg-white shadow-sm"
+                <div className="px-5 pb-6 pt-2 flex justify-center">
+                  <button
+                    type="button"
                     onClick={() => setShowDeleteDialog(true)}
+                    className="h-10 px-6 rounded-full text-[15px] font-medium text-red-500 bg-white hover:bg-red-50 shadow-sm transition-colors"
                   >
-                    <Trash2 className="h-4 w-4 mr-1.5" />
                     Delete Event
-                  </Button>
+                  </button>
                 </div>
               )}
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-              <Calendar className="h-10 w-10 text-muted-foreground/50 mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">
+              <Calendar className="h-10 w-10 text-muted-foreground/40 mb-3" />
+              <p className="text-[15px] font-medium text-muted-foreground">
                 {dayEvents.length === 0 ? 'No events this day' : 'Select an event to see details'}
               </p>
             </div>
