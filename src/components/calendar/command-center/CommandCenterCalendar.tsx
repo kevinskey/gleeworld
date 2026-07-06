@@ -11,7 +11,7 @@ import { useIsMobile, useIsTabletOrNarrower } from "@/hooks/use-mobile";
 import { useCurrentProvider, useProviderAvailability, ProviderAvailability } from "@/hooks/useServiceProviders";
 import { CommandCenterHeader } from "./CommandCenterHeader";
 import { CalendarFiltersSheet } from "./CalendarFiltersSheet";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { CalendarPopout } from "./CalendarPopout";
 import { Loader2 } from "lucide-react";
 
 // Heavy popout content — loaded on first open, not with the calendar chunk.
@@ -414,44 +414,34 @@ export const CommandCenterCalendar = () => {
 
       {/* Office hours — left popout. Students book; admins get the full
           office-hours management surface. */}
-      <Sheet open={showOfficeHours} onOpenChange={setShowOfficeHours}>
-        <SheetContent side="left" className="w-[92vw] max-w-3xl p-0 flex flex-col">
-          <SheetHeader className="px-5 pt-5 pb-2 text-left border-b border-slate-200">
-            <SheetTitle className="text-lg font-bold">Office Hours</SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 overflow-y-auto p-4">
-            {showOfficeHours && (
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              }>
-                {canManageEvents ? <AdminOfficeHoursDashboard /> : <StudentBooking />}
-              </Suspense>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <CalendarPopout open={showOfficeHours} onOpenChange={setShowOfficeHours} title="Office Hours" headerBorder>
+        <div className="flex-1 overflow-y-auto p-4">
+          {showOfficeHours && (
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            }>
+              {canManageEvents ? <AdminOfficeHoursDashboard /> : <StudentBooking />}
+            </Suspense>
+          )}
+        </div>
+      </CalendarPopout>
 
       {/* List (agenda) — left popout, removed from the desktop view switcher. */}
-      <Sheet open={showAgenda} onOpenChange={setShowAgenda}>
-        <SheetContent side="left" className="w-[92vw] max-w-md p-0 flex flex-col">
-          <SheetHeader className="px-5 pt-5 pb-2 text-left">
-            <SheetTitle className="text-lg font-bold">List</SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 min-h-0 px-2 pb-3">
-            <AgendaView
-              events={filteredEvents}
-              selectedDate={selectedDate}
-              onDateSelect={(d) => { setSelectedDate(d); setCurrentDate(d); }}
-              onNavigateDay={navigateDay}
-              getCategoryForEvent={getCategoryForEvent}
-              categoryConfigs={CATEGORY_CONFIGS}
-              onEventDeleted={fetchEvents}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      <CalendarPopout open={showAgenda} onOpenChange={setShowAgenda} title="List">
+        <div className="flex-1 min-h-0 px-2 pb-3">
+          <AgendaView
+            events={filteredEvents}
+            selectedDate={selectedDate}
+            onDateSelect={(d) => { setSelectedDate(d); setCurrentDate(d); }}
+            onNavigateDay={navigateDay}
+            getCategoryForEvent={getCategoryForEvent}
+            categoryConfigs={CATEGORY_CONFIGS}
+            onEventDeleted={fetchEvents}
+          />
+        </div>
+      </CalendarPopout>
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
