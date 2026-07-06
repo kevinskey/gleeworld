@@ -10,7 +10,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useIsMobile, useIsTabletOrNarrower } from "@/hooks/use-mobile";
 import { useCurrentProvider, useProviderAvailability, ProviderAvailability } from "@/hooks/useServiceProviders";
 import { CommandCenterHeader } from "./CommandCenterHeader";
-import { CommandCenterFilterRail } from "./CommandCenterFilterRail";
+import { CalendarFiltersSheet } from "./CalendarFiltersSheet";
 import { CommandCenterGrid } from "./CommandCenterGrid";
 import { WeeklyTimeGrid } from "./WeeklyTimeGrid";
 import { YearView } from "./YearView";
@@ -126,39 +126,15 @@ export const CommandCenterCalendar = () => {
   const [activeCalendarFilters, setActiveCalendarFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'calendars' | 'categories'>('calendars');
-  const [isFilterRailCollapsed, setIsFilterRailCollapsed] = useState(isMobile || isNarrow);
-
-  // Resizable columns — persisted per-user via localStorage. Tight clamps so
-  // the layout can't be dragged into unusable territory.
-  const [filterRailWidth, setFilterRailWidth] = useState<number>(() => {
-    const saved = typeof window !== 'undefined' ? Number(localStorage.getItem('cal-filter-rail-w')) : 0;
-    return saved >= 180 && saved <= 400 ? saved : 224;
-  });
+  // Resizable right panel — persisted per-user via localStorage. Tight
+  // clamps so the layout can't be dragged into unusable territory.
   const [rightPanelWidth, setRightPanelWidth] = useState<number>(() => {
     const saved = typeof window !== 'undefined' ? Number(localStorage.getItem('cal-right-panel-w')) : 0;
     return saved >= 280 && saved <= 640 ? saved : 384;
   });
-
-  function startRailResize(e: React.PointerEvent<HTMLDivElement>) {
-    e.preventDefault();
-    const target = e.currentTarget;
-    const startX = e.clientX;
-    const startW = filterRailWidth;
-    target.setPointerCapture(e.pointerId);
-    const move = (ev: PointerEvent) => {
-      const next = Math.min(Math.max(startW + ev.clientX - startX, 180), 400);
-      setFilterRailWidth(next);
-    };
-    const up = () => {
-      target.removeEventListener('pointermove', move);
-      target.removeEventListener('pointerup', up);
-      setFilterRailWidth((w) => { localStorage.setItem('cal-filter-rail-w', String(Math.round(w))); return w; });
-    };
-    target.addEventListener('pointermove', move);
-    target.addEventListener('pointerup', up);
-  }
 
   function startRightResize(e: React.PointerEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -407,38 +383,24 @@ export const CommandCenterCalendar = () => {
         categories={liveCategories}
         activeCategoryFilters={activeCategoryFilters}
         onToggleCategoryFilter={toggleCategoryFilter}
+        onOpenFilters={() => setShowFilters(true)}
+      />
+
+      {/* Filters — Apple Calendar-style left slide-out (replaces the old
+          docked filter rail). */}
+      <CalendarFiltersSheet
+        open={showFilters}
+        onOpenChange={setShowFilters}
+        categories={liveCategories}
+        activeCategoryFilters={activeCategoryFilters}
+        onToggleCategory={toggleCategoryFilter}
+        calendars={calendars || []}
+        activeCalendarFilters={activeCalendarFilters}
+        onToggleCalendar={toggleCalendarFilter}
       />
 
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left Filter Rail - Hidden on mobile */}
-        {!isMobile && (
-          <>
-            <CommandCenterFilterRail
-              categories={liveCategories}
-              calendars={calendars || []}
-              activeCategoryFilters={activeCategoryFilters}
-              activeCalendarFilters={activeCalendarFilters}
-              onToggleCategoryFilter={toggleCategoryFilter}
-              onToggleCalendarFilter={toggleCalendarFilter}
-              isCollapsed={isFilterRailCollapsed}
-              onToggleCollapse={() => setIsFilterRailCollapsed(!isFilterRailCollapsed)}
-              width={isFilterRailCollapsed ? undefined : filterRailWidth}
-              onAddCategory={canManageEvents ? () => { setSettingsTab('categories'); setShowSettings(true); } : undefined}
-              onAddCalendar={canManageEvents ? () => { setSettingsTab('calendars');  setShowSettings(true); } : undefined}
-            />
-            {!isFilterRailCollapsed && (
-              <div
-                onPointerDown={startRailResize}
-                className="w-1.5 -mx-0.5 shrink-0 cursor-col-resize touch-none flex items-stretch justify-center group z-10"
-                title="Drag to resize"
-              >
-                <div className="w-px bg-border group-hover:w-1 group-hover:bg-primary/50 transition-all" />
-              </div>
-            )}
-          </>
-        )}
-
         {/* Center Content */}
         <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
           {/* Calendar Grid or Agenda */}

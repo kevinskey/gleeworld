@@ -23,6 +23,8 @@ interface CommandCenterHeaderProps {
   categories?: CategoryConfig[];
   activeCategoryFilters?: CategoryFilter[];
   onToggleCategoryFilter?: (id: CategoryFilter) => void;
+  /** Opens the Apple-style left filters slide-out. */
+  onOpenFilters?: () => void;
 }
 
 export const CommandCenterHeader = ({
@@ -41,6 +43,7 @@ export const CommandCenterHeader = ({
   categories,
   activeCategoryFilters,
   onToggleCategoryFilter,
+  onOpenFilters,
 }: CommandCenterHeaderProps) => {
   const filtersAvailable = !!(categories && activeCategoryFilters && onToggleCategoryFilter);
   const filtersActive = filtersAvailable && categories && activeCategoryFilters!.length < categories.length;
@@ -96,60 +99,23 @@ export const CommandCenterHeader = ({
                 </Button>
               )}
               {filtersAvailable && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className={cn(
-                        "h-9 w-9 p-0 relative text-muted-foreground hover:text-foreground hover:bg-muted",
-                        filtersActive && "text-primary"
-                      )}
-                      title="Filters"
-                    >
-                      <Filter className="h-5 w-5" />
-                      {filtersActive && (
-                        <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-1">
-                          {activeCategoryFilters!.length}
-                        </span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-64 p-2">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-2 py-1.5">
-                      Categories
-                    </div>
-                    {categories!.length === 0 ? (
-                      <p className="text-xs text-muted-foreground p-2">No categories — add one in Settings.</p>
-                    ) : (
-                      <ul className="space-y-0.5">
-                        {categories!.map((cat) => {
-                          const active = activeCategoryFilters!.includes(cat.id);
-                          return (
-                            <li key={cat.id}>
-                              <button
-                                onClick={() => onToggleCategoryFilter!(cat.id)}
-                                className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-muted text-left"
-                              >
-                                <span
-                                  className="w-4 h-4 rounded inline-flex items-center justify-center shrink-0"
-                                  style={{ background: active ? cat.color : 'transparent', border: `1px solid ${cat.color}` }}
-                                >
-                                  {active && (
-                                    <svg viewBox="0 0 20 20" className="w-3 h-3 text-white"><path fill="currentColor" d="M16.7 5.3a1 1 0 010 1.4l-7.4 7.4a1 1 0 01-1.4 0L3.3 9.5a1 1 0 011.4-1.4L8.6 12l6.7-6.7a1 1 0 011.4 0z"/></svg>
-                                  )}
-                                </span>
-                                <span className={cn("text-sm", active ? "text-foreground" : "text-muted-foreground")}>
-                                  {cat.label}
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </PopoverContent>
-                </Popover>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={onOpenFilters}
+                  className={cn(
+                    "h-9 w-9 p-0 relative text-muted-foreground hover:text-foreground hover:bg-muted",
+                    filtersActive && "text-primary"
+                  )}
+                  title="Filters"
+                >
+                  <Filter className="h-5 w-5" />
+                  {filtersActive && (
+                    <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-1">
+                      {activeCategoryFilters!.length}
+                    </span>
+                  )}
+                </Button>
               )}
               {canManageEvents && onOpenSettings && (
                 <Button
@@ -251,59 +217,22 @@ export const CommandCenterHeader = ({
           </div>
 
           {filtersAvailable && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "h-9 gap-2 text-sm font-medium",
-                    filtersActive && "border-primary text-primary"
-                  )}
-                >
-                  <Filter className="h-4 w-4" />
-                  Filters
-                  {filtersActive && (
-                    <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-semibold px-1">
-                      {activeCategoryFilters!.length}/{categories!.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-64 p-2">
-                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-2 py-1.5">
-                  Categories
-                </div>
-                {categories!.length === 0 ? (
-                  <p className="text-xs text-muted-foreground p-2">No categories — add one in Settings.</p>
-                ) : (
-                  <ul className="space-y-0.5">
-                    {categories!.map((cat) => {
-                      const active = activeCategoryFilters!.includes(cat.id);
-                      return (
-                        <li key={cat.id}>
-                          <button
-                            onClick={() => onToggleCategoryFilter!(cat.id)}
-                            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-muted text-left"
-                          >
-                            <span
-                              className="w-4 h-4 rounded inline-flex items-center justify-center shrink-0"
-                              style={{ background: active ? cat.color : 'transparent', border: `1px solid ${cat.color}` }}
-                            >
-                              {active && (
-                                <svg viewBox="0 0 20 20" className="w-3 h-3 text-white"><path fill="currentColor" d="M16.7 5.3a1 1 0 010 1.4l-7.4 7.4a1 1 0 01-1.4 0L3.3 9.5a1 1 0 011.4-1.4L8.6 12l6.7-6.7a1 1 0 011.4 0z"/></svg>
-                              )}
-                            </span>
-                            <span className={cn("text-sm", active ? "text-foreground" : "text-muted-foreground")}>
-                              {cat.label}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </PopoverContent>
-            </Popover>
+            <Button
+              variant="outline"
+              onClick={onOpenFilters}
+              className={cn(
+                "h-9 gap-2 text-sm font-medium",
+                filtersActive && "border-primary text-primary"
+              )}
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              {filtersActive && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-semibold px-1">
+                  {activeCategoryFilters!.length}/{categories!.length}
+                </span>
+              )}
+            </Button>
           )}
 
           <div className="flex items-center gap-2">
