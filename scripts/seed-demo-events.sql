@@ -10,9 +10,17 @@ DO $$
 DECLARE
   v_tenant uuid;
   v_calendar uuid;
+  v_creator uuid;
 BEGIN
   SELECT id INTO v_tenant FROM public.gw_tenants WHERE slug = 'demo';
   IF v_tenant IS NULL THEN RAISE EXCEPTION 'demo tenant not found'; END IF;
+
+  -- The sync_gw_event_to_events trigger mirrors rows into the legacy
+  -- events table, where created_by is NOT NULL — attribute the season
+  -- to the demo director account.
+  SELECT user_id INTO v_creator FROM public.gw_profiles
+   WHERE email = 'demo-director@gleeworld.org';
+  IF v_creator IS NULL THEN RAISE EXCEPTION 'demo-director account not found — run seed-demo-accounts.mjs first'; END IF;
 
   -- Scope by tenant: this runs as superuser, so the JWT-derived tenant_id
   -- default is NULL — an untenanted calendar would be invisible to the demo
@@ -26,9 +34,9 @@ BEGIN
   END IF;
 
   INSERT INTO public.gw_events
-    (tenant_id, calendar_id, title, description, location, start_date, end_date,
+    (tenant_id, calendar_id, created_by, title, description, location, start_date, end_date,
      event_type, category, is_public, status)
-  SELECT v_tenant, v_calendar, e.title, e.descr, e.loc, e.starts, e.ends,
+  SELECT v_tenant, v_calendar, v_creator, e.title, e.descr, e.loc, e.starts, e.ends,
          e.etype, e.cat, true, 'confirmed'
   FROM (VALUES
     ('Fall Kickoff Rehearsal', 'First full-choir rehearsal of the season. Bring your folders.', 'Harmony Hall, Room 204', timestamptz '2026-08-24 18:00-04', timestamptz '2026-08-24 20:00-04', 'rehearsal', 'rehearsal'),
