@@ -12,6 +12,7 @@
 // Super-admins (gw_tenant_members.role = 'super_admin') always see
 // every nav item so they can reach settings to unhide things later.
 
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,11 +65,14 @@ export function useTenantNavPrefs(): Set<string> {
   // restriction their tenant admin set.
   const effectiveRole = (myRole === 'super_admin' && previewRole) ? previewRole : myRole;
 
-  // Tenant super-admin bypass. If we haven't resolved the role yet,
-  // do NOT filter — otherwise the sidebar flashes empty during the
-  // first render.
-  if (!effectiveRole || effectiveRole === 'super_admin') return new Set<string>();
-
-  const row = rows.find((r) => r.role === effectiveRole);
-  return new Set(row?.hidden_items ?? []);
+  // Memoized so consumers can use the Set as a dependency — a fresh Set
+  // every render made downstream useMemos (HouseHome's NavContext) inert.
+  return useMemo(() => {
+    // Tenant super-admin bypass. If we haven't resolved the role yet,
+    // do NOT filter — otherwise the sidebar flashes empty during the
+    // first render.
+    if (!effectiveRole || effectiveRole === 'super_admin') return new Set<string>();
+    const row = rows.find((r) => r.role === effectiveRole);
+    return new Set(row?.hidden_items ?? []);
+  }, [effectiveRole, rows]);
 }
