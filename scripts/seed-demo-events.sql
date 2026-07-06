@@ -14,11 +14,14 @@ BEGIN
   SELECT id INTO v_tenant FROM public.gw_tenants WHERE slug = 'demo';
   IF v_tenant IS NULL THEN RAISE EXCEPTION 'demo tenant not found'; END IF;
 
+  -- Scope by tenant: this runs as superuser, so the JWT-derived tenant_id
+  -- default is NULL — an untenanted calendar would be invisible to the demo
+  -- tenant under the RESTRICTIVE RLS policy.
   SELECT id INTO v_calendar FROM public.gw_calendars
-   WHERE name = 'Harmony Hall Season' LIMIT 1;
+   WHERE tenant_id = v_tenant AND name = 'Harmony Hall Season' LIMIT 1;
   IF v_calendar IS NULL THEN
-    INSERT INTO public.gw_calendars (name, description, color, is_default, is_visible)
-    VALUES ('Harmony Hall Season', 'Concert season for the Harmony Hall Choir', '#2563eb', true, true)
+    INSERT INTO public.gw_calendars (tenant_id, name, description, color, is_default, is_visible)
+    VALUES (v_tenant, 'Harmony Hall Season', 'Concert season for the Harmony Hall Choir', '#2563eb', true, true)
     RETURNING id INTO v_calendar;
   END IF;
 
