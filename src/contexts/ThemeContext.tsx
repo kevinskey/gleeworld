@@ -14,32 +14,44 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 /**
- * Hardcoded GleeWorld design tokens (HSL triplets).
- * Applied once on mount — no switching, no DB calls, no local storage.
+ * GleeWorld design tokens are owned by `:root` in src/index.css (the
+ * iOS 26 House/Stage system) — that stylesheet is the single source of
+ * truth for these values.
+ *
+ * This used to be a `GW_TOKENS` map of hardcoded HSL triplets applied via
+ * `element.style.setProperty` on every mount. Inline styles set on
+ * `documentElement` always win over stylesheet rules, regardless of CSS
+ * specificity or source order — so that map silently froze the app on
+ * whatever colors it listed (stale oatmeal/cyan values) no matter what
+ * `:root` in index.css said. When index.css was migrated to the iOS 26
+ * palette, this component kept clobbering it back to the old look.
+ *
+ * The map never encoded a "reset to tenant-neutral defaults" mechanism —
+ * TenantThemeRoot.tsx owns tenant color overrides (--site-accent,
+ * --primary/--accent/--ring) independently and never depended on this
+ * list. So instead of restating index.css's values here in a second
+ * place (guaranteed to drift again), we just make sure nothing is left
+ * inline: `removeProperty` for each token guards against any stray
+ * inline value (e.g. leftover from HMR) and lets the stylesheet cascade
+ * take over, same effect as never having set them.
  */
-// Unified light surface system (2026-06-09):
-//   - `--background` is cream (the actual page bg via UniversalLayout)
-//   - `--card` is WHITE with dark text — the old dark-navy card token
-//     made every component that paired `bg-card` with page-level dark
-//     text (text-muted-foreground etc.) unreadable. One light surface
-//     family means any text token reads on any surface.
-const GW_TOKENS = {
-  '--primary':                '203 85% 63%',
-  '--primary-foreground':     '219 78% 15%',
-  '--secondary':              '219 78% 31%',
-  '--secondary-foreground':   '0 0% 100%',
-  '--accent':                 '203 85% 63%',
-  '--accent-foreground':      '219 78% 15%',
-  '--background':             '40 10% 96%',     // cream page bg (matches UniversalLayout)
-  '--foreground':             '222 47% 11%',    // slate-900 — dark text for cream
-  '--card':                   '0 0% 100%',      // white card
-  '--card-foreground':        '222 47% 11%',    // dark text on white cards
-  '--muted':                  '40 8% 92%',      // very light warm gray
-  '--muted-foreground':       '215 25% 27%',    // slate-700 — readable on cream/white
-  '--border':                 '220 13% 85%',    // light cool gray border
-  '--destructive':            '0 84% 60%',
-  '--destructive-foreground': '0 0% 100%',
-} as const;
+const RESET_TOKENS = [
+  '--primary',
+  '--primary-foreground',
+  '--secondary',
+  '--secondary-foreground',
+  '--accent',
+  '--accent-foreground',
+  '--background',
+  '--foreground',
+  '--card',
+  '--card-foreground',
+  '--muted',
+  '--muted-foreground',
+  '--border',
+  '--destructive',
+  '--destructive-foreground',
+] as const;
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   // Apply tokens once on mount
@@ -55,8 +67,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.classList.remove('light');
     root.setAttribute('data-theme', 'glee-world');
 
-    for (const [prop, value] of Object.entries(GW_TOKENS)) {
-      root.style.setProperty(prop, value);
+    for (const prop of RESET_TOKENS) {
+      root.style.removeProperty(prop);
     }
 
     root.style.setProperty('--font-family', "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif");

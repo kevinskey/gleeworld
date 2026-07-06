@@ -1240,20 +1240,20 @@ html[data-theme="brand-blue"] .bg-primary {
   }
 
   .depth-subtle {
-    background: var(--gradient-card);
+    background: hsl(var(--card));
     box-shadow: var(--shadow-depth-1);
     border: 1px solid rgba(0, 0, 0, 0.06);
   }
 
   .depth-elevated {
-    background: var(--gradient-card);
+    background: hsl(var(--card));
     box-shadow: var(--shadow-depth-2);
     border: 1px solid rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
   }
 
   .depth-floating {
-    background: var(--gradient-card);
+    background: hsl(var(--card));
     box-shadow: var(--shadow-depth-3);
     border: 1px solid rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
