@@ -96,8 +96,14 @@ export const DayViewPanel = ({
       // google_event_id anymore (same order as CommandCenterEventCard).
       const { pushEventToGoogle } = await import('@/hooks/useGoogleConnection');
       await pushEventToGoogle(selectedEvent.id, 'delete');
-      const { error } = await supabase.from('gw_events').delete().eq('id', selectedEvent.id);
+      const { data: deleted, error } = await supabase
+        .from('gw_events').delete().eq('id', selectedEvent.id).select('id');
       if (error) throw error;
+      // RLS-blocked deletes return success with zero rows — surface that
+      // honestly instead of pretending it worked.
+      if (!deleted || deleted.length === 0) {
+        throw new Error('Not permitted to delete this event');
+      }
       toast.success('Event deleted');
       setSelectedEvent(null);
       onEventDeleted?.();
