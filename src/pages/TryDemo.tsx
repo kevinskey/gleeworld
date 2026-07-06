@@ -5,7 +5,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { startDemoSession, DEMO_HOME } from '@/lib/demoSession';
+import { startDemoSession, DEMO_HOME, claimsToDemoRole, decodeJwtClaims } from '@/lib/demoSession';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function TryDemo() {
   const started = useRef(false);
@@ -16,6 +17,16 @@ export default function TryDemo() {
     started.current = true;
     (async () => {
       try {
+        // Don't clobber a real signed-in session (e.g. the demo-admin curator):
+        // only prospects (no session, or an existing demo-viewer session) get a
+        // fresh demo login.
+        const { data } = await supabase.auth.getSession();
+        const existing = data.session?.access_token;
+        if (existing && !claimsToDemoRole(decodeJwtClaims(existing))) {
+          window.location.replace(DEMO_HOME.director);
+          return;
+        }
+
         await startDemoSession('director');
         sessionStorage.setItem('gw-demo-welcome-pending', '1');
         window.location.replace(DEMO_HOME.director);
