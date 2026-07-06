@@ -13,9 +13,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { startDemoSession } from '@/lib/demoSession';
 
-const DEMO_EMAIL = 'demo-admin@gleeworld.org';
-const DEMO_PASSWORD = 'GleeDemo2026';
 const TOUR_TARGET = '/dashboard?tour=admin';
 
 type Status = 'idle' | 'signing-in' | 'awaiting-session' | 'redirecting' | 'error';
@@ -51,25 +50,24 @@ export default function TourSandbox() {
     setStatus('signing-in');
 
     (async () => {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: DEMO_EMAIL,
-        password: DEMO_PASSWORD,
-      });
-      if (cancelled) return;
-      if (authError) {
-        setError(authError.message);
+      try {
+        // Server-minted read-only demo session — credentials never ship in the bundle.
+        await startDemoSession('director');
+        if (cancelled) return;
+        // Belt-and-suspenders: also drop a redirectAfterAuth so any
+        // ProtectedRoute intercept routes back here.
+        try {
+          sessionStorage.setItem('redirectAfterAuth', TOUR_TARGET);
+        } catch {
+          /* private mode: ignore */
+        }
+        setStatus('awaiting-session');
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Failed to start demo session');
         setStatus('error');
         signInTriggeredRef.current = false; // allow retry
-        return;
       }
-      // Belt-and-suspenders: also drop a redirectAfterAuth so any
-      // ProtectedRoute intercept routes back here.
-      try {
-        sessionStorage.setItem('redirectAfterAuth', TOUR_TARGET);
-      } catch {
-        /* private mode: ignore */
-      }
-      setStatus('awaiting-session');
     })();
 
     return () => {
