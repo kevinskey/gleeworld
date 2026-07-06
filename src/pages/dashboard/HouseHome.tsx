@@ -16,6 +16,8 @@ import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations'
 import { toModuleFlags } from '@/lib/navigation/moduleFlags';
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
+import { useHomeTileLayout } from '@/hooks/useHomeTileLayout';
+import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
 
 interface FeedRow {
   section: string; subtype: string | null; id: string; title: string;
@@ -121,9 +123,10 @@ export default function HouseHome() {
   // a moment later (mirrors the MobileBottomNav loading guard).
   const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
   const flags: ModuleFlags = toModuleFlags(modules);
+  const { layout, save: saveTileLayout } = useHomeTileLayout();
   const { primary, overflow } = modulesLoading
     ? { primary: [], overflow: [] }
-    : getAppTiles(isFaculty ? 'faculty' : 'student', flags);
+    : getAppTiles(isFaculty ? 'faculty' : 'student', flags, layout);
 
   return (
     <DashboardShell>
@@ -214,41 +217,9 @@ export default function HouseHome() {
           )}
         </div>
 
-        {/* Keycap app grid */}
-        <div className="grid grid-cols-4 gap-2">
-          {primary.map((t) => {
-            const Icon = t.icon;
-            return (
-              <Link key={t.key} to={t.to}
-                className="flex flex-col items-center gap-1 text-xs text-muted-foreground group min-h-[44px]">
-                <span className="w-full aspect-square bg-card border border-border shadow-[0_2px_0_hsl(var(--border))] flex items-center justify-center transition-transform motion-reduce:transition-none group-active:translate-y-px group-active:shadow-none">
-                  <Icon className="w-5 h-5 text-foreground" />
-                </span>
-                {t.label}
-              </Link>
-            );
-          })}
-        </div>
-        {overflow.length > 0 && (
-          <details className="text-sm">
-            <summary className="text-muted-foreground cursor-pointer py-2 min-h-[44px] flex items-center">
-              More ({overflow.length})
-            </summary>
-            <div className="grid grid-cols-4 gap-2 pt-2">
-              {overflow.map((t) => {
-                const Icon = t.icon;
-                return (
-                  <Link key={t.key} to={t.to}
-                    className="flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px]">
-                    <span className="w-full aspect-square bg-card border border-border flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-foreground" />
-                    </span>
-                    {t.label}
-                  </Link>
-                );
-              })}
-            </div>
-          </details>
+        {/* Keycap app grid (editable — see HomeTileGrid) */}
+        {!modulesLoading && (
+          <HomeTileGrid primary={primary} overflow={overflow} onSave={saveTileLayout} />
         )}
       </div>
     </DashboardShell>
