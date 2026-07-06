@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Minus, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Destination } from '@/lib/navigation/appDestinations';
+import { NAV_SECTION_LABELS, type NavSectionKey } from '@/lib/navigation/navCatalog';
 
 interface HomeTileGridProps {
   primary: Destination[];
@@ -29,6 +30,12 @@ interface HomeTileGridProps {
 
 const LONG_PRESS_MS = 500;
 const LONG_PRESS_SLOP_PX = 10;
+
+// Sections rendered as their own "More" group, in display order. A tile
+// whose section isn't in this list (or has no section at all) falls
+// through to the catch-all group below instead of vanishing — see the
+// draftOverflow filter in the edit-mode More renderer.
+const MORE_SECTIONS: NavSectionKey[] = ['music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
 
 function KeycapFace({ tile, editing }: { tile: Destination; editing: boolean }) {
   const Icon = tile.icon;
@@ -62,6 +69,28 @@ function SortableTile({ tile, index, onRemove }: {
       <span aria-hidden="true"
         className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-background border border-border flex items-center justify-center pointer-events-none">
         <Minus className="w-4 h-4 text-destructive" />
+      </span>
+    </div>
+  );
+}
+
+// A single More-group tile in edit mode: jiggling keycap + Plus badge,
+// tapping either adds the tile back to the primary grid. Shared by the
+// per-section groups and the unlisted-section catch-all group so the two
+// never drift out of sync.
+function AddTile({ tile, index, onAdd }: { tile: Destination; index: number; onAdd: (key: string) => void }) {
+  return (
+    <div className="relative">
+      <button type="button"
+        onClick={() => onAdd(tile.key)}
+        aria-label={`Add ${tile.label} to grid`}
+        className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
+        style={{ animationDelay: `${(index % 4) * 75}ms` }}>
+        <KeycapFace tile={tile} editing />
+      </button>
+      <span aria-hidden="true"
+        className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-background border border-border flex items-center justify-center pointer-events-none">
+        <Plus className="w-4 h-4 text-primary" />
       </span>
     </div>
   );
@@ -179,23 +208,35 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
             {draftOverflow.length === 0 ? (
               <p className="text-sm text-muted-foreground">Everything is on your grid.</p>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {draftOverflow.map((t, i) => (
-                  <div key={t.key} className="relative">
-                    <button type="button"
-                      onClick={() => setDraft((d) => (d && !d.includes(t.key) ? [...d, t.key] : d))}
-                      aria-label={`Add ${t.label} to grid`}
-                      className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
-                      style={{ animationDelay: `${(i % 4) * 75}ms` }}>
-                      <KeycapFace tile={t} editing />
-                    </button>
-                    <span aria-hidden="true"
-                      className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-background border border-border flex items-center justify-center pointer-events-none">
-                      <Plus className="w-4 h-4 text-primary" />
-                    </span>
+              <>
+                {MORE_SECTIONS
+                  .map((s) => ({ s, tiles: draftOverflow.filter((t) => t.section === s) }))
+                  .filter(({ tiles }) => tiles.length > 0)
+                  .map(({ s, tiles }) => (
+                    <div key={s}>
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground/70 mt-3 mb-2">
+                        {NAV_SECTION_LABELS[s]}
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {tiles.map((t, i) => (
+                          <AddTile key={t.key} tile={t} index={i}
+                            onAdd={(key) => setDraft((d) => (d && !d.includes(key) ? [...d, key] : d))} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                {/* Catch-all: a tile whose section is unset OR not one of
+                    MORE_SECTIONS (e.g. a future grid-surface entry like
+                    'today') still lands here instead of being unpinnable. */}
+                {draftOverflow.filter((t) => !t.section || !MORE_SECTIONS.includes(t.section)).length > 0 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {draftOverflow.filter((t) => !t.section || !MORE_SECTIONS.includes(t.section)).map((t, i) => (
+                      <AddTile key={t.key} tile={t} index={i}
+                        onAdd={(key) => setDraft((d) => (d && !d.includes(key) ? [...d, key] : d))} />
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </DndContext>
         </div>
