@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_TEAM_ID.org.gleeworld.app"],
+        "components": [
+          { "/": "*", "comment": "Every path on gleeworld.org opens in the app when installed." }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["REPLACE_WITH_TEAM_ID.org.gleeworld.app"]
+  }
+}
