@@ -46,6 +46,7 @@ export interface CatalogEntry {
   to: string;
   label: string;            // sidebar label
   gridLabel?: string;       // shorter grid word when it differs (e.g. 'Programs')
+  gridIcon?: LucideIcon;    // grid keeps its shipped icon where the sidebar differs
   icon: LucideIcon;
   section: NavSectionKey;
   tone: string;             // sidebar icon-tile classes

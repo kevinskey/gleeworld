@@ -1,0 +1,86 @@
+import { describe, it, expect } from 'vitest';
+import { NAV_CATALOG, resolveNav, entrySurfaces, type NavContext } from '../navCatalog';
+
+const openCtx = (over: Partial<NavContext> = {}): NavContext => ({
+  hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true,
+  canLibrarian: true, hiddenRoutes: new Set(), ...over,
+});
+
+describe('NAV_CATALOG integrity', () => {
+  it('keys are unique', () => {
+    const keys = NAV_CATALOG.map((e) => e.key);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+  it('frozen grid keys keep their exact routes and grid labels', () => {
+    const byKey = new Map(NAV_CATALOG.map((e) => [e.key, e]));
+    const frozen: Array<[string, string, string]> = [
+      ['music', '/dashboard/viewer', 'Music'],
+      ['tracks', '/dashboard/part-tracks', 'Tracks'],
+      ['studio', '/studio', 'Studio'],
+      ['sight', '/dashboard/sight-reading', 'Sight Reading'],
+      ['attendance', '/attendance', 'Attendance'],
+      ['academy', '/dashboard/academy', 'Academy'],
+      ['tickets', '/box-office', 'Tickets'],
+      ['planner', '/dashboard/concert-planner', 'Programs'],
+      ['finance', '/dashboard/finance', 'Finance'],
+      ['merch', '/store', 'Merch'],
+    ];
+    for (const [key, to, gridLabel] of frozen) {
+      const e = byKey.get(key);
+      expect(e, key).toBeDefined();
+      expect(e!.to).toBe(to);
+      expect(e!.gridLabel ?? e!.label).toBe(gridLabel);
+    }
+  });
+});
+
+describe('resolveNav gates', () => {
+  it('open context resolves every entry', () => {
+    expect(resolveNav(openCtx()).length).toBe(NAV_CATALOG.length);
+  });
+  it('module gate drops entries whose module is off', () => {
+    const out = resolveNav(openCtx({ hasModule: (k) => k !== 'pr_hub' }));
+    expect(out.find((e) => e.key === 'pr-hub')).toBeUndefined();
+    expect(out.find((e) => e.key === 'feeds')).toBeDefined();
+  });
+  it('moduleAny keeps Store when either merch or store is on', () => {
+    const only = (on: string) => openCtx({ hasModule: (k) => k === on });
+    expect(resolveNav(only('merch')).find((e) => e.key === 'shop')).toBeDefined();
+    expect(resolveNav(only('store')).find((e) => e.key === 'shop')).toBeDefined();
+    expect(resolveNav(openCtx({ hasModule: () => false })).find((e) => e.key === 'shop')).toBeUndefined();
+  });
+  it('adminOnly entries hidden from non-admins', () => {
+    const out = resolveNav(openCtx({ isTenantAdmin: false }));
+    for (const key of ['practice', 'fan-page', 'box-office', 'site-setup']) {
+      expect(out.find((e) => e.key === key), key).toBeUndefined();
+    }
+  });
+  it('platformAdminOnly hides Tenants from tenant admins', () => {
+    expect(resolveNav(openCtx({ isPlatformAdmin: false })).find((e) => e.key === 'tenants')).toBeUndefined();
+  });
+  it('librarianOnly requires both module and permission', () => {
+    expect(resolveNav(openCtx({ canLibrarian: false })).find((e) => e.key === 'librarian')).toBeUndefined();
+    expect(resolveNav(openCtx({ hasModule: (k) => k !== 'librarian' })).find((e) => e.key === 'librarian')).toBeUndefined();
+  });
+  it('hiddenRoutes filters by route', () => {
+    const out = resolveNav(openCtx({ hiddenRoutes: new Set(['/dashboard/pr-hub']) }));
+    expect(out.find((e) => e.to === '/dashboard/pr-hub')).toBeUndefined();
+  });
+  it('flagless core (Music Library, People, Video) survives an all-off context', () => {
+    const out = resolveNav({ hasModule: () => false, isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, hiddenRoutes: new Set() });
+    for (const key of ['music-library', 'people', 'video', 'music-tools', 'office-hours', 'analytics', 'settings', 'attendance', 'academy']) {
+      expect(out.find((e) => e.key === key), key).toBeDefined();
+    }
+  });
+});
+
+describe('entrySurfaces', () => {
+  it('attendance is grid-only; Command Center/Messenger/Calendar are sidebar-only', () => {
+    const byKey = new Map(NAV_CATALOG.map((e) => [e.key, e]));
+    expect(entrySurfaces(byKey.get('attendance')!)).toEqual(['grid']);
+    for (const key of ['home', 'messages', 'calendar']) {
+      expect(entrySurfaces(byKey.get(key)!)).toEqual(['sidebar']);
+    }
+    expect(entrySurfaces(byKey.get('pr-hub')!)).toEqual(['sidebar', 'grid']);
+  });
+});
