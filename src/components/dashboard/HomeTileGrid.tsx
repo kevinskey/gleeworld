@@ -109,11 +109,11 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
 
   // Esc cancels the edit session and reverts.
   useEffect(() => {
-    if (!editing) return;
+    if (!editing || saving) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDraft(null); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [editing]);
+  }, [editing, saving]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const onDragEnd = (e: DragEndEvent) => {
@@ -144,7 +144,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
         <span className="text-xs uppercase tracking-widest text-muted-foreground">Apps</span>
         {editing ? (
           <span className="flex items-center gap-3 text-sm">
-            <button type="button" onClick={() => setDraft(null)} className="text-muted-foreground min-h-[44px]">
+            <button type="button" onClick={() => setDraft(null)} disabled={saving} className="text-muted-foreground min-h-[44px]">
               Cancel
             </button>
             <button type="button" onClick={done} disabled={saving} className="font-semibold text-primary min-h-[44px]">
@@ -219,7 +219,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
             </div>
           )}
           {overflow.length > 0 && (
-            <details className="text-sm mt-2" open={primary.length === 0 || undefined}>
+            <details className="text-sm mt-4" open={primary.length === 0 || undefined}>
               <summary className="text-muted-foreground cursor-pointer py-2 min-h-[44px] flex items-center">
                 More ({overflow.length})
               </summary>
