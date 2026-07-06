@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
+import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations';
@@ -27,7 +28,7 @@ interface FeedRow {
 }
 
 export default function HouseHome() {
-  const { profile } = useUserRole();
+  const { profile, canEditMusicLibrary } = useUserRole();
   const isFaculty = isFacultyProfile(profile);
   const firstName = (profile?.full_name || 'there').split(' ')[0];
 
@@ -124,14 +125,18 @@ export default function HouseHome() {
   // a moment later (mirrors the MobileBottomNav loading guard).
   const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
   const flags: ModuleFlags = toModuleFlags(modules);
-  // TEMPORARY most-restrictive ctx: Task 4 wires real admin/librarian/hidden
-  // state through. Until then this only affects overflow (never default
-  // primary), since default primary keys are all flagless or module-gated.
-  const nav: NavContext = {
-    hasModule: (k) => toModuleSet(modules).has(k),
-    isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false,
-    hiddenRoutes: new Set(),
-  };
+  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
+  const hiddenNav = useTenantNavPrefs();
+  const moduleSet = useMemo(() => toModuleSet(modules), [modules]);
+  const nav: NavContext = useMemo(() => ({
+    hasModule: (k) => moduleSet.has(k),
+    isTenantAdmin: !!profile?.is_admin || !!profile?.is_super_admin,
+    isPlatformAdmin: !!profile?.is_super_admin && tenantSlug === 'main',
+    canLibrarian: typeof canEditMusicLibrary === 'function'
+      ? canEditMusicLibrary()
+      : !!(profile?.is_admin || profile?.is_super_admin),
+    hiddenRoutes: hiddenNav,
+  }), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav]);
   const { layout, layoutLoading, save: saveTileLayout } = useHomeTileLayout();
   const { primary, overflow } = modulesLoading || layoutLoading
     ? { primary: [], overflow: [] }

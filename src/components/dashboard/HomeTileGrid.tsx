@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Minus, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Destination } from '@/lib/navigation/appDestinations';
+import { NAV_SECTION_LABELS, type NavSectionKey } from '@/lib/navigation/navCatalog';
 
 interface HomeTileGridProps {
   primary: Destination[];
@@ -179,23 +180,54 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
             {draftOverflow.length === 0 ? (
               <p className="text-sm text-muted-foreground">Everything is on your grid.</p>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {draftOverflow.map((t, i) => (
-                  <div key={t.key} className="relative">
-                    <button type="button"
-                      onClick={() => setDraft((d) => (d && !d.includes(t.key) ? [...d, t.key] : d))}
-                      aria-label={`Add ${t.label} to grid`}
-                      className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
-                      style={{ animationDelay: `${(i % 4) * 75}ms` }}>
-                      <KeycapFace tile={t} editing />
-                    </button>
-                    <span aria-hidden="true"
-                      className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-background border border-border flex items-center justify-center pointer-events-none">
-                      <Plus className="w-4 h-4 text-primary" />
-                    </span>
+              <>
+                {(['music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'] as NavSectionKey[])
+                  .map((s) => ({ s, tiles: draftOverflow.filter((t) => t.section === s) }))
+                  .filter(({ tiles }) => tiles.length > 0)
+                  .map(({ s, tiles }) => (
+                    <div key={s}>
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground/70 mt-3 mb-2">
+                        {NAV_SECTION_LABELS[s]}
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {tiles.map((t, i) => (
+                          <div key={t.key} className="relative">
+                            <button type="button"
+                              onClick={() => setDraft((d) => (d && !d.includes(t.key) ? [...d, t.key] : d))}
+                              aria-label={`Add ${t.label} to grid`}
+                              className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
+                              style={{ animationDelay: `${(i % 4) * 75}ms` }}>
+                              <KeycapFace tile={t} editing />
+                            </button>
+                            <span aria-hidden="true"
+                              className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-background border border-border flex items-center justify-center pointer-events-none">
+                              <Plus className="w-4 h-4 text-primary" />
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                {draftOverflow.filter((t) => !t.section).length > 0 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {draftOverflow.filter((t) => !t.section).map((t, i) => (
+                      <div key={t.key} className="relative">
+                        <button type="button"
+                          onClick={() => setDraft((d) => (d && !d.includes(t.key) ? [...d, t.key] : d))}
+                          aria-label={`Add ${t.label} to grid`}
+                          className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
+                          style={{ animationDelay: `${(i % 4) * 75}ms` }}>
+                          <KeycapFace tile={t} editing />
+                        </button>
+                        <span aria-hidden="true"
+                          className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-background border border-border flex items-center justify-center pointer-events-none">
+                          <Plus className="w-4 h-4 text-primary" />
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </DndContext>
         </div>
