@@ -2,20 +2,19 @@
 //
 // Flow when ?key=preview is present:
 //   1. If a session already exists, redirect to /dashboard?tour=admin.
-//   2. Otherwise, sign in as the demo viewer using the public popup creds.
+//   2. Otherwise, mint a server-side, read-only demo session (no credentials
+//      ship in the bundle — see startDemoSession()/demo-login edge function).
 //   3. Wait for AuthContext to actually report `user` populated, then
 //      navigate. Doing this in two passes avoids a brief flash to /auth
 //      caused by ProtectedRoute seeing `user === null` between the
-//      supabase signin resolving and the auth state listener firing.
+//      signin resolving and the auth state listener firing.
 
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { startDemoSession } from '@/lib/demoSession';
 
-const DEMO_EMAIL = 'demo-admin@gleeworld.org';
-const DEMO_PASSWORD = 'GleeDemo2026';
 const TOUR_TARGET = '/dashboard?tour=admin';
 
 type Status = 'idle' | 'signing-in' | 'awaiting-session' | 'redirecting' | 'error';
@@ -51,25 +50,24 @@ export default function TourSandbox() {
     setStatus('signing-in');
 
     (async () => {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: DEMO_EMAIL,
-        password: DEMO_PASSWORD,
-      });
-      if (cancelled) return;
-      if (authError) {
-        setError(authError.message);
+      try {
+        // Server-minted read-only demo session — credentials never ship in the bundle.
+        await startDemoSession('director');
+        if (cancelled) return;
+        // Belt-and-suspenders: also drop a redirectAfterAuth so any
+        // ProtectedRoute intercept routes back here.
+        try {
+          sessionStorage.setItem('redirectAfterAuth', TOUR_TARGET);
+        } catch {
+          /* private mode: ignore */
+        }
+        setStatus('awaiting-session');
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Failed to start demo session');
         setStatus('error');
         signInTriggeredRef.current = false; // allow retry
-        return;
       }
-      // Belt-and-suspenders: also drop a redirectAfterAuth so any
-      // ProtectedRoute intercept routes back here.
-      try {
-        sessionStorage.setItem('redirectAfterAuth', TOUR_TARGET);
-      } catch {
-        /* private mode: ignore */
-      }
-      setStatus('awaiting-session');
     })();
 
     return () => {
@@ -113,7 +111,7 @@ export default function TourSandbox() {
                 Try again
               </button>
               <a
-                href="/auth?email=demo-admin@gleeworld.org&returnTo=/dashboard?tour=admin"
+                href="/auth?returnTo=/dashboard?tour=admin"
                 className="inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-semibold border border-white/30"
               >
                 Sign in manually

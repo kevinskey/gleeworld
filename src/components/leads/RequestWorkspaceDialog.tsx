@@ -1,6 +1,7 @@
-// "Become a tenant" intake — concierge form opened from inside the
-// demo. The submission funnels to Kevin via Resend + Twilio + a row in
-// gw_tenant_leads. There's no automation; Kevin runs the queue.
+// "Request your workspace" — the single conversion CTA for prospects,
+// opened from the demo bar, the dashboard upsell, and every marketing
+// "Get started" button. Submissions land in gw_tenant_leads via the
+// tenant-intake edge function; Kevin provisions manually.
 //
 // Mirrors the marketing InquiryDialog visually so the demo CTA reads as
 // part of the same brand world.
@@ -10,7 +11,7 @@ import { createPortal } from "react-dom";
 import { ArrowRight, CheckCircle2, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface BecomeTenantDialogProps {
+interface RequestWorkspaceDialogProps {
   open: boolean;
   onClose: () => void;
 }
@@ -37,7 +38,7 @@ const MODULE_OPTIONS: { id: string; label: string }[] = [
   { id: "google-calendar", label: "Google Calendar sync" },
 ];
 
-export function BecomeTenantDialog({ open, onClose }: BecomeTenantDialogProps) {
+export function RequestWorkspaceDialog({ open, onClose }: RequestWorkspaceDialogProps) {
   const [orgName, setOrgName] = useState("");
   const [contactName, setContactName] = useState("");
   const [role, setRole] = useState("");
@@ -148,12 +149,12 @@ export function BecomeTenantDialog({ open, onClose }: BecomeTenantDialogProps) {
 
         <div className="px-7 sm:px-10 pt-10 pb-6 text-white">
           <h2 className="text-2xl sm:text-3xl font-bold leading-tight" style={{ letterSpacing: "-0.02em" }}>
-            {sent ? "You're on the list." : "Bring GleeWorld to your program."}
+            {sent ? "You're on the list." : "Request your GleeWorld workspace."}
           </h2>
           <p className="mt-2 text-white/85 text-sm sm:text-base">
             {sent
-              ? "Kevin will reach out personally within one business day to walk you through pricing and features."
-              : "Tell us a bit about your group. Kevin runs every onboarding personally and will be in touch within one business day."}
+              ? "Kevin will reach out personally within one business day — most workspaces are live within two."
+              : "Tell us a bit about your program. Every workspace is set up personally, and most are live within two business days."}
           </p>
         </div>
 
@@ -265,7 +266,7 @@ export function BecomeTenantDialog({ open, onClose }: BecomeTenantDialogProps) {
               </button>
 
               <p className="text-xs text-slate-500 text-center">
-                No automated provisioning — every onboarding is hands-on with Kevin.
+                Every setup is hands-on — no bots, no self-serve maze.
               </p>
             </form>
           )}

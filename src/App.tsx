@@ -20,6 +20,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { ServiceWorkerUpdateNotifier } from "@/components/pwa/ServiceWorkerUpdateNotifier";
+import { DemoBar } from "@/components/demo/DemoBar";
+import { installDemoWriteInterceptor } from "@/lib/demoSession";
+
+// Global fallback that converts read-only-demo RLS rejections into a
+// friendly DemoBar toast. No-ops for non-demo sessions (event has no listener).
+if (typeof window !== 'undefined') installDemoWriteInterceptor();
 
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
@@ -39,6 +45,7 @@ import { ModuleRouteRedirect } from "@/components/routing/module-route-redirect"
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { NativeTenantGate } from "@/components/native/NativeTenantGate";
 import { UsageTracker } from "@/components/tracking/UsageTracker";
+const TryDemo = lazy(() => import("./pages/TryDemo"));
 const ModulesSettings = lazy(() => import("./pages/admin/ModulesSettings"));
 const LandingEditor = lazy(() => import("./pages/admin/LandingEditor"));
 const AIRehearsalAssistant = lazy(() => import("./pages/admin/AIRehearsalAssistant"));
@@ -499,6 +506,7 @@ const App = () => {
                   <AuthenticatedGlobals />
                   <DesignSystemEnforcer />
                   <UsageTracker>
+                  <DemoBar />
                   <Suspense
                     fallback={
                       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -561,6 +569,8 @@ const App = () => {
               {/* Sandbox: animated cursor + spotlight tour over a mock Command Center.
                   Gated by ?key=preview inside the component itself. */}
               <Route path="/tour-sandbox" element={<TourSandbox />} />
+              {/* One-click prospect demo entry — mints a read-only Director session. */}
+              <Route path="/try" element={<TryDemo />} />
               <Route 
                 path="/auth/mus240" 
                 element={

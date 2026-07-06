@@ -63,7 +63,8 @@ import {
   Sheet, SheetContent, SheetTrigger, SheetClose,
 } from '@/components/ui/sheet';
 import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
-import { BecomeTenantDialog } from '@/components/onboarding/BecomeTenantDialog';
+import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
+import { isDemoTenant } from '@/lib/demoTenant';
 import {
   resolveNav, entrySurfaces, NAV_SECTION_LABELS,
   type CatalogEntry, type NavContext, type NavSectionKey,
@@ -80,16 +81,6 @@ function buildNavSections(ctx: NavContext): Array<{ label: string; items: Catalo
   return SECTION_ORDER
     .map((s) => ({ label: NAV_SECTION_LABELS[s], items: resolved.filter((e) => e.section === s) }))
     .filter((s) => s.items.length > 0);
-}
-
-/** True when the current subdomain is the public demo. The platform owner
- * uses this to gate the "Become a tenant" CTA — paying tenants shouldn't
- * see an upgrade pitch on their own site. */
-function isDemoTenant(): boolean {
-  if (typeof window === 'undefined') return false;
-  const slug = (window as unknown as { __TENANT_CONFIG__?: { tenant?: string } })
-    .__TENANT_CONFIG__?.tenant;
-  return slug === 'demo';
 }
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
@@ -623,18 +614,18 @@ function TopBar() {
       {/* Spacer pushes the cluster to the right */}
       <div className="flex-1" />
 
-      {/* Demo-only: "Get your own GleeWorld" CTA pill. Hidden on paying
-       * tenants. Opens the concierge intake form (BecomeTenantDialog).
+      {/* Demo-only: "Request your workspace" CTA pill. Hidden on paying
+       * tenants. Opens the concierge intake form (RequestWorkspaceDialog).
        * Uniform sizing across all breakpoints — earlier sm:h-10 + label
        * reveal made the pill jump sizes and the text wrap on narrow
        * widths. `!text-white` overrides the global `button { color }`
        * reset from index.css that otherwise rendered the label black.
-       * `whitespace-nowrap` keeps "Get your own" on one line. */}
+       * `whitespace-nowrap` keeps the label on one line. */}
       {showBecomeTenantCta && (
         <button
           onClick={() => setBecomeTenantOpen(true)}
-          title="Get your own GleeWorld site"
-          aria-label="Get your own GleeWorld site"
+          title="Request your workspace"
+          aria-label="Request your workspace"
           className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm shrink-0 hover:scale-[1.02] transition-transform"
           style={{
             background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)',
@@ -645,7 +636,7 @@ function TopBar() {
           }}
         >
           <Sparkles className="w-3.5 h-3.5" style={{ color: '#ffffff' }} />
-          <span className="hidden sm:inline" style={{ color: '#ffffff' }}>Get your own</span>
+          <span className="hidden sm:inline" style={{ color: '#ffffff' }}>Request your workspace</span>
         </button>
       )}
 
@@ -762,7 +753,7 @@ function TopBar() {
       {/* Concierge intake — only mounted/shown when triggered from the
        * topbar pill. Self-portals to body so no layout impact when closed. */}
       {showBecomeTenantCta && (
-        <BecomeTenantDialog
+        <RequestWorkspaceDialog
           open={becomeTenantOpen}
           onClose={() => setBecomeTenantOpen(false)}
         />

@@ -228,10 +228,6 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
 
 // ── Modules ─────────────────────────────────────────────────────────
 
-// Demo tenant gets sandbox toggles instead of paid Stripe checkouts —
-// matches the pinned id in gw-demo-toggle-addon edge function.
-const DEMO_TENANT_ID = 'ae2fbec2-7562-45f9-9028-c4df93b99cef';
-
 function ModulesTabPanel({ canManage }: { canManage: boolean }) {
   const queryClient = useQueryClient();
   // Invalidate every cache that depends on the tenant's active
@@ -257,14 +253,17 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
   });
   const active = new Set((tenantModules as Array<{ module_id: string }>).map((m) => m.module_id));
 
-  // Detect demo tenant from JWT — same source the edge function checks.
+  // Demo tenant (sandbox toggles) — but never for read-only demo viewers:
+  // their writes are RLS-blocked, so showing toggles would just fail.
   const { data: isDemo = false } = useQuery({
     queryKey: ['workspace-is-demo'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const claims = session?.user?.app_metadata as Record<string, unknown> | undefined;
-      const t = (claims?.tenant_id as string | undefined) ?? (session?.user?.user_metadata as any)?.tenant_id;
-      return t === DEMO_TENANT_ID;
+      const token = session?.access_token;
+      if (!token) return false;
+      const { decodeJwtClaims } = await import('@/lib/demoSession');
+      const claims = decodeJwtClaims(token);
+      return claims?.tenant_slug === 'demo' && claims?.demo_viewer !== true;
     },
   });
 

@@ -11,6 +11,8 @@ import gleeWorldLogoCircle from '@/assets/glee-world-logo-circle.png';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { getOrgName } from '@/lib/orgName';
 import { tenantAuthGradient, tenantButtonGradient } from '@/lib/tenantGradient';
+import { isDemoTenant } from '@/lib/demoTenant';
+import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
 
 export default function AuthPage() {
   const {
@@ -50,6 +52,9 @@ export default function AuthPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const onDemoTenant = isDemoTenant();
+  const demoError = new URLSearchParams(window.location.search).get('demoError') === '1';
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const getRedirectTarget = () => {
     // Check sessionStorage first for stored redirect path
     const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
@@ -78,6 +83,9 @@ export default function AuthPage() {
       });
     }
   }, [user, loading, navigate]);
+  useEffect(() => {
+    if (onDemoTenant) setIsLogin(true); // no public signup into the demo tenant
+  }, [onDemoTenant]);
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -339,6 +347,15 @@ export default function AuthPage() {
               )
             ) : (
               <>
+                {demoError && (
+                  <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      The one-click demo hit a snag. Try{' '}
+                      <a href="/try" className="font-semibold underline underline-offset-2">opening it again</a>
+                      {' '}— or reach us via "Request your workspace" below.
+                    </p>
+                  </div>
+                )}
                 <form onSubmit={handleAuth} className="space-y-4">
                   {!isLogin && (
                     <div>
@@ -437,16 +454,27 @@ export default function AuthPage() {
                 </form>
 
                 <div className="mt-5 text-center">
-                  <button
-                    type="button"
-                    onClick={() => setIsLogin(!isLogin)}
-                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
-                  >
-                    {isLogin ? "Don't have an account? " : 'Already have an account? '}
-                    <span className="underline underline-offset-2">
-                      {isLogin ? 'Create one' : 'Sign in'}
-                    </span>
-                  </button>
+                  {onDemoTenant ? (
+                    <button
+                      type="button"
+                      onClick={() => setWorkspaceOpen(true)}
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      Want GleeWorld for your program?{' '}
+                      <span className="underline underline-offset-2">Request your workspace</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsLogin(!isLogin)}
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                      <span className="underline underline-offset-2">
+                        {isLogin ? 'Create one' : 'Sign in'}
+                      </span>
+                    </button>
+                  )}
                 </div>
 
                 {!isLogin && (
@@ -470,6 +498,8 @@ export default function AuthPage() {
           </p>
         </div>
       </div>
+
+      <RequestWorkspaceDialog open={workspaceOpen} onClose={() => setWorkspaceOpen(false)} />
     </div>
   );
 }
