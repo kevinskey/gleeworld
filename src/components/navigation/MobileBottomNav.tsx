@@ -63,22 +63,25 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
   return createPortal(
     <nav
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border shadow-2xl",
+        // iOS floating pill: inset from edges, glass, capsule.
+        "fixed left-4 right-4 z-30 rounded-full",
+        "backdrop-blur-xl bg-card/75 supports-[not(backdrop-filter:blur(0))]:bg-card",
+        "shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-border/40",
         "pointer-events-auto",
         className
       )}
       style={{
-        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+        bottom: 'max(16px, env(safe-area-inset-bottom))',
         // Promote to its own GPU layer so iOS WKWebView doesn't repaint
         // it against the document scroll position during momentum
         // scrolling — that's the visual glitch the user saw as
         // "footer goes up on swipe". (Omitting `will-change: transform`
         // on purpose: keeping a permanent compositing hint here has
         // been seen to starve other WKWebView paints on long pages.)
-        transform: 'translateZ(0)',
+        transform: 'translateZ(0)', // keep the WKWebView compositing fix
       }}
     >
-      <div className="flex items-stretch w-full bg-background" style={{ minHeight: 56 }}>
+      <div className="flex items-stretch w-full" style={{ minHeight: 56 }}>
         {tabs.map((t) => {
           const active = t.to === '/dashboard'
             ? location.pathname === '/dashboard'
@@ -91,12 +94,12 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
               aria-label={t.label}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 min-h-[48px]',
-                active ? 'text-primary shadow-[inset_0_2px_0_hsl(var(--primary))] font-semibold' : 'text-muted-foreground',
+                'flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 min-h-[48px] first:rounded-l-full last:rounded-r-full',
+                active ? 'text-[var(--tint)] font-semibold' : 'text-muted-foreground',
               )}
             >
               <Icon className="h-5 w-5" />
-              <span className="text-xs leading-none">{t.label}</span>
+              <span className="text-2xs leading-none">{t.label}</span>
             </button>
           );
         })}

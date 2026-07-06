@@ -7,18 +7,16 @@ const Card = React.forwardRef<
     variant?: "default" | "glass" | "elevated" | "outline" | "glossy" | "muted"
   }
 >(({ className, variant = "default", ...props }, ref) => {
-  // Tactile-brutalism cards: 1px line + canvas-to-card contrast carries
-  // the elevation. No drop shadows on any variant; the "elevated"
-  // variant just bumps to a stronger border instead. `rounded-none` is
-  // explicit so a per-page `className` can opt back in via `rounded-sm`
-  // etc. without fighting the shadcn base.
+  // iOS cards: white on gray canvas, 12px continuous-feel corners,
+  // whisper shadow. No border on the default surface — contrast + radius
+  // carry the elevation (HIG grouped-inset pattern).
   const variants = {
-    default: "bg-card border border-border",
-    glass: "bg-card/80 backdrop-blur-md border border-border/50",
-    elevated: "bg-card border-2 border-border",
-    outline: "bg-transparent border-2 border-border hover:border-primary/50",
-    glossy: "bg-card border border-border",
-    muted: "bg-muted border border-border/50",
+    default: "bg-card shadow-card",
+    glass: "bg-card/75 backdrop-blur-xl border border-border/40",
+    elevated: "bg-card shadow-card",
+    outline: "bg-transparent border border-border",
+    glossy: "bg-card shadow-card",
+    muted: "bg-muted",
   }
 
   return (
@@ -26,7 +24,7 @@ const Card = React.forwardRef<
       ref={ref}
       data-component="card"
       className={cn(
-        "rounded-none text-card-foreground transition-colors duration-150 relative overflow-hidden",
+        "rounded-xl text-card-foreground transition-colors duration-150 relative overflow-hidden",
         variants[variant],
         className
       )}
@@ -44,7 +42,7 @@ const CardHeader = React.forwardRef<
     ref={ref}
     data-component="card-header"
     className={cn(
-      "flex flex-col space-y-1 p-3 sm:p-4",
+      "flex flex-col space-y-1 p-4",
       className
     )}
     {...props}
@@ -59,7 +57,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-sm sm:text-base font-semibold leading-tight tracking-tight text-card-foreground",
+      "font-headline text-card-foreground",
       className
     )}
     {...props}
@@ -73,7 +71,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground leading-relaxed", className)}
+    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ))
@@ -87,9 +85,9 @@ const CardContent = React.forwardRef<
     ref={ref}
     data-component="card-content"
     className={cn(
-      "p-3 sm:p-4 pt-0",
+      "p-4 pt-0",
       className
-    )} 
+    )}
     {...props} 
   />
 ))
@@ -103,7 +101,7 @@ const CardFooter = React.forwardRef<
     ref={ref}
     data-component="card-footer"
     className={cn(
-      "flex items-center p-3 sm:p-4 pt-0 gap-2",
+      "flex items-center p-4 pt-0 gap-2",
       className
     )}
     {...props}
