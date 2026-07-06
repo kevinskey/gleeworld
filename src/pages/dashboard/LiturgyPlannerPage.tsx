@@ -14,6 +14,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { getYouTubeId } from '@/lib/youtubeId';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -305,6 +306,8 @@ function LiturgyEditor({ massId }: { massId: string }) {
   // crashed with React error #310.
   const [readingsOpen, setReadingsOpen] = useState(false);
   const [pullingReadings, setPullingReadings] = useState(false);
+  // Which song slot's inline YouTube player is open (one at a time).
+  const [playingSlot, setPlayingSlot] = useState<string | null>(null);
   // Cached blocks from the last Universalis pull. Keyed for the inline
   // hover popovers so each citation field can show its full text without
   // re-hitting the upstream.
@@ -493,7 +496,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
           <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Order of Mass</h2>
 
           <SongSlot
-            label="Mass Setting Used"
+            label="Mass Setting Used" slotKey="setting" playing={playingSlot === 'setting'} onPlayToggle={setPlayingSlot}
             title={row.setting_title ?? ''}
             youtube={row.setting_youtube ?? ''}
             onTitle={(v) => update({ setting_title: v || null })}
@@ -503,7 +506,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
 
           <OrderItem n={1}>
             <SongSlot
-              label="Call to Worship / Prelude"
+              label="Call to Worship / Prelude" slotKey="prelude" playing={playingSlot === 'prelude'} onPlayToggle={setPlayingSlot}
               title={row.prelude_title ?? ''}
               youtube={row.prelude_youtube ?? ''}
               onTitle={(v) => update({ prelude_title: v || null })}
@@ -513,7 +516,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
 
           <OrderItem n={2}>
             <SongSlot
-              label="Opening Hymn / Song"
+              label="Opening Hymn / Song" slotKey="opening" playing={playingSlot === 'opening'} onPlayToggle={setPlayingSlot}
               title={row.opening_title ?? ''}
               youtube={row.opening_youtube ?? ''}
               onTitle={(v) => update({ opening_title: v || null })}
@@ -540,7 +543,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
               block={pickBlock(readingBlocks, ['responsorial psalm'])}
             />
             <SongSlot
-              label="Responsorial Psalm — sung setting"
+              label="Responsorial Psalm — sung setting" slotKey="psalm" playing={playingSlot === 'psalm'} onPlayToggle={setPlayingSlot}
               title={row.psalm_title ?? ''}
               youtube={row.psalm_youtube ?? ''}
               onTitle={(v) => update({ psalm_title: v || null })}
@@ -585,7 +588,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
 
           <OrderItem n={8}>
             <SongSlot
-              label="Preparation Song"
+              label="Preparation Song" slotKey="preparation" playing={playingSlot === 'preparation'} onPlayToggle={setPlayingSlot}
               title={row.preparation_title ?? ''}
               youtube={row.preparation_youtube ?? ''}
               onTitle={(v) => update({ preparation_title: v || null })}
@@ -595,7 +598,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
 
           <OrderItem n={9}>
             <SongSlot
-              label="Communion Song 1"
+              label="Communion Song 1" slotKey="communion1" playing={playingSlot === 'communion1'} onPlayToggle={setPlayingSlot}
               title={row.communion_1_title ?? ''}
               youtube={row.communion_1_youtube ?? ''}
               onTitle={(v) => update({ communion_1_title: v || null })}
@@ -605,7 +608,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
 
           <OrderItem n={10}>
             <SongSlot
-              label="Communion Song 2"
+              label="Communion Song 2" slotKey="communion2" playing={playingSlot === 'communion2'} onPlayToggle={setPlayingSlot}
               title={row.communion_2_title ?? ''}
               youtube={row.communion_2_youtube ?? ''}
               onTitle={(v) => update({ communion_2_title: v || null })}
@@ -615,7 +618,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
 
           <OrderItem n={11}>
             <SongSlot
-              label="Song of Praise"
+              label="Song of Praise" slotKey="praise" playing={playingSlot === 'praise'} onPlayToggle={setPlayingSlot}
               title={row.praise_title ?? ''}
               youtube={row.praise_youtube ?? ''}
               onTitle={(v) => update({ praise_title: v || null })}
@@ -625,7 +628,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
 
           <OrderItem n={12}>
             <SongSlot
-              label="Closing Hymn / Song"
+              label="Closing Hymn / Song" slotKey="closing" playing={playingSlot === 'closing'} onPlayToggle={setPlayingSlot}
               title={row.closing_title ?? ''}
               youtube={row.closing_youtube ?? ''}
               onTitle={(v) => update({ closing_title: v || null })}
@@ -809,11 +812,15 @@ function useHymnSearch(q: string) {
   return hits;
 }
 
-function SongSlot({ label, title, youtube, onTitle, onYouTube }: {
+function SongSlot({ label, title, youtube, onTitle, onYouTube, slotKey, playing = false, onPlayToggle }: {
   label: string; title: string; youtube: string;
   onTitle: (v: string) => void; onYouTube: (v: string) => void;
+  // Inline playback: parent owns which slot is playing (one at a time).
+  slotKey?: string; playing?: boolean; onPlayToggle?: (slotKey: string | null) => void;
 }) {
   const hasUrl = /^https?:\/\//i.test(youtube.trim());
+  const videoId = hasUrl ? getYouTubeId(youtube) : null;
+  const canPlayInline = !!videoId && !!slotKey && !!onPlayToggle;
   const disabled = !title.trim() && !hasUrl;
   const [searchOpen, setSearchOpen] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -858,9 +865,13 @@ function SongSlot({ label, title, youtube, onTitle, onYouTube }: {
         <button
           type="button"
           onClick={() => {
-            if (hasUrl) {
-              // Already saved — open the chosen video in a new tab so
-              // the user can preview without losing form state.
+            if (canPlayInline) {
+              // Toggle the inline player under this slot; the parent
+              // closes any other slot's player (one at a time).
+              onPlayToggle!(playing ? null : slotKey!);
+            } else if (hasUrl) {
+              // URL didn't parse as a YouTube video — fall back to
+              // opening it in a new tab so the link still works.
               window.open(youtube.trim(), '_blank', 'noopener,noreferrer');
             } else {
               setSearchOpen(true);
@@ -872,18 +883,58 @@ function SongSlot({ label, title, youtube, onTitle, onYouTube }: {
               ? 'border-border text-muted-foreground cursor-not-allowed opacity-50'
               : 'border-rose-600 text-rose-600 hover:bg-rose-50'
           }`}
-          title={hasUrl ? 'Open the saved YouTube video' : 'Search YouTube for this title'}
+          title={canPlayInline ? (playing ? 'Close the player' : 'Play here, above the next selection') : hasUrl ? 'Open the saved YouTube video' : 'Search YouTube for this title'}
         >
           <Youtube className="w-3.5 h-3.5" />
-          {hasUrl ? 'Open' : 'Search'}
+          {canPlayInline ? (playing ? 'Close' : 'Play') : hasUrl ? 'Open' : 'Search'}
         </button>
       </div>
       <Input
         value={youtube}
-        onChange={(e) => onYouTube(e.target.value)}
+        onChange={(e) => {
+          // Editing the URL under a live player would leave a stale
+          // embed — close it first.
+          if (playing && onPlayToggle) onPlayToggle(null);
+          onYouTube(e.target.value);
+        }}
         placeholder="YouTube URL (optional)"
         className="text-xs"
       />
+      {playing && videoId && (
+        <div className="rounded-xl overflow-hidden border border-border">
+          <div className="flex items-center gap-1 px-3 py-1.5 bg-muted/50">
+            <span className="min-w-0 flex-1 truncate text-xs font-medium">{title.trim() || label}</span>
+            <a
+              href={youtube.trim()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 p-2 text-muted-foreground hover:text-foreground"
+              title="Open in YouTube"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            <button
+              type="button"
+              data-compact
+              onClick={() => onPlayToggle!(null)}
+              className="shrink-0 p-2 text-muted-foreground hover:text-foreground"
+              title="Close player"
+              aria-label="Close player"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="aspect-video w-full">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+              title={title.trim() || label}
+              className="w-full h-full"
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
       <YouTubeSearchModal
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
