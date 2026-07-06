@@ -89,16 +89,7 @@ import {
 } from '@/components/ui/sheet';
 import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
-
-/** True when the current subdomain is the public demo. The platform owner
- * uses this to gate the "Request your workspace" CTA — paying tenants shouldn't
- * see an upgrade pitch on their own site. */
-function isDemoTenant(): boolean {
-  if (typeof window === 'undefined') return false;
-  const slug = (window as unknown as { __TENANT_CONFIG__?: { tenant?: string } })
-    .__TENANT_CONFIG__?.tenant;
-  return slug === 'demo';
-}
+import { isDemoTenant } from '@/lib/demoTenant';
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
 
