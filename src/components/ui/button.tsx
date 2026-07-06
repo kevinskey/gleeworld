@@ -5,57 +5,48 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none text-sm font-medium ring-offset-background transition-all duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-75 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 touch-manipulation select-none active:scale-[0.98]",
+  // iOS base: capsule, 17px, weight carries emphasis, opacity press.
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-base font-semibold ring-offset-background transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 touch-manipulation select-none active:opacity-60",
   {
     variants: {
       variant: {
-        default: 
-          "bg-primary text-primary-foreground shadow-button hover:bg-primary/90 hover:shadow-button-hover active:bg-primary/95 focus-visible:ring-primary",
+        default:
+          "bg-[var(--tint)] text-[var(--tint-contrast)] hover:opacity-90",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-button hover:bg-destructive/90 hover:shadow-button-hover focus-visible:ring-destructive",
+          "bg-destructive text-destructive-foreground hover:opacity-90",
         outline:
-          "border-2 border-input bg-background text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground hover:border-accent focus-visible:border-ring",
+          "border border-border bg-card text-foreground hover:bg-muted",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-button hover:bg-secondary/80 hover:shadow-button-hover",
-        ghost: 
-          "text-foreground hover:bg-accent hover:text-accent-foreground",
-        link: 
-          "text-primary underline-offset-4 hover:underline focus-visible:underline",
-        glass: 
-          "backdrop-blur-md bg-background/80 border border-border/50 shadow-glass hover:bg-background/90 hover:border-border",
-        "glass-solid": 
-          "backdrop-blur-xl bg-card/95 border border-border shadow-elevated hover:shadow-glass-lg",
-        branded: 
-          "bg-brand-600 text-white shadow-button hover:bg-brand-700 hover:shadow-button-hover font-semibold",
-        /**
-         * Brand Navy (landing/header primary CTA)
-         * Uses semantic CSS vars (defined in index.css) so we don't hardcode colors in components.
-         */
+          "bg-[hsl(var(--gray-5))] text-[var(--tint)] hover:bg-[hsl(var(--gray-4))]",
+        ghost:
+          "font-normal text-[var(--tint)] hover:bg-muted",
+        link:
+          "font-normal text-[var(--tint)] underline-offset-4 hover:underline",
+        glass:
+          "backdrop-blur-xl bg-card/75 border border-border/40 text-foreground",
+        "glass-solid":
+          "backdrop-blur-xl bg-card/95 border border-border text-foreground",
+        branded:
+          "bg-[var(--tint)] text-[var(--tint-contrast)] hover:opacity-90",
         navy:
-          "bg-[hsl(var(--brand-navy))] text-[hsl(var(--brand-navy-foreground))] shadow-button hover:bg-[hsl(var(--brand-navy-hover))] hover:shadow-button-hover font-semibold focus-visible:ring-[hsl(var(--brand-navy))]",
+          "bg-[hsl(var(--brand-navy))] text-[hsl(var(--brand-navy-foreground))] hover:bg-[hsl(var(--brand-navy-hover))]",
         success:
-          "bg-success text-success-foreground shadow-button hover:bg-success/90",
+          "bg-success text-success-foreground hover:opacity-90",
         warning:
-          "bg-warning text-warning-foreground shadow-button hover:bg-warning/90",
+          "bg-warning text-warning-foreground hover:opacity-90",
       },
-      // iPad (md: 768–1023) is a touch device and needs the full 44pt
-      // target. The "shrink to compact" sizing only kicks in at lg: so
-      // mouse-driven desktops can pack denser UIs while iPad portrait,
-      // landscape, and phones all stay 44pt-safe.
+      // 44pt HIG floor on touch; lg: desktop may compact to 40.
       size: {
-        default: "h-10 px-4 py-2 min-h-[44px] lg:min-h-[40px]",
-        sm: "h-9 px-3 text-xs min-h-[44px] lg:min-h-[36px]",
-        lg: "h-11 px-8 text-base min-h-[48px] lg:min-h-[44px]",
-        xl: "h-12 px-10 text-base font-semibold min-h-[52px]",
-        icon: "h-10 w-10 min-h-[44px] min-w-[44px] lg:min-h-[40px] lg:min-w-[40px]",
+        default: "h-11 px-5 min-h-[44px] lg:h-10 lg:min-h-[40px]",
+        sm: "h-9 px-4 text-sm min-h-[44px] lg:min-h-[36px]",
+        lg: "h-12 px-6 min-h-[48px]",
+        xl: "h-[52px] px-8 min-h-[52px]",
+        icon: "h-11 w-11 min-h-[44px] min-w-[44px] lg:h-10 lg:w-10 lg:min-h-[40px] lg:min-w-[40px]",
         "icon-sm": "h-9 w-9 min-h-[44px] min-w-[44px] lg:min-h-[36px] lg:min-w-[36px]",
         "icon-lg": "h-12 w-12 min-h-[48px] min-w-[48px]",
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+    defaultVariants: { variant: "default", size: "default" },
   }
 )
 

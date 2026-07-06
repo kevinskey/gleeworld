@@ -22,6 +22,11 @@
 
 /* Full-bleed utility - extends background colors edge-to-edge while keeping content padded */
 @layer utilities {
+  /* Apple "Headline" — list/card item titles: body size, semibold. */
+  .font-headline {
+    font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px;
+  }
+
   /* Brand gradient — cyan → purple, matches the music-note logo */
   .bg-brand-gradient {
     background: linear-gradient(135deg, hsl(var(--brand-blue-light)) 0%, hsl(var(--brand-blue-dark)) 100%);
@@ -104,21 +109,6 @@
     background-repeat: no-repeat;
   }
 
-  /* Subtle film-grain overlay — code-generated SVG noise at very low
-   * opacity. Adds the "physical, high-end" tactility called for in
-   * 2026 standards without shipping a heavy texture image. Position
-   * fixed so it stays consistent across scroll; pointer-events:none
-   * so it never intercepts clicks. */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    opacity: 0.035;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  }
 
   /* Micro-interactions baseline — everything that the user can hit
    * gets a 150ms color+transform transition by default. Component
@@ -128,72 +118,41 @@
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+
+  /* iOS press feedback: plain controls dim, surfaces compress. */
   button:active:not(:disabled), [role="button"]:active:not(:disabled) {
-    transform: translateY(1px) scale(0.99);
+    opacity: 0.6;
   }
 
-  /* Typography scale — Kennedy's responsive guide, interaction-heavy app
-     profile. Body floor is 16px on mobile (iOS auto-zoom rule on inputs
-     also relies on this), lifts to 17px on desktop. Secondary text
-     (text-sm) sits 2px below body; tertiary (text-xs) sits 2 more below.
-     Headings use clamp() so they scale smoothly from phone to desktop:
-       h1 → 28–40 px  (page titles)
-       h2 → 22–30 px
-       h3 → 20–24 px
-       h4 → 18 px
-     The four-step scale (h1, body, text-sm, text-xs) is intentional —
-     the guide warns that using more than ~4 sizes makes a UI feel busy. */
-  html, body {
-    font-size: 16px;
-    line-height: 1.5;
+  /* Apple iOS 26 typography — HIG Dynamic Type "Large" (1pt = 1px CSS).
+     Real SF Pro on Apple devices via the system stack; Segoe/Roboto
+     elsewhere. Leading and tracking are explicit so layout holds on
+     non-SF platforms. Hierarchy comes from WEIGHT (regular body vs
+     semibold headline), not size drama. */
+  :root {
+    --font-ui: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
+      Roboto, "Helvetica Neue", sans-serif;
   }
-  p, label, li, td, th, dd, dt {
-    font-size: 1rem; /* 16px — body floor */
-    line-height: 1.55;
+  html {
+    font-family: var(--font-ui);
+    font-size: 16px; /* rem base — keeps the 4px spacing grid; body text is 17px below */
   }
-  .text-xs {
-    font-size: 0.75rem !important;  /* 12px */
-    line-height: 1.4 !important;
-  }
-  .text-sm {
-    font-size: 0.875rem !important; /* 14px = 2px under body */
-    line-height: 1.5 !important;
-  }
-  @media (min-width: 1024px) {
-    html, body { font-size: 17px; }
-    p, label, li, td, th, dd, dt { font-size: 1.0625rem; /* 17px */ }
-    .text-xs { font-size: 0.8125rem !important; /* 13px */ }
-    .text-sm { font-size: 0.9375rem !important; /* 15px */ }
-  }
-  @media (min-width: 1536px) {
-    html, body { font-size: 18px; }
-    p, label, li, td, th, dd, dt { font-size: 1.125rem; /* 18px */ }
-    .text-sm { font-size: 1rem !important; /* 16px */ }
+  body {
+    font-size: 17px;
+    line-height: 22px;
+    letter-spacing: -0.43px;
   }
 
-  /* Heading sizes — single source of truth (the duplicate Bebas Neue
-     block lower in this file only overrides font-family/letter-spacing,
-     these sizes win). */
-  /* "Typography as architecture" — let large headers carry visible
-   * weight on big screens rather than relying on imagery or animation.
-   * Page titles (h1) scale 28→56px so a desktop dashboard reads as
-   * an editorial spread instead of a small label. Page-specific
-   * components can still opt out with !text-[Npx]. */
-  /* True viewport-scaling so headlines stretch as page architecture
-   * rather than reading as labels. 32→88px at 8vw, capped so a
-   * 4K monitor doesn't blow up. */
-  /* line-height 1.02 collided wrapped lines in Bebas Neue (nearly zero
-     internal leading) — e.g. "AUDITIONS / MANAGEMENT" on phones. 1.12
-     keeps the architectural weight but separates multi-line titles. */
-  h1 { font-size: clamp(2rem, 8vw, 5.5rem); font-weight: 800; letter-spacing: -0.025em; color: hsl(var(--foreground)); line-height: 1.12; }
-  h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); font-weight: 700; letter-spacing: -0.015em; color: hsl(var(--foreground)); line-height: 1.15; }
-  h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 600; color: hsl(var(--foreground)); line-height: 1.25; }
-  h4 { font-size: 1.125rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.3; }
-  h5, h6 { font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.4; }
+  /* iOS large-title hierarchy — HIG sizes/weights/tracking verbatim. */
+  h1 { font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: 0.4px;  color: hsl(var(--foreground)); }
+  h2 { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: 0.38px; color: hsl(var(--foreground)); }
+  h3 { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.26px; color: hsl(var(--foreground)); }
+  h4 { font-size: 20px; line-height: 25px; font-weight: 600; letter-spacing: -0.45px; color: hsl(var(--foreground)); }
+  h5, h6 { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px; color: hsl(var(--foreground)); }
 
   :root {
-    /* High-Contrast Design System for GleeWorld */
-    
+    /* iOS 26 Design System for GleeWorld — House (light) */
+
     /* Core Brand Colors — GleeWorld cyan→purple gradient (matches music-note logo) */
     --brand-blue-dark: 271 76% 53%; /* Vivid purple #9333ea */
     --brand-blue-light: 187 95% 53%; /* Cyan #22d3ee */
@@ -204,53 +163,61 @@
     --brand-navy-hover: 263 50% 7%; /* slightly darker */
     --brand-navy-foreground: 0 0% 100%;
 
-    /* Primary Brand Palette */
-    --primary: 271 76% 53%; /* Brand purple */
-    --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
-
-    /* Secondary Accent Colors */
-    --secondary: var(--brand-blue-light);
-    --secondary-foreground: 0 0% 100%; /* White text on blue */
-    
     /* Messenger colors — high-contrast, brand-aligned */
     --message-header: 208 100% 20%; /* Brand Navy — matches brand header */
     --message-sent: 217 72% 48%; /* Vivid blue — clearly "yours" */
     --message-received: 210 20% 95%; /* Very light blue-gray — clearly "theirs" */
     --message-received-fg: 220 20% 18%; /* Near-black text for readability */
-    
-    /* Canvas — "Cloud Dancer" warm off-white (oatmeal) per 2026 design
-     * standards. Pure #FFFFFF is being phased out (eye strain + flat
-     * feel); a touch of warmth gives the editorial paper quality. Cards
-     * stay near-white so they pop crisply against this canvas — that
-     * one-step contrast IS the elevation, replacing heavy shadows. */
-    --background: 36 30% 97%; /* #FAF7F1 — warm oatmeal canvas */
-    --foreground: 222 47% 11%; /* #0F172A - Primary text */
 
-    /* Card System — slightly warmer-white than pure to stay one step
-     * brighter than the canvas without going clinical white. */
-    --card: 36 25% 99%; /* #FEFDFB — paper white */
-    --card-foreground: 222 47% 11%; /* #0F172A */
-
-    /* Popover and Dropdown Elements */
+    /* ── iOS 26 neutrals (HIG values; HSL triples for shadcn plumbing) ── */
+    --background: 240 24% 96%;        /* #F2F2F7 systemGray6 — canvas */
+    --foreground: 0 0% 0%;            /* label */
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%; /* #0F172A */
+    --popover-foreground: 0 0% 0%;
+    --muted: 240 24% 96%;             /* systemGray6 — secondary fill */
+    --muted-foreground: 240 2% 55%;   /* #8A8A8E = secondaryLabel flattened on white */
+    --accent: 240 24% 96%;
+    --accent-foreground: 0 0% 0%;
+    --border: 240 2% 78%;             /* #C7C7C9 = separator (3C3C43 @29%) flattened */
+    --input: 0 0% 100%;
+    --ring: var(--primary);
 
-    /* Muted Elements - High contrast for readability */
-    --muted: 40 10% 96%; /* Warm off-white */
-    --muted-foreground: 215 16% 37%; /* #475569 - Secondary text, WCAG AA 7:1 */
+    /* Tiered text (flattened Apple label opacities on white) */
+    --text-primary: 0 0% 0%;
+    --text-secondary: 240 2% 55%;     /* #8A8A8E — secondaryLabel */
+    --text-metadata: 240 2% 55%;
 
-    /* Accent for Interactive Elements */
-    --accent: 40 10% 96%; /* Warm neutral accent */
-    --accent-foreground: 222 47% 11%; /* #0F172A */
+    /* iOS system grays 1–6 (light) */
+    --gray-1: 240 2% 57%;  /* #8E8E93 */
+    --gray-2: 240 2% 69%;  /* #AEAEB2 */
+    --gray-3: 240 5% 79%;  /* #C7C7CC */
+    --gray-4: 240 6% 83%;  /* #D1D1D6 → 240 6% 83% */
+    --gray-5: 240 11% 91%; /* #E5E5EA */
+    --gray-6: 240 24% 96%; /* #F2F2F7 */
 
-    /* Tiered Text Color Tokens */
-    --text-primary: 222 47% 11%; /* #0F172A — headings, titles, body */
-    --text-secondary: 215 16% 37%; /* #475569 — descriptions, secondary info */
-    --text-metadata: 215 14% 47%; /* #64748B — timestamps, counts, labels */
+    /* ── Tint: the ONE accent (Apple AccentColor model). Full-color token;
+       composes with tenant plumbing: tenant sets --site-accent, default
+       falls through to --primary (GleeWorld purple, iOS 26 family). ── */
+    --primary: 293 74% 53%;           /* #CB30E0 iOS purple (light) */
+    --primary-foreground: 0 0% 100%;
+    --tint: var(--site-accent, hsl(var(--primary)));
+    --tint-contrast: hsl(var(--primary-foreground));
+    --secondary: 240 24% 96%;         /* iOS "gray button" fill, NOT cyan */
+    --secondary-foreground: 0 0% 0%;
+    --link: var(--primary);           /* chrome links ride the tint now */
+    --link-hover: var(--primary);
 
-    /* System Colors */
-    --destructive: 0 84% 60%;
+    /* ── iOS system semantics ── */
+    --destructive: 359 100% 61%;      /* #FF383C */
     --destructive-foreground: 0 0% 100%;
+    --success: 135 59% 49%;           /* #34C759 */
+    --success-foreground: 0 0% 100%;
+    --warning: 48 100% 50%;           /* #FFCC00 */
+    --warning-foreground: 0 0% 0%;
+    --info: 212 100% 50%;             /* #0088FF */
+    --info-foreground: 0 0% 100%;
 
     /* Status colors — fixed semantics, NOT tenant-routed. Exist so status
        surfaces stop hardcoding hex to dodge tenant overrides. */
@@ -258,75 +225,29 @@
     --status-warning-fg: 26 83% 27%;
     --status-warning-border: 45 93% 76%;
 
-    /* Border — bumped a step darker so 1px solids actually read against
-     * the warm canvas (tactile-brutalism standard: precise, crisp
-     * geometry instead of blurry shadows for elevation). */
-    --border: 32 12% 82%; /* #DCD5C9 — warm sand line */
-    --input: 0 0% 100%; /* White inputs */
-    --ring: 271 76% 53%; /* Purple focus rings */
+    /* iOS 12px standard radius — white cards on gray canvas. */
+    --radius: 0.75rem;
 
-    /* Chrome accent — tenant-neutral indigo for links, secondary CTAs,
-     * and "View all"-style affordances. Independent of the per-tenant
-     * --primary so a Spelman site keeps gold for active nav + brand
-     * surfaces while navigation chrome stays in a universally-readable
-     * electric indigo (2026 Tech/AI standard). */
-    --link: 239 84% 56%; /* #4F46E5 — indigo-600 */
-    --link-hover: 243 75% 47%; /* #4338CA — indigo-700 */
-
-    /* Wireframe-segregation geometry: 0px corners everywhere shadcn's
-     * --radius cascades. Pills (rounded-full) still pill via their own
-     * utility; everything else goes square per 2026 tactile-brutalism. */
-    --radius: 0rem;
-
-    /* Enhanced Color Tokens - WCAG Compliant */
-    --hover-accent: 219 78% 40%; /* Subtle blue for hovers */
-    
-    /* Professional Gradients - minimal, not dark */
-    --gradient-hero: linear-gradient(135deg, hsl(219 78% 31%), hsl(203 85% 50%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 100%));
-    --gradient-accent: linear-gradient(90deg, hsl(45 100% 55%), hsl(45 100% 65%));
-    
-    /* Enhanced 3D Shadow System */
-    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
-    --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    --shadow-depth-1: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-depth-2: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.12);
-    --shadow-depth-3: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.16);
-    --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.06);
-    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+    /* iOS depth: white-card-on-gray-canvas IS the elevation. One whisper. */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
     
     /* Animation Variables */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    /* Event type colors - High contrast system */
-    --event-performance: 212 100% 92%; /* Light blue background */
-    --event-performance-fg: 212 100% 25%; /* Dark blue text */
-    --event-rehearsal: 142 76% 92%; /* Light green background */
-    --event-rehearsal-fg: 142 76% 25%; /* Dark green text */
-    --event-sectional: 267 57% 92%; /* Light purple background */
-    --event-sectional-fg: 267 57% 25%; /* Dark purple text */
-    --event-service: 267 60% 92%; /* Light violet background — Church Service / Mass */
-    --event-service-fg: 267 60% 30%; /* Dark violet text */
-    --event-meeting: 34 100% 92%; /* Light orange background */
-    --event-meeting-fg: 34 100% 25%; /* Dark orange text */
-    --event-member-meeting: 142 76% 92%; /* Light green background */
-    --event-member-meeting-fg: 142 76% 25%; /* Dark green text */
-    --event-exec-meeting: 267 57% 92%; /* Light purple background */
-    --event-exec-meeting-fg: 267 57% 25%; /* Dark purple text */
-    --event-voice-lesson: 320 70% 92%; /* Light pink background */
-    --event-voice-lesson-fg: 320 70% 25%; /* Dark pink text */
-    --event-tutorial: 290 100% 92%; /* Light violet background */
-    --event-tutorial-fg: 290 100% 25%; /* Dark violet text */
-    --event-social: 320 70% 92%; /* Light pink background */
-    --event-social-fg: 320 70% 25%; /* Dark pink text */
-    --event-workshop: 34 100% 92%; /* Light orange background */
-    --event-workshop-fg: 34 100% 25%; /* Dark orange text */
-    --event-audition: 0 84% 92%; /* Light red background */
-    --event-audition-fg: 0 84% 25%; /* Dark red text */
-    --event-general: 210 20% 92%; /* Light gray background */
-    --event-general-fg: 210 20% 25%; /* Dark gray text */
+    /* Event chips — iOS Calendar-style pastels (fixed semantics) */
+    --event-performance: 212 100% 93%;    --event-performance-fg: 212 100% 30%;   /* blue */
+    --event-rehearsal: 135 59% 92%;       --event-rehearsal-fg: 135 70% 22%;      /* green */
+    --event-sectional: 293 74% 94%;       --event-sectional-fg: 293 74% 30%;      /* purple */
+    --event-service: 243 70% 94%;         --event-service-fg: 243 60% 35%;        /* indigo */
+    --event-meeting: 30 100% 92%;         --event-meeting-fg: 25 100% 30%;        /* orange */
+    --event-member-meeting: 135 59% 92%;  --event-member-meeting-fg: 135 70% 22%;
+    --event-exec-meeting: 293 74% 94%;    --event-exec-meeting-fg: 293 74% 30%;
+    --event-voice-lesson: 348 100% 94%;   --event-voice-lesson-fg: 348 87% 33%;   /* pink */
+    --event-tutorial: 191 100% 92%;       --event-tutorial-fg: 195 100% 27%;      /* cyan */
+    --event-social: 168 100% 90%;         --event-social-fg: 172 100% 22%;        /* mint */
+    --event-workshop: 187 100% 91%;       --event-workshop-fg: 187 100% 24%;      /* teal */
+    --event-audition: 48 100% 89%;        --event-audition-fg: 39 100% 25%;       /* yellow */
+    --event-general: 240 4% 94%;          --event-general-fg: 240 2% 30%;         /* gray */
     
     /* Status colors - High contrast */
     --status-scheduled: 212 100% 92%; /* Light blue */
@@ -614,66 +535,38 @@ button.module-card-solid:hover,
   .staff-line:nth-child(5) { top: 60px; }
 }
 
-  html.light,
-  .light {
-    /* High-contrast light theme */
-    --background: 0 0% 100%; /* Pure white */
-    --foreground: 0 0% 8%; /* Near-black text */
-
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 0 0% 8%; /* Dark text */
-
-    --popover: 0 0% 100%; /* Pure white */
-    --popover-foreground: 0 0% 8%; /* Dark text */
-
-    --primary: var(--brand-blue-dark);
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: var(--brand-blue-light);
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 0 0% 96%; /* Very light gray */
-    --muted-foreground: 0 0% 30%; /* WCAG AA compliant - 4.5:1 contrast */
-
-    --accent: var(--brand-blue-light);
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 85%;
-    --input: 0 0% 98%;
-    --ring: var(--brand-blue-light);
-  }
-
   .dark {
-    --background: 40 10% 96%; /* Off-white — GleeWorld uses a fixed brand theme, not true dark mode */
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: var(--brand-blue-light);
+    /* iOS 26 dark palette — Stage rooms (Studio, Tonight mode). */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 240 2% 11%;               /* #1C1C1E */
+    --card-foreground: 0 0% 100%;
+    --popover: 240 2% 11%;
+    --popover-foreground: 0 0% 100%;
+    --muted: 240 2% 16%;              /* #2C2C2E */
+    --muted-foreground: 240 5% 64%;   /* #9E9EA7 ≈ secondaryLabel dark flattened */
+    --accent: 240 2% 16%;
+    --accent-foreground: 0 0% 100%;
+    --border: 240 1% 27%;             /* #444446 ≈ dark separator flattened */
+    --input: 240 2% 11%;
+    --primary: 294 88% 58%;           /* #DB34F2 iOS purple (dark variant) */
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 40 10% 92%;
-    --muted-foreground: 215 16% 37%;
-
-    --accent: 40 10% 92%;
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 40 5% 88%;
-    --input: 0 0% 98%;
-    --ring: var(--brand-blue-light);
+    --tint: var(--site-accent, hsl(var(--primary)));
+    --tint-contrast: hsl(var(--primary-foreground));
+    --secondary: 240 2% 16%;
+    --secondary-foreground: 0 0% 100%;
+    --ring: var(--primary);
+    --text-primary: 0 0% 100%;
+    --text-secondary: 240 5% 64%;
+    --text-metadata: 240 5% 64%;
+    --destructive: 359 100% 63%;      /* #FF4245 */
+    --destructive-foreground: 0 0% 100%;
+    --success: 135 63% 50%;           /* #30D158 */
+    --warning: 50 100% 50%;           /* #FFD600 */
+    --info: 206 100% 50%;             /* #0091FF */
+    --gray-4: 240 3% 23%;             /* #3A3A3C — button secondary hover */
+    --gray-5: 240 2% 16%;             /* #2C2C2E */
+    --gray-6: 240 2% 11%;             /* #1C1C1E */
   }
 
 /* ========================================
@@ -721,7 +614,7 @@ html[data-theme="brand-blue"] h3,
 html[data-theme="brand-blue"] h4,
 html[data-theme="brand-blue"] h5,
 html[data-theme="brand-blue"] h6 {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif !important;
+  font-family: var(--font-ui) !important;
   font-weight: 600 !important;
   letter-spacing: -0.01em !important;
   text-transform: none !important;
@@ -772,41 +665,6 @@ html[data-theme="brand-blue"] .bg-primary {
   --input: 0 0% 12%;
   --popover: 0 0% 8%;
   --popover-foreground: 45 65% 75%;
-}
-
-/* HBCU Theme Typography - Collegiate Styling */
-.hbcu-theme {
-  font-family: 'Bebas Neue', 'Oswald', sans-serif !important;
-}
-
-html.hbcu-theme h1,
-html.hbcu-theme h2,
-html.hbcu-theme h3,
-html.hbcu-theme h4,
-html.hbcu-theme h5,
-html.hbcu-theme h6,
-html[data-theme="hbcu"] h1,
-html[data-theme="hbcu"] h2,
-html[data-theme="hbcu"] h3,
-html[data-theme="hbcu"] h4,
-html[data-theme="hbcu"] h5,
-html[data-theme="hbcu"] h6 {
-  font-family: 'Graduate', 'Bebas Neue', sans-serif !important;
-  font-weight: 400 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.05em !important;
-  text-shadow: var(--heading-shadow, 2px 2px 0px hsl(0 0% 0%), 3px 3px 0px hsl(0 72% 42%));
-}
-
-.hbcu-theme p,
-.hbcu-theme span,
-.hbcu-theme div,
-.hbcu-theme button,
-.hbcu-theme a,
-.hbcu-theme label,
-.hbcu-theme input {
-  font-family: 'Bebas Neue', 'Oswald', sans-serif;
-  letter-spacing: 0.03em;
 }
 
 /* HBCU Button Variants - Uses theme tokens */
@@ -977,43 +835,12 @@ html[data-theme="hbcu"] h6 {
 
   body {
     @apply bg-background text-foreground min-h-screen;
-    font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+    font-family: var(--font-ui);
     /* font-size + line-height come from the base block above so we have a
        single source of truth for the type scale (Kennedy's responsive guide). */
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
   
-  /* HBCU Theme - Graduate Collegiate Font for Headings Only */
-  html.hbcu-theme h1,
-  html.hbcu-theme h2,
-  html.hbcu-theme h3,
-  html.hbcu-theme h4,
-  html.hbcu-theme h5,
-  html.hbcu-theme h6,
-  html[data-theme="hbcu"] h1,
-  html[data-theme="hbcu"] h2,
-  html[data-theme="hbcu"] h3,
-  html[data-theme="hbcu"] h4,
-  html[data-theme="hbcu"] h5,
-  html[data-theme="hbcu"] h6 {
-    font-family: 'Graduate', 'Bebas Neue', sans-serif !important;
-    letter-spacing: 0.05em !important;
-    text-transform: uppercase;
-  }
-  
-  /* GleeWorld heading family — sizes already set by the canonical block
-     above, this block only adds the brand font + letter-spacing + balanced
-     wrapping. NOTE: the Bebas Neue heading family was visually too wide
-     for body-style headings on dashboards; kept here for parity with the
-     original design system but consider trimming to h1–h2 only later. */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Bebas Neue', system-ui, sans-serif;
-    font-weight: 400;
-    letter-spacing: 0.02em;
-    color: inherit;
-    text-wrap: balance;
-  }
-
   /* Body text - optimized for readability.
      Note: the 70ch max-width that used to live here applied to EVERY
      <p> tag, which left-anchored copyright lines and other short
@@ -1368,19 +1195,19 @@ html[data-theme="hbcu"] h6 {
 
   /* 3D Depth Utilities */
   .depth-1 {
-    box-shadow: var(--shadow-depth-1);
+    box-shadow: var(--shadow-card);
     transform: translateY(0px);
     transition: var(--transition-smooth);
   }
 
   .depth-2 {
-    box-shadow: var(--shadow-depth-2);
+    box-shadow: var(--shadow-card);
     transform: translateY(-1px);
     transition: var(--transition-smooth);
   }
 
   .depth-3 {
-    box-shadow: var(--shadow-depth-3);
+    box-shadow: var(--shadow-card);
     transform: translateY(-2px);
     transition: var(--transition-smooth);
   }
@@ -1390,26 +1217,26 @@ html[data-theme="hbcu"] h6 {
   }
 
   .depth-hover:hover {
-    box-shadow: var(--shadow-depth-2);
+    box-shadow: var(--shadow-card);
     transform: translateY(-1px);
   }
 
   .depth-subtle {
-    background: var(--gradient-card);
-    box-shadow: var(--shadow-depth-1);
+    background: hsl(var(--card));
+    box-shadow: var(--shadow-card);
     border: 1px solid rgba(0, 0, 0, 0.06);
   }
 
   .depth-elevated {
-    background: var(--gradient-card);
-    box-shadow: var(--shadow-depth-2);
+    background: hsl(var(--card));
+    box-shadow: var(--shadow-card);
     border: 1px solid rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
   }
 
   .depth-floating {
-    background: var(--gradient-card);
-    box-shadow: var(--shadow-depth-3);
+    background: hsl(var(--card));
+    box-shadow: var(--shadow-card);
     border: 1px solid rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
   }
@@ -1586,7 +1413,7 @@ html[data-theme="hbcu"] h6 {
 }
 
 .card:hover {
-  box-shadow: var(--shadow-hover) !important;
+  box-shadow: var(--shadow-card) !important;
   border-color: hsl(var(--primary) / 0.3) !important;
   transform: translateY(-1px);
 }
@@ -1599,7 +1426,7 @@ html[data-theme="hbcu"] h6 {
 .dropdown-content {
   background: hsl(var(--popover)) !important;
   border: 1px solid hsl(var(--border)) !important;
-  box-shadow: var(--shadow-hover) !important;
+  box-shadow: var(--shadow-card) !important;
   backdrop-filter: blur(12px);
   z-index: 1000 !important;
 }
@@ -1611,76 +1438,6 @@ html[data-theme="hbcu"] h6 {
 .dropdown-item:hover {
   background: hsl(var(--accent)) !important;
   color: hsl(var(--accent-foreground)) !important;
-}
-
-/* Desktop Typography Enhancements */
-@media (min-width: 768px) {
-  body {
-    font-size: 20px;
-  }
-  
-  .card h1, .card h2, .card h3 {
-    font-size: 1.75rem;
-  }
-  
-  .card h4, .card h5, .card h6 {
-    font-size: 1.5rem;
-  }
-  
-  .card p, .card span, .card div {
-    font-size: 1.25rem;
-  }
-  
-  .text-sm {
-    font-size: 1.125rem !important;
-  }
-  
-  .text-xs {
-    font-size: 1rem !important;
-  }
-  
-  .text-2xl {
-    font-size: 2.25rem !important;
-  }
-  
-  .text-3xl {
-    font-size: 3rem !important;
-  }
-  
-  .text-4xl {
-    font-size: 3.5rem !important;
-  }
-}
-
-/* Large Desktop Typography */
-@media (min-width: 1024px) {
-  body {
-    font-size: 22px;
-  }
-  
-  .card h1, .card h2, .card h3 {
-    font-size: 2rem;
-  }
-  
-  .card h4, .card h5, .card h6 {
-    font-size: 1.75rem;
-  }
-  
-  .card p, .card span, .card div {
-    font-size: 1.5rem;
-  }
-  
-  .text-2xl {
-    font-size: 2.5rem !important;
-  }
-  
-  .text-3xl {
-    font-size: 3.5rem !important;
-  }
-  
-  .text-4xl {
-    font-size: 4rem !important;
-  }
 }
 
 /* Mobile background cropping for landing page */
@@ -2204,10 +1961,11 @@ label.required::after {
   --surface: 0 0% 100%; /* Pure white surface */
   --surface-elevated: 0 0% 100%; /* Elevated surfaces */
   --surface-sunken: 210 20% 96%; /* Recessed areas */
-  
-  /* Ensure text contrast */
-  --text-primary: 220 25% 10%; /* Near-black for body text */
-  --text-secondary: 220 15% 35%; /* Muted but readable */
+
+  /* --text-primary / --text-secondary intentionally NOT redefined here —
+     this used to silently override the iOS token values set in the main
+     :root block above (same selector, later in source order wins). The
+     authoritative definitions live with the rest of the color system. */
   --text-tertiary: 220 10% 50%; /* Placeholder/disabled */
 }
 
