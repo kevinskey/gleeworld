@@ -162,109 +162,113 @@ export const CommandCenterHeader = ({
           </div>
         </div>
       ) : (
-        /* Desktop layout: single row */
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center">
-              <button 
-                onClick={() => onNavigateMonth('prev')} 
-                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+        /* Desktop / tablet — Apple Calendar iPad layout:
+           row 1: toolbar (filter/add/settings icons · centered view
+           switcher · search); row 2: big bold title + ‹ Today › cluster. */
+        <div className="flex flex-col gap-2">
+          {/* Row 1: toolbar */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {filtersAvailable && (
+                <button
+                  onClick={onOpenFilters}
+                  className={cn(
+                    "relative h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 transition-colors",
+                    filtersActive ? "text-primary" : "text-foreground"
+                  )}
+                  title="Filters"
+                >
+                  <Filter className="h-4 w-4" />
+                  {filtersActive && (
+                    <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold px-1">
+                      {activeCategoryFilters!.length}
+                    </span>
+                  )}
+                </button>
+              )}
+              {canManageEvents && (
+                <button
+                  onClick={onAddEvent}
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 text-foreground transition-colors"
+                  title="Add event"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              )}
+              {canManageEvents && onOpenSettings && (
+                <button
+                  onClick={onOpenSettings}
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 text-foreground transition-colors"
+                  title="Calendar settings"
+                >
+                  <Settings className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex-1 flex justify-center min-w-0">
+              <div className="flex items-center bg-muted rounded-full p-1">
+                {VIEW_ORDER.map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => onViewModeChange(m)}
+                    className={cn(
+                      "px-3 lg:px-3.5 h-7 rounded-full text-sm font-medium transition-all inline-flex items-center",
+                      viewMode === m
+                        ? "bg-white text-foreground font-semibold shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {VIEW_LABELS[m]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative flex-shrink-0 w-36 lg:w-56">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="pl-9 h-9 w-full rounded-full bg-muted border-transparent text-sm text-foreground placeholder:text-muted-foreground focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Row 2: big title + navigation cluster */}
+          <div className="flex items-end justify-between gap-3">
+            <h1 className="font-sans normal-case tracking-tight leading-none text-2xl lg:text-3xl">
+              {viewMode === 'year' ? (
+                <span className="font-bold">{title}</span>
+              ) : (
+                <>
+                  <span className="font-bold">{format(currentDate, 'MMMM')}</span>{' '}
+                  <span className="font-normal">{format(currentDate, 'yyyy')}</span>
+                </>
+              )}
+            </h1>
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              <button
+                onClick={() => onNavigateMonth('prev')}
+                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <div className="min-w-[180px] text-center">
-                <h1 className="font-sans normal-case tracking-tight leading-none text-xl">
-                  {viewMode === 'year' ? (
-                    <span className="font-bold">{title}</span>
-                  ) : (
-                    <>
-                      <span className="font-bold">{format(currentDate, 'MMMM')}</span>{' '}
-                      <span className="font-normal text-muted-foreground">{format(currentDate, 'yyyy')}</span>
-                    </>
-                  )}
-                </h1>
-              </div>
-              <button 
-                onClick={() => onNavigateMonth('next')} 
-                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              <button
+                onClick={onToday}
+                className="h-8 px-3 rounded-full text-[15px] font-medium text-primary hover:bg-primary/10 transition-colors"
+              >
+                Today
+              </button>
+              <button
+                onClick={() => onNavigateMonth('next')}
+                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
-            <button
-              onClick={onToday}
-              className="h-9 px-4 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-sm"
-            >
-              Today
-            </button>
-          </div>
-
-          <div className="flex items-center bg-muted rounded-full p-1">
-            {VIEW_ORDER.map((m) => (
-              <button
-                key={m}
-                onClick={() => onViewModeChange(m)}
-                className={cn(
-                  "px-3.5 h-7 rounded-full text-sm font-medium transition-all inline-flex items-center",
-                  viewMode === m
-                    ? "bg-white text-foreground font-semibold shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {VIEW_LABELS[m]}
-              </button>
-            ))}
-          </div>
-
-          {filtersAvailable && (
-            <Button
-              variant="outline"
-              onClick={onOpenFilters}
-              className={cn(
-                "h-9 gap-2 text-sm font-medium",
-                filtersActive && "border-primary text-primary"
-              )}
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-              {filtersActive && (
-                <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-semibold px-1">
-                  {activeCategoryFilters!.length}/{categories!.length}
-                </span>
-              )}
-            </Button>
-          )}
-
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search events..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-9 h-9 w-48 md:w-64 bg-muted border-border text-sm text-foreground placeholder:text-muted-foreground placeholder:text-sm focus:bg-white focus:text-foreground focus:placeholder:text-muted-foreground transition-all"
-              />
-            </div>
-            {canManageEvents && (
-              <Button
-                onClick={onAddEvent}
-                className="h-9 px-3 bg-primary hover:opacity-90 text-primary-foreground text-sm font-semibold shadow-sm"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                <span>Add Event</span>
-              </Button>
-            )}
-            {canManageEvents && onOpenSettings && (
-              <Button
-                onClick={onOpenSettings}
-                variant="ghost"
-                className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                title="Calendar settings"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
       )}
