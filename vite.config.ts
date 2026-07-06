@@ -41,7 +41,19 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
-  server: { port: 8080, host: '::' },
+  server: {
+    port: 8080,
+    host: '::',
+    proxy: {
+      // Dev-only: forward the Apple Music developer-token endpoint to the
+      // live demo tenant so the companion harness can exercise search.
+      '/apple-music': {
+        target: 'https://demo.gleeworld.org',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
   // Vite's default worker format is IIFE, which can't load ES module workers
   // like pdfjs 5's pdf.worker.mjs — the worker silently fails to initialize
   // and pdfjs hangs on getDocument forever. Forcing 'es' fixes the score
