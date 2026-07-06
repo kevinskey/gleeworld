@@ -84,7 +84,21 @@ export function getTabItems(role: 'student' | 'faculty', flags: ModuleFlags): De
   return [D.home, D.messages, ...filled, D.schedule];
 }
 
-export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags):
+// Per-user home grid layout, stored in user_preferences.home_tile_layout
+// as versioned jsonb. Anything that isn't exactly {v:1, order: string[]}
+// parses to null (= default layout) — never throws.
+// Spec: docs/superpowers/specs/2026-07-06-home-tile-customization-design.md
+export interface TileLayout { v: 1; order: string[] }
+
+export function parseTileLayout(raw: unknown): TileLayout | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+  if (o.v !== 1 || !Array.isArray(o.order)) return null;
+  if (!o.order.every((k): k is string => typeof k === 'string')) return null;
+  return { v: 1, order: o.order };
+}
+
+export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, layout?: TileLayout | null):
   { primary: Destination[]; overflow: Destination[] } {
   // Dedupe against tab ROUTES, not keys — two distinct keys (e.g. Roster
   // and Attendance) can point at the same route, and the grid must not
@@ -100,5 +114,19 @@ export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags):
   const enabled = candidates
     .filter(([d, on]) => on && !tabRoutes.has(d.to))
     .map(([d]) => d);
-  return { primary: enabled.slice(0, 8), overflow: enabled.slice(8) };
+
+  // No custom layout: today's default — first 8 enabled tiles.
+  if (!layout) return { primary: enabled.slice(0, 8), overflow: enabled.slice(8) };
+
+  // Custom layout: saved keys in saved order, filtered to what is still
+  // enabled and un-claimed by the tab bar (stale keys silently drop; the
+  // stored layout is never rewritten, so re-enabling a module restores
+  // its old spot). Everything else enabled falls to overflow — newly
+  // tenant-enabled modules land there, never inside a curated grid.
+  const byKey = new Map(enabled.map((d) => [d.key, d]));
+  const primary = layout.order
+    .map((k) => byKey.get(k))
+    .filter((d): d is Destination => d !== undefined);
+  const pinned = new Set(primary.map((d) => d.key));
+  return { primary, overflow: enabled.filter((d) => !pinned.has(d.key)) };
 }
