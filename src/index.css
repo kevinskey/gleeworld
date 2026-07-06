@@ -161,8 +161,8 @@
   h5, h6 { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px; color: hsl(var(--foreground)); }
 
   :root {
-    /* High-Contrast Design System for GleeWorld */
-    
+    /* iOS 26 Design System for GleeWorld — House (light) */
+
     /* Core Brand Colors — GleeWorld cyan→purple gradient (matches music-note logo) */
     --brand-blue-dark: 271 76% 53%; /* Vivid purple #9333ea */
     --brand-blue-light: 187 95% 53%; /* Cyan #22d3ee */
@@ -173,53 +173,61 @@
     --brand-navy-hover: 263 50% 7%; /* slightly darker */
     --brand-navy-foreground: 0 0% 100%;
 
-    /* Primary Brand Palette */
-    --primary: 271 76% 53%; /* Brand purple */
-    --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
-
-    /* Secondary Accent Colors */
-    --secondary: var(--brand-blue-light);
-    --secondary-foreground: 0 0% 100%; /* White text on blue */
-    
     /* Messenger colors — high-contrast, brand-aligned */
     --message-header: 208 100% 20%; /* Brand Navy — matches brand header */
     --message-sent: 217 72% 48%; /* Vivid blue — clearly "yours" */
     --message-received: 210 20% 95%; /* Very light blue-gray — clearly "theirs" */
     --message-received-fg: 220 20% 18%; /* Near-black text for readability */
-    
-    /* Canvas — "Cloud Dancer" warm off-white (oatmeal) per 2026 design
-     * standards. Pure #FFFFFF is being phased out (eye strain + flat
-     * feel); a touch of warmth gives the editorial paper quality. Cards
-     * stay near-white so they pop crisply against this canvas — that
-     * one-step contrast IS the elevation, replacing heavy shadows. */
-    --background: 36 30% 97%; /* #FAF7F1 — warm oatmeal canvas */
-    --foreground: 222 47% 11%; /* #0F172A - Primary text */
 
-    /* Card System — slightly warmer-white than pure to stay one step
-     * brighter than the canvas without going clinical white. */
-    --card: 36 25% 99%; /* #FEFDFB — paper white */
-    --card-foreground: 222 47% 11%; /* #0F172A */
-
-    /* Popover and Dropdown Elements */
+    /* ── iOS 26 neutrals (HIG values; HSL triples for shadcn plumbing) ── */
+    --background: 240 24% 96%;        /* #F2F2F7 systemGray6 — canvas */
+    --foreground: 0 0% 0%;            /* label */
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%; /* #0F172A */
+    --popover-foreground: 0 0% 0%;
+    --muted: 240 24% 96%;             /* systemGray6 — secondary fill */
+    --muted-foreground: 240 2% 55%;   /* #8A8A8E = secondaryLabel flattened on white */
+    --accent: 240 24% 96%;
+    --accent-foreground: 0 0% 0%;
+    --border: 240 2% 78%;             /* #C7C7C9 = separator (3C3C43 @29%) flattened */
+    --input: 0 0% 100%;
+    --ring: var(--primary);
 
-    /* Muted Elements - High contrast for readability */
-    --muted: 40 10% 96%; /* Warm off-white */
-    --muted-foreground: 215 16% 37%; /* #475569 - Secondary text, WCAG AA 7:1 */
+    /* Tiered text (flattened Apple label opacities on white) */
+    --text-primary: 0 0% 0%;
+    --text-secondary: 240 2% 55%;     /* #8A8A8E — secondaryLabel */
+    --text-metadata: 240 2% 55%;
 
-    /* Accent for Interactive Elements */
-    --accent: 40 10% 96%; /* Warm neutral accent */
-    --accent-foreground: 222 47% 11%; /* #0F172A */
+    /* iOS system grays 1–6 (light) */
+    --gray-1: 240 2% 57%;  /* #8E8E93 */
+    --gray-2: 240 2% 69%;  /* #AEAEB2 */
+    --gray-3: 240 5% 79%;  /* #C7C7CC */
+    --gray-4: 240 6% 83%;  /* #D1D1D6 → 240 6% 83% */
+    --gray-5: 240 11% 91%; /* #E5E5EA */
+    --gray-6: 240 24% 96%; /* #F2F2F7 */
 
-    /* Tiered Text Color Tokens */
-    --text-primary: 222 47% 11%; /* #0F172A — headings, titles, body */
-    --text-secondary: 215 16% 37%; /* #475569 — descriptions, secondary info */
-    --text-metadata: 215 14% 47%; /* #64748B — timestamps, counts, labels */
+    /* ── Tint: the ONE accent (Apple AccentColor model). Full-color token;
+       composes with tenant plumbing: tenant sets --site-accent, default
+       falls through to --primary (GleeWorld purple, iOS 26 family). ── */
+    --primary: 293 74% 53%;           /* #CB30E0 iOS purple (light) */
+    --primary-foreground: 0 0% 100%;
+    --tint: var(--site-accent, hsl(var(--primary)));
+    --tint-contrast: hsl(var(--primary-foreground));
+    --secondary: 240 24% 96%;         /* iOS "gray button" fill, NOT cyan */
+    --secondary-foreground: 0 0% 0%;
+    --link: var(--primary);           /* chrome links ride the tint now */
+    --link-hover: var(--primary);
 
-    /* System Colors */
-    --destructive: 0 84% 60%;
+    /* ── iOS system semantics ── */
+    --destructive: 359 100% 61%;      /* #FF383C */
     --destructive-foreground: 0 0% 100%;
+    --success: 135 59% 49%;           /* #34C759 */
+    --success-foreground: 0 0% 100%;
+    --warning: 48 100% 50%;           /* #FFCC00 */
+    --warning-foreground: 0 0% 0%;
+    --info: 212 100% 50%;             /* #0088FF */
+    --info-foreground: 0 0% 100%;
 
     /* Status colors — fixed semantics, NOT tenant-routed. Exist so status
        surfaces stop hardcoding hex to dodge tenant overrides. */
@@ -227,34 +235,11 @@
     --status-warning-fg: 26 83% 27%;
     --status-warning-border: 45 93% 76%;
 
-    /* Border — bumped a step darker so 1px solids actually read against
-     * the warm canvas (tactile-brutalism standard: precise, crisp
-     * geometry instead of blurry shadows for elevation). */
-    --border: 32 12% 82%; /* #DCD5C9 — warm sand line */
-    --input: 0 0% 100%; /* White inputs */
-    --ring: 271 76% 53%; /* Purple focus rings */
-
-    /* Chrome accent — tenant-neutral indigo for links, secondary CTAs,
-     * and "View all"-style affordances. Independent of the per-tenant
-     * --primary so a Spelman site keeps gold for active nav + brand
-     * surfaces while navigation chrome stays in a universally-readable
-     * electric indigo (2026 Tech/AI standard). */
-    --link: 239 84% 56%; /* #4F46E5 — indigo-600 */
-    --link-hover: 243 75% 47%; /* #4338CA — indigo-700 */
-
     /* Wireframe-segregation geometry: 0px corners everywhere shadcn's
      * --radius cascades. Pills (rounded-full) still pill via their own
      * utility; everything else goes square per 2026 tactile-brutalism. */
     --radius: 0rem;
 
-    /* Enhanced Color Tokens - WCAG Compliant */
-    --hover-accent: 219 78% 40%; /* Subtle blue for hovers */
-    
-    /* Professional Gradients - minimal, not dark */
-    --gradient-hero: linear-gradient(135deg, hsl(219 78% 31%), hsl(203 85% 50%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 100%));
-    --gradient-accent: linear-gradient(90deg, hsl(45 100% 55%), hsl(45 100% 65%));
-    
     /* Enhanced 3D Shadow System */
     --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
     --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
@@ -269,33 +254,20 @@
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    /* Event type colors - High contrast system */
-    --event-performance: 212 100% 92%; /* Light blue background */
-    --event-performance-fg: 212 100% 25%; /* Dark blue text */
-    --event-rehearsal: 142 76% 92%; /* Light green background */
-    --event-rehearsal-fg: 142 76% 25%; /* Dark green text */
-    --event-sectional: 267 57% 92%; /* Light purple background */
-    --event-sectional-fg: 267 57% 25%; /* Dark purple text */
-    --event-service: 267 60% 92%; /* Light violet background — Church Service / Mass */
-    --event-service-fg: 267 60% 30%; /* Dark violet text */
-    --event-meeting: 34 100% 92%; /* Light orange background */
-    --event-meeting-fg: 34 100% 25%; /* Dark orange text */
-    --event-member-meeting: 142 76% 92%; /* Light green background */
-    --event-member-meeting-fg: 142 76% 25%; /* Dark green text */
-    --event-exec-meeting: 267 57% 92%; /* Light purple background */
-    --event-exec-meeting-fg: 267 57% 25%; /* Dark purple text */
-    --event-voice-lesson: 320 70% 92%; /* Light pink background */
-    --event-voice-lesson-fg: 320 70% 25%; /* Dark pink text */
-    --event-tutorial: 290 100% 92%; /* Light violet background */
-    --event-tutorial-fg: 290 100% 25%; /* Dark violet text */
-    --event-social: 320 70% 92%; /* Light pink background */
-    --event-social-fg: 320 70% 25%; /* Dark pink text */
-    --event-workshop: 34 100% 92%; /* Light orange background */
-    --event-workshop-fg: 34 100% 25%; /* Dark orange text */
-    --event-audition: 0 84% 92%; /* Light red background */
-    --event-audition-fg: 0 84% 25%; /* Dark red text */
-    --event-general: 210 20% 92%; /* Light gray background */
-    --event-general-fg: 210 20% 25%; /* Dark gray text */
+    /* Event chips — iOS Calendar-style pastels (fixed semantics) */
+    --event-performance: 212 100% 93%;    --event-performance-fg: 212 100% 30%;   /* blue */
+    --event-rehearsal: 135 59% 92%;       --event-rehearsal-fg: 135 70% 22%;      /* green */
+    --event-sectional: 293 74% 94%;       --event-sectional-fg: 293 74% 30%;      /* purple */
+    --event-service: 243 70% 94%;         --event-service-fg: 243 60% 35%;        /* indigo */
+    --event-meeting: 30 100% 92%;         --event-meeting-fg: 25 100% 30%;        /* orange */
+    --event-member-meeting: 135 59% 92%;  --event-member-meeting-fg: 135 70% 22%;
+    --event-exec-meeting: 293 74% 94%;    --event-exec-meeting-fg: 293 74% 30%;
+    --event-voice-lesson: 348 100% 94%;   --event-voice-lesson-fg: 348 87% 33%;   /* pink */
+    --event-tutorial: 191 100% 92%;       --event-tutorial-fg: 195 100% 27%;      /* cyan */
+    --event-social: 168 100% 90%;         --event-social-fg: 172 100% 22%;        /* mint */
+    --event-workshop: 187 100% 91%;       --event-workshop-fg: 187 100% 24%;      /* teal */
+    --event-audition: 48 100% 89%;        --event-audition-fg: 39 100% 25%;       /* yellow */
+    --event-general: 240 4% 94%;          --event-general-fg: 240 2% 30%;         /* gray */
     
     /* Status colors - High contrast */
     --status-scheduled: 212 100% 92%; /* Light blue */
@@ -583,66 +555,36 @@ button.module-card-solid:hover,
   .staff-line:nth-child(5) { top: 60px; }
 }
 
-  html.light,
-  .light {
-    /* High-contrast light theme */
-    --background: 0 0% 100%; /* Pure white */
-    --foreground: 0 0% 8%; /* Near-black text */
-
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 0 0% 8%; /* Dark text */
-
-    --popover: 0 0% 100%; /* Pure white */
-    --popover-foreground: 0 0% 8%; /* Dark text */
-
-    --primary: var(--brand-blue-dark);
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: var(--brand-blue-light);
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 0 0% 96%; /* Very light gray */
-    --muted-foreground: 0 0% 30%; /* WCAG AA compliant - 4.5:1 contrast */
-
-    --accent: var(--brand-blue-light);
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 85%;
-    --input: 0 0% 98%;
-    --ring: var(--brand-blue-light);
-  }
-
   .dark {
-    --background: 40 10% 96%; /* Off-white — GleeWorld uses a fixed brand theme, not true dark mode */
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: var(--brand-blue-light);
+    /* iOS 26 dark palette — Stage rooms (Studio, Tonight mode). */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 240 2% 11%;               /* #1C1C1E */
+    --card-foreground: 0 0% 100%;
+    --popover: 240 2% 11%;
+    --popover-foreground: 0 0% 100%;
+    --muted: 240 2% 16%;              /* #2C2C2E */
+    --muted-foreground: 240 5% 64%;   /* #9E9EA7 ≈ secondaryLabel dark flattened */
+    --accent: 240 2% 16%;
+    --accent-foreground: 0 0% 100%;
+    --border: 240 1% 27%;             /* #444446 ≈ dark separator flattened */
+    --input: 240 2% 11%;
+    --primary: 294 88% 58%;           /* #DB34F2 iOS purple (dark variant) */
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 40 10% 92%;
-    --muted-foreground: 215 16% 37%;
-
-    --accent: 40 10% 92%;
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 40 5% 88%;
-    --input: 0 0% 98%;
-    --ring: var(--brand-blue-light);
+    --secondary: 240 2% 16%;
+    --secondary-foreground: 0 0% 100%;
+    --ring: var(--primary);
+    --text-primary: 0 0% 100%;
+    --text-secondary: 240 5% 64%;
+    --text-metadata: 240 5% 64%;
+    --destructive: 359 100% 63%;      /* #FF4245 */
+    --destructive-foreground: 0 0% 100%;
+    --success: 135 63% 50%;           /* #30D158 */
+    --warning: 50 100% 50%;           /* #FFD600 */
+    --info: 206 100% 50%;             /* #0091FF */
+    --gray-4: 240 3% 23%;             /* #3A3A3C — button secondary hover */
+    --gray-5: 240 2% 16%;             /* #2C2C2E */
+    --gray-6: 240 2% 11%;             /* #1C1C1E */
   }
 
 /* ========================================
@@ -2037,10 +1979,11 @@ label.required::after {
   --surface: 0 0% 100%; /* Pure white surface */
   --surface-elevated: 0 0% 100%; /* Elevated surfaces */
   --surface-sunken: 210 20% 96%; /* Recessed areas */
-  
-  /* Ensure text contrast */
-  --text-primary: 220 25% 10%; /* Near-black for body text */
-  --text-secondary: 220 15% 35%; /* Muted but readable */
+
+  /* --text-primary / --text-secondary intentionally NOT redefined here —
+     this used to silently override the iOS token values set in the main
+     :root block above (same selector, later in source order wins). The
+     authoritative definitions live with the rest of the color system. */
   --text-tertiary: 220 10% 50%; /* Placeholder/disabled */
 }
 
