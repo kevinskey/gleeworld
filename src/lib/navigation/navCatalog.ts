@@ -119,3 +119,40 @@ function gateOpen(gate: NavGate | undefined, ctx: NavContext): boolean {
 export function resolveNav(ctx: NavContext): CatalogEntry[] {
   return NAV_CATALOG.filter((e) => gateOpen(e.gate, ctx) && !ctx.hiddenRoutes.has(e.to));
 }
+
+// ---------------------------------------------------------------------------
+// Hideable-nav settings (Workspace Settings → Navigation tab)
+//
+// Tenant super-admins hide nav items per role; hidden routes are stored in
+// gw_tenant_nav_prefs.hidden_items and applied by resolveNav's hiddenRoutes
+// filter — which covers the sidebar, mobile drawer, AND home grid. Derived
+// from NAV_CATALOG so this list can never drift from what actually renders
+// (its hand-maintained predecessor at src/lib/nav/navCatalog.ts had drifted:
+// /dashboard/tour and /dashboard/liturgy-planner never matched a real route,
+// so hiding Tour Manager / Liturgy Planner silently failed).
+
+export type NavRole = 'admin' | 'student' | 'fan' | 'graduate' | 'member';
+
+export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
+  { value: 'admin',    label: 'Tenant admins' },
+  { value: 'student',  label: 'Students' },
+  { value: 'fan',      label: 'Fans' },
+  { value: 'graduate', label: 'Graduates' },
+  { value: 'member',   label: 'Members' },
+];
+
+export interface HideableNavItem {
+  /** Route path — the stable identity stored in hidden_items. */
+  path: string;
+  label: string;
+  section: string;
+}
+
+// Platform-admin-only entries (Tenants) are excluded: they never render for
+// the roles this feature can hide from. Grid-only entries (Attendance,
+// Tickets, Merch) ARE included — hiding them removes the grid tile.
+export function hideableNavItems(): HideableNavItem[] {
+  return NAV_CATALOG
+    .filter((e) => !e.gate?.platformAdminOnly)
+    .map((e) => ({ path: e.to, label: e.label, section: NAV_SECTION_LABELS[e.section] }));
+}

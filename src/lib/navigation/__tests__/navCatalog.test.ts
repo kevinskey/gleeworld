@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NAV_CATALOG, resolveNav, entrySurfaces, type NavContext } from '../navCatalog';
+import { NAV_CATALOG, resolveNav, entrySurfaces, hideableNavItems, type NavContext } from '../navCatalog';
 
 const openCtx = (over: Partial<NavContext> = {}): NavContext => ({
   hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true,
@@ -87,5 +87,33 @@ describe('entrySurfaces', () => {
       expect(entrySurfaces(byKey.get(key)!)).toEqual(['sidebar']);
     }
     expect(entrySurfaces(byKey.get('pr-hub')!)).toEqual(['sidebar', 'grid']);
+  });
+});
+
+describe('hideableNavItems (Workspace Settings source)', () => {
+  const items = hideableNavItems();
+  it('every item derives from a catalog entry (no drift possible)', () => {
+    const routes = new Set(NAV_CATALOG.map((e) => e.to));
+    for (const it of items) expect(routes.has(it.path), it.path).toBe(true);
+  });
+  it('fixes the legacy list: Tour Manager and Liturgy Planner use their REAL routes', () => {
+    const paths = items.map((i) => i.path);
+    expect(paths).toContain('/tour-manager');
+    expect(paths).toContain('/dashboard/liturgy');
+    // The legacy hand-maintained paths that silently never matched:
+    for (const dead of ['/dashboard/tour', '/dashboard/liturgy-planner', '/dashboard/inbox', '/dashboard/schedule', '/dashboard/attendance']) {
+      expect(paths, dead).not.toContain(dead);
+    }
+  });
+  it('excludes platform-admin-only entries (Tenants)', () => {
+    expect(items.find((i) => i.path === '/admin/tenants')).toBeUndefined();
+  });
+  it('includes grid-only tiles so admins can hide them from the home grid', () => {
+    const paths = items.map((i) => i.path);
+    for (const p of ['/attendance', '/box-office', '/store']) expect(paths, p).toContain(p);
+  });
+  it('paths are unique and every item has a section label', () => {
+    expect(new Set(items.map((i) => i.path)).size).toBe(items.length);
+    for (const it of items) expect(it.section.length, it.path).toBeGreaterThan(0);
   });
 });

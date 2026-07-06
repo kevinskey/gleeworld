@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/nav/navCatalog';
+import { HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/navigation/navCatalog';
 import { setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';

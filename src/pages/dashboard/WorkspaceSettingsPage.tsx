@@ -20,7 +20,7 @@ import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
   Plug, Save, Building2, Lock, Sparkles, Users, Menu,
 } from 'lucide-react';
-import { NAV_CATALOG, HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/nav/navCatalog';
+import { hideableNavItems, HIDEABLE_NAV_ROLES, type NavRole, type HideableNavItem } from '@/lib/navigation/navCatalog';
 import { getPreviewRole, setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -539,8 +539,9 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
     if (getPreviewRole()) setPreviewRole(r);
   };
 
-  // Group by section for display.
-  const bySection = NAV_CATALOG.reduce<Record<string, typeof NAV_CATALOG>>((acc, item) => {
+  // Group by section for display. Derived from the shared nav catalog so
+  // the checkbox list always matches what the sidebar + home grid render.
+  const bySection = hideableNavItems().reduce<Record<string, HideableNavItem[]>>((acc, item) => {
     (acc[item.section] ??= []).push(item);
     return acc;
   }, {});
