@@ -29870,6 +29870,7 @@ export type Database = {
       user_preferences: {
         Row: {
           calendar_controls_enabled: boolean
+          home_tile_layout: Json | null
           created_at: string
           id: string
           selected_calendars: string[] | null
@@ -29880,6 +29881,7 @@ export type Database = {
         }
         Insert: {
           calendar_controls_enabled?: boolean
+          home_tile_layout?: Json | null
           created_at?: string
           id?: string
           selected_calendars?: string[] | null
@@ -29890,6 +29892,7 @@ export type Database = {
         }
         Update: {
           calendar_controls_enabled?: boolean
+          home_tile_layout?: Json | null
           created_at?: string
           id?: string
           selected_calendars?: string[] | null
