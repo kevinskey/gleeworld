@@ -291,7 +291,7 @@ const PressKit = () => {
 
         {/* Social Media & Contact */}
         <div className="grid lg:grid-cols-2 gap-8">
-          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-[var(--shadow-hover)] transition-all duration-500 bg-gradient-to-br from-primary/5 to-background backdrop-blur-lg">
+          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-card transition-all duration-500 bg-gradient-to-br from-primary/5 to-background backdrop-blur-lg">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <CardContent className="relative p-8">
               <div className="flex items-center mb-6">
@@ -322,7 +322,7 @@ const PressKit = () => {
             </CardContent>
           </Card>
 
-          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-[var(--shadow-hover)] transition-all duration-500 bg-gradient-to-br from-secondary/5 to-background backdrop-blur-lg">
+          <Card className="group relative overflow-hidden border-0 shadow-lg hover:shadow-card transition-all duration-500 bg-gradient-to-br from-secondary/5 to-background backdrop-blur-lg">
             <div className="absolute inset-0 bg-gradient-to-br from-secondary/10 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <CardContent className="relative p-8">
               <div className="flex items-center mb-6">

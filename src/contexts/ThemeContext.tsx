@@ -71,9 +71,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.style.removeProperty(prop);
     }
 
-    root.style.setProperty('--font-family', "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif");
-    root.style.setProperty('--font-heading', "'Cinzel', 'Georgia', serif");
-    root.style.setProperty('--theme-background', 'hsl(40 10% 96%)');
     root.style.removeProperty('--heading-shadow');
   }, []);
 

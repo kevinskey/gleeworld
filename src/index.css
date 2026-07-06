@@ -133,8 +133,11 @@
     --font-ui: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
       Roboto, "Helvetica Neue", sans-serif;
   }
-  html, body {
+  html {
     font-family: var(--font-ui);
+    font-size: 16px; /* rem base — keeps the 4px spacing grid; body text is 17px below */
+  }
+  body {
     font-size: 17px;
     line-height: 22px;
     letter-spacing: -0.43px;
@@ -548,6 +551,8 @@ button.module-card-solid:hover,
     --input: 240 2% 11%;
     --primary: 294 88% 58%;           /* #DB34F2 iOS purple (dark variant) */
     --primary-foreground: 0 0% 100%;
+    --tint: var(--site-accent, hsl(var(--primary)));
+    --tint-contrast: hsl(var(--primary-foreground));
     --secondary: 240 2% 16%;
     --secondary-foreground: 0 0% 100%;
     --ring: var(--primary);
