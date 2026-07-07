@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { Disc3, Plus, Music, Search, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
-import { toast } from 'sonner';
 import { createPartTracksProject, deletePartTracksProject, type PartTracksProject, VOICING_TEMPLATES } from '@/hooks/usePartTracksProject';
 import { PartTracksStudio } from '@/components/partTracks/PartTracksStudio';
 

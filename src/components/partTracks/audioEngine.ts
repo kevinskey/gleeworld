@@ -131,6 +131,22 @@ export async function unlockAudio(): Promise<void> {
   }
 }
 
+/** Waits (ms) BEFORE each fetch attempt when loading a track's audio.
+ *  Two regimes on purpose:
+ *   - the first four attempts land within ~2.7s, catching ordinary CDN
+ *     propagation blips right after an upload;
+ *   - the tail keeps trying past 60s because the self-hosted storage
+ *     backend only exposes new objects after a once-a-minute "flatten"
+ *     cron on the droplet (Storage writes stub/<bucket>/… paths; the
+ *     public proxy reads flat paths; /opt/supabase/scripts/
+ *     flatten-storage.sh reconciles every 60s). Until that job has run,
+ *     the public URL returns 403 AccessDenied.
+ *  Exported for unit tests: the load-bearing property is that the total
+ *  window comfortably covers the 60s flatten interval. */
+export const TRACK_FETCH_RETRY_DELAYS_MS: readonly number[] = [
+  0, 400, 800, 1500, 3000, 5000, 8000, 12000, 15000, 15000, 15000, 15000,
+];
+
 export async function loadTrack(
   id: string,
   url: string,
@@ -144,12 +160,16 @@ export async function loadTrack(
     try { existing.source?.stop(); } catch {}
   }
 
-  // Retry on 404 / 5xx with backoff. Supabase Storage's public URL can
-  // briefly 404 (or return an empty body) for 1-2s after upload while the
-  // CDN propagates — without this the immediate post-save reload misses
-  // the take and the user has to hard-refresh to hear it.
+  // Retry on 403 / 404 / 5xx with backoff. Supabase Storage's public URL
+  // can reject a fresh upload for a while: the self-hosted storage
+  // service writes new objects to a stub path and a droplet cron
+  // flattens them to the public path every 60s — until then the URL
+  // returns 403 AccessDenied (see TRACK_FETCH_RETRY_DELAYS_MS). Without
+  // a retry window that spans the flatten interval, a just-uploaded
+  // backing track (or a take opened from another device right after
+  // recording) looks permanently broken: no waveform, silent playback.
   const fetchWithRetry = async (): Promise<ArrayBuffer> => {
-    const delays = [0, 400, 800, 1500];
+    const delays = TRACK_FETCH_RETRY_DELAYS_MS;
     let lastStatus = 0;
     for (const ms of delays) {
       if (ms > 0) await new Promise((r) => setTimeout(r, ms));
