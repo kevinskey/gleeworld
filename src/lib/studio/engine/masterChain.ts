@@ -135,10 +135,31 @@ async function tryLoadWorklets(ctx: BaseAudioContext): Promise<boolean> {
   }
 }
 
+export interface BuildMasterChainOptions {
+  /** Override AudioWorkletNode construction. Needed by the LIVE engine:
+   * Tone 15's `getContext().rawContext` is a standardized-audio-context
+   * wrapper at runtime (its .d.ts claims native AudioContext, but the JS
+   * constructs `new stdAudioContext(...)` — see tone's
+   * core/context/AudioContext.js), and the bare native
+   * `new AudioWorkletNode(ctx, …)` constructor throws "not of type
+   * 'BaseAudioContext'" for it. The engine passes Tone's own
+   * `context.createAudioWorkletNode`, which branches native vs.
+   * standardized exactly for this case. Truly-native contexts — e.g.
+   * exportRender's OfflineAudioContext (Task 7) — omit this and get the
+   * native-constructor default below. `ctx.createGain/-BiquadFilter/
+   * -DynamicsCompressor` and `ctx.audioWorklet.addModule` behave the
+   * same on both context flavors, so only worklet-NODE construction
+   * needs the escape hatch. */
+  createWorkletNode?: (name: string, options: AudioWorkletNodeOptions) => AudioWorkletNode;
+}
+
 export async function buildMasterChain(
   ctx: BaseAudioContext,
   p: MasteringParams,
+  opts: BuildMasterChainOptions = {},
 ): Promise<MasterChainHandle> {
+  const makeWorkletNode = opts.createWorkletNode
+    ?? ((name: string, options: AudioWorkletNodeOptions) => new AudioWorkletNode(ctx, name, options));
   const workletOk = await tryLoadWorklets(ctx);
   const stages = chainTopology(p, workletOk);
   const degraded = p.enabled && !workletOk;
@@ -198,7 +219,7 @@ export async function buildMasterChain(
 
     if (stages.includes('limiter')) {
       const lim = mapLimiterParams(p.limiter);
-      limiterNode = new AudioWorkletNode(ctx, 'gw-limiter', {
+      limiterNode = makeWorkletNode('gw-limiter', {
         numberOfInputs: 1,
         numberOfOutputs: 1,
         channelCount: 2,
@@ -216,7 +237,7 @@ export async function buildMasterChain(
     if (stages.includes('meter') && limiterNode) {
       // Parallel analyzer tap: limiter -> loudness, loudness's own
       // output is never connected anywhere (numberOfOutputs: 0).
-      loudnessNode = new AudioWorkletNode(ctx, 'gw-loudness', {
+      loudnessNode = makeWorkletNode('gw-loudness', {
         numberOfInputs: 1,
         numberOfOutputs: 0,
         channelCount: 2,

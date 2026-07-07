@@ -9,6 +9,7 @@ import {
   type SessionListItem,
 } from '@/lib/studio/storage';
 import { StudioEngine, type EngineState } from '@/lib/studio/engine/engine';
+import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { renderSessionToWav } from '@/lib/studio/engine/mixdown';
 import type { Session } from '@/lib/studio/session';
@@ -149,6 +150,9 @@ function skeletonSig(session: Session | null): string {
   for (const t of session.tracks) {
     parts.push(`${t.id}:${t.kind}`);
     parts.push(t.fx.map((f) => `${f.id}:${f.type}:${f.enabled}`).join(','));
+    // Per-track EQ bands are baked into buildTrack's graph exactly like
+    // FX nodes, so EQ edits ride the same full-rebuild path (B1 task 5).
+    parts.push(trackEqSig(t.eq));
     if (t.kind === 'midi') {
       // MIDI tracks still need full rebuild for clip / note edits — the
       // incremental path here only covers audio clips. List midi notes
@@ -438,6 +442,13 @@ export function useStudioEngine(session: Session | null) {
           }
         }
         lastAudioClipsRef.current = nextSnap;
+
+        // Mastering is deliberately NOT part of the skeleton (a full
+        // loadSession teardown for a checkbox/slider would glitch
+        // playback) — converge it here instead. setMastering is
+        // idempotent: enabled-toggle rebuilds just the master chain,
+        // param edits become a debounced update, no-change is a no-op.
+        engine.setMastering(session.master.mastering);
       }
 
       setWarming(false);

@@ -1,7 +1,7 @@
 // Bind a Track from the session to a live audio graph node. Each
 // track has:
 //
-//   panvol → fx chain → output
+//   panvol → fx chain → eq bands → output
 //
 // Audio tracks schedule Tone.Player instances per clip on the transport.
 // MIDI tracks schedule note triggers against the track's instrument.
@@ -17,6 +17,7 @@ import { dbToGain } from './engine';
 import { buildFxChain, type EngineFxChain } from './fx';
 import { buildInstrument, type EngineInstrument } from './instruments';
 import { getAssetUrlSync } from './assetUrlCache';
+import { enabledEqBands, eqBandToBiquadOptions } from './trackEq';
 
 /** A clip + its loaded player, ready to be (re-)scheduled on the
  * transport. The engine collects these so it can re-register the
@@ -63,10 +64,30 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
   // node is referenced through its `.gain.value` setter.
   muteGate.gain.value = track.mute ? 0 : 1;
 
+  // Per-track EQ (B1): one BiquadFilterNode per ENABLED track.eq band,
+  // in series between the FX chain and the track output, in session
+  // order. Canonical `q` IS the Web Audio BiquadFilterNode Q for these
+  // RBJ filter types — passed through 1:1, no conversion (full mapping
+  // note + per-type footnotes in trackEq.ts). Bands are baked into the
+  // graph at build time (exactly like buildFxChain skips bypassed FX),
+  // so ANY eq change rebuilds the track via useStudio's skeleton diff —
+  // the same rebuild path fx changes take (trackEqSig sits next to the
+  // fx signature in skeletonSig).
+  const eqNodes = enabledEqBands(track.eq).map((band) => {
+    const o = eqBandToBiquadOptions(band);
+    return new Tone.BiquadFilter({ type: o.type, frequency: o.frequency, gain: o.gain, Q: o.Q });
+  });
+  let eqTail: Tone.ToneAudioNode = fx.output;
+  for (const node of eqNodes) {
+    eqTail.connect(node);
+    eqTail = node;
+  }
+
   const disposers: Array<() => void> = [
     () => panvol.dispose(),
     () => muteGate.dispose(),
     () => fx.dispose(),
+    () => { for (const n of eqNodes) n.dispose(); },
   ];
   const playbacks: ClipPlayback[] = [];
 
@@ -88,7 +109,9 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
 
   return {
     trackId: track.id,
-    output: fx.output,
+    // Track output = the last enabled EQ band, or fx.output when the
+    // track has no enabled EQ (eqTail starts life as fx.output).
+    output: eqTail,
     userMute: track.mute,
     userSolo: track.solo,
     playbacks,
