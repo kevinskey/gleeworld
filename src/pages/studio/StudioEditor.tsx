@@ -21,9 +21,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { useStudioSession, useStudioEngine, useMixdown, useUploadAudioAsset } from '@/hooks/useStudio';
+import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
-import { isAudioTrack, isMidiTrack, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
+import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
 import {
   formatTime, formatBarBeat, formatSamples, nextCounterMode, type CounterMode,
   preRollStartSeconds, postRollEndSeconds, punchTransition,
@@ -40,6 +40,7 @@ import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
 import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
 import { splitAudioClips, sliceClipChannels } from '@/lib/studio/clipOps';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
+import { exportSession, hasResumableExport, type ExportPreset } from '@/lib/studio/engine/exportRender';
 import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
 import { toast } from 'sonner';
 import { MixerView } from './MixerView';
@@ -308,7 +309,11 @@ function Editor({
     state, start, play, pause, stop, updateTrackStrip, updateTempo,
     updateTimeSignature, setMetronome,
   } = engineState;
-  const mixdown = useMixdown();
+  // Export sheet (B1 Task 7) — MP3 320 / WAV / Stems. Owned here (not
+  // inside MixerView) so the header's Export button AND the MasterStrip's
+  // Export button (inside MixerView, a different component subtree) open
+  // the exact same sheet/state.
+  const [exportOpen, setExportOpen] = useState(false);
 
   // Timeline vs Mixer — same route, transport/header stay mounted; only
   // the main tracks-area block below swaps content (B1 Task 6).
@@ -1296,21 +1301,6 @@ function Editor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, start, play, pause, stop, setMetronome, update, recording, selectedClip, session, session.tempo_bpm, session.time_signature.numerator, session.length_seconds, loopEnabled, loopRegion?.start, loopRegion?.end, punchEnabled, markers]);
 
-  const exportMix = async () => {
-    try {
-      const blob = await mixdown.mutateAsync(session);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${session.title.replace(/[^\w]+/g, '_')}.wav`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Mixdown exported');
-    } catch (e) {
-      toast.error('Mixdown failed', { description: e instanceof Error ? e.message : String(e) });
-    }
-  };
-
   return (
     <ZoomContext.Provider value={pxPerSecond}>
     <TrackHeightContext.Provider value={trackHeight}>
@@ -1347,15 +1337,17 @@ function Editor({
           >
             <SlidersHorizontal className="w-4 h-4 mr-1" /> Mix
           </Button>
-          <Button size="sm" variant="outline" onClick={exportMix} disabled={mixdown.isPending} title="Render to WAV" className="h-7 text-sm">
-            {mixdown.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Download className="w-4 h-4 mr-1" />}
-            Mixdown
+          <Button size="sm" variant="outline" onClick={() => setExportOpen(true)} title="Export MP3 320 / WAV / stems" className="h-7 text-sm">
+            <Download className="w-4 h-4 mr-1" />
+            Export
           </Button>
           <Button size="sm" variant="outline" onClick={() => exportSessionJson(session)} title="Download session JSON" className="h-7 w-7 p-0">
             <FileJson className="w-4 h-4" />
           </Button>
         </div>
       </div>
+
+      <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} />
 
       {/* Transport bar — single dense row */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 flex items-center gap-0.5 sm:gap-2 flex-wrap">
@@ -1815,7 +1807,7 @@ function Editor({
        * transport bar above stay mounted either way, so playback/record/
        * metronome are unaffected by which view is showing (B1 Task 6). */}
       {view === 'mix' ? (
-        <MixerView session={session} update={update} engineState={engineState} state={state} />
+        <MixerView session={session} update={update} engineState={engineState} state={state} onOpenExport={() => setExportOpen(true)} />
       ) : (
       <>
       {/* Logic-style main window — Inspector left | Tracks area right */}
@@ -3378,6 +3370,155 @@ function exportSessionJson(session: Session): void {
   a.download = `${session.title.replace(/[^\w]+/g, '_')}.gleewstudio.json`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ── Export sheet (B1 Task 7) — MP3 320 / WAV (CD quality) / Stems ────
+//
+// Controlled (open/onOpenChange from Editor) rather than owning its own
+// trigger button, because BOTH the header's Export button AND the
+// MasterStrip's Export button (MixerView.tsx, a sibling component tree)
+// need to open this exact same sheet — a self-contained
+// Dialog-with-its-own-trigger like AudioSettingsButton below won't work
+// for a two-entry-point sheet.
+//
+// Downloads fire sequentially (one <a> click + revoke per file, a short
+// stagger between them for Stems) rather than all at once — browsers can
+// silently drop rapid-fire simultaneous downloads triggered from a single
+// event handler.
+
+const EXPORT_PRESET_LABEL: Record<ExportPreset, string> = {
+  mp3: 'MP3 320',
+  wav: 'WAV (CD quality)',
+  stems: 'Stems (per track)',
+};
+
+function ExportSheet({
+  session, open, onOpenChange,
+}: {
+  session: Session;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const [preset, setPreset] = useState<ExportPreset>('wav');
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [resumeAvailable, setResumeAvailable] = useState(false);
+  const mastering = withMasteringDefaults(session).master.mastering!;
+
+  // Only mp3/wav (renderMaster) persist chunked-render progress — stems
+  // render one small per-track pass at a time and are never chunked.
+  useEffect(() => {
+    if (!open || preset === 'stems') { setResumeAvailable(false); return; }
+    let cancelled = false;
+    hasResumableExport(session.id, preset).then((has) => {
+      if (!cancelled) setResumeAvailable(has);
+    });
+    return () => { cancelled = true; };
+  }, [open, preset, session.id]);
+
+  const runExport = async (resume: boolean) => {
+    setBusy(true);
+    setProgress(0);
+    try {
+      const files = await exportSession(session, preset, {
+        mastering: mastering.enabled,
+        onProgress: setProgress,
+        resume,
+        onDegraded: () => toast.warning(
+          'Mastering ran in degraded mode for this export',
+          { description: 'The limiter worklet was unavailable — exported with HPF/air/comp only.' },
+        ),
+      });
+      for (let i = 0; i < files.length; i++) {
+        const { filename, blob } = files[i];
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        // Sequential downloads (spec) — stagger so the browser's
+        // multi-download throttle doesn't drop any of the stems.
+        if (i < files.length - 1) await new Promise((r) => setTimeout(r, 200));
+      }
+      toast.success(files.length > 1 ? `Exported ${files.length} stems` : 'Export complete');
+      setResumeAvailable(false);
+      onOpenChange(false);
+    } catch (e) {
+      toast.error('Export failed', { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={(o) => { if (!busy) onOpenChange(o); }}>
+      <SheetContent side="bottom" className="max-w-md mx-auto rounded-t-xl">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            Export
+            <span
+              className={`text-xs font-semibold px-1.5 py-0.5 rounded border ${
+                mastering.enabled
+                  ? 'bg-emerald-500/15 border-emerald-500/60 text-emerald-400'
+                  : 'bg-muted border-border text-muted-foreground'
+              }`}
+            >
+              {mastering.enabled ? 'Mastering applied' : 'No mastering'}
+            </span>
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="space-y-3 py-2">
+          <div className="grid grid-cols-3 gap-2">
+            {(['mp3', 'wav', 'stems'] as ExportPreset[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                disabled={busy}
+                onClick={() => setPreset(p)}
+                className={`h-11 rounded border text-sm font-semibold disabled:opacity-50 ${
+                  preset === p
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'
+                }`}
+              >
+                {EXPORT_PRESET_LABEL[p]}
+              </button>
+            ))}
+          </div>
+
+          {resumeAvailable && !busy && (
+            <div className="text-xs bg-amber-500/10 border border-amber-500/40 rounded p-2 flex items-center justify-between gap-2">
+              <span>An interrupted export of this preset was found.</span>
+              <button type="button" onClick={() => runExport(true)} className="underline font-semibold shrink-0">
+                Resume
+              </button>
+            </div>
+          )}
+
+          {busy && (
+            <div className="space-y-1">
+              <div className="h-2 rounded bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-[width] duration-150"
+                  style={{ width: `${Math.round(progress * 100)}%` }}
+                />
+              </div>
+              <div className="text-xs text-muted-foreground text-center tabular-nums">
+                {Math.round(progress * 100)}%
+              </div>
+            </div>
+          )}
+
+          <Button onClick={() => runExport(false)} disabled={busy} className="w-full">
+            {busy ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Download className="w-4 h-4 mr-1" />}
+            {busy ? 'Rendering…' : `Export ${EXPORT_PRESET_LABEL[preset]}`}
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 }
 
 // ── Compact time-signature picker (dark, fits in transport bar) ──────

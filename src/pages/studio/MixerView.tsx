@@ -111,12 +111,16 @@ const EMPTY_METER: MeterEntry = { db: -Infinity, holdDb: -Infinity };
 // ═══════════════════════════════════════════════════════════════════
 
 export function MixerView({
-  session, update, engineState, state,
+  session, update, engineState, state, onOpenExport,
 }: {
   session: Session;
   update: (mut: (s: Session) => Session) => void;
   engineState: ReturnType<typeof useStudioEngine>;
   state: EngineState | null;
+  /** Opens the Export sheet owned by StudioEditor (MP3 320 / WAV / Stems)
+   * — the MasterStrip's Export button (Task 7) and the header's Export
+   * button both drive the same sheet/state. */
+  onOpenExport: () => void;
 }) {
   const isPhone = useIsPhone();
   const [meters, setMeters] = useState<Record<string, MeterEntry>>({});
@@ -210,7 +214,7 @@ export function MixerView({
             onTapPhone={() => setActivePhoneTrackId(t.id)}
           />
         ))}
-        <MasterStrip session={session} update={update} state={state} meter={meters.master ?? EMPTY_METER} onResetHold={() => resetHold('master')} />
+        <MasterStrip session={session} update={update} state={state} meter={meters.master ?? EMPTY_METER} onResetHold={() => resetHold('master')} onExport={onOpenExport} />
       </div>
       {isPhone && activePhoneTrack && (
         <MiniFader
@@ -631,19 +635,21 @@ function MiniFader({ track, onStripChange, onClose }: {
 
 // ═══════════════════════════════════════════════════════════════════
 // MasterStrip — mastering enable, HPF/air/comp/ceiling, loudness servo,
-// LUFS M/S/I + peak readouts, Export (disabled — Task 7 wires it).
+// LUFS M/S/I + peak readouts, Export (opens the StudioEditor Export
+// sheet — MP3 320 / WAV / Stems, Task 7).
 // ═══════════════════════════════════════════════════════════════════
 
 const SERVO_INTERVAL_MS = 3000;
 
 function MasterStrip({
-  session, update, state, meter, onResetHold,
+  session, update, state, meter, onResetHold, onExport,
 }: {
   session: Session;
   update: (mut: (s: Session) => Session) => void;
   state: EngineState | null;
   meter: MeterEntry;
   onResetHold: () => void;
+  onExport: () => void;
 }) {
   const mastering = useMemo(() => withMasteringDefaults(session).master.mastering!, [session]);
   const [servoEngaged, setServoEngaged] = useState(false);
@@ -710,6 +716,19 @@ function MasterStrip({
         </div>
       </div>
 
+      {/* Mastering-applied badge — mirrors the switch above; also shown
+       * in the Export sheet itself so it's clear whether an export will
+       * run through the mastering chain (Task 7). */}
+      <div
+        className={`text-center text-xs font-semibold rounded border py-0.5 ${
+          mastering.enabled
+            ? 'bg-emerald-500/15 border-emerald-500/60 text-emerald-400'
+            : 'bg-muted border-border text-muted-foreground'
+        }`}
+      >
+        {mastering.enabled ? 'Mastering applied' : 'No mastering'}
+      </div>
+
       <div className="space-y-1.5">
         <LabeledSlider label="HPF" value={mastering.hpf_hz} min={20} max={120} step={1} unit="Hz"
           onChange={(v) => updateMastering({ hpf_hz: v })} />
@@ -760,9 +779,9 @@ function MasterStrip({
       </div>
 
       <button
-        disabled
-        title="Export presets arrive in the next update"
-        className="w-full h-9 rounded border border-border text-muted-foreground opacity-50 cursor-not-allowed inline-flex items-center justify-center gap-1.5 text-xs font-semibold"
+        onClick={onExport}
+        title="Export MP3 320 / WAV / stems"
+        className="w-full h-9 rounded border border-border text-foreground hover:bg-muted/70 inline-flex items-center justify-center gap-1.5 text-xs font-semibold"
       >
         <Download className="w-3.5 h-3.5" /> Export
       </button>
