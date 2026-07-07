@@ -1171,12 +1171,18 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
 
       // prepareExternalRecordSession SUPERSEDES AudioSessionConfigPlugin's
       // configureForMusicRecording on this path: it sets .playAndRecord +
-      // .mixWithOthers when we own the session, or (Apple Music) leaves the
-      // MusicKit-owned session untouched and resolves sessionConfigured=false.
+      // .mixWithOthers. Session-BEFORE-MusicKit (plan Task 6, promoted
+      // 2026-07-07): we now claim the record session even for Apple Music
+      // backing, THEN start playback into the already-mixed session.
+      // Starting Music first and opening the mic after paused the Music
+      // the instant capture began ("accompaniment won't play while
+      // recording"). If Music still steals the session, the
+      // externalRecordStart catch below falls back to the web capture
+      // path, same as before.
       let prepared: { sessionConfigured: boolean };
       try {
         prepared = await NativeStudio.prepareExternalRecordSession({
-          musicKitOwnsSession: backing === 'appleMusic',
+          musicKitOwnsSession: false,
           mixWithOthers: true,
         });
       } catch (e: any) {
@@ -1248,11 +1254,12 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
           try { await externalPeakSubRef.current.remove(); } catch { /* ignore */ }
           externalPeakSubRef.current = null;
         }
-        // FALLBACK: MusicKit owned the session (sessionConfigured=false) and
-        // the dead-input watchdog rejected ("no record route"). Fall back to
-        // the Task-2 web capture path, which re-establishes its own mic graph.
-        if (prepared.sessionConfigured === false) {
-          console.info('[PartTracks] Native external record unavailable under MusicKit-owned session — falling back to web capture path.');
+        // FALLBACK: the session couldn't be configured, or Apple Music
+        // grabbed it back despite the session-first order (the dead-input
+        // watchdog rejects with "no record route"). Fall back to the
+        // Task-2 web capture path, which re-establishes its own mic graph.
+        if (prepared.sessionConfigured === false || backing === 'appleMusic') {
+          console.info('[PartTracks] Native external record unavailable with this backing — falling back to web capture path.');
           // Clean the optimistic native state + backing so the web path can
           // start fresh (it re-arms its own session, count-in, and backing).
           nativeRecRef.current = null;
@@ -1344,16 +1351,16 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     opts?: { fallbackFromNative?: boolean },
   ) => {
     // iOS uses the native external recorder (Task 4). The web path below is
-    // the fallback when native capture can't get a record route under a
-    // MusicKit-owned session (opts.fallbackFromNative), and the path for all
-    // non-iOS platforms.
-    // Apple Music goes straight to web capture: MPMusicPlayerController owns
-    // the audio session, so the native recorder's watchdog would reject after
-    // ~1.5s, stop/restart the Music playback, and re-run the count-in before
-    // landing here anyway. (Device-gate experiment for later: establishing a
-    // .playAndRecord session BEFORE MusicKit playback may enable the native
-    // path — see plan Task 6.)
-    if (isNativeStudioAvailable() && !opts?.fallbackFromNative && getBackingKind() !== 'appleMusic') {
+    // the fallback when native capture can't get a record route
+    // (opts.fallbackFromNative), and the path for all non-iOS platforms.
+    // Apple Music now ALSO takes the native path (plan Task 6, promoted
+    // 2026-07-07): prepareExternalRecordSession claims .playAndRecord +
+    // .mixWithOthers BEFORE MusicKit starts, which keeps the Music
+    // playing when capture begins — the old Music-first order let the
+    // session switch pause the backing the moment the mic opened. If
+    // Music still steals the session, the start-failure catch falls back
+    // here with fallbackFromNative.
+    if (isNativeStudioAvailable() && !opts?.fallbackFromNative) {
       await startNativeRecordForTrack(track);
       return;
     }
@@ -1415,20 +1422,14 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       livePeaksRef.current = [];
       setLivePeaks([]);
 
-      // External accompaniment FIRST and AWAIT it actually playing.
-      // MusicKit's setQueue + play() takes 500ms–2s to reach the
-      // playbackState=2 (Playing) event. If we started the mic and
-      // local audio before that, the vocal would lead Apple Music by
-      // the warm-up delay — and that delay differs every session,
-      // which is why takes never lined up on replay. Awaiting here
-      // anchors the recorder to Apple Music's audible start.
+      // MIC FIRST, backing second (order flipped 2026-07-07): opening
+      // the mic switches the audio session (playAndRecord on iOS/WebKit),
+      // and when Apple Music/YouTube was already playing, that switch
+      // PAUSED it — "accompaniment won't play while recording". Starting
+      // the backing after the session is already record-capable keeps it
+      // alive, and the measured alignment below absorbs the extra head
+      // silence (capture rolls while the backing warms up).
       const isStreamingBacking = getBackingKind() === 'appleMusic' || getBackingKind() === 'youtube';
-      let backingAudibleWallMs: number | null = null;
-      if (!playing) {
-        await startExternalAccompaniment(recordStartOffsetRef.current);
-        if (isStreamingBacking) backingAudibleWallMs = performance.now();
-      }
-
       await startRecording({
         inputDeviceId,
         musicMode: isMusicModeEnabled(),
@@ -1445,38 +1446,37 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // plugin warns once if it's missing. iOS-only, web no-ops.
       void startRecordingActivity(project?.title ?? 'Part Tracks', track.label);
 
-      // Local backing tracks fire NOW that the mic recorder is rolling
-      // and the external source is already audible. External start was
-      // awaited above, so this last call closes the sync triangle.
+      // Backing sources fire now that capture is rolling. The external
+      // (streaming) start is AWAITED to its actually-playing state —
+      // MusicKit's setQueue + play() takes 500ms–2s — so its resolve is
+      // the "backing became audible" anchor for alignment.
       let transportStartWallMs: number | null = null;
       if (!playing) {
+        await startExternalAccompaniment(recordStartOffsetRef.current);
+        const backingAudibleWallMs = performance.now();
         startPlayback(recordStartOffsetRef.current);
-        // + the 50ms scheduling anchor inside startPlayback (sources fire
-        // at ctx.currentTime + 0.05, not at the call itself).
-        transportStartWallMs = performance.now() + 50;
+        // Streaming backing: the singer follows the stream, audible at
+        // its awaited resolve. Local/file backing: sources fire at the
+        // ctx anchor, ~50ms after the startPlayback call.
+        transportStartWallMs = isStreamingBacking
+          ? backingAudibleWallMs
+          : performance.now() + 50;
         setPlaying(true);
       }
 
       // Stamp the take so stop can MEASURE the real head gap instead of
       // trusting a fixed trim guess (real startup — mic open, audio
-      // session switch on iOS — varies 0.3s–2.5s and landed takes "a
-      // measure late"). Three shapes, same model as Studio's
-      // takeAlignment.ts:
-      //  - fresh start, local/file backing → transport stamp set: trim
-      //    the measured capture→audible gap + hardware residual;
-      //  - fresh start, streaming backing → backing became audible when
-      //    startExternalAccompaniment resolved, BEFORE capture: treat as
-      //    the already-running case anchored at that moment;
+      // session switch on iOS, MusicKit warm-up — varies 0.3s–2.5s and
+      // landed takes "a measure late"). Two shapes, same model as
+      // Studio's takeAlignment.ts:
+      //  - fresh start → transport stamp set: trim the measured
+      //    capture→backing-audible gap + hardware residual;
       //  - overdub while playing → anchor is the press moment; capture
       //    opened late, so the clip shifts right instead of trimming.
       takeStampsRef.current = {
-        pressWallMs: !wasPlayingAtPress && backingAudibleWallMs !== null
-          ? backingAudibleWallMs
-          : pressWallMs,
+        pressWallMs,
         captureStartWallMs,
-        transportStartWallMs: !wasPlayingAtPress && !isStreamingBacking
-          ? transportStartWallMs
-          : null,
+        transportStartWallMs: !wasPlayingAtPress ? transportStartWallMs : null,
         deviceLatencyMs: getConfiguredDeviceLatencyMs(),
       };
 
