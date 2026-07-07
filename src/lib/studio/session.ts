@@ -108,6 +108,18 @@ export interface Instrument {
 
 export type TrackKind = 'audio' | 'midi';
 
+/** RBJ-cookbook biquad EQ band on a track. `q` is the canonical RBJ Q —
+ * see docs/superpowers/plans/2026-07-07-studio-mixer-mastering-b1.md
+ * Global Constraints for the comment convention required wherever this
+ * crosses into a platform API (Web Audio BiquadFilterNode.Q etc). */
+export interface TrackEqBand {
+  type: 'highpass' | 'lowshelf' | 'peaking' | 'highshelf';
+  freq_hz: number;
+  gain_db: number;
+  q: number;
+  enabled: boolean;
+}
+
 interface TrackBase {
   id: string;
   kind: TrackKind;
@@ -119,6 +131,7 @@ interface TrackBase {
   solo: boolean;
   arm: boolean;        // recording armed
   fx: FxNode[];
+  eq?: TrackEqBand[];  // optional — absent on sessions written before Mixer/Mastering (B1)
 }
 
 export interface AudioTrack extends TrackBase {
@@ -136,10 +149,38 @@ export type Track = AudioTrack | MidiTrack;
 
 // ── Master bus ───────────────────────────────────────────────────────
 
+/** Canonical mastering chain params (HPF → air shelf → glue comp →
+ * look-ahead limiter, EBU R128 loudness target). Stored on the session
+ * and never passed to platform APIs by name — see B1 plan Global
+ * Constraints for the canonical→node mapping notes (Task 4/5).
+ * `comp.attack_ms`/`release_ms` = time to reach 90% of the target gain
+ * change (NOT the Web Audio DynamicsCompressorNode convention). */
+export interface MasteringParams {
+  enabled: boolean;
+  hpf_hz: number;
+  air_gain_db: number;
+  comp: { threshold_db: number; ratio: number; attack_ms: number; release_ms: number };
+  limiter: { ceiling_db: number; release_ms: number };
+  loudness_target_lufs: number;
+}
+
+/** Verbatim defaults from the B1 spec/research briefs — do not tweak
+ * without updating the spec and the rendered-reference fixtures
+ * (Task 8), which are pinned to these exact values. */
+export const DEFAULT_MASTERING: MasteringParams = {
+  enabled: false,
+  hpf_hz: 60,
+  air_gain_db: 1,
+  comp: { threshold_db: -18, ratio: 2, attack_ms: 10, release_ms: 250 },
+  limiter: { ceiling_db: -1, release_ms: 200 },
+  loudness_target_lufs: -14,
+};
+
 export interface MasterBus {
   volume_db: number;   // 0 default
   pan: number;         // 0 default
   fx: FxNode[];        // applied to the final mix
+  mastering?: MasteringParams; // optional — absent on sessions written before Mixer/Mastering (B1)
 }
 
 // ── Audio assets ─────────────────────────────────────────────────────
@@ -195,3 +236,24 @@ export const isAudioTrack = (t: Track): t is AudioTrack => t.kind === 'audio';
 export const isMidiTrack = (t: Track): t is MidiTrack => t.kind === 'midi';
 export const isAudioClip = (c: Clip): c is AudioClip => c.kind === 'audio';
 export const isMidiClip = (c: Clip): c is MidiClip => c.kind === 'midi';
+
+// ── Backward-compat helpers ──────────────────────────────────────────
+//
+// session.ts has no runtime normalize/load path of its own (validate.ts
+// only checks shape; defaults.ts only builds brand-new sessions) — so a
+// legacy session loaded from storage without `master.mastering` is
+// already a structurally valid Session (the field is optional). This
+// helper fills in DEFAULT_MASTERING for callers (e.g. the Mixer view)
+// that want a concrete MasteringParams to render/bind against, without
+// mutating the caller's session or writing defaults back to storage.
+
+/** Returns a session whose `master.mastering` is guaranteed to be a
+ * concrete MasteringParams — DEFAULT_MASTERING when the loaded session
+ * predates Mixer/Mastering (B1). Does not mutate `session`. */
+export function withMasteringDefaults(session: Session): Session {
+  if (session.master.mastering) return session;
+  return {
+    ...session,
+    master: { ...session.master, mastering: { ...DEFAULT_MASTERING } },
+  };
+}
