@@ -162,12 +162,49 @@ export async function openMicRecorder(
   if (mic) mic.connect(inputGain);
   else Tone.connect(manualSourceNode!, inputGain);
   const monitor = new Tone.Gain(args.monitorGain ?? 0); // default off to avoid feedback
-  // Let MediaRecorder pick the best supported type by default. Safari +
-  // iOS don't support audio/webm so forcing it makes recordings fail
-  // silently or produce unplayable files. Callers that already probed a
-  // supported type (Part Tracks) can pass it via `mimeType`; the caller
-  // reads blob.type after stop() either way to know the actual format.
-  const recorder = args.mimeType ? new Tone.Recorder({ mimeType: args.mimeType }) : new Tone.Recorder();
+
+  // CAPTURE path splits by how the mic was opened:
+  //
+  //  - manual-stream callers (Part Tracks) record with a raw MediaRecorder
+  //    on the getUserMedia stream itself — NO Web Audio hop. Routing the
+  //    take through the Tone graph (MediaStreamSource → Tone.Recorder's
+  //    MediaStreamDestination → MediaRecorder) silently captures nothing
+  //    on iOS WebKit when the mic's sample rate differs from the
+  //    context's (e.g. AirPods mic at 24k vs a 48k context) — the source
+  //    node produces silence and the take comes out as a husk. This is
+  //    the pre-refactor Part Tracks capture path, restored (2026-07-07,
+  //    iPhone Chrome+Safari takes never reached upload). The Tone graph
+  //    below still gets the stream for metering/waveform/monitoring —
+  //    losing the live meter on a broken graph is cosmetic; losing the
+  //    take is not.
+  //
+  //  - Tone.UserMedia callers (Studio — no `constraints`) keep recording
+  //    through Tone.Recorder exactly as before. Let MediaRecorder pick
+  //    the best supported type by default there. Callers that already
+  //    probed a supported type pass it via `mimeType`; the caller reads
+  //    blob.type after stop() either way to know the actual format.
+  let rawRecorder: MediaRecorder | null = null;
+  let rawChunks: Blob[] = [];
+  let toneRecorder: Tone.Recorder | null = null;
+  if (manualStream && typeof MediaRecorder !== 'undefined') {
+    try {
+      rawRecorder = args.mimeType
+        ? new MediaRecorder(manualStream, { mimeType: args.mimeType })
+        : new MediaRecorder(manualStream);
+    } catch {
+      // Requested mimeType rejected at construction — retry unconstrained
+      // before falling back to the Tone path.
+      try { rawRecorder = new MediaRecorder(manualStream); } catch { rawRecorder = null; }
+    }
+    if (rawRecorder) {
+      rawRecorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data && e.data.size > 0) rawChunks.push(e.data);
+      };
+    }
+  }
+  if (!rawRecorder) {
+    toneRecorder = args.mimeType ? new Tone.Recorder({ mimeType: args.mimeType }) : new Tone.Recorder();
+  }
 
   // Time-domain analyser for waveform rendering.
   const waveAnalyser = new Tone.Analyser('waveform', 512);
@@ -175,7 +212,7 @@ export async function openMicRecorder(
 
   inputGain.connect(monitor);
   if (args.monitorTo) monitor.connect(args.monitorTo);
-  inputGain.connect(recorder);
+  if (toneRecorder) inputGain.connect(toneRecorder);
   inputGain.connect(waveAnalyser);
   inputGain.connect(meter);
 
@@ -183,12 +220,29 @@ export async function openMicRecorder(
 
   const start = async () => {
     if (recording) return;
-    await recorder.start();
+    if (rawRecorder) {
+      rawChunks = [];
+      rawRecorder.start();
+    } else {
+      await toneRecorder!.start();
+    }
     recording = true;
   };
   const stop = async () => {
     if (!recording) throw new Error('not recording');
-    const blob = await recorder.stop();
+    let blob: Blob;
+    if (rawRecorder) {
+      blob = await new Promise<Blob>((resolve, reject) => {
+        const rec = rawRecorder!;
+        rec.onstop = () => resolve(new Blob(rawChunks, {
+          type: rec.mimeType || args.mimeType || 'audio/webm',
+        }));
+        rec.onerror = (e: any) => reject(e?.error ?? new Error('MediaRecorder error'));
+        try { rec.stop(); } catch (e) { reject(e); }
+      });
+    } else {
+      blob = await toneRecorder!.stop();
+    }
     recording = false;
     return blob;
   };
@@ -205,6 +259,11 @@ export async function openMicRecorder(
     getPeakDb: () => meter.getValue() as number,
     dispose: () => {
       if (activeHandle === handle) activeHandle = null;
+      if (rawRecorder && rawRecorder.state !== 'inactive') {
+        try { rawRecorder.stop(); } catch { /* ignore */ }
+      }
+      rawRecorder = null;
+      rawChunks = [];
       if (mic) {
         try { mic.close(); } catch { /* ignore */ }
         mic.dispose();
@@ -213,7 +272,7 @@ export async function openMicRecorder(
         try { manualStream.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ }
       }
       try { manualSourceNode?.disconnect(); } catch { /* ignore */ }
-      inputGain.dispose(); monitor.dispose(); recorder.dispose();
+      inputGain.dispose(); monitor.dispose(); toneRecorder?.dispose();
       waveAnalyser.dispose(); meter.dispose();
     },
     close: () => handle.dispose(),
