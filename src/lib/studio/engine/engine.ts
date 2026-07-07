@@ -20,6 +20,7 @@ import { buildTrack, type EngineTrack } from './tracks';
 import { setAssetUrl } from './assetUrlCache';
 import { shouldLoopWrap } from '../transport';
 import { buildMasterChain, type MasterChainHandle } from './masterChain';
+import { MasterChainSync } from './masterChainSync';
 
 export interface EngineState {
   isReady: boolean;
@@ -60,15 +61,49 @@ export class StudioEngine {
   private masterFx: EngineFxChain;
   private masterMeter: Tone.Meter;
   // Mastering chain (B1 task 4/5) — built async (AudioWorklet module
-  // load) only when session.master.mastering?.enabled. null means
-  // bypass: masterFx.output feeds Destination directly.
-  private masterChainHandle: MasterChainHandle | null = null;
-  // Monotonic counter guarding rebuildMasterChain's async gap: if
-  // dispose()/loadSession()/setMastering() runs again before an
-  // in-flight buildMasterChain() resolves, the resolved handle is
-  // stale — bump the token and compare on resolve to discard it instead
-  // of wiring a zombie chain into the live graph.
-  private masterChainBuildToken = 0;
+  // load) only when session.master.mastering?.enabled. chainSync.handle
+  // null means bypass: masterFx.output feeds Destination directly.
+  // ALL toggle/build-race decisions live in MasterChainSync (which
+  // converges on the DESIRED enabled state, recorded synchronously —
+  // never on handle-null-ness, which is stale during the async worklet
+  // load; see masterChainSync.ts for the fd2f223e8 race this fixes).
+  // The hooks below are the engine-side effects of each transition.
+  private chainSync = new MasterChainSync<MasterChainHandle>({
+    build: (mastering) => {
+      const toneCtx = Tone.getContext();
+      return buildMasterChain(toneCtx.rawContext, mastering, {
+        // Tone 15's rawContext is a standardized-audio-context wrapper
+        // at runtime (typed as native AudioContext, constructed as
+        // stdAudioContext) — the bare `new AudioWorkletNode(ctx, …)`
+        // constructor rejects it. Tone's context.createAudioWorkletNode
+        // branches native-vs-standardized correctly, so worklet NODES go
+        // through it. Module LOADING stays inside buildMasterChain
+        // (rawContext.audioWorklet.addModule — works on both flavors);
+        // we deliberately do NOT use Tone's addAudioWorkletModule, which
+        // caches a single _workletPromise and would silently skip the
+        // second of our two module URLs.
+        createWorkletNode: (name, options) => toneCtx.createAudioWorkletNode(name, options),
+      });
+    },
+    install: (handle) => {
+      this.state.masterChain = this.guardedHandle(handle);
+      this.wireMasterOutput();
+      this.emit();
+    },
+    uninstall: () => {
+      // The chain's connections died with its dispose() — rewire the
+      // bypass topology (masterFx -> Destination) immediately so the
+      // master bus is never silent.
+      this.state.masterChain = undefined;
+      this.wireMasterOutput();
+      this.emit();
+    },
+    refresh: (p) => this.updateMastering(p),
+    onBuildError: (e) => {
+      // eslint-disable-next-line no-console
+      console.error('[studio] buildMasterChain failed', e);
+    },
+  });
   // Debounce state for updateMastering() — coalesces a fast-dragging
   // mastering-panel slider into one AudioParam write per 50ms instead of
   // one per input event.
@@ -161,96 +196,42 @@ export class StudioEngine {
   /** (Re)wire the tail of the master bus: masterFx.output always feeds
    * the post-FX meter (unchanged by mastering — this is the same peak
    * meter the transport bar always read); the signal that reaches the
-   * speakers is masterFx.output -> masterChainHandle (if built) ->
+   * speakers is masterFx.output -> chainSync.handle (if built) ->
    * Destination, collapsing to masterFx.output -> Destination directly
-   * when masterChainHandle is null (mastering off, or its async build
+   * when chainSync.handle is null (mastering off, or its async build
    * hasn't resolved yet). Called from the constructor (bypass), from
-   * loadSession() after masterFx is rebuilt, and from
-   * rebuildMasterChain() whenever masterChainHandle is replaced.
+   * loadSession() after masterFx is rebuilt, and from chainSync's
+   * install/uninstall hooks whenever the chain handle is replaced.
    * `.disconnect()` on a node with nothing wired is a safe no-op, so
    * this is safe to call redundantly. */
   private wireMasterOutput(): void {
+    const chain = this.chainSync.handle;
     this.masterFx.output.disconnect();
     this.masterFx.output.connect(this.masterMeter);
-    if (this.masterChainHandle) {
-      Tone.connect(this.masterFx.output, this.masterChainHandle.input);
-      this.connectToDestination(this.masterChainHandle.output);
+    if (chain) {
+      Tone.connect(this.masterFx.output, chain.input);
+      this.connectToDestination(chain.output);
     } else {
       this.connectToDestination(this.masterFx.output);
     }
   }
 
   /** Converge the live master chain with `mastering` (from a session
-   * load or a live edit). Idempotent: when the enabled/built state
-   * already matches, this is just a (debounced) param refresh — NO
+   * load or a live edit). Idempotent: when the desired state already
+   * matches, this is just a (debounced) param refresh — NO
    * teardown/rebuild of the AudioWorklet-backed chain, so calling it on
-   * every session write is cheap. Only an actual enabled-toggle disposes
-   * the old chain and (if turning on) kicks off the async rebuild.
+   * every session write is cheap. All toggle/build-race logic (desired
+   * state recorded synchronously, superseded builds disposed) lives in
+   * MasterChainSync — see masterChainSync.ts.
    * `rewireTail` re-runs wireMasterOutput even in the no-toggle case —
    * loadSession needs that because it just disposed + rebuilt masterFx,
    * orphaning the old tail connections; live edits don't. */
   private syncMasterChain(mastering: MasteringParams | undefined, rewireTail: boolean): void {
-    const enabled = !!mastering?.enabled;
-    const currentlyBuilt = this.masterChainHandle !== null;
-    if (enabled !== currentlyBuilt) {
-      void this.rebuildMasterChain(mastering);
-      return;
-    }
+    this.chainSync.sync(mastering);
+    // If sync() changed the chain synchronously (disable path), its
+    // uninstall hook already rewired; wireMasterOutput is documented
+    // safe to call redundantly, so the extra pass here is harmless.
     if (rewireTail) this.wireMasterOutput();
-    if (enabled && mastering) this.updateMastering(mastering);
-  }
-
-  /** Tear down whatever master chain is live and, if `mastering?.enabled`,
-   * build a fresh one (async — awaits the gw-limiter/gw-loudness
-   * AudioWorklet modules) and rewire it in. Guarded by a monotonic token
-   * so a second call (another toggle, a loadSession, or dispose()) before
-   * this one's `buildMasterChain()` resolves discards the stale result
-   * instead of wiring a zombie chain alongside/over the newer one. */
-  private async rebuildMasterChain(mastering: MasteringParams | undefined): Promise<void> {
-    const token = ++this.masterChainBuildToken;
-    if (this.masterChainHandle) {
-      this.masterChainHandle.dispose();
-      this.masterChainHandle = null;
-      this.state.masterChain = undefined;
-    }
-    // Re-wire the bypass topology NOW (handle is null): the disposed
-    // chain's connections are gone, and buildMasterChain is async
-    // (worklet module fetch) — without this, the master bus would be
-    // silent for the whole build. Audio flows masterFx -> Destination
-    // until the chain lands and wireMasterOutput runs again below.
-    this.wireMasterOutput();
-    if (!mastering?.enabled) {
-      this.emit();
-      return;
-    }
-    try {
-      const toneCtx = Tone.getContext();
-      const handle = await buildMasterChain(toneCtx.rawContext, mastering, {
-        // Tone 15's rawContext is a standardized-audio-context wrapper
-        // at runtime (typed as native AudioContext, constructed as
-        // stdAudioContext) — the bare `new AudioWorkletNode(ctx, …)`
-        // constructor rejects it. Tone's context.createAudioWorkletNode
-        // branches native-vs-standardized correctly, so worklet NODES go
-        // through it. Module LOADING stays inside buildMasterChain
-        // (rawContext.audioWorklet.addModule — works on both flavors);
-        // we deliberately do NOT use Tone's addAudioWorkletModule, which
-        // caches a single _workletPromise and would silently skip the
-        // second of our two module URLs.
-        createWorkletNode: (name, options) => toneCtx.createAudioWorkletNode(name, options),
-      });
-      if (token !== this.masterChainBuildToken) {
-        // Superseded while we awaited the worklet load — discard.
-        handle.dispose();
-        return;
-      }
-      this.masterChainHandle = handle;
-      this.state.masterChain = this.guardedHandle(handle);
-      this.wireMasterOutput();
-      this.emit();
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('[studio] buildMasterChain failed', e);
-    }
   }
 
   /** The handle exposed on EngineState is a thin wrapper over the real
@@ -304,7 +285,7 @@ export class StudioEngine {
       this.masterChainUpdateTimer = null;
       const p = this.pendingMasteringUpdate;
       this.pendingMasteringUpdate = null;
-      if (p && this.masterChainHandle) this.masterChainHandle.update(p);
+      if (p) this.chainSync.handle?.update(p);
     }, 50);
   }
 
