@@ -1,7 +1,7 @@
 # Studio Mixer & Mastering — Design Spec (Sub-project B)
 
 **Date:** 2026-07-06
-**Status:** Approved (brainstorm with Kevin; "Mix + Master strip" scope chosen over full-bus console)
+**Status:** Implemented (B1) — 2026-07-07
 **Prerequisites:** READ the three research briefs first — `docs/research/2026-07-06-touch-daw-ux-brief.md`, `2026-07-06-web-audio-mastering-brief.md`, `2026-07-06-ios-audio-engineering-brief.md`. Every convention below is sourced there.
 **Phasing:** B1 = web (this spec) · B2 = native iOS parity (separate spec, uses the canonical parameter model defined here) · B3 = later (buses, automation).
 
