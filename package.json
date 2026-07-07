@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:studio": "vitest run src/lib/studio"
+    "test:studio": "vitest run src/lib/studio",
+    "typecheck:guard": "node scripts/typecheck-baseline.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",

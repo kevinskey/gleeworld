@@ -235,12 +235,6 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
   const isSuperAdmin = userProfile?.role === 'super-admin';
   const isOnUserDashboard = location.pathname.startsWith('/dashboard/member-view/');
 
-  console.log('Header - userProfile:', userProfile);
-  console.log('Header - userProfile avatar_url:', userProfile?.avatar_url);
-  console.log('Header - isAdmin:', isAdmin);
-  console.log('Header - isPRCoordinator:', isPRCoordinator);
-  console.log('Header - canAccessPR:', canAccessPR);
-
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
   ];

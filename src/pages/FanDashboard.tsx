@@ -141,10 +141,10 @@ export default function FanDashboard() {
     );
   }
 
-  return <FanDashboardBody fanStats={fanStats} upcomingEvents={upcomingEvents} />;
+  return <FanDashboardBody fanStats={fanStats} upcomingEvents={upcomingEvents} handleRSVP={handleRSVP} />;
 }
 
-function FanDashboardBody({ fanStats, upcomingEvents }: { fanStats: FanStats | null; upcomingEvents: UpcomingEvent[] }) {
+function FanDashboardBody({ fanStats, upcomingEvents, handleRSVP }: { fanStats: FanStats | null; upcomingEvents: UpcomingEvent[]; handleRSVP: (eventId: string) => void }) {
   const { data: fanHeroSlides = [] } = useUniversalHeroSlides('fan_landing_hero');
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">

@@ -1,0 +1,138 @@
+src/App.tsx(L,C): error TS2322: Type 'import("/private/tmp/claude-501/-Users-kevinjohnson/367461db-5a7c-4327-b1d7-b152e9f2ad34/scratchpad/gleeworld/node_modules/@tanstack/query-core/build/modern/_tsup-dts-rollup").QueryClient' is not assignable to type 'import("/private/tmp/claude-501/-Users-kevinjohnson/367461db-5a7c-4327-b1d7-b152e9f2ad34/scratchpad/gleeworld/node_modules/@tanstack/react-query/node_modules/@tanstack/query-core/build/modern/hydration-Cvr-9VdO").b'.
+src/components/academy/groups/CourseGroups.tsx(L,C): error TS2322: Type 'Promise<boolean>' is not assignable to type 'void | Promise<void>'.
+src/components/admin/GranularPermissionsManager.tsx(L,C): error TS2345: Argument of type 'Set<unknown>' is not assignable to parameter of type 'SetStateAction<Set<string>>'.
+src/components/admin/PermissionsPanel.tsx(L,C): error TS2345: Argument of type 'Set<unknown>' is not assignable to parameter of type 'SetStateAction<Set<string>>'.
+src/components/admin/UnifiedUserManagement.tsx(L,C): error TS2353: Object literal may only specify known properties, and 'exec_board_role' does not exist in type 'User'.
+src/components/appointments/AdminOfficeHoursDashboard.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/components/appointments/AdminOfficeHoursDashboard.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
+src/components/assignments/SimpleAssignmentCreator.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/components/attendance/CourseAttendanceLedger.tsx(L,C): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<string>'.
+src/components/attendance/CourseAttendanceLedger.tsx(L,C): error TS2345: Argument of type 'unknown[]' is not assignable to parameter of type 'SetStateAction<string[]>'.
+src/components/attendance/TakeAttendance.tsx(L,C): error TS2339: Property 'notes' does not exist on type 'unknown'.
+src/components/attendance/TakeAttendance.tsx(L,C): error TS2339: Property 'status' does not exist on type 'unknown'.
+src/components/audioTools/DrumsPlayer.tsx(L,C): error TS2339: Property 'connect' does not exist on type 'OutputChannel'.
+src/components/audioTools/InstrumentPlayer.tsx(L,C): error TS2339: Property 'connect' does not exist on type 'OutputChannel'.
+src/components/dashboard/UnifiedDashboard.tsx(L,C): error TS2353: Object literal may only specify known properties, and 'exec_board_role' does not exist in type '{ id: string; email: string; full_name: string; role: string; created_at: string; }'.
+src/components/dashboard/UserHero.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/components/demo/DemoBar.tsx(L,C): error TS2345: Argument of type '() => () => string' is not assignable to parameter of type 'EffectCallback'.
+src/components/events/CreateEventDialog.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'MergedProfile'.
+src/components/grading/student/AdminConflictApproval.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/components/grading/student/AdminConflictApproval.tsx(L,C): error TS2339: Property 'phone' does not exist on type 'unknown'.
+src/components/grading/student/StudentCourseView.tsx(L,C): error TS2339: Property 'attendance_status' does not exist on type 'unknown'.
+src/components/grading/student/StudentCourseView.tsx(L,C): error TS2339: Property 'check_in_time' does not exist on type 'unknown'.
+src/components/grading/student/StudentGradeSpreadsheet.tsx(L,C): error TS2339: Property 'grade' does not exist on type 'unknown'.
+src/components/grading/student/StudentGradeSpreadsheet.tsx(L,C): error TS2339: Property 'status' does not exist on type 'unknown'.
+src/components/grading/student/UnifiedGradeView.tsx(L,C): error TS2339: Property 'points' does not exist on type 'unknown'.
+src/components/grading/student/UnifiedGradeView.tsx(L,C): error TS2339: Property 'title' does not exist on type 'unknown'.
+src/components/graduates/GraduatesEmailManager.tsx(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
+src/components/graduates/GraduatesEmailManager.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/components/instructor/DiscussionGradingPanel.tsx(L,C): error TS2339: Property 'id' does not exist on type 'unknown'.
+src/components/instructor/DiscussionGradingPanel.tsx(L,C): error TS2339: Property 'instructor_feedback' does not exist on type 'unknown'.
+src/components/instructor/DiscussionGradingPanel.tsx(L,C): error TS2339: Property 'total_score' does not exist on type 'unknown'.
+src/components/member-view/dashboards/AdminDashboard.tsx(L,C): error TS2307: Cannot find module '@/pages/StudentConductorDashboard' or its corresponding type declarations.
+src/components/modules/ConcertTicketAnalytics.tsx(L,C): error TS2339: Property 'class_year' does not exist on type 'unknown'.
+src/components/modules/ConcertTicketAnalytics.tsx(L,C): error TS2339: Property 'role' does not exist on type 'unknown'.
+src/components/modules/UsageAnalyticsModule.tsx(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
+src/components/modules/UsageAnalyticsModule.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/components/mus240/admin/MidtermSubmissionAnalytics.tsx(L,C): error TS2322: Type 'Map<unknown, unknown>' is not assignable to type 'Map<string, any>'.
+src/components/mus240/admin/MidtermSubmissionAnalytics.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/components/mus240/grades/Mus240GradeGrid.tsx(L,C): error TS2339: Property 'grade' does not exist on type 'unknown'.
+src/components/mus240/grades/Mus240GradeGrid.tsx(L,C): error TS2339: Property 'status' does not exist on type 'unknown'.
+src/components/mus240/instructor/SimpleGradeSpreadsheet.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/components/mus240/instructor/StudentGradesRoster.tsx(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
+src/components/mus240/instructor/StudentGradesRoster.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/components/music-library/DockablePiano.tsx(L,C): error TS2367: This comparison appears to be unintentional because the types 'number' and 'string' have no overlap.
+src/components/music-library/MobilePDFViewer.tsx(L,C): error TS2322: Type 'MutableRefObject<{ promptToSaveIfDirty: () => Promise<boolean>; toggleToolbar: () => void; }>' is not assignable to type 'LegacyRef<PDFViewerHandle>'.
+src/components/music-library/SheetMusicViewDialog.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/components/partTracks/PartTracksStudio.tsx(L,C): error TS2551: Property 'accompaniment_kind' does not exist on type 'PartTracksProject'. Did you mean 'accompaniment_url'?
+src/components/public-site/blocks/contact.tsx(L,C): error TS2322: Type '{ key: string; href: string; Icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; }[]' is not assignable to type '{ key: "youtube" | "facebook" | "instagram" | "twitter" | "spotify"; href: string; Icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; }[]'.
+src/components/public-site/blocks/video-gallery.tsx(L,C): error TS2578: Unused '@ts-expect-error' directive.
+src/components/qr/QRScanHistory.tsx(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
+src/components/qr/QRScanHistory.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/components/qr/QRScanHistory.tsx(L,C): error TS2339: Property 'title' does not exist on type 'unknown'.
+src/components/shared/MetalHeaderDashboard.tsx(L,C): error TS2307: Cannot find module '@/components/dashboard/ExecBoardModulesCard' or its corresponding type declarations.
+src/components/sight-singing/AssignmentCreator.tsx(L,C): error TS2322: Type 'unknown[]' is not assignable to type 'number[]'.
+src/components/sight-singing/AssignmentCreator.tsx(L,C): error TS2322: Type 'unknown[]' is not assignable to type 'string[]'.
+src/components/sight-singing/AssignmentCreator.tsx(L,C): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/sight-singing/AssignmentCreator.tsx(L,C): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/components/sight-singing/VirtualPiano.tsx(L,C): error TS2339: Property 'port' does not exist on type 'Event'.
+src/components/tour-manager/TourManagerLanding.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/components/tour-manager/TourManagerLanding.tsx(L,C): error TS2339: Property 'voice_part' does not exist on type 'unknown'.
+src/components/tour/CreateTourGroupButton.tsx(L,C): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/components/tour/TourRosterSection.tsx(L,C): error TS2339: Property 'id' does not exist on type 'unknown'.
+src/components/tour/TourRosterSection.tsx(L,C): error TS2339: Property 'status' does not exist on type 'unknown'.
+src/components/user-dashboard/GleeWorldProfileManager.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/components/user-dashboard/GleeWorldProfileManager.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
+src/components/user-dashboard/sections/DashboardModulesSection.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/components/user-dashboard/sections/DashboardModulesSection.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
+src/components/viewer/ViewerReader.tsx(L,C): error TS2339: Property 'name' does not exist on type 'Setlist'.
+src/contexts/AudioCompanionContext.tsx(L,C): error TS2345: Argument of type '"apple_music"' is not assignable to parameter of type 'SetStateAction<"youtube" | "file">'.
+src/contexts/AudioCompanionContext.tsx(L,C): error TS2367: This comparison appears to be unintentional because the types '"file"' and '"apple_music"' have no overlap.
+src/contexts/AudioCompanionContext.tsx(L,C): error TS2367: This comparison appears to be unintentional because the types '"youtube" | "file"' and '"apple_music"' have no overlap.
+src/features/read-music/components/Score.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Accidental'.
+src/features/read-music/components/Score.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Formatter'.
+src/features/read-music/components/Score.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'KeySignature'.
+src/features/read-music/components/Score.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Renderer'.
+src/features/read-music/components/Score.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Stave'.
+src/features/read-music/components/Score.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'StaveNote'.
+src/features/read-music/components/Score.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Voice'.
+src/features/read-music/components/Score.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'VoiceMode'.
+src/features/read-music/components/Staff.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Formatter'.
+src/features/read-music/components/Staff.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Renderer'.
+src/features/read-music/components/Staff.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Stave'.
+src/features/read-music/components/Staff.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'StaveNote'.
+src/features/read-music/components/Staff.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Voice'.
+src/features/read-music/curriculum/engine/Notation.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Formatter'.
+src/features/read-music/curriculum/engine/Notation.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Renderer'.
+src/features/read-music/curriculum/engine/Notation.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Stave'.
+src/features/read-music/curriculum/engine/Notation.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'StaveNote'.
+src/features/read-music/curriculum/engine/Notation.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Voice'.
+src/features/read-music/curriculum/engine/RhythmTap.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Formatter'.
+src/features/read-music/curriculum/engine/RhythmTap.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Renderer'.
+src/features/read-music/curriculum/engine/RhythmTap.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Stave'.
+src/features/read-music/curriculum/engine/RhythmTap.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'StaveNote'.
+src/features/read-music/curriculum/engine/RhythmTap.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Voice'.
+src/features/read-music/curriculum/engine/StaffPlacement.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Formatter'.
+src/features/read-music/curriculum/engine/StaffPlacement.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Renderer'.
+src/features/read-music/curriculum/engine/StaffPlacement.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Stave'.
+src/features/read-music/curriculum/engine/StaffPlacement.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'StaveNote'.
+src/features/read-music/curriculum/engine/StaffPlacement.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Voice'.
+src/hooks/useAdminFinancialOverview.ts(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
+src/hooks/useAdminFinancialOverview.ts(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/hooks/useAdminStipends.ts(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
+src/hooks/useAdminStipends.ts(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/hooks/useBrandingSettings.ts(L,C): error TS2352: Conversion of type 'BrandingSettings' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/hooks/useBucketsOfLove.ts(L,C): error TS2339: Property 'display_name' does not exist on type 'unknown'.
+src/hooks/useBucketsOfLove.ts(L,C): error TS2339: Property 'first_name' does not exist on type 'unknown'.
+src/hooks/useBucketsOfLove.ts(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/hooks/useCourseStudents.ts(L,C): error TS2322: Type 'unknown' is not assignable to type 'string'.
+src/hooks/useDirectMessages.ts(L,C): error TS2339: Property 'avatar_url' does not exist on type 'unknown'.
+src/hooks/useDirectMessages.ts(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/hooks/useFavorites.ts(L,C): error TS2345: Argument of type 'Set<unknown>' is not assignable to parameter of type 'SetStateAction<Set<string>>'.
+src/hooks/useModuleFavorites.ts(L,C): error TS2345: Argument of type 'Set<unknown>' is not assignable to parameter of type 'SetStateAction<Set<string>>'.
+src/hooks/useMultiChannelNotifications.ts(L,C): error TS2339: Property 'email_enabled' does not exist on type 'unknown'.
+src/hooks/useMultiChannelNotifications.ts(L,C): error TS2339: Property 'push_enabled' does not exist on type 'unknown'.
+src/hooks/useSheetMusicAudio.ts(L,C): error TS2345: Argument of type '{ audio_url: string; audio_title: string; }' is not assignable to parameter of type 'SetStateAction<SheetMusicAudio>'.
+src/hooks/useUnifiedAssignments.ts(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
+src/hooks/useUnifiedAssignments.ts(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
+src/lib/studio/__tests__/validate-markers.test.ts(L,C): error TS2339: Property 'errors' does not exist on type 'ValidateResult'.
+src/lib/studio/storage.ts(L,C): error TS2339: Property 'errors' does not exist on type 'ValidateResult'.
+src/pages/GraduatesLanding.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/pages/JoinCourse.tsx(L,C): error TS2339: Property 'organization_name' does not exist on type 'BrandingSettings'.
+src/pages/MemberDirectory.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'User'.
+src/pages/ModulesDirectory.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
+src/pages/PRHubPage.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/pages/QRAnalytics.tsx(L,C): error TS2345: Argument of type '{ status: string; count: unknown; percentage: number; }[]' is not assignable to parameter of type 'SetStateAction<StatusBreakdown[]>'.
+src/pages/QRAnalytics.tsx(L,C): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/QRAnalytics.tsx(L,C): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/UserManagement.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
+src/pages/academy/DiscussionThreadPage.tsx(L,C): error TS2322: Type 'Map<unknown, unknown>' is not assignable to type 'Map<string, any>'.
+src/pages/admin/CourseStatistics.tsx(L,C): error TS2322: Type '{ name: string; count: unknown; }[]' is not assignable to type '{ name: string; count: number; }[]'.
+src/pages/admin/CourseStatistics.tsx(L,C): error TS2322: Type '{ name: string; value: unknown; }[]' is not assignable to type '{ name: string; value: number; }[]'.
+src/pages/admin/CourseStatistics.tsx(L,C): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/admin/CourseStatistics.tsx(L,C): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/pages/admin/PublicPageEditor.tsx(L,C): error TS2339: Property 'tenant_id' does not exist on type 'SiteRow'.
+src/pages/admin/StudentOnboarding.tsx(L,C): error TS2339: Property 'organization_name' does not exist on type 'BrandingSettings'.
+src/pages/dashboard/ConcertPlannerEditorPage.tsx(L,C): error TS2345: Argument of type 'import("/private/tmp/claude-501/-Users-kevinjohnson/367461db-5a7c-4327-b1d7-b152e9f2ad34/scratchpad/gw-verify-wave1/src/hooks/useConcertPrograms").ConcertProgram' is not assignable to parameter of type 'import("/private/tmp/claude-501/-Users-kevinjohnson/367461db-5a7c-4327-b1d7-b152e9f2ad34/scratchpad/gw-verify-wave1/src/lib/concertPlanner/types").ConcertProgram'.
+src/pages/member/AttendancePage.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
+src/pages/studio/StudioEditor.tsx(L,C): error TS2578: Unused '@ts-expect-error' directive.

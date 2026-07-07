@@ -102,7 +102,6 @@ export const MobileUserForm = ({ user, mode, onSuccess, onCancel }: MobileUserFo
     setStudentNumber("");
     setVoicePart("");
     setCanDance(false);
-    setExecBoardRole("");
     setDietaryRestrictions([]);
     setAllergies("");
     setTempPassword("");

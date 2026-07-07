@@ -120,7 +120,6 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
     setStudentNumber("");
     setVoicePart("");
     setCanDance(false);
-    setExecBoardRole("");
     setSelectedInstruments([]);
     setDressSize("");
     setShoeSize("");
