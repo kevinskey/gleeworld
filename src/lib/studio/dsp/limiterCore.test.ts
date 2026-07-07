@@ -115,6 +115,48 @@ describe('processLimiterBlock', () => {
     }
   });
 
+  it('(a) REGRESSION: single 1.0 impulse mid-block must never exceed ceiling (outgoing sample must vote in its own window max)', () => {
+    const L = 64;
+    const state = createLimiterState(L);
+    const ceiling = 0.25;
+    const releaseCoeff = releaseCoeffFor(100);
+    const n = 400;
+    const inL = new Float32Array(n);
+    inL[150] = 1.0; // impulse squarely mid-block, far from both edges
+    const outL = new Float32Array(n);
+
+    processLimiterBlock(state, inL, null, outL, null, ceiling, releaseCoeff);
+
+    for (let i = 0; i < n; i++) {
+      expect(outL[i]).toBeLessThanOrEqual(ceiling + 1e-6);
+    }
+  });
+
+  it('(b) REGRESSION: impulse at the exact last sample of block 1 (block 2 silent) must never exceed ceiling across the block boundary', () => {
+    const L = 64;
+    const state = createLimiterState(L);
+    const ceiling = 0.3;
+    const releaseCoeff = releaseCoeffFor(100);
+
+    const block1Len = 100;
+    const block2Len = 200;
+    const inL1 = new Float32Array(block1Len);
+    inL1[block1Len - 1] = 1.0; // impulse at the exact last sample of block 1
+    const outL1 = new Float32Array(block1Len);
+    const inL2 = new Float32Array(block2Len); // block 2 entirely silent
+    const outL2 = new Float32Array(block2Len);
+
+    processLimiterBlock(state, inL1, null, outL1, null, ceiling, releaseCoeff);
+    processLimiterBlock(state, inL2, null, outL2, null, ceiling, releaseCoeff);
+
+    for (let i = 0; i < block1Len; i++) {
+      expect(outL1[i]).toBeLessThanOrEqual(ceiling + 1e-6);
+    }
+    for (let i = 0; i < block2Len; i++) {
+      expect(outL2[i]).toBeLessThanOrEqual(ceiling + 1e-6);
+    }
+  });
+
   it('streaming: splitting the same signal across two sequential blocks produces identical output to processing it in one block', () => {
     const L = 96;
     const ceiling = 0.5;

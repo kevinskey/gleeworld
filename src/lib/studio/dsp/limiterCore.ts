@@ -24,6 +24,20 @@
 // entry is evicted before that position's buffer slot gets overwritten
 // by the next revolution's sample. `processLimiterBlock` is ordered
 // specifically to guarantee that.
+//
+// WINDOW-MAX READ ORDER (why the head is read before eviction): the
+// sample about to be emitted this iteration is exactly the one sitting
+// at the slot the head entry will eventually point back to once it has
+// aged out. Its own magnitude must still get a vote in the windowMax
+// (and therefore the gain) applied to its own output — otherwise the
+// envelope starts releasing a step early on the very sample carrying
+// the peak, producing a deterministic ceiling overshoot on transients.
+// So each iteration reads `windowMax` from the deque exactly as
+// inherited from the previous iteration (before this iteration's evict
+// / pop / write / push), then performs the eviction/maintenance for the
+// *next* iteration afterward. This is a pure phase shift of the window
+// (still exactly `L` samples wide) — delay-line length, and therefore
+// output latency, is unchanged.
 
 export interface LimiterState {
   delayL: Float32Array;
@@ -105,16 +119,42 @@ export function processLimiterBlock(
     const vR = hasR ? Math.abs(inR![i]) : 0;
     const v = vL > vR ? vL : vR;
 
-    // 3. Evict the head entry if it refers to the slot we're about to
-    // overwrite: that entry is, by construction, exactly `L` samples
+    // 3. Sliding-window max = magnitude at the head, read BEFORE any of
+    // this iteration's deque maintenance runs. The sample being emitted
+    // this step (`delayedL`/`delayedR`, still sitting at `writeIdx`) is
+    // exactly the entry the head points to once it has aged the full
+    // `L` samples — so if we evicted it first, this step's own peak
+    // would never get a vote in the gain that's about to be applied to
+    // it. Reading the head here, before eviction, gives that outgoing
+    // sample its vote; it only stops counting once we move on to the
+    // *next* sample below.
+    const windowMax = magnitudeAt(state, state.deque[dequeHead]);
+
+    // 4. Target gain (windowMax <= ceiling, including silence, -> unity).
+    const g = windowMax <= ceilingLinear ? 1 : ceilingLinear / windowMax;
+
+    // 5. Envelope: instant attack downward, exponential release upward.
+    if (g < env) {
+      env = g;
+    } else {
+      env = g + (env - g) * releaseCoeff;
+    }
+
+    // 6. Output = delayed input sample * envelope.
+    outL[i] = delayedL * env;
+    if (hasR) outR![i] = delayedR * env;
+
+    // 7. NOW evict the head entry if it refers to the slot we're about
+    // to overwrite: that entry is, by construction, exactly `L` samples
     // old — the oldest the window can hold — so if it's still present
     // at all it must be at the head (monotonic deques are insertion-
-    // ordered from head=oldest to tail=newest).
+    // ordered from head=oldest to tail=newest). Deferred until after
+    // step 3 read it, so it still voted in its own sample's gain.
     if (dequeHead !== dequeTail && state.deque[dequeHead] === writeIdx) {
       dequeHead = (dequeHead + 1) % capacity;
     }
 
-    // 4. Maintain the non-increasing (head->tail) monotonic invariant:
+    // 8. Maintain the non-increasing (head->tail) monotonic invariant:
     // pop any tail entries that can never again beat the new sample
     // within the window.
     while (dequeHead !== dequeTail) {
@@ -127,32 +167,16 @@ export function processLimiterBlock(
       }
     }
 
-    // 5. Only now write the new sample into the delay line — any deque
+    // 9. Only now write the new sample into the delay line — any deque
     // entry that pointed at this position has already been evicted or
     // popped above, so nothing will read stale data through it.
     state.delayL[writeIdx] = inL[i];
     if (hasR) state.delayR[writeIdx] = inR![i];
 
-    // 6. Push the new position.
+    // 10. Push the new position — it starts voting in the window max
+    // starting next iteration.
     state.deque[dequeTail] = writeIdx;
     dequeTail = (dequeTail + 1) % capacity;
-
-    // 7. Sliding-window max = magnitude at the head.
-    const windowMax = magnitudeAt(state, state.deque[dequeHead]);
-
-    // 8. Target gain (windowMax <= ceiling, including silence, -> unity).
-    const g = windowMax <= ceilingLinear ? 1 : ceilingLinear / windowMax;
-
-    // 9. Envelope: instant attack downward, exponential release upward.
-    if (g < env) {
-      env = g;
-    } else {
-      env = g + (env - g) * releaseCoeff;
-    }
-
-    // 10. Output = delayed input sample * envelope.
-    outL[i] = delayedL * env;
-    if (hasR) outR![i] = delayedR * env;
 
     writeIdx = (writeIdx + 1) % L;
   }
