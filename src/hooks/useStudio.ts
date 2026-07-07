@@ -505,6 +505,11 @@ export function useStudioEngine(session: Session | null) {
         nativeRecordStop: async () => NativeStudio.recordStop(),
         // Loop is unwired on native, so there is no wrap to guard.
         setRecordingActive: (_active: boolean) => { /* no-op on native */ },
+        // Native per-track metering isn't bridged yet (B1 Task 6 ships
+        // the web meters first) — MixerView's PeakMeter renders its
+        // empty/floor state on iOS until a follow-up wires this through
+        // NativeStudio.
+        getTrackPeakDb: (_trackId: string) => -Infinity,
       };
     }
     return {
@@ -530,6 +535,7 @@ export function useStudioEngine(session: Session | null) {
       nativeRecordStart: null as null | (() => Promise<void>),
       nativeRecordStop: null as null | (() => Promise<{ localUrl: string; filename: string }>),
       setRecordingActive: (active: boolean) => engineRef.current?.setRecordingActive(active),
+      getTrackPeakDb: (id: string) => engineRef.current?.getTrackPeakDb(id) ?? -Infinity,
     };
   }, [native]);
 

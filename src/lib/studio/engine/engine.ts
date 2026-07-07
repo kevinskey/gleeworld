@@ -123,6 +123,12 @@ export class StudioEngine {
   private recordingActive = false;
   // Tracks (audio + MIDI), built from the loaded Session.
   private tracks = new Map<string, EngineTrack>();
+  // Per-track PPM peak meters (B1 Task 6) — one Tone.Meter tapped in
+  // PARALLEL off each track's post-EQ output (does not affect the
+  // signal path to masterIn). Rebuilt alongside `tracks` in
+  // loadSession(); read by getTrackPeakDb(), which the MixerView's
+  // meter rAF loop polls once per frame per visible strip.
+  private trackMeters = new Map<string, Tone.Meter>();
   private session: Session | null = null;
   // Tone.Transport one-shot schedules registered during play() — kept
   // so stop() can clear ONLY them and leave nothing else dangling.
@@ -390,6 +396,8 @@ export class StudioEngine {
     this.state.masterChain = undefined;
     for (const t of this.tracks.values()) t.dispose();
     this.tracks.clear();
+    for (const m of this.trackMeters.values()) m.dispose();
+    this.trackMeters.clear();
     this.metronome.dispose();
     this.metronomeAccent.dispose();
     this.masterMeter.dispose();
@@ -426,11 +434,18 @@ export class StudioEngine {
     // Rebuild tracks.
     for (const t of this.tracks.values()) t.dispose();
     this.tracks.clear();
+    for (const m of this.trackMeters.values()) m.dispose();
+    this.trackMeters.clear();
     for (const tr of session.tracks) {
       const eng = buildTrack(tr, session.assets);
       eng.userMute = tr.mute;
       eng.userSolo = tr.solo;
       eng.output.connect(this.masterIn);
+      // Parallel meter tap — a second `.connect()` off the same output
+      // fans the signal out without removing the masterIn connection.
+      const meter = new Tone.Meter({ channels: 1, smoothing: 0.7 });
+      eng.output.connect(meter);
+      this.trackMeters.set(tr.id, meter);
       this.tracks.set(tr.id, eng);
     }
     this.recomputeSolo();
@@ -534,6 +549,19 @@ export class StudioEngine {
    *  means we have to fall back to loadSession). */
   hasTrack(trackId: string): boolean {
     return this.tracks.has(trackId);
+  }
+
+  /** Per-track PPM peak read, in dB (see `trackMeters` above). Polled
+   *  once per animation frame per visible ChannelStrip by MixerView's
+   *  meter loop — ballistics (attack/release/peak-hold) are applied in
+   *  the UI via mixerMath's `ppmDecay`, the same way the transport bar's
+   *  existing peakDbL/R meter already works. -Infinity for an unknown
+   *  or not-yet-built track. */
+  getTrackPeakDb(trackId: string): number {
+    const m = this.trackMeters.get(trackId);
+    if (!m) return -Infinity;
+    const v = m.getValue();
+    return Array.isArray(v) ? (v[0] ?? -Infinity) : v;
   }
 
   // ── Runtime-hook aliases ──────────────────────────────────────────

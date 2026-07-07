@@ -42,6 +42,7 @@ import { splitAudioClips, sliceClipChannels } from '@/lib/studio/clipOps';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
 import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
 import { toast } from 'sonner';
+import { MixerView } from './MixerView';
 
 const PX_PER_SECOND_DEFAULT = 40;
 const PX_PER_SECOND_MIN = 8;
@@ -308,6 +309,10 @@ function Editor({
     updateTimeSignature, setMetronome,
   } = engineState;
   const mixdown = useMixdown();
+
+  // Timeline vs Mixer — same route, transport/header stay mounted; only
+  // the main tracks-area block below swaps content (B1 Task 6).
+  const [view, setView] = useState<'tracks' | 'mix'>('tracks');
 
   // Snap mode — musical (bar / 1/4 / 1/8 / etc) rather than absolute
   // seconds. The runtime value `snapSeconds` is derived from tempo +
@@ -1333,6 +1338,15 @@ function Editor({
             enabled: midiSyncEnabled, setEnabled: setMidiSyncEnabled,
             outputId: midiSyncOutputId, setOutputId: setMidiSyncOutputId,
           }} />
+          <Button
+            size="sm"
+            variant={view === 'mix' ? 'default' : 'outline'}
+            onClick={() => setView(view === 'mix' ? 'tracks' : 'mix')}
+            title="Switch between the timeline and the mixer"
+            className="h-7 text-sm"
+          >
+            <SlidersHorizontal className="w-4 h-4 mr-1" /> Mix
+          </Button>
           <Button size="sm" variant="outline" onClick={exportMix} disabled={mixdown.isPending} title="Render to WAV" className="h-7 text-sm">
             {mixdown.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Download className="w-4 h-4 mr-1" />}
             Mixdown
@@ -1797,6 +1811,13 @@ function Editor({
         </div>
       </div>
 
+      {/* Mix toggle swaps this whole block for MixerView — the header +
+       * transport bar above stay mounted either way, so playback/record/
+       * metronome are unaffected by which view is showing (B1 Task 6). */}
+      {view === 'mix' ? (
+        <MixerView session={session} update={update} engineState={engineState} state={state} />
+      ) : (
+      <>
       {/* Logic-style main window — Inspector left | Tracks area right */}
       <div className="flex gap-2 items-start">
         {/* INSPECTOR (left rail, resizable). Hidden on phones — they
@@ -1986,6 +2007,8 @@ function Editor({
       />
         </div>{/* /flex-1 right column */}
       </div>
+      </>
+      )}
 
       {selectedClip && (
         <ClipInspector
