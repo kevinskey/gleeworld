@@ -12,7 +12,10 @@
 // FINAL mime type, not the pre-recording format probe.
 
 import { describe, test, expect } from 'vitest';
-import { extensionForMimeType, getRecordingExtension, getRecordingMimeType } from '../audioEngine';
+import {
+  extensionForMimeType, getRecordingExtension, getRecordingMimeType,
+  TRACK_FETCH_RETRY_DELAYS_MS,
+} from '../audioEngine';
 
 describe('extensionForMimeType', () => {
   test('maps WAV variants to "wav" (the post-trim case)', () => {
@@ -37,6 +40,25 @@ describe('extensionForMimeType', () => {
   test('is case-insensitive', () => {
     expect(extensionForMimeType('AUDIO/WAV')).toBe('wav');
     expect(extensionForMimeType('Audio/MP4')).toBe('m4a');
+  });
+});
+
+describe('TRACK_FETCH_RETRY_DELAYS_MS', () => {
+  test('total retry window covers the 60s storage flatten interval with margin', () => {
+    // Fresh uploads 403 at their public URL until the droplet's
+    // once-a-minute flatten cron runs. If this schedule ever shrinks
+    // below ~60s again, a just-uploaded backing track goes back to
+    // looking permanently broken (the 2026-07-07 Part Tracks bug).
+    const total = TRACK_FETCH_RETRY_DELAYS_MS.reduce((a, b) => a + b, 0);
+    expect(total).toBeGreaterThanOrEqual(75_000);
+  });
+
+  test('first attempts stay quick so ordinary CDN blips resolve fast', () => {
+    // The first four attempts should all land within ~3s — the common
+    // "upload just landed" case must not wait tens of seconds.
+    const early = TRACK_FETCH_RETRY_DELAYS_MS.slice(0, 4).reduce((a, b) => a + b, 0);
+    expect(TRACK_FETCH_RETRY_DELAYS_MS[0]).toBe(0);
+    expect(early).toBeLessThanOrEqual(3_000);
   });
 });
 

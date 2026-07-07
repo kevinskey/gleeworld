@@ -217,15 +217,18 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
   const loadedUrlByTrackRef = useRef<Record<string, string>>({});
 
   // Load every track's audio into the engine + capture waveform peaks.
+  // Tracks load CONCURRENTLY: loadTrack retries a fresh upload's URL for
+  // up to ~90s (storage flatten window — see TRACK_FETCH_RETRY_DELAYS_MS
+  // in audioEngine.ts), and a sequential loop would let one propagating
+  // track block every other row from loading for that long.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      for (const t of tracks) {
+    void Promise.all(tracks.map(async (t) => {
         const url = t.audio_url || (t.kind === 'accompaniment' ? project?.accompaniment_url : null);
-        if (!url) continue;
+        if (!url) return;
         // Skip when we already have a buffer + peaks for THIS url. If
         // the url has changed since last load, fall through and reload.
-        if (loadedUrlByTrackRef.current[t.id] === url && waveformByTrack[t.id]) continue;
+        if (loadedUrlByTrackRef.current[t.id] === url && waveformByTrack[t.id]) return;
         try {
           // Hand the engine the record offset so the source plays at the
           // right point on the master timeline. Accompaniment is always 0.
@@ -243,6 +246,9 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
             const next = new Set(prev); next.delete(t.id); return next;
           });
         } catch (err: any) {
+          // A superseded load (newer load / blob load / unloadTrack won
+          // the race) is not a decode failure — just drop it quietly.
+          if (err?.name === 'AbortError') return;
           console.warn('[PartTracksStudio] load failed', t.id, err);
           if (cancelled) return;
           setUndecodableTrackIds((prev) => {
@@ -261,8 +267,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
             });
           }
         }
-      }
-    })();
+    }));
     return () => { cancelled = true; };
   }, [tracks, project?.accompaniment_url]);
 
@@ -671,25 +676,25 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
             recordingId = insRow?.id as string | undefined;
           }
         }
-        await updateTrack.mutateAsync({
-          id: track.id,
-          patch: { audio_url: url, record_offset_sec: offsetSec } as any,
-        });
         // Load the just-recorded take into the engine straight from the
-        // in-memory blob. Avoids fetch/CDN/decode races against the
-        // freshly-uploaded URL — previously this would silently fail and
-        // the user had to hard-refresh to hear their recording.
+        // in-memory blob BEFORE the track-row update triggers a React
+        // Query refetch. Avoids fetch/CDN/decode races against the
+        // freshly-uploaded URL (which can 403 for up to a minute — the
+        // storage flatten window) — and marking loadedUrlByTrackRef +
+        // waveform first means the refetch-driven load effect skips the
+        // redundant URL fetch entirely.
         try {
           const { peaks, duration } = await loadTrackFromBlob(track.id, blob, offsetSec);
-          // Mark this URL as already loaded so the load effect (which
-          // will re-fire on the React Query refetch) doesn't redundantly
-          // re-fetch + re-decode the take we just played from blob.
           loadedUrlByTrackRef.current[track.id] = url;
           setWaveformByTrack((prev) => ({ ...prev, [track.id]: peaks }));
           setDurationByTrack((prev) => ({ ...prev, [track.id]: duration }));
         } catch (decodeErr: any) {
           console.warn('[PartTracks] Take saved but in-memory preview failed', decodeErr);
         }
+        await updateTrack.mutateAsync({
+          id: track.id,
+          patch: { audio_url: url, record_offset_sec: offsetSec } as any,
+        });
         const description = offsetSec > 0 ? `Offset ${offsetSec.toFixed(1)}s` : undefined;
         // Stash for Cmd/Ctrl+Z. Stays until either the user undoes it,
         // starts a new take, or saves a new one (each save overwrites
@@ -983,18 +988,19 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         duration_sec: out.duration,
         record_offset_sec: offset,
       } as any);
+      // Swap the engine onto the processed WAV from memory BEFORE the
+      // track-row update triggers a refetch — the new URL can 403 for up
+      // to a minute (storage flatten window), and marking the ref +
+      // waveform first stops the load effect from re-fetching it.
+      unloadTrack(track.id);
+      const { peaks, duration } = await loadTrackFromBlob(track.id, wav, offset);
+      loadedUrlByTrackRef.current[track.id] = url;
+      setWaveformByTrack((prev) => ({ ...prev, [track.id]: peaks }));
+      setDurationByTrack((prev) => ({ ...prev, [track.id]: duration }));
       await updateTrack.mutateAsync({
         id: track.id,
         patch: { audio_url: url, record_offset_sec: offset } as any,
       });
-      unloadTrack(track.id);
-      const { peaks, duration } = await loadTrackFromBlob(track.id, wav, offset);
-      // Mark the new url as already-loaded so the load effect, which
-      // re-fires after updateTrack.mutateAsync invalidates the cache,
-      // doesn't re-fetch + re-decode what we just loaded from blob.
-      loadedUrlByTrackRef.current[track.id] = url;
-      setWaveformByTrack((prev) => ({ ...prev, [track.id]: peaks }));
-      setDurationByTrack((prev) => ({ ...prev, [track.id]: duration }));
       const labels = { trim: 'Trimmed', normalize: 'Normalized', denoise: 'Cleaned' } as const;
       toast.success(`${labels[tool]} "${track.label}"`);
     } catch (e: any) {
@@ -1439,6 +1445,35 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         .from('sheet-music').upload(path, file, { contentType, upsert: true });
       if (error) throw new Error(`Upload failed: ${error.message}`);
       const url = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
+
+      // Load the backing track into the engine straight from the picked
+      // file, BEFORE the DB mutations below trigger a React Query refetch.
+      // The public URL can 403 for up to a minute after upload (storage
+      // flatten window) — waiting on it made a fresh upload look broken:
+      // no waveform, silent playback, and silence behind the next take.
+      // Marking loadedUrlByTrackRef + waveform state first also stops the
+      // load effect from kicking off a redundant URL fetch of the same
+      // bytes when the refetch lands.
+      const accTrack = tracks.find((t) => t.kind === 'accompaniment');
+      if (accTrack) {
+        try {
+          const { peaks, duration } = await loadTrackFromBlob(accTrack.id, file, 0);
+          loadedUrlByTrackRef.current[accTrack.id] = url;
+          setWaveformByTrack((prev) => ({ ...prev, [accTrack.id]: peaks }));
+          setDurationByTrack((prev) => ({ ...prev, [accTrack.id]: duration }));
+          setTrackVolume(accTrack.id, accTrack.volume, accTrack.muted);
+          setTrackPan(accTrack.id, accTrack.pan);
+          setUndecodableTrackIds((prev) => {
+            if (!prev.has(accTrack.id)) return prev;
+            const next = new Set(prev); next.delete(accTrack.id); return next;
+          });
+        } catch (previewErr) {
+          // Undecodable here may still decode via the URL path (or the
+          // HTMLAudioElement fallback) — leave it to the load effect.
+          console.warn('[PartTracks] Backing uploaded but immediate preview failed', previewErr);
+        }
+      }
+
       await updateProject.mutateAsync({
         accompaniment_url: url,
         accompaniment_title: file.name,
@@ -1446,7 +1481,6 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         accompaniment_apple_music_id: null,
         accompaniment_youtube_url: null,
       } as any);
-      const accTrack = tracks.find((t) => t.kind === 'accompaniment');
       if (accTrack) await updateTrack.mutateAsync({ id: accTrack.id, patch: { audio_url: url } });
       toast.success(`Loaded "${file.name}" as the backing track.`);
     } catch (e: any) {
