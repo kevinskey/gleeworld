@@ -561,23 +561,38 @@ let recordingActive = false;
 let recordingMimeType: string = 'audio/webm';
 let levelRaf: number | null = null;
 
-// iOS Safari only supports audio/mp4; Chrome/Firefox prefer webm/opus.
-// Probe so the resulting blob is actually playable on the originating
-// device and the upload path/contentType match the container. Fed to
-// sharedRecorder's `mimeType` option (→ `new Tone.Recorder({ mimeType })`)
-// since Tone.Recorder otherwise falls back to the browser's unmanaged
-// default, which isn't always the one Safari/iOS can play back.
+// Candidate container/codec strings for MediaRecorder, best-first for the
+// GIVEN engine. The whole take pipeline depends on decodeAudioData being
+// able to re-read the recording (head-trim, waveform peaks, audio tools),
+// so the probe must pick a format the recording browser can also DECODE.
+// Safari 18.4+ reports MediaRecorder support for audio/webm;codecs=opus,
+// but its decodeAudioData still rejects webm — and worse, its webm
+// recording path has produced husk blobs (observed 2026-07-07: a 5-byte
+// Cues fragment saved as a take). Apple engines therefore prefer their
+// native mp4/aac; everything else prefers webm/opus. Pure function over
+// a boolean so the ordering is directly unit-tested.
+export function orderRecorderMimeCandidates(isAppleEngine: boolean): string[] {
+  const webm = ['audio/webm;codecs=opus', 'audio/webm'];
+  const mp4 = ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/aac'];
+  return isAppleEngine ? [...mp4, ...webm] : [...webm, ...mp4];
+}
+
+// Safari (macOS + every iOS browser shell) reports vendor "Apple
+// Computer, Inc."; Chrome reports "Google Inc." and Firefox "".
+function isAppleWebEngine(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /apple/i.test(navigator.vendor || '');
+}
+
+// Probe so the resulting blob is actually playable AND decodable on the
+// originating device and the upload path/contentType match the container.
+// Fed to sharedRecorder's `mimeType` option (→ `new Tone.Recorder({
+// mimeType })`) since Tone.Recorder otherwise falls back to the browser's
+// unmanaged default.
 function pickRecorderMimeType(): string {
-  const candidates = [
-    'audio/webm;codecs=opus',
-    'audio/webm',
-    'audio/mp4;codecs=mp4a.40.2',
-    'audio/mp4',
-    'audio/aac',
-  ];
   const MR = (window as any).MediaRecorder;
   if (!MR || typeof MR.isTypeSupported !== 'function') return '';
-  for (const t of candidates) {
+  for (const t of orderRecorderMimeCandidates(isAppleWebEngine())) {
     try { if (MR.isTypeSupported(t)) return t; } catch { /* ignore */ }
   }
   return '';

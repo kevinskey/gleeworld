@@ -832,7 +832,12 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // waveform replaces them once loadTrackFromBlob returns peaks.
       livePeaksRef.current = [];
       setLivePeaks([]);
-      if (!blob || blob.size === 0) {
+      // Floor is 1KB, not just non-empty: a broken MediaRecorder path can
+      // emit a header-only husk (observed 2026-07-07 on Safari's webm
+      // recorder — a 5-byte Cues fragment) that passes a size>0 check but
+      // contains no audio. Uploading it poisons the track with an
+      // undecodable take.
+      if (!blob || blob.size < 1024) {
         toast.error('Recording failed — no audio was captured. Check your microphone.');
         return;
       }
