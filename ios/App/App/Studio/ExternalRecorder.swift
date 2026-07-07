@@ -142,13 +142,35 @@ public final class ExternalRecorder {
             return
         }
 
-        do {
-            if !captureEngine.isRunning {
-                try captureEngine.start()
+        // AVAudioEngine.start() can fail TWO ways: return an NSError (Swift
+        // `throws`), OR raise an ObjC NSException from
+        // AVAudioEngineGraph::Initialize when the graph can't initialize —
+        // e.g. no valid input route because Apple Music / MusicKit is
+        // contending for the audio session. A Swift do/catch only catches
+        // the first; the NSException blows straight past it to abort()
+        // (SIGABRT crash, build 129 ExternalRecorder.swift:147, exposed when
+        // Part Tracks began routing Apple Music backing through this native
+        // path). Wrap in the ObjC-exception catcher — the same guard already
+        // used for attach/connect around this — so BOTH failure modes
+        // degrade to a clean reject. The reject drives the JS fallback to
+        // the web-capture path (startNativeRecordForTrack's catch).
+        var startError: Error?
+        if let exc = StudioObjC.catchExceptions({
+            do {
+                if !self.captureEngine.isRunning {
+                    try self.captureEngine.start()
+                }
+            } catch {
+                startError = error
             }
-        } catch {
+        }) {
             teardown()
-            onError("capture engine start failed: \(error.localizedDescription)")
+            onError("capture engine start failed: \(exc.localizedDescription)")
+            return
+        }
+        if let startError {
+            teardown()
+            onError("capture engine start failed: \(startError.localizedDescription)")
             return
         }
 
