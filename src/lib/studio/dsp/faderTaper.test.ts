@@ -37,6 +37,20 @@ describe('dbToFaderPos / faderPosToDb round-trip', () => {
   });
 });
 
+describe('dbToFaderPos edge cases', () => {
+  // B1 follow-up: dbToFaderPos(-72) used to land on position 0, which
+  // faderPosToDb round-trips to -Infinity (its own hard special case for
+  // "fader fully off") — a finite -72dB silently became -Infinity. Pos 0
+  // is now reserved exclusively for an actual -Infinity input; -72 (and
+  // anything at/below the table's floor) floors to the next breakpoint.
+  it('dbToFaderPos(-72) lands on 0.05, not 0 — 0 is reserved for -Infinity', () => {
+    expect(dbToFaderPos(-72)).toBe(0.05);
+  });
+  it('dbToFaderPos(-Infinity) is still exactly 0', () => {
+    expect(dbToFaderPos(-Infinity)).toBe(0);
+  });
+});
+
 describe('dbToLinear', () => {
   it('maps -Infinity to 0', () => {
     expect(dbToLinear(-Infinity)).toBe(0);

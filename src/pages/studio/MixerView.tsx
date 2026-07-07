@@ -673,20 +673,27 @@ function MasterStrip({
   }, [state?.masterChain]);
 
   // Loudness servo — every 3s while engaged, nudge the master chain's
-  // pre-limiter makeup gain toward the target LUFS. The recording-armed
-  // guard lives engine-side (StudioEngine.setMasterPreGainDb) — we rely
-  // on it rather than re-checking recording state here.
+  // pre-limiter makeup gain toward the target LUFS. The AudioParam
+  // write itself is guarded engine-side (StudioEngine.setMasterPreGainDb
+  // no-ops while recording-armed — B1 spec §5), but that alone isn't
+  // enough: `preGainRef` is UI-side state, and servoStep's own math
+  // folds it forward every tick regardless of whether the write landed.
+  // Left unguarded here, several armed ticks would advance the ref well
+  // past the actual (frozen) live gain, and disarming would apply that
+  // drifted value in one jump — audible exactly when the guard above
+  // was supposed to prevent it. So: skip the tick ENTIRELY (no ref
+  // advance, no write) while armed, not just the write.
   useEffect(() => {
     if (!servoEngaged) return;
     const id = setInterval(() => {
       const chain = state?.masterChain;
-      if (!chain || !state?.isPlaying) return;
+      if (!chain || !state?.isPlaying || state?.recordingActive) return;
       const next = servoStep(preGainRef.current, integratedRef.current, mastering.loudness_target_lufs);
       preGainRef.current = next;
       chain.setPreGainDb(next);
     }, SERVO_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [servoEngaged, state?.masterChain, state?.isPlaying, mastering.loudness_target_lufs]);
+  }, [servoEngaged, state?.masterChain, state?.isPlaying, state?.recordingActive, mastering.loudness_target_lufs]);
 
   const updateMastering = useCallback((patch: Partial<MasteringParams>) => update((s) => {
     const base = withMasteringDefaults(s).master.mastering!;

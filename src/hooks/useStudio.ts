@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import {
   createSession, deleteSession, listMySessions, loadSession, saveSession,
@@ -202,7 +203,17 @@ export function useStudioEngine(session: Session | null) {
   // Create the web engine once on mount (no-op on native).
   useEffect(() => {
     if (native) return;
-    const engine = new StudioEngine();
+    const engine = new StudioEngine({
+      // B1 follow-up: worklet-load failure during LIVE preview
+      // previously only console.warned (masterChain.ts's
+      // tryLoadWorklets) — exports already toast (see the Export
+      // sheet's onDegraded below). The engine stays UI-free and only
+      // fires this callback (latched to once per instance); the actual
+      // toast lives here, matching the export path's wording/style.
+      onMasteringDegraded: () => {
+        toast.warning('Mastering limiter unavailable in this browser — preview uses EQ + compressor only');
+      },
+    });
     engineRef.current = engine;
     const unsub = engine.subscribe((s) => setState(s));
     return () => {
@@ -319,6 +330,10 @@ export function useStudioEngine(session: Session | null) {
               // AVAudioSession runs at 48k on modern devices; the value
               // only feeds the Samples counter readout.
               sampleRate: 48000,
+              // Mastering (and its loudness servo) is explicitly deferred
+              // on iOS — see reference_gleeworld_ios notes — so there's
+              // no recording-armed guard to mirror from the native side.
+              recordingActive: false,
             });
             // Surface any engine-side error as a toast so device users
             // can report the failure without needing Mac + Safari console.

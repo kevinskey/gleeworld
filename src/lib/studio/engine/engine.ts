@@ -50,9 +50,33 @@ export interface EngineState {
    * enabled-toggle rebuild); it is NOT deep-cloned like the rest of
    * `state` because it wraps live AudioNodes, not plain data. */
   masterChain?: MasterChainHandle;
+  /** Mirrors the engine's internal recording-armed flag (see
+   * `setRecordingActive`/`recordingActive` private field) so UI-side
+   * consumers can gate their own logic on it instead of duplicating the
+   * flag. B1 follow-up: MixerView's MasterStrip loudness servo reads
+   * this to skip its tick (not just the resulting AudioParam write,
+   * which `setMasterPreGainDb` already no-ops while armed) so its
+   * `preGainRef` doesn't keep advancing during a take and jump on
+   * disarm. */
+  recordingActive: boolean;
 }
 
 type Listener = (s: EngineState) => void;
+
+export interface StudioEngineOptions {
+  /** Fired at most once per engine instance (i.e. once per session —
+   * see the constructor field below) the first time a LIVE mastering
+   * chain build comes back degraded (AudioWorklet module load failed,
+   * so the chain runs HPF/shelf/comp only, no limiter/loudness meter).
+   * Exports already surface this via exportRender's own `onDegraded`
+   * option (see StudioEditor.tsx's Export sheet); this is the same idea
+   * for the always-on live preview, which previously only
+   * console.warned (see masterChain.ts's tryLoadWorklets). The engine
+   * itself stays UI-free — it doesn't import a toast library — so the
+   * actual toast lives wherever the caller (useStudioEngine) wires this
+   * up. */
+  onMasteringDegraded?: () => void;
+}
 
 export class StudioEngine {
   // Master bus: masterIn → masterFx → [masterChain?] → Destination
@@ -88,6 +112,16 @@ export class StudioEngine {
     install: (handle) => {
       this.state.masterChain = this.guardedHandle(handle);
       this.wireMasterOutput();
+      // Surface the degraded-preview toast at most once per engine
+      // instance (see StudioEngineOptions.onMasteringDegraded) — not
+      // once per rebuild. A session can toggle mastering on/off or edit
+      // params (each of which may re-run this `install` hook) many
+      // times; the worklet-availability verdict doesn't change mid
+      // session, so nagging on every rebuild would be noise.
+      if (handle.degraded && !this.masteringDegradedFired) {
+        this.masteringDegradedFired = true;
+        this.onMasteringDegraded?.();
+      }
       this.emit();
     },
     uninstall: () => {
@@ -121,6 +155,10 @@ export class StudioEngine {
   // While a take is in flight the loop watchdog stands down — a wrap
   // mid-recording would mangle the take's clip placement.
   private recordingActive = false;
+  // See StudioEngineOptions.onMasteringDegraded — set from the
+  // constructor, fired at most once (masteringDegradedFired latches it).
+  private onMasteringDegraded?: () => void;
+  private masteringDegradedFired = false;
   // Tracks (audio + MIDI), built from the loaded Session.
   private tracks = new Map<string, EngineTrack>();
   // Per-track PPM peak meters (B1 Task 6) — one Tone.Meter tapped in
@@ -138,7 +176,8 @@ export class StudioEngine {
   private rafId: number | null = null;
   private state: EngineState;
 
-  constructor() {
+  constructor(opts: StudioEngineOptions = {}) {
+    this.onMasteringDegraded = opts.onMasteringDegraded;
     this.masterIn = new Tone.Gain(1);
     this.masterFx = buildFxChain([]);
     this.masterIn.connect(this.masterFx.input);
@@ -173,18 +212,19 @@ export class StudioEngine {
       sampleRate: (() => {
         try { return Tone.getContext().sampleRate; } catch { return 48000; }
       })(),
+      recordingActive: false,
     };
   }
 
   /** Connect `tail` — whatever currently feeds the speakers, either
    * masterFx.output (mastering off / still building) or
-   * masterChainHandle.output (mastering live) — to Tone.Destination AND
+   * chainSync.handle.output (mastering live) — to Tone.Destination AND
    * directly to the raw AudioContext destination. Some Tone versions
    * silently mute the Destination Volume node after hot-reload; the
    * direct path is the fallback. Also unmutes Destination explicitly.
    * `Tone.connect` resolves both Tone and raw-native AudioNode arguments
    * (see ToneAudioNode.js), so this works whether `tail` is the Tone.Gain
-   * masterFx.output or the plain GainNode masterChainHandle.output. */
+   * masterFx.output or the plain GainNode chainSync.handle.output. */
   private connectToDestination(tail: Tone.ToneAudioNode | AudioNode): void {
     try {
       Tone.connect(tail, Tone.getDestination());
@@ -682,9 +722,14 @@ export class StudioEngine {
   }
 
   /** Recording guard — StudioEditor flips this around every take so the
-   * loop watchdog can't wrap the transport mid-recording. */
+   * loop watchdog can't wrap the transport mid-recording. Also mirrored
+   * onto EngineState.recordingActive (B1 follow-up) so UI consumers —
+   * e.g. MixerView's loudness servo — can read the same flag instead of
+   * duplicating it via a second recording-state plumbing path. */
   setRecordingActive(active: boolean): void {
     this.recordingActive = active;
+    this.state.recordingActive = active;
+    this.emit();
   }
 
   private startLoopInterval(): void {

@@ -55,14 +55,25 @@ export function faderPosToDb(pos: number): number {
 }
 
 /** Inverse of faderPosToDb — dB -> fader position (0..1), clamped to
- * the breakpoint table's range. -Infinity (or anything at/below the
- * lowest breakpoint) clamps to position 0. */
+ * the breakpoint table's range. -Infinity clamps to position 0 (and
+ * ONLY -Infinity does — see the guard below); any other value at/below
+ * the lowest breakpoint (-72dB) floors to position 0.05 instead. */
 export function dbToFaderPos(db: number): number {
   if (db === -Infinity) return 0;
 
   const minDb = FADER_BREAKPOINTS[0][1];
   const maxDb = FADER_BREAKPOINTS[FADER_BREAKPOINTS.length - 1][1];
   const d = clamp(db, minDb, maxDb);
+
+  // Position 0 round-trips to -Infinity in faderPosToDb (its own hard
+  // special case). Without this guard, a finite -72dB would ALSO land
+  // on position 0 via the interpolation below (the -72/pos-0 breakpoint
+  // is the loop's first anchor), so dbToFaderPos(-72) would silently
+  // round-trip through faderPosToDb back to -Infinity instead of -72 —
+  // an asymmetry a mid-drag disarm or a stored preset could surface as
+  // a fader jump. Reserve pos 0 exclusively for -Infinity: any finite
+  // dB at the table's floor floors to the next breakpoint (0.05).
+  if (d === minDb) return FADER_BREAKPOINTS[1][0];
 
   for (let i = 0; i < FADER_BREAKPOINTS.length - 1; i++) {
     const [p0, db0] = FADER_BREAKPOINTS[i];
