@@ -237,7 +237,7 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
         return (
           <div key={t.id} className="flex flex-col items-center gap-0.5 shrink-0 w-6" title={t.name}>
             <div className="w-2 h-8 bg-muted rounded-sm overflow-hidden flex flex-col justify-end">
-              <div className={`w-full transition-[height] duration-75 ${clip ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ height: `${pct}%` }} />
+              <div className={`w-full transition-[height] duration-75 ${hot ? 'bg-rose-500' : warm ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ height: `${pct}%` }} />
             </div>
             <span className="w-2 h-1 rounded-full" style={{ backgroundColor: t.color }} />
           </div>
@@ -433,6 +433,7 @@ function StripEqSheet({
 function PanKnob({ pan, onChange }: { pan: number; onChange: (pan: number) => void }) {
   const dragRef = useRef<{ y: number; pan: number } | null>(null);
   const movedRef = useRef(false);
+  const startYRef = useRef(0);
   const tap = useTapTracker();
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -505,11 +506,14 @@ function Fader({ volumeDb, muted, onChange }: { volumeDb: number; muted: boolean
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
     draggingRef.current = true;
     movedRef.current = false;
+    startYRef.current = e.clientY;
     onChange(faderPosToDb(posFromClientY(e.clientY)));
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!draggingRef.current) return;
-    movedRef.current = true;
+    // Same 3px slop as PanKnob: touch taps emit micro-moves; without
+    // this, double-tap-to-0dB never fires on real touchscreens.
+    if (Math.abs(e.clientY - startYRef.current) > 3) movedRef.current = true;
     onChange(faderPosToDb(posFromClientY(e.clientY)));
   };
   const onPointerUp = () => {
@@ -554,7 +558,8 @@ function PeakMeter({ db, holdDb, onReset, height = FADER_TRACK_HEIGHT }: {
   db: number; holdDb: number; onReset: () => void; height?: number;
 }) {
   const pct = clamp(((db === -Infinity ? -60 : db) + 60) / 60 * 100, 0, 100);
-  const clip = db > -1;
+  const hot = db > -3;
+  const warm = db > -12;
   return (
     <button
       type="button"
@@ -562,7 +567,7 @@ function PeakMeter({ db, holdDb, onReset, height = FADER_TRACK_HEIGHT }: {
       title="Tap to reset peak hold"
       className="flex flex-col items-center gap-0.5 justify-end px-2 py-1 min-w-11 min-h-11"
     >
-      <span className="text-[11px] tabular-nums text-muted-foreground leading-none">
+      <span className="text-xs tabular-nums text-muted-foreground leading-none">
         {holdDb === -Infinity ? '—' : holdDb.toFixed(0)}
       </span>
       <div className="w-2 bg-muted rounded-sm overflow-hidden flex flex-col justify-end" style={{ height }}>
@@ -582,6 +587,8 @@ function MiniFader({ track, onStripChange, onClose }: {
   onStripChange: (p: StripPatch) => void;
   onClose: () => void;
 }) {
+  const volTap = useTapTracker();
+  const panTap = useTapTracker();
   return (
     <div className="fixed left-2 right-2 bottom-2 z-50 bg-card border border-border rounded-xl shadow-xl p-3 flex items-center gap-3">
       <div className="flex-1 min-w-0">
@@ -591,7 +598,9 @@ function MiniFader({ track, onStripChange, onClose }: {
           <input
             type="range" min={-40} max={6} step={0.5} value={track.volume_db === -Infinity ? -40 : track.volume_db}
             onChange={(e) => onStripChange({ volume_db: Number(e.target.value) })}
-            onDoubleClick={() => onStripChange({ volume_db: 0 })}
+            // Touch has no reliable dblclick on range inputs — use the
+            // same 300ms tracker as Fader/PanKnob (see header comment).
+            onPointerUp={() => volTap(false, () => onStripChange({ volume_db: 0 }))}
             className="flex-1 h-2 accent-primary min-w-0"
           />
           <span className="text-xs tabular-nums w-12 text-right">{formatDb(track.volume_db)}</span>
@@ -601,7 +610,7 @@ function MiniFader({ track, onStripChange, onClose }: {
           <input
             type="range" min={-1} max={1} step={0.05} value={track.pan}
             onChange={(e) => onStripChange({ pan: Number(e.target.value) })}
-            onDoubleClick={() => onStripChange({ pan: 0 })}
+            onPointerUp={() => panTap(false, () => onStripChange({ pan: 0 }))}
             className="flex-1 h-2 accent-primary min-w-0"
           />
           <span className="text-xs tabular-nums w-12 text-right">{formatPan(track.pan)}</span>
@@ -609,9 +618,9 @@ function MiniFader({ track, onStripChange, onClose }: {
       </div>
       <div className="flex flex-col items-center gap-1.5">
         <button onClick={() => onStripChange({ mute: !track.mute })}
-          className={`h-9 w-9 text-sm font-bold rounded border ${track.mute ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border text-muted-foreground'}`}>M</button>
+          className={`h-11 w-11 text-sm font-bold rounded border ${track.mute ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border text-muted-foreground'}`}>M</button>
         <button onClick={() => onStripChange({ solo: !track.solo })}
-          className={`h-9 w-9 text-sm font-bold rounded border ${track.solo ? 'bg-yellow-400 border-yellow-400 text-yellow-950' : 'bg-muted border-border text-muted-foreground'}`}>S</button>
+          className={`h-11 w-11 text-sm font-bold rounded border ${track.solo ? 'bg-yellow-400 border-yellow-400 text-yellow-950' : 'bg-muted border-border text-muted-foreground'}`}>S</button>
       </div>
       <button onClick={onClose} aria-label="Close" className="h-11 w-11 -mr-1 rounded flex items-center justify-center text-muted-foreground hover:bg-muted shrink-0">
         <X className="w-5 h-5" />
@@ -730,15 +739,15 @@ function MasterStrip({
       {/* LUFS M/S/I + peak readouts */}
       <div className="border-t border-border pt-1.5 grid grid-cols-3 gap-1 text-center">
         <div>
-          <div className="text-[10px] text-muted-foreground">M</div>
+          <div className="text-xs text-muted-foreground">M</div>
           <div className="text-xs tabular-nums">{block ? block.momentary.toFixed(1) : '—'}</div>
         </div>
         <div>
-          <div className="text-[10px] text-muted-foreground">S</div>
+          <div className="text-xs text-muted-foreground">S</div>
           <div className="text-xs tabular-nums">{block ? block.shortTerm.toFixed(1) : '—'}</div>
         </div>
         <div>
-          <div className="text-[10px] text-muted-foreground">I</div>
+          <div className="text-xs text-muted-foreground">I</div>
           <div className={`text-xs tabular-nums ${integratedOverTarget ? 'text-amber-500 font-semibold' : ''}`}>
             {block ? block.integrated.toFixed(1) : '—'}
           </div>
@@ -746,7 +755,7 @@ function MasterStrip({
       </div>
 
       <div className="flex items-center justify-center gap-3">
-        <span className="text-[10px] text-muted-foreground">Peak {block ? `${block.peakDb.toFixed(1)}dB` : '—'}</span>
+        <span className="text-xs text-muted-foreground">Peak {block ? `${block.peakDb.toFixed(1)}dB` : '—'}</span>
         <PeakMeter db={meter.db} holdDb={meter.holdDb} onReset={onResetHold} height={64} />
       </div>
 
@@ -767,9 +776,9 @@ function LabeledSlider({ label, value, min, max, step, unit, onChange }: {
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[10px] w-14 text-muted-foreground shrink-0">{label}</span>
+      <span className="text-xs w-14 text-muted-foreground shrink-0">{label}</span>
       <Slider value={[value]} min={min} max={max} step={step} onValueChange={(v) => onChange(v[0])} className="flex-1" />
-      <span className="text-[10px] tabular-nums w-12 text-right shrink-0">{value.toFixed(1)}{unit}</span>
+      <span className="text-xs tabular-nums w-12 text-right shrink-0">{value.toFixed(1)}{unit}</span>
     </div>
   );
 }
