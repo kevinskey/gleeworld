@@ -246,6 +246,9 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
             const next = new Set(prev); next.delete(t.id); return next;
           });
         } catch (err: any) {
+          // A superseded load (newer load / blob load / unloadTrack won
+          // the race) is not a decode failure — just drop it quietly.
+          if (err?.name === 'AbortError') return;
           console.warn('[PartTracksStudio] load failed', t.id, err);
           if (cancelled) return;
           setUndecodableTrackIds((prev) => {

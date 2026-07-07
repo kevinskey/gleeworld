@@ -147,6 +147,18 @@ export const TRACK_FETCH_RETRY_DELAYS_MS: readonly number[] = [
   0, 400, 800, 1500, 3000, 5000, 8000, 12000, 15000, 15000, 15000, 15000,
 ];
 
+// One in-flight URL load per track id. With retries spanning ~90s, a
+// pending loadTrack could otherwise resolve long after the track was
+// unloaded (deleted, project closed) or superseded by a blob load, and
+// re-insert a ghost entry into `tracks` that plays on the next transport
+// start. unloadTrack/loadTrackFromBlob abort the pending load instead.
+const loadAborts = new Map<string, AbortController>();
+
+function abortPendingLoad(id: string) {
+  loadAborts.get(id)?.abort();
+  loadAborts.delete(id);
+}
+
 export async function loadTrack(
   id: string,
   url: string,
@@ -160,6 +172,13 @@ export async function loadTrack(
     try { existing.source?.stop(); } catch {}
   }
 
+  // Supersede any load already in flight for this id and register our own
+  // controller so unloadTrack / a newer load can cancel us mid-retry.
+  abortPendingLoad(id);
+  const aborter = new AbortController();
+  loadAborts.set(id, aborter);
+  const signal = aborter.signal;
+
   // Retry on 403 / 404 / 5xx with backoff. Supabase Storage's public URL
   // can reject a fresh upload for a while: the self-hosted storage
   // service writes new objects to a stub path and a droplet cron
@@ -171,13 +190,15 @@ export async function loadTrack(
   const fetchWithRetry = async (): Promise<ArrayBuffer> => {
     const delays = TRACK_FETCH_RETRY_DELAYS_MS;
     let lastStatus = 0;
-    for (const ms of delays) {
+    for (let i = 0; i < delays.length; i++) {
+      const ms = delays[i];
       if (ms > 0) await new Promise((r) => setTimeout(r, ms));
+      if (signal.aborted) throw new DOMException('Track load superseded', 'AbortError');
       let resp: Response;
       try {
-        resp = await fetch(url, { cache: 'no-store' });
+        resp = await fetch(url, { cache: 'no-store', signal });
       } catch (err) {
-        if (ms === delays[delays.length - 1]) throw err;
+        if ((err as any)?.name === 'AbortError' || i === delays.length - 1) throw err;
         continue;
       }
       lastStatus = resp.status;
@@ -190,7 +211,13 @@ export async function loadTrack(
       ? `Could not fetch audio (HTTP ${lastStatus}) — the upload may still be propagating.`
       : 'Could not fetch audio.');
   };
-  const ab = await fetchWithRetry();
+  let ab: ArrayBuffer;
+  try {
+    ab = await fetchWithRetry();
+  } finally {
+    if (loadAborts.get(id) === aborter) loadAborts.delete(id);
+  }
+  if (signal.aborted) throw new DOMException('Track load superseded', 'AbortError');
 
   const gain = ctx.createGain();
   const panner = ctx.createStereoPanner();
@@ -271,6 +298,10 @@ export async function loadTrackFromBlob(
 ): Promise<{ duration: number; peaks: number[] }> {
   const ctx = ensureCtx();
   await unlockAudio();
+
+  // The in-memory blob supersedes any URL load still retrying for this
+  // id (e.g. the load effect racing a just-uploaded backing track).
+  abortPendingLoad(id);
 
   const existing = tracks.get(id);
   if (existing) {
@@ -389,6 +420,9 @@ export function setTrackRecordOffset(id: string, recordOffsetSec: number) {
 }
 
 export function unloadTrack(id: string) {
+  // Cancel any URL load still retrying for this id — otherwise it could
+  // resolve after the unload and re-insert the track as a ghost entry.
+  abortPendingLoad(id);
   const t = tracks.get(id);
   if (!t) return;
   try { t.source?.stop(); } catch {}
