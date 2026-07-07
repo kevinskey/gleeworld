@@ -38,6 +38,13 @@
 // *next* iteration afterward. This is a pure phase shift of the window
 // (still exactly `L` samples wide) — delay-line length, and therefore
 // output latency, is unchanged.
+//
+// KEEP IN SYNC WITH public/worklets/gw-limiter.js — that file is a
+// standalone-JS inlined copy of this exact algorithm (AudioWorklets
+// can't import TS/bundle app modules), including the ordering fix from
+// commit d94461088 described above (windowMax read before eviction).
+// This module is the vitest-covered reference implementation; mirror
+// any change to the math here into gw-limiter.js, and vice versa.
 
 export interface LimiterState {
   delayL: Float32Array;

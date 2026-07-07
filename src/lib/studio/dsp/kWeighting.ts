@@ -18,6 +18,13 @@
 // standard RBJ cookbook forms are also exported below (as `rbjBiquad`)
 // for the mastering chain's own HPF/air-shelf, which are NOT part of
 // K-weighting and have no published reference table to match.
+//
+// KEEP IN SYNC WITH public/worklets/gw-loudness.js — that file inlines
+// standalone-JS copies of ebur128HighShelf/ebur128Highpass (AudioWorklets
+// can't import TS/bundle app modules) to K-filter the post-limiter tap in
+// real time. This module (validated against the published BS.1770-4
+// 48kHz table) is the reference implementation; mirror any change to the
+// derivation here into gw-loudness.js, and vice versa.
 
 /** Direct-form biquad coefficients, normalized so a0 = 1 (a0 is implicit). */
 export interface Biquad {
