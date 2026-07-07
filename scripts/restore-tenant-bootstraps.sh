@@ -49,8 +49,10 @@ while read -r slug; do
   [ -n "$slug" ] && [ -z "${seen[$slug]:-}" ] || continue
   write_boot "$slug" "$slug"
   seen[$slug]=1
-done < <(grep -rhoE 'tenants/[A-Za-z0-9_-]+/tenant-bootstrap\.js' /etc/nginx/sites-enabled/ \
+done < <(grep -RhoE 'tenants/[A-Za-z0-9_-]+/tenant-bootstrap\.js' /etc/nginx/sites-enabled/ \
   | sed -E 's|tenants/([A-Za-z0-9_-]+)/.*|\1|' | sort -u)
+# (-R, not -r: sites-enabled entries are usually symlinks into
+#  sites-available, and lowercase -r does not follow them.)
 
 echo
 echo "Verify:"
