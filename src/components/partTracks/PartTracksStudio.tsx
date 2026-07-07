@@ -15,7 +15,7 @@ import {
   Play, Pause, Square, Mic, MicOff, Volume2, VolumeX, Trash2, Plus, Upload, Circle,
   Music, ArrowLeft, Headphones, Sparkles, Loader2, Youtube, Settings2,
   Wrench, AudioWaveform, AudioLines, Star, MicVocal, CircleDot,
-  Scissors, BarChart3, Wand2, X, ZoomIn, ZoomOut,
+  Scissors, BarChart3, Wand2, X, ZoomIn, ZoomOut, Eraser, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { AccompanimentPicker } from './AccompanimentPicker';
 import { DeviceSettings, isMusicModeEnabled } from './DeviceSettings';
@@ -1006,6 +1006,19 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Nudge a recorded take along the master timeline in 0.1s steps — the
+  // manual escape hatch when a take still sits slightly off the grid on
+  // a device whose real output latency the automatic alignment can't
+  // observe (WebKit reports no outputLatency).
+  const nudgeTake = (track: PartTrack, deltaSec: number) => {
+    if (!track.audio_url) return;
+    const current = (track as any).record_offset_sec ?? 0;
+    const next = Math.max(0, Math.round((current + deltaSec) * 100) / 100);
+    setTrackRecordOffset(track.id, next);
+    updateTrack.mutate({ id: track.id, patch: { record_offset_sec: next } as any });
+    toast.message(`"${track.label}" ${deltaSec < 0 ? 'earlier' : 'later'} → ${next.toFixed(2)}s`);
+  };
+
   // Apply an audio tool (trim / normalize / denoise) to a track's
   // recorded take. Reads the decoded buffer from the engine, runs the
   // processor, encodes to WAV, uploads, swaps audio_url, reloads.
@@ -1545,23 +1558,40 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // load effect from kicking off a redundant URL fetch of the same
       // bytes when the refetch lands.
       const accTrack = tracks.find((t) => t.kind === 'accompaniment');
-      if (accTrack) {
-        try {
-          const { peaks, duration } = await loadTrackFromBlob(accTrack.id, file, 0);
-          loadedUrlByTrackRef.current[accTrack.id] = url;
-          setWaveformByTrack((prev) => ({ ...prev, [accTrack.id]: peaks }));
-          setDurationByTrack((prev) => ({ ...prev, [accTrack.id]: duration }));
-          setTrackVolume(accTrack.id, accTrack.volume, accTrack.muted);
-          setTrackPan(accTrack.id, accTrack.pan);
-          setUndecodableTrackIds((prev) => {
-            if (!prev.has(accTrack.id)) return prev;
-            const next = new Set(prev); next.delete(accTrack.id); return next;
-          });
-        } catch (previewErr) {
-          // Undecodable here may still decode via the URL path (or the
-          // HTMLAudioElement fallback) — leave it to the load effect.
-          console.warn('[PartTracks] Backing uploaded but immediate preview failed', previewErr);
-        }
+      let accTrackId = accTrack?.id ?? null;
+      if (!accTrackId) {
+        // The Accompaniment row is deletable like any other track — if
+        // it's gone, re-seed it now, otherwise the upload succeeds but
+        // has no mixer row to live on (no waveform, silent playback).
+        const { data: created, error: insErr } = await supabase
+          .from('gw_part_tracks_tracks')
+          .insert({
+            project_id: project.id,
+            kind: 'accompaniment',
+            label: 'Accompaniment',
+            color: '#94a3b8',
+            sort_order: 0,
+          })
+          .select('id')
+          .single();
+        if (insErr || !created) throw new Error(insErr?.message ?? 'Could not recreate the accompaniment row');
+        accTrackId = created.id as string;
+      }
+      try {
+        const { peaks, duration } = await loadTrackFromBlob(accTrackId, file, 0);
+        loadedUrlByTrackRef.current[accTrackId] = url;
+        setWaveformByTrack((prev) => ({ ...prev, [accTrackId!]: peaks }));
+        setDurationByTrack((prev) => ({ ...prev, [accTrackId!]: duration }));
+        setTrackVolume(accTrackId, accTrack?.volume ?? 0.8, accTrack?.muted ?? false);
+        setTrackPan(accTrackId, accTrack?.pan ?? 0);
+        setUndecodableTrackIds((prev) => {
+          if (!prev.has(accTrackId!)) return prev;
+          const next = new Set(prev); next.delete(accTrackId!); return next;
+        });
+      } catch (previewErr) {
+        // Undecodable here may still decode via the URL path (or the
+        // HTMLAudioElement fallback) — leave it to the load effect.
+        console.warn('[PartTracks] Backing uploaded but immediate preview failed', previewErr);
       }
 
       await updateProject.mutateAsync({
@@ -1571,7 +1601,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         accompaniment_apple_music_id: null,
         accompaniment_youtube_url: null,
       } as any);
-      if (accTrack) await updateTrack.mutateAsync({ id: accTrack.id, patch: { audio_url: url } });
+      await updateTrack.mutateAsync({ id: accTrackId, patch: { audio_url: url } });
       toast.success(`Loaded "${file.name}" as the backing track.`);
     } catch (e: any) {
       console.error('[PartTracks] Accompaniment upload failed', e);
@@ -1886,36 +1916,17 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
                 }}
                 onSeek={(frac) => seekTo(frac * maxDuration)}
                 onDelete={() => {
-                  // toast.confirm — `confirm()` is blocked silently in
-                  // iOS WKWebView (and some Safari versions), so it
-                  // appeared to the user that the delete button did
-                  // nothing. Sonner's action toast works everywhere and
-                  // also surfaces an error if the mutation fails. We
-                  // hold onto the toast ID so we can explicitly dismiss
-                  // it from inside the action — Sonner's auto-dismiss
-                  // on action click has been inconsistent on iOS
-                  // Capacitor (touch event sometimes ends without
-                  // triggering the auto-close timer).
-                  const confirmId = toast(`Delete "${t.label}"?`, {
-                    action: {
-                      label: 'Delete',
-                      onClick: () => {
-                        toast.dismiss(confirmId);
-                        unloadTrack(t.id);
-                        // No success toast — the track row vanishing
-                        // is the confirmation. Stacking three "Removed X"
-                        // cards on rapid deletes was blocking the
-                        // transport.
-                        deleteTrack.mutate(t.id, {
-                          onError: (err: any) => toast.error(`Couldn't remove "${t.label}": ${err?.message ?? 'unknown error'}`),
-                        });
-                      },
-                    },
-                    cancel: {
-                      label: 'Cancel',
-                      onClick: () => { toast.dismiss(confirmId); },
-                    },
-                    duration: 8000,
+                  // Confirmation lives IN the trash button now (two-tap
+                  // arm — see TrackRow). The previous sonner-action
+                  // confirm was unreliable on iOS: the action tap
+                  // sometimes never fired in WKWebView/Safari, so
+                  // "delete does nothing" (reported 2026-07-07, iPad).
+                  // By the time this fires the user has already
+                  // confirmed. No success toast — the row vanishing is
+                  // the confirmation.
+                  unloadTrack(t.id);
+                  deleteTrack.mutate(t.id, {
+                    onError: (err: any) => toast.error(`Couldn't remove "${t.label}": ${err?.message ?? 'unknown error'}`),
                   });
                 }}
               />
@@ -2154,6 +2165,40 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
                               </button>
                             ))}
                           </div>
+                          {/* Row 2: timing nudge (manual grid alignment)
+                              + clear the take without deleting the part. */}
+                          <div className="grid grid-cols-3 gap-1.5">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => nudgeTake(t, -0.1)}
+                              title="Shift this take 0.1s earlier"
+                              className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md border border-border bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-50 transition-colors"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                              <span className="text-[10px] font-semibold uppercase tracking-wider">Earlier</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => { clearTakeForTrack(t); setAudioToolsOpen(false); }}
+                              title="Delete this recording but keep the part (re-record onto it)"
+                              className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md border border-border bg-card hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50 transition-colors"
+                            >
+                              <Eraser className="w-4 h-4" />
+                              <span className="text-[10px] font-semibold uppercase tracking-wider">Clear</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => nudgeTake(t, 0.1)}
+                              title="Shift this take 0.1s later"
+                              className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md border border-border bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-50 transition-colors"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                              <span className="text-[10px] font-semibold uppercase tracking-wider">Later</span>
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -2367,6 +2412,14 @@ function TrackRow({
   // clear and let `track.volume` take over again.
   const [dragVolume, setDragVolume] = useState<number | null>(null);
   const volumePct = dragVolume ?? Math.round(track.volume * 100);
+  // Two-tap delete confirm, entirely inside the button — sonner action
+  // taps were unreliable on iOS (WKWebView/Safari), which read as
+  // "delete does nothing". First tap arms for 3s, second tap deletes.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmTimerRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (confirmTimerRef.current !== null) window.clearTimeout(confirmTimerRef.current);
+  }, []);
   return (
     <li className="p-3 flex gap-3 items-center">
       {/* Sticky when the timeline is zoomed: the controls column pins to
@@ -2452,12 +2505,26 @@ function TrackRow({
           </button>
           <button
             type="button"
-            onClick={onDelete}
-            className="ml-auto inline-flex items-center justify-center h-9 w-9 rounded-md text-muted-foreground/70 hover:text-rose-500 hover:bg-rose-500/10 transition-colors touch-manipulation"
-            title="Delete track"
-            aria-label="Delete track"
+            onClick={() => {
+              if (!confirmDelete) {
+                setConfirmDelete(true);
+                confirmTimerRef.current = window.setTimeout(() => setConfirmDelete(false), 3000);
+                return;
+              }
+              if (confirmTimerRef.current !== null) window.clearTimeout(confirmTimerRef.current);
+              setConfirmDelete(false);
+              onDelete();
+            }}
+            className={`ml-auto inline-flex items-center justify-center h-9 rounded-md transition-colors touch-manipulation ${
+              confirmDelete
+                ? 'bg-rose-500 text-white px-2 text-[10px] font-bold uppercase tracking-wide gap-1'
+                : 'w-9 text-muted-foreground/70 hover:text-rose-500 hover:bg-rose-500/10'
+            }`}
+            title={confirmDelete ? 'Tap again to delete this track' : 'Delete track'}
+            aria-label={confirmDelete ? 'Tap again to delete this track' : 'Delete track'}
           >
             <Trash2 className="w-4 h-4" />
+            {confirmDelete && 'Sure?'}
           </button>
         </div>
 
