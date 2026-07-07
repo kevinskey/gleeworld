@@ -14,7 +14,7 @@
 import { describe, test, expect } from 'vitest';
 import {
   extensionForMimeType, getRecordingExtension, getRecordingMimeType,
-  TRACK_FETCH_RETRY_DELAYS_MS,
+  TRACK_FETCH_RETRY_DELAYS_MS, orderRecorderMimeCandidates,
 } from '../audioEngine';
 
 describe('extensionForMimeType', () => {
@@ -59,6 +59,30 @@ describe('TRACK_FETCH_RETRY_DELAYS_MS', () => {
     const early = TRACK_FETCH_RETRY_DELAYS_MS.slice(0, 4).reduce((a, b) => a + b, 0);
     expect(TRACK_FETCH_RETRY_DELAYS_MS[0]).toBe(0);
     expect(early).toBeLessThanOrEqual(3_000);
+  });
+});
+
+describe('orderRecorderMimeCandidates', () => {
+  test('Apple engines get mp4/aac BEFORE any webm candidate', () => {
+    // Safari 18.4+ claims MediaRecorder webm/opus support but its
+    // decodeAudioData still rejects webm, and its webm recorder emitted
+    // 5-byte husk takes (2026-07-07 incident). If webm ever sorts ahead
+    // of mp4 for Apple engines again, Safari recording silently breaks.
+    const apple = orderRecorderMimeCandidates(true);
+    const lastMp4 = Math.max(apple.indexOf('audio/mp4'), apple.indexOf('audio/mp4;codecs=mp4a.40.2'), apple.indexOf('audio/aac'));
+    const firstWebm = apple.findIndex((t) => t.startsWith('audio/webm'));
+    expect(lastMp4).toBeLessThan(firstWebm);
+    expect(apple[0]).toBe('audio/mp4;codecs=mp4a.40.2');
+  });
+
+  test('non-Apple engines keep webm/opus first (Chrome/Firefox native path)', () => {
+    const other = orderRecorderMimeCandidates(false);
+    expect(other[0]).toBe('audio/webm;codecs=opus');
+  });
+
+  test('both orderings contain the same candidate set', () => {
+    expect([...orderRecorderMimeCandidates(true)].sort())
+      .toEqual([...orderRecorderMimeCandidates(false)].sort());
   });
 });
 
