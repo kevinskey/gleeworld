@@ -223,7 +223,7 @@ const PressKit = () => {
         </div>
 
         {/* Director Bio */}
-        <Card className="relative overflow-hidden border-0 shadow-[var(--shadow-promotional)] bg-gradient-to-r from-background via-primary/5 to-background backdrop-blur-lg">
+        <Card className="relative overflow-hidden border-0 shadow-card bg-gradient-to-r from-background via-primary/5 to-background backdrop-blur-lg">
           <div className="absolute inset-0 bg-[hsl(var(--card))] opacity-50"></div>
           <CardContent className="relative p-10">
             <div className="flex items-center justify-center mb-8">
@@ -369,7 +369,7 @@ const PressKit = () => {
         </div>
 
         {/* Performance History Highlights */}
-        <Card className="relative overflow-hidden border-0 shadow-[var(--shadow-promotional)] bg-gradient-to-br from-background via-secondary/5 to-primary/5 backdrop-blur-lg">
+        <Card className="relative overflow-hidden border-0 shadow-card bg-gradient-to-br from-background via-secondary/5 to-primary/5 backdrop-blur-lg">
           <div className="absolute inset-0 bg-[hsl(var(--card))] opacity-30"></div>
           <CardContent className="relative p-10">
             <div className="flex items-center justify-center mb-10">
@@ -427,7 +427,7 @@ const PressKit = () => {
         </Card>
 
         {/* Call to Action */}
-        <Card className="relative overflow-hidden border-0 shadow-[var(--shadow-promotional)] bg-gradient-to-r from-primary/10 via-secondary/5 to-primary/10 backdrop-blur-lg">
+        <Card className="relative overflow-hidden border-0 shadow-card bg-gradient-to-r from-primary/10 via-secondary/5 to-primary/10 backdrop-blur-lg">
           <div className="absolute inset-0 bg-brand-gradient-deep opacity-20"></div>
           <CardContent className="relative p-12 text-center">
             <div className="flex justify-center mb-6">
