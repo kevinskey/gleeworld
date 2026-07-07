@@ -10,7 +10,12 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
 const BASELINE_PATH = '.typecheck-baseline.txt';
 // Ignore line/col churn from unrelated edits elsewhere in the file.
-const norm = (line) => line.replace(/\(\d+,\d+\)/, '(L,C)');
+// Normalize: strip line/col AND any absolute path prefixes (error text
+// can embed the checkout's absolute path inside cross-module type names,
+// which broke the guard on any other machine/worktree).
+const norm = (line) => line
+  .replace(/\(\d+,\d+\)/, '(L,C)')
+  .replace(/(["'( ])\/[^"'()\s]*\/(src|node_modules)\//g, '$1$2/');
 
 let out = '';
 try {

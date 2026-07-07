@@ -1,4 +1,4 @@
-src/App.tsx(L,C): error TS2322: Type 'import("/private/tmp/claude-501/-Users-kevinjohnson/367461db-5a7c-4327-b1d7-b152e9f2ad34/scratchpad/gleeworld/node_modules/@tanstack/query-core/build/modern/_tsup-dts-rollup").QueryClient' is not assignable to type 'import("/private/tmp/claude-501/-Users-kevinjohnson/367461db-5a7c-4327-b1d7-b152e9f2ad34/scratchpad/gleeworld/node_modules/@tanstack/react-query/node_modules/@tanstack/query-core/build/modern/hydration-Cvr-9VdO").b'.
+src/App.tsx(L,C): error TS2322: Type 'import("node_modules/@tanstack/query-core/build/modern/_tsup-dts-rollup").QueryClient' is not assignable to type 'import("node_modules/@tanstack/query-core/build/modern/hydration-Cvr-9VdO").b'.
 src/components/academy/groups/CourseGroups.tsx(L,C): error TS2322: Type 'Promise<boolean>' is not assignable to type 'void | Promise<void>'.
 src/components/admin/GranularPermissionsManager.tsx(L,C): error TS2345: Argument of type 'Set<unknown>' is not assignable to parameter of type 'SetStateAction<Set<string>>'.
 src/components/admin/PermissionsPanel.tsx(L,C): error TS2345: Argument of type 'Set<unknown>' is not assignable to parameter of type 'SetStateAction<Set<string>>'.
@@ -133,6 +133,6 @@ src/pages/admin/CourseStatistics.tsx(L,C): error TS2362: The left-hand side of a
 src/pages/admin/CourseStatistics.tsx(L,C): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
 src/pages/admin/PublicPageEditor.tsx(L,C): error TS2339: Property 'tenant_id' does not exist on type 'SiteRow'.
 src/pages/admin/StudentOnboarding.tsx(L,C): error TS2339: Property 'organization_name' does not exist on type 'BrandingSettings'.
-src/pages/dashboard/ConcertPlannerEditorPage.tsx(L,C): error TS2345: Argument of type 'import("/private/tmp/claude-501/-Users-kevinjohnson/367461db-5a7c-4327-b1d7-b152e9f2ad34/scratchpad/gw-verify-wave1/src/hooks/useConcertPrograms").ConcertProgram' is not assignable to parameter of type 'import("/private/tmp/claude-501/-Users-kevinjohnson/367461db-5a7c-4327-b1d7-b152e9f2ad34/scratchpad/gw-verify-wave1/src/lib/concertPlanner/types").ConcertProgram'.
+src/pages/dashboard/ConcertPlannerEditorPage.tsx(L,C): error TS2345: Argument of type 'import("src/hooks/useConcertPrograms").ConcertProgram' is not assignable to parameter of type 'import("src/lib/concertPlanner/types").ConcertProgram'.
 src/pages/member/AttendancePage.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
 src/pages/studio/StudioEditor.tsx(L,C): error TS2578: Unused '@ts-expect-error' directive.
