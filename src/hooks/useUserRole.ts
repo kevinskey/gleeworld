@@ -11,6 +11,7 @@ interface UserProfile {
   full_name?: string;
   is_admin: boolean;
   is_super_admin: boolean;
+  is_exec_board?: boolean | null;
   verified?: boolean;
 }
 
@@ -37,7 +38,7 @@ export const useUserRole = () => {
         const [profileResult, appRolesResult] = await Promise.all([
           supabase
             .from('gw_profiles')
-            .select('id, user_id, email, role, full_name, is_admin, is_super_admin, verified')
+            .select('id, user_id, email, role, full_name, is_admin, is_super_admin, is_exec_board, verified')
             .eq('user_id', user.id)
             .maybeSingle(),
           supabase

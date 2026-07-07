@@ -2825,66 +2825,6 @@ function ImportClipDialog({
   );
 }
 
-function RecordClipDialog({
-  open, onOpenChange, track, onUpdate,
-}: { open: boolean; onOpenChange: (o: boolean) => void; track: Track; onUpdate: (mut: (t: Track) => Track) => void }) {
-  const sess = useParentSession();
-  const [seconds, setSeconds] = useState(10);
-  const [busy, setBusy] = useState(false);
-
-  const submit = async () => {
-    if (!sess) return;
-    try {
-      setBusy(true);
-      const asset = await recordAndUpload({
-        tenantId: sess.tenant_id, sessionId: sess.id,
-        durationSeconds: seconds,
-      });
-      const url = await getAssetUrl({ tenantId: sess.tenant_id, sessionId: sess.id, asset });
-      setAssetUrl(asset.id, url);
-      sessAddAsset(asset);
-      onUpdate((t) => {
-        if (!isAudioTrack(t)) return t;
-        const clip: AudioClip = {
-          id: newId(), kind: 'audio', asset_id: asset.id,
-          start_seconds: 0, duration_seconds: asset.duration_seconds,
-          offset_seconds: 0, gain_db: 0,
-          fade_in_seconds: 0, fade_out_seconds: 0,
-          reverse: false, pitch_semitones: 0, time_stretch: 1,
-        };
-        return { ...t, clips: [...t.clips, clip] } as Track;
-      });
-      toast.success('Recorded');
-      onOpenChange(false);
-    } catch (e) {
-      toast.error('Record failed', { description: e instanceof Error ? e.message : String(e) });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Record from mic</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Duration (seconds)</Label>
-            <Input type="number" min="1" max="600" value={seconds} onChange={(e) => setSeconds(Number(e.target.value) || 10)} />
-          </div>
-          <div className="text-xs text-muted-foreground">Recording starts on click and stops after the set duration. Browser will ask for mic permission.</div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={submit} disabled={busy}>
-              {busy ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Recording…</> : <><Mic className="w-4 h-4 mr-1.5" /> Record</>}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ── Piano roll: simple 16-step note grid for now ────────────────────
 
 function PianoRollDialog({
