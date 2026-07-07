@@ -560,6 +560,16 @@ function computePeaks(buffer: AudioBuffer, bucketCount: number): number[] {
 let recordingActive = false;
 let recordingMimeType: string = 'audio/webm';
 let levelRaf: number | null = null;
+// performance.now() at the instant the current take's capture went live
+// (sharedStartTake resolved). The studio reads this to MEASURE the real
+// gap between capture start and the backing becoming audible instead of
+// trusting a fixed trim guess — see computeTakeAlignment usage in
+// PartTracksStudio.tsx (same model Studio adopted in takeAlignment.ts).
+let lastCaptureStartWallMs: number | null = null;
+
+export function getLastCaptureStartWallMs(): number | null {
+  return lastCaptureStartWallMs;
+}
 
 // Candidate container/codec strings for MediaRecorder, best-first for the
 // GIVEN engine. The whole take pipeline depends on decodeAudioData being
@@ -691,6 +701,7 @@ export async function startRecording(opts?: {
     closeMicRecorder();
     throw e;
   }
+  lastCaptureStartWallMs = performance.now();
   recordingActive = true;
 
   // Wire a live-level tap off the shared recorder's own analyser so the
@@ -717,7 +728,15 @@ export async function startRecording(opts?: {
   }
 }
 
-export async function stopRecording(): Promise<Blob | null> {
+export async function stopRecording(opts?: {
+  /** Head-trim in ms computed by the caller from MEASURED per-take
+   *  stamps (computeTakeAlignment in takeAlignment.ts — capture-start to
+   *  backing-audible gap plus the configured hardware residual). When
+   *  provided, it replaces the legacy fixed guess entirely; 0 means
+   *  "don't trim" (e.g. an overdub where the shift moves the clip
+   *  instead). Omit for the legacy configured-guess behavior. */
+  trimHeadMsOverride?: number;
+}): Promise<Blob | null> {
   if (!recordingActive) return null;
   recordingActive = false;
   if (levelRaf !== null) { cancelAnimationFrame(levelRaf); levelRaf = null; }
@@ -726,16 +745,17 @@ export async function stopRecording(): Promise<Blob | null> {
   closeMicRecorder();
   if (!rawBlob || rawBlob.size === 0) return rawBlob ?? null;
 
-  // Latency compensation Part Tracks never had with the old MediaRecorder
-  // path: trim the configured input + measured output latency off the
-  // head of every take before the caller uploads it. Falls back to the
-  // raw blob untouched when decode fails or the take is shorter than the
-  // trim (trimHeadLatency's own contract).
-  // Part Tracks has its own tunable key ('partTracks.inputLatencyMs');
-  // falls back to Studio's calibration, then the shared default. The
-  // right value for THIS pipeline is settled by the on-device clap test
-  // (plan Task 6) — the trim technique is proven, the constant is not.
-  const trimMs = getConfiguredInputLatencyMs('partTracks.inputLatencyMs') + getOutputLatencyMs();
+  // Head-trim so the take lines up with the backing. Preferred: the
+  // measured per-take value from the caller (real startup gap varies
+  // 0.3s–2.5s per device/session — a fixed guess landed takes "a measure
+  // late" on iPhone, 2026-07-07). Legacy fallback: configured input
+  // latency ('partTracks.inputLatencyMs' → Studio's key → 700ms default)
+  // plus measured output latency. Falls back to the raw blob untouched
+  // when decode fails or the take is shorter than the trim
+  // (trimHeadLatency's own contract).
+  const trimMs = typeof opts?.trimHeadMsOverride === 'number' && opts.trimHeadMsOverride >= 0
+    ? opts.trimHeadMsOverride
+    : getConfiguredInputLatencyMs('partTracks.inputLatencyMs') + getOutputLatencyMs();
   const finalBlob = await trimHeadLatency(rawBlob, trimMs);
   recordingMimeType = finalBlob.type || rawBlob.type || recordingMimeType;
   return finalBlob;

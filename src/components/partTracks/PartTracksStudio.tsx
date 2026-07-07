@@ -46,10 +46,11 @@ import {
   startPlayback, stopPlayback, getCurrentTime, getMaxDuration,
   startRecording, stopRecording, setTrackRecordOffset,
   getRecordingMimeType, extensionForMimeType,
-  getTrackBuffer, playCountIn,
+  getTrackBuffer, playCountIn, getLastCaptureStartWallMs,
 } from './audioEngine';
 import { bufferToWav, trimSilence, normalize, reduceNoise } from './audioProcessing';
-import { getLikelyAudioRoute } from '@/lib/audio/sharedRecorder';
+import { getLikelyAudioRoute, getConfiguredDeviceLatencyMs } from '@/lib/audio/sharedRecorder';
+import { computeTakeAlignment, type TakeStamps } from '@/lib/audio/takeAlignment';
 
 // Task 5 (headphone/bleed guard): once dismissed, the "wear headphones"
 // warning stays suppressed for the rest of the browser tab's session —
@@ -110,6 +111,11 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
   // started. Used to align the saved take with the rest of the mix on
   // subsequent plays so the vocal never drifts ahead of the backing.
   const recordStartOffsetRef = useRef<number>(0);
+  // Wall-clock stamps for the take in progress (press / capture-live /
+  // transport-start) so stop can compute a MEASURED head-trim + clip
+  // shift via computeTakeAlignment instead of a fixed guess. Web path
+  // only; the native iOS recorder does its own hardware compensation.
+  const takeStampsRef = useRef<TakeStamps | null>(null);
   const [progressByTrack, setProgressByTrack] = useState<Record<string, number>>({});
   const [waveformByTrack, setWaveformByTrack] = useState<Record<string, number[] | null>>({});
   const [durationByTrack, setDurationByTrack] = useState<Record<string, number>>({});
@@ -800,7 +806,15 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         await stopNativeRecordForTrack(track);
         return;
       }
-      const blob = await stopRecording();
+      // Measured alignment for this take (see takeStampsRef): trim the
+      // real capture→backing-audible gap off the head, and/or shift the
+      // clip right when capture opened after the anchor (overdub case).
+      const stamps = takeStampsRef.current;
+      takeStampsRef.current = null;
+      const alignment = stamps ? computeTakeAlignment(stamps) : null;
+      const blob = await stopRecording(
+        alignment ? { trimHeadMsOverride: alignment.trimMs } : undefined,
+      );
       // End the Live Activity so the lock screen / Dynamic Island
       // returns to normal. iOS-only, web no-ops.
       void endRecordingActivity();
@@ -841,7 +855,9 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         toast.error('Recording failed — no audio was captured. Check your microphone.');
         return;
       }
-      const offsetSec = recordStartOffsetRef.current;
+      // Overdub case: capture opened later than the anchor — that audio
+      // can't be trimmed into existence, so the take places later instead.
+      const offsetSec = recordStartOffsetRef.current + (alignment?.clipStartOffsetSec ?? 0);
       await saveTakeBlob(track, blob, offsetSec);
   };
 
@@ -1344,6 +1360,8 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // Capture the master-timeline position the INSTANT we start
       // recording. If playback is already going we lock to that
       // playhead; otherwise we begin a new take from the very top.
+      const wasPlayingAtPress = playing;
+      const pressWallMs = performance.now();
       recordStartOffsetRef.current = playing ? getCurrentTime() : (punchIn ?? 0);
       livePeaksRef.current = [];
       setLivePeaks([]);
@@ -1355,8 +1373,11 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // the warm-up delay — and that delay differs every session,
       // which is why takes never lined up on replay. Awaiting here
       // anchors the recorder to Apple Music's audible start.
+      const isStreamingBacking = getBackingKind() === 'appleMusic' || getBackingKind() === 'youtube';
+      let backingAudibleWallMs: number | null = null;
       if (!playing) {
         await startExternalAccompaniment(recordStartOffsetRef.current);
+        if (isStreamingBacking) backingAudibleWallMs = performance.now();
       }
 
       await startRecording({
@@ -1364,6 +1385,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         musicMode: isMusicModeEnabled(),
         onLevel: appendLivePeak,
       });
+      const captureStartWallMs = getLastCaptureStartWallMs() ?? performance.now();
       setRecordingTrackId(track.id);
       recordingTrackIdRef.current = track.id;
       setArmedTrackId(track.id); // keep arm light on while recording
@@ -1377,10 +1399,37 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // Local backing tracks fire NOW that the mic recorder is rolling
       // and the external source is already audible. External start was
       // awaited above, so this last call closes the sync triangle.
+      let transportStartWallMs: number | null = null;
       if (!playing) {
         startPlayback(recordStartOffsetRef.current);
+        // + the 50ms scheduling anchor inside startPlayback (sources fire
+        // at ctx.currentTime + 0.05, not at the call itself).
+        transportStartWallMs = performance.now() + 50;
         setPlaying(true);
       }
+
+      // Stamp the take so stop can MEASURE the real head gap instead of
+      // trusting a fixed trim guess (real startup — mic open, audio
+      // session switch on iOS — varies 0.3s–2.5s and landed takes "a
+      // measure late"). Three shapes, same model as Studio's
+      // takeAlignment.ts:
+      //  - fresh start, local/file backing → transport stamp set: trim
+      //    the measured capture→audible gap + hardware residual;
+      //  - fresh start, streaming backing → backing became audible when
+      //    startExternalAccompaniment resolved, BEFORE capture: treat as
+      //    the already-running case anchored at that moment;
+      //  - overdub while playing → anchor is the press moment; capture
+      //    opened late, so the clip shifts right instead of trimming.
+      takeStampsRef.current = {
+        pressWallMs: !wasPlayingAtPress && backingAudibleWallMs !== null
+          ? backingAudibleWallMs
+          : pressWallMs,
+        captureStartWallMs,
+        transportStartWallMs: !wasPlayingAtPress && !isStreamingBacking
+          ? transportStartWallMs
+          : null,
+        deviceLatencyMs: getConfiguredDeviceLatencyMs(),
+      };
 
       // Punch-out: schedule auto-stop at the out-mark. If the user hits
       // Stop earlier, that path also tears the recorder down so this
