@@ -1,21 +1,29 @@
-// MP3 encoder worker. Receives Float32 PCM (mono), returns an MP3 Uint8Array.
-// Runs in a Web Worker so a 10-minute encode (≈2–5 s of CPU) doesn't freeze
-// the UI.
+// MP3 encoder worker. Receives Float32 PCM (mono, or stereo via the
+// optional `right` channel), returns an MP3 Uint8Array. Runs in a Web
+// Worker so a 10-minute encode (≈2–5 s of CPU) doesn't freeze the UI.
 import { Mp3Encoder } from '@breezystack/lamejs';
 
-self.onmessage = (e: MessageEvent<{ samples: Float32Array; sampleRate: number; bitrate?: number }>) => {
-  const { samples, sampleRate, bitrate = 128 } = e.data;
-  const int16 = new Int16Array(samples.length);
-  for (let i = 0; i < samples.length; i++) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
+function toInt16(f32: Float32Array): Int16Array {
+  const int16 = new Int16Array(f32.length);
+  for (let i = 0; i < f32.length; i++) {
+    const s = Math.max(-1, Math.min(1, f32[i]));
     int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
   }
-  const enc = new Mp3Encoder(1, sampleRate, bitrate);
+  return int16;
+}
+
+self.onmessage = (e: MessageEvent<{ samples: Float32Array; right?: Float32Array; sampleRate: number; bitrate?: number }>) => {
+  const { samples, right, sampleRate, bitrate = 128 } = e.data;
+  const int16 = toInt16(samples);
+  const int16R = right ? toInt16(right) : null;
+  const enc = new Mp3Encoder(int16R ? 2 : 1, sampleRate, bitrate);
   const chunk = 1152;
   const out: Uint8Array[] = [];
   for (let i = 0; i < int16.length; i += chunk) {
     const slice = int16.subarray(i, i + chunk);
-    const buf = enc.encodeBuffer(slice);
+    const buf = int16R
+      ? enc.encodeBuffer(slice, int16R.subarray(i, i + chunk))
+      : enc.encodeBuffer(slice);
     if (buf.length > 0) out.push(buf);
   }
   const tail = enc.flush();
