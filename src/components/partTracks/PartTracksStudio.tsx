@@ -15,7 +15,7 @@ import {
   Play, Pause, Square, Mic, MicOff, Volume2, VolumeX, Trash2, Plus, Upload, Circle,
   Music, ArrowLeft, Headphones, Sparkles, Loader2, Youtube, Settings2,
   Wrench, AudioWaveform, AudioLines, Star, MicVocal, CircleDot,
-  Scissors, BarChart3, Wand2, X, ZoomIn, ZoomOut,
+  Scissors, BarChart3, Wand2, X, ZoomIn, ZoomOut, Eraser, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { AccompanimentPicker } from './AccompanimentPicker';
 import { DeviceSettings, isMusicModeEnabled } from './DeviceSettings';
@@ -1006,6 +1006,19 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // Nudge a recorded take along the master timeline in 0.1s steps — the
+  // manual escape hatch when a take still sits slightly off the grid on
+  // a device whose real output latency the automatic alignment can't
+  // observe (WebKit reports no outputLatency).
+  const nudgeTake = (track: PartTrack, deltaSec: number) => {
+    if (!track.audio_url) return;
+    const current = (track as any).record_offset_sec ?? 0;
+    const next = Math.max(0, Math.round((current + deltaSec) * 100) / 100);
+    setTrackRecordOffset(track.id, next);
+    updateTrack.mutate({ id: track.id, patch: { record_offset_sec: next } as any });
+    toast.message(`"${track.label}" ${deltaSec < 0 ? 'earlier' : 'later'} → ${next.toFixed(2)}s`);
+  };
+
   // Apply an audio tool (trim / normalize / denoise) to a track's
   // recorded take. Reads the decoded buffer from the engine, runs the
   // processor, encodes to WAV, uploads, swaps audio_url, reloads.
@@ -1158,12 +1171,18 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
 
       // prepareExternalRecordSession SUPERSEDES AudioSessionConfigPlugin's
       // configureForMusicRecording on this path: it sets .playAndRecord +
-      // .mixWithOthers when we own the session, or (Apple Music) leaves the
-      // MusicKit-owned session untouched and resolves sessionConfigured=false.
+      // .mixWithOthers. Session-BEFORE-MusicKit (plan Task 6, promoted
+      // 2026-07-07): we now claim the record session even for Apple Music
+      // backing, THEN start playback into the already-mixed session.
+      // Starting Music first and opening the mic after paused the Music
+      // the instant capture began ("accompaniment won't play while
+      // recording"). If Music still steals the session, the
+      // externalRecordStart catch below falls back to the web capture
+      // path, same as before.
       let prepared: { sessionConfigured: boolean };
       try {
         prepared = await NativeStudio.prepareExternalRecordSession({
-          musicKitOwnsSession: backing === 'appleMusic',
+          musicKitOwnsSession: false,
           mixWithOthers: true,
         });
       } catch (e: any) {
@@ -1235,11 +1254,12 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
           try { await externalPeakSubRef.current.remove(); } catch { /* ignore */ }
           externalPeakSubRef.current = null;
         }
-        // FALLBACK: MusicKit owned the session (sessionConfigured=false) and
-        // the dead-input watchdog rejected ("no record route"). Fall back to
-        // the Task-2 web capture path, which re-establishes its own mic graph.
-        if (prepared.sessionConfigured === false) {
-          console.info('[PartTracks] Native external record unavailable under MusicKit-owned session — falling back to web capture path.');
+        // FALLBACK: the session couldn't be configured, or Apple Music
+        // grabbed it back despite the session-first order (the dead-input
+        // watchdog rejects with "no record route"). Fall back to the
+        // Task-2 web capture path, which re-establishes its own mic graph.
+        if (prepared.sessionConfigured === false || backing === 'appleMusic') {
+          console.info('[PartTracks] Native external record unavailable with this backing — falling back to web capture path.');
           // Clean the optimistic native state + backing so the web path can
           // start fresh (it re-arms its own session, count-in, and backing).
           nativeRecRef.current = null;
@@ -1331,16 +1351,16 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     opts?: { fallbackFromNative?: boolean },
   ) => {
     // iOS uses the native external recorder (Task 4). The web path below is
-    // the fallback when native capture can't get a record route under a
-    // MusicKit-owned session (opts.fallbackFromNative), and the path for all
-    // non-iOS platforms.
-    // Apple Music goes straight to web capture: MPMusicPlayerController owns
-    // the audio session, so the native recorder's watchdog would reject after
-    // ~1.5s, stop/restart the Music playback, and re-run the count-in before
-    // landing here anyway. (Device-gate experiment for later: establishing a
-    // .playAndRecord session BEFORE MusicKit playback may enable the native
-    // path — see plan Task 6.)
-    if (isNativeStudioAvailable() && !opts?.fallbackFromNative && getBackingKind() !== 'appleMusic') {
+    // the fallback when native capture can't get a record route
+    // (opts.fallbackFromNative), and the path for all non-iOS platforms.
+    // Apple Music now ALSO takes the native path (plan Task 6, promoted
+    // 2026-07-07): prepareExternalRecordSession claims .playAndRecord +
+    // .mixWithOthers BEFORE MusicKit starts, which keeps the Music
+    // playing when capture begins — the old Music-first order let the
+    // session switch pause the backing the moment the mic opened. If
+    // Music still steals the session, the start-failure catch falls back
+    // here with fallbackFromNative.
+    if (isNativeStudioAvailable() && !opts?.fallbackFromNative) {
       await startNativeRecordForTrack(track);
       return;
     }
@@ -1402,20 +1422,14 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       livePeaksRef.current = [];
       setLivePeaks([]);
 
-      // External accompaniment FIRST and AWAIT it actually playing.
-      // MusicKit's setQueue + play() takes 500ms–2s to reach the
-      // playbackState=2 (Playing) event. If we started the mic and
-      // local audio before that, the vocal would lead Apple Music by
-      // the warm-up delay — and that delay differs every session,
-      // which is why takes never lined up on replay. Awaiting here
-      // anchors the recorder to Apple Music's audible start.
+      // MIC FIRST, backing second (order flipped 2026-07-07): opening
+      // the mic switches the audio session (playAndRecord on iOS/WebKit),
+      // and when Apple Music/YouTube was already playing, that switch
+      // PAUSED it — "accompaniment won't play while recording". Starting
+      // the backing after the session is already record-capable keeps it
+      // alive, and the measured alignment below absorbs the extra head
+      // silence (capture rolls while the backing warms up).
       const isStreamingBacking = getBackingKind() === 'appleMusic' || getBackingKind() === 'youtube';
-      let backingAudibleWallMs: number | null = null;
-      if (!playing) {
-        await startExternalAccompaniment(recordStartOffsetRef.current);
-        if (isStreamingBacking) backingAudibleWallMs = performance.now();
-      }
-
       await startRecording({
         inputDeviceId,
         musicMode: isMusicModeEnabled(),
@@ -1432,38 +1446,37 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // plugin warns once if it's missing. iOS-only, web no-ops.
       void startRecordingActivity(project?.title ?? 'Part Tracks', track.label);
 
-      // Local backing tracks fire NOW that the mic recorder is rolling
-      // and the external source is already audible. External start was
-      // awaited above, so this last call closes the sync triangle.
+      // Backing sources fire now that capture is rolling. The external
+      // (streaming) start is AWAITED to its actually-playing state —
+      // MusicKit's setQueue + play() takes 500ms–2s — so its resolve is
+      // the "backing became audible" anchor for alignment.
       let transportStartWallMs: number | null = null;
       if (!playing) {
+        await startExternalAccompaniment(recordStartOffsetRef.current);
+        const backingAudibleWallMs = performance.now();
         startPlayback(recordStartOffsetRef.current);
-        // + the 50ms scheduling anchor inside startPlayback (sources fire
-        // at ctx.currentTime + 0.05, not at the call itself).
-        transportStartWallMs = performance.now() + 50;
+        // Streaming backing: the singer follows the stream, audible at
+        // its awaited resolve. Local/file backing: sources fire at the
+        // ctx anchor, ~50ms after the startPlayback call.
+        transportStartWallMs = isStreamingBacking
+          ? backingAudibleWallMs
+          : performance.now() + 50;
         setPlaying(true);
       }
 
       // Stamp the take so stop can MEASURE the real head gap instead of
       // trusting a fixed trim guess (real startup — mic open, audio
-      // session switch on iOS — varies 0.3s–2.5s and landed takes "a
-      // measure late"). Three shapes, same model as Studio's
-      // takeAlignment.ts:
-      //  - fresh start, local/file backing → transport stamp set: trim
-      //    the measured capture→audible gap + hardware residual;
-      //  - fresh start, streaming backing → backing became audible when
-      //    startExternalAccompaniment resolved, BEFORE capture: treat as
-      //    the already-running case anchored at that moment;
+      // session switch on iOS, MusicKit warm-up — varies 0.3s–2.5s and
+      // landed takes "a measure late"). Two shapes, same model as
+      // Studio's takeAlignment.ts:
+      //  - fresh start → transport stamp set: trim the measured
+      //    capture→backing-audible gap + hardware residual;
       //  - overdub while playing → anchor is the press moment; capture
       //    opened late, so the clip shifts right instead of trimming.
       takeStampsRef.current = {
-        pressWallMs: !wasPlayingAtPress && backingAudibleWallMs !== null
-          ? backingAudibleWallMs
-          : pressWallMs,
+        pressWallMs,
         captureStartWallMs,
-        transportStartWallMs: !wasPlayingAtPress && !isStreamingBacking
-          ? transportStartWallMs
-          : null,
+        transportStartWallMs: !wasPlayingAtPress ? transportStartWallMs : null,
         deviceLatencyMs: getConfiguredDeviceLatencyMs(),
       };
 
@@ -1545,23 +1558,40 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
       // load effect from kicking off a redundant URL fetch of the same
       // bytes when the refetch lands.
       const accTrack = tracks.find((t) => t.kind === 'accompaniment');
-      if (accTrack) {
-        try {
-          const { peaks, duration } = await loadTrackFromBlob(accTrack.id, file, 0);
-          loadedUrlByTrackRef.current[accTrack.id] = url;
-          setWaveformByTrack((prev) => ({ ...prev, [accTrack.id]: peaks }));
-          setDurationByTrack((prev) => ({ ...prev, [accTrack.id]: duration }));
-          setTrackVolume(accTrack.id, accTrack.volume, accTrack.muted);
-          setTrackPan(accTrack.id, accTrack.pan);
-          setUndecodableTrackIds((prev) => {
-            if (!prev.has(accTrack.id)) return prev;
-            const next = new Set(prev); next.delete(accTrack.id); return next;
-          });
-        } catch (previewErr) {
-          // Undecodable here may still decode via the URL path (or the
-          // HTMLAudioElement fallback) — leave it to the load effect.
-          console.warn('[PartTracks] Backing uploaded but immediate preview failed', previewErr);
-        }
+      let accTrackId = accTrack?.id ?? null;
+      if (!accTrackId) {
+        // The Accompaniment row is deletable like any other track — if
+        // it's gone, re-seed it now, otherwise the upload succeeds but
+        // has no mixer row to live on (no waveform, silent playback).
+        const { data: created, error: insErr } = await supabase
+          .from('gw_part_tracks_tracks')
+          .insert({
+            project_id: project.id,
+            kind: 'accompaniment',
+            label: 'Accompaniment',
+            color: '#94a3b8',
+            sort_order: 0,
+          })
+          .select('id')
+          .single();
+        if (insErr || !created) throw new Error(insErr?.message ?? 'Could not recreate the accompaniment row');
+        accTrackId = created.id as string;
+      }
+      try {
+        const { peaks, duration } = await loadTrackFromBlob(accTrackId, file, 0);
+        loadedUrlByTrackRef.current[accTrackId] = url;
+        setWaveformByTrack((prev) => ({ ...prev, [accTrackId!]: peaks }));
+        setDurationByTrack((prev) => ({ ...prev, [accTrackId!]: duration }));
+        setTrackVolume(accTrackId, accTrack?.volume ?? 0.8, accTrack?.muted ?? false);
+        setTrackPan(accTrackId, accTrack?.pan ?? 0);
+        setUndecodableTrackIds((prev) => {
+          if (!prev.has(accTrackId!)) return prev;
+          const next = new Set(prev); next.delete(accTrackId!); return next;
+        });
+      } catch (previewErr) {
+        // Undecodable here may still decode via the URL path (or the
+        // HTMLAudioElement fallback) — leave it to the load effect.
+        console.warn('[PartTracks] Backing uploaded but immediate preview failed', previewErr);
       }
 
       await updateProject.mutateAsync({
@@ -1571,7 +1601,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         accompaniment_apple_music_id: null,
         accompaniment_youtube_url: null,
       } as any);
-      if (accTrack) await updateTrack.mutateAsync({ id: accTrack.id, patch: { audio_url: url } });
+      await updateTrack.mutateAsync({ id: accTrackId, patch: { audio_url: url } });
       toast.success(`Loaded "${file.name}" as the backing track.`);
     } catch (e: any) {
       console.error('[PartTracks] Accompaniment upload failed', e);
@@ -1886,36 +1916,17 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
                 }}
                 onSeek={(frac) => seekTo(frac * maxDuration)}
                 onDelete={() => {
-                  // toast.confirm — `confirm()` is blocked silently in
-                  // iOS WKWebView (and some Safari versions), so it
-                  // appeared to the user that the delete button did
-                  // nothing. Sonner's action toast works everywhere and
-                  // also surfaces an error if the mutation fails. We
-                  // hold onto the toast ID so we can explicitly dismiss
-                  // it from inside the action — Sonner's auto-dismiss
-                  // on action click has been inconsistent on iOS
-                  // Capacitor (touch event sometimes ends without
-                  // triggering the auto-close timer).
-                  const confirmId = toast(`Delete "${t.label}"?`, {
-                    action: {
-                      label: 'Delete',
-                      onClick: () => {
-                        toast.dismiss(confirmId);
-                        unloadTrack(t.id);
-                        // No success toast — the track row vanishing
-                        // is the confirmation. Stacking three "Removed X"
-                        // cards on rapid deletes was blocking the
-                        // transport.
-                        deleteTrack.mutate(t.id, {
-                          onError: (err: any) => toast.error(`Couldn't remove "${t.label}": ${err?.message ?? 'unknown error'}`),
-                        });
-                      },
-                    },
-                    cancel: {
-                      label: 'Cancel',
-                      onClick: () => { toast.dismiss(confirmId); },
-                    },
-                    duration: 8000,
+                  // Confirmation lives IN the trash button now (two-tap
+                  // arm — see TrackRow). The previous sonner-action
+                  // confirm was unreliable on iOS: the action tap
+                  // sometimes never fired in WKWebView/Safari, so
+                  // "delete does nothing" (reported 2026-07-07, iPad).
+                  // By the time this fires the user has already
+                  // confirmed. No success toast — the row vanishing is
+                  // the confirmation.
+                  unloadTrack(t.id);
+                  deleteTrack.mutate(t.id, {
+                    onError: (err: any) => toast.error(`Couldn't remove "${t.label}": ${err?.message ?? 'unknown error'}`),
                   });
                 }}
               />
@@ -2154,6 +2165,40 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
                               </button>
                             ))}
                           </div>
+                          {/* Row 2: timing nudge (manual grid alignment)
+                              + clear the take without deleting the part. */}
+                          <div className="grid grid-cols-3 gap-1.5">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => nudgeTake(t, -0.1)}
+                              title="Shift this take 0.1s earlier"
+                              className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md border border-border bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-50 transition-colors"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                              <span className="text-[10px] font-semibold uppercase tracking-wider">Earlier</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => { clearTakeForTrack(t); setAudioToolsOpen(false); }}
+                              title="Delete this recording but keep the part (re-record onto it)"
+                              className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md border border-border bg-card hover:bg-rose-500 hover:text-white hover:border-rose-500 disabled:opacity-50 transition-colors"
+                            >
+                              <Eraser className="w-4 h-4" />
+                              <span className="text-[10px] font-semibold uppercase tracking-wider">Clear</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => nudgeTake(t, 0.1)}
+                              title="Shift this take 0.1s later"
+                              className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md border border-border bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-50 transition-colors"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                              <span className="text-[10px] font-semibold uppercase tracking-wider">Later</span>
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -2367,6 +2412,14 @@ function TrackRow({
   // clear and let `track.volume` take over again.
   const [dragVolume, setDragVolume] = useState<number | null>(null);
   const volumePct = dragVolume ?? Math.round(track.volume * 100);
+  // Two-tap delete confirm, entirely inside the button — sonner action
+  // taps were unreliable on iOS (WKWebView/Safari), which read as
+  // "delete does nothing". First tap arms for 3s, second tap deletes.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmTimerRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (confirmTimerRef.current !== null) window.clearTimeout(confirmTimerRef.current);
+  }, []);
   return (
     <li className="p-3 flex gap-3 items-center">
       {/* Sticky when the timeline is zoomed: the controls column pins to
@@ -2452,12 +2505,26 @@ function TrackRow({
           </button>
           <button
             type="button"
-            onClick={onDelete}
-            className="ml-auto inline-flex items-center justify-center h-9 w-9 rounded-md text-muted-foreground/70 hover:text-rose-500 hover:bg-rose-500/10 transition-colors touch-manipulation"
-            title="Delete track"
-            aria-label="Delete track"
+            onClick={() => {
+              if (!confirmDelete) {
+                setConfirmDelete(true);
+                confirmTimerRef.current = window.setTimeout(() => setConfirmDelete(false), 3000);
+                return;
+              }
+              if (confirmTimerRef.current !== null) window.clearTimeout(confirmTimerRef.current);
+              setConfirmDelete(false);
+              onDelete();
+            }}
+            className={`ml-auto inline-flex items-center justify-center h-9 rounded-md transition-colors touch-manipulation ${
+              confirmDelete
+                ? 'bg-rose-500 text-white px-2 text-[10px] font-bold uppercase tracking-wide gap-1'
+                : 'w-9 text-muted-foreground/70 hover:text-rose-500 hover:bg-rose-500/10'
+            }`}
+            title={confirmDelete ? 'Tap again to delete this track' : 'Delete track'}
+            aria-label={confirmDelete ? 'Tap again to delete this track' : 'Delete track'}
           >
             <Trash2 className="w-4 h-4" />
+            {confirmDelete && 'Sure?'}
           </button>
         </div>
 

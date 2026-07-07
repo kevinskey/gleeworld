@@ -28,6 +28,9 @@ export function Waveform({
   offsetFrac = 0, widthFrac = 1, onSeek,
 }: WaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Pointer-down position so pointer-up can tell a tap (seek) from the
+  // start of a horizontal pan (scroll the zoomed timeline).
+  const downRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -120,17 +123,28 @@ export function Waveform({
     return () => ro.disconnect();
   }, [peaks, color, height, progress, offsetFrac, widthFrac]);
 
+  // Seek on a clean TAP (pointer-up without movement), not on
+  // pointer-down: with `touch-action: none` the canvas swallowed every
+  // touch, so the zoomed timeline could never be finger-panned on
+  // iPad/iPhone. `pan-x pan-y` hands drags to the scroller (the browser
+  // fires pointercancel, so no accidental seek), while a stationary tap
+  // still lands the playhead.
   return (
     <canvas
       ref={canvasRef}
-      onPointerDown={(e) => {
-        if (!onSeek) return;
+      onPointerDown={(e) => { downRef.current = { x: e.clientX, y: e.clientY }; }}
+      onPointerUp={(e) => {
+        const d = downRef.current;
+        downRef.current = null;
+        if (!onSeek || !d) return;
+        if (Math.abs(e.clientX - d.x) > 8 || Math.abs(e.clientY - d.y) > 8) return;
         const r = e.currentTarget.getBoundingClientRect();
         const frac = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
         onSeek(frac);
       }}
-      className={`w-full block ${onSeek ? 'cursor-pointer touch-manipulation' : ''}`}
-      style={{ height, touchAction: onSeek ? 'none' : undefined }}
+      onPointerCancel={() => { downRef.current = null; }}
+      className={`w-full block ${onSeek ? 'cursor-pointer' : ''}`}
+      style={{ height, touchAction: onSeek ? 'pan-x pan-y' : undefined }}
     />
   );
 }
