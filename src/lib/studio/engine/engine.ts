@@ -246,6 +246,11 @@ export class StudioEngine {
    *   - `update()` routes through the 50ms debounce (updateMastering),
    *   - `setPreGainDb()` routes through the recording-armed guard
    *     (setMasterPreGainDb — B1 spec §5),
+   *   - `getPreGainDb()` passes straight through, unguarded — it's a
+   *     read of the last-committed value, not a write, so the
+   *     recording-armed guard doesn't apply; export (exportRender.ts)
+   *     calls this at export start to thread the servo's settled gain
+   *     into the offline render (spec §3),
    *   - `dispose()` is withheld: the engine owns the chain lifecycle
    *     (enabled-toggle or engine.dispose() tears it down); a stray UI
    *     dispose() must not yank live AudioNodes out of the graph. */
@@ -257,6 +262,7 @@ export class StudioEngine {
       meter: handle.meter,
       update: (p) => this.updateMastering(p),
       setPreGainDb: (db) => this.setMasterPreGainDb(db),
+      getPreGainDb: () => handle.getPreGainDb(),
       dispose: () => {
         // eslint-disable-next-line no-console
         console.warn('[studio] masterChain.dispose() ignored — engine owns the chain lifecycle');

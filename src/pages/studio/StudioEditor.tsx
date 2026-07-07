@@ -40,7 +40,7 @@ import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
 import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
 import { splitAudioClips, sliceClipChannels } from '@/lib/studio/clipOps';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
-import { exportSession, hasResumableExport, type ExportPreset } from '@/lib/studio/engine/exportRender';
+import { exportSession, hasResumableExport, clearExportProgress, type ExportPreset } from '@/lib/studio/engine/exportRender';
 import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
 import { toast } from 'sonner';
 import { MixerView } from './MixerView';
@@ -1347,7 +1347,7 @@ function Editor({
         </div>
       </div>
 
-      <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} />
+      <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} engineState={engineState} />
 
       {/* Transport bar — single dense row */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 flex items-center gap-0.5 sm:gap-2 flex-wrap">
@@ -3393,11 +3393,12 @@ const EXPORT_PRESET_LABEL: Record<ExportPreset, string> = {
 };
 
 function ExportSheet({
-  session, open, onOpenChange,
+  session, open, onOpenChange, engineState,
 }: {
   session: Session;
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  engineState: ReturnType<typeof useStudioEngine>;
 }) {
   const [preset, setPreset] = useState<ExportPreset>('wav');
   const [busy, setBusy] = useState(false);
@@ -3420,10 +3421,26 @@ function ExportSheet({
     setBusy(true);
     setProgress(0);
     try {
+      // Declining a resumable record and starting fresh must not leave
+      // the stale chunks lying around in IndexedDB — a later resume
+      // attempt (possibly after the session/mastering params changed)
+      // would otherwise silently splice in outdated audio. Only mp3/wav
+      // persist progress (stems are never chunked), matching the
+      // hasResumableExport gating above.
+      if (!resume && resumeAvailable && preset !== 'stems') {
+        await clearExportProgress(session.id, preset);
+        setResumeAvailable(false);
+      }
+      // Spec §3: "Export applies the settled gain" — read the loudness
+      // servo's converged pre-limiter makeup gain straight off the live
+      // master chain (the same guarded handle the servo itself writes
+      // through in MixerView's MasterStrip) rather than re-deriving it.
+      const preGainDb = engineState.state?.masterChain?.getPreGainDb() ?? 0;
       const files = await exportSession(session, preset, {
         mastering: mastering.enabled,
         onProgress: setProgress,
         resume,
+        preGainDb,
         onDegraded: () => toast.warning(
           'Mastering ran in degraded mode for this export',
           { description: 'The limiter worklet was unavailable — exported with HPF/air/comp only.' },

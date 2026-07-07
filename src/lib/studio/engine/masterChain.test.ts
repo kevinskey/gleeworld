@@ -3,6 +3,7 @@ import {
   chainTopology,
   mapCompParams,
   mapLimiterParams,
+  buildMasterChain,
   COMP_KNEE_DB,
   HPF_Q,
   AIR_SHELF_HZ,
@@ -12,8 +13,30 @@ import { dbToLinear } from '../dsp/faderTaper';
 
 // Node-level tests only — pure adapters + param math. AudioWorkletNode /
 // BaseAudioContext can't run in vitest (jsdom/node have no real Web
-// Audio implementation), so `buildMasterChain` itself is covered by the
+// Audio implementation), so most of `buildMasterChain` is covered by the
 // manual smoke path documented in the task report, not here.
+//
+// The getPreGainDb/setPreGainDb tests below are the one exception: the
+// bypass (`enabled: false`) and degraded (`enabled: true`, worklets
+// unavailable) topologies never touch AudioWorkletNode and only call
+// ctx.createGain/-BiquadFilter/-DynamicsCompressor as plain node
+// factories, so a hand-rolled object satisfying that narrow surface
+// (no real Web Audio behavior, just `.connect`/`.disconnect`/param
+// bags) exercises the real `buildMasterChain` code path without needing
+// jsdom or a native AudioContext.
+function fakeNode() {
+  return { connect: () => {}, disconnect: () => {} };
+}
+function fakeAudioContext(): BaseAudioContext {
+  return {
+    audioWorklet: undefined, // -> tryLoadWorklets resolves false without touching addModule
+    createGain: () => ({ ...fakeNode(), gain: { value: 1 } }),
+    createBiquadFilter: () => ({ ...fakeNode(), type: '', frequency: { value: 0 }, Q: { value: 0 }, gain: { value: 0 } }),
+    createDynamicsCompressor: () => ({
+      ...fakeNode(), threshold: { value: 0 }, ratio: { value: 0 }, attack: { value: 0 }, release: { value: 0 }, knee: { value: 0 },
+    }),
+  } as unknown as BaseAudioContext;
+}
 
 describe('chainTopology', () => {
   it('mastering disabled -> empty (bypass, no DSP nodes)', () => {
@@ -80,5 +103,44 @@ describe('fixed B1 constants', () => {
   it('HPF Q and air-shelf frequency match the spec', () => {
     expect(HPF_Q).toBe(0.707);
     expect(AIR_SHELF_HZ).toBe(8000);
+  });
+});
+
+// Spec §3: "Export applies the settled gain." exportRender.ts's
+// renderWindow reads this getter right after buildMasterChain and
+// forwards the loudness servo's settled dB into the offline chain via
+// setPreGainDb — see exportRender.ts. These tests cover the handle's
+// half of that contract.
+describe('MasterChainHandle.getPreGainDb / setPreGainDb', () => {
+  it('defaults to 0 (unity) before any setPreGainDb call', async () => {
+    const p: MasteringParams = { ...DEFAULT_MASTERING, enabled: true };
+    const handle = await buildMasterChain(fakeAudioContext(), p);
+    expect(handle.getPreGainDb()).toBe(0);
+  });
+
+  it('getPreGainDb reflects the last value passed to setPreGainDb', async () => {
+    const p: MasteringParams = { ...DEFAULT_MASTERING, enabled: true };
+    const handle = await buildMasterChain(fakeAudioContext(), p);
+    handle.setPreGainDb(-4.5);
+    expect(handle.getPreGainDb()).toBe(-4.5);
+    handle.setPreGainDb(2);
+    expect(handle.getPreGainDb()).toBe(2);
+  });
+
+  it('setPreGainDb is a safe no-op (no throw) on a bypass chain (mastering disabled -> no pregain node)', async () => {
+    const p: MasteringParams = { ...DEFAULT_MASTERING, enabled: false };
+    const handle = await buildMasterChain(fakeAudioContext(), p);
+    expect(() => handle.setPreGainDb(-6)).not.toThrow();
+    // The dB is still recorded even though there's no node to apply it
+    // to — export still wants the value threaded through consistently.
+    expect(handle.getPreGainDb()).toBe(-6);
+  });
+
+  it('setPreGainDb is a safe no-op (no throw) on a degraded chain (worklets unavailable -> no pregain node)', async () => {
+    const p: MasteringParams = { ...DEFAULT_MASTERING, enabled: true };
+    const handle = await buildMasterChain(fakeAudioContext(), p);
+    expect(handle.degraded).toBe(true); // fakeAudioContext has no audioWorklet
+    expect(() => handle.setPreGainDb(3.25)).not.toThrow();
+    expect(handle.getPreGainDb()).toBe(3.25);
   });
 });

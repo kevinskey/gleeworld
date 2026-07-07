@@ -112,8 +112,19 @@ export interface MasterChainHandle {
    * the graph — toggling `enabled` (which changes chainTopology's
    * result) requires `dispose()` + a fresh `buildMasterChain()` call. */
   update(p: MasteringParams): void;
-  /** Loudness-servo control — sets the pre-limiter makeup-gain stage. */
+  /** Loudness-servo control — sets the pre-limiter makeup-gain stage.
+   * Safe no-op when the chain has no pregain stage (bypass, or degraded —
+   * see `chainTopology`): the dB value is still recorded (see
+   * `getPreGainDb`), it just has nothing to apply to. */
   setPreGainDb(db: number): void;
+  /** Last dB passed to `setPreGainDb` (default 0 — unity — before the
+   * first call). Lets export thread the loudness servo's settled gain
+   * into the offline render (spec §3, "Export applies the settled
+   * gain") without lifting the servo's UI state: the live chain already
+   * knows the value because the servo wrote it here through the same
+   * guarded handle. Read-safe even while recording is armed (the
+   * recording guard in engine.ts only gates the *write* path). */
+  getPreGainDb(): number;
   readonly meter: { onBlock(cb: (m: MeterBlock) => void): () => void };
   dispose(): void;
 }
@@ -255,6 +266,7 @@ export async function buildMasterChain(
   const blockPowers: number[] = [];
   const blockLoudnesses: number[] = [];
   let peakLinear = 0;
+  let lastPreGainDb = 0;
   const listeners = new Set<(m: MeterBlock) => void>();
 
   if (loudnessNode) {
@@ -303,7 +315,12 @@ export async function buildMasterChain(
     },
 
     setPreGainDb(db: number) {
+      lastPreGainDb = db;
       if (preGainNode) preGainNode.gain.value = dbToLinear(db);
+    },
+
+    getPreGainDb() {
+      return lastPreGainDb;
     },
 
     meter: {

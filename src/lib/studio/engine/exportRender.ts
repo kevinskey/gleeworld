@@ -230,6 +230,7 @@ async function renderWindow(
   end: number,
   sampleRate: number,
   onDegraded: () => void,
+  preGainDb?: number,
 ): Promise<Float32Array[]> {
   const renderSeconds = Math.max(end - renderStart, 1 / sampleRate);
   const disposers: Array<() => void> = [];
@@ -250,6 +251,12 @@ async function renderWindow(
       // context wrapper, see engine.ts's chainSync.build).
       const chain = await buildMasterChain(rawContext, mastering);
       if (chain.degraded) onDegraded();
+      // Spec §3: "Export applies the settled gain" — thread the live
+      // loudness servo's converged pre-limiter makeup gain into this
+      // offline chain. setPreGainDb is a safe no-op when there's no
+      // pregain stage (degraded chain — see chainTopology), so this is
+      // unconditional rather than gated on `chain.degraded`.
+      if (preGainDb !== undefined) chain.setPreGainDb(preGainDb);
       masterFx.output.connect(chain.input);
       chain.output.connect(rawContext.destination);
       disposers.push(() => chain.dispose());
@@ -285,6 +292,11 @@ async function renderWindow(
 export interface RenderMasterOptions {
   mastering: boolean;
   onProgress: (f: number) => void;
+  /** The loudness servo's settled pre-limiter makeup gain (dB), read
+   * from the live master chain at export start (spec §3, "Export
+   * applies the settled gain"). Defaults to 0 (unity) — a session that
+   * never engaged the servo, or wasn't mastered live, exports flat. */
+  preGainDb?: number;
   /** Fires (at most once) if mastering was requested but the chain had
    * to run in degraded (HPF/shelf/comp-only) mode. */
   onDegraded?: () => void;
@@ -325,7 +337,7 @@ export async function renderMaster(session: Session, opts: RenderMasterOptions):
   let resultChannels: Float32Array[];
 
   if (projected <= CHUNK_THRESHOLD_BYTES) {
-    resultChannels = await renderWindow(session, mastering, 0, 0, totalSeconds, sampleRate, onDegraded);
+    resultChannels = await renderWindow(session, mastering, 0, 0, totalSeconds, sampleRate, onDegraded, opts.preGainDb);
     opts.onProgress(1);
   } else {
     const plan = planChunks(totalSeconds, CHUNK_SECONDS, LEAD_IN_SECONDS);
@@ -344,7 +356,7 @@ export async function renderMaster(session: Session, opts: RenderMasterOptions):
     for (let i = startIdx; i < plan.length; i++) {
       const { start, renderStart, end } = plan[i];
       const keepFromSeconds = i === 0 ? start : start - crossfadeSamples / sampleRate;
-      const piece = await renderWindow(session, mastering, renderStart, keepFromSeconds, end, sampleRate, onDegraded);
+      const piece = await renderWindow(session, mastering, renderStart, keepFromSeconds, end, sampleRate, onDegraded, opts.preGainDb);
       pieces.push(piece);
       await saveExportProgress({
         sessionId: session.id, preset, chunkIdx: i + 1, totalChunks: plan.length, sampleRate, pieces,
@@ -527,11 +539,14 @@ export interface ExportSessionOptions {
   onProgress: (f: number) => void;
   onDegraded?: () => void;
   resume?: boolean;
+  /** See RenderMasterOptions.preGainDb — ignored for `stems` (stems never
+   * run through the master chain). */
+  preGainDb?: number;
 }
 
 /** Renders `preset` and returns the file(s) ready to download. `stems`
- * ignores `mastering`/`resume` (stems never run through the master
- * chain and are never chunked). */
+ * ignores `mastering`/`resume`/`preGainDb` (stems never run through the
+ * master chain and are never chunked). */
 export async function exportSession(
   session: Session,
   preset: ExportPreset,
@@ -551,6 +566,7 @@ export async function exportSession(
     onDegraded: opts.onDegraded,
     preset,
     resume: opts.resume,
+    preGainDb: opts.preGainDb,
   });
 
   const title = sanitizeSessionTitle(session.title);
