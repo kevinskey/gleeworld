@@ -11,7 +11,10 @@
 // Viewer uses, just sized to the panel's content area.
 
 import { useEffect, useRef, useState } from 'react';
-import { GripHorizontal, Minimize2, Maximize2, X, ExternalLink, PictureInPicture2 } from 'lucide-react';
+import {
+  GripHorizontal, Minimize2, Maximize2, X, ExternalLink, PictureInPicture2,
+  PanelBottomOpen, PanelBottomClose,
+} from 'lucide-react';
 import { PDFViewerWithAnnotations } from '@/components/PDFViewerWithAnnotations';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -26,6 +29,11 @@ interface FloatingScorePanelProps {
 interface PanelRect { left: number; top: number; width: number; height: number }
 
 const STORAGE_KEY = 'gw_pt_floating_score_rect';
+// Docked-to-bottom mode (iPad recording flow): the score pins full-width
+// above the transport bar so the singer reads while tracking, no window
+// juggling. Both the mode and the chosen height persist.
+const DOCK_KEY = 'gw_pt_floating_score_docked';
+const DOCK_H_KEY = 'gw_pt_floating_score_dock_h';
 const MIN_W = 280;
 const MIN_H = 200;
 
@@ -52,16 +60,33 @@ function saveRect(r: PanelRect) {
 export function FloatingScorePanel({ pdfUrl, musicId, musicTitle, onClose }: FloatingScorePanelProps) {
   const [rect, setRect] = useState<PanelRect>(() => loadRect());
   const [minimized, setMinimized] = useState(false);
+  const [docked, setDocked] = useState<boolean>(() => {
+    try { return localStorage.getItem(DOCK_KEY) === '1'; } catch { return false; }
+  });
+  const [dockHeight, setDockHeight] = useState<number>(() => {
+    try {
+      const v = Number(localStorage.getItem(DOCK_H_KEY));
+      if (Number.isFinite(v) && v >= MIN_H) return v;
+    } catch { /* ignore */ }
+    return Math.round(window.innerHeight * 0.42);
+  });
   // Tracks an in-progress drag/resize so the corresponding pointer-move
   // handler can update the rect on every frame.
   const opRef = useRef<
     | { kind: 'drag'; startX: number; startY: number; origLeft: number; origTop: number }
     | { kind: 'resize'; startX: number; startY: number; origW: number; origH: number }
+    | { kind: 'dockResize'; startY: number; origH: number }
     | null
   >(null);
 
   // Persist whenever the rect settles.
   useEffect(() => { saveRect(rect); }, [rect]);
+  useEffect(() => {
+    try { localStorage.setItem(DOCK_KEY, docked ? '1' : '0'); } catch { /* ignore */ }
+  }, [docked]);
+  useEffect(() => {
+    try { localStorage.setItem(DOCK_H_KEY, String(dockHeight)); } catch { /* ignore */ }
+  }, [dockHeight]);
 
   // Clamp panel to viewport on resize so a smaller window can't strand
   // it off-screen.
@@ -100,9 +125,20 @@ export function FloatingScorePanel({ pdfUrl, musicId, musicTitle, onClose }: Flo
       origW: rect.width, origH: rect.height,
     };
   };
+  const startDockResize = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    opRef.current = { kind: 'dockResize', startY: e.clientY, origH: dockHeight };
+  };
   const onMove = (e: React.PointerEvent) => {
     const op = opRef.current;
     if (!op) return;
+    if (op.kind === 'dockResize') {
+      // Dragging the top edge UP grows the docked panel.
+      const dy = e.clientY - op.startY;
+      setDockHeight(Math.max(MIN_H, Math.min(Math.round(window.innerHeight * 0.8), op.origH - dy)));
+      return;
+    }
     const dx = e.clientX - op.startX;
     const dy = e.clientY - op.startY;
     if (op.kind === 'drag') {
@@ -140,20 +176,50 @@ export function FloatingScorePanel({ pdfUrl, musicId, musicTitle, onClose }: Flo
 
   return (
     <div
-      className="fixed z-50 bg-card border border-border rounded-lg shadow-2xl overflow-hidden flex flex-col"
-      style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
+      className={
+        docked
+          // Docked: full-width sheet pinned above the transport bar
+          // (which sits at bottom-12 + its own height on phones, bottom-0
+          // on md+). The score stays readable while the user records.
+          ? 'fixed z-50 bg-card border-t border-border rounded-t-lg shadow-2xl overflow-hidden flex flex-col inset-x-0 bottom-32 md:bottom-20'
+          : 'fixed z-50 bg-card border border-border rounded-lg shadow-2xl overflow-hidden flex flex-col'
+      }
+      style={docked
+        ? { height: dockHeight }
+        : { left: rect.left, top: rect.top, width: rect.width, height: rect.height }}
       onPointerMove={onMove}
       onPointerUp={endOp}
       onPointerCancel={endOp}
     >
-      {/* Drag handle / title bar */}
+      {/* Docked: top-edge grip to drag the sheet taller/shorter. */}
+      {docked && (
+        <div
+          onPointerDown={startDockResize}
+          className="absolute top-0 inset-x-0 h-2.5 cursor-ns-resize z-10"
+          style={{ touchAction: 'none' }}
+          aria-label="Resize score height"
+        >
+          <div className="mx-auto mt-1 h-1 w-10 rounded-full bg-muted-foreground/40" />
+        </div>
+      )}
+      {/* Drag handle / title bar (drag disabled while docked) */}
       <div
-        onPointerDown={startDrag}
-        className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/40 cursor-move select-none"
+        onPointerDown={docked ? undefined : startDrag}
+        className={`flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/40 select-none ${docked ? '' : 'cursor-move'}`}
         style={{ touchAction: 'none' }}
       >
         <GripHorizontal className="w-4 h-4 text-muted-foreground shrink-0" />
         <div className="text-sm font-semibold truncate flex-1">{musicTitle ?? 'Score'}</div>
+        <button
+          type="button"
+          onClick={() => setDocked((d) => !d)}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+          title={docked ? 'Float the score panel' : 'Dock score to the bottom of the screen'}
+          aria-label={docked ? 'Float the score panel' : 'Dock score to the bottom of the screen'}
+        >
+          {docked ? <PanelBottomClose className="w-4 h-4" /> : <PanelBottomOpen className="w-4 h-4" />}
+        </button>
         {/* Pop the score out as its OWN browser window. Lets the user
             drag it to a second monitor (or just to a separate desktop
             space) so the score lives independently of the studio tab.
@@ -224,17 +290,20 @@ export function FloatingScorePanel({ pdfUrl, musicId, musicTitle, onClose }: Flo
         />
       </div>
 
-      {/* Resize grip — bottom-right corner. */}
-      <div
-        onPointerDown={startResize}
-        className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
-        style={{ touchAction: 'none' }}
-        aria-label="Resize"
-      >
-        <svg viewBox="0 0 16 16" className="w-full h-full opacity-60" aria-hidden="true">
-          <path d="M14 14L10 14M14 14L14 10M14 14L6 6" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      </div>
+      {/* Resize grip — bottom-right corner (floating mode only; docked
+          mode resizes via the top-edge grip instead). */}
+      {!docked && (
+        <div
+          onPointerDown={startResize}
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
+          style={{ touchAction: 'none' }}
+          aria-label="Resize"
+        >
+          <svg viewBox="0 0 16 16" className="w-full h-full opacity-60" aria-hidden="true">
+            <path d="M14 14L10 14M14 14L14 10M14 14L6 6" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 }
