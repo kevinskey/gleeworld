@@ -15,7 +15,7 @@ import {
   Play, Pause, Square, Mic, MicOff, Volume2, VolumeX, Trash2, Plus, Upload, Circle,
   Music, ArrowLeft, Headphones, Sparkles, Loader2, Youtube, Settings2,
   Wrench, AudioWaveform, AudioLines, Star, MicVocal, CircleDot,
-  Scissors, BarChart3, Wand2, X,
+  Scissors, BarChart3, Wand2, X, ZoomIn, ZoomOut,
 } from 'lucide-react';
 import { AccompanimentPicker } from './AccompanimentPicker';
 import { DeviceSettings, isMusicModeEnabled } from './DeviceSettings';
@@ -195,6 +195,32 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
   // Draggable + resizable + minimizable so the conductor can park it
   // wherever it's least in the way.
   const [scoreOpen, setScoreOpen] = useState(false);
+  // Timeline zoom: 1 = fit-to-width (the old fixed behavior), 2/4/8 =
+  // that many screen-widths of waveform, horizontally scrollable. On a
+  // phone a 5-minute song squeezed into ~400px is unreadable and
+  // unseekable — zooming in is the only way to place the playhead with
+  // any precision. Track controls stay pinned (sticky) while the lane
+  // scrolls.
+  const [timelineZoom, setTimelineZoom] = useState(1);
+  const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+  const [waveBasePx, setWaveBasePx] = useState<number | null>(null);
+
+  // Measure the waveform lane's fit width (scroller minus the pinned
+  // controls column + paddings) so zoomed widths are real pixels.
+  useEffect(() => {
+    const el = timelineScrollRef.current;
+    // Keyed on project?.id: on first mount the component early-returns a
+    // loading spinner, so the scroller ref is null here — the effect
+    // must re-run once the studio actually renders.
+    if (!el) return;
+    const measure = () => setWaveBasePx(Math.max(160, el.clientWidth - 192));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [project?.id]);
+
+  const waveWidthPx = timelineZoom > 1 && waveBasePx ? Math.round(waveBasePx * timelineZoom) : null;
 
   // Pull the linked score's title / composer / voicing for the header card.
   useEffect(() => {
@@ -263,7 +289,10 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
           });
           if (!decodeToastShownRef.current && t.kind !== 'accompaniment') {
             decodeToastShownRef.current = true;
-            toast.error(`Can't play "${t.label}" on this device`, {
+            // Explicit dismiss timer: sonner's auto-dismiss stalls on iOS
+            // once touched (see the Saved toast for the same treatment).
+            // The track row keeps its own inline Clear-take affordance.
+            const codecToastId = toast.error(`Can't play "${t.label}" on this device`, {
               description: err?.message ?? 'Unable to decode audio track.',
               action: {
                 label: 'Clear take',
@@ -271,6 +300,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
               },
               duration: 10000,
             });
+            window.setTimeout(() => toast.dismiss(codecToastId), 10500);
           }
         }
     }));
@@ -707,7 +737,12 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
         // the slot so undo always rolls back the most-recent take).
         const snapshot = { recordingId, prevAudioUrl, prevOffset, prevWaveform, prevDuration };
         lastUndoableRef.current = { track, snapshot };
-        toast.success(`Saved ${track.label}`, {
+        // Explicit dismiss timer alongside `duration`: sonner's own
+        // auto-dismiss stalls on iOS Safari once the toast has been
+        // touched/scrolled (its hover-pause never resumes on touch), so
+        // the Saved card sat on top of the transport forever. Undo stays
+        // reachable via Cmd/Ctrl+Z after the card goes away.
+        const savedToastId = toast.success(`Saved ${track.label}`, {
           description,
           action: {
             label: 'Undo',
@@ -715,6 +750,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
           },
           duration: 10000,
         });
+        window.setTimeout(() => toast.dismiss(savedToastId), 10500);
       } catch (e: any) {
         console.error('[PartTracks] Save take failed', e);
         toast.error(e?.message ?? 'Failed to save take');
@@ -1740,13 +1776,47 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
                 Multitrack
               </div>
             </div>
-            <div className="text-xs text-muted-foreground tabular-nums font-medium">
-              <span className="text-foreground">{fmtTime(currentTime)}</span>
-              <span className="text-muted-foreground/60 mx-1.5">/</span>
-              {fmtTime(maxDuration)}
+            <div className="flex items-center gap-2">
+              {/* Timeline zoom — 1× fits the row, 2/4/8× widen the lane
+                  into a horizontal scroll. Touch-first controls, visible
+                  on every viewport. */}
+              <div className="flex items-center gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => setTimelineZoom((z) => Math.max(1, z / 2))}
+                  disabled={timelineZoom <= 1}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:bg-muted disabled:opacity-40 touch-manipulation"
+                  title="Zoom timeline out"
+                  aria-label="Zoom timeline out"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-[10px] tabular-nums font-semibold text-muted-foreground w-6 text-center">
+                  {timelineZoom}×
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTimelineZoom((z) => Math.min(8, z * 2))}
+                  disabled={timelineZoom >= 8}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:bg-muted disabled:opacity-40 touch-manipulation"
+                  title="Zoom timeline in"
+                  aria-label="Zoom timeline in"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="text-xs text-muted-foreground tabular-nums font-medium">
+                <span className="text-foreground">{fmtTime(currentTime)}</span>
+                <span className="text-muted-foreground/60 mx-1.5">/</span>
+                {fmtTime(maxDuration)}
+              </div>
             </div>
           </div>
-          <ul className="divide-y divide-slate-800">
+          {/* Horizontal scroller: at 1× rows fit and nothing scrolls; at
+              2×+ each row's waveform lane is zoom× the fit width and the
+              pinned controls column stays visible (sticky left). */}
+          <div ref={timelineScrollRef} className="overflow-x-auto">
+          <ul className="divide-y divide-slate-800 min-w-full w-max">
             {tracks.map((t) => {
               // Where this take sits on the master timeline. We map
               // record_offset_sec + take duration → 0..1 fractions of
@@ -1759,6 +1829,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
               return (
               <TrackRow
                 key={t.id}
+                waveWidthPx={waveWidthPx}
                 track={t}
                 peaks={
                   recordingTrackId === t.id && livePeaks.length > 0
@@ -1856,6 +1927,7 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
               </li>
             )}
           </ul>
+          </div>
         </section>
 
         {/* Right — studio tools. Inline only on xl+; on lg (iPad landscape)
@@ -2263,8 +2335,11 @@ function NewTrackButton({ onAdd }: { onAdd: (opt: typeof TRACK_KIND_OPTIONS[numb
 function TrackRow({
   track, peaks, progress, offsetFrac, widthFrac, recording, armed,
   onArmRecord, onVolume, onVolumeCommit, onPan, onPanCommit, onMute, onSolo, onDelete,
-  onSeek, undecodable, onClearTake,
+  onSeek, undecodable, onClearTake, waveWidthPx,
 }: {
+  /** Fixed pixel width for the waveform lane when the timeline is zoomed
+   *  in (rows scroll horizontally, controls stay pinned). null = fit. */
+  waveWidthPx: number | null;
   track: PartTrack;
   peaks: number[] | null;
   progress: number;
@@ -2294,7 +2369,10 @@ function TrackRow({
   const volumePct = dragVolume ?? Math.round(track.volume * 100);
   return (
     <li className="p-3 flex gap-3 items-center">
-      <div className="w-36 shrink-0 flex flex-col gap-1.5">
+      {/* Sticky when the timeline is zoomed: the controls column pins to
+          the scrollport's left edge while the waveform lane scrolls
+          beneath it. Inert at 1× (no horizontal overflow). */}
+      <div className="w-36 shrink-0 flex flex-col gap-1.5 sticky left-0 z-10 bg-card -my-3 py-3 -ml-3 pl-3 pr-1 rounded-r">
         {/* Name row — color dot, label, and a status pill that reflects
             the loudest state (RECording > ARMED > SOLO > MUTED > —). */}
         <div className="flex items-center gap-2">
@@ -2404,7 +2482,10 @@ function TrackRow({
           </span>
         </div>
       </div>
-      <div className="flex-1 min-w-0">
+      <div
+        className={waveWidthPx ? 'shrink-0' : 'flex-1 min-w-0'}
+        style={waveWidthPx ? { width: waveWidthPx } : undefined}
+      >
         {undecodable ? (
           <div className="flex items-center justify-between gap-3 bg-rose-500/5 border border-rose-500/30 rounded-md px-3 py-2 text-xs">
             <div className="text-rose-600 dark:text-rose-400 truncate">

@@ -32,8 +32,14 @@ export function Waveform({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const draw = () => {
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
+    // Size from the PARENT, not the canvas itself: a previous draw pins
+    // canvas.style.width to pixels, so measuring the canvas would keep
+    // returning the stale width forever after the container resizes
+    // (e.g. the timeline-zoom lane widening).
+    const rect = { width: canvas.parentElement?.clientWidth ?? canvas.getBoundingClientRect().width };
     canvas.width = rect.width * dpr;
     canvas.height = height * dpr;
     canvas.style.width = `${rect.width}px`;
@@ -104,6 +110,14 @@ export function Waveform({
       ctx.lineTo(playedX, height);
       ctx.stroke();
     }
+    };
+
+    draw();
+    // Redraw when the lane resizes (timeline zoom, orientation change,
+    // window resize) — prop changes alone can't see container width.
+    const ro = new ResizeObserver(draw);
+    ro.observe(canvas.parentElement ?? canvas);
+    return () => ro.disconnect();
   }, [peaks, color, height, progress, offsetFrac, widthFrac]);
 
   return (
