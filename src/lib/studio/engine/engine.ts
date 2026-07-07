@@ -142,7 +142,7 @@ export class StudioEngine {
     this.masterIn = new Tone.Gain(1);
     this.masterFx = buildFxChain([]);
     this.masterIn.connect(this.masterFx.input);
-    this.masterMeter = new Tone.Meter({ channels: 2, smoothing: 0.7 });
+    this.masterMeter = new Tone.Meter({ channelCount: 2, smoothing: 0.7 });
     // No session loaded yet, so no mastering chain either — this is the
     // bypass wiring (masterFx.output straight to Destination).
     this.wireMasterOutput();
@@ -314,7 +314,7 @@ export class StudioEngine {
    * holds for both call paths. */
   setMasterPreGainDb(db: number): void {
     if (this.recordingActive) return; // guarded no-op while armed — see above
-    this.masterChainHandle?.setPreGainDb(db);
+    this.chainSync.handle?.setPreGainDb(db);
   }
 
   // ── Metronome ─────────────────────────────────────────────────────
@@ -390,15 +390,14 @@ export class StudioEngine {
     this.stopPositionLoop();
     this.stopMetronomeInterval();
     this.stopLoopInterval();
-    // Invalidate any in-flight rebuildMasterChain() so a late resolve
-    // can't wire a chain into a graph that's being torn down.
-    this.masterChainBuildToken++;
+    // Tear down the mastering chain via the sync machine — it bumps its
+    // own token so a late in-flight build resolves into disposal, not
+    // into this dead graph.
     if (this.masterChainUpdateTimer !== null) {
       clearTimeout(this.masterChainUpdateTimer);
       this.masterChainUpdateTimer = null;
     }
-    this.masterChainHandle?.dispose();
-    this.masterChainHandle = null;
+    this.chainSync.dispose();
     this.state.masterChain = undefined;
     for (const t of this.tracks.values()) t.dispose();
     this.tracks.clear();
@@ -449,7 +448,7 @@ export class StudioEngine {
       eng.output.connect(this.masterIn);
       // Parallel meter tap — a second `.connect()` off the same output
       // fans the signal out without removing the masterIn connection.
-      const meter = new Tone.Meter({ channels: 1, smoothing: 0.7 });
+      const meter = new Tone.Meter({ channelCount: 1, smoothing: 0.7 });
       eng.output.connect(meter);
       this.trackMeters.set(tr.id, meter);
       this.tracks.set(tr.id, eng);

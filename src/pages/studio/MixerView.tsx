@@ -237,7 +237,8 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
       {tracks.map((t) => {
         const m = meters[t.id] ?? EMPTY_METER;
         const pct = clamp(((m.db === -Infinity ? -60 : m.db) + 60) / 60 * 100, 0, 100);
-        const clip = m.db > -1;
+        const hot = m.db > -3;
+        const warm = m.db > -12;
         return (
           <div key={t.id} className="flex flex-col items-center gap-0.5 shrink-0 w-6" title={t.name}>
             <div className="w-2 h-8 bg-muted rounded-sm overflow-hidden flex flex-col justify-end">
@@ -495,6 +496,7 @@ function Fader({ volumeDb, muted, onChange }: { volumeDb: number; muted: boolean
   const trackRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
   const movedRef = useRef(false);
+  const startYRef = useRef(0);
   const tap = useTapTracker();
   const pos = dbToFaderPos(volumeDb);
 
@@ -575,7 +577,7 @@ function PeakMeter({ db, holdDb, onReset, height = FADER_TRACK_HEIGHT }: {
         {holdDb === -Infinity ? '—' : holdDb.toFixed(0)}
       </span>
       <div className="w-2 bg-muted rounded-sm overflow-hidden flex flex-col justify-end" style={{ height }}>
-        <div className={`w-full transition-[height] duration-75 ${clip ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ height: `${pct}%` }} />
+        <div className={`w-full transition-[height] duration-75 ${hot ? 'bg-rose-500' : warm ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ height: `${pct}%` }} />
       </div>
     </button>
   );

@@ -18,7 +18,7 @@ import { DEFAULT_MASTERING, type MasteringParams } from '../session';
 const ON: MasteringParams = { ...DEFAULT_MASTERING, enabled: true };
 const OFF: MasteringParams = { ...DEFAULT_MASTERING, enabled: false };
 
-interface FakeHandle { id: number; dispose: ReturnType<typeof vi.fn> }
+interface FakeHandle { id: number; dispose: () => void }
 
 function makeHarness() {
   let nextId = 1;
