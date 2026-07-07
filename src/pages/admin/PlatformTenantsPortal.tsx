@@ -38,6 +38,10 @@ interface TenantRow {
 }
 
 function tenantUrl(t: TenantRow): string {
+  // The platform tenant's subdomain column holds the bare apex domain
+  // ("gleeworld.org"), which naively concatenates to the dead
+  // "gleeworld.org.gleeworld.org" — special-case it.
+  if (t.slug === 'main') return 'https://gleeworld.org';
   if (t.custom_domain) return `https://${t.custom_domain}`;
   return `https://${t.subdomain || t.slug}.gleeworld.org`;
 }
@@ -70,6 +74,45 @@ export default function PlatformTenantsPortal() {
       return res.json();
     },
   });
+
+  // Jump into a tenant's admin surface signed in AS that tenant's admin.
+  // A plain link can't work: the gleeworld.org session doesn't exist on
+  // the tenant subdomain (per-origin storage), and the platform JWT is
+  // bound to the main tenant anyway. The superadmin API mints a
+  // single-use magic link for the tenant's own admin user instead.
+  // The tab opens synchronously (before the fetch) so Safari's popup
+  // blocker sees a user gesture; on failure we close it and toast.
+  const openTenantAdmin = async (t: TenantRow, path: string) => {
+    if (t.slug === 'main') {
+      window.open(`https://gleeworld.org${path}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    const tab = window.open('about:blank', '_blank');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not signed in.');
+      const res = await fetch(`/superadmin/api/tenants/${t.id}/admin-link`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ path }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.hint || body.error || `HTTP ${res.status}`);
+      if (tab) tab.location.href = body.link;
+      else window.open(body.link, '_blank', 'noopener,noreferrer');
+      toast({ title: `Opening ${t.name}`, description: `Signed in as ${body.as_email}` });
+    } catch (e: any) {
+      tab?.close();
+      toast({
+        title: `Couldn't open ${t.name} admin`,
+        description: e?.message ?? 'Unknown error',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (!isPlatformAdmin) {
     return (
@@ -192,16 +235,16 @@ export default function PlatformTenantsPortal() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`${url}/control-center`, '_blank', 'noopener,noreferrer')}
-                      title="Open the tenant Control Center"
+                      onClick={() => void openTenantAdmin(t, '/control-center')}
+                      title="Open the tenant Control Center signed in as its admin"
                     >
                       <Settings className="w-3.5 h-3.5 mr-1" /> Admin
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`${url}/admin/public-page`, '_blank', 'noopener,noreferrer')}
-                      title="Open the page builder"
+                      onClick={() => void openTenantAdmin(t, '/admin/public-page')}
+                      title="Open the page builder signed in as the tenant admin"
                     >
                       <LayoutPanelTop className="w-3.5 h-3.5 mr-1" /> Pages
                     </Button>
