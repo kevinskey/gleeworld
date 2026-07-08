@@ -7,7 +7,7 @@ export function isNativeApp(): boolean {
   return Capacitor.isNativePlatform();
 }
 
-function decodeTenantSlug(session: Session): string | null {
+export function decodeTenantSlug(session: Session): string | null {
   try {
     const p = session.access_token.split('.')[1];
     const padded = p + '='.repeat((-p.length) % 4);
@@ -33,15 +33,14 @@ export async function syncNativeTenant(session: Session): Promise<void> {
   // stored {tenant, org} — refresh to get shortName + logoUrl too).
   if (current?.tenant === slug && current?.shortName && current?.logoUrl) return;
 
-  // 'main' tenant: no per-tenant fetch (GleeWorldLanding treats a truthy org
-  // as a tenant clone). Settle the cache to platform defaults so we don't
-  // re-sync + reload on every login.
-  if (slug === 'main') {
-    if (current?.tenant === 'main') return;
-    localStorage.setItem(KEY, JSON.stringify({ tenant: 'main' }));
-    window.location.reload();
-    return;
-  }
+  // 'main' is the platform/marketing tenant — it has no member app on native.
+  // Do NOT force it: a platform admin (super-admin on 'main') signing into the
+  // native app has no single "home" choir, so forcing tenant='main' dropped
+  // them on the marketing site (looked like login bouncing back). Leave the
+  // cache untouched so NativeTenantGate can offer the org picker to choose a
+  // choir. If the admin already picked a choir, this preserves that choice
+  // (previously it was wiped back to 'main' on every token refresh).
+  if (slug === 'main') return;
 
   // Seed with the existing cache so a failed DB fetch can't wipe a valid
   // org/shortName/logoUrl that the picker (or a previous sync) wrote.

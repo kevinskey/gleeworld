@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { isNativeApp, syncNativeTenant } from '@/lib/nativeTenant';
+import { isNativeApp, syncNativeTenant, decodeTenantSlug } from '@/lib/nativeTenant';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { startDemoSession, DEMO_WELCOME_PENDING_KEY } from '@/lib/demoSession';
@@ -92,11 +92,21 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
         setSigningIn(false);
         return;
       }
-      // Resolve + cache the tenant brand from the JWT, then enter the app.
-      // syncNativeTenant reloads on its own in most cases; the explicit reload
-      // is a fallback for accounts whose JWT carries no tenant_slug.
-      if (data.session) await syncNativeTenant(data.session);
-      window.location.reload();
+      const slug = data.session ? decodeTenantSlug(data.session) : null;
+      if (slug && slug !== 'main') {
+        // Normal member: cache their choir's brand from the JWT and enter.
+        // syncNativeTenant reloads once it has the tenant; the explicit reload
+        // is a fallback.
+        await syncNativeTenant(data.session);
+        window.location.reload();
+      } else {
+        // Platform admin (super-admin on 'main'), or an account with no single
+        // home choir: don't bounce to the marketing site — let them choose
+        // which choir to open. The session persists, so picking an org below
+        // reloads straight into that choir already signed in.
+        setSigningIn(false);
+        setMode('orgs');
+      }
     } catch (err) {
       console.error('[native-login] sign-in failed', err);
       setSignInError('Something went wrong. Check your connection and try again.');
