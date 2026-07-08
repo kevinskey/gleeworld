@@ -188,6 +188,15 @@ function computePeaks(buffer: AudioBuffer, target = 300): number[] {
  * docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md, Task
  * 1); the decode/copy/re-encode steps below are unchanged from before
  * that extraction. */
+/** Safari / any iOS browser shell reports vendor "Apple Computer, Inc.".
+ *  On those engines MediaRecorder emits a fragmented mp4 that
+ *  decodeAudioData can't read ("decoding failed" — recorded takes never
+ *  became clips, 2026-07-07), so Studio captures WAV PCM directly there.
+ *  Chrome/Firefox keep their webm MediaRecorder (decodes fine). */
+function isAppleWebEngine(): boolean {
+  return typeof navigator !== 'undefined' && /apple/i.test(navigator.vendor || '');
+}
+
 async function finalizeRecordingBlob(
   rawBlob: Blob,
   trimOverrideMs?: number,
@@ -825,7 +834,7 @@ function Editor({
       // Web path: Tone.UserMedia + MediaRecorder.
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
-      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb });
+      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb, captureWav: isAppleWebEngine() });
       await recorder.start();
       // Stamp the moment capture is actually live — getUserMedia +
       // graph setup above is the variable startup cost that used to be
@@ -1071,7 +1080,7 @@ function Editor({
       if (loopEnabled) setLoopEnabled(false);
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
-      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb });
+      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb, captureWav: isAppleWebEngine() });
       punchRef.current = { recorder, phase: 'pre' };
       engineState.setRecordingActive?.(true);
       const from = preRollStartSeconds(

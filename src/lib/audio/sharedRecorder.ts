@@ -69,6 +69,13 @@ export interface MicRecorderOptions {
    * accepting Tone.Recorder's unmanaged browser default. Omit (Studio's
    * path) for identical behavior to before. */
   mimeType?: string;
+  /** Capture the take as 16-bit PCM WAV via a ScriptProcessor tap
+   * instead of MediaRecorder. iOS WebKit's MediaRecorder emits a
+   * fragmented mp4 that `decodeAudioData` CANNOT read ("decoding failed"
+   * — Studio takes never became clips, 2026-07-07); a self-encoded WAV
+   * always decodes AND plays. Recommended on Apple web engines. The
+   * returned blob is `audio/wav`. */
+  captureWav?: boolean;
 }
 
 export interface MicRecorder {
@@ -183,10 +190,38 @@ export async function openMicRecorder(
   //    the best supported type by default there. Callers that already
   //    probed a supported type pass it via `mimeType`; the caller reads
   //    blob.type after stop() either way to know the actual format.
+  // WAV PCM capture path (captureWav) — bypasses MediaRecorder entirely.
+  // A ScriptProcessor taps inputGain, we copy each render block's PCM,
+  // and encode a 16-bit WAV on stop. Always decodable/playable, unlike
+  // WebKit's fragmented-mp4 MediaRecorder output. Mono is plenty for a
+  // single vocal take and halves the data.
+  let pcmProcessor: ScriptProcessorNode | null = null;
+  let pcmMute: Tone.Gain | null = null;
+  let pcmChunks: Float32Array[] = [];
+  let pcmSampleRate = 48000;
+  const wantWav = !!args.captureWav;
+  if (wantWav) {
+    const rawCtx = Tone.getContext().rawContext as unknown as AudioContext;
+    pcmSampleRate = rawCtx.sampleRate;
+    pcmProcessor = rawCtx.createScriptProcessor(4096, 1, 1);
+    pcmProcessor.onaudioprocess = (ev: AudioProcessingEvent) => {
+      // Copy — the event buffer is reused across callbacks.
+      pcmChunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
+    };
+    // A ScriptProcessor only fires while connected to the destination,
+    // so route it through a MUTED gain (no monitor feedback).
+    pcmMute = new Tone.Gain(0);
+    Tone.connect(inputGain, pcmProcessor);
+    Tone.connect(pcmProcessor, pcmMute);
+    pcmMute.toDestination();
+  }
+
   let rawRecorder: MediaRecorder | null = null;
   let rawChunks: Blob[] = [];
   let toneRecorder: Tone.Recorder | null = null;
-  if (manualStream && typeof MediaRecorder !== 'undefined') {
+  if (wantWav) {
+    // PCM path owns capture; no MediaRecorder/Tone.Recorder needed.
+  } else if (manualStream && typeof MediaRecorder !== 'undefined') {
     try {
       rawRecorder = args.mimeType
         ? new MediaRecorder(manualStream, { mimeType: args.mimeType })
@@ -202,7 +237,7 @@ export async function openMicRecorder(
       };
     }
   }
-  if (!rawRecorder) {
+  if (!wantWav && !rawRecorder) {
     toneRecorder = args.mimeType ? new Tone.Recorder({ mimeType: args.mimeType }) : new Tone.Recorder();
   }
 
@@ -220,7 +255,9 @@ export async function openMicRecorder(
 
   const start = async () => {
     if (recording) return;
-    if (rawRecorder) {
+    if (wantWav) {
+      pcmChunks = [];
+    } else if (rawRecorder) {
       rawChunks = [];
       rawRecorder.start();
     } else {
@@ -231,6 +268,22 @@ export async function openMicRecorder(
   const stop = async () => {
     if (!recording) throw new Error('not recording');
     let blob: Blob;
+    if (wantWav) {
+      recording = false; // stop the onaudioprocess accumulation first
+      let total = 0;
+      for (const c of pcmChunks) total += c.length;
+      const merged = new Float32Array(total);
+      let off = 0;
+      for (const c of pcmChunks) { merged.set(c, off); off += c.length; }
+      pcmChunks = [];
+      blob = encodeWavFromBufferLike({
+        numberOfChannels: 1,
+        length: merged.length,
+        sampleRate: pcmSampleRate,
+        getChannelData: () => merged,
+      });
+      return blob;
+    }
     if (rawRecorder) {
       blob = await new Promise<Blob>((resolve, reject) => {
         const rec = rawRecorder!;
@@ -272,7 +325,14 @@ export async function openMicRecorder(
         try { manualStream.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ }
       }
       try { manualSourceNode?.disconnect(); } catch { /* ignore */ }
+      if (pcmProcessor) {
+        try { pcmProcessor.disconnect(); } catch { /* ignore */ }
+        pcmProcessor.onaudioprocess = null;
+        pcmProcessor = null;
+      }
+      pcmChunks = [];
       inputGain.dispose(); monitor.dispose(); toneRecorder?.dispose();
+      pcmMute?.dispose();
       waveAnalyser.dispose(); meter.dispose();
     },
     close: () => handle.dispose(),
