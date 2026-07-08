@@ -12,12 +12,16 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Metronome } from '@/components/audioTools/Metronome';
+import { PitchPipe } from '@/components/audioTools/PitchPipe';
+import { Tuner } from '@/components/audioTools/Tuner';
+import { InstrumentPlayer } from '@/components/audioTools/InstrumentPlayer';
 import {
   Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download, Scissors,
   Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
   ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
-  Magnet,
+  Magnet, Wrench,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -328,6 +332,7 @@ function Editor({
   // Export button (inside MixerView, a different component subtree) open
   // the exact same sheet/state.
   const [exportOpen, setExportOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
 
   // Timeline vs Mixer — same route, transport/header stay mounted; only
   // the main tracks-area block below swaps content (B1 Task 6).
@@ -1343,6 +1348,31 @@ function Editor({
           className="text-sm font-semibold bg-transparent border-0 px-2 h-6 focus-visible:ring-1 max-w-xs"
         />
         <div className="ml-auto flex items-center gap-2">
+          {/* Music Tools — left slide-out with metronome, pitch pipe,
+              tuner, and the instrument-voice player, so a director can
+              grab a reference pitch or set a tempo without leaving the
+              session. Reuses the same components as the Viewer + Music
+              Tools page. */}
+          <Sheet open={toolsOpen} onOpenChange={setToolsOpen}>
+            <SheetTrigger asChild>
+              <Button size="sm" variant="outline" title="Music tools — metronome, pitch pipe, tuner, instruments" className="h-7 text-sm">
+                <Wrench className="w-4 h-4 mr-1" /> Tools
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="dark bg-card text-foreground border-border w-[320px] sm:w-[360px] overflow-y-auto">
+              <SheetHeader className="mb-3">
+                <SheetTitle className="text-base inline-flex items-center gap-2">
+                  <Wrench className="w-4 h-4" /> Music Tools
+                </SheetTitle>
+              </SheetHeader>
+              <div className="space-y-3 pb-6">
+                <Metronome />
+                <PitchPipe />
+                <Tuner />
+                <InstrumentPlayer />
+              </div>
+            </SheetContent>
+          </Sheet>
           <AudioSettingsButton midiSync={engineState.native ? undefined : {
             enabled: midiSyncEnabled, setEnabled: setMidiSyncEnabled,
             outputId: midiSyncOutputId, setOutputId: setMidiSyncOutputId,
