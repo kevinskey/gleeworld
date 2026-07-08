@@ -17,6 +17,7 @@ import {
   Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
   ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
+  Magnet,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -337,6 +338,11 @@ function Editor({
     if (v && SNAP_MODES.includes(v)) setSnapMode(v);
   }, []);
   useEffect(() => { localStorage.setItem('studio.snapMode', snapMode); }, [snapMode]);
+  // Remember the last grid subdivision so the one-tap Snap toggle can
+  // return to it after a stint of free ('free') dragging.
+  const lastGridSnapRef = useRef<SnapMode>('1/4');
+  useEffect(() => { if (snapMode !== 'free') lastGridSnapRef.current = snapMode; }, [snapMode]);
+  const toggleSnap = () => setSnapMode((m) => (m === 'free' ? lastGridSnapRef.current : 'free'));
 
   // Count-in bars — how many empty bars to click off before recording
   // actually starts. 0 = off, 1 or 2 bars supported.
@@ -1911,6 +1917,25 @@ function Editor({
                 className="h-7 w-7 inline-flex items-center justify-center hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-base leading-none"
               >+</button>
             </div>
+            {/* One-tap Snap on/off. On = clips snap to the grid
+                subdivision; off = drag/trim freely to any position.
+                Grid choice still lives in Settings → Snap; this just
+                flips between that and free. */}
+            <button
+              onClick={toggleSnap}
+              title={snapMode === 'free'
+                ? 'Snap OFF — clips move freely. Tap to snap to grid.'
+                : `Snap ON (${snapMode}) — clips align to the grid. Tap for free movement.`}
+              aria-pressed={snapMode !== 'free'}
+              className={`h-7 px-2.5 inline-flex items-center gap-1 rounded border text-xs font-semibold ${
+                snapMode !== 'free'
+                  ? 'bg-primary/15 text-primary border-primary/40'
+                  : 'bg-background text-muted-foreground border-border'
+              }`}
+            >
+              <Magnet className="w-3.5 h-3.5" />
+              {snapMode !== 'free' ? 'Snap' : 'Free'}
+            </button>
             {isRecording && (
               <div className="ml-auto text-rose-600 inline-flex items-center gap-1.5 font-semibold">
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
