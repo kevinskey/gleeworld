@@ -26,3 +26,6 @@ dist-ssr
 .git.broken-*
 server-files/
 ios/App/App/config [0-9]*.xml
+
+# Generated manual booklet (Phase C)
+docs/manual/dist/
