@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { StudioEngineStatus } from '@/components/studio/StudioEngineStatus';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { renderRegionMix, renderRegionStems, zipBlobs, safeName } from '@/lib/studio/engine/regionExport';
@@ -1777,6 +1778,10 @@ function Editor({
             </div>
           </SheetContent>
         </Sheet>
+
+        {/* Native engine status + error panel (renders only when not "ready",
+         * and only in the app). Full-width line so it never crowds the bar. */}
+        <div className="w-full"><StudioEngineStatus /></div>
 
         {/* Phone tools row — always its own full-width line under the
          * transport controls. Tempo, count-in, and undo were reported

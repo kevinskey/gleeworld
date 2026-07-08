@@ -148,6 +148,15 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
                 }
             }
         }
+        // Discrete named events (playbackStarted, audioInterrupted, …). Always
+        // deliver on the main thread — notifyListeners touches the bridge.
+        engine.onEvent = { [weak self] name, payload in
+            if Thread.isMainThread {
+                self?.notifyListeners(name, data: payload)
+            } else {
+                DispatchQueue.main.async { self?.notifyListeners(name, data: payload) }
+            }
+        }
     }
 
     public override func load() {

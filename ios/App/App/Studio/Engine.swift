@@ -94,6 +94,10 @@ public final class StudioNativeEngine {
 
     /// Position-tick callback bridged to JS via the plugin.
     public var onState: ((StudioEngineState) -> Void)?
+    /// Discrete named events (see StudioEvents) — the plugin wires this to
+    /// Capacitor notifyListeners. Complements the monolithic onState stream.
+    public var onEvent: ((String, [String: Any]) -> Void)?
+    private func emitEvent(_ name: String, _ payload: [String: Any] = [:]) { onEvent?(name, payload) }
     private var positionTimer: Timer?
 
     // Metronome — one AVAudioPlayerNode on the master bus; each beat
@@ -226,6 +230,7 @@ public final class StudioNativeEngine {
         }
         installRecoveryObservers()
         emit()
+        emitEvent(StudioEvents.ready, ["isReady": engine.isRunning])
     }
 
     /// Observe audio-session interruptions and AVAudioEngine configuration
@@ -246,6 +251,7 @@ public final class StudioNativeEngine {
                     self.interruptionWasActive = true
                     self.isPlayingNow = false
                 }
+                self.emitEvent(StudioEvents.audioInterrupted, ["reason": "session_interruption"])
                 NSLog("[Studio] interruption BEGAN (wantsPlayback=\(self.wantsPlayback), pos=\(self.interruptionResumePos))")
             } else {
                 NSLog("[Studio] interruption ENDED — recovering")
@@ -282,6 +288,7 @@ public final class StudioNativeEngine {
         }
         pausedAt = resumePos
         play()   // reschedules every track from pausedAt and flips isPlayingNow
+        emitEvent(StudioEvents.engineRecovered, ["positionMs": resumePos * 1000])
         NSLog("[Studio] recoverPlayback: resumed at \(resumePos)")
         recovering = false
     }
@@ -541,6 +548,7 @@ public final class StudioNativeEngine {
         wantsPlayback = true   // user intent — drives interruption recovery
         startPositionTimer()
         emit()
+        emitEvent(StudioEvents.playbackStarted, ["positionMs": pausedAt * 1000])
     }
 
     public func pause() {
@@ -554,6 +562,7 @@ public final class StudioNativeEngine {
         isPlayingNow = false
         positionTimer?.invalidate(); positionTimer = nil
         emit()
+        emitEvent(StudioEvents.playbackPaused, ["positionMs": pausedAt * 1000])
     }
 
     public func stopTransport() {
@@ -566,6 +575,7 @@ public final class StudioNativeEngine {
         startHostTime = nil
         positionTimer?.invalidate(); positionTimer = nil
         emit()
+        emitEvent(StudioEvents.playbackStopped)
     }
 
     public func seek(toSeconds s: Double) {
