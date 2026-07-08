@@ -193,6 +193,11 @@ export function useStudioEngine(session: Session | null) {
   const native = isNativeStudioAvailable();
   const engineRef = useRef<StudioEngine | null>(null);
   const nativeCloseRef = useRef<(() => Promise<void>) | null>(null);
+  // Latest native playback state, tracked so a full reload forced by an
+  // FX/gain/EQ edit can RESUME playback from where it was — otherwise the
+  // teardown+rebuild leaves the track stopped ("adjusting gain stops the
+  // track"). Updated from every native onState.
+  const livePlayRef = useRef<{ playing: boolean; pos: number }>({ playing: false, pos: 0 });
   const [state, setState] = useState<EngineState | null>(null);
   const [warming, setWarming] = useState(false);
   // Last skeleton signature we built the engine for. Stays constant
@@ -310,6 +315,10 @@ export function useStudioEngine(session: Session | null) {
 
       setWarming(true);
       (async () => {
+        // Snapshot playback BEFORE the teardown so we can resume after the
+        // rebuild — an FX/gain/EQ edit forces this full reload and would
+        // otherwise stop the track.
+        const resume = { ...livePlayRef.current };
         if (nativeCloseRef.current) { await nativeCloseRef.current(); nativeCloseRef.current = null; }
         const close = await openNativeStudio({
           session,
@@ -350,6 +359,7 @@ export function useStudioEngine(session: Session | null) {
               // no recording-armed guard to mirror from the native side.
               recordingActive: false,
             });
+            livePlayRef.current = { playing: !!s.isPlaying, pos: s.positionSeconds ?? 0 };
             // Surface any engine-side error as a toast so device users
             // can report the failure without needing Mac + Safari console.
             const err = (s as any)?.lastError;
@@ -375,6 +385,18 @@ export function useStudioEngine(session: Session | null) {
         }
         lastAudioClipsRef.current = snap;
         setWarming(false);
+
+        // Resume playback if this reload interrupted it (FX/gain/EQ edit).
+        // Seek to the pre-reload position, then play — so adjusting gain no
+        // longer stops the track.
+        if (resume.playing) {
+          try {
+            await NativeStudio.seek({ seconds: resume.pos });
+            await NativeStudio.play();
+          } catch (e) {
+            console.warn('[StudioEngine] resume-after-reload failed', e);
+          }
+        }
 
         // Logic-Pro-style eager prewarm: as soon as the engine is up,
         // queue a background decode of every asset into the LRU cache.
