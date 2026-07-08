@@ -75,6 +75,18 @@ public final class StudioNativeEngine {
     private var startHostTime: AVAudioTime?
     private var pausedAt: Double = 0
     private var isPlayingNow: Bool = false
+    // Audio-session interruption / IO-unit-stop recovery. AVAudioEngine pauses
+    // itself when the session is interrupted or the IO unit stops (route change,
+    // a graph edit while running, another app grabbing audio) and does NOT
+    // auto-resume — without handling it, playback just stops ("moving the gain
+    // stops the track", confirmed via device log: "iounit stopped unexpectedly
+    // > pausing the engine"). wantsPlayback tracks user intent so we can
+    // restart + resume from where we were.
+    private var wantsPlayback = false
+    private var interruptionResumePos: Double = 0
+    private var interruptionWasActive = false
+    private var recoveryObserversInstalled = false
+    private var recovering = false
     /// True while a take is rolling. play() must not auto-rewind under
     /// a live recording — the take is stamped at the position the user
     /// armed, and yanking the transport to 0 would misplace it.
@@ -212,7 +224,66 @@ public final class StudioNativeEngine {
             try engine.start()
             NSLog("[Studio] engine.start: AVAudioEngine running")
         }
+        installRecoveryObservers()
         emit()
+    }
+
+    /// Observe audio-session interruptions and AVAudioEngine configuration
+    /// changes so a stopped IO unit (which silently pauses the engine) is
+    /// recovered instead of leaving the track stopped. Registered once.
+    private func installRecoveryObservers() {
+        guard !recoveryObserversInstalled else { return }
+        recoveryObserversInstalled = true
+        let nc = NotificationCenter.default
+        nc.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
+            guard let self else { return }
+            let raw = (note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt) ?? 0
+            if raw == AVAudioSession.InterruptionType.began.rawValue {
+                // System paused the engine. Snapshot where we were so we can
+                // resume there when the interruption ends.
+                if self.isPlayingNow {
+                    self.interruptionResumePos = self.currentPositionSeconds()
+                    self.interruptionWasActive = true
+                    self.isPlayingNow = false
+                }
+                NSLog("[Studio] interruption BEGAN (wantsPlayback=\(self.wantsPlayback), pos=\(self.interruptionResumePos))")
+            } else {
+                NSLog("[Studio] interruption ENDED — recovering")
+                self.recoverPlayback()
+            }
+        }
+        // Fires when the IO unit stops / the render config changes (route
+        // change, a graph edit while running). Belt-and-suspenders with the
+        // interruption path — some IO-unit stops arrive only as this.
+        nc.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+            guard let self else { return }
+            NSLog("[Studio] engine configuration change — recovering (isRunning=\(self.engine.isRunning))")
+            self.recoverPlayback()
+        }
+    }
+
+    /// Reactivate the session, restart the engine, and resume playback from
+    /// where it stopped — the fix for "the track stops" after an interruption
+    /// or IO-unit stop. No-op if the user isn't trying to play.
+    private func recoverPlayback() {
+        guard wantsPlayback, !recovering else { return }
+        // If the engine is genuinely still running and we're still playing,
+        // there's nothing to recover.
+        if engine.isRunning && isPlayingNow { return }
+        recovering = true
+        let resumePos = interruptionWasActive ? interruptionResumePos : currentPositionSeconds()
+        interruptionWasActive = false
+        isPlayingNow = false
+        do {
+            // start() reactivates the AVAudioSession and (re)starts the engine.
+            try start()
+        } catch {
+            NSLog("[Studio] recoverPlayback: start() failed: \(error.localizedDescription)")
+        }
+        pausedAt = resumePos
+        play()   // reschedules every track from pausedAt and flips isPlayingNow
+        NSLog("[Studio] recoverPlayback: resumed at \(resumePos)")
+        recovering = false
     }
 
     public func stopEngine() {
@@ -451,12 +522,14 @@ public final class StudioNativeEngine {
 
         if metronomeOn { scheduleMetronome(from: pausedAt) }
         isPlayingNow = true
+        wantsPlayback = true   // user intent — drives interruption recovery
         startPositionTimer()
         emit()
     }
 
     public func pause() {
         cancelCountIn()
+        wantsPlayback = false   // deliberate stop — don't auto-resume
         guard isPlayingNow else { return }
         // Record where we paused so play() resumes from there.
         pausedAt = currentPositionSeconds()
@@ -469,6 +542,7 @@ public final class StudioNativeEngine {
 
     public func stopTransport() {
         cancelCountIn()
+        wantsPlayback = false   // deliberate stop — don't auto-resume
         for (_, t) in tracks { t.stopScheduling() }
         cancelMetronome()
         pausedAt = 0
