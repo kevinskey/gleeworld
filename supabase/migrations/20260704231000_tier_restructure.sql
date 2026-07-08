@@ -60,7 +60,7 @@ VALUES
   ('director_60', 'tenant', 'Director', 'For directors with up to 60 students.', 60, 50,
    3900, 39000,
    'gw_director60_monthly', 'gw_director60_annual',
-   '["Up to 60 students","Roster, attendance, scheduling","Scores + part tracks + Studio","Tonight mode + stage viewer","50 GB"]'::jsonb, 10),
+   '["Up to 60 students","Roster, attendance, scheduling","Scores + part tracks + Studio","Tonight mode + stage viewer","Branded login (your logo & colors)","50 GB"]'::jsonb, 10),
 
   ('director_150', 'tenant', 'Director+', 'For growing programs up to 150 students.', 150, 150,
    6900, 69000,
@@ -70,7 +70,7 @@ VALUES
   ('institution', 'tenant', 'Institution', 'Unlimited students, multi-ensemble.', NULL, 1024,
    19900, 199000,
    'gw_institution_monthly', 'gw_institution_annual',
-   '["Unlimited students","Multi-ensemble + SSO + Canvas","Broadcast texts included","Box Office included","1 TB pooled"]'::jsonb, 30);
+   '["Unlimited students","Multi-ensemble + SSO + Canvas","Broadcast texts included","Box Office included","Custom app icon","Dedicated app (talk to us)","1 TB pooled"]'::jsonb, 30);
 
 -- ── gw_user_plans: user-scoped subscription (personal tier) ──────────
 -- Deliberately has NO tenant_id / tenant policy: a Personal plan belongs

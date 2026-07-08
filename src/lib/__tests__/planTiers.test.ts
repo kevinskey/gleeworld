@@ -92,6 +92,7 @@ describe('seed values match the Task 3 migration table', () => {
       'Roster, attendance, scheduling',
       'Scores + part tracks + Studio',
       'Tonight mode + stage viewer',
+      'Branded login (your logo & colors)',
       '50 GB',
     ]);
   });
@@ -130,6 +131,8 @@ describe('seed values match the Task 3 migration table', () => {
       'Multi-ensemble + SSO + Canvas',
       'Broadcast texts included',
       'Box Office included',
+      'Custom app icon',
+      'Dedicated app (talk to us)',
       '1 TB pooled',
     ]);
     expect(t.quote).toBe(true);
