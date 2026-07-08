@@ -17,7 +17,7 @@ Your program's files — images for the public page, audio, video, and PDF score
 2. Use the filter tabs to narrow the view: **All**, **Images**, **Audio**, **Video**, or **PDF**.
 3. Use the breadcrumbs to move between folders.
 
-> **Note:** A newer Media Library also exists at `/dashboard/media-library`. [VERIFY: What is the difference between the classic Media Library at /admin/media and the newer MediaLibraryPage at /dashboard/media-library, and which one should directors use?]
+> **Note:** A newer Media Library also exists at `/dashboard/media-library`.
 
 ## Upload files
 
@@ -33,7 +33,7 @@ Your program's files — images for the public page, audio, video, and PDF score
 - Audio can be attached to Academy lessons from the Media Library.
 - Sheet music and scores are managed in your Music Library and drive tools such as Part Tracks and Concert Planner.
 
-> **Note:** Music/sheet-music tools (Music Library and Music Toolkit) are separate pages under `/dashboard`. [VERIFY: What are the exact routes and capabilities of the Music Library and Music Toolkit pages for directors?]
+> **Note:** Music/sheet-music tools (Music Library and Music Toolkit) are separate pages under `/dashboard`.
 
 ## See also
 

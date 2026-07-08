@@ -14,7 +14,7 @@ GleeWorld has two related but **separate** recording tools, each with its own mo
 
 Both are optional, module-gated features. If a tool doesn't appear in your navigation, it isn't active for your program.
 
-> **Note:** [VERIFY: the billing tier / activation path for the `part_tracks` and `studio` modules — no `gw_billing_modules` seed row for either was found, so it is unclear whether they are starter, add-on, or activated some other way.]
+> **Note:**
 
 ## Part Tracks
 

@@ -51,7 +51,7 @@ If you were approved for complimentary tickets, they appear on this same page un
 
 ## Find upcoming events
 
-Your program may publish a public calendar of events (its address ends in **/public-calendar**). [VERIFY: What does the public calendar at /public-calendar show to fans, and can they open ticket pages or programs directly from it?]
+Your program may publish a public calendar of events (its address ends in **/public-calendar**).
 
 ## Ticket states at a glance
 

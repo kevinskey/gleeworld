@@ -11,7 +11,7 @@ GleeWorld gives you tools to record your voice part, practice along with backing
 
 **Before you start:** Sign in, wear headphones, and allow microphone access when your browser asks. Recording without headphones lets the backing track bleed into your microphone.
 
-> **Note:** Which of these tools appears depends on what your program has turned on. Part Tracks may be an optional add-on, so if you do not see it in the **Music** navigation group, ask your director whether it is enabled for your program. [VERIFY: Is Part Tracks always included, or is it gated behind the Studio & Part Tracks add-on for the tenant?]
+> **Note:** Which of these tools appears depends on what your program has turned on. Part Tracks may be an optional add-on, so if you do not see it in the **Music** navigation group, ask your director whether it is enabled for your program.
 
 ## Two ways your program may offer Part Tracks
 
@@ -19,8 +19,6 @@ GleeWorld has two Part Tracks surfaces, and your program may use either one:
 
 - **Part Tracks Studio** — a full multitrack recording environment reached from **Part Tracks** in the **Music** group.
 - **Part Tracks per-piece grid** — a simpler dashboard tile for uploading or recording one MP3 per voice part on a piece.
-
-[VERIFY: What determines which Part Tracks surface a given student sees — a tenant setting, or are both available at once?]
 
 The recording basics below apply to both.
 

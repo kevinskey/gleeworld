@@ -15,7 +15,7 @@ Yes. GleeWorld is a shared platform, but each program's data is isolated. Every 
 
 ## What personal information does GleeWorld store?
 
-GleeWorld stores the account and program information needed to run your program, such as your name, email, and role, plus program content like rosters, music, recordings, attendance, and events. For the authoritative description of what is collected and how it is used, read GleeWorld's Privacy Policy at **/privacy**. [VERIFY: Is there a canonical list of personal-data categories collected, beyond profile name/email/role, that should be documented here?]
+GleeWorld stores the account and program information needed to run your program, such as your name, email, and role, plus program content like rosters, music, recordings, attendance, and events. For the authoritative description of what is collected and how it is used, read GleeWorld's Privacy Policy at **/privacy**.
 
 ## Export your program's data
 
@@ -25,7 +25,7 @@ GleeWorld stores the account and program information needed to run your program,
 2. Open the **General** tab.
 3. Click **Data export**.
 
-The screen confirms that a super-admin will receive the export bundle by email. [VERIFY: Is the tenant data export (gw-tenant-export) live and actually delivering export bundles, or is it still a confirmation message only?]
+The screen confirms that a super-admin will receive the export bundle by email.
 
 ## Delete your account
 

@@ -36,7 +36,7 @@ Public sign-ups create a **fan** account. Students are enrolled by their directo
 
 > **Note:** On a program in demo mode, public sign-up is disabled. Instead you'll see a **Request your workspace** option.
 
-> **Note:** [VERIFY: What are the password requirements at sign-up? The fact sheet documents rules for the reset-password page (minimum 6 characters), the forced-change page (8+ with upper, lower, number), and the in-app change dialog (8+ with a special character), but not for the sign-up form.]
+> **Note:**
 
 ## Reset a forgotten password
 
@@ -67,7 +67,7 @@ If you get stuck:
 - Reach the GleeWorld team by email at **kevin@gleeworld.org**.
 - For questions specific to your program (enrollment, your role, your music), contact your program's director or admin.
 
-> **Note:** [VERIFY: Is there a dedicated in-app support or help-desk channel beyond the contact page and the kevin@gleeworld.org email?]
+> **Note:**
 
 ## See also
 

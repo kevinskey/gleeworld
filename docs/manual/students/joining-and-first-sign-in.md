@@ -17,8 +17,6 @@ Students do **not** create their own student accounts. Your program director enr
 
 > **Note:** If you sign up on your own from the public sign-up form, you get a **fan** account, not a student account. The sign-up screen says so directly: "Students are enrolled separately by the program director." If you accidentally created a fan account, ask your director to enroll you as a student rather than making a second account.
 
-[VERIFY: How do enrolled students receive their initial login credentials — an email invite, a temporary password, or a magic link?]
-
 ## Sign in for the first time
 
 **Before you start:** Use the web address your program gave you. Signing in on the wrong tenant's address will sign you back out automatically.

@@ -9,7 +9,7 @@ updated: 2026-07-08
 
 The **Studio** is GleeWorld's full multitrack editor (a DAW). It is more capable than Part Tracks: you can record several tracks, edit clips on a timeline, and export a finished mix. Your Studio sessions sync across your devices.
 
-**Before you start:** Sign in and connect headphones. Studio may be part of an optional add-on, so if you do not see **Studio** in the **Music** navigation group, ask your director whether it is enabled. [VERIFY: Is Studio always included for students, or is it gated behind the Studio & Part Tracks add-on for the tenant?]
+**Before you start:** Sign in and connect headphones. Studio may be part of an optional add-on, so if you do not see **Studio** in the **Music** navigation group, ask your director whether it is enabled.
 
 ## Create a session
 

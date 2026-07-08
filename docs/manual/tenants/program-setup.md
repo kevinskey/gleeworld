@@ -49,7 +49,7 @@ The **Navigation** tab lets you choose which sidebar items each type of user see
 
 The **General** tab includes a **Data export** button. When you click it, GleeWorld tells you that a super-admin will receive the export bundle by email within 24 hours.
 
-> **Warning:** The export delivery is not fully wired up yet, so treat the confirmation message as a request rather than a guarantee. [VERIFY: Does clicking Data export actually deliver an export bundle by email, given the gw-tenant-export edge function is noted as not yet wired?]
+> **Warning:** The export delivery is not fully wired up yet, so treat the confirmation message as a request rather than a guarantee.
 
 ## See also
 

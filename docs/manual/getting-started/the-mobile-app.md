@@ -9,7 +9,7 @@ updated: 2026-07-08
 
 GleeWorld has a native iOS app that wraps the same GleeWorld experience you use on the web, with added mobile features like push notifications, an on-device practice audio engine, and Apple Music playback for backing tracks. This page covers installing it, choosing your organization, and granting permissions.
 
-> **Note:** This section documents the iOS app. [VERIFY: Is there an Android version of the GleeWorld app? The fact sheet only documents an iOS (Capacitor/WKWebView) build.]
+> **Note:** This section documents the iOS app.
 
 ## Install the app
 

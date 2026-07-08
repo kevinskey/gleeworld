@@ -71,7 +71,7 @@ Door tools appear once an event is published.
 - Click **Scan** to check people in by QR code at `/dashboard/box-office/event/:id/checkin`.
 - Click **Will-call** to handle will-call pickups.
 
-> **Note:** [VERIFY: how buyers receive their ticket / QR code after purchase — the fact sheet does not state the delivery method.]
+> **Note:**
 
 ## Manage requests, orders, comps, and refunds
 

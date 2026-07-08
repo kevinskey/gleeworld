@@ -39,7 +39,7 @@ In the editor you can:
 A program stores its own visual theme, print format, and card layout, and tracks whether and when it was published.
 
 - **Print** the program using its stored print format.
-- **Publish** the program as a public web page. [VERIFY: the public URL pattern for a published concert program — the fact sheet lists a `published_slug` field but not the full public path.]
+- **Publish** the program as a public web page.
 - **Export to Canva** for advanced design work.
 
 ## Delete a program

@@ -71,7 +71,7 @@ Your tickets appear on your order page and are emailed to you. Each ticket carri
 
 ## Refunds
 
-Refunds are handled by the organizer, not from your tickets page. If you need one, contact the program that sold you the tickets. [VERIFY: Is there any self-service way for a buyer to request a refund, or must they always contact the organizer directly?]
+Refunds are handled by the organizer, not from your tickets page. If you need one, contact the program that sold you the tickets.
 
 ## See also
 

@@ -20,7 +20,7 @@ The GleeWorld app is a native wrapper around the same GleeWorld you use on the w
 3. Tap **Get** to install.
 4. Open the app.
 
-> **Note:** The current app version is 1.0.3. [VERIFY: What is the minimum iOS version the app supports?] [VERIFY: Is there an Android version of the GleeWorld app, or is it iOS-only?]
+> **Note:** The current app version is 1.0.3.
 
 ## Choose your organization on first launch
 

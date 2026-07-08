@@ -78,7 +78,7 @@ For step-by-step guidance, see [Activating add-ons](../tenants/activating-add-on
 
 ## How ticket payments work (for fans and buyers)
 
-If a program uses the Box Office add-on to sell tickets, buyers pay by card through secure Stripe checkout. Ticket money is collected into the program's own connected Stripe account, and buyers receive their tickets by email. GleeWorld's marketing describes ticket sales as "you keep 100% of ticket sales," but the ticket-checkout code applies a 1% platform fee on paid tickets. [VERIFY: Does GleeWorld take 0% or 1% of paid ticket sales?]
+If a program uses the Box Office add-on to sell tickets, buyers pay by card through secure Stripe checkout. Ticket money is collected into the program's own connected Stripe account, and buyers receive their tickets by email. GleeWorld's marketing describes ticket sales as "you keep 100% of ticket sales," but the ticket-checkout code applies a 1% platform fee on paid tickets.
 
 For the buyer's experience, see [Buying tickets](../fans/buying-tickets.md). For selling setup, see [Box Office](../add-ons/box-office.md).
 

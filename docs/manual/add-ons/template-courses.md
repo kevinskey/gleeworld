@@ -39,7 +39,7 @@ An adopted course is a normal course you fully control.
 
 ## Paid template courses
 
-> **Note:** [VERIFY: two template systems appear to coexist in the code — the wired Course Store shows every template as "Free" and adopts via an RPC, while a parallel layer models purchasable course products (SKU, price, Stripe checkout via `create-course-checkout`) and per-tenant entitlements. Confirm which path is live for tenants and whether any template courses are actually paid.]
+> **Note:**
 
 ## See also
 
