@@ -1,0 +1,169 @@
+{
+  "title": "GleeWorld User Manual",
+  "updated": "2026-07-08",
+  "nav": [
+    {
+      "title": "Getting Started",
+      "children": [
+        {
+          "title": "What Is GleeWorld?",
+          "path": "getting-started/what-is-gleeworld.md"
+        },
+        {
+          "title": "Accounts and Roles",
+          "path": "getting-started/accounts-and-roles.md"
+        },
+        {
+          "title": "The GleeWorld Mobile App",
+          "path": "getting-started/the-mobile-app.md"
+        },
+        {
+          "title": "Signing In and Getting Help",
+          "path": "getting-started/signing-in-and-getting-help.md"
+        }
+      ]
+    },
+    {
+      "title": "For Tenants (Directors & Admins)",
+      "children": [
+        {
+          "title": "Program setup",
+          "path": "tenants/program-setup.md"
+        },
+        {
+          "title": "Branding and landing pages",
+          "path": "tenants/branding-and-landing-pages.md"
+        },
+        {
+          "title": "Roster and students",
+          "path": "tenants/roster-and-students.md"
+        },
+        {
+          "title": "Content management",
+          "path": "tenants/content-management.md"
+        },
+        {
+          "title": "Calendar and attendance",
+          "path": "tenants/calendar-and-attendance.md"
+        },
+        {
+          "title": "Activating add-ons",
+          "path": "tenants/activating-add-ons.md"
+        },
+        {
+          "title": "Billing and plans",
+          "path": "tenants/billing-and-plans.md"
+        }
+      ]
+    },
+    {
+      "title": "For Students",
+      "children": [
+        {
+          "title": "Joining and Your First Sign-In",
+          "path": "students/joining-and-first-sign-in.md"
+        },
+        {
+          "title": "Finding Your Music",
+          "path": "students/finding-your-music.md"
+        },
+        {
+          "title": "Part Tracks and Practice",
+          "path": "students/part-tracks-and-practice.md"
+        },
+        {
+          "title": "Studio Basics",
+          "path": "students/studio-basics.md"
+        },
+        {
+          "title": "Assignments and Submissions",
+          "path": "students/assignments-and-submissions.md"
+        },
+        {
+          "title": "Checking In With QR",
+          "path": "students/checking-in-with-qr.md"
+        }
+      ]
+    },
+    {
+      "title": "For Fans",
+      "children": [
+        {
+          "title": "Follow along with a concert program",
+          "path": "fans/following-a-program.md"
+        },
+        {
+          "title": "Buy tickets to a concert",
+          "path": "fans/buying-tickets.md"
+        },
+        {
+          "title": "Get in with your tickets",
+          "path": "fans/attending-events.md"
+        }
+      ]
+    },
+    {
+      "title": "Add-ons Reference",
+      "children": [
+        {
+          "title": "Box Office",
+          "path": "add-ons/box-office.md"
+        },
+        {
+          "title": "Glee Academy",
+          "path": "add-ons/glee-academy.md"
+        },
+        {
+          "title": "Concert Planner",
+          "path": "add-ons/concert-planner.md"
+        },
+        {
+          "title": "Studio & Part Tracks",
+          "path": "add-ons/studio-part-tracks.md"
+        },
+        {
+          "title": "Landing Pages",
+          "path": "add-ons/landing-pages.md"
+        },
+        {
+          "title": "Template Courses",
+          "path": "add-ons/template-courses.md"
+        }
+      ]
+    },
+    {
+      "title": "FAQ & Troubleshooting",
+      "children": [
+        {
+          "title": "Accounts and Sign-in",
+          "path": "faq/accounts-and-sign-in.md"
+        },
+        {
+          "title": "Billing and Payments",
+          "path": "faq/billing-and-payments.md"
+        },
+        {
+          "title": "Privacy and Data",
+          "path": "faq/privacy-and-data.md"
+        },
+        {
+          "title": "iOS and the Mobile App",
+          "path": "faq/ios-mobile-app.md"
+        },
+        {
+          "title": "Common Issues and Troubleshooting",
+          "path": "faq/common-issues.md"
+        }
+      ]
+    },
+    {
+      "title": "Glossary",
+      "children": [
+        {
+          "title": "Glossary",
+          "path": "glossary.md"
+        }
+      ]
+    }
+  ]
+}

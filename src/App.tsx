@@ -153,6 +153,7 @@ const W9FormPage = lazy(() => import("./pages/W9FormPage"));
 import NotFound from "./pages/NotFound";
 const Accounting = lazy(() => import("./pages/Accounting"));
 const DocsArchitecture = lazy(() => import("./pages/DocsArchitecture"));
+const DocsApp = lazy(() => import("./features/docs/DocsApp"));
 const SavedFeed = lazy(() => import("./pages/SavedFeed"));
 const FeedControl = lazy(() => import("./pages/FeedControl"));
 const UnifiedDashboard = lazy(() => import("./components/dashboard/UnifiedDashboard").then(m => ({ default: m.UnifiedDashboard })));
@@ -688,9 +689,14 @@ const App = () => {
                 } 
               />
               {/* Architecture documentation - publicly accessible */}
-              <Route 
-                path="/docs/architecture" 
-                element={<DocsArchitecture />} 
+              <Route
+                path="/docs/architecture"
+                element={<DocsArchitecture />}
+              />
+              {/* User manual / help center - publicly accessible */}
+              <Route
+                path="/docs/*"
+                element={<DocsApp />}
               />
               {/* Glee Cam Gallery */}
               <Route 
