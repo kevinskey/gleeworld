@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Download } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import DocsSidebar from "./DocsSidebar";
 import DocsSearch from "./DocsSearch";
@@ -17,7 +17,15 @@ export default function DocsApp() {
             <BookOpen className="h-5 w-5 text-primary" /> GleeWorld Help
           </Link>
           <div className="hidden w-full max-w-sm md:block"><DocsSearch /></div>
-          <a href="/" className="whitespace-nowrap text-sm text-muted-foreground hover:text-primary">← GleeWorld</a>
+          <div className="flex items-center gap-4">
+            <a
+              href="/GleeWorld_User_Manual.pdf"
+              className="hidden items-center gap-1 whitespace-nowrap text-sm text-muted-foreground hover:text-primary sm:flex"
+            >
+              <Download className="h-4 w-4" /> PDF
+            </a>
+            <a href="/" className="whitespace-nowrap text-sm text-muted-foreground hover:text-primary">← GleeWorld</a>
+          </div>
         </div>
       </header>
       <div className="container flex gap-8 px-4 py-8">
