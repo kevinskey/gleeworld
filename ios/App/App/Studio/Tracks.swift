@@ -436,22 +436,35 @@ public final class TrackBinding {
 
     public func dispose() {
         stopScheduling()
-        for p in playerNodes {
-            engine.disconnectNodeInput(p)
-            engine.detach(p)
-        }
-        for p in retiredPlayers {
-            engine.disconnectNodeInput(p)
-            engine.detach(p)
+        // Graph teardown can raise an ObjC NSException out of
+        // AVAudioEngine.disconnectNodeInput/detach when a node is already
+        // detached or the engine is mid-teardown. Swift's do/catch can't
+        // catch it, so an uncaught throw here ABORTS the app — this was the
+        // SIGABRT via disconnectNodeInput on the Capacitor bridge queue
+        // (build 140, triggered by a gain/FX change → stopEngine → dispose).
+        // Wrap the graph ops in the ObjC catcher so a stale node degrades to
+        // a no-op instead of crashing; the Swift-side bookkeeping (clearing
+        // arrays) always runs afterward.
+        if let err = StudioObjC.catchExceptions({
+            for p in self.playerNodes {
+                self.engine.disconnectNodeInput(p)
+                self.engine.detach(p)
+            }
+            for p in self.retiredPlayers {
+                self.engine.disconnectNodeInput(p)
+                self.engine.detach(p)
+            }
+            self.instrument?.dispose()
+            self.fxChain?.dispose()
+            self.engine.disconnectNodeInput(self.strip)
+            self.engine.disconnectNodeInput(self.muteGate)
+            self.engine.detach(self.strip)
+            self.engine.detach(self.muteGate)
+        }) {
+            NSLog("[Studio] TrackBinding.dispose teardown raised (ignored): \(err.localizedDescription)")
         }
         retiredPlayers.removeAll()
         playerNodes.removeAll()
         loadedClips.removeAll()
-        if let inst = instrument { inst.dispose() }
-        fxChain?.dispose()
-        engine.disconnectNodeInput(strip)
-        engine.disconnectNodeInput(muteGate)
-        engine.detach(strip)
-        engine.detach(muteGate)
     }
 }
