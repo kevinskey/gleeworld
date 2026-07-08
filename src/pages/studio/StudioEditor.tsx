@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
+import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
 import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
 import {
   formatTime, formatBarBeat, formatSamples, nextCounterMode, type CounterMode,
@@ -2323,6 +2324,7 @@ const FX_TYPES: { value: FxType; label: string }[] = [
 
 function FxRack({ track, onUpdate }: { track: Track; onUpdate: (mut: (t: Track) => Track) => void }) {
   const [open, setOpen] = useState(false);
+  const [presets, setPresets] = useState<FxPreset[]>([]);
   const addFx = (type: FxType) => {
     onUpdate((t) => ({ ...t, fx: [...t.fx, newFxNode(type)] } as Track));
   };
@@ -2331,6 +2333,19 @@ function FxRack({ track, onUpdate }: { track: Track; onUpdate: (mut: (t: Track) 
   };
   const updateFx = (id: string, patch: Partial<FxNode>) => {
     onUpdate((t) => ({ ...t, fx: t.fx.map((f) => f.id === id ? { ...f, ...patch } : f) } as Track));
+  };
+  const refreshPresets = () => { listFxPresets().then(setPresets).catch(() => { /* offline / no table */ }); };
+  useEffect(() => { if (open) refreshPresets(); }, [open]);
+  const savePreset = async () => {
+    const name = window.prompt('Save FX chain as preset — name:');
+    if (!name?.trim()) return;
+    try { await saveFxPreset(name, track.fx); toast.success('Preset saved'); refreshPresets(); }
+    catch { toast.error("Couldn't save preset"); }
+  };
+  const loadPreset = (p: FxPreset) => {
+    // Fresh ids so a preset's effects don't collide with another track's.
+    onUpdate((t) => ({ ...t, fx: p.effects.map((f) => ({ ...f, id: newId() })) } as Track));
+    toast.success(`Loaded "${p.name}"`);
   };
   return (
     <div className="pt-1 border-t border-border/60">
@@ -2360,6 +2375,29 @@ function FxRack({ track, onUpdate }: { track: Track; onUpdate: (mut: (t: Track) 
             >
               <option value="">+ Add FX…</option>
               {FX_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+          {/* Presets: save this chain, or apply a saved one. */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <button
+              onClick={savePreset}
+              disabled={track.fx.length === 0}
+              className="text-xs px-2 py-0.5 rounded border border-border bg-card hover:bg-muted disabled:opacity-40"
+              title="Save this FX chain as a preset"
+            >
+              Save preset
+            </button>
+            <select
+              className="text-xs border border-border rounded px-1 py-0.5 bg-card flex-1 min-w-0"
+              value=""
+              onChange={(e) => {
+                const p = presets.find((x) => x.id === e.target.value);
+                if (p) loadPreset(p);
+                e.target.value = '';
+              }}
+            >
+              <option value="">Load preset…</option>
+              {presets.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
         </div>
