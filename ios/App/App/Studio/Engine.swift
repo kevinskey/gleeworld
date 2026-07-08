@@ -11,6 +11,7 @@
 
 import Foundation
 import AVFoundation
+import UIKit   // UIApplication foreground notification (lifecycle recovery)
 
 /// Snapshot of engine state. Sent to JS via Capacitor `notifyListeners`.
 public struct StudioEngineState {
@@ -265,6 +266,31 @@ public final class StudioNativeEngine {
             guard let self else { return }
             NSLog("[Studio] engine configuration change — recovering (isRunning=\(self.engine.isRunning))")
             self.recoverPlayback()
+        }
+        // Route change — tell JS + apply HIG behavior. Removing an output
+        // (headphones/BT unplugged) must PAUSE, never resume to the speaker.
+        nc.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] note in
+            guard let self else { return }
+            let reason = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt) ?? 0
+            let outputs = AVAudioSession.sharedInstance().currentRoute.outputs.map { $0.portType.rawValue }
+            let priv: Set<String> = [
+                AVAudioSession.Port.headphones.rawValue, AVAudioSession.Port.bluetoothA2DP.rawValue,
+                AVAudioSession.Port.bluetoothHFP.rawValue, AVAudioSession.Port.bluetoothLE.rawValue,
+                AVAudioSession.Port.usbAudio.rawValue, AVAudioSession.Port.carAudio.rawValue,
+            ]
+            self.emitEvent(StudioEvents.routeChanged,
+                           ["outputs": outputs, "isHeadphones": outputs.contains { priv.contains($0) }])
+            if reason == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue {
+                // Output removed → pause. pause() also clears wantsPlayback, so
+                // the config-change observer won't auto-resume to the speaker.
+                if self.isPlayingNow { self.pause() } else { self.wantsPlayback = false }
+                NSLog("[Studio] route: output removed → paused (no speaker resume)")
+            }
+        }
+        // Foreground — a backgrounded .playback engine can have its IO unit
+        // stopped; resume from where we were IF the user still intends to play.
+        nc.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.recoverPlayback()
         }
     }
 
