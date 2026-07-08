@@ -87,6 +87,11 @@ function useTrackHeight(): number { return useContext(TrackHeightContext); }
  * one fires a scroll event broadcasts its scrollLeft to the others. */
 interface ScrollSync {
   register: (el: HTMLDivElement | null) => void;
+  /** Current horizontal viewport of the (synced) scrollers, or null if none
+   * are registered yet. All registered scrollers share the same scrollLeft. */
+  getViewport: () => { scrollLeft: number; clientWidth: number; scrollWidth: number } | null;
+  /** Programmatically scroll every synced scroller to `px` (clamped ≥ 0). */
+  scrollToX: (px: number) => void;
 }
 const ScrollSyncContext = createContext<ScrollSync | null>(null);
 function useScrollSync(): ScrollSync | null { return useContext(ScrollSyncContext); }
@@ -117,7 +122,19 @@ function useScrollSyncProvider(): ScrollSync {
     const any = elementsRef.current.values().next().value;
     if (any && any !== el) el.scrollLeft = any.scrollLeft;
   }, [onScroll]);
-  return { register };
+  const getViewport = useCallback(() => {
+    const el = elementsRef.current.values().next().value as HTMLDivElement | undefined;
+    if (!el) return null;
+    return { scrollLeft: el.scrollLeft, clientWidth: el.clientWidth, scrollWidth: el.scrollWidth };
+  }, []);
+  const scrollToX = useCallback((px: number) => {
+    const clamped = Math.max(0, px);
+    // Set all scrollers directly (guarded so onScroll doesn't re-broadcast).
+    isSyncingRef.current = true;
+    for (const el of elementsRef.current) el.scrollLeft = clamped;
+    requestAnimationFrame(() => { isSyncingRef.current = false; });
+  }, []);
+  return { register, getViewport, scrollToX };
 }
 
 /** Snap modes for clip start / duration during drag. "free" is no
@@ -638,6 +655,21 @@ function Editor({
   // Shared horizontal-scroll sync so the ruler + every track lane move
   // together. Each scrollable child registers itself via the context.
   const scrollSync = useScrollSyncProvider();
+
+  // Auto-follow the playhead while playing so it never runs off-screen.
+  // When the playhead nears the right edge (or is left of view after a
+  // seek/loop), page the timeline forward so the playhead sits ~15% from
+  // the left, giving some lookahead. Runs on each position tick; cheap.
+  useEffect(() => {
+    if (!state?.isPlaying) return;
+    const vp = scrollSync.getViewport();
+    if (!vp || vp.clientWidth <= 0) return;
+    const playheadX = (state.positionSeconds ?? 0) * pxPerSecond;
+    const margin = Math.min(80, vp.clientWidth * 0.15);
+    if (playheadX > vp.scrollLeft + vp.clientWidth - margin || playheadX < vp.scrollLeft) {
+      scrollSync.scrollToX(playheadX - vp.clientWidth * 0.15);
+    }
+  }, [state?.positionSeconds, state?.isPlaying, pxPerSecond, scrollSync]);
 
   // Track row height — uniform across all rows. Drag the bottom edge
   // of any row to resize them all.
