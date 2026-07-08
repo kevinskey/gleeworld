@@ -1039,7 +1039,13 @@ function Editor({
           };
           return { ...t, clips: [...t.clips, clip] } as Track;
         });
-        return { ...s, assets: nextAssets, tracks: nextTracks };
+        // Grow the session to cover a take that ran past the current grid —
+        // otherwise the transport stops at length_seconds (the end of the
+        // grid) and the tail of the recording never plays back even though
+        // the clip captured it.
+        const clipEndSec = startSeconds + clipStartOffsetSec + buf.duration;
+        const nextLength = Math.max(s.length_seconds, Math.ceil(clipEndSec));
+        return { ...s, assets: nextAssets, tracks: nextTracks, length_seconds: nextLength };
       });
       toast.success(`Recorded ${elapsed.toFixed(1)}s`);
 
