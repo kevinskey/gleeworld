@@ -131,8 +131,10 @@ export async function openMicRecorder(
   let manualStream: MediaStream | null = null;
   let manualSourceNode: MediaStreamAudioSourceNode | null = null;
 
-  if (args.constraints) {
-    const constraints: MediaTrackConstraints = { ...args.constraints };
+  // captureWav needs the raw MediaStream (Tone.UserMedia hides it), so it
+  // opens the mic manually too — even without explicit `constraints`.
+  if (args.constraints || args.captureWav) {
+    const constraints: MediaTrackConstraints = { ...(args.constraints ?? {}) };
     if (args.inputDeviceId && args.inputDeviceId !== 'default') {
       (constraints as { deviceId?: ConstrainDOMString }).deviceId = { exact: args.inputDeviceId };
     }
@@ -195,25 +197,41 @@ export async function openMicRecorder(
   // and encode a 16-bit WAV on stop. Always decodable/playable, unlike
   // WebKit's fragmented-mp4 MediaRecorder output. Mono is plenty for a
   // single vocal take and halves the data.
+  // captureWav runs on its OWN genuine-native AudioContext — Tone v15's
+  // context wrapper does not expose createScriptProcessor (it threw
+  // "createScriptProcessor is not a function" on iOS, 2026-07-07). The
+  // native context (webkit-prefixed on older iOS) always has it. The mic
+  // MediaStream (opened manually above) feeds a native
+  // MediaStreamSource → ScriptProcessor → muted destination; we copy each
+  // block's PCM and encode WAV on stop.
+  let pcmCtx: AudioContext | null = null;
   let pcmProcessor: ScriptProcessorNode | null = null;
-  let pcmMute: Tone.Gain | null = null;
+  let pcmSourceNode: MediaStreamAudioSourceNode | null = null;
   let pcmChunks: Float32Array[] = [];
   let pcmSampleRate = 48000;
   const wantWav = !!args.captureWav;
   if (wantWav) {
-    const rawCtx = Tone.getContext().rawContext as unknown as AudioContext;
-    pcmSampleRate = rawCtx.sampleRate;
-    pcmProcessor = rawCtx.createScriptProcessor(4096, 1, 1);
+    if (!manualStream) throw new Error('captureWav requires a mic stream');
+    const NativeAC: typeof AudioContext =
+      (window as any).AudioContext || (window as any).webkitAudioContext;
+    pcmCtx = new NativeAC();
+    if (pcmCtx.state !== 'running') { try { await pcmCtx.resume(); } catch { /* ignore */ } }
+    pcmSampleRate = pcmCtx.sampleRate;
+    pcmSourceNode = pcmCtx.createMediaStreamSource(manualStream);
+    pcmProcessor = pcmCtx.createScriptProcessor(4096, 1, 1);
+    const gainMul = Math.pow(10, (args.inputGainDb ?? 0) / 20);
     pcmProcessor.onaudioprocess = (ev: AudioProcessingEvent) => {
-      // Copy — the event buffer is reused across callbacks.
-      pcmChunks.push(new Float32Array(ev.inputBuffer.getChannelData(0)));
+      if (!recording) return;          // capture only while armed
+      const src = ev.inputBuffer.getChannelData(0);
+      const block = new Float32Array(src.length);
+      for (let i = 0; i < src.length; i++) block[i] = src[i] * gainMul;
+      pcmChunks.push(block);
     };
-    // A ScriptProcessor only fires while connected to the destination,
-    // so route it through a MUTED gain (no monitor feedback).
-    pcmMute = new Tone.Gain(0);
-    Tone.connect(inputGain, pcmProcessor);
-    Tone.connect(pcmProcessor, pcmMute);
-    pcmMute.toDestination();
+    const mute = pcmCtx.createGain();
+    mute.gain.value = 0;
+    pcmSourceNode.connect(pcmProcessor);
+    pcmProcessor.connect(mute);
+    mute.connect(pcmCtx.destination);
   }
 
   let rawRecorder: MediaRecorder | null = null;
@@ -330,9 +348,11 @@ export async function openMicRecorder(
         pcmProcessor.onaudioprocess = null;
         pcmProcessor = null;
       }
+      try { pcmSourceNode?.disconnect(); } catch { /* ignore */ }
+      pcmSourceNode = null;
+      if (pcmCtx) { try { void pcmCtx.close(); } catch { /* ignore */ } pcmCtx = null; }
       pcmChunks = [];
       inputGain.dispose(); monitor.dispose(); toneRecorder?.dispose();
-      pcmMute?.dispose();
       waveAnalyser.dispose(); meter.dispose();
     },
     close: () => handle.dispose(),
