@@ -50,13 +50,25 @@ public final class FxChain {
             engine.detach(n.node)
         }
     }
+
+    /// Apply changed FX PARAMS live to the already-built node — no graph
+    /// rebuild, no re-decode, no transport interruption. Returns true if a
+    /// node with `fxId` was found. Structural changes (add/remove/reorder/
+    /// enable-toggle) are NOT handled here — those still go through a rebuild.
+    public func setParams(fxId: String, spec: Studio.FxNode) -> Bool {
+        guard let binding = nodes.first(where: { $0.id == fxId }) else { return false }
+        FxNodeBinding.applyLive(node: binding.node, spec: spec)
+        return true
+    }
 }
 
 public final class FxNodeBinding {
+    public let id: String
     public let type: String
     public let node: AVAudioNode
 
-    init(type: String, node: AVAudioNode) {
+    init(id: String, type: String, node: AVAudioNode) {
+        self.id = id
         self.type = type
         self.node = node
     }
@@ -134,7 +146,51 @@ public final class FxNodeBinding {
             node = eq
         }
         engine.attach(node)
-        return FxNodeBinding(type: spec.type.rawValue, node: node)
+        return FxNodeBinding(id: spec.id, type: spec.type.rawValue, node: node)
+    }
+
+    /// Re-apply the param VALUES from `spec` to an existing node (live). Must
+    /// mirror the value-setting in build() exactly — only values change, never
+    /// node structure (band counts, presets, filter kind stays as built except
+    /// the filter's type, which is a param). Safe to call on a running engine.
+    public static func applyLive(node: AVAudioNode, spec: Studio.FxNode) {
+        switch spec.type {
+        case .gain:
+            (node as? AVAudioUnitEQ)?.globalGain = paramFloat(spec.params, "gain_db", 0)
+        case .eq3:
+            guard let eq = node as? AVAudioUnitEQ, eq.bands.count >= 3 else { return }
+            eq.bands[0].gain = paramFloat(spec.params, "low_db", 0)
+            eq.bands[1].frequency = paramFloat(spec.params, "mid_hz", 1000)
+            eq.bands[1].gain = paramFloat(spec.params, "mid_db", 0)
+            eq.bands[2].gain = paramFloat(spec.params, "high_db", 0)
+        case .compressor:
+            guard let dyn = node as? AVAudioUnitEffect else { return }
+            AudioUnitSetParameter(dyn.audioUnit, 0, kAudioUnitScope_Global, 0,
+                                  paramFloat(spec.params, "threshold_db", -18), 0)
+            AudioUnitSetParameter(dyn.audioUnit, 6, kAudioUnitScope_Global, 0,
+                                  paramFloat(spec.params, "makeup_db", 0), 0)
+            AudioUnitSetParameter(dyn.audioUnit, 4, kAudioUnitScope_Global, 0,
+                                  paramFloat(spec.params, "attack_ms", 5) / 1000.0, 0)
+            AudioUnitSetParameter(dyn.audioUnit, 5, kAudioUnitScope_Global, 0,
+                                  paramFloat(spec.params, "release_ms", 80) / 1000.0, 0)
+        case .reverb:
+            (node as? AVAudioUnitReverb)?.wetDryMix = paramFloat(spec.params, "wet", 0.25) * 100
+        case .delay:
+            guard let del = node as? AVAudioUnitDelay else { return }
+            del.delayTime = TimeInterval(paramFloat(spec.params, "time_ms", 350) / 1000.0)
+            del.feedback = paramFloat(spec.params, "feedback", 0.35) * 100
+            del.wetDryMix = paramFloat(spec.params, "wet", 0.25) * 100
+        case .filter:
+            guard let eq = node as? AVAudioUnitEQ, let band = eq.bands.first else { return }
+            switch paramString(spec.params, "kind", "low") {
+            case "low":  band.filterType = .lowPass
+            case "high": band.filterType = .highPass
+            case "band": band.filterType = .bandPass
+            default:     band.filterType = .lowPass
+            }
+            band.frequency = paramFloat(spec.params, "cutoff_hz", 1000)
+            band.bandwidth = max(0.1, paramFloat(spec.params, "q", 0.7))
+        }
     }
 }
 

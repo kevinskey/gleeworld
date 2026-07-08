@@ -25,6 +25,10 @@ interface StudioEnginePluginShape {
   stop(): Promise<void>;
   seek(args: { seconds: number }): Promise<void>;
   updateStrip(args: { trackId: string; volumeDb?: number; pan?: number; mute?: boolean; solo?: boolean }): Promise<void>;
+  // Live FX-parameter update — apply a changed effect's params without a
+  // full engine rebuild. Omit trackId to target the master bus. `fx` is the
+  // full updated FxNode.
+  setFxParam(args: { trackId?: string; fx: unknown }): Promise<void>;
   // Pre-arm the .playAndRecord audio session before the count-in so
   // recordStart doesn't pay the category-flip latency mid-groove.
   prepareRecordSession(): Promise<void>;

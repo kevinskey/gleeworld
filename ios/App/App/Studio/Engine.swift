@@ -454,6 +454,22 @@ public final class StudioNativeEngine {
         recomputeSolo()
     }
 
+    /// Live FX-parameter update — apply changed params to an already-built FX
+    /// node without rebuilding the graph, so tweaking a reverb/EQ/gain knob
+    /// doesn't stop playback or re-decode assets. `trackId == nil` targets the
+    /// master bus. Structural FX changes (add/remove/reorder/enable) still go
+    /// through loadSession. Wrapped: an AU param set shouldn't raise, but the
+    /// graph guard keeps a bad cast/state from ever aborting.
+    public func setFxParam(trackId: String?, spec: Studio.FxNode) {
+        _ = StudioObjC.catchExceptions {
+            if let tid = trackId {
+                _ = self.tracks[tid]?.applyFxParam(fxId: spec.id, spec: spec)
+            } else {
+                _ = self.masterFxChain?.setParams(fxId: spec.id, spec: spec)
+            }
+        }
+    }
+
     /// Solo override — when any track is soloed, every non-soloed track
     /// is silenced regardless of its own mute flag. Mirrors the web
     /// engine's recomputeSolo; before this, the S button did nothing on

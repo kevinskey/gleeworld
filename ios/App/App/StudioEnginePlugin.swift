@@ -36,6 +36,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateStrip", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setFxParam", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateTempo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setMetronome", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clickOnce", returnType: CAPPluginReturnPromise),
@@ -260,6 +261,23 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             mute: call.getBool("mute"),
             solo: call.getBool("solo"))
         call.resolve()
+    }
+
+    // Live FX-parameter update. `trackId` omitted → master bus. `fx` is the
+    // full updated FxNode JSON (id/type/enabled/params); the engine applies
+    // the param values to the existing node without a rebuild.
+    @objc func setFxParam(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let fxDict = call.getObject("fx") else { call.reject("missing fx"); return }
+        let trackId = call.getString("trackId")
+        do {
+            let data = try JSONSerialization.data(withJSONObject: fxDict, options: [])
+            let spec = try JSONDecoder().decode(Studio.FxNode.self, from: data)
+            engine.setFxParam(trackId: trackId, spec: spec)
+            call.resolve()
+        } catch {
+            call.reject("setFxParam decode failed: \(error.localizedDescription)")
+        }
     }
 
     @objc func updateTempo(_ call: CAPPluginCall) {

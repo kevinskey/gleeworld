@@ -176,6 +176,12 @@ public final class TrackBinding {
     public func setPan(_ p: Float) { strip.pan = max(-1, min(1, p)) }
     public func setMute(_ m: Bool) { muteGate.outputVolume = m ? 0 : 1 }
 
+    /// Live-apply changed FX params to this track's chain (no rebuild).
+    @discardableResult
+    public func applyFxParam(fxId: String, spec: Studio.FxNode) -> Bool {
+        return fxChain?.setParams(fxId: fxId, spec: spec) ?? false
+    }
+
     // MARK: - Transport
 
     /// Schedule clips starting from `currentSeconds` against the engine's
