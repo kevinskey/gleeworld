@@ -471,7 +471,17 @@ function Editor({
    * the B shortcut and the selection action bar (touch). */
   const splitSelectedClipAtPlayhead = () => {
     if (!selectedClip) return;
-    const pos = state?.positionSeconds ?? 0;
+    // Determine the cut point. Split at the playhead when it's inside the
+    // selected clip; otherwise fall back to the clip's midpoint so a single
+    // tap always splits on touch (iPad has no keyboard and precise scrubbing
+    // into the clip is fiddly). The user can then trim the halves.
+    const t0 = session?.tracks.find((x) => x.id === selectedClip.trackId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const c0 = t0 && (t0 as any).clips?.find((x: any) => x.id === selectedClip.clipId);
+    if (!c0) return;
+    const ph = state?.positionSeconds ?? 0;
+    const inside0 = ph > c0.start_seconds && ph < c0.start_seconds + c0.duration_seconds;
+    const pos = inside0 ? ph : c0.start_seconds + c0.duration_seconds / 2;
     pushHistory(session);
     let didSplit = false;
     update((s) => {
@@ -508,8 +518,8 @@ function Editor({
       });
       return { ...s, tracks };
     });
-    if (didSplit) toast.success('Clip split at playhead');
-    else toast.error('Move the playhead inside the clip to split it');
+    if (didSplit) toast.success(inside0 ? 'Clip split at playhead' : 'Clip split at center');
+    else toast.error("Couldn't split this clip");
   };
 
   /** True when the playhead currently intersects the selected clip —
@@ -1039,7 +1049,13 @@ function Editor({
           };
           return { ...t, clips: [...t.clips, clip] } as Track;
         });
-        return { ...s, assets: nextAssets, tracks: nextTracks };
+        // Grow the session to cover a take that ran past the current grid —
+        // otherwise the transport stops at length_seconds (the end of the
+        // grid) and the tail of the recording never plays back even though
+        // the clip captured it.
+        const clipEndSec = startSeconds + clipStartOffsetSec + buf.duration;
+        const nextLength = Math.max(s.length_seconds, Math.ceil(clipEndSec));
+        return { ...s, assets: nextAssets, tracks: nextTracks, length_seconds: nextLength };
       });
       toast.success(`Recorded ${elapsed.toFixed(1)}s`);
 
@@ -1809,6 +1825,18 @@ function Editor({
           )}
         </div>
 
+        {/* Undo — tablet/desktop otherwise has no on-screen undo (⌘Z is
+         * keyboard-only and unreachable on an iPad; the phone tools row's
+         * undo is sm:hidden). */}
+        <button
+          onClick={undo}
+          className="hidden sm:inline-flex ml-2 h-9 px-3 rounded border border-border bg-muted hover:bg-muted/70 text-sm font-semibold items-center gap-1.5"
+          aria-label="Undo"
+          title="Undo (⌘Z)"
+        >
+          <Undo2 className="w-4 h-4" /> Undo
+        </button>
+
         {/* Punch in/out — auto drop in/out of record over the marked
          * range (drag the bar ruler to set it). Pre/post-roll pickers
          * appear only while punch is armed to keep the bar tight. */}
@@ -1943,8 +1971,7 @@ function Editor({
               <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate pl-2">Clip selected</span>
               <button
                 onClick={splitSelectedClipAtPlayhead}
-                disabled={!playheadInsideSelectedClip}
-                title={playheadInsideSelectedClip ? 'Split at playhead (B)' : 'Move the playhead inside the clip to split'}
+                title={playheadInsideSelectedClip ? 'Split at playhead (B)' : 'Split at clip center (move the playhead into the clip to cut there)'}
                 className="h-10 px-3 rounded-full border border-border inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--tint)] hover:bg-muted disabled:opacity-40 shrink-0"
               >
                 <Scissors className="w-4 h-4" /> Split

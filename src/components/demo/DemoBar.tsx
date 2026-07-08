@@ -34,6 +34,7 @@ export function DemoBar() {
   const [leadOpen, setLeadOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const barRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,10 +64,20 @@ export function DemoBar() {
   }, [role]);
 
   // Publish the bar's height so fixed/sticky page headers can sit below it.
+  // Measured (not hardcoded) because the top padding now includes the device
+  // safe-area inset, which varies by device.
   useEffect(() => {
     if (!role) return;
-    document.documentElement.style.setProperty('--gw-demo-bar-h', '2.75rem');
-    return () => document.documentElement.style.removeProperty('--gw-demo-bar-h');
+    const setH = () => {
+      const el = barRef.current;
+      if (el) document.documentElement.style.setProperty('--gw-demo-bar-h', `${el.offsetHeight}px`);
+    };
+    setH();
+    window.addEventListener('resize', setH);
+    return () => {
+      window.removeEventListener('resize', setH);
+      document.documentElement.style.removeProperty('--gw-demo-bar-h');
+    };
   }, [role]);
 
   // Close the role menu on outside click or Escape.
@@ -112,8 +123,15 @@ export function DemoBar() {
 
   return (
     <>
-      {/* Sticky: the bar publishes its height as --gw-demo-bar-h; fixed/sticky page headers offset themselves by that var so nothing overlaps. */}
-      <div className="sticky top-0 z-[60] bg-card border-b border-border px-3 sm:px-6 h-11 flex items-center gap-2 sm:gap-3">
+      {/* Sticky: the bar publishes its height as --gw-demo-bar-h; fixed/sticky page headers offset themselves by that var so nothing overlaps. Top padding clears the device status bar / notch (safe-area inset). */}
+      <div
+        ref={barRef}
+        className="sticky top-0 z-[60] bg-card border-b border-border px-3 sm:px-6 flex items-center gap-2 sm:gap-3"
+        style={{
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)',
+          paddingBottom: '0.5rem',
+        }}
+      >
         <Sparkles className="w-4 h-4 text-primary shrink-0" />
         <span className="text-xs sm:text-sm text-muted-foreground truncate">
           You're exploring GleeWorld as
@@ -146,15 +164,10 @@ export function DemoBar() {
             </div>
           )}
         </div>
-        <div className="flex-1" />
-        <button
-          type="button"
-          onClick={() => setLeadOpen(true)}
-          className="text-xs sm:text-sm font-semibold text-white rounded-full px-3 sm:px-4 py-1.5 transition-transform hover:scale-[1.02] shrink-0"
-          style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)' }}
-        >
-          Request your workspace
-        </button>
+        {/* "Request your workspace" CTA intentionally omitted here — the
+         * dashboard header already shows it next to search, so a second copy
+         * on this bar was redundant. The write-blocked toast + welcome overlay
+         * still surface it. */}
       </div>
 
       <RequestWorkspaceDialog open={leadOpen} onClose={() => setLeadOpen(false)} />

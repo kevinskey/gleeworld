@@ -234,7 +234,32 @@ public final class StudioNativeEngine {
 
     // MARK: - Session binding
 
+    // Serializes graph rebuilds. loadSession suspends at `await` points (asset
+    // loading) mid-rebuild, and the plugin fires each call as its own Task —
+    // so toggling an effect (which re-pushes the session) could start a second
+    // loadSession that interleaves disconnect/connect on the shared, NON
+    // thread-safe AVAudioEngine graph, corrupting the heap (observed crash:
+    // AVAudioEngine.connect → libmalloc "memory corruption of free block",
+    // build 135). Chain each rebuild after any in-flight one so they run one at
+    // a time. The lock guards only the tiny task-chain bookkeeping (no await is
+    // held under it, so it can't deadlock).
+    private var previousLoad: Task<Void, Never>?
+    private let loadLock = NSLock()
+
     public func loadSession(_ s: Studio.Session, assetLoader: AssetLoader) async throws {
+        loadLock.lock()
+        let prior = previousLoad
+        let body = Task<Void, Error> {
+            await prior?.value  // wait our turn behind any in-flight rebuild
+            try await self.loadSessionBody(s, assetLoader: assetLoader)
+        }
+        // The next caller waits on this (errors swallowed — it's only a gate).
+        previousLoad = Task { _ = try? await body.value }
+        loadLock.unlock()
+        try await body.value  // propagate this rebuild's result/errors to us
+    }
+
+    private func loadSessionBody(_ s: Studio.Session, assetLoader: AssetLoader) async throws {
         // start() must have run first. If a caller forgot to wire the
         // audio session, do it now so the rest of this method is safe.
         if !masterConnected { try start() }
