@@ -2250,14 +2250,19 @@ function FxParamRow({
   // booleans as a toggle. Slider ranges are heuristic by suffix.
   if (typeof value === 'number') {
     const { min, max, step } = inferRange(paramKey);
+    // Commit ON RELEASE, not per drag-tick. FX params have no live engine
+    // setter — applying them means a full engine rebuild (via
+    // skeletonSig, which now includes FX params). Firing that per range
+    // tick would rebuild the whole Tone/AVAudioEngine graph dozens of
+    // times a second → dropouts/jank on iOS. Local draft tracks the
+    // thumb during the drag; the committed value (which triggers the
+    // one rebuild) fires on pointer/key release. Before this, FX params
+    // did nothing at all (skeletonSig ignored them) — see useStudio fxSig.
     return (
-      <div className="flex items-center gap-1 text-sm">
-        <span className="w-16 text-muted-foreground">{paramKey}</span>
-        <input type="range" min={min} max={max} step={step}
-          value={value} onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 h-3" />
-        <span className="w-10 text-right tabular-nums">{value.toFixed(2)}</span>
-      </div>
+      <FxNumberSlider
+        paramKey={paramKey} value={value} min={min} max={max} step={step}
+        onCommit={(v) => onChange(v)}
+      />
     );
   }
   if (typeof value === 'boolean') {
@@ -2274,6 +2279,38 @@ function FxParamRow({
     <div className="flex items-center gap-1 text-sm">
       <span className="w-16 text-muted-foreground">{paramKey}</span>
       <input value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 border border-border rounded px-1" />
+    </div>
+  );
+}
+
+/** Numeric FX-param slider that shows a live thumb while dragging but
+ *  only COMMITS (→ engine rebuild) on release. See FxParamRow. */
+function FxNumberSlider({
+  paramKey, value, min, max, step, onCommit,
+}: {
+  paramKey: string; value: number; min: number; max: number; step: number;
+  onCommit: (v: number) => void;
+}) {
+  const [draft, setDraft] = useState<number | null>(null);
+  const shown = draft ?? value;
+  const commit = () => {
+    if (draft !== null) { onCommit(draft); setDraft(null); }
+  };
+  return (
+    <div className="flex items-center gap-1 text-sm">
+      <span className="w-16 text-muted-foreground">{paramKey}</span>
+      <input
+        type="range" min={min} max={max} step={step}
+        value={shown}
+        onChange={(e) => setDraft(Number(e.target.value))}
+        onPointerUp={commit}
+        onPointerCancel={commit}
+        onKeyUp={commit}
+        onBlur={commit}
+        className="flex-1 h-3"
+        style={{ touchAction: 'none' }}
+      />
+      <span className="w-10 text-right tabular-nums">{shown.toFixed(2)}</span>
     </div>
   );
 }
@@ -2646,6 +2683,14 @@ function DraggableClip({
         backgroundColor: selected ? `${tint}aa` : `${tint}66`,
         borderColor: tint,
         borderWidth: selected ? 2 : 1,
+        // Without this, the iOS webview claims the touch for scrolling the
+        // timeline the instant the finger moves, cancels the pointer
+        // stream, and the drag/trim/fade never runs — "dragging clips
+        // doesn't work" (2026-07-07, iPad). `none` hands every gesture
+        // starting on the clip (body + edge/fade handles, which are
+        // children) to our pointer handlers. The empty track lane keeps
+        // its default touch-action, so timeline scrolling still works.
+        touchAction: 'none',
       }}
       onPointerDown={onDragBody}
       onDoubleClick={onRemove}
@@ -4364,6 +4409,11 @@ function MicLevelTester() {
   const [running, setRunning] = useState(false);
   const [peakDb, setPeakDb] = useState(-Infinity);
   const [holdDb, setHoldDb] = useState(-Infinity);
+  // Session MAX — monotonic, never decays until Test is (re)started.
+  // The decaying `holdDb` tick was too fleeting to read "how hot did I
+  // actually get" on a phone ("not enough to tell your max input level",
+  // 2026-07-07). This is the number you set your gain by.
+  const [maxDb, setMaxDb] = useState(-Infinity);
   const [error, setError] = useState<string | null>(null);
   const [inputGainDb, setInputGainDb] = useState<number>(() =>
     Number(localStorage.getItem('studio.micInputGainDb') || 0),
@@ -4389,6 +4439,7 @@ function MicLevelTester() {
 
   const start = async () => {
     setError(null);
+    setMaxDb(-Infinity); // fresh session max
     try {
       const deviceId = localStorage.getItem('studio.inputDeviceId') || '';
       const rec = await openMicRecorder({ inputDeviceId: deviceId, monitorGain: 0, inputGainDb });
@@ -4407,6 +4458,7 @@ function MicLevelTester() {
         }
         const db = peakLin > 0 ? 20 * Math.log10(peakLin) : -Infinity;
         setPeakDb(db);
+        if (isFinite(db)) setMaxDb((prev) => (db > prev ? db : prev));
         const now = performance.now();
         setHoldDb((prev) => {
           if (db > prev) return db;
@@ -4457,11 +4509,19 @@ function MicLevelTester() {
           className={`absolute left-0 top-0 bottom-0 transition-[width] duration-75 ${fillColor}`}
           style={{ width: `${fillPct}%` }}
         />
-        {/* Peak hold tick */}
+        {/* Peak hold tick (decaying) */}
         {running && isFinite(holdDb) && (
           <div
             className="absolute top-0 bottom-0 w-0.5 bg-foreground/80 pointer-events-none"
             style={{ left: `calc(${holdPct}% - 1px)` }}
+          />
+        )}
+        {/* Session MAX tick — non-decaying, the level to set gain by. */}
+        {running && isFinite(maxDb) && (
+          <div
+            className={`absolute top-0 bottom-0 w-1 pointer-events-none ${maxDb >= -3 ? 'bg-rose-600' : 'bg-primary'}`}
+            style={{ left: `calc(${dbToPct(maxDb) * 100}% - 1.5px)` }}
+            title={`Max: ${maxDb.toFixed(1)} dB`}
           />
         )}
         {/* dB ruler — small dashes at -60, -40, -20, -12, -3, 0 */}
@@ -4478,9 +4538,15 @@ function MicLevelTester() {
         <span>-3</span>
         <span>0 dB</span>
       </div>
-      <div className="text-xs tabular-nums">
+      <div className="text-xs tabular-nums flex items-center justify-between gap-2">
         {running
-          ? <>Peak: <span className="font-mono">{isFinite(peakDb) ? peakDb.toFixed(1) : '−∞'} dB</span> · Hold: <span className="font-mono">{isFinite(holdDb) ? holdDb.toFixed(1) : '−∞'} dB</span></>
+          ? <>
+              <span>Peak: <span className="font-mono">{isFinite(peakDb) ? peakDb.toFixed(1) : '−∞'}</span> dB</span>
+              <span className={`font-semibold ${isFinite(maxDb) && maxDb >= -3 ? 'text-rose-600' : 'text-foreground'}`}>
+                Max: <span className="font-mono">{isFinite(maxDb) ? maxDb.toFixed(1) : '−∞'}</span> dB
+                {isFinite(maxDb) && maxDb >= -1 && <span className="ml-1 text-rose-600">CLIP!</span>}
+              </span>
+            </>
           : <span className="text-muted-foreground italic">Tap Test to verify mic input.</span>}
       </div>
       {/* Input gain — applied to recordings too, persisted to localStorage. */}

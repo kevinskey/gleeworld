@@ -136,6 +136,21 @@ export function useStudioSession(sessionId: string | null) {
 // Everywhere else we use the Tone.js StudioEngine. The returned API
 // is uniform so StudioEditor doesn't know which engine it's talking to.
 
+/** Signature of one FX spec for the skeleton diff. MUST include params:
+ *  buildFxChain (engine/fx.ts) reads `spec.params.*` only at BUILD time
+ *  and there is NO live per-track FX param setter, so a param edit that
+ *  doesn't change this signature never rebuilds the track and never
+ *  reaches the node — every FX knob is silently inert. That was the bug
+ *  (2026-07-07): the sig hashed only id:type:enabled, so effects "didn't
+ *  work" and their sub-settings "did nothing". EQ already hashes its
+ *  params (trackEqSig); FX just wasn't. Keys sorted so an equivalent
+ *  params object always yields the same string. */
+function fxSig(f: { id: string; type: string; enabled: boolean; params?: Record<string, unknown> }): string {
+  const p = f.params ?? {};
+  const paramStr = Object.keys(p).sort().map((k) => `${k}=${p[k]}`).join(';');
+  return `${f.id}:${f.type}:${f.enabled}:${paramStr}`;
+}
+
 /** Skeleton signature — only the parts of the session that REQUIRE a
  *  full engine rebuild. Excludes audio clip lists + the assets array;
  *  changes to those are handled incrementally via addClipToTrack /
@@ -146,11 +161,11 @@ function skeletonSig(session: Session | null): string {
   const parts: string[] = [
     String(session.tempo_bpm),
     `${session.time_signature.numerator}/${session.time_signature.denominator}`,
-    session.master.fx.map((f) => `${f.id}:${f.type}:${f.enabled}`).join(','),
+    session.master.fx.map(fxSig).join(','),
   ];
   for (const t of session.tracks) {
     parts.push(`${t.id}:${t.kind}`);
-    parts.push(t.fx.map((f) => `${f.id}:${f.type}:${f.enabled}`).join(','));
+    parts.push(t.fx.map(fxSig).join(','));
     // Per-track EQ bands are baked into buildTrack's graph exactly like
     // FX nodes, so EQ edits ride the same full-rebuild path (B1 task 5).
     parts.push(trackEqSig(t.eq));
