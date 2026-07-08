@@ -1661,6 +1661,12 @@ function Editor({
                   onChange={(e) => update((s) => ({ ...s, length_seconds: Number(e.target.value) || 60 }))}
                   className="w-20 h-10 bg-background border border-border rounded text-center" />
               </div>
+              {/* Mic input — Test meter + Input gain. Lives in the desktop
+                  Inspector too, but that rail is hidden on phones, so this
+                  is the ONLY place to set input volume on mobile. */}
+              <div className="border-t border-border pt-3">
+                <MicLevelTester />
+              </div>
             </div>
           </SheetContent>
         </Sheet>
