@@ -32,8 +32,10 @@ export default function SiteSetup() {
   const [showEnrollCta, setShowEnrollCta] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#150d26');
+  const [authBackgroundUrl, setAuthBackgroundUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [bgUploading, setBgUploading] = useState(false);
 
   // Tenant URL + custom domain state
   const [tenant, setTenant] = useState<{ id: string; slug: string; subdomain: string | null; custom_domain: string | null } | null>(null);
@@ -64,6 +66,7 @@ export default function SiteSetup() {
       setShowEnrollCta(Boolean((settings as any).show_enroll_cta));
       setLogoUrl(settings.logo_url ?? '');
       setPrimaryColor(settings.primary_color ?? '#150d26');
+      setAuthBackgroundUrl(settings.auth_background_url ?? '');
     }
   }, [isLoading, settings]);
 
@@ -109,6 +112,30 @@ export default function SiteSetup() {
     toast.success('Logo uploaded');
   }
 
+  async function handleBackgroundUpload(file: File) {
+    if (!user) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Background must be 5 MB or smaller.');
+      return;
+    }
+    setBgUploading(true);
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const path = `authbg-${Date.now()}.${ext}`;
+    const { error: uploadErr } = await supabase
+      .storage
+      .from('site-branding')
+      .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+    if (uploadErr) {
+      setBgUploading(false);
+      toast.error(`Upload failed: ${uploadErr.message}`);
+      return;
+    }
+    const { data: pub } = supabase.storage.from('site-branding').getPublicUrl(path);
+    setAuthBackgroundUrl(pub.publicUrl);
+    setBgUploading(false);
+    toast.success('Sign-in background uploaded');
+  }
+
   async function handleSave(markComplete: boolean) {
     if (!orgName.trim()) {
       toast.error('Organization name is required.');
@@ -145,6 +172,7 @@ export default function SiteSetup() {
       show_enroll_cta: showEnrollCta,
       logo_url: logoUrl.trim() || null,
       primary_color: primaryColor || '#150d26',
+      auth_background_url: authBackgroundUrl.trim() || null,
       ...(markComplete ? { setup_completed: true } : {}),
     };
 
@@ -322,6 +350,59 @@ export default function SiteSetup() {
                   </label>
                   <p className="text-xs text-slate-400 mt-2">
                     PNG, JPG, SVG, WebP. Max 5 MB. Square images work best.
+                  </p>
+                </div>
+              </div>
+            </Field>
+
+            <Field
+              label="Sign-in screen background"
+              hint="Shown behind your members' sign-in screen. Use a photo or texture — up to 5 MB. Leave empty to use your brand color gradient."
+            >
+              <div className="flex flex-wrap items-start gap-4">
+                {authBackgroundUrl ? (
+                  <div className="relative bg-white border border-slate-200 rounded-lg p-1.5 shadow-sm">
+                    <img
+                      src={authBackgroundUrl}
+                      alt="Sign-in background preview"
+                      className="w-40 h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAuthBackgroundUrl('')}
+                      className="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 rounded-full p-1 text-white hover:bg-slate-700"
+                      title="Remove background"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-40 h-24 bg-white border border-slate-300 border-dashed rounded-lg flex items-center justify-center text-slate-400">
+                    <ImageIcon className="w-8 h-8" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-[12rem]">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium cursor-pointer transition-colors">
+                    {bgUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {bgUploading ? 'Uploading…' : authBackgroundUrl ? 'Replace background' : 'Upload background'}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      disabled={bgUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleBackgroundUpload(file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  <p className="text-xs text-slate-400 mt-2">
+                    PNG, JPG, WebP. Max 5 MB. Wide (landscape) images work best.
                   </p>
                 </div>
               </div>
