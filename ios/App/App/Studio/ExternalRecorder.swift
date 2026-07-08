@@ -88,8 +88,8 @@ public final class ExternalRecorder {
     /// before they're written. The built-in mic records quiet through
     /// AVAudioEngine and AVAudioSession.setInputGain isn't settable on most
     /// devices, so we boost here with hard-clip protection. 1.0 = unity;
-    /// 2.0 ≈ +6 dB. Tunable if users still want more/less headroom.
-    public var inputGain: Float = 2.0
+    /// 4.0 ≈ +12 dB. Tunable if users still want more/less headroom.
+    public var inputGain: Float = 4.0
 
     public init() {}
 
