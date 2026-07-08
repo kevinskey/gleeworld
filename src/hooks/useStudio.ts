@@ -159,8 +159,11 @@ function fxSig(f: { id: string; type: string; enabled: boolean; params?: Record<
 /** FX signature WITHOUT params — structure only (id/type/enabled). Used to
  *  tell a param-only knob change (→ live update, no rebuild) apart from a
  *  structural FX change (add/remove/reorder/enable → rebuild). */
-function fxStructSig(f: { id: string; type: string; enabled: boolean }): string {
-  return `${f.id}:${f.type}:${f.enabled}`;
+function fxStructSig(f: { id: string; type: string }): string {
+  // NOTE: `enabled` is intentionally EXCLUDED — enable/disable is applied live
+  // via bypassEffect (the node is always built, just bypassed). Only add /
+  // remove / reorder change this structure signature → full reload.
+  return `${f.id}:${f.type}`;
 }
 function buildSkeletonSig(session: Session | null, fxFn: (f: { id: string; type: string; enabled: boolean; params?: Record<string, unknown> }) => string): string {
   if (!session) return '';
@@ -195,11 +198,14 @@ function structSig(session: Session | null): string { return buildSkeletonSig(se
 
 /** Every FX node in the session (master + per-track) with its owner track id
  *  (null = master) and a param signature, for the native live-update diff. */
-function fxEntries(session: Session | null): Array<{ fxId: string; trackId: string | null; fx: unknown; sig: string }> {
+function fxEntries(session: Session | null): Array<{ fxId: string; trackId: string | null; fx: unknown; enabled: boolean; sig: string }> {
   if (!session) return [];
-  const out: Array<{ fxId: string; trackId: string | null; fx: unknown; sig: string }> = [];
-  for (const f of session.master.fx) out.push({ fxId: f.id, trackId: null, fx: f, sig: fxSig(f) });
-  for (const t of session.tracks) for (const f of t.fx) out.push({ fxId: f.id, trackId: t.id, fx: f, sig: fxSig(f) });
+  const out: Array<{ fxId: string; trackId: string | null; fx: unknown; enabled: boolean; sig: string }> = [];
+  // sig includes enabled so an enable/disable toggle is detected on the live
+  // path (applied via bypassEffect), not only param edits.
+  const sigOf = (f: { enabled: boolean }) => `${fxSig(f as never)}|en${f.enabled}`;
+  for (const f of session.master.fx) out.push({ fxId: f.id, trackId: null, fx: f, enabled: f.enabled, sig: sigOf(f) });
+  for (const t of session.tracks) for (const f of t.fx) out.push({ fxId: f.id, trackId: t.id, fx: f, enabled: f.enabled, sig: sigOf(f) });
   return out;
 }
 
@@ -297,7 +303,9 @@ export function useStudioEngine(session: Session | null) {
           try {
             for (const e of fxEntries(session)) {
               if (lastFxParamsRef.current.get(e.fxId) !== e.sig) {
+                // Params live; enable/disable live via bypass (both no-rebuild).
                 await NativeStudio.setFxParam({ trackId: e.trackId ?? undefined, fx: e.fx });
+                await NativeStudio.bypassEffect({ trackId: e.trackId ?? undefined, effectId: e.fxId, bypassed: !e.enabled });
               }
             }
             if (!cancelled) {

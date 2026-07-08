@@ -182,6 +182,12 @@ public final class TrackBinding {
         return fxChain?.setParams(fxId: fxId, spec: spec) ?? false
     }
 
+    /// Live enable/disable an effect on this track (bypass flip, no rebuild).
+    @discardableResult
+    public func setFxBypass(fxId: String, on: Bool) -> Bool {
+        return fxChain?.setBypass(fxId: fxId, on: on) ?? false
+    }
+
     // MARK: - Transport
 
     /// Schedule clips starting from `currentSeconds` against the engine's

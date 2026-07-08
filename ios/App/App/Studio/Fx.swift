@@ -23,13 +23,15 @@ public final class FxChain {
         self.nodes = nodes
     }
 
-    /// Returns nil if specs is empty — caller should just wire input→output directly.
+    /// Returns nil if specs is empty — caller should just wire input→output
+    /// directly. NOTE: we build ALL effects (enabled or not) and set the
+    /// node's `.bypass` from `!enabled`, so enabling/disabling an effect is a
+    /// live property flip (no graph surgery), not a rebuild.
     public static func build(engine: AVAudioEngine, specs: [Studio.FxNode]) -> FxChain? {
-        let enabled = specs.filter { $0.enabled }
-        guard !enabled.isEmpty else { return nil }
+        guard !specs.isEmpty else { return nil }
 
         var bindings: [FxNodeBinding] = []
-        for spec in enabled {
+        for spec in specs {
             let b = FxNodeBinding.build(engine: engine, spec: spec)
             bindings.append(b)
         }
@@ -60,17 +62,33 @@ public final class FxChain {
         FxNodeBinding.applyLive(node: binding.node, spec: spec)
         return true
     }
+
+    /// Live enable/disable — flips the AVAudioUnitEffect's bypass. No graph
+    /// change: a bypassed unit is a clean passthrough. Returns true if found.
+    public func setBypass(fxId: String, on: Bool) -> Bool {
+        guard let binding = nodes.first(where: { $0.id == fxId }) else { return false }
+        binding.setBypass(on)
+        return true
+    }
 }
 
 public final class FxNodeBinding {
     public let id: String
     public let type: String
     public let node: AVAudioNode
+    public private(set) var bypassed = false
 
     init(id: String, type: String, node: AVAudioNode) {
         self.id = id
         self.type = type
         self.node = node
+    }
+
+    /// Bypass = clean passthrough on Apple's built-in AVAudioUnitEffect units
+    /// (EQ/Reverb/Delay/Dynamics all inherit `.bypass`). No graph mutation.
+    public func setBypass(_ on: Bool) {
+        (node as? AVAudioUnitEffect)?.bypass = on
+        bypassed = on
     }
 
     public static func build(engine: AVAudioEngine, spec: Studio.FxNode) -> FxNodeBinding {
@@ -146,7 +164,9 @@ public final class FxNodeBinding {
             node = eq
         }
         engine.attach(node)
-        return FxNodeBinding(id: spec.id, type: spec.type.rawValue, node: node)
+        let binding = FxNodeBinding(id: spec.id, type: spec.type.rawValue, node: node)
+        binding.setBypass(!spec.enabled)   // disabled effect = built but bypassed
+        return binding
     }
 
     /// Re-apply the param VALUES from `spec` to an existing node (live). Must

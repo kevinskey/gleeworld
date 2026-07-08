@@ -85,6 +85,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateStrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setFxParam", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "bypassEffect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateTempo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setMetronome", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clickOnce", returnType: CAPPluginReturnPromise),
@@ -335,6 +336,26 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         } catch {
             call.reject("setFxParam decode failed: \(error.localizedDescription)")
         }
+    }
+
+    // Live enable/disable of an effect (bypass flip). `trackId` omitted →
+    // master bus. Emits effectBypassed.
+    @objc func bypassEffect(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let effectId = call.getString("effectId") else {
+            return call.reject(StudioError(code: "BAD_ARGS", message: "effectId required",
+                                           operation: "bypassEffect", recoverable: false)) }
+        let trackId = call.getString("trackId")
+        let bypassed = call.getBool("bypassed") ?? false
+        let ok = engine.bypassEffect(trackId: trackId, fxId: effectId, bypassed: bypassed)
+        if !ok {
+            return call.reject(StudioError(code: "FX_NOT_FOUND",
+                message: "effect \(effectId) not found on \(trackId ?? "master")",
+                operation: "bypassEffect", trackId: trackId, effectId: effectId)) }
+        var payload: [String: Any] = ["effectId": effectId, "bypassed": bypassed]
+        if let t = trackId { payload["trackId"] = t }
+        notifyListeners(StudioEvents.effectBypassed, data: payload)
+        call.resolve()
     }
 
     @objc func updateTempo(_ call: CAPPluginCall) {

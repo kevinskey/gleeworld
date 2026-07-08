@@ -29,6 +29,9 @@ interface StudioEnginePluginShape {
   // full engine rebuild. Omit trackId to target the master bus. `fx` is the
   // full updated FxNode.
   setFxParam(args: { trackId?: string; fx: unknown }): Promise<void>;
+  // Live enable/disable of an effect (bypass flip, no rebuild). Omit trackId
+  // for the master bus.
+  bypassEffect(args: { trackId?: string; effectId: string; bypassed: boolean }): Promise<void>;
   // Pre-arm the .playAndRecord audio session before the count-in so
   // recordStart doesn't pay the category-flip latency mid-groove.
   prepareRecordSession(): Promise<void>;

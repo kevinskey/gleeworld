@@ -477,6 +477,21 @@ public final class StudioNativeEngine {
         }
     }
 
+    /// Live enable/disable of an effect (bypass flip, no rebuild). trackId nil
+    /// = master. Returns true if the effect was found.
+    @discardableResult
+    public func bypassEffect(trackId: String?, fxId: String, bypassed: Bool) -> Bool {
+        var ok = false
+        _ = StudioObjC.catchExceptions {
+            if let tid = trackId {
+                ok = self.tracks[tid]?.setFxBypass(fxId: fxId, on: bypassed) ?? false
+            } else {
+                ok = self.masterFxChain?.setBypass(fxId: fxId, on: bypassed) ?? false
+            }
+        }
+        return ok
+    }
+
     /// Solo override — when any track is soloed, every non-soloed track
     /// is silenced regardless of its own mute flag. Mirrors the web
     /// engine's recomputeSolo; before this, the S button did nothing on
