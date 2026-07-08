@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Image as ImageIcon, Music, Video, FileText, FolderOpen, Upload, Search,
-  Loader2, Trash2, Download, X,
+  Loader2, Trash2, Download, X, Share2, Mail,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -71,6 +71,7 @@ export default function MediaLibraryPage() {
   const [kind, setKind] = useState<Kind>('all');
   const [folder, setFolder] = useState<string | null>(null); // null = all folders
   const [search, setSearch] = useState('');
+  const [shareFolder, setShareFolder] = useState<string | null>(null); // folder being shared
   const [uploadOpen, setUploadOpen] = useState(false);
   // Currently-open media in the inline player dialog. null = nothing
   // playing. Tapping a card opens the player here; external links / new
@@ -180,6 +181,19 @@ export default function MediaLibraryPage() {
                   <FolderOpen className="w-4 h-4" /> {f}
                 </button>
               ))}
+              {/* Share the currently-selected folder (owner only — shares
+                  grant same-tenant recipients read access to your files
+                  in this folder). */}
+              {folder !== null && (
+                <button
+                  type="button"
+                  onClick={() => setShareFolder(folder)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors border border-border"
+                  title={`Share the "${folder}" folder by email`}
+                >
+                  <Share2 className="w-4 h-4" /> Share
+                </button>
+              )}
             </div>
           )}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -263,7 +277,112 @@ export default function MediaLibraryPage() {
         row={playing}
         onOpenChange={(v) => { if (!v) setPlaying(null); }}
       />
+
+      <ShareFolderDialog
+        folder={shareFolder}
+        ownerId={user?.id ?? null}
+        onOpenChange={(v) => { if (!v) setShareFolder(null); }}
+      />
     </div>
+  );
+}
+
+/** Share a folder (your files under it) with same-tenant recipients by
+ *  email. Grants read-only access via gw_media_folder_shares; recipients
+ *  see the files in their Media Library. Cross-tenant sharing is not
+ *  supported (tenant isolation) — see the design doc. */
+function ShareFolderDialog({
+  folder, ownerId, onOpenChange,
+}: {
+  folder: string | null;
+  ownerId: string | null;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const qc = useQueryClient();
+  const [email, setEmail] = useState('');
+  const open = folder !== null;
+
+  const { data: shares = [] } = useQuery<Array<{ id: string; invited_email: string; created_at: string }>>({
+    queryKey: ['media-folder-shares', folder, ownerId],
+    enabled: open && !!ownerId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_media_folder_shares')
+        .select('id, invited_email, created_at')
+        .eq('owner_user_id', ownerId!)
+        .eq('folder', folder!)
+        .is('revoked_at', null)
+        .order('created_at', { ascending: false });
+      return (data ?? []) as any;
+    },
+  });
+
+  const add = useMutation({
+    mutationFn: async (addr: string) => {
+      const clean = addr.trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) throw new Error('Enter a valid email.');
+      const { error } = await supabase.from('gw_media_folder_shares').insert({
+        owner_user_id: ownerId, folder, invited_email: clean, permission: 'view',
+      } as never);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => { setEmail(''); toast.success('Folder shared.'); qc.invalidateQueries({ queryKey: ['media-folder-shares'] }); },
+    onError: (e: any) => toast.error(e?.message || 'Could not share.'),
+  });
+
+  const revoke = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('gw_media_folder_shares')
+        .update({ revoked_at: new Date().toISOString() }).eq('id', id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => { toast.success('Access revoked.'); qc.invalidateQueries({ queryKey: ['media-folder-shares'] }); },
+    onError: (e: any) => toast.error(e?.message || 'Could not revoke.'),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="inline-flex items-center gap-2"><Share2 className="w-4 h-4" /> Share "{folder}" folder</DialogTitle>
+          <DialogDescription>
+            Give someone in your organization read access to your files in this folder. They'll see them in their own Media Library.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Mail className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="email" value={email} placeholder="person@email.com"
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && email.trim()) add.mutate(email); }}
+                className="pl-8"
+              />
+            </div>
+            <Button onClick={() => add.mutate(email)} disabled={!email.trim() || add.isPending}>
+              {add.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Share'}
+            </Button>
+          </div>
+          <div className="space-y-1.5 max-h-56 overflow-y-auto">
+            {shares.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic py-2">Not shared with anyone yet.</p>
+            ) : shares.map((s) => (
+              <div key={s.id} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded border border-border text-sm">
+                <span className="truncate">{s.invited_email}</span>
+                <button onClick={() => revoke.mutate(s.id)} className="text-xs text-rose-500 hover:underline shrink-0">Revoke</button>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Recipients must have a GleeWorld account in your organization. Files are shared read-only; revoke anytime.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Done</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
