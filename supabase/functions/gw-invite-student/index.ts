@@ -94,7 +94,8 @@ serve(async (req) => {
     // The link lands on /auth/callback which handles "new user → onboarding,
     // existing user → ?next" routing.
     const origin = (body.appOrigin || "").replace(/\/+$/, "");
-    let next = "/academy";
+    // Where the student ends up AFTER filling out their profile.
+    let dest = "/academy";
     let courseTitle = ""; // used in the email subject + body
     if (body.courseId) {
       // Look up the course_code AND title so we can deep-link to the
@@ -108,10 +109,16 @@ serve(async (req) => {
         .maybeSingle();
       if (c?.course_code) {
         const slug = String(c.course_code).toLowerCase().replace(/\s+/g, "-");
-        next = `/academy/c/${slug}`;
+        dest = `/academy/c/${slug}`;
       }
       if (c?.title) courseTitle = String(c.title);
     }
+    // Invited students arrive signed in via the magic link. Because the invite
+    // pre-creates their gw_profiles row, AuthCallback would treat them as an
+    // existing user and drop them straight on the class/landing page, skipping
+    // the profile form. Route them through /onboarding first to fill out their
+    // profile, then on to their course/academy (Onboarding honors ?next=).
+    const next = `/onboarding?next=${encodeURIComponent(dest)}`;
     const redirectTo = origin ? `${origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
 
     // Call GoTrue's admin endpoint directly. The supabase-js SDK nests
