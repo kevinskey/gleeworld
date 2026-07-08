@@ -56,8 +56,12 @@ const PX_PER_SECOND_MAX = 240;
  * touch devices a taller floor instead of shrinking the tap targets. */
 const IS_COARSE_POINTER =
   typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
-const TRACK_HEIGHT_DEFAULT = IS_COARSE_POINTER ? 88 : 72;
-const TRACK_HEIGHT_MIN = IS_COARSE_POINTER ? 88 : 48;
+// Coarse-pointer (touch) floor raised 88 → 100 so the two-row strip
+// header (name + M/S/R + volume) always has breathing room above the
+// divider — at 88 the buttons sat flush and read as clipped by the next
+// track (2026-07-07).
+const TRACK_HEIGHT_DEFAULT = IS_COARSE_POINTER ? 100 : 72;
+const TRACK_HEIGHT_MIN = IS_COARSE_POINTER ? 100 : 48;
 const TRACK_HEIGHT_MAX = 240;
 
 /** Zoom is one value (px per second of timeline) shared by the ruler,
@@ -3956,7 +3960,12 @@ function DarkTrackRow({
         />
         {/* Color stripe */}
         <div className="w-1.5" style={{ backgroundColor: track.color }} />
-        <div className="flex-1 px-2 py-1.5 flex flex-col gap-0.5">
+        {/* justify-center + overflow-hidden: keep the header vertically
+            centred inside the fixed row height so M/S/R never sits flush
+            against (and reads as clipped by) the divider to the next
+            track, and clip cleanly at the strip edge rather than bleeding
+            under the row below. */}
+        <div className="flex-1 min-w-0 px-2 py-1.5 flex flex-col justify-center gap-1 overflow-hidden">
           {/* Row 1: number + name + remove */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground tabular-nums w-5 font-mono">{index}</span>
