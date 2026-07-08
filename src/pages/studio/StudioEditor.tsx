@@ -3522,21 +3522,24 @@ function RegionExportSheet({
       .from('media-library').upload(path, blob, { contentType: 'audio/wav', upsert: true });
     if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
     const fileUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
+    // Columns must match the LIVE gw_media_library schema (the same set
+    // MediaLibraryPage's working upload uses) + folder. An earlier cut
+    // included filename/original_filename/mime_type/bucket_name which
+    // don't exist on the live table — PostgREST rejected the whole insert
+    // ("Could not find the 'bucket_name' column"), so takes never
+    // appeared in the library (2026-07-08).
     const { error: insErr } = await supabase.from('gw_media_library').insert({
       title: filename.replace(/\.wav$/i, ''),
-      filename,
-      original_filename: filename,
       file_url: fileUrl,
       file_path: path,
-      file_type: 'audio',
-      mime_type: 'audio/wav',
-      bucket_name: 'media-library',
+      file_type: 'audio/wav',
       file_size: blob.size,
       folder: 'Studio',
       category: 'studio',
       is_public: false,
       is_featured: false,
       is_deleted: false,
+      course_id: null,
       uploaded_by: user.id,
       download_count: 0,
       view_count: 0,
