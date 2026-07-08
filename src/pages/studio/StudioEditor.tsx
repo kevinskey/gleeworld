@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { renderRegionMix, renderRegionStems, zipBlobs, safeName } from '@/lib/studio/engine/regionExport';
 import { Metronome } from '@/components/audioTools/Metronome';
 import { PitchPipe } from '@/components/audioTools/PitchPipe';
 import { Tuner } from '@/components/audioTools/Tuner';
@@ -333,6 +334,7 @@ function Editor({
   // the exact same sheet/state.
   const [exportOpen, setExportOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [regionExportOpen, setRegionExportOpen] = useState(false);
 
   // Timeline vs Mixer — same route, transport/header stay mounted; only
   // the main tracks-area block below swaps content (B1 Task 6).
@@ -1390,6 +1392,20 @@ function Editor({
             <Download className="w-4 h-4 mr-1" />
             Export
           </Button>
+          {/* Region export — enabled only when a loop region is set (drag
+              across the bar ruler). Bounces the selected tracks over just
+              that range as a stereo mix or mono stems. */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setRegionExportOpen(true)}
+            disabled={!loopRegion || loopRegion.end <= loopRegion.start}
+            title={loopRegion ? 'Export the selected region (tracks → stereo mix or mono stems)' : 'Drag across the bar ruler to select a region first'}
+            className="h-7 text-sm"
+          >
+            <Scissors className="w-4 h-4 mr-1" />
+            Region
+          </Button>
           <Button size="sm" variant="outline" onClick={() => exportSessionJson(session)} title="Download session JSON" className="h-7 w-7 p-0">
             <FileJson className="w-4 h-4" />
           </Button>
@@ -1397,6 +1413,7 @@ function Editor({
       </div>
 
       <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} engineState={engineState} />
+      <RegionExportSheet session={session} region={loopRegion} open={regionExportOpen} onOpenChange={setRegionExportOpen} />
 
       {/* Transport bar — single dense row */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 flex items-center gap-0.5 sm:gap-2 flex-wrap">
@@ -3450,6 +3467,172 @@ const EXPORT_PRESET_LABEL: Record<ExportPreset, string> = {
   wav: 'WAV (CD quality)',
   stems: 'Stems (per track)',
 };
+
+/** Region export — bounce the selected loop range of chosen tracks as a
+ *  stereo mix (one file) or mono stems (per track), delivered as
+ *  individual downloads or one zip. (Send-to-Media-Library lands in a
+ *  follow-up phase.) */
+function RegionExportSheet({
+  session, region, open, onOpenChange,
+}: {
+  session: Session;
+  region: { start: number; end: number } | null;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const bounceable = session.tracks.filter((t) => isAudioTrack(t) || isMidiTrack(t));
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(bounceable.map((t) => t.id)));
+  const [mode, setMode] = useState<'mix' | 'stems'>('mix');
+  const [mono, setMono] = useState(false);
+  const [pkg, setPkg] = useState<'individual' | 'zip'>('individual');
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  // Re-seed the selection whenever the sheet opens (tracks may have
+  // changed since last time) — default to everything bounceable.
+  useEffect(() => {
+    if (open) setSelected(new Set(bounceable.map((t) => t.id)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const toggle = (id: string) => setSelected((s) => {
+    const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
+
+  const download = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  };
+
+  const run = async () => {
+    if (!region || busy) return;
+    const trackIds = [...selected];
+    if (trackIds.length === 0) { toast.error('Select at least one track.'); return; }
+    setBusy(true); setProgress(0);
+    const stamp = `${safeName(session.title)}_${region.start.toFixed(1)}-${region.end.toFixed(1)}s`;
+    try {
+      if (mode === 'mix') {
+        const blob = await renderRegionMix(session, {
+          trackIds, startSec: region.start, endSec: region.end, mono, onProgress: setProgress,
+        });
+        download(blob, `${stamp}_${mono ? 'mono' : 'stereo'}mix.wav`);
+        toast.success('Region mix exported.');
+      } else {
+        const stems = await renderRegionStems(session, {
+          trackIds, startSec: region.start, endSec: region.end, mono, onProgress: setProgress,
+        });
+        const files = stems.map((s) => ({
+          name: `${stamp}_${safeName(s.track.name)}${mono ? '_mono' : ''}.wav`,
+          blob: s.blob,
+        }));
+        if (pkg === 'zip') {
+          download(await zipBlobs(files), `${stamp}_stems.zip`);
+        } else {
+          // Stagger so the browser's multi-download throttle keeps all.
+          for (let i = 0; i < files.length; i++) {
+            download(files[i].blob, files[i].name);
+            await new Promise((r) => setTimeout(r, 400));
+          }
+        }
+        toast.success(`${files.length} stem${files.length === 1 ? '' : 's'} exported.`);
+      }
+      onOpenChange(false);
+    } catch (e) {
+      console.error('[Studio] region export failed', e);
+      toast.error(e instanceof Error ? e.message : 'Region export failed.');
+    } finally {
+      setBusy(false); setProgress(0);
+    }
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="dark bg-card text-foreground border-border max-h-[85dvh] overflow-y-auto">
+        <SheetHeader className="mb-3">
+          <SheetTitle className="text-base inline-flex items-center gap-2">
+            <Scissors className="w-4 h-4" /> Export region
+            {region && (
+              <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                {region.start.toFixed(1)}s – {region.end.toFixed(1)}s ({(region.end - region.start).toFixed(1)}s)
+              </span>
+            )}
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="space-y-4 text-sm pb-4">
+          {/* Tracks */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="font-semibold">Tracks</span>
+              <button
+                className="text-xs text-primary"
+                onClick={() => setSelected((s) => s.size === bounceable.length ? new Set() : new Set(bounceable.map((t) => t.id)))}
+              >
+                {selected.size === bounceable.length ? 'Clear all' : 'Select all'}
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {bounceable.map((t) => (
+                <label key={t.id} className="flex items-center gap-2 px-2 py-2 rounded border border-border bg-background cursor-pointer">
+                  <input type="checkbox" checked={selected.has(t.id)} onChange={() => toggle(t.id)} className="accent-primary w-4 h-4" />
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
+                  <span className="truncate">{t.name}</span>
+                </label>
+              ))}
+              {bounceable.length === 0 && <span className="text-muted-foreground italic col-span-2">No tracks to export.</span>}
+            </div>
+          </div>
+
+          {/* Format */}
+          <div>
+            <span className="font-semibold block mb-1.5">Format</span>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => { setMode('mix'); setMono(false); }}
+                className={`h-11 rounded border text-sm font-semibold ${mode === 'mix' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
+              >Stereo mix<span className="block text-[10px] font-normal opacity-70">one file</span></button>
+              <button
+                onClick={() => { setMode('stems'); setMono(true); }}
+                className={`h-11 rounded border text-sm font-semibold ${mode === 'stems' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
+              >Mono stems<span className="block text-[10px] font-normal opacity-70">one file per track</span></button>
+            </div>
+            <label className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+              <input type="checkbox" checked={mono} onChange={(e) => setMono(e.target.checked)} className="accent-primary w-4 h-4" />
+              Downmix to mono
+            </label>
+          </div>
+
+          {/* Delivery (stems only) */}
+          {mode === 'stems' && (
+            <div>
+              <span className="font-semibold block mb-1.5">Download as</span>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button onClick={() => setPkg('individual')}
+                  className={`h-10 rounded border text-sm font-semibold ${pkg === 'individual' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
+                >Individual files</button>
+                <button onClick={() => setPkg('zip')}
+                  className={`h-10 rounded border text-sm font-semibold ${pkg === 'zip' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
+                >One .zip</button>
+              </div>
+            </div>
+          )}
+
+          <Button onClick={run} disabled={busy || selected.size === 0} className="w-full h-11">
+            {busy
+              ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Rendering… {Math.round(progress * 100)}%</>
+              : <><Download className="w-4 h-4 mr-2" /> Export {selected.size} track{selected.size === 1 ? '' : 's'}</>}
+          </Button>
+          <p className="text-[11px] text-muted-foreground text-center">
+            Sending to your Media Library (Studio folder) is coming next.
+          </p>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
 function ExportSheet({
   session, open, onOpenChange, engineState,
