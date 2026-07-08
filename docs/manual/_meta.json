@@ -1,0 +1,15 @@
+{
+  "title": "GleeWorld User Manual",
+  "updated": "2026-07-08",
+  "nav": [
+    { "title": "Getting Started", "children": [
+      { "title": "What is GleeWorld?", "path": "getting-started/what-is-gleeworld.md" }
+    ] },
+    { "title": "For Tenants (Directors & Admins)", "children": [] },
+    { "title": "For Students", "children": [] },
+    { "title": "For Fans", "children": [] },
+    { "title": "Add-ons Reference", "children": [] },
+    { "title": "FAQ & Troubleshooting", "children": [] },
+    { "title": "Glossary", "children": [] }
+  ]
+}
