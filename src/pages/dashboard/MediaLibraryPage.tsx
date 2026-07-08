@@ -45,6 +45,7 @@ interface MediaRow {
   file_size: number;
   course_id: string | null;
   created_at: string;
+  folder: string | null;
 }
 
 function kindOf(fileType: string): Exclude<Kind, 'all'> {
@@ -68,6 +69,7 @@ export default function MediaLibraryPage() {
   const qc = useQueryClient();
   const { active: scope, setActive: setScope, options, courses, applyFilter } = useScopeFilter();
   const [kind, setKind] = useState<Kind>('all');
+  const [folder, setFolder] = useState<string | null>(null); // null = all folders
   const [search, setSearch] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
   // Currently-open media in the inline player dialog. null = nothing
@@ -81,7 +83,7 @@ export default function MediaLibraryPage() {
     queryFn: async () => {
       let q = supabase
         .from('gw_media_library')
-        .select('id, title, file_url, file_path, file_type, file_size, course_id, created_at')
+        .select('id, title, file_url, file_path, file_type, file_size, course_id, created_at, folder')
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .limit(200);
@@ -97,15 +99,24 @@ export default function MediaLibraryPage() {
     return m;
   }, [courses]);
 
+  // Distinct folders present in the current result set (e.g. "Studio"),
+  // for the folder chip row. null-folder rows are the ungrouped library.
+  const folders = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows) if (r.folder) set.add(r.folder);
+    return [...set].sort();
+  }, [rows]);
+
   const filtered = useMemo(() => {
     let list = rows;
+    if (folder !== null) list = list.filter((r) => (r.folder ?? null) === folder);
     if (kind !== 'all') list = list.filter((r) => kindOf(r.file_type) === kind);
     if (search.trim()) {
       const s = search.trim().toLowerCase();
       list = list.filter((r) => r.title?.toLowerCase().includes(s));
     }
     return list;
-  }, [rows, kind, search]);
+  }, [rows, folder, kind, search]);
 
   const deleteRow = useMutation({
     mutationFn: async (id: string) => {
@@ -144,6 +155,33 @@ export default function MediaLibraryPage() {
             <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Scope</div>
             <ScopeFilterChips active={scope} options={options} onChange={setScope} />
           </div>
+          {/* Folder chips — only shown once at least one foldered item
+              exists (e.g. Studio exports). "Library" = ungrouped/all. */}
+          {folders.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setFolder(null)}
+                className={folder === null
+                  ? 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-primary/10 text-primary'
+                  : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors'}
+              >
+                <FolderOpen className="w-4 h-4" /> Library
+              </button>
+              {folders.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFolder(f)}
+                  className={folder === f
+                    ? 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold bg-primary/10 text-primary'
+                    : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors'}
+                >
+                  <FolderOpen className="w-4 h-4" /> {f}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-2">
               {KIND_TABS.map((t) => {
