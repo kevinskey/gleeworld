@@ -84,6 +84,13 @@ public final class ExternalRecorder {
     /// 'recordPeak' so Part Tracks JS subscribes without colliding).
     public var onPeak: ((Float) -> Void)?
 
+    /// Software input gain (linear multiplier) applied to captured samples
+    /// before they're written. The built-in mic records quiet through
+    /// AVAudioEngine and AVAudioSession.setInputGain isn't settable on most
+    /// devices, so we boost here with hard-clip protection. 1.0 = unity;
+    /// 2.0 ≈ +6 dB. Tunable if users still want more/less headroom.
+    public var inputGain: Float = 2.0
+
     public init() {}
 
     deinit {
@@ -280,6 +287,9 @@ public final class ExternalRecorder {
         if let err = StudioObjC.catchExceptions({
             inputNode.installTap(onBus: 0, bufferSize: 4096, format: inFormat) { [weak self] buffer, when in
                 guard let self else { return }
+                // Boost the quiet built-in-mic signal before writing (and
+                // before metering, so the level readout matches what's saved).
+                ExternalRecorder.applyGain(buffer, gain: self.inputGain)
                 // Write on the audio thread — AVAudioFile.write is
                 // real-time-unsafe in theory but is what Apple's own
                 // capture samples do; the file is buffered.
@@ -484,6 +494,22 @@ public final class ExternalRecorder {
             }
         }
         return maxAbs > 0 ? 20 * log10(maxAbs) : -160
+    }
+
+    /// Multiply every sample by `gain` in-place, hard-clamped to [-1, 1] so a
+    /// boost can't overflow into wrap-around distortion. No-op at unity gain.
+    private static func applyGain(_ buffer: AVAudioPCMBuffer, gain: Float) {
+        guard gain != 1.0, gain > 0, let channels = buffer.floatChannelData else { return }
+        let frameCount = Int(buffer.frameLength)
+        let channelCount = Int(buffer.format.channelCount)
+        for c in 0..<channelCount {
+            let samples = channels[c]
+            for i in 0..<frameCount {
+                var v = samples[i] * gain
+                if v > 1 { v = 1 } else if v < -1 { v = -1 }
+                samples[i] = v
+            }
+        }
     }
 
     /// Short windowed square-wave click in the given format. Identical
