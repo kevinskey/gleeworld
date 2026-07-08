@@ -13,6 +13,8 @@ import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { renderRegionMix, renderRegionStems, zipBlobs, safeName } from '@/lib/studio/engine/regionExport';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Metronome } from '@/components/audioTools/Metronome';
 import { PitchPipe } from '@/components/audioTools/PitchPipe';
 import { Tuner } from '@/components/audioTools/Tuner';
@@ -3480,11 +3482,13 @@ function RegionExportSheet({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const { user } = useAuth();
   const bounceable = session.tracks.filter((t) => isAudioTrack(t) || isMidiTrack(t));
   const [selected, setSelected] = useState<Set<string>>(() => new Set(bounceable.map((t) => t.id)));
   const [mode, setMode] = useState<'mix' | 'stems'>('mix');
   const [mono, setMono] = useState(false);
   const [pkg, setPkg] = useState<'individual' | 'zip'>('individual');
+  const [dest, setDest] = useState<'download' | 'library'>('download');
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -3507,6 +3511,39 @@ function RegionExportSheet({
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   };
 
+  // Upload one WAV to the Media Library's per-user Studio folder:
+  //   bucket media-library, path media/<userId>/studio/<file>
+  // + a gw_media_library row with folder='Studio'. tenant_id fills from
+  // the table's DEFAULT current_tenant_id() + trigger (cutover model).
+  const sendToLibrary = async (blob: Blob, filename: string) => {
+    if (!user?.id) throw new Error('Not signed in.');
+    const path = `media/${user.id}/studio/${Date.now()}-${filename}`;
+    const { error: upErr } = await supabase.storage
+      .from('media-library').upload(path, blob, { contentType: 'audio/wav', upsert: true });
+    if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
+    const fileUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
+    const { error: insErr } = await supabase.from('gw_media_library').insert({
+      title: filename.replace(/\.wav$/i, ''),
+      filename,
+      original_filename: filename,
+      file_url: fileUrl,
+      file_path: path,
+      file_type: 'audio',
+      mime_type: 'audio/wav',
+      bucket_name: 'media-library',
+      file_size: blob.size,
+      folder: 'Studio',
+      category: 'studio',
+      is_public: false,
+      is_featured: false,
+      is_deleted: false,
+      uploaded_by: user.id,
+      download_count: 0,
+      view_count: 0,
+    } as never);
+    if (insErr) throw new Error(`Library save failed: ${insErr.message}`);
+  };
+
   const run = async () => {
     if (!region || busy) return;
     const trackIds = [...selected];
@@ -3514,30 +3551,36 @@ function RegionExportSheet({
     setBusy(true); setProgress(0);
     const stamp = `${safeName(session.title)}_${region.start.toFixed(1)}-${region.end.toFixed(1)}s`;
     try {
+      // Build the list of named WAVs to deliver.
+      let files: Array<{ name: string; blob: Blob }>;
       if (mode === 'mix') {
         const blob = await renderRegionMix(session, {
           trackIds, startSec: region.start, endSec: region.end, mono, onProgress: setProgress,
         });
-        download(blob, `${stamp}_${mono ? 'mono' : 'stereo'}mix.wav`);
-        toast.success('Region mix exported.');
+        files = [{ name: `${stamp}_${mono ? 'mono' : 'stereo'}mix.wav`, blob }];
       } else {
         const stems = await renderRegionStems(session, {
           trackIds, startSec: region.start, endSec: region.end, mono, onProgress: setProgress,
         });
-        const files = stems.map((s) => ({
+        files = stems.map((s) => ({
           name: `${stamp}_${safeName(s.track.name)}${mono ? '_mono' : ''}.wav`,
           blob: s.blob,
         }));
-        if (pkg === 'zip') {
-          download(await zipBlobs(files), `${stamp}_stems.zip`);
-        } else {
-          // Stagger so the browser's multi-download throttle keeps all.
-          for (let i = 0; i < files.length; i++) {
-            download(files[i].blob, files[i].name);
-            await new Promise((r) => setTimeout(r, 400));
-          }
+      }
+
+      if (dest === 'library') {
+        for (const f of files) await sendToLibrary(f.blob, f.name);
+        toast.success(`Saved ${files.length} file${files.length === 1 ? '' : 's'} to your Media Library (Studio).`);
+      } else if (mode === 'stems' && pkg === 'zip') {
+        download(await zipBlobs(files), `${stamp}_stems.zip`);
+        toast.success(`${files.length} stem${files.length === 1 ? '' : 's'} zipped.`);
+      } else {
+        // Stagger so the browser's multi-download throttle keeps all.
+        for (let i = 0; i < files.length; i++) {
+          download(files[i].blob, files[i].name);
+          if (i < files.length - 1) await new Promise((r) => setTimeout(r, 400));
         }
-        toast.success(`${files.length} stem${files.length === 1 ? '' : 's'} exported.`);
+        toast.success(`${files.length} file${files.length === 1 ? '' : 's'} exported.`);
       }
       onOpenChange(false);
     } catch (e) {
@@ -3605,8 +3648,21 @@ function RegionExportSheet({
             </label>
           </div>
 
-          {/* Delivery (stems only) */}
-          {mode === 'stems' && (
+          {/* Destination */}
+          <div>
+            <span className="font-semibold block mb-1.5">Destination</span>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button onClick={() => setDest('download')}
+                className={`h-10 rounded border text-sm font-semibold ${dest === 'download' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
+              >Download</button>
+              <button onClick={() => setDest('library')}
+                className={`h-10 rounded border text-sm font-semibold ${dest === 'library' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
+              >Media Library</button>
+            </div>
+          </div>
+
+          {/* Packaging (stems + download only) */}
+          {mode === 'stems' && dest === 'download' && (
             <div>
               <span className="font-semibold block mb-1.5">Download as</span>
               <div className="grid grid-cols-2 gap-1.5">
@@ -3623,10 +3679,14 @@ function RegionExportSheet({
           <Button onClick={run} disabled={busy || selected.size === 0} className="w-full h-11">
             {busy
               ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Rendering… {Math.round(progress * 100)}%</>
-              : <><Download className="w-4 h-4 mr-2" /> Export {selected.size} track{selected.size === 1 ? '' : 's'}</>}
+              : dest === 'library'
+                ? <><Upload className="w-4 h-4 mr-2" /> Send {selected.size} track{selected.size === 1 ? '' : 's'} to Library</>
+                : <><Download className="w-4 h-4 mr-2" /> Export {selected.size} track{selected.size === 1 ? '' : 's'}</>}
           </Button>
           <p className="text-[11px] text-muted-foreground text-center">
-            Sending to your Media Library (Studio folder) is coming next.
+            {dest === 'library'
+              ? 'Saved to Media Library → Studio, in your own subfolder.'
+              : 'Downloads to this device.'}
           </p>
         </div>
       </SheetContent>
