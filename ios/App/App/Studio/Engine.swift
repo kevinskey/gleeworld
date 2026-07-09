@@ -720,6 +720,7 @@ public final class StudioNativeEngine {
                         binding.addClip(clip: clip, file: file,
                                         currentSeconds: self.currentPositionSeconds(),
                                         anchor: self.startHostTime)
+                        self.healWiringAfterIncrementalAdd()
                     }
                 } catch {
                     await MainActor.run {
@@ -741,6 +742,7 @@ public final class StudioNativeEngine {
         binding.addClip(clip: clip, file: file,
                         currentSeconds: currentPositionSeconds(),
                         anchor: startHostTime)
+        healWiringAfterIncrementalAdd()
     }
 
     /// Surface a clip-load failure to the UI (toast via lastError) —
@@ -751,6 +753,20 @@ public final class StudioNativeEngine {
         NSLog("[Studio] addClipToTrack — \(msg)")
         lastError = msg
         emit()
+    }
+
+    /// Re-heal the graph after an incremental clip-add. Connecting a fresh
+    /// AVAudioPlayerNode on a RUNNING engine can make AVAudioEngine silently
+    /// drop NEIGHBORING links (documented in TrackBinding.build) — including
+    /// master→outputLimiter→mainMixerNode, which mutes the WHOLE mix (the
+    /// "recorded a 2nd track → total silence" bug). Re-run the exact wiring
+    /// checks play() uses so any dropped link is restored immediately.
+    private func healWiringAfterIncrementalAdd() {
+        _ = StudioObjC.catchExceptions {
+            self.ensureMasterWired()
+            for (_, t) in self.tracks { t.verifyWiring() }
+        }
+        NSLog("[Studio] healed wiring after incremental clip add")
     }
 
     public func removeClipFromTrack(trackId: String, clipId: String) {
