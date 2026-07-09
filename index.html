@@ -10,11 +10,16 @@
     <meta property="og:title" content="GleeWorld — Run your music program. Beautifully." />
     <meta property="og:description" content="The all-in-one platform for choirs, bands, and music classrooms. Your branded site, set up in ten minutes." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- Absolute URL: link-preview crawlers don't resolve relative paths. These
+         are the platform defaults; crawlers don't run JS, so tenant-bootstrap.js
+         can never brand them. Tenant sites get their own og:title/description/
+         image rewritten per-vhost by nginx sub_filter (provision-vhost.sh).
+         Changing the title or description text here means updating the
+         sub_filter match strings too, or the rewrite silently stops matching. -->
+    <meta property="og:image" content="https://gleeworld.org/og-image.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:image" content="https://gleeworld.org/og-image.png" />
     
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://cdn.gpteng.co https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://gleeworld.org https://*.gleeworld.org https://js-cdn.music.apple.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' https://*.supabase.co https://supabase.gleeworld.org https://*.digitaloceanspaces.com blob: https://*.jit.si https://*.8x8.vc https://meet.gleeworld.org https://tonejs.github.io https://*.apple.com https://*.mzstatic.com; connect-src 'self' blob: https://gleeworld.org https://*.gleeworld.org wss://*.gleeworld.org *.sentry.io https://api.squareup.com https://app.squareup.com https://squareup.com https://api.squareup.com/v1/cdp/batch https://ecosystem-header.squarecdn.com *.squarecloudservices.com https://cdn.cookielaw.org/ https://*.onetrust.com/ https://browser-intake-datadoghq.com/ https://www.google.com https://www.gstatic.com https://*.supabase.co wss://*.supabase.co https://supabase.gleeworld.org wss://supabase.gleeworld.org https://*.digitaloceanspaces.com https://*.stripe.com https://meet.jit.si https://*.jit.si wss://meet.jit.si wss://*.jit.si https://8x8.vc https://*.8x8.vc wss://8x8.vc wss://*.8x8.vc https://meet.gleeworld.org wss://meet.gleeworld.org https://tonejs.github.io https://gleitz.github.io https://api.music.apple.com https://amp-api.music.apple.com https://amp-api-edge.music.apple.com https://*.music.apple.com https://*.apple.com https://*.mzstatic.com https://play.itunes.apple.com https://buy.itunes.apple.com https://cdn.jsdelivr.net https://storage.googleapis.com; worker-src 'self' blob:; frame-src 'self' https://js.stripe.com https://www.google.com https://docs.google.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://meet.gleeworld.org https://conducting.gleeworld.org https://readmusic.gleeworld.org https://*.apple.com https://buy.itunes.apple.com;" />
@@ -148,9 +153,23 @@
           } catch (_) {}
           return false;
         }
+        // Only OUR scripts are boot-critical. A third-party <script> that fails
+        // to load is somebody else's problem — reloading cannot fix it, and the
+        // reload just fails again. Cloudflare's proxy injects
+        // static.cloudflareinsights.com/beacon.min.js into every HTML response;
+        // our CSP blocks it; the blocked tag fires this error event. Retrying on
+        // that spun any Cloudflare-proxied custom domain at ~5 reloads/sec.
+        function isOwnScript(el) {
+          try {
+            return !!(el && el.src) && new URL(el.src, location.href).origin === location.origin;
+          } catch (_) {
+            return false;
+          }
+        }
         window.addEventListener('error', function (e) {
           var src = e.filename || e.target && e.target.src || '';
           var isScriptLoad = e.target && e.target.tagName === 'SCRIPT';
+          if (isScriptLoad && !isOwnScript(e.target)) return; // third-party — not ours to retry
           if (isScriptLoad && retryOnce()) return;
           paint('Boot error: ' + (e.message || e.type) + (src ? ' (' + src + ')' : '') + '\n\n' + ((e.error && e.error.stack) || ''));
         }, true);
