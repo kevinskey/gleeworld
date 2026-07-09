@@ -130,19 +130,23 @@ from the *extracted ID*, never from the caller's string.
 Without that ordering this function is an SSRF proxy running inside our infrastructure with
 service-role reach. This is the single most security-sensitive line in the feature.
 
-### URL forms the parser accepts
+### The parser already exists — reuse it
 
-| Input | ID |
-|---|---|
-| `https://www.youtube.com/watch?v=dQw4w9WgXcQ` | `dQw4w9WgXcQ` |
-| `https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PL…&index=3` | `dQw4w9WgXcQ` |
-| `https://youtu.be/dQw4w9WgXcQ?t=42` | `dQw4w9WgXcQ` |
-| `https://www.youtube.com/shorts/dQw4w9WgXcQ` | `dQw4w9WgXcQ` |
-| `https://www.youtube.com/embed/dQw4w9WgXcQ` | `dQw4w9WgXcQ` |
-| `https://vimeo.com/12345`, `not a url`, `https://youtube.com/watch?v=short` | reject |
+`src/lib/youtubeId.ts` on `main` already exports `getYouTubeId(url): string | null`,
+with 7 tests. It validates the hostname against an allowlist, handles `watch?v=`,
+`youtu.be/<id>`, `/shorts/<id>`, `/embed/<id>`, `/live/<id>`, `music.youtube.com`, and
+`youtube-nocookie.com`, and returns `null` for anything that doesn't yield a valid
+11-character ID. **Do not write a second one.**
 
-Playlist and timestamp parameters are stripped. A playlist URL with no `v=` is rejected — we
-save videos, not playlists.
+One wrinkle: edge functions run on Deno and can't import from `src/`. Copy the module to
+`supabase/functions/_shared/youtubeId.ts` and have the SPA keep importing `src/lib/youtubeId.ts`,
+or move it to a location both can reach. Either way there is exactly one implementation and one
+test suite — a parser that disagrees with itself across the client/server boundary is how a
+"valid" URL gets saved with an ID the player can't resolve.
+
+The client should call `getYouTubeId` *before* hitting the function, so an obviously bad paste
+fails instantly without a round trip. The function must call it again anyway: client-side
+validation is a convenience, never a security control.
 
 ### Why an edge function and not a browser fetch
 
@@ -207,9 +211,8 @@ required reading before writing a line of player code.
 
 Written before the implementation, per the project's TDD practice.
 
-**URL parser** (pure, fast, the highest-value tests in the feature)
-Every row of the table above, plus: empty string, `null`, a URL with a valid-looking 11-char
-segment in the wrong position, and a 10- and 12-character ID.
+**URL parser** — already covered by `src/lib/youtubeId.test.ts` (7 cases). Extend it only if the
+shared/Deno copy needs its own harness; do not duplicate the cases.
 
 **Edge function**
 - A non-YouTube URL returns 400 **and makes no outbound request** (assert on a stubbed fetch).
