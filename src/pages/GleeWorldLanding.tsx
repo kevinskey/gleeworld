@@ -35,6 +35,8 @@ import {
   School,
   Church,
   Building,
+  Menu,
+  X,
 } from "lucide-react";
 
 interface Event {
@@ -628,8 +630,28 @@ function MarketingSite() {
   );
 }
 
+// One source of truth for the nav links: the desktop row and the mobile sheet
+// render the same array, so they can't drift apart.
+const MARKETING_NAV_LINKS: { href: string; label: string }[] = [
+  { href: '#product', label: 'Product' },
+  { href: '#how', label: 'How it works' },
+  { href: '#pricing', label: 'Pricing' },
+  { href: TRY_DEMO_URL, label: 'Try the demo' },
+];
+
 function AppleNav() {
   const { open: openInquiry } = useInquiry();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Esc closes the sheet. Without this the only way out on a keyboard is to
+  // tab to the toggle, which is a trap for anyone not using a pointer.
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
   return (
     <header
       className="sticky top-0 z-50 w-full bg-white border-b border-slate-200 shadow-sm"
@@ -658,11 +680,16 @@ function AppleNav() {
             GleeWorld
           </span>
         </a>
-        <nav className="hidden sm:flex items-center gap-7 text-sm font-medium text-slate-700">
-          <a href="#product" className="hover:text-slate-900 transition-colors">Product</a>
-          <a href="#how" className="hover:text-slate-900 transition-colors">How it works</a>
-          <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
-          <a href={TRY_DEMO_URL} className="hover:text-slate-900 transition-colors">Try the demo</a>
+        {/* Desktop nav appears at lg (1024px), not sm (640px). Measured: the
+            wordmark is 191px and this row is 468px; with the 48px gutter they
+            touch at 707px and need 755px to breathe. md (768px) looks like it
+            clears that, but a desktop scrollbar eats ~15px of it, so the gap
+            collapses to zero at exactly 768. lg leaves 459px of air. Below it,
+            the links live in the sheet. */}
+        <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-700">
+          {MARKETING_NAV_LINKS.map((l) => (
+            <a key={l.href} href={l.href} className="hover:text-slate-900 transition-colors">{l.label}</a>
+          ))}
           <a href="/auth" className="hover:text-slate-900 transition-colors">Sign in</a>
           <button
             type="button"
@@ -673,9 +700,52 @@ function AppleNav() {
             Get started
           </button>
         </nav>
-        {/* Mobile sign-in (nav is hidden on phones) */}
-        <a href="/auth" className="sm:hidden text-sm font-semibold text-slate-700 hover:text-slate-900">Sign in</a>
+
+        {/* Below lg the links live in the sheet, so the toggle replaces them. */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          className="lg:hidden inline-flex items-center justify-center w-10 h-10 -mr-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          aria-controls="marketing-mobile-nav"
+        >
+          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
       </div>
+
+      {menuOpen && (
+        <nav
+          id="marketing-mobile-nav"
+          className="lg:hidden border-t border-slate-200 bg-white px-6 py-4 flex flex-col gap-1 text-base font-medium text-slate-700"
+        >
+          {MARKETING_NAV_LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={() => setMenuOpen(false)}
+              className="py-2.5 hover:text-slate-900 transition-colors"
+            >
+              {l.label}
+            </a>
+          ))}
+          <a
+            href="/auth"
+            onClick={() => setMenuOpen(false)}
+            className="py-2.5 hover:text-slate-900 transition-colors"
+          >
+            Sign in
+          </a>
+          <button
+            type="button"
+            onClick={() => { setMenuOpen(false); openInquiry(); }}
+            className="mt-2 inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+            style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
+          >
+            Get started
+          </button>
+        </nav>
+      )}
     </header>
   );
 }

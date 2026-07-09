@@ -251,9 +251,29 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {/* Auth Card — semi-opaque so the background scene shows through */}
-        <div className="rounded-3xl bg-white/85 backdrop-blur-md shadow-2xl overflow-hidden border border-white/40">
-          <div className="px-7 sm:px-8 py-7 sm:py-8">
+        {/* Auth card — liquid glass.
+            At bg-white/85 there was almost nothing left for backdrop-blur to
+            blur, so the card read as flat grey. Glass needs the background
+            actually visible: a lighter fill, a wide blur, and saturation to
+            keep the photo's colour from going muddy behind the frost.
+            The supports- variants fall back to a near-opaque card wherever
+            backdrop-filter is unavailable, so the form never loses contrast. */}
+        <div
+          className="relative rounded-3xl overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)]
+                     bg-white/80
+                     supports-[backdrop-filter]:bg-white/55
+                     supports-[backdrop-filter]:backdrop-blur-2xl
+                     supports-[backdrop-filter]:backdrop-saturate-150
+                     border border-white/50 ring-1 ring-inset ring-white/25"
+        >
+          {/* Specular highlight: the bright top edge and soft sheen that make
+              glass read as a lens rather than a translucent rectangle. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-24
+                       bg-gradient-to-b from-white/45 to-transparent"
+          />
+          <div className="relative px-7 sm:px-8 py-7 sm:py-8">
             <div className="flex items-center justify-center gap-2 mb-6 text-slate-900">
               {isForgotPassword ? (
                 <>
@@ -289,7 +309,7 @@ export default function AuthPage() {
                     <KeyRound className="h-7 w-7" />
                   </div>
                   <h3 className="text-base font-semibold text-slate-900 mb-1">Check your email</h3>
-                  <p className="text-slate-600 text-sm mb-6">
+                  <p className="text-slate-800 text-sm mb-6">
                     We sent a reset link to <strong className="text-slate-900">{email}</strong>
                   </p>
                   <button
@@ -299,7 +319,7 @@ export default function AuthPage() {
                       setResetEmailSent(false);
                       navigate('/auth');
                     }}
-                    className="w-full inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors"
+                    className="w-full inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-slate-900 border border-slate-300 hover:bg-slate-50 transition-colors"
                   >
                     Back to sign in
                   </button>
@@ -307,7 +327,7 @@ export default function AuthPage() {
               ) : (
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div>
-                    <label htmlFor="forgot-email" className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 block">
+                    <label htmlFor="forgot-email" className="text-xs font-semibold uppercase tracking-wider text-slate-900 mb-1.5 block">
                       Email
                     </label>
                     <Input
@@ -338,7 +358,7 @@ export default function AuthPage() {
                         setIsForgotPassword(false);
                         navigate('/auth');
                       }}
-                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline-offset-2 hover:underline transition-colors"
+                      className="text-xs font-semibold text-slate-800 hover:text-slate-900 underline-offset-2 hover:underline transition-colors"
                     >
                       Back to sign in
                     </button>
@@ -359,7 +379,7 @@ export default function AuthPage() {
                 <form onSubmit={handleAuth} className="space-y-4">
                   {!isLogin && (
                     <div>
-                      <label htmlFor="auth-name" className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 block">
+                      <label htmlFor="auth-name" className="text-xs font-semibold uppercase tracking-wider text-slate-900 mb-1.5 block">
                         Full name
                       </label>
                       <Input
@@ -378,7 +398,7 @@ export default function AuthPage() {
                   )}
 
                   <div>
-                    <label htmlFor="auth-email" className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 block">
+                    <label htmlFor="auth-email" className="text-xs font-semibold uppercase tracking-wider text-slate-900 mb-1.5 block">
                       Email
                     </label>
                     <Input
@@ -396,7 +416,7 @@ export default function AuthPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="auth-password" className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5 block">
+                    <label htmlFor="auth-password" className="text-xs font-semibold uppercase tracking-wider text-slate-900 mb-1.5 block">
                       Password
                     </label>
                     <div className="relative">
@@ -429,7 +449,7 @@ export default function AuthPage() {
                             setIsForgotPassword(true);
                             navigate('/auth?forgot=true');
                           }}
-                          className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline-offset-2 hover:underline transition-colors"
+                          className="text-xs font-semibold text-slate-800 hover:text-slate-900 underline-offset-2 hover:underline transition-colors"
                         >
                           Forgot your password?
                         </button>
@@ -458,7 +478,7 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setWorkspaceOpen(true)}
-                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                      className="text-xs font-semibold text-slate-800 hover:text-slate-900 transition-colors"
                     >
                       Want GleeWorld for your program?{' '}
                       <span className="underline underline-offset-2">Request your workspace</span>
@@ -467,7 +487,7 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setIsLogin(!isLogin)}
-                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                      className="text-xs font-semibold text-slate-800 hover:text-slate-900 transition-colors"
                     >
                       {isLogin ? "Don't have an account? " : 'Already have an account? '}
                       <span className="underline underline-offset-2">
