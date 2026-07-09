@@ -112,8 +112,10 @@ public final class TrackBinding {
         switch track {
         case .audio(let t):
             let assetMap = Dictionary(uniqueKeysWithValues: allAssets.map { ($0.id, $0) })
+            NSLog("[Studio.build] audio track \(id): \(t.clips.count) clips")
             for clip in t.clips {
-                guard let asset = assetMap[clip.asset_id] else { continue }
+                guard let asset = assetMap[clip.asset_id] else { NSLog("[Studio.build] clip \(clip.id): asset \(clip.asset_id) not in map — skip"); continue }
+                NSLog("[Studio.build] clip \(clip.id): loading asset \(asset.id) (.\(asset.format.rawValue)) …")
                 // Some asset formats (notably .webm from older Chrome
                 // recordings) can't be decoded by AVAudioFile. Skip the
                 // clip rather than aborting the whole loadSession — the
@@ -139,11 +141,13 @@ public final class TrackBinding {
                     NSLog("[Studio] skipping clip \(clip.id) — invalid file format (sr=\(fmt.sampleRate), ch=\(fmt.channelCount))")
                     continue
                 }
+                NSLog("[Studio.build] clip \(clip.id): loaded (sr=\(fmt.sampleRate) ch=\(fmt.channelCount)); attaching+connecting player")
                 let player = AVAudioPlayerNode()
                 engine.attach(player)
                 engine.connect(player, to: strip, format: fmt)
                 binding.playerNodes.append(player)
                 binding.loadedClips.append((clip, file, player))
+                NSLog("[Studio.build] clip \(clip.id): player connected")
             }
         case .midi(let t):
             let inst = EngineInstrumentFactory.build(spec: t.instrument, engine: engine, destination: strip)
@@ -432,22 +436,35 @@ public final class TrackBinding {
 
     public func dispose() {
         stopScheduling()
-        for p in playerNodes {
-            engine.disconnectNodeInput(p)
-            engine.detach(p)
-        }
-        for p in retiredPlayers {
-            engine.disconnectNodeInput(p)
-            engine.detach(p)
+        // Graph teardown can raise an ObjC NSException out of
+        // AVAudioEngine.disconnectNodeInput/detach when a node is already
+        // detached or the engine is mid-teardown. Swift's do/catch can't
+        // catch it, so an uncaught throw here ABORTS the app — this was the
+        // SIGABRT via disconnectNodeInput on the Capacitor bridge queue
+        // (build 140, triggered by a gain/FX change → stopEngine → dispose).
+        // Wrap the graph ops in the ObjC catcher so a stale node degrades to
+        // a no-op instead of crashing; the Swift-side bookkeeping (clearing
+        // arrays) always runs afterward.
+        if let err = StudioObjC.catchExceptions({
+            for p in self.playerNodes {
+                self.engine.disconnectNodeInput(p)
+                self.engine.detach(p)
+            }
+            for p in self.retiredPlayers {
+                self.engine.disconnectNodeInput(p)
+                self.engine.detach(p)
+            }
+            self.instrument?.dispose()
+            self.fxChain?.dispose()
+            self.engine.disconnectNodeInput(self.strip)
+            self.engine.disconnectNodeInput(self.muteGate)
+            self.engine.detach(self.strip)
+            self.engine.detach(self.muteGate)
+        }) {
+            NSLog("[Studio] TrackBinding.dispose teardown raised (ignored): \(err.localizedDescription)")
         }
         retiredPlayers.removeAll()
         playerNodes.removeAll()
         loadedClips.removeAll()
-        if let inst = instrument { inst.dispose() }
-        fxChain?.dispose()
-        engine.disconnectNodeInput(strip)
-        engine.disconnectNodeInput(muteGate)
-        engine.detach(strip)
-        engine.detach(muteGate)
     }
 }

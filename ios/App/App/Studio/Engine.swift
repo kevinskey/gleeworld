@@ -260,9 +260,11 @@ public final class StudioNativeEngine {
     }
 
     private func loadSessionBody(_ s: Studio.Session, assetLoader: AssetLoader) async throws {
+        NSLog("[Studio.load] ENTER tracks=\(s.tracks.count) assets=\(s.assets.count)")
         // start() must have run first. If a caller forgot to wire the
         // audio session, do it now so the rest of this method is safe.
         if !masterConnected { try start() }
+        NSLog("[Studio.load] started/masterConnected ok")
 
         // STOP the engine for the whole rebuild. Bulk graph surgery on
         // a running AVAudioEngine is unreliable: connecting chains of
@@ -272,12 +274,14 @@ public final class StudioNativeEngine {
         // the restart below.
         let wasRunning = engine.isRunning
         if wasRunning { engine.stop() }
+        NSLog("[Studio.load] engine stopped (wasRunning=\(wasRunning)); disposing \(tracks.count) old bindings")
 
         // Tear down previous bindings.
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
         masterFxChain?.dispose()
         masterFxChain = nil
+        NSLog("[Studio.load] old bindings disposed")
 
         self.session = s
 
@@ -287,7 +291,8 @@ public final class StudioNativeEngine {
         // re-negotiated masterMixer's format and silently dropped its
         // output link — wiring the master last means nothing runs after
         // it that could tear it down again.
-        for tr in s.tracks {
+        for (i, tr) in s.tracks.enumerated() {
+            NSLog("[Studio.load] build track \(i+1)/\(s.tracks.count) …")
             let binding = try await TrackBinding.build(
                 track: tr, engine: engine, master: masterMixer, assetLoader: assetLoader,
                 allAssets: s.assets)
@@ -296,8 +301,10 @@ public final class StudioNativeEngine {
             case .midi(let t):  binding.userMute = t.mute; binding.userSolo = t.solo
             }
             tracks[binding.trackId] = binding
+            NSLog("[Studio.load] built track \(i+1) ok")
         }
         recomputeSolo()
+        NSLog("[Studio.load] all tracks built; wiring master fx")
 
         // Wire master FX chain in front of the engine's main mixer.
         // format: nil here (unlike the track wiring above) — masterMixer's
@@ -326,6 +333,7 @@ public final class StudioNativeEngine {
         }
         // Apply master gain.
         masterMixer.outputVolume = Float(dbToGain(s.master.volume_db))
+        NSLog("[Studio.load] master wired; restarting engine (wasRunning=\(wasRunning))")
 
         // Restart — the rebuilt graph negotiates formats here, in one
         // shot, with every connection in place.
@@ -336,6 +344,7 @@ public final class StudioNativeEngine {
                 lastError = "engine restart failed: \(error.localizedDescription)"
             }
         }
+        NSLog("[Studio.load] DONE (engine.isRunning=\(engine.isRunning))")
 
         emit()
     }
