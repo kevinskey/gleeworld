@@ -23,6 +23,54 @@ import Foundation
 import AVFoundation
 import Capacitor
 
+// ── Structured error shape (returned by every plugin method) ──────────────
+// Kept in this file (not a separate source) because the Xcode project uses
+// manual file references; a new .swift wouldn't be in Compile Sources.
+public struct StudioError: Error {
+    public let code: String        // stable machine code, e.g. "ENGINE_NOT_READY"
+    public let message: String
+    public let operation: String   // the plugin method that failed
+    public var trackId: String?
+    public var effectId: String?
+    public var recoverable: Bool
+
+    public init(code: String, message: String, operation: String,
+                trackId: String? = nil, effectId: String? = nil, recoverable: Bool = true) {
+        self.code = code; self.message = message; self.operation = operation
+        self.trackId = trackId; self.effectId = effectId; self.recoverable = recoverable
+    }
+    public var dict: [String: Any] {
+        var d: [String: Any] = ["code": code, "message": message,
+                                "operation": operation, "recoverable": recoverable]
+        if let t = trackId { d["trackId"] = t }
+        if let e = effectId { d["effectId"] = e }
+        return d
+    }
+}
+
+public extension CAPPluginCall {
+    func reject(_ e: StudioError) { self.reject(e.message, e.code, nil, e.dict) }
+}
+
+// ── Discrete engine event names (see Engine.onEvent) ──────────────────────
+public enum StudioEvents {
+    public static let ready = "studioEngineReady"
+    public static let error = "studioEngineError"
+    public static let playbackStarted = "playbackStarted"
+    public static let playbackPaused = "playbackPaused"
+    public static let playbackStopped = "playbackStopped"
+    public static let positionChanged = "playbackPositionChanged"
+    public static let trackLoaded = "trackLoaded"
+    public static let trackFailed = "trackFailed"
+    public static let effectAdded = "effectAdded"
+    public static let effectRemoved = "effectRemoved"
+    public static let effectBypassed = "effectBypassed"
+    public static let effectParameterChanged = "effectParameterChanged"
+    public static let routeChanged = "routeChanged"
+    public static let audioInterrupted = "audioInterrupted"
+    public static let engineRecovered = "engineRecovered"
+}
+
 @objc(StudioEnginePlugin)
 public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "StudioEnginePlugin"
@@ -36,6 +84,8 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateStrip", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setFxParam", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "bypassEffect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateTempo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setMetronome", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "clickOnce", returnType: CAPPluginReturnPromise),
@@ -145,6 +195,15 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
                 DispatchQueue.main.async {
                     self?.notifyListeners("state", data: payload)
                 }
+            }
+        }
+        // Discrete named events (playbackStarted, audioInterrupted, …). Always
+        // deliver on the main thread — notifyListeners touches the bridge.
+        engine.onEvent = { [weak self] name, payload in
+            if Thread.isMainThread {
+                self?.notifyListeners(name, data: payload)
+            } else {
+                DispatchQueue.main.async { self?.notifyListeners(name, data: payload) }
             }
         }
     }
@@ -259,6 +318,43 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             pan: call.getDouble("pan"),
             mute: call.getBool("mute"),
             solo: call.getBool("solo"))
+        call.resolve()
+    }
+
+    // Live FX-parameter update. `trackId` omitted → master bus. `fx` is the
+    // full updated FxNode JSON (id/type/enabled/params); the engine applies
+    // the param values to the existing node without a rebuild.
+    @objc func setFxParam(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let fxDict = call.getObject("fx") else { call.reject("missing fx"); return }
+        let trackId = call.getString("trackId")
+        do {
+            let data = try JSONSerialization.data(withJSONObject: fxDict, options: [])
+            let spec = try JSONDecoder().decode(Studio.FxNode.self, from: data)
+            engine.setFxParam(trackId: trackId, spec: spec)
+            call.resolve()
+        } catch {
+            call.reject("setFxParam decode failed: \(error.localizedDescription)")
+        }
+    }
+
+    // Live enable/disable of an effect (bypass flip). `trackId` omitted →
+    // master bus. Emits effectBypassed.
+    @objc func bypassEffect(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let effectId = call.getString("effectId") else {
+            return call.reject(StudioError(code: "BAD_ARGS", message: "effectId required",
+                                           operation: "bypassEffect", recoverable: false)) }
+        let trackId = call.getString("trackId")
+        let bypassed = call.getBool("bypassed") ?? false
+        let ok = engine.bypassEffect(trackId: trackId, fxId: effectId, bypassed: bypassed)
+        if !ok {
+            return call.reject(StudioError(code: "FX_NOT_FOUND",
+                message: "effect \(effectId) not found on \(trackId ?? "master")",
+                operation: "bypassEffect", trackId: trackId, effectId: effectId)) }
+        var payload: [String: Any] = ["effectId": effectId, "bypassed": bypassed]
+        if let t = trackId { payload["trackId"] = t }
+        notifyListeners(StudioEvents.effectBypassed, data: payload)
         call.resolve()
     }
 

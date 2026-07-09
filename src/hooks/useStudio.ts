@@ -156,16 +156,25 @@ function fxSig(f: { id: string; type: string; enabled: boolean; params?: Record<
  *  changes to those are handled incrementally via addClipToTrack /
  *  removeClipFromTrack. Volume / pan / mute / solo go through
  *  updateTrackStrip and don't bump the skeleton either. */
-function skeletonSig(session: Session | null): string {
+/** FX signature WITHOUT params — structure only (id/type/enabled). Used to
+ *  tell a param-only knob change (→ live update, no rebuild) apart from a
+ *  structural FX change (add/remove/reorder/enable → rebuild). */
+function fxStructSig(f: { id: string; type: string }): string {
+  // NOTE: `enabled` is intentionally EXCLUDED — enable/disable is applied live
+  // via bypassEffect (the node is always built, just bypassed). Only add /
+  // remove / reorder change this structure signature → full reload.
+  return `${f.id}:${f.type}`;
+}
+function buildSkeletonSig(session: Session | null, fxFn: (f: { id: string; type: string; enabled: boolean; params?: Record<string, unknown> }) => string): string {
   if (!session) return '';
   const parts: string[] = [
     String(session.tempo_bpm),
     `${session.time_signature.numerator}/${session.time_signature.denominator}`,
-    session.master.fx.map(fxSig).join(','),
+    session.master.fx.map(fxFn).join(','),
   ];
   for (const t of session.tracks) {
     parts.push(`${t.id}:${t.kind}`);
-    parts.push(t.fx.map(fxSig).join(','));
+    parts.push(t.fx.map(fxFn).join(','));
     // Per-track EQ bands are baked into buildTrack's graph exactly like
     // FX nodes, so EQ edits ride the same full-rebuild path (B1 task 5).
     parts.push(trackEqSig(t.eq));
@@ -180,6 +189,24 @@ function skeletonSig(session: Session | null): string {
     }
   }
   return parts.join('|');
+}
+// Full skeleton (incl. FX params) — the web (Tone) engine still rebuilds on
+// any FX change through this, unchanged. structSig omits FX params so the
+// native path can detect a param-only change and apply it live.
+function skeletonSig(session: Session | null): string { return buildSkeletonSig(session, fxSig); }
+function structSig(session: Session | null): string { return buildSkeletonSig(session, fxStructSig); }
+
+/** Every FX node in the session (master + per-track) with its owner track id
+ *  (null = master) and a param signature, for the native live-update diff. */
+function fxEntries(session: Session | null): Array<{ fxId: string; trackId: string | null; fx: unknown; enabled: boolean; sig: string }> {
+  if (!session) return [];
+  const out: Array<{ fxId: string; trackId: string | null; fx: unknown; enabled: boolean; sig: string }> = [];
+  // sig includes enabled so an enable/disable toggle is detected on the live
+  // path (applied via bypassEffect), not only param edits.
+  const sigOf = (f: { enabled: boolean }) => `${fxSig(f as never)}|en${f.enabled}`;
+  for (const f of session.master.fx) out.push({ fxId: f.id, trackId: null, fx: f, enabled: f.enabled, sig: sigOf(f) });
+  for (const t of session.tracks) for (const f of t.fx) out.push({ fxId: f.id, trackId: t.id, fx: f, enabled: f.enabled, sig: sigOf(f) });
+  return out;
 }
 
 /** Audio-clip signature for a single audio track. Used to detect which
@@ -209,6 +236,10 @@ export function useStudioEngine(session: Session | null) {
   // sync. Diffing against the current session tells us exactly which
   // clips to add or remove on the live graph.
   const lastAudioClipsRef = useRef<Map<string, Map<string, string>>>(new Map());
+  // Structure (FX minus params) + per-FX param signatures — let the native
+  // path apply an FX knob change live (no rebuild) when only params differ.
+  const lastStructRef = useRef<string>('');
+  const lastFxParamsRef = useRef<Map<string, string>>(new Map());
 
   // Close the native engine exactly once, on unmount. Session-change
   // effects must never do this (see cleanup note in the reload effect).
@@ -263,6 +294,32 @@ export function useStudioEngine(session: Session | null) {
       // of tearing it down + re-opening — which on iOS means redownload
       // every asset + redecode every AVAudioFile, easily multi-second.
       const skeleton = skeletonSig(session);
+      const struct = structSig(session);
+      // Param-only FX change (same structure, only knob values differ):
+      // apply live on the running engine — no rebuild, no re-decode, no
+      // playback interruption. This is what makes FX knobs feel "pro".
+      if (skeleton !== lastSkeletonRef.current && struct === lastStructRef.current && nativeCloseRef.current) {
+        (async () => {
+          try {
+            for (const e of fxEntries(session)) {
+              if (lastFxParamsRef.current.get(e.fxId) !== e.sig) {
+                // Params live; enable/disable live via bypass (both no-rebuild).
+                await NativeStudio.setFxParam({ trackId: e.trackId ?? undefined, fx: e.fx });
+                await NativeStudio.bypassEffect({ trackId: e.trackId ?? undefined, effectId: e.fxId, bypassed: !e.enabled });
+              }
+            }
+            if (!cancelled) {
+              lastFxParamsRef.current = new Map(fxEntries(session).map((e) => [e.fxId, e.sig]));
+              lastSkeletonRef.current = skeleton;
+              lastStructRef.current = struct;
+            }
+          } catch (err) {
+            console.warn('[StudioEngine] live FX param update failed; forcing reload', err);
+            lastSkeletonRef.current = '';   // trigger a full reload next render
+          }
+        })();
+        return () => { cancelled = true; };
+      }
       const needsFullReload = skeleton !== lastSkeletonRef.current || !nativeCloseRef.current;
       if (!needsFullReload) {
         setWarming(true);
@@ -374,8 +431,11 @@ export function useStudioEngine(session: Session | null) {
         nativeCloseRef.current = close;
         // Pin the skeleton + audio-clip snapshot now that the native
         // engine reflects this session. Subsequent clip-only edits
-        // take the incremental path above.
+        // take the incremental path above; FX-param-only edits take the
+        // live path (needs the struct + fx-param snapshots).
         lastSkeletonRef.current = skeleton;
+        lastStructRef.current = structSig(session);
+        lastFxParamsRef.current = new Map(fxEntries(session).map((e) => [e.fxId, e.sig]));
         const snap = new Map<string, Map<string, string>>();
         for (const t of session.tracks) {
           if (t.kind !== 'audio') continue;

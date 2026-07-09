@@ -11,6 +11,7 @@
 
 import Foundation
 import AVFoundation
+import UIKit   // UIApplication foreground notification (lifecycle recovery)
 
 /// Snapshot of engine state. Sent to JS via Capacitor `notifyListeners`.
 public struct StudioEngineState {
@@ -75,6 +76,18 @@ public final class StudioNativeEngine {
     private var startHostTime: AVAudioTime?
     private var pausedAt: Double = 0
     private var isPlayingNow: Bool = false
+    // Audio-session interruption / IO-unit-stop recovery. AVAudioEngine pauses
+    // itself when the session is interrupted or the IO unit stops (route change,
+    // a graph edit while running, another app grabbing audio) and does NOT
+    // auto-resume — without handling it, playback just stops ("moving the gain
+    // stops the track", confirmed via device log: "iounit stopped unexpectedly
+    // > pausing the engine"). wantsPlayback tracks user intent so we can
+    // restart + resume from where we were.
+    private var wantsPlayback = false
+    private var interruptionResumePos: Double = 0
+    private var interruptionWasActive = false
+    private var recoveryObserversInstalled = false
+    private var recovering = false
     /// True while a take is rolling. play() must not auto-rewind under
     /// a live recording — the take is stamped at the position the user
     /// armed, and yanking the transport to 0 would misplace it.
@@ -82,6 +95,10 @@ public final class StudioNativeEngine {
 
     /// Position-tick callback bridged to JS via the plugin.
     public var onState: ((StudioEngineState) -> Void)?
+    /// Discrete named events (see StudioEvents) — the plugin wires this to
+    /// Capacitor notifyListeners. Complements the monolithic onState stream.
+    public var onEvent: ((String, [String: Any]) -> Void)?
+    private func emitEvent(_ name: String, _ payload: [String: Any] = [:]) { onEvent?(name, payload) }
     private var positionTimer: Timer?
 
     // Metronome — one AVAudioPlayerNode on the master bus; each beat
@@ -212,7 +229,94 @@ public final class StudioNativeEngine {
             try engine.start()
             NSLog("[Studio] engine.start: AVAudioEngine running")
         }
+        installRecoveryObservers()
         emit()
+        emitEvent(StudioEvents.ready, ["isReady": engine.isRunning])
+    }
+
+    /// Observe audio-session interruptions and AVAudioEngine configuration
+    /// changes so a stopped IO unit (which silently pauses the engine) is
+    /// recovered instead of leaving the track stopped. Registered once.
+    private func installRecoveryObservers() {
+        guard !recoveryObserversInstalled else { return }
+        recoveryObserversInstalled = true
+        let nc = NotificationCenter.default
+        nc.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
+            guard let self else { return }
+            let raw = (note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt) ?? 0
+            if raw == AVAudioSession.InterruptionType.began.rawValue {
+                // System paused the engine. Snapshot where we were so we can
+                // resume there when the interruption ends.
+                if self.isPlayingNow {
+                    self.interruptionResumePos = self.currentPositionSeconds()
+                    self.interruptionWasActive = true
+                    self.isPlayingNow = false
+                }
+                self.emitEvent(StudioEvents.audioInterrupted, ["reason": "session_interruption"])
+                NSLog("[Studio] interruption BEGAN (wantsPlayback=\(self.wantsPlayback), pos=\(self.interruptionResumePos))")
+            } else {
+                NSLog("[Studio] interruption ENDED — recovering")
+                self.recoverPlayback()
+            }
+        }
+        // Fires when the IO unit stops / the render config changes (route
+        // change, a graph edit while running). Belt-and-suspenders with the
+        // interruption path — some IO-unit stops arrive only as this.
+        nc.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+            guard let self else { return }
+            NSLog("[Studio] engine configuration change — recovering (isRunning=\(self.engine.isRunning))")
+            self.recoverPlayback()
+        }
+        // Route change — tell JS + apply HIG behavior. Removing an output
+        // (headphones/BT unplugged) must PAUSE, never resume to the speaker.
+        nc.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { [weak self] note in
+            guard let self else { return }
+            let reason = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt) ?? 0
+            let outputs = AVAudioSession.sharedInstance().currentRoute.outputs.map { $0.portType.rawValue }
+            let priv: Set<String> = [
+                AVAudioSession.Port.headphones.rawValue, AVAudioSession.Port.bluetoothA2DP.rawValue,
+                AVAudioSession.Port.bluetoothHFP.rawValue, AVAudioSession.Port.bluetoothLE.rawValue,
+                AVAudioSession.Port.usbAudio.rawValue, AVAudioSession.Port.carAudio.rawValue,
+            ]
+            self.emitEvent(StudioEvents.routeChanged,
+                           ["outputs": outputs, "isHeadphones": outputs.contains { priv.contains($0) }])
+            if reason == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue {
+                // Output removed → pause. pause() also clears wantsPlayback, so
+                // the config-change observer won't auto-resume to the speaker.
+                if self.isPlayingNow { self.pause() } else { self.wantsPlayback = false }
+                NSLog("[Studio] route: output removed → paused (no speaker resume)")
+            }
+        }
+        // Foreground — a backgrounded .playback engine can have its IO unit
+        // stopped; resume from where we were IF the user still intends to play.
+        nc.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.recoverPlayback()
+        }
+    }
+
+    /// Reactivate the session, restart the engine, and resume playback from
+    /// where it stopped — the fix for "the track stops" after an interruption
+    /// or IO-unit stop. No-op if the user isn't trying to play.
+    private func recoverPlayback() {
+        guard wantsPlayback, !recovering else { return }
+        // If the engine is genuinely still running and we're still playing,
+        // there's nothing to recover.
+        if engine.isRunning && isPlayingNow { return }
+        recovering = true
+        let resumePos = interruptionWasActive ? interruptionResumePos : currentPositionSeconds()
+        interruptionWasActive = false
+        isPlayingNow = false
+        do {
+            // start() reactivates the AVAudioSession and (re)starts the engine.
+            try start()
+        } catch {
+            NSLog("[Studio] recoverPlayback: start() failed: \(error.localizedDescription)")
+        }
+        pausedAt = resumePos
+        play()   // reschedules every track from pausedAt and flips isPlayingNow
+        emitEvent(StudioEvents.engineRecovered, ["positionMs": resumePos * 1000])
+        NSLog("[Studio] recoverPlayback: resumed at \(resumePos)")
+        recovering = false
     }
 
     public func stopEngine() {
@@ -383,6 +487,37 @@ public final class StudioNativeEngine {
         recomputeSolo()
     }
 
+    /// Live FX-parameter update — apply changed params to an already-built FX
+    /// node without rebuilding the graph, so tweaking a reverb/EQ/gain knob
+    /// doesn't stop playback or re-decode assets. `trackId == nil` targets the
+    /// master bus. Structural FX changes (add/remove/reorder/enable) still go
+    /// through loadSession. Wrapped: an AU param set shouldn't raise, but the
+    /// graph guard keeps a bad cast/state from ever aborting.
+    public func setFxParam(trackId: String?, spec: Studio.FxNode) {
+        _ = StudioObjC.catchExceptions {
+            if let tid = trackId {
+                _ = self.tracks[tid]?.applyFxParam(fxId: spec.id, spec: spec)
+            } else {
+                _ = self.masterFxChain?.setParams(fxId: spec.id, spec: spec)
+            }
+        }
+    }
+
+    /// Live enable/disable of an effect (bypass flip, no rebuild). trackId nil
+    /// = master. Returns true if the effect was found.
+    @discardableResult
+    public func bypassEffect(trackId: String?, fxId: String, bypassed: Bool) -> Bool {
+        var ok = false
+        _ = StudioObjC.catchExceptions {
+            if let tid = trackId {
+                ok = self.tracks[tid]?.setFxBypass(fxId: fxId, on: bypassed) ?? false
+            } else {
+                ok = self.masterFxChain?.setBypass(fxId: fxId, on: bypassed) ?? false
+            }
+        }
+        return ok
+    }
+
     /// Solo override — when any track is soloed, every non-soloed track
     /// is silenced regardless of its own mute flag. Mirrors the web
     /// engine's recomputeSolo; before this, the S button did nothing on
@@ -451,12 +586,15 @@ public final class StudioNativeEngine {
 
         if metronomeOn { scheduleMetronome(from: pausedAt) }
         isPlayingNow = true
+        wantsPlayback = true   // user intent — drives interruption recovery
         startPositionTimer()
         emit()
+        emitEvent(StudioEvents.playbackStarted, ["positionMs": pausedAt * 1000])
     }
 
     public func pause() {
         cancelCountIn()
+        wantsPlayback = false   // deliberate stop — don't auto-resume
         guard isPlayingNow else { return }
         // Record where we paused so play() resumes from there.
         pausedAt = currentPositionSeconds()
@@ -465,10 +603,12 @@ public final class StudioNativeEngine {
         isPlayingNow = false
         positionTimer?.invalidate(); positionTimer = nil
         emit()
+        emitEvent(StudioEvents.playbackPaused, ["positionMs": pausedAt * 1000])
     }
 
     public func stopTransport() {
         cancelCountIn()
+        wantsPlayback = false   // deliberate stop — don't auto-resume
         for (_, t) in tracks { t.stopScheduling() }
         cancelMetronome()
         pausedAt = 0
@@ -476,6 +616,7 @@ public final class StudioNativeEngine {
         startHostTime = nil
         positionTimer?.invalidate(); positionTimer = nil
         emit()
+        emitEvent(StudioEvents.playbackStopped)
     }
 
     public func seek(toSeconds s: Double) {
