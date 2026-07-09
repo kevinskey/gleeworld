@@ -760,7 +760,33 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         // OR a raw file:// path. Normalize to a real on-disk path because
         // AVAudioFile(forReading:) wants file:// or a path string.
         let localPath: String
-        if let url = URL(string: localUrlOrPath), url.isFileURL {
+        if let url = URL(string: localUrlOrPath), url.scheme == "http" || url.scheme == "https" {
+            // Remote signed URL — happens after a take's background upload
+            // swaps its local file:// for the remote https asset. AVAudioFile
+            // CANNOT open an http(s) URL: passing one through crashed silently
+            // as ExtAudioFileOpenURL error 2003334207 (device log), leaving the
+            // clip — and with two remote takes, the whole mix — silent. The
+            // full-reload path downloads first (AssetLoader); the incremental
+            // path didn't. Download to a temp file here before opening.
+            let sem = DispatchSemaphore(value: 0)
+            var tmpPath: String?
+            URLSession.shared.dataTask(with: url) { data, _, _ in
+                if let data {
+                    let ext = url.pathExtension.isEmpty ? "wav" : url.pathExtension
+                    let tmp = FileManager.default.temporaryDirectory
+                        .appendingPathComponent(UUID().uuidString).appendingPathExtension(ext)
+                    if (try? data.write(to: tmp)) != nil { tmpPath = tmp.path }
+                }
+                sem.signal()
+            }.resume()
+            _ = sem.wait(timeout: .now() + 20)
+            guard let p = tmpPath else {
+                return call.reject(StudioError(code: "ASSET_DOWNLOAD_FAILED",
+                    message: "couldn't download clip audio for playback",
+                    operation: "addClipToTrack", trackId: trackId))
+            }
+            localPath = p
+        } else if let url = URL(string: localUrlOrPath), url.isFileURL {
             localPath = url.path
         } else if localUrlOrPath.hasPrefix("/") {
             localPath = localUrlOrPath
