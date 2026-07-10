@@ -18,6 +18,9 @@
 //    a stale `next`, and re-arming would overwrite saveTimer.current,
 //    cancelling a newer pending save so the stale snapshot could win the
 //    write while the UI flips to 'saved'.
+//  - On unmount / song change, a still-pending debounce is flushed
+//    (fire-and-forget) rather than discarded, so the last ≤800ms of typing
+//    survives an immediate back-navigation.
 //  - Added a Share toggle (song.visibility) — new in this multi-tenant app,
 //    the old app had no such concept.
 //  - AIPanel / ChordChartEditor (via SectionChordSlot) / RecorderPanel /
@@ -34,6 +37,21 @@ import SectionBlock from './components/SectionBlock';
 // import AIPanel from './components/AIPanel'; // restored in Task 9
 // import RecorderPanel from './components/RecorderPanel'; // restored in Task 11
 // import SectionChordSlot from './components/SectionChordSlot'; // restored in Task 10 alongside ChordChartEditor
+
+// The exact autosave payload — shared by the debounced save and the
+// unmount/song-change flush so the two can never drift apart.
+function songPatch(s: Song): Partial<Song> {
+  return {
+    title: s.title,
+    sections: s.sections,
+    notes: s.notes,
+    tempo_bpm: s.tempo_bpm,
+    key_signature: s.key_signature,
+    graveyard: s.graveyard,
+    chord_chart: s.chord_chart,
+    chord_charts: s.chord_charts,
+  };
+}
 
 export default function SongwritingEditorPage() {
   const { songId } = useParams<{ songId: string }>();
@@ -52,6 +70,10 @@ export default function SongwritingEditorPage() {
   // route change) must never flip the indicator to 'saved'/'dirty' for state
   // it doesn't represent.
   const saveSeq = useRef(0);
+  // Snapshot behind the pending debounce timer: set when the timer is armed,
+  // cleared when it fires normally. Lets the cleanup effect below FLUSH the
+  // final ≤800ms of edits instead of discarding them.
+  const pendingSave = useRef<Song | null>(null);
 
   // Load song
   useEffect(() => {
@@ -61,9 +83,13 @@ export default function SongwritingEditorPage() {
       .catch((e: any) => toast.error(e.message || 'Could not load song'));
   }, [songId]);
 
-  // Kill any pending debounce and invalidate any in-flight save whenever the
-  // editor unmounts or navigates to a different song — no timer or late
-  // response may outlive the song it belongs to.
+  // On unmount or navigating to a different song: invalidate any in-flight
+  // save (no late response may flip saveState for the wrong song), and if a
+  // debounce is still pending, flush it immediately rather than discard it —
+  // otherwise "type a word, hit back within 800ms" would silently never
+  // persist. The flush is fire-and-forget: the seq bump guarantees it can't
+  // touch React state, and a failure is only logged (the editor is gone, so
+  // there's no UI left to surface a retry from).
   useEffect(() => {
     return () => {
       if (saveTimer.current) {
@@ -71,6 +97,13 @@ export default function SongwritingEditorPage() {
         saveTimer.current = undefined;
       }
       saveSeq.current += 1; // orphan any in-flight attempt
+      const pending = pendingSave.current;
+      pendingSave.current = null;
+      if (pending) {
+        updateSong(pending.id, songPatch(pending)).catch((e) => {
+          console.error('Final autosave flush failed', e);
+        });
+      }
     };
   }, [songId]);
 
@@ -86,19 +119,12 @@ export default function SongwritingEditorPage() {
     setSaveState('dirty');
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
     const seq = ++saveSeq.current;
+    pendingSave.current = next;
     saveTimer.current = window.setTimeout(async () => {
+      pendingSave.current = null; // in flight now, no longer pending
       setSaveState('saving');
       try {
-        await updateSong(next.id, {
-          title: next.title,
-          sections: next.sections,
-          notes: next.notes,
-          tempo_bpm: next.tempo_bpm,
-          key_signature: next.key_signature,
-          graveyard: next.graveyard,
-          chord_chart: next.chord_chart,
-          chord_charts: next.chord_charts,
-        });
+        await updateSong(next.id, songPatch(next));
         // A newer save was scheduled (or the editor unmounted / changed song)
         // while this one was in flight — its outcome no longer describes the
         // current document. Never report 'saved' for a superseded attempt.
