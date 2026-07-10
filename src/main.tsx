@@ -119,13 +119,13 @@ ReactDOM.createRoot(rootElement).render(
   </React.StrictMode>
 );
 
-// Boot succeeded — re-arm the index.html watchdog's one-shot auto-reload
-// so a future transient script-load failure in this tab gets its retry.
-try { sessionStorage.removeItem('gw-boot-retried'); } catch { /* ignore */ }
-
-// Re-arm the stale-chunk auto-reload (BootErrorBoundary) only after the
-// app has been healthy for a while: clearing it immediately at boot could
-// turn a genuinely missing chunk into a reload loop.
+// Re-arm both watchdogs' one-shot auto-reloads, but only after the app has
+// been healthy for a while. Clearing a guard immediately at boot doesn't make
+// it one-shot at all: a failure that recurs on every load re-arms the retry
+// every load, so the tab reloads forever. (gw-boot-retried did exactly that —
+// a script error on each boot spun the page at ~5 reloads/sec.) A loop reloads
+// long before this fires, so the guard survives and the error screen renders.
 setTimeout(() => {
+  try { sessionStorage.removeItem('gw-boot-retried'); } catch { /* ignore */ }
   try { sessionStorage.removeItem('gw-chunk-retried'); } catch { /* ignore */ }
 }, 30_000);

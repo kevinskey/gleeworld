@@ -143,12 +143,18 @@
     letter-spacing: -0.43px;
   }
 
-  /* iOS large-title hierarchy — HIG sizes/weights/tracking verbatim. */
-  h1 { font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: 0.4px;  color: hsl(var(--foreground)); }
-  h2 { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: 0.38px; color: hsl(var(--foreground)); }
-  h3 { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.26px; color: hsl(var(--foreground)); }
-  h4 { font-size: 20px; line-height: 25px; font-weight: 600; letter-spacing: -0.45px; color: hsl(var(--foreground)); }
-  h5, h6 { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px; color: hsl(var(--foreground)); }
+  /* iOS large-title hierarchy — HIG sizes/weights/tracking verbatim.
+     Deliberately NO color: an element rule beats an inherited one, so setting
+     color here painted every heading --foreground (near-black) even inside a
+     dark section whose parent had set text-white — the tenant landing hero
+     rendered a black title on a navy gradient. Headings inherit from body
+     (@apply text-foreground), so light surfaces are unchanged, while dark
+     surfaces get the white their container asked for. */
+  h1 { font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: 0.4px; }
+  h2 { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: 0.38px; }
+  h3 { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.26px; }
+  h4 { font-size: 20px; line-height: 25px; font-weight: 600; letter-spacing: -0.45px; }
+  h5, h6 { font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px; }
 
   :root {
     /* iOS 26 Design System for GleeWorld — House (light) */
