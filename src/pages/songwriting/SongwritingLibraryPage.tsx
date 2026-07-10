@@ -19,21 +19,30 @@ export default function SongwritingLibraryPage() {
   const [songs, setSongs] = useState<SongSummary[]>([]);
   const [shared, setShared] = useState<SongSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      try {
-        const [mine, theirs] = await Promise.all([listMySongs(), listSharedSongs()]);
-        if (cancelled) return;
-        setSongs(mine);
-        setShared(theirs);
-      } catch {
-        if (!cancelled) toast.error('Could not load songs');
-      } finally {
-        if (!cancelled) setLoading(false);
+      // Load the two lists independently so a shared-songs failure can never
+      // blank the user's own list (and vice versa).
+      const [mine, theirs] = await Promise.allSettled([listMySongs(), listSharedSongs()]);
+      if (cancelled) return;
+      if (mine.status === 'fulfilled') {
+        setSongs(mine.value);
+      } else {
+        console.error(mine.reason);
+        toast.error('Could not load songs');
       }
+      if (theirs.status === 'fulfilled') {
+        setShared(theirs.value);
+      } else {
+        // Shared list is secondary: log it and fall through to the empty
+        // "No songs shared yet." state without a second toast.
+        console.error(theirs.reason);
+      }
+      setLoading(false);
     }
     load();
     return () => {
@@ -42,6 +51,8 @@ export default function SongwritingLibraryPage() {
   }, []);
 
   async function newSong() {
+    if (creating) return;
+    setCreating(true);
     try {
       const song = await createSong({
         title: 'Untitled song',
@@ -51,8 +62,11 @@ export default function SongwritingLibraryPage() {
         ],
       });
       navigate(`/songwriting/${song.id}`);
-    } catch {
+    } catch (e) {
+      console.error(e);
       toast.error('Could not create song');
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -62,7 +76,8 @@ export default function SongwritingLibraryPage() {
       await deleteSong(id);
       setSongs((s) => s.filter((x) => x.id !== id));
       toast.success('Song deleted');
-    } catch {
+    } catch (e) {
+      console.error(e);
       toast.error('Could not delete song');
     }
   }
@@ -71,8 +86,8 @@ export default function SongwritingLibraryPage() {
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-8">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Your songs</h1>
-        <Button onClick={newSong}>
-          <Plus className="w-4 h-4 mr-1" /> New song
+        <Button onClick={newSong} disabled={creating}>
+          <Plus className="w-4 h-4 mr-1" /> {creating ? 'Creating…' : 'New song'}
         </Button>
       </div>
 
@@ -80,10 +95,10 @@ export default function SongwritingLibraryPage() {
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : songs.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center bg-muted/30">
-          <Music2 className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+          <Music2 aria-hidden="true" className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground mb-4">No songs yet — start your first one.</p>
-          <Button onClick={newSong}>
-            <Plus className="w-4 h-4 mr-1" /> New song
+          <Button onClick={newSong} disabled={creating}>
+            <Plus className="w-4 h-4 mr-1" /> {creating ? 'Creating…' : 'New song'}
           </Button>
         </div>
       ) : (
