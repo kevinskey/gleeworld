@@ -29,3 +29,6 @@ ios/App/App/config [0-9]*.xml
 
 # Generated manual booklet (Phase C)
 docs/manual/dist/
+
+# deno check output (edge functions)
+deno.lock

@@ -5,6 +5,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { askSongwritingAI, AiError } from '../ai';
 
 describe('askSongwritingAI', () => {
@@ -12,12 +13,60 @@ describe('askSongwritingAI', () => {
     (supabase.functions.invoke as any).mockResolvedValue({ data: { perfect: ['moon'] }, error: null });
     await expect(askSongwritingAI('rhymes', { word: 'June' })).resolves.toEqual({ perfect: ['moon'] });
   });
-  it('throws AiError on function error', async () => {
-    (supabase.functions.invoke as any).mockResolvedValue({ data: null, error: { message: 'boom' } });
-    await expect(askSongwritingAI('rhymes', { word: 'x' })).rejects.toBeInstanceOf(AiError);
+
+  it('recovers the rate-limit message and status from a 429 FunctionsHttpError body', async () => {
+    const response = new Response(
+      JSON.stringify({ error: 'Too many AI requests. Try again in a few minutes.' }),
+      { status: 429 },
+    );
+    (supabase.functions.invoke as any).mockResolvedValue({
+      data: null,
+      error: new FunctionsHttpError(response),
+    });
+    let caught: unknown;
+    try {
+      await askSongwritingAI('rhymes', { word: 'x' });
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(AiError);
+    expect((caught as AiError).message).toBe('Too many AI requests. Try again in a few minutes.');
+    expect((caught as AiError).status).toBe(429);
   });
-  it('throws AiError on embedded error payload (429 etc.)', async () => {
-    (supabase.functions.invoke as any).mockResolvedValue({ data: { error: 'Too many AI requests. Try again in a few minutes.' }, error: null });
-    await expect(askSongwritingAI('rhymes', { word: 'x' })).rejects.toThrow(/Too many/);
+
+  it('recovers the not-enabled message and status from a 403 FunctionsHttpError body', async () => {
+    const response = new Response(
+      JSON.stringify({ error: 'songwriting_not_enabled' }),
+      { status: 403 },
+    );
+    (supabase.functions.invoke as any).mockResolvedValue({
+      data: null,
+      error: new FunctionsHttpError(response),
+    });
+    let caught: unknown;
+    try {
+      await askSongwritingAI('rhymes', { word: 'x' });
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(AiError);
+    expect((caught as AiError).message).toBe('songwriting_not_enabled');
+    expect((caught as AiError).status).toBe(403);
+  });
+
+  it('falls back to the generic message for a non-HTTP error', async () => {
+    (supabase.functions.invoke as any).mockResolvedValue({
+      data: null,
+      error: { message: 'fetch failed' },
+    });
+    let caught: unknown;
+    try {
+      await askSongwritingAI('rhymes', { word: 'x' });
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(AiError);
+    expect((caught as AiError).message).toBe('fetch failed');
+    expect((caught as AiError).status).toBeUndefined();
   });
 });

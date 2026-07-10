@@ -253,15 +253,20 @@ Deno.serve(async (req) => {
     let parsed: unknown
     try { parsed = JSON.parse(raw) } catch { return json({ error: 'Failed to parse AI response' }, 502) }
 
-    await sb.from('gw_songwriting_ai_logs').insert({
-      tenant_id: tenantId,
-      user_id: userId,
-      feature,
-      input_preview: spec.inputPreview(payload).slice(0, 300),
-      output_preview: raw.slice(0, 300),
-      prompt_tokens: ds.usage?.prompt_tokens ?? null,
-      completion_tokens: ds.usage?.completion_tokens ?? null,
-    })
+    try {
+      const { error: logErr } = await sb.from('gw_songwriting_ai_logs').insert({
+        tenant_id: tenantId,
+        user_id: userId,
+        feature,
+        input_preview: spec.inputPreview(payload).slice(0, 300),
+        output_preview: raw.slice(0, 300),
+        prompt_tokens: ds.usage?.prompt_tokens ?? null,
+        completion_tokens: ds.usage?.completion_tokens ?? null,
+      })
+      if (logErr) console.error('[songwriting-ai] log insert failed', logErr)
+    } catch (logEx) {
+      console.error('[songwriting-ai] log insert failed', logEx)
+    }
     return json(parsed)
   } catch (err) {
     return json({ error: (err as Error).message }, 500)

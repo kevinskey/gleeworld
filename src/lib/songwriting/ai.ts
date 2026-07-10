@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 
 export type AiFeature = 'rhymes' | 'next_line' | 'synonyms' | 'sensory' | 'related' | 'rewrite';
 
@@ -13,7 +14,18 @@ export async function askSongwritingAI(
   const { data, error } = await supabase.functions.invoke('songwriting-ai', {
     body: { feature, payload },
   });
-  if (error) throw new AiError(error.message ?? 'AI request failed');
+  if (error) {
+    let message = error.message ?? 'AI request failed';
+    let status: number | undefined;
+    if (error instanceof FunctionsHttpError && error.context) {
+      status = error.context.status;
+      try {
+        const body = await error.context.json();
+        if (body?.error) message = body.error;
+      } catch { /* body not JSON — keep the generic message */ }
+    }
+    throw new AiError(message, status);
+  }
   if (data?.error) throw new AiError(data.error);
   return data;
 }
