@@ -8,6 +8,9 @@
 // some of their consumer components aren't rendered yet — the AI-panel
 // wiring is now live (Task 9); Task 10/11 reattach the rest.
 //
+// Task 10 update: ChordChartEditor / SectionChordSlot / TTSPlayButton are
+// now ported and restored below (RecorderPanel remains Task 11).
+//
 // Deliberate changes for this port:
 //  - useParams key is `songId` (string, Supabase uuid) instead of `id` (number).
 //  - Autosave persists via `updateSong` (Supabase) instead of the old REST client.
@@ -24,9 +27,9 @@
 //    survives an immediate back-navigation.
 //  - Added a Share toggle (song.visibility) — new in this multi-tenant app,
 //    the old app had no such concept.
-//  - ChordChartEditor (via SectionChordSlot) / RecorderPanel / TTSPlayButton
-//    are still commented out — those files don't exist until Tasks 10-11
-//    land. AIPanel is restored (Task 9).
+//  - RecorderPanel is still commented out — that file doesn't exist until
+//    Task 11 lands. AIPanel is restored (Task 9). ChordChartEditor (via
+//    SectionChordSlot) and TTSPlayButton are restored (Task 10).
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -36,8 +39,8 @@ import type { ChordChart, GraveyardEntry, Section, Song } from '@/lib/songwritin
 import TopBar, { type SaveState } from './components/TopBar';
 import SectionBlock from './components/SectionBlock';
 import AIPanel from './components/AIPanel';
+import SectionChordSlot from './components/SectionChordSlot';
 // import RecorderPanel from './components/RecorderPanel'; // restored in Task 11
-// import SectionChordSlot from './components/SectionChordSlot'; // restored in Task 10 alongside ChordChartEditor
 
 // The exact autosave payload — shared by the debounced save and the
 // unmount/song-change flush so the two can never drift apart.
@@ -260,8 +263,6 @@ export default function SongwritingEditorPage() {
   }
 
   // ── Chord chart helpers (per-section) ────────────────────────────
-  // Not rendered until Task 10 (ChordChartEditor / SectionChordSlot don't
-  // exist yet), but kept intact so that task can reattach them as-is.
   function chartFor(section: Section): ChordChart | undefined {
     if (!song || !section.chart_id) return undefined;
     return song.chord_charts?.find((c) => c.id === section.chart_id);
@@ -372,6 +373,7 @@ export default function SongwritingEditorPage() {
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
       <TopBar
+        song={song}
         highlightRhymes={highlightRhymes}
         onToggleRhymes={() => setHighlightRhymes((v) => !v)}
         saveState={saveState}
@@ -413,37 +415,50 @@ export default function SongwritingEditorPage() {
 
           {/* Sections — each with its own optional chord chart slot */}
           <div className="space-y-8">
-            {song.sections.map((section, i) => (
-              <div key={section.id}>
-                <SectionBlock
-                  section={section}
-                  canMoveUp={i > 0}
-                  canMoveDown={i < song.sections.length - 1}
-                  focusedLine={focusedLine?.sectionId === section.id ? focusedLine.index : null}
-                  highlightRhymes={highlightRhymes}
-                  onChange={(patch) => updateSection(section.id, patch)}
-                  onDelete={() => deleteSection(section.id)}
-                  onMoveUp={() => moveSection(section.id, -1)}
-                  onMoveDown={() => moveSection(section.id, 1)}
-                  onFocusLine={(index) => setFocusedLine({ sectionId: section.id, index })}
-                  onSelectWord={setSelectedWord}
-                />
-                {/* <SectionChordSlot
-                  section={section}
-                  chart={chartFor(section)}
-                  bpm={song.tempo_bpm}
-                  refCount={chartFor(section) ? chartRefCount(chartFor(section)!.id) : 0}
-                  clipboardChart={chartClipboard ? song.chord_charts?.find((c) => c.id === chartClipboard) ?? null : null}
-                  clipboardChartLabel={null}
-                  onChartChange={(next) => updateChart(next.id, next)}
-                  onTempoChange={(tempo_bpm) => update({ tempo_bpm: tempo_bpm > 0 ? tempo_bpm : null })}
-                  onAttachNew={attachNewChart}
-                  onAttachClipboard={attachClipboardChart}
-                  onCopy={copyChartToClipboard}
-                  onDetach={detachChart}
-                /> restored in Task 10 alongside ChordChartEditor */}
-              </div>
-            ))}
+            {song.sections.map((section, i) => {
+              const chart = chartFor(section);
+              const clipboardChart =
+                chartClipboard
+                  ? song.chord_charts?.find((c) => c.id === chartClipboard) ?? null
+                  : null;
+              return (
+                <div key={section.id}>
+                  <SectionBlock
+                    section={section}
+                    canMoveUp={i > 0}
+                    canMoveDown={i < song.sections.length - 1}
+                    focusedLine={focusedLine?.sectionId === section.id ? focusedLine.index : null}
+                    highlightRhymes={highlightRhymes}
+                    onChange={(patch) => updateSection(section.id, patch)}
+                    onDelete={() => deleteSection(section.id)}
+                    onMoveUp={() => moveSection(section.id, -1)}
+                    onMoveDown={() => moveSection(section.id, 1)}
+                    onFocusLine={(index) => setFocusedLine({ sectionId: section.id, index })}
+                    onSelectWord={setSelectedWord}
+                  />
+                  <SectionChordSlot
+                    section={section}
+                    chart={chart}
+                    bpm={song.tempo_bpm}
+                    refCount={chart ? chartRefCount(chart.id) : 0}
+                    clipboardChart={clipboardChart}
+                    clipboardChartLabel={
+                      clipboardChart
+                        ? song.sections.find((s) => s.chart_id === clipboardChart.id)?.label
+                          ?? clipboardChart.name
+                          ?? 'chart'
+                        : null
+                    }
+                    onChartChange={(next) => updateChart(next.id, next)}
+                    onTempoChange={(tempo_bpm) => update({ tempo_bpm: tempo_bpm > 0 ? tempo_bpm : null })}
+                    onAttachNew={attachNewChart}
+                    onAttachClipboard={attachClipboardChart}
+                    onCopy={copyChartToClipboard}
+                    onDetach={detachChart}
+                  />
+                </div>
+              );
+            })}
           </div>
 
           {/* Notes */}
