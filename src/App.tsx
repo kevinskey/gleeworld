@@ -297,6 +297,10 @@ const SoundCloudSearch = lazy(() => import("./pages/SoundCloudSearch"));
 const ShoutcastManagement = lazy(() => import("./pages/admin/ShoutcastManagement").then(m => ({ default: m.ShoutcastManagement })));
 const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ default: m.ReceiptsPage })));
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
+// Temporary Task 7 harness (Sight Reading Studio rebuild) — proves the mic ->
+// cents path on a physical iPhone. Remove this import + its route once the
+// on-device verification is recorded (see .superpowers/sdd/task-7-brief.md).
+const MicCheck = lazy(() => import("./pages/sightReading/MicCheck"));
 import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
 import GroupPresentationView from './pages/mus240/GroupPresentationView';
 const SightReadingSubmission = lazy(() => import("./pages/SightReadingSubmission"));
@@ -570,6 +574,10 @@ const App = () => {
               {/* Sandbox: animated cursor + spotlight tour over a mock Command Center.
                   Gated by ?key=preview inside the component itself. */}
               <Route path="/tour-sandbox" element={<TourSandbox />} />
+              {/* Temporary Task 7 harness (Sight Reading Studio rebuild) — remove
+                  alongside the MicCheck lazy import once on-device verification
+                  is recorded. See .superpowers/sdd/task-7-brief.md. */}
+              <Route path="/mic-check" element={<MicCheck />} />
               {/* One-click prospect demo entry — mints a read-only Director session. */}
               <Route path="/try" element={<TryDemo />} />
               <Route 
