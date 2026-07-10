@@ -20,8 +20,10 @@ const PER_ROW_DESKTOP = 4;
 const PER_ROW_PHONE = 2;
 const PHONE_MAX_WIDTH = 768;
 
-export function NotationView({ score, width, onNoteClick }: {
-  score: EditorScore; width?: number; onNoteClick?: (index: number) => void;
+const SELECTED_COLOR = '#ea580c'; // orange-600
+
+export function NotationView({ score, width, onNoteClick, selectedIndex }: {
+  score: EditorScore; width?: number; onNoteClick?: (index: number) => void; selectedIndex?: number | null;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const onNoteClickRef = useRef(onNoteClick);
@@ -81,18 +83,23 @@ export function NotationView({ score, width, onNoteClick }: {
       if (mi === measures.length - 1 && score.elements.length > 0) stave.setEndBarType(Barline.type.END);
       stave.setContext(ctx).draw();
 
-      const notes = m.elements.map((el) => {
+      const notes = m.elements.map((el, i) => {
+        const flatIndex = globalIndex + i;
+        let sn: StaveNote;
         if (el.kind === 'rest') {
-          const r = new StaveNote({ keys: ['b/4'], duration: toVexDuration(el.base, el.dots) + 'r', clef: VEX_CLEF[score.clef] });
-          if (el.dots > 0) Dot.buildAndAttach([r], { all: true });   // augmentation dot glyph(s)
-          return r;
+          sn = new StaveNote({ keys: ['b/4'], duration: toVexDuration(el.base, el.dots) + 'r', clef: VEX_CLEF[score.clef] });
+          if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });   // augmentation dot glyph(s)
+        } else {
+          // Pitch spelling (incl. sharp/flat) is encoded in the key string; the key-aware
+          // accidental engine (applyAccidentals below) decides which glyphs actually draw.
+          sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
+          // A dotted duration string ('qd') sets the note's dot count but does NOT draw the dot.
+          if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
         }
-        // Pitch spelling (incl. sharp/flat) is encoded in the key string; the key-aware
-        // accidental engine (applyAccidentals below) decides which glyphs actually draw.
-        const sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
-        // A dotted duration string ('qd') sets the note's dot count but does NOT draw the dot;
-        // the glyph must be attached explicitly.
-        if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
+        // Highlight the selected element in orange.
+        if (selectedIndex != null && flatIndex === selectedIndex) {
+          sn.setStyle({ fillStyle: SELECTED_COLOR, strokeStyle: SELECTED_COLOR });
+        }
         return sn;
       });
       if (notes.length) {
@@ -121,7 +128,7 @@ export function NotationView({ score, width, onNoteClick }: {
       }
       globalIndex += m.elements.length;
     });
-  }, [score, width, measuredW]);
+  }, [score, width, measuredW, selectedIndex]);
 
   return <div ref={ref} className="w-full overflow-x-auto" />;
 }

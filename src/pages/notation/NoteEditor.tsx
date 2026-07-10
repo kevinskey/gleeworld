@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { EditorScore, noteOf, restOf, Pitch } from '@/lib/notation/model';
 import { BaseDur } from '@/lib/notation/duration';
-import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, CommandStack } from '@/lib/notation/commands';
+import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, respellEnharmonic, CommandStack } from '@/lib/notation/commands';
 import { NotationView } from './NotationView';
 
 const DURATIONS: { code: BaseDur; label: string; key: string }[] = [
@@ -94,6 +94,11 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         if (selected != null && s.elements[selected]?.kind === 'note') dispatch(tieToNext(selected));
         return;
       }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selected != null && s.elements[selected]?.kind === 'note') dispatch(respellEnharmonic(selected));
+        return;
+      }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         e.preventDefault();
         if (s.elements.length === 0) return;
@@ -135,10 +140,10 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         Press <Kbd>A</Kbd>–<Kbd>G</Kbd> to add notes · <Kbd>1</Kbd>–<Kbd>6</Kbd> duration ·{' '}
         <Kbd>.</Kbd> dot · <Kbd>=</Kbd> sharp · <Kbd>-</Kbd> flat · <Kbd>R</Kbd> rest ·{' '}
         <Kbd>←</Kbd>/<Kbd>→</Kbd> select a note · <Kbd>↑</Kbd>/<Kbd>↓</Kbd> move its pitch ·{' '}
-        <Kbd>T</Kbd> tie to next · <Kbd>⌫</Kbd> delete. Click a note to select it.
+        <Kbd>T</Kbd> tie to next · <Kbd>↵</Kbd> respell (♯/♭) · <Kbd>⌫</Kbd> delete. Click a note to select it.
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <NotationView score={score} onNoteClick={setSelected} />
+        <NotationView score={score} onNoteClick={setSelected} selectedIndex={selected} />
       </div>
     </div>
   );

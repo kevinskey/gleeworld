@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { insertElement, deleteElement, changeDuration, transpose, toggleTie, tieToNext, setAccidental, CommandStack } from './commands';
+import { insertElement, deleteElement, changeDuration, transpose, toggleTie, tieToNext, setAccidental, respellEnharmonic, CommandStack } from './commands';
 import { emptyScore, noteOf, restOf } from './model';
 
 const C4 = { step: 'C' as const, octave: 4, alter: 0 };
@@ -31,6 +31,17 @@ describe('invertibility holds for enharmonic spellings and all tie states', () =
     const after = cmd.apply(flatBase);
     expect(after).not.toEqual(flatBase);            // it actually moved the note
     expect(cmd.invert(after)).toEqual(flatBase);     // and restores Bb4, not A#4
+  });
+
+  it('respellEnharmonic toggles F#4 to Gb4 (same pitch), and inverts cleanly', () => {
+    const FS4 = { step: 'F' as const, octave: 4, alter: 1 };
+    const base = { ...emptyScore(), elements: [noteOf(FS4, 'quarter')] };
+    const cmd = respellEnharmonic(0);
+    const after = cmd.apply(base);
+    expect((after.elements[0] as any).pitch).toEqual({ step: 'G', octave: 4, alter: -1 }); // Gb4
+    expect(cmd.invert(after)).toEqual(base);
+    // pressing again toggles back to F#4
+    expect((respellEnharmonic(0).apply(after).elements[0] as any).pitch).toEqual(FS4);
   });
 
   it('setAccidental flats a natural and invert restores it; no-ops on a rest', () => {

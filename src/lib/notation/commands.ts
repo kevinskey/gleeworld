@@ -119,6 +119,42 @@ export function tieToNext(at: number): Command {
   };
 }
 
+const STEP_ORDER: Pitch['step'][] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+// Same sounding pitch, respelled with the fewest accidentals (e.g. F#4 -> Gb4, C4 -> B#3).
+// Ties prefer the flatter spelling; toggling repeatedly cycles back (F# <-> Gb).
+function nextEnharmonic(p: Pitch): Pitch {
+  const midi = pitchToMidi(p);
+  const partners: Pitch[] = [];
+  for (const step of STEP_ORDER) {
+    for (let octave = p.octave - 1; octave <= p.octave + 1; octave++) {
+      const alter = midi - ((octave + 1) * 12 + CHROMA[step]);
+      if (Math.abs(alter) <= 2 && !(step === p.step && octave === p.octave && alter === p.alter)) {
+        partners.push({ step, octave, alter });
+      }
+    }
+  }
+  if (!partners.length) return p;
+  partners.sort((a, b) => Math.abs(a.alter) - Math.abs(b.alter) || a.alter - b.alter);
+  return partners[0];
+}
+
+export function respellEnharmonic(at: number): Command {
+  let prev: Pitch | undefined;
+  return {
+    label: 'respell',
+    apply: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note') return e;
+      prev = e.pitch;
+      return { ...e, pitch: nextEnharmonic(e.pitch) };
+    })),
+    invert: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note' || !prev) return e;
+      return { ...e, pitch: prev };
+    })),
+  };
+}
+
 export function setAccidental(at: number, alter: number): Command {
   // Directly set a note's alter (…, -1 flat, 0 natural, 1 sharp, 2 double-sharp …) WITHOUT
   // the enharmonic re-spelling transpose does — an authored Bb stays Bb. Capture-and-restore
