@@ -25,4 +25,31 @@ describe('editorScoreToIR', () => {
     expect(editorScoreToIR(emptyScore())).toBeNull();
     expect(editorScoreToIR({ ...emptyScore(), elements: [restOf('whole')] })).toBeNull();
   });
+  it('derives the key label from keyFifths', () => {
+    const s = { ...emptyScore(), keyFifths: 1, elements: [noteOf(C4, 'quarter')] };
+    const ir = editorScoreToIR(s)!;
+    expect(ir.key).toBe('G');
+    expect(ir.tonicMidi).toBe(67);
+  });
+  it('merges a tied note pair into one sustained onset', () => {
+    const G4 = { step: 'G' as const, octave: 4, alter: 0 };
+    const s = {
+      ...emptyScore(),
+      elements: [
+        { ...noteOf(G4, 'half'), tie: 'start' as const },
+        { ...noteOf(G4, 'half'), tie: 'stop' as const },
+      ],
+    };
+    const ir = editorScoreToIR(s)!;
+    expect(ir.notes.length).toBe(1);
+    expect(ir.notes[0].durationBeats).toBe(4);
+    expect(ir.notes[0].beatPos).toBe(0);
+    expect(ir.notes[0].midi).toBe(67);
+  });
+  it('falls back to a normal note for a malformed lone tie-stop', () => {
+    const s = { ...emptyScore(), elements: [{ ...noteOf(C4, 'quarter'), tie: 'stop' as const }] };
+    const ir = editorScoreToIR(s);
+    expect(ir).not.toBeNull();
+    expect(ir!.notes.length).toBe(1);
+  });
 });
