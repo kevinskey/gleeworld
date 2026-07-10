@@ -10,9 +10,14 @@
 // Deliberate changes for this port:
 //  - useParams key is `songId` (string, Supabase uuid) instead of `id` (number).
 //  - Autosave persists via `updateSong` (Supabase) instead of the old REST client.
-//  - On save failure the doc is kept dirty and a fresh save is scheduled
-//    (genuine retry — see scheduleSave's catch block), instead of the old
-//    app's terminal "error" state that just sat there until the next edit.
+//  - On save failure the doc is kept 'dirty' (never a terminal "error" state,
+//    never 'saved') and the failure is toasted once per failed attempt; the
+//    retry is PASSIVE — the next update() call (i.e. the next keystroke)
+//    reschedules a save from the then-current state. scheduleSave must NOT
+//    re-arm itself from its own catch block: that retry closure would capture
+//    a stale `next`, and re-arming would overwrite saveTimer.current,
+//    cancelling a newer pending save so the stale snapshot could win the
+//    write while the UI flips to 'saved'.
 //  - Added a Share toggle (song.visibility) — new in this multi-tenant app,
 //    the old app had no such concept.
 //  - AIPanel / ChordChartEditor (via SectionChordSlot) / RecorderPanel /
@@ -41,6 +46,12 @@ export default function SongwritingEditorPage() {
   // Chart clipboard — stores a chart_id to paste into another section.
   const [chartClipboard, setChartClipboard] = useState<string | null>(null);
   const saveTimer = useRef<number | undefined>(undefined);
+  // Monotonic id per scheduled save. A save attempt may only touch saveState
+  // after its await if it is still the newest attempt — a stale in-flight
+  // response (older attempt, unmounted editor, or a different song after a
+  // route change) must never flip the indicator to 'saved'/'dirty' for state
+  // it doesn't represent.
+  const saveSeq = useRef(0);
 
   // Load song
   useEffect(() => {
@@ -50,10 +61,31 @@ export default function SongwritingEditorPage() {
       .catch((e: any) => toast.error(e.message || 'Could not load song'));
   }, [songId]);
 
-  // Autosave (debounced) whenever song changes via update()
+  // Kill any pending debounce and invalidate any in-flight save whenever the
+  // editor unmounts or navigates to a different song — no timer or late
+  // response may outlive the song it belongs to.
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) {
+        window.clearTimeout(saveTimer.current);
+        saveTimer.current = undefined;
+      }
+      saveSeq.current += 1; // orphan any in-flight attempt
+    };
+  }, [songId]);
+
+  // Autosave (debounced) whenever song changes via update().
+  //
+  // Failure handling is PASSIVE by design: toast once, mark the doc 'dirty',
+  // and stop. The next update() call reschedules a save from current state.
+  // Do NOT re-arm the timer from the catch block — the captured `next` is a
+  // stale snapshot, and re-arming clears saveTimer.current, cancelling a
+  // newer pending save (stale data could then persist while saveState lies
+  // 'saved'). Lyric text lives only in React state and is never touched here.
   const scheduleSave = useCallback((next: Song) => {
     setSaveState('dirty');
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    const seq = ++saveSeq.current;
     saveTimer.current = window.setTimeout(async () => {
       setSaveState('saving');
       try {
@@ -67,15 +99,15 @@ export default function SongwritingEditorPage() {
           chord_chart: next.chord_chart,
           chord_charts: next.chord_charts,
         });
+        // A newer save was scheduled (or the editor unmounted / changed song)
+        // while this one was in flight — its outcome no longer describes the
+        // current document. Never report 'saved' for a superseded attempt.
+        if (seq !== saveSeq.current) return;
         setSaveState('saved');
-      } catch (e: any) {
-        // Never drop to a terminal "error" state and never touch the
-        // in-memory lyric text — keep the doc dirty and re-arm the debounce
-        // so the next tick tries again on its own, without the user having
-        // to type anything else to trigger a retry.
+      } catch {
+        if (seq !== saveSeq.current) return;
         setSaveState('dirty');
         toast.error('Autosave failed — retrying');
-        scheduleSave(next);
       }
     }, 800);
   }, []);

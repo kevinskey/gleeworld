@@ -24,7 +24,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-// import TTSPlayButton from './TTSPlayButton'; // restored in Task 9/10/11 — file not yet ported
+// import TTSPlayButton from './TTSPlayButton'; // restored in Task 9/10/11 — file not yet ported.
+// NOTE for the restoring task: TTSPlayButton needs the full `song` object
+// (it reads title + sections), which is NOT in this component's current prop
+// list — thread a `song: Song` prop through TopBar before uncommenting.
 
 export type SaveState = 'saved' | 'saving' | 'dirty' | 'error';
 
@@ -59,7 +62,8 @@ export default function TopBar({
           <Palette className="w-4 h-4" />
           Internal rhymes
         </button>
-        {/* <TTSPlayButton song={song} /> restored in Task 9/10/11 */}
+        {/* <TTSPlayButton song={song} /> restored in Task 9/10/11 — requires
+            adding a `song` prop to TopBar first (see import note at top) */}
         <Select value={visibility} onValueChange={(v) => onVisibilityChange(v as 'private' | 'tenant')}>
           <SelectTrigger className="h-8 min-h-0 w-auto text-xs gap-1.5 px-2 py-1" aria-label="Song visibility">
             <SelectValue />
