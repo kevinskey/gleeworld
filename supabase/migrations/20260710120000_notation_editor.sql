@@ -7,13 +7,25 @@ BEGIN;
 
 -- Shared trigger: coalesce an explicit NULL tenant_id back to the tenant. The column
 -- DEFAULT is suppressed when a client serializes tenant_id: null, and a RESTRICTIVE
--- WITH CHECK then silently rejects the row. (create-or-replace: may already exist —
--- schema-qualified call + pinned search_path so the shared fn resolves deterministically.)
-CREATE OR REPLACE FUNCTION public.set_tenant_id_default() RETURNS trigger
-LANGUAGE plpgsql
-SET search_path = public, pg_temp
-AS $$ BEGIN
-  IF NEW.tenant_id IS NULL THEN NEW.tenant_id := public.current_tenant_id(); END IF; RETURN NEW; END $$;
+-- WITH CHECK then silently rejects the row.
+-- This fn may ALREADY EXIST owned by a more-privileged role (e.g. supabase_admin) that
+-- other tenant tables share; CREATE OR REPLACE would then fail with "must be owner"
+-- for the non-superuser (postgres) that owns the app tables. So create it only when
+-- absent (schema-qualified call + pinned search_path); the existing definition is
+-- equivalent and is left untouched.
+DO $do$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE p.proname = 'set_tenant_id_default' AND n.nspname = 'public'
+  ) THEN
+    CREATE FUNCTION public.set_tenant_id_default() RETURNS trigger
+    LANGUAGE plpgsql SET search_path = public, pg_temp
+    AS $fn$ BEGIN
+      IF NEW.tenant_id IS NULL THEN NEW.tenant_id := public.current_tenant_id(); END IF; RETURN NEW; END $fn$;
+  END IF;
+END
+$do$;
 
 -- 1. Individual-student assignment. Nullable, no default: NULL = existing course-wide behavior.
 ALTER TABLE public.gw_assignments
