@@ -9,7 +9,7 @@ const VEX_CLEF = { treble: 'treble', bass: 'bass', alto: 'alto' } as const;
 // Enlarge the whole score so notes are legible in a wide card, and keep a comfortable
 // minimum per-measure width so a single measure fills space instead of hugging the clef.
 const SCALE = 1.5;
-const MIN_MEASURE = 260;
+const MIN_MEASURE = 200;  // logical px; drives how many measures fit per line before wrapping
 
 export function NotationView({ score, width, onNoteClick }: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void;
