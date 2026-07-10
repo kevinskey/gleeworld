@@ -9,7 +9,11 @@
 // wiring is now live (Task 9); Task 10/11 reattach the rest.
 //
 // Task 10 update: ChordChartEditor / SectionChordSlot / TTSPlayButton are
-// now ported and restored below (RecorderPanel remains Task 11).
+// now ported and restored below.
+// Task 11 update: RecorderPanel is ported and restored below (both the
+// compact mobile/iPad slot and the full sidebar slot). Dictation is not
+// wired here — it already lives in SectionBlock (Task 8), bound to the
+// focused lyric line.
 //
 // Deliberate changes for this port:
 //  - useParams key is `songId` (string, Supabase uuid) instead of `id` (number).
@@ -27,9 +31,9 @@
 //    survives an immediate back-navigation.
 //  - Added a Share toggle (song.visibility) — new in this multi-tenant app,
 //    the old app had no such concept.
-//  - RecorderPanel is still commented out — that file doesn't exist until
-//    Task 11 lands. AIPanel is restored (Task 9). ChordChartEditor (via
-//    SectionChordSlot) and TTSPlayButton are restored (Task 10).
+//  - AIPanel is restored (Task 9). ChordChartEditor (via SectionChordSlot)
+//    and TTSPlayButton are restored (Task 10). RecorderPanel is restored
+//    (Task 11).
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -40,7 +44,7 @@ import TopBar, { type SaveState } from './components/TopBar';
 import SectionBlock from './components/SectionBlock';
 import AIPanel from './components/AIPanel';
 import SectionChordSlot from './components/SectionChordSlot';
-// import RecorderPanel from './components/RecorderPanel'; // restored in Task 11
+import RecorderPanel from './components/RecorderPanel';
 
 // The exact autosave payload — shared by the debounced save and the
 // unmount/song-change flush so the two can never drift apart.
@@ -381,8 +385,10 @@ export default function SongwritingEditorPage() {
         onVisibilityChange={handleVisibilityChange}
       />
 
-      {/* Compact recorder for mobile/iPad — sits near Play lyrics so it's always reachable.
-          <RecorderPanel songId={song.id} compact /> restored in Task 11 */}
+      {/* Compact recorder for mobile/iPad — sits near Play lyrics so it's always reachable. */}
+      <div className="mb-4 lg:hidden">
+        <RecorderPanel songId={song.id} compact />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6">
         {/* Editor column */}
@@ -547,7 +553,7 @@ export default function SongwritingEditorPage() {
               </span>
               <div className="flex-1 h-px bg-border" />
             </div>
-            {/* <RecorderPanel songId={song.id} /> restored in Task 11 */}
+            <RecorderPanel songId={song.id} />
           </div>
         </div>
       </div>
