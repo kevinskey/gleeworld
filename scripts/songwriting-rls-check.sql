@@ -6,8 +6,11 @@
 SELECT relname, relrowsecurity FROM pg_class
 WHERE relname IN ('gw_songs','gw_song_recordings','gw_songwriting_ai_logs');
 
--- 2. RESTRICTIVE tenant policy exists on all three (expect 3 rows)
-SELECT tablename, policyname FROM pg_policies
+-- 2. RESTRICTIVE tenant policy exists on all three (expect 3 rows, all
+--    permissive = 'RESTRICTIVE' — a PERMISSIVE policy of the same name
+--    would silently OR itself into the access check instead of narrowing
+--    it, defeating tenant isolation)
+SELECT tablename, policyname, permissive FROM pg_policies
 WHERE policyname = 'tenant_isolation_restrict'
   AND tablename IN ('gw_songs','gw_song_recordings','gw_songwriting_ai_logs');
 
