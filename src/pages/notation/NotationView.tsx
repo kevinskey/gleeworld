@@ -6,10 +6,12 @@ import { toVexKey, toVexDuration, vexAccidentalCode } from '@/lib/notation/toVex
 
 const VEX_CLEF = { treble: 'treble', bass: 'bass', alto: 'alto' } as const;
 
-// Enlarge the whole score so notes are legible in a wide card, and keep a comfortable
-// minimum per-measure width so a single measure fills space instead of hugging the clef.
-const SCALE = 1.5;
-const MIN_MEASURE = 200;  // logical px; drives how many measures fit per line before wrapping
+// Small, engraving-sized notation. Measures per line are fixed by viewport: 4 across on
+// desktop/iPad, 2 on phones (below Tailwind's md breakpoint).
+const SCALE = 1.0;
+const PER_ROW_DESKTOP = 4;
+const PER_ROW_PHONE = 2;
+const PHONE_MAX_WIDTH = 768;
 
 export function NotationView({ score, width, onNoteClick }: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void;
@@ -43,13 +45,14 @@ export function NotationView({ score, width, onNoteClick }: {
     // The SVG is cssWidth CSS px wide; ctx.scale(SCALE) then draws everything SCALE× larger,
     // so we lay out in a logical space of cssWidth / SCALE.
     const logicalWidth = cssWidth / SCALE;
-    // Wrap measures onto multiple lines (systems) so a long exercise flows top-to-bottom
-    // like real sheet music instead of scrolling off the right edge. perRow fills the width
-    // with measures at least ~MIN_MEASURE wide; the height grows to fit every row.
-    const perRow = Math.max(1, Math.min(Math.floor((logicalWidth - 16) / MIN_MEASURE) || 1, measures.length));
+    // Wrap measures onto multiple lines (systems) so a long exercise flows top-to-bottom like
+    // real sheet music. Measures per line: 4 on desktop/iPad, 2 on phones — capped to the
+    // actual count so a short score fills the width instead of leaving empty slots.
+    const isPhone = typeof window !== 'undefined' && window.innerWidth < PHONE_MAX_WIDTH;
+    const perRow = Math.max(1, Math.min(isPhone ? PER_ROW_PHONE : PER_ROW_DESKTOP, measures.length));
     const measureWidth = (logicalWidth - 16) / perRow;
     const rows = Math.ceil(measures.length / perRow);
-    const TOP = 24, SYSTEM_H = 116, BOTTOM = 20;
+    const TOP = 20, SYSTEM_H = 100, BOTTOM = 16;
     const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
     renderer.resize(cssWidth, Math.ceil(logicalHeight * SCALE));
     const ctx = renderer.getContext();
