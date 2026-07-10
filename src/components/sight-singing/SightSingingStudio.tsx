@@ -39,7 +39,7 @@ import { useUserScores } from '@/hooks/useUserScores';
 import { useRecordings } from '@/hooks/useRecordings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { ParsedScore, ParsedMeasure, ParsedNote } from './utils/musicXMLParser';
+import { ParsedScore, ParsedMeasure, ParsedNote } from '@/lib/sightReading/musicXMLParser';
 
 // Import types and utilities
 import { supabase } from '@/integrations/supabase/client';
@@ -772,7 +772,7 @@ export const SightSingingStudio: React.FC = () => {
         } else if (currentMusicXML) {
           // Uploaded MusicXML file - parse directly
           console.log('📊 Using uploaded MusicXML file for audio combination');
-          const { parseMusicXML } = await import('./utils/musicXMLParser');
+          const { parseMusicXML } = await import('@/lib/sightReading/musicXMLParser');
           parsedScore = parseMusicXML(currentMusicXML, currentBpm);
         } else {
           console.error('❌ No score data available for audio combination');

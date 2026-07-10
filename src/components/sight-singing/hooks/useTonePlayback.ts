@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { MusicXMLPlayer } from '../utils/audioPlayback';
-import { parseMusicXML } from '../utils/musicXMLParser';
+import { parseMusicXML } from '@/lib/sightReading/musicXMLParser';
 
 export const useTonePlayback = (soundSettings?: { notes: string; click: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);

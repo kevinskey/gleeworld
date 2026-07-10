@@ -196,7 +196,7 @@ const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPag
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
-const SightReadingPage = lazy(() => import("./pages/member/SightReadingPage"));
+const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
 const BoxOfficePage = lazy(() => import("./pages/dashboard/BoxOfficePage"));
 const BoxOfficeEventPage = lazy(() => import("./pages/dashboard/BoxOfficeEventPage"));
 const BoxOfficeCheckinPage = lazy(() => import("./pages/dashboard/BoxOfficeCheckinPage"));
@@ -299,12 +299,8 @@ const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ defa
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
 import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
 import GroupPresentationView from './pages/mus240/GroupPresentationView';
-const SightReadingSubmission = lazy(() => import("./pages/SightReadingSubmission"));
-const SightReadingPreview = lazy(() => import("./pages/SightReadingPreview"));
-const SightReadingGeneratorPage = lazy(() => import("./pages/SightReadingGenerator"));
 const AssignmentCreatorPage = lazy(() => import("./pages/AssignmentCreator"));
 const PracticeStudioPage = lazy(() => import("./pages/PracticeStudioPage"));
-import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
 const MessagingInterface = lazy(() => import("./components/messaging/MessagingInterface").then(m => ({ default: m.MessagingInterface })));
 
 const BookAppointmentPage = lazy(() => import("./pages/BookAppointmentPage"));
@@ -347,7 +343,6 @@ const PeerReviewBrowserPage = lazy(() => import("./pages/mus240/PeerReviewBrowse
 const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
-const MUS100SightSingingPage = lazy(() => import("./pages/MUS100SightSingingPage"));
 const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
@@ -1215,14 +1210,10 @@ const App = () => {
                    </PublicRoute>
                  } 
                />
-               {/* MUS100 Sight Singing Practice */}
-               <Route 
-                 path="/mus100-sight-singing" 
-                 element={
-                   <PublicRoute>
-                     <MUS100SightSingingPage />
-                   </PublicRoute>
-                 } 
+               {/* MUS100 Sight Singing Practice - retired, redirects to canonical sight-reading studio */}
+               <Route
+                 path="/mus100-sight-singing"
+                 element={<Navigate to="/dashboard/sight-reading" replace />}
                />
               {/* MUS 240 Poll System */}
               <Route 
@@ -1434,7 +1425,7 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><SightReadingPage /></DashboardShell>
+                        <DashboardShell><SightReadingStudio /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
@@ -2728,29 +2719,17 @@ const App = () => {
                                       </ProtectedRoute>
                                     } 
                                   />
-                                   <Route 
-                                     path="/sight-reading-submission" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <SightReadingSubmission />
-                                       </ProtectedRoute>
-                                     } 
+                                   <Route
+                                     path="/sight-reading-submission"
+                                     element={<Navigate to="/dashboard/sight-reading" replace />}
                                    />
-                                   <Route 
-                                     path="/sight-reading-preview" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <SightReadingPreview />
-                                       </ProtectedRoute>
-                                     } 
+                                   <Route
+                                     path="/sight-reading-preview"
+                                     element={<Navigate to="/dashboard/sight-reading" replace />}
                                    />
                                        <Route 
-                                        path="/sight-reading-generator" 
-                                        element={
-                                          <ProtectedRoute>
-                                            <SightReadingGeneratorPage />
-                                          </ProtectedRoute>
-                                        } 
+                                        path="/sight-reading-generator"
+                                        element={<Navigate to="/dashboard/sight-reading" replace />}
                                       />
                                       {/* /karaoke-challenge route removed with Karaoke module. */}
                                       <Route 
@@ -2770,12 +2749,8 @@ const App = () => {
                                         }
                                       />
                                       <Route 
-                                        path="/member-sight-reading-studio" 
-                                        element={
-                                          <ProtectedRoute>
-                                            <MemberSightReadingStudioPage />
-                                          </ProtectedRoute>
-                                        } 
+                                        path="/member-sight-reading-studio"
+                                        element={<Navigate to="/dashboard/sight-reading" replace />}
                                       />
                                            <Route 
                                              path="/setup-crews" 
@@ -2805,14 +2780,8 @@ const App = () => {
                              } 
                            />
                            <Route 
-                             path="/member/sight-reading" 
-                             element={
-                               <ProtectedRoute>
-                                 <UniversalLayout>
-                                   <SightReadingPage />
-                                 </UniversalLayout>
-                               </ProtectedRoute>
-                             } 
+                             path="/member/sight-reading"
+                             element={<Navigate to="/dashboard/sight-reading" replace />}
                            />
                            <Route 
                              path="/member/calendar" 
