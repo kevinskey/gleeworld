@@ -207,6 +207,8 @@ const BoxOfficeIndexPage = lazy(() => import("./pages/public/BoxOfficeIndexPage"
 const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
 const PartTracksLandingPage = lazy(() => import("./pages/dashboard/PartTracksLandingPage"));
 const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
+const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
+const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
@@ -1513,6 +1515,31 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
                           <ConcertPlannerEditorPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Songwriting — addon module 'songwriting'. */}
+                <Route
+                  path="/songwriting"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="songwriting"><SongwritingLibraryPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/songwriting/:songId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="songwriting"><SongwritingEditorPage /></ModuleGate>
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
