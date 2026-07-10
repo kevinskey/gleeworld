@@ -11,6 +11,7 @@ const row = {
   key_signature: 'C',
   graveyard: [],
   chord_chart: null,
+  chord_charts: null,
   visibility: 'private',
   created_at: '2026-07-10T00:00:00Z',
   updated_at: '2026-07-10T00:00:00Z',
@@ -21,6 +22,7 @@ describe('rowToSong', () => {
     const song = rowToSong({ ...row, sections: null, graveyard: null } as any);
     expect(song.sections).toEqual([]);
     expect(song.graveyard).toEqual([]);
+    expect(song.chord_charts).toEqual([]);
   });
   it('preserves populated fields', () => {
     const song = rowToSong(row as any);

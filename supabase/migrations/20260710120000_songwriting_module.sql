@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.gw_songs (
   key_signature TEXT,
   graveyard JSONB NOT NULL DEFAULT '[]'::jsonb,
   chord_chart JSONB,
+  chord_charts JSONB NOT NULL DEFAULT '[]'::jsonb,
   visibility TEXT NOT NULL DEFAULT 'private'
     CHECK (visibility IN ('private', 'tenant')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

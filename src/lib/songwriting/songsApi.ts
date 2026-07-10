@@ -5,7 +5,7 @@ export type SongRow = {
   id: string; user_id: string; title: string;
   sections: unknown; notes: string | null;
   tempo_bpm: number | null; key_signature: string | null;
-  graveyard: unknown; chord_chart: unknown;
+  graveyard: unknown; chord_chart: unknown; chord_charts: unknown;
   visibility: 'private' | 'tenant';
   created_at: string; updated_at: string;
 };
@@ -21,6 +21,7 @@ export function rowToSong(row: SongRow): Song {
     key_signature: row.key_signature,
     graveyard: (row.graveyard as Song['graveyard']) ?? [],
     chord_chart: (row.chord_chart as Song['chord_chart']) ?? null,
+    chord_charts: (row.chord_charts as Song['chord_charts']) ?? [],
     visibility: row.visibility,
     created_at: row.created_at,
     updated_at: row.updated_at,
