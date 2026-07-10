@@ -16,6 +16,7 @@ import {
   Music, ArrowLeft, Headphones, Sparkles, Loader2, Youtube, Settings2,
   Wrench, AudioWaveform, AudioLines, Star, MicVocal, CircleDot,
   Scissors, BarChart3, Wand2, X, ZoomIn, ZoomOut, Eraser, ChevronLeft, ChevronRight,
+  Download,
 } from 'lucide-react';
 import { AccompanimentPicker } from './AccompanimentPicker';
 import { DeviceSettings, isMusicModeEnabled } from './DeviceSettings';
@@ -49,6 +50,7 @@ import {
   getTrackBuffer, playCountIn, getLastCaptureStartWallMs,
 } from './audioEngine';
 import { bufferToWav, trimSilence, normalize, reduceNoise } from './audioProcessing';
+import { renderMixToMp3, downloadBlob, downloadTake, sanitizeFilename, type ExportEntry } from './exportMix';
 import { getLikelyAudioRoute, getConfiguredDeviceLatencyMs } from '@/lib/audio/sharedRecorder';
 import { computeTakeAlignment, type TakeStamps } from '@/lib/audio/takeAlignment';
 
@@ -1023,6 +1025,65 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     toast.message(`"${track.label}" ${deltaSec < 0 ? 'earlier' : 'later'} → ${next.toFixed(2)}s`);
   };
 
+  // Save a track's stored take to the user's device exactly as
+  // uploaded (no re-encode) — WAV from the iOS app, webm/m4a from web.
+  const downloadTakeForTrack = async (track: PartTrack) => {
+    if (!track.audio_url || !project) return;
+    try {
+      await downloadTake(track.audio_url, `${project.title} – ${track.label}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Download failed');
+    }
+  };
+
+  // Offline-render every unmuted decodable track (fader + pan + timeline
+  // offset preserved) into one stereo MP3. Streaming backings (Apple
+  // Music / YouTube) sit outside the Web Audio graph (DRM) so they can
+  // never be part of the file — surface that instead of failing silently.
+  const [exportingMix, setExportingMix] = useState(false);
+  const exportMix = async () => {
+    if (exportingMix || !project) return;
+    setExportingMix(true);
+    try {
+      const entries: ExportEntry[] = [];
+      const skipped: string[] = [];
+      for (const t of tracks) {
+        const buffer = getTrackBuffer(t.id);
+        if (buffer) {
+          entries.push({
+            buffer,
+            volume: t.volume ?? 0.8,
+            muted: !!t.muted,
+            pan: t.pan ?? 0,
+            offsetSec: t.record_offset_sec ?? 0,
+          });
+        } else if (t.audio_url) {
+          // Loaded via the HTMLAudioElement fallback (undecodable here)
+          // or still loading — either way it can't go into the render.
+          skipped.push(t.label);
+        }
+      }
+      if (!entries.filter((e) => !e.muted).length) {
+        toast.message('Nothing to export yet — record or unmute a track first.');
+        return;
+      }
+      const blob = await renderMixToMp3(entries);
+      downloadBlob(blob, `${sanitizeFilename(project.title)} mix.mp3`);
+      const kind = (project as any).accompaniment_kind as string | undefined;
+      const notes: string[] = [];
+      if (kind === 'youtube' || kind?.startsWith('apple_music')) {
+        notes.push('the streaming backing track is not included (DRM)');
+      }
+      if (skipped.length) notes.push(`couldn't include ${skipped.join(', ')} (not decodable on this device)`);
+      toast.success(notes.length ? `Mix exported — ${notes.join('; ')}.` : 'Mix exported.');
+    } catch (e: any) {
+      console.error('[PartTracks] Export mix failed', e);
+      toast.error(e?.message ?? 'Export failed');
+    } finally {
+      setExportingMix(false);
+    }
+  };
+
   // Apply an audio tool (trim / normalize / denoise) to a track's
   // recorded take. Reads the decoded buffer from the engine, runs the
   // processor, encodes to WAV, uploads, swaps audio_url, reloads.
@@ -1952,6 +2013,8 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
           <StudioToolsPanel
             tracks={tracks}
             onOpenDevices={() => setDevicesOpen(true)}
+            onExportMix={() => { void exportMix(); }}
+            exporting={exportingMix}
           />
         </aside>
       </div>
@@ -1971,6 +2034,8 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
             <StudioToolsPanel
               tracks={tracks}
               onOpenDevices={() => { setDevicesOpen(true); setToolsOpen(false); }}
+              onExportMix={() => { setToolsOpen(false); void exportMix(); }}
+              exporting={exportingMix}
             />
           </div>
         </SheetContent>
@@ -2169,9 +2234,10 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
                               </button>
                             ))}
                           </div>
-                          {/* Row 2: timing nudge (manual grid alignment)
-                              + clear the take without deleting the part. */}
-                          <div className="grid grid-cols-3 gap-1.5">
+                          {/* Row 2: timing nudge (manual grid alignment),
+                              clear the take without deleting the part,
+                              and download the stored file as-is. */}
+                          <div className="grid grid-cols-4 gap-1.5">
                             <button
                               type="button"
                               disabled={busy}
@@ -2202,6 +2268,16 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
                               <ChevronRight className="w-4 h-4" />
                               <span className="text-[10px] font-semibold uppercase tracking-wider">Later</span>
                             </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => { void downloadTakeForTrack(t); }}
+                              title="Save this recording to your device"
+                              className="flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-md border border-border bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary disabled:opacity-50 transition-colors"
+                            >
+                              <Download className="w-4 h-4" />
+                              <span className="text-[10px] font-semibold uppercase tracking-wider">Save</span>
+                            </button>
                           </div>
                         </div>
                       );
@@ -2209,7 +2285,19 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
                   </div>
                 )}
 
-                <div className="sticky bottom-0 bg-popover border-t border-border px-3 py-2 space-y-1">
+                <div className="sticky bottom-0 bg-popover border-t border-border px-3 py-2 space-y-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full justify-center"
+                    disabled={exportingMix}
+                    onClick={() => { void exportMix(); }}
+                  >
+                    {exportingMix
+                      ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      : <Download className="w-3.5 h-3.5 mr-1.5" />}
+                    Export mix (MP3)
+                  </Button>
                   <div className="grid grid-cols-3 gap-2 text-[10px] text-muted-foreground leading-tight">
                     <div className="flex items-start gap-1">
                       <Scissors className="w-3 h-3 mt-0.5 shrink-0" />
@@ -2292,12 +2380,32 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
 function StudioToolsPanel({
   tracks,
   onOpenDevices,
+  onExportMix,
+  exporting,
 }: {
   tracks: PartTrack[];
   onOpenDevices: () => void;
+  onExportMix: () => void;
+  exporting: boolean;
 }) {
   return (
     <>
+      <Section title="Export">
+        <button
+          type="button"
+          onClick={onExportMix}
+          disabled={exporting}
+          className="w-full text-xs px-2 py-2 rounded bg-muted text-foreground hover:bg-primary/15 hover:text-primary flex items-center gap-2 disabled:opacity-50"
+        >
+          {exporting
+            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            : <Download className="w-3.5 h-3.5" />}
+          <span className="flex-1 text-left">{exporting ? 'Rendering…' : 'Export mix (MP3)'}</span>
+        </button>
+        <p className="text-[11px] text-muted-foreground mt-1.5">
+          Faders, pan, and take alignment are baked in. Streaming backings (Apple Music / YouTube) can't be included.
+        </p>
+      </Section>
       <Section title="Devices">
         <button
           type="button"
