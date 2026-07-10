@@ -5,6 +5,7 @@
 // any commercial backing track. Only the singer's voice is captured.
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Music, Upload, Youtube, Search, Loader2, X, AlertTriangle } from 'lucide-react';
@@ -88,7 +89,12 @@ export function AccompanimentPicker({
 
   if (!open) return null;
 
-  return (
+  // Portaled to <body>: the picker mounts inside arbitrary containers
+  // (studio, New Project dialog) and index.css has descendant rules like
+  // `.bg-card h2/span/p { color: … }` that black out this dark-styled
+  // modal when it nests inside a light card. Body-level rendering keeps
+  // it out of every container's cascade (and stacking context).
+  return createPortal(
     <div
       className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3"
       onClick={onClose}
@@ -325,6 +331,7 @@ export function AccompanimentPicker({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
