@@ -112,7 +112,10 @@ export function NotationView({ score, width, onNoteClick, selectedIndex }: {
         // render with beams instead of individual flags.
         const beamGroups = Beam.getDefaultBeamGroups(`${score.timeSig.beats}/${score.timeSig.beatType}`);
         const beams = Beam.generateBeams(voice.getTickables(), { groups: beamGroups });
-        new Formatter().joinVoices([voice]).formatToStave([voice], stave);
+        // Justify the notes across the measure's note area (after clef/key/time) so they
+        // fill the bar evenly instead of bunching at the left (formatToStave doesn't stretch).
+        const justifyW = Math.max(60, stave.getNoteEndX() - stave.getNoteStartX() - 12);
+        new Formatter().joinVoices([voice]).format([voice], justifyW);
         voice.draw(ctx, stave);
         beams.forEach((b) => b.setContext(ctx).draw());
         // Wire click-to-select: attach the flat index to each drawn note's SVG group.
