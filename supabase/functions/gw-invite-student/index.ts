@@ -204,22 +204,31 @@ serve(async (req) => {
       });
     }
 
-    // 4. Send invite email via Resend.
+    // 4. Resolve the tenant's display name for the invite copy. Prefer an explicit
+    //    orgName from the caller, else the tenant's branding org_name, else a generic.
+    let tenantName = (body.orgName || "").replace(/[<>"]/g, "").trim();
+    if (!tenantName && tenantId) {
+      const { data: brand } = await supabase
+        .from("gw_branding_settings")
+        .select("org_name")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      if (brand?.org_name) tenantName = String(brand.org_name).replace(/[<>"]/g, "").trim();
+    }
+    if (!tenantName) tenantName = "your music program";
+
+    // 5. Send invite email via Resend.
     const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
-    const orgName = body.orgName || "your music program";
     // Sender shows the tenant's name (the actual address stays on our verified
     // gleeworld.org domain so Resend will deliver).
-    const safeFromName = orgName.replace(/[<>"]/g, "").trim() || "Your music program";
-    // Subject + body lead with the class name when we have one ("You're
-    // invited to join Choir 101"). Fall back to the org name when this
-    // invite isn't tied to a specific course.
-    const classLabel = courseTitle || orgName;
-    const subject = courseTitle
-      ? `You're invited to join ${courseTitle}`
-      : `You're invited to join ${orgName}`;
+    const safeFromName = tenantName || "Your music program";
+    // Always: "You're invited to join {Class} on {Tenant}". When the invite isn't
+    // tied to a specific class, fall back to just the tenant name.
+    const joining = courseTitle ? `${courseTitle} on ${tenantName}` : tenantName;
+    const subject = `You're invited to join ${joining}`;
     const html = `
       <div style="font-family:sans-serif;max-width:600px;padding:24px;">
-        <h2 style="color:#1a1a1a;">You're invited to join ${escapeHtml(classLabel)}.</h2>
+        <h2 style="color:#1a1a1a;">You're invited to join ${escapeHtml(joining)}.</h2>
         <p>Click the link below to accept your invitation and sign in — no password needed.</p>
         <p><a href="${actionLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
         <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${actionLink}</p>

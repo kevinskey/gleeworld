@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnboardingProfile } from '@/hooks/useOnboardingProfile';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 import { AccountGate } from '@/components/onboarding/AccountGate';
 import { OnboardingStepper } from '@/components/onboarding/OnboardingStepper';
@@ -20,7 +21,25 @@ export const Onboarding = () => {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading, saving, updateField, updateFields, getStepCompletion } = useOnboardingProfile();
   const { settings: branding } = useBrandingSettings();
-  const orgName = branding.org_name || 'your organization';
+  // Invited students land on the platform domain (gleeworld.org), where the domain
+  // branding is the platform's — not the tenant they were invited to. Resolve the
+  // tenant's real name from the invited user's own profile so the page greets them
+  // with their program, not "GleeWorld".
+  const [profileOrgName, setProfileOrgName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data: prof } = await supabase
+        .from('gw_profiles').select('tenant_id').eq('user_id', user.id).maybeSingle();
+      if (!prof?.tenant_id || cancelled) return;
+      const { data: brand } = await supabase
+        .from('gw_branding_settings').select('org_name').eq('tenant_id', prof.tenant_id).maybeSingle();
+      if (!cancelled && brand?.org_name) setProfileOrgName(String(brand.org_name));
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+  const orgName = profileOrgName || branding.org_name || 'your program';
   const { toast } = useToast();
   const navigate = useNavigate();
   const nextDest = typeof window !== 'undefined'
@@ -166,10 +185,26 @@ export const Onboarding = () => {
       <div className="container max-w-4xl mx-auto p-4 py-8">
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">GleeWorld Onboarding</h1>
-          <p className="text-muted-foreground mt-2">
-            Complete your profile to join {orgName}
+        <div className="mb-10 text-center">
+          {branding.logo_url ? (
+            <img
+              src={branding.logo_url}
+              alt={orgName}
+              className="mx-auto mb-5 h-16 w-auto object-contain"
+            />
+          ) : (
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-2xl font-bold text-primary">
+              {orgName.trim().charAt(0).toUpperCase() || '♪'}
+            </div>
+          )}
+          <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+            Welcome to {orgName}
+          </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
+            Let's set up your profile
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+            A few quick steps to finish joining {orgName} — it only takes a minute.
           </p>
         </div>
 
@@ -235,7 +270,7 @@ export const Onboarding = () => {
 
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground mt-12">
-          <p>Questions? Contact us at info@gleeworld.org</p>
+          <p>Questions? Reach out to your program administrator.</p>
         </div>
       </div>
     </div>
