@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { emptyScore, EditorScore } from '@/lib/notation/model';
 import { NoteEditor } from '@/pages/notation/NoteEditor';
 import { saveExercise, loadExercise } from '@/lib/notation/exercisesApi';
-import { editorScoreToMusicXML } from '@/lib/notation/musicxmlWrite';
+import { editorScoreToParsed } from '@/lib/notation/toParsedScore';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
 import { AssignExerciseDialog } from './AssignExerciseDialog';
@@ -40,7 +40,9 @@ export default function NotationEditorPage() {
   const overfull = layoutMeasures(score).some((m) => m.overfull);
 
   const handlePlay = () => {
-    void startPlayback(editorScoreToMusicXML(score), score.tempo, 'click-and-score');
+    // Faithful path: build the playback score straight from the in-memory EditorScore
+    // (ties preserved) instead of serializing to MusicXML and re-parsing with the lossy parser.
+    void startPlayback(editorScoreToParsed(score), score.tempo, 'click-and-score');
   };
 
   const handleSave = async () => {

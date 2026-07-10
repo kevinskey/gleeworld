@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { MusicXMLPlayer } from '../utils/audioPlayback';
-import { parseMusicXML } from '@/lib/sightReading/musicXMLParser';
+import { parseMusicXML, type ParsedScore } from '@/lib/sightReading/musicXMLParser';
 
 export const useTonePlayback = (soundSettings?: { notes: string; click: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -58,7 +58,10 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
     };
   }, []);
 
-  const startPlayback = useCallback(async (musicXML: string, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only' | 'record-click' | 'record-both') => {
+  // `source` is either serialized MusicXML (parsed with the sight-reading parser) or an
+  // already-parsed ParsedScore. The notation editor passes the latter — built faithfully
+  // from its in-memory EditorScore (ties preserved) — so playback never hits the lossy parse.
+  const startPlayback = useCallback(async (source: string | ParsedScore, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only' | 'record-click' | 'record-both') => {
     console.log('🎼 useTonePlayback.startPlayback called');
     
     // Check if transitioning and wait briefly if needed
@@ -85,7 +88,7 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
     const activeMode = overrideMode || mode;
     console.log('🎼 Input validation:', {
       playerExists: !!playerRef.current,
-      musicXMLLength: musicXML.length,
+      musicXMLLength: typeof source === 'string' ? source.length : `(pre-parsed: ${source.measures?.length ?? 0} measures)`,
       tempo,
       activeMode,
       soundSettings,
@@ -110,7 +113,7 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
       
       // Parse the MusicXML
       console.log('🎼 About to parse MusicXML...');
-      const parsedScore = parseMusicXML(musicXML, tempo);
+      const parsedScore = typeof source === 'string' ? parseMusicXML(source, tempo) : source;
       console.log('🎼 MusicXML parsed successfully:', {
         measuresCount: parsedScore.measures.length,
         totalDuration: parsedScore.totalDuration,
