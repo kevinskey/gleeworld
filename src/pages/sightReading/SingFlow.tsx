@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mic, Play } from 'lucide-react';
 import { useMicPitch } from '@/lib/sightReading/useMicPitch';
 import { scoreAttempt, type ScoreResult, type SungNote } from '@/lib/sightReading/score';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 import { ResultCard } from './ResultCard';
+import { NotationView } from '@/pages/notation/NotationView';
+import { irToEditorScore } from '@/lib/notation/fromIR';
 
 // The count-in is four beats. useMicPitch's beatPos clock starts (startedAt =
 // ctx.currentTime) when the AudioWorklet node is constructed inside start(),
@@ -73,23 +75,14 @@ function tone(ctx: AudioContext, hz: number, at: number, dur: number, gain: numb
  * overshoot their nominal bar count, and the IR is honest about it. */
 function NotationStrip({ ir }: { ir: ExerciseIR }) {
   const realized = ir.notes.reduce((s, n) => s + n.durationBeats, 0);
+  // Render the line as real notation on a staff (memoized so mic-driven re-renders
+  // during a take don't rebuild VexFlow ~30×/s).
+  const score = useMemo(() => irToEditorScore(ir), [ir]);
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white p-4 shadow-sm">
-      <div className="flex min-w-max items-end gap-1">
-        {ir.notes.map((n, i) => (
-          <div
-            key={i}
-            className="flex flex-col items-center justify-end"
-            style={{ width: `${Math.max(2.4, (n.durationBeats / realized) * 100 * 0.9)}rem` }}
-          >
-            <span className="text-sm font-semibold text-slate-800">{n.solfege}</span>
-            <span className="text-xs text-slate-500">{midiToName(n.midi)}</span>
-            <div className="mt-1 h-1.5 w-full rounded-full bg-slate-300" />
-          </div>
-        ))}
-      </div>
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <NotationView score={score} />
       <p className="mt-2 text-xs text-slate-500">
-        {ir.key} major · {ir.meter.beats}/{ir.meter.beatType} · {ir.tempo} bpm · {realized} beats
+        {ir.key} {ir.mode} · {ir.meter.beats}/{ir.meter.beatType} · {ir.tempo} bpm · {realized} beats
       </p>
     </div>
   );
