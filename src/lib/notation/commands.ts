@@ -174,6 +174,26 @@ export function setAccidental(at: number, alter: number): Command {
   };
 }
 
+export function setLyric(at: number, lyric: string): Command {
+  // Directly set (or clear, when empty) a note's sung syllable. Capture-and-restore on
+  // invert, same pattern as setAccidental/toggleTie; no-ops on a rest.
+  let prevLyric: string | undefined;
+  let hadPrev = false;
+  return {
+    label: 'lyric',
+    apply: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note') return e;
+      prevLyric = e.lyric;
+      hadPrev = true;
+      return { ...e, lyric: lyric || undefined };
+    })),
+    invert: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note' || !hadPrev) return e;
+      return { ...e, lyric: prevLyric };
+    })),
+  };
+}
+
 export class CommandStack {
   private undoStack: Command[] = [];
   private redoStack: Command[] = [];

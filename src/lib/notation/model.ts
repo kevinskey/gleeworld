@@ -1,7 +1,7 @@
 import { BaseDur, dottedTicks } from './duration';
 
 export interface Pitch { step: 'A'|'B'|'C'|'D'|'E'|'F'|'G'; octave: number; alter: number }
-export interface EditorNote { kind: 'note'; pitch: Pitch; base: BaseDur; dots: number; tie: 'start'|'stop'|'none' }
+export interface EditorNote { kind: 'note'; pitch: Pitch; base: BaseDur; dots: number; tie: 'start'|'stop'|'none'; lyric?: string }
 export interface EditorRest { kind: 'rest'; base: BaseDur; dots: number }
 export type EditorElement = EditorNote | EditorRest;
 

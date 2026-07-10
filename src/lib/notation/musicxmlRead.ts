@@ -41,6 +41,8 @@ export function musicXmlToEditorScore(xml: string): EditorScore {
     const n = noteOf({ step, octave, alter }, base, dots);
     const tied = note.getElementsByTagName('tie')[0];
     if (tied) n.tie = tied.getAttribute('type') === 'stop' ? 'stop' : 'start';
+    const lyricText = textOf(note.getElementsByTagName('lyric')[0] ?? null, 'text');
+    if (lyricText) n.lyric = lyricText;
     elements.push(n);
   }
 

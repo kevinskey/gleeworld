@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { EditorScore, noteOf, restOf, Pitch } from '@/lib/notation/model';
 import { BaseDur } from '@/lib/notation/duration';
-import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, respellEnharmonic, CommandStack } from '@/lib/notation/commands';
+import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, respellEnharmonic, setLyric, CommandStack } from '@/lib/notation/commands';
 import { playPitch } from '@/lib/notation/pitchAudio';
 import { NotationView } from './NotationView';
 
@@ -35,12 +35,21 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
   const [armedDots, setArmedDots] = useState<0 | 1 | 2>(0);
   const [armedAlter, setArmedAlter] = useState<-1 | 0 | 1>(0);
   const [selected, setSelected] = useState<number | null>(null);
+  const [lyricMode, setLyricMode] = useState(false);
   const stackRef = useRef(new CommandStack());
   const scoreRef = useRef(score); scoreRef.current = score;
 
   const dispatch = useCallback((cmd: Parameters<CommandStack['do']>[0]) => {
     onChange(stackRef.current.do(cmd, scoreRef.current));
   }, [onChange]);
+
+  // Advance the lyric cursor to the next note (skipping rests); if there is none, stay put.
+  const advanceToNextNote = useCallback((from: number) => {
+    const s = scoreRef.current;
+    for (let i = from + 1; i < s.elements.length; i++) {
+      if (s.elements[i].kind === 'note') { setSelected(i); return; }
+    }
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -141,17 +150,60 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         <button onClick={() => setArmedAlter(0)} className={pill(armedAlter === 0)}>♮</button>
         <button onClick={() => setArmedAlter(1)} className={pill(armedAlter === 1)}>♯</button>
         <button onClick={() => setArmedAlter(-1)} className={pill(armedAlter === -1)}>♭</button>
+        <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
+        <button onClick={() => setLyricMode((v) => !v)} className={pill(lyricMode)}>Lyrics</button>
       </div>
+      {lyricMode && selected != null && score.elements[selected]?.kind === 'note' && (
+        <LyricInput
+          key={selected}
+          value={(score.elements[selected] as any).lyric ?? ''}
+          onChange={(v) => dispatch(setLyric(selected, v))}
+          onAdvance={() => advanceToNextNote(selected)}
+          onExit={() => setLyricMode(false)}
+        />
+      )}
       <div className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs leading-relaxed text-slate-600">
         <span className="font-medium text-slate-700">Type to write music.</span>{' '}
         Press <Kbd>A</Kbd>–<Kbd>G</Kbd> to add notes · <Kbd>1</Kbd>–<Kbd>6</Kbd> duration ·{' '}
         <Kbd>.</Kbd> dot · <Kbd>=</Kbd> sharp · <Kbd>-</Kbd> flat · <Kbd>R</Kbd> rest ·{' '}
         <Kbd>←</Kbd>/<Kbd>→</Kbd> select a note · <Kbd>↑</Kbd>/<Kbd>↓</Kbd> move its pitch ·{' '}
-        <Kbd>T</Kbd> tie to next · <Kbd>↵</Kbd> respell (♯/♭) · <Kbd>⌫</Kbd> delete. Click a note to select it.
+        <Kbd>T</Kbd> tie to next · <Kbd>↵</Kbd> respell (♯/♭) · <Kbd>⌫</Kbd> delete ·{' '}
+        Lyrics: toggle <Kbd>Lyrics</Kbd>, type under the selected note, <Kbd>Space</Kbd> = next. Click a note to select it.
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <NotationView score={score} onNoteClick={setSelected} selectedIndex={selected} />
       </div>
+    </div>
+  );
+}
+
+// Small text input for typing a syllable under the currently selected note. Remounted
+// (via `key={selected}`) whenever the selection changes, so it always autofocuses and
+// starts fresh on the newly-selected note's lyric.
+function LyricInput({ value, onChange, onAdvance, onExit }: {
+  value: string; onChange: (v: string) => void; onAdvance: () => void; onExit: () => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => { ref.current?.focus(); }, []);
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-orange-50 px-3 py-1.5">
+      <input
+        ref={ref}
+        type="text"
+        aria-label="Lyric"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') {
+            e.preventDefault();
+            onAdvance();
+          } else if (e.key === 'Escape') {
+            onExit();
+          }
+        }}
+        className="w-40 rounded border border-orange-300 bg-white px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-400"
+      />
+      <span className="text-xs text-orange-800">Type a syllable, press Space for the next note.</span>
     </div>
   );
 }

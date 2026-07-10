@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { insertElement, deleteElement, changeDuration, transpose, toggleTie, tieToNext, setAccidental, respellEnharmonic, CommandStack } from './commands';
+import { insertElement, deleteElement, changeDuration, transpose, toggleTie, tieToNext, setAccidental, respellEnharmonic, setLyric, CommandStack } from './commands';
 import { emptyScore, noteOf, restOf } from './model';
 
 const C4 = { step: 'C' as const, octave: 4, alter: 0 };
@@ -61,6 +61,29 @@ describe('invertibility holds for enharmonic spellings and all tie states', () =
     const cmd = toggleTie(0);
     const after = cmd.apply(tieBase);
     expect(cmd.invert(after)).toEqual(tieBase);
+  });
+});
+
+describe('setLyric', () => {
+  it('sets a lyric on a note and inverts cleanly', () => {
+    const noteBase = { ...emptyScore(), elements: [noteOf(C4, 'quarter')] };
+    const cmd = setLyric(0, 'la');
+    const after = cmd.apply(noteBase);
+    expect((after.elements[0] as any).lyric).toBe('la');
+    expect(cmd.invert(after)).toEqual(noteBase);
+  });
+
+  it('setting an empty string clears the lyric', () => {
+    const lyricBase = { ...emptyScore(), elements: [{ ...noteOf(C4, 'quarter'), lyric: 'la' }] };
+    const cmd = setLyric(0, '');
+    const after = cmd.apply(lyricBase);
+    expect((after.elements[0] as any).lyric).toBeUndefined();
+    expect(cmd.invert(after)).toEqual(lyricBase);
+  });
+
+  it('no-ops on a rest', () => {
+    const restBase = { ...emptyScore(), elements: [restOf('quarter')] };
+    expect(setLyric(0, 'la').apply(restBase)).toEqual(restBase);
   });
 });
 

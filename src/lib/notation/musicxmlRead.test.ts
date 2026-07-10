@@ -15,6 +15,7 @@ describe('musicXmlToEditorScore round-trips the writer', () => {
     'G major 3/4 bass': { ...emptyScore(), keyFifths: 1, timeSig: { beats: 3, beatType: 4 }, clef: 'bass', elements: [noteOf(C4,'quarter'), noteOf(C4,'half')] },
     'a tie': { ...emptyScore(), elements: [{ ...noteOf(C4,'half'), tie: 'start' as const }, { ...noteOf(C4,'half'), tie: 'stop' as const }] },
     'a non-120 tempo': { ...emptyScore(), tempo: 92, elements: [noteOf(C4,'quarter')] },
+    'a lyric': { ...emptyScore(), elements: [{ ...noteOf(C4,'quarter'), lyric: 'la' }] },
   };
   for (const [name, score] of Object.entries(fixtures)) {
     it(`round-trips: ${name}`, () => {
