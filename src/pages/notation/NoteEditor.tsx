@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { EditorScore, noteOf, restOf, Pitch } from '@/lib/notation/model';
 import { BaseDur } from '@/lib/notation/duration';
-import { insertElement, deleteElement, transpose, CommandStack } from '@/lib/notation/commands';
+import { insertElement, deleteElement, transpose, changeDuration, toggleTie, setAccidental, CommandStack } from '@/lib/notation/commands';
 import { NotationView } from './NotationView';
 
 const DURATIONS: { code: BaseDur; label: string; key: string }[] = [
@@ -24,6 +24,8 @@ function nearestPitch(step: Pitch['step'], prev: Pitch | null): Pitch {
 
 export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: (s: EditorScore) => void }) {
   const [armed, setArmed] = useState<BaseDur>('quarter');
+  const [armedDots, setArmedDots] = useState<0 | 1 | 2>(0);
+  const [armedAlter, setArmedAlter] = useState<-1 | 0 | 1>(0);
   const [selected, setSelected] = useState<number | null>(null);
   const stackRef = useRef(new CommandStack());
   const scoreRef = useRef(score); scoreRef.current = score;
@@ -45,11 +47,12 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
       if (dur) { setArmed(dur.code); return; }
       if (/^[a-gA-G]$/.test(e.key)) {
         const prev = [...s.elements].reverse().find((el) => el.kind === 'note') as any;
-        const pitch = nearestPitch(e.key.toUpperCase() as Pitch['step'], prev ? prev.pitch : null);
-        dispatch(insertElement(s.elements.length, noteOf(pitch, armed)));
+        const basePitch = nearestPitch(e.key.toUpperCase() as Pitch['step'], prev ? prev.pitch : null);
+        const pitch = { ...basePitch, alter: armedAlter };
+        dispatch(insertElement(s.elements.length, noteOf(pitch, armed, armedDots)));
         return;
       }
-      if (e.key === 'r' || e.key === 'R') { dispatch(insertElement(s.elements.length, restOf(armed))); return; }
+      if (e.key === 'r' || e.key === 'R') { dispatch(insertElement(s.elements.length, restOf(armed, armedDots))); return; }
       if (e.key === 'Backspace' || e.key === 'Delete') {
         const at = selected ?? s.elements.length - 1;
         if (at >= 0) {
@@ -59,6 +62,37 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         }
         return;
       }
+      if (e.key === '.') {
+        e.preventDefault();
+        if (selected != null && s.elements[selected]) {
+          const el = s.elements[selected];
+          dispatch(changeDuration(selected, el.base, ((el.dots + 1) % 3) as 0 | 1 | 2));
+        } else {
+          setArmedDots((d) => ((d + 1) % 3) as 0 | 1 | 2);
+        }
+        return;
+      }
+      const ACC: Record<string, -1 | 0 | 1> = { '=': 1, '-': -1, '0': 0 };
+      if (e.key in ACC) {
+        const alter = ACC[e.key];
+        if (selected != null && s.elements[selected]?.kind === 'note') dispatch(setAccidental(selected, alter));
+        else setArmedAlter(alter);
+        return;
+      }
+      if (e.key === 't' || e.key === 'T') {
+        if (selected != null && s.elements[selected]?.kind === 'note') dispatch(toggleTie(selected));
+        return;
+      }
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (s.elements.length === 0) return;
+        setSelected((cur) => {
+          const next = cur == null ? (e.key === 'ArrowRight' ? 0 : s.elements.length - 1)
+                                   : cur + (e.key === 'ArrowRight' ? 1 : -1);
+          return Math.max(0, Math.min(s.elements.length - 1, next));
+        });
+        return;
+      }
       if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && selected != null) {
         e.preventDefault();
         dispatch(transpose(selected, e.key === 'ArrowUp' ? 1 : -1));
@@ -66,7 +100,7 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [armed, selected, dispatch]);
+  }, [armed, armedDots, armedAlter, selected, dispatch]);
 
   return (
     <div className="space-y-4">
@@ -77,6 +111,24 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
             {d.label}
           </button>
         ))}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => setArmedDots((d) => ((d + 1) % 3) as 0 | 1 | 2)}
+          className={`rounded-lg px-3 py-2 text-sm font-medium ${armedDots > 0 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
+          Dot: {armedDots}
+        </button>
+        <button onClick={() => setArmedAlter(0)}
+          className={`rounded-lg px-3 py-2 text-sm font-medium ${armedAlter === 0 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
+          ♮
+        </button>
+        <button onClick={() => setArmedAlter(1)}
+          className={`rounded-lg px-3 py-2 text-sm font-medium ${armedAlter === 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
+          ♯
+        </button>
+        <button onClick={() => setArmedAlter(-1)}
+          className={`rounded-lg px-3 py-2 text-sm font-medium ${armedAlter === -1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
+          ♭
+        </button>
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <NotationView score={score} onNoteClick={setSelected} />
