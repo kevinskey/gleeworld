@@ -151,59 +151,41 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         <button onClick={() => setArmedAlter(1)} className={pill(armedAlter === 1)}>♯</button>
         <button onClick={() => setArmedAlter(-1)} className={pill(armedAlter === -1)}>♭</button>
         <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
-        <button onClick={() => setLyricMode((v) => !v)} className={pill(lyricMode)}>Lyrics</button>
+        <button
+          onClick={() => {
+            const next = !lyricMode;
+            setLyricMode(next);
+            // Entering lyric mode with nothing selected: drop the cursor on the first note.
+            if (next && (selected == null || score.elements[selected]?.kind !== 'note')) {
+              const first = score.elements.findIndex((el) => el.kind === 'note');
+              if (first >= 0) setSelected(first);
+            }
+          }}
+          className={pill(lyricMode)}
+        >
+          Lyrics
+        </button>
       </div>
-      {lyricMode && selected != null && score.elements[selected]?.kind === 'note' && (
-        <LyricInput
-          key={selected}
-          value={(score.elements[selected] as any).lyric ?? ''}
-          onChange={(v) => dispatch(setLyric(selected, v))}
-          onAdvance={() => advanceToNextNote(selected)}
-          onExit={() => setLyricMode(false)}
-        />
-      )}
       <div className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs leading-relaxed text-slate-600">
         <span className="font-medium text-slate-700">Type to write music.</span>{' '}
         Press <Kbd>A</Kbd>–<Kbd>G</Kbd> to add notes · <Kbd>1</Kbd>–<Kbd>6</Kbd> duration ·{' '}
         <Kbd>.</Kbd> dot · <Kbd>=</Kbd> sharp · <Kbd>-</Kbd> flat · <Kbd>R</Kbd> rest ·{' '}
         <Kbd>←</Kbd>/<Kbd>→</Kbd> select a note · <Kbd>↑</Kbd>/<Kbd>↓</Kbd> move its pitch ·{' '}
         <Kbd>T</Kbd> tie to next · <Kbd>↵</Kbd> respell (♯/♭) · <Kbd>⌫</Kbd> delete ·{' '}
-        Lyrics: toggle <Kbd>Lyrics</Kbd>, type under the selected note, <Kbd>Space</Kbd> = next. Click a note to select it.
+        <Kbd>Lyrics</Kbd> then type under the note: <Kbd>Space</Kbd> = next word, <Kbd>-</Kbd> = hyphen to next syllable.
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <NotationView score={score} onNoteClick={setSelected} selectedIndex={selected} />
+        <NotationView
+          score={score}
+          onNoteClick={setSelected}
+          selectedIndex={selected}
+          editingLyric={lyricMode && selected != null && score.elements[selected]?.kind === 'note'}
+          lyricValue={selected != null ? (score.elements[selected] as any)?.lyric ?? '' : ''}
+          onLyricChange={(v) => selected != null && dispatch(setLyric(selected, v))}
+          onLyricAdvance={() => selected != null && advanceToNextNote(selected)}
+          onLyricExit={() => setLyricMode(false)}
+        />
       </div>
-    </div>
-  );
-}
-
-// Small text input for typing a syllable under the currently selected note. Remounted
-// (via `key={selected}`) whenever the selection changes, so it always autofocuses and
-// starts fresh on the newly-selected note's lyric.
-function LyricInput({ value, onChange, onAdvance, onExit }: {
-  value: string; onChange: (v: string) => void; onAdvance: () => void; onExit: () => void;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => { ref.current?.focus(); }, []);
-  return (
-    <div className="flex items-center gap-2 rounded-lg bg-orange-50 px-3 py-1.5">
-      <input
-        ref={ref}
-        type="text"
-        aria-label="Lyric"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') {
-            e.preventDefault();
-            onAdvance();
-          } else if (e.key === 'Escape') {
-            onExit();
-          }
-        }}
-        className="w-40 rounded border border-orange-300 bg-white px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-400"
-      />
-      <span className="text-xs text-orange-800">Type a syllable, press Space for the next note.</span>
     </div>
   );
 }
