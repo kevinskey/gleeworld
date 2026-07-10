@@ -31,6 +31,10 @@ export function AccompanimentPicker({
   // the top so users don't scroll past every song hit to find albums.
   const [appleKind, setAppleKind] = useState<'songs' | 'albums'>('songs');
   const [ytUrl, setYtUrl] = useState('');
+  const [ytSearch, setYtSearch] = useState('');
+  const [ytHits, setYtHits] = useState<Array<{ videoId: string; title: string; channelTitle: string; thumbnail: string; url: string }>>([]);
+  const [ytLoading, setYtLoading] = useState(false);
+  const [ytErr, setYtErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (tab !== 'apple') return;
@@ -52,6 +56,35 @@ export function AccompanimentPicker({
     }, 300);
     return () => { cancelled = true; window.clearTimeout(handle); };
   }, [tab, appleSearch]);
+
+  // YouTube search — same debounce pattern as Apple Music, but proxied
+  // through the youtube-search edge fn (server holds the API key; each
+  // search costs ~100 of the 10k/day quota units).
+  useEffect(() => {
+    if (tab !== 'youtube') return;
+    const term = ytSearch.trim();
+    if (!term) { setYtHits([]); setYtErr(null); return; }
+    let cancelled = false;
+    setYtLoading(true);
+    setYtErr(null);
+    const handle = window.setTimeout(async () => {
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data, error } = await supabase.functions.invoke('youtube-search', {
+          body: { q: term, maxResults: 10 },
+        });
+        if (error) throw error;
+        const body = data as { hits?: typeof ytHits; error?: string };
+        if (body?.error) throw new Error(body.error);
+        if (!cancelled) setYtHits(body?.hits ?? []);
+      } catch (e: any) {
+        if (!cancelled) setYtErr(e?.message ?? 'YouTube search failed.');
+      } finally {
+        if (!cancelled) setYtLoading(false);
+      }
+    }, 300);
+    return () => { cancelled = true; window.clearTimeout(handle); };
+  }, [tab, ytSearch]);
 
   if (!open) return null;
 
@@ -225,8 +258,49 @@ export function AccompanimentPicker({
 
           {tab === 'youtube' && (
             <div className="space-y-3">
-              <label className="block">
-                <span className="text-xs text-slate-400 mb-1 block">YouTube URL</span>
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Input
+                  value={ytSearch}
+                  onChange={(e) => setYtSearch(e.target.value)}
+                  placeholder="Search YouTube…"
+                  className="pl-8 h-9 bg-black/40 border-amber-500/20 text-slate-100 placeholder:text-slate-500"
+                />
+              </div>
+              <p className="text-[11px] text-amber-400/80 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                Plays alongside the mix — audio isn't captured into your recording.
+              </p>
+              {ytErr && <p className="text-xs text-rose-400">{ytErr}</p>}
+              {ytLoading ? (
+                <div className="p-4 text-center text-xs text-slate-400">
+                  <Loader2 className="w-4 h-4 animate-spin inline mr-1" /> Searching…
+                </div>
+              ) : ytHits.length > 0 ? (
+                <div className="max-h-72 overflow-y-auto border border-amber-500/10 rounded divide-y divide-slate-800">
+                  {ytHits.map((h) => (
+                    <button
+                      key={h.videoId}
+                      type="button"
+                      onClick={() => { onPickYouTube(h.url); onClose(); }}
+                      className="w-full flex items-start gap-3 px-3 py-2 text-left hover:bg-amber-500/10 text-slate-200"
+                    >
+                      {h.thumbnail
+                        ? <img src={h.thumbnail} alt="" className="w-16 h-9 rounded object-cover shrink-0" />
+                        : <Youtube className="w-9 h-9 text-amber-400/70 shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium leading-snug break-words">{h.title}</div>
+                        <div className="text-xs text-slate-400 break-words">{h.channelTitle}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : ytSearch.trim() ? (
+                <div className="p-4 text-center text-xs text-slate-500 italic">No results.</div>
+              ) : null}
+
+              <label className="block pt-1 border-t border-amber-500/10">
+                <span className="text-xs text-slate-400 mb-1 mt-2 block">Or paste a YouTube URL</span>
                 <Input
                   type="url"
                   value={ytUrl}
@@ -235,10 +309,6 @@ export function AccompanimentPicker({
                   className="bg-black/40 border-amber-500/20 text-slate-100 placeholder:text-slate-500"
                 />
               </label>
-              <p className="text-[11px] text-amber-400/80 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                Plays alongside the mix — audio isn't captured into your recording.
-              </p>
               <Button
                 onClick={() => {
                   const url = ytUrl.trim();

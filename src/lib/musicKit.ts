@@ -160,6 +160,12 @@ async function getDeveloperToken(): Promise<string> {
   }
   const res = await fetch(getDeveloperTokenUrl(), { cache: 'no-store' });
   if (!res.ok) throw new Error(`developer token unavailable (${res.status})`);
+  // A vhost missing the nginx apple-music snippet answers this route with
+  // the SPA's index.html and a 200 — catch it here so the user sees what's
+  // wrong instead of "Unexpected token '<' … is not valid JSON".
+  if (!(res.headers.get('content-type') ?? '').includes('application/json')) {
+    throw new Error('Apple Music is not enabled on this domain yet (token endpoint returned HTML).');
+  }
   const { token } = await res.json();
   if (!token) throw new Error('developer token endpoint returned empty body');
   cachedToken = { token, fetchedAt: Date.now() };
