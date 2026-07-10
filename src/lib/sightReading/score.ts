@@ -3,7 +3,15 @@ import type { ExerciseIR } from './ir';
 export interface SungNote { midi: number; beatPos: number; }
 export interface ScoreResult {
   firstNoteOk: boolean; pitch: number; rhythm: number; retention: number; overall: number;
-  perNote: { expectedMidi: number; sungMidi: number | null; centsOff: number | null; ok: boolean }[];
+  perNote: {
+    expectedMidi: number; sungMidi: number | null;
+    // Semitone-quantized, NOT true cents: SungNote.midi is an integer, so this
+    // is always a multiple of 100 (e.g. an octave slip reports exactly -1200
+    // even though `ok` may still be true). A UI that wants real sub-semitone
+    // cents must read the live pitch tracker directly rather than this field.
+    centsOff: number | null;
+    ok: boolean;
+  }[];
   driftBar: number | null;
 }
 
@@ -19,10 +27,28 @@ const ALIGNMENT_TOLERANCE_BEATS = 1;
 // octave multiple of a shared pitch-class offset.
 const sameOctaveClass = (a: number, b: number) => (((a - b) % 12) + 12) % 12 === 0;
 
+// The "lower median" of a set of semitone offsets: sorted-and-indexed rather
+// than averaged, so the result is always one of the actual observed offsets
+// (an integer) instead of e.g. 3.5 between two middle values — averaging
+// would make sameOctaveClass's exact modulo comparison never match anything.
+// A single outlier offset (including at index 0) cannot move this value,
+// which is the whole point: the baseline is "what most of the performance
+// agreed on," not "wherever the take happened to start."
+function medianOffset(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor((sorted.length - 1) / 2)];
+}
+
 export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
   const expected = ir.notes;
 
-  if (sung.length === 0) {
+  // Empty-sung and empty-expected both collapse to the same zeroed shape.
+  // Critically this also guards the case a blank/empty MusicXML upload
+  // produces (ir.notes === [] but the student did sing something): without
+  // this check, aligned[0] is undefined below and reading .offset off it
+  // throws, and expected.length === 0 makes every percentage a divide-by-zero.
+  if (sung.length === 0 || expected.length === 0) {
     return {
       firstNoteOk: false, pitch: 0, rhythm: 0, retention: 0, overall: 0, driftBar: null,
       perNote: expected.map(n => ({ expectedMidi: n.midi, sungMidi: null, centsOff: null, ok: false })),
@@ -44,13 +70,18 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
     return { expectedMidi: exp.midi, sungMidi: best.midi, offset: best.midi - exp.midi };
   });
 
-  // The performance's own reference point: whatever offset the student
-  // established on the first note they actually sang. Everything else is
-  // judged for consistency against THIS, not against 0. That is what lets a
-  // whole-line semitone offset keep most of its pitch credit (the intervals
-  // between notes are all still correct) while the isolated firstNoteOk
-  // dimension is what actually fails the student for mis-placing that first
-  // note in the first place.
+  // The performance's own reference point: the MEDIAN offset across every
+  // aligned note. Everything else is judged for consistency against THIS,
+  // not against 0. That is what lets a whole-line semitone offset keep most
+  // of its pitch credit (the intervals between notes are all still correct)
+  // while the isolated firstNoteOk dimension is what actually fails the
+  // student for mis-placing that first note in the first place.
+  //
+  // Anchoring to the median (rather than the first aligned note) is what
+  // keeps a single bad note — including a wrong or dropped note 0 — from
+  // becoming a single point of failure for every other note's pitch credit:
+  // a lone outlier offset cannot move a median the way it moves "whatever
+  // note happened to come first."
   //
   // NOTE ON THE BRIEF'S REFERENCE IMPLEMENTATION: the brief's draft scored
   // `pitch` from a per-note ABSOLUTE pitch-class match against the expected
@@ -62,13 +93,16 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
   // remaining pitch credit." A `pitch` of 0 destroys 100% of it. That draft
   // does not implement its own stated design, so `pitch`/`perNote.ok` here
   // are computed relative to the established baseline offset instead.
-  const firstKnownOffset = aligned.find(a => a.offset !== null)?.offset ?? 0;
+  const alignedOffsets = aligned
+    .map((a, i) => ({ i, offset: a.offset }))
+    .filter((x): x is { i: number; offset: number } => x.offset !== null);
+  const baselineOffset = medianOffset(alignedOffsets.map(x => x.offset));
 
   const perNote = aligned.map((a) => {
     if (a.sungMidi === null || a.offset === null) {
       return { expectedMidi: a.expectedMidi, sungMidi: null, centsOff: null, ok: false };
     }
-    const ok = sameOctaveClass(a.offset, firstKnownOffset);
+    const ok = sameOctaveClass(a.offset, baselineOffset);
     return { expectedMidi: a.expectedMidi, sungMidi: a.sungMidi, centsOff: a.offset * 100, ok };
   });
 
@@ -89,15 +123,34 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
   // Retention: does the offset between sung and expected STAY PUT relative to
   // the established baseline? A student who is consistently a semitone flat
   // (or a consistent octave down) has kept the key relative to themselves —
-  // that's the baseline, not a drift. A student who starts on pitch and
-  // slides to a semitone flat partway through has lost the tonal centre, and
-  // we name the bar where that first happens.
+  // that's the baseline, not a drift. A single off-baseline note that
+  // immediately recovers is a transient slip, not lost tonal centre — so we
+  // only call it drift once the offset differs from the baseline for two or
+  // more CONSECUTIVE aligned notes (a dropped/unaligned note in between
+  // doesn't reset the run; it just wasn't evidence either way). driftIdx is
+  // the first note of that run, and we name the bar it falls in.
   let driftIdx: number | null = null;
-  for (let i = 0; i < aligned.length; i++) {
-    const offset = aligned[i].offset;
-    if (offset !== null && !sameOctaveClass(offset, firstKnownOffset)) { driftIdx = i; break; }
+  {
+    let runStartIdx: number | null = null;
+    let runLen = 0;
+    for (const { i, offset } of alignedOffsets) {
+      if (!sameOctaveClass(offset, baselineOffset)) {
+        if (runLen === 0) runStartIdx = i;
+        runLen++;
+        if (runLen >= 2) { driftIdx = runStartIdx; break; }
+      } else {
+        runLen = 0;
+        runStartIdx = null;
+      }
+    }
   }
-  const retention = driftIdx === null ? 100 : Math.round((driftIdx / expected.length) * 100);
+
+  // A take that aligns with NOTHING (every offset null) must not out-score
+  // silence just because there's no baseline to have drifted from — force it
+  // to 0 rather than falling through to the "no drift found" 100 case.
+  const retention = alignedOffsets.length === 0
+    ? 0
+    : driftIdx === null ? 100 : Math.round((driftIdx / expected.length) * 100);
 
   const beatsPerBar = ir.meter.beats;
   const driftBar = driftIdx === null ? null : Math.floor(expected[driftIdx].beatPos / beatsPerBar) + 1;
