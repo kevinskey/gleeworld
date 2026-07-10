@@ -1,10 +1,84 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Music } from 'lucide-react';
+import { Music, Plus, Pencil } from 'lucide-react';
 import { SingFlow } from './SingFlow';
 import { generateExercise } from '@/lib/sightReading/generate';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
+import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
+
+interface LibraryRow {
+  id: string;
+  title: string;
+}
+
+// Admin-only: create/edit entry points for teacher-authored notation exercises.
+// Non-admins keep the plain empty state — they can't author exercises.
+function LibraryTabAdmin() {
+  const navigate = useNavigate();
+  const [rows, setRows] = useState<LibraryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('gw_sight_reading_exercises')
+      .select('id, title')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          console.error('notation: failed to load exercise library', error);
+        } else {
+          setRows((data ?? []) as LibraryRow[]);
+        }
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="space-y-3">
+      <Button
+        type="button"
+        className="w-full rounded-full"
+        onClick={() => navigate('/dashboard/sight-reading/editor')}
+      >
+        <Plus className="mr-1.5 h-4 w-4" /> Create exercise
+      </Button>
+
+      {loading ? (
+        <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
+          <p className="text-sm text-slate-600">Loading…</p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
+          <p className="text-sm text-slate-600">No exercises yet. Create your first one above.</p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-slate-100 rounded-2xl bg-white shadow-sm">
+          {rows.map((row) => (
+            <li key={row.id} className="flex items-center justify-between gap-2 px-4 py-3">
+              <span className="text-sm text-slate-900">{row.title}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/dashboard/sight-reading/editor/' + row.id)}
+              >
+                <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const ACTIVITY_KEY = 'gw_sight_reading_activity'; // existing key, unchanged
 
@@ -17,6 +91,7 @@ export default function SightReadingStudio() {
   const [level, setLevel] = useState(1);
   const [musicKey, setMusicKey] = useState('C');
   const [priming, setPriming] = useState(false);
+  const { isAdmin } = useUserRole();
 
   const start = () =>
     setExercise(generateExercise({ level, key: musicKey, seed: Math.floor(Math.random() * 1e9) }));
@@ -134,9 +209,13 @@ export default function SightReadingStudio() {
         </TabsContent>
 
         <TabsContent value="library" className="pt-4">
-          <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="text-sm text-slate-600">Your teacher hasn’t added any scores yet.</p>
-          </div>
+          {isAdmin() ? (
+            <LibraryTabAdmin />
+          ) : (
+            <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
+              <p className="text-sm text-slate-600">Your teacher hasn’t added any scores yet.</p>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="progress" className="pt-4">
