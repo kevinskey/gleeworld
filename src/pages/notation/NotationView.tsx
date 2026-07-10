@@ -67,7 +67,6 @@ export function NotationView({
     // actual count so a short score fills the width instead of leaving empty slots.
     const isPhone = typeof window !== 'undefined' && window.innerWidth < PHONE_MAX_WIDTH;
     const perRow = Math.max(1, Math.min(isPhone ? PER_ROW_PHONE : PER_ROW_DESKTOP, measures.length));
-    const measureWidth = (logicalWidth - 16) / perRow;
     const rows = Math.ceil(measures.length / perRow);
     const TOP = 20, SYSTEM_H = 120, BOTTOM = 16;
     const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
@@ -77,86 +76,92 @@ export function NotationView({
 
     const keySpec = FIFTHS_KEY[score.keyFifths] ?? 'C';
 
-    let globalIndex = 0;
-    let selPos: { x: number; y: number } | null = null;   // captured position of the selected note
-    measures.forEach((m, mi) => {
-      const row = Math.floor(mi / perRow);
-      const col = mi % perRow;
-      const stave = new Stave(8 + col * measureWidth, TOP + row * SYSTEM_H, measureWidth);
-      if (col === 0) {
-        stave.addClef(VEX_CLEF[score.clef]);                                                     // clef opens every system
-        if (score.keyFifths !== 0) stave.addKeySignature(keySpec);                               // key signature too
-      }
-      if (mi === 0) stave.addTimeSignature(`${score.timeSig.beats}/${score.timeSig.beatType}`); // time signature only once
-      // Final barline (thin-thick) closes the last measure once the exercise has content.
-      if (mi === measures.length - 1 && score.elements.length > 0) stave.setEndBarType(Barline.type.END);
-      stave.setContext(ctx).draw();
+    const beamSpec = `${score.timeSig.beats}/${score.timeSig.beatType}`;
 
-      const notes = m.elements.map((el, i) => {
-        const flatIndex = globalIndex + i;
+    // Pass 1 — build each measure's tickables + its minimum content width, so a system can
+    // size bars PROPORTIONALLY to their content (a busy bar gets more width than a sparse one)
+    // instead of forcing every bar to the same width (which cramps busy bars).
+    const built = measures.map((m) => {
+      const notes = m.elements.map((el) => {
         let sn: StaveNote;
         if (el.kind === 'rest') {
           sn = new StaveNote({ keys: ['b/4'], duration: toVexDuration(el.base, el.dots) + 'r', clef: VEX_CLEF[score.clef] });
-          if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });   // augmentation dot glyph(s)
-        } else {
-          // Pitch spelling (incl. sharp/flat) is encoded in the key string; the key-aware
-          // accidental engine (applyAccidentals below) decides which glyphs actually draw.
-          sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
-          // A dotted duration string ('qd') sets the note's dot count but does NOT draw the dot.
           if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
-          // Sung syllable, rendered under the staff. Added as a modifier before formatting
-          // so the Formatter accounts for its width.
-          if (el.lyric) {
+        } else {
+          sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
+          if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
+          if (el.lyric) {   // sung syllable, rendered under the staff
             const ann = new Annotation(el.lyric);
             ann.setVerticalJustification(Annotation.VerticalJustify.BOTTOM);
             sn.addModifier(ann, 0);
           }
         }
-        // Highlight the selected element in orange.
-        if (selectedIndex != null && flatIndex === selectedIndex) {
-          sn.setStyle({ fillStyle: SELECTED_COLOR, strokeStyle: SELECTED_COLOR });
-        }
         return sn;
       });
+      let voice: Voice | null = null;
+      let beams: Beam[] = [];
+      let minW = 40;
       if (notes.length) {
-        const voice = new Voice({ numBeats: score.timeSig.beats, beatValue: score.timeSig.beatType }).setMode(VoiceMode.SOFT);
+        voice = new Voice({ numBeats: score.timeSig.beats, beatValue: score.timeSig.beatType }).setMode(VoiceMode.SOFT);
         voice.addTickables(notes);
-        // Given the key, draw sharps/flats that differ from the signature and naturals that
-        // cancel it — and omit accidentals already implied by the signature.
-        Accidental.applyAccidentals([voice], keySpec);
-        // Auto-beam eighths (and shorter) into groups per the time signature so they
-        // render with beams instead of individual flags.
-        const beamGroups = Beam.getDefaultBeamGroups(`${score.timeSig.beats}/${score.timeSig.beatType}`);
-        const beams = Beam.generateBeams(voice.getTickables(), { groups: beamGroups });
-        // Justify the notes across the measure's note area (after clef/key/time) so they
-        // fill the bar evenly instead of bunching at the left (formatToStave doesn't stretch).
-        const justifyW = Math.max(60, stave.getNoteEndX() - stave.getNoteStartX() - 12);
-        new Formatter().joinVoices([voice]).format([voice], justifyW);
-        voice.draw(ctx, stave);
-        beams.forEach((b) => b.setContext(ctx).draw());
-        // Wire click-to-select: attach the flat index to each drawn note's SVG group.
-        notes.forEach((n, i) => {
-          const idx = globalIndex + i;
-          (n as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
-          // Record the selected note's on-screen position for the inline lyric cursor.
-          if (idx === selectedIndex && m.elements[i].kind === 'note') {
-            const yb = typeof (stave as any).getYForBottomText === 'function'
-              ? (stave as any).getYForBottomText(1) : stave.getBottomY();
-            selPos = { x: (n as any).getAbsoluteX() * SCALE, y: yb * SCALE };
-          }
-        });
-        // Draw tie curves between paired start/stop notes within this measure.
-        try {
-          m.elements.forEach((el, i) => {
-            if (el.kind === 'note' && el.tie === 'start' && notes[i + 1]) {
-              new StaveTie({ firstNote: notes[i], lastNote: notes[i + 1], firstIndexes: [0], lastIndexes: [0] })
-                .setContext(ctx).draw();
+        Accidental.applyAccidentals([voice], keySpec);   // key-aware sharps/naturals
+        beams = Beam.generateBeams(voice.getTickables(), { groups: Beam.getDefaultBeamGroups(beamSpec) });
+        try { minW = new Formatter().joinVoices([voice]).preCalculateMinTotalWidth([voice]); }
+        catch { minW = 44 * notes.length; }
+      }
+      return { m, notes, voice, beams, minW };
+    });
+
+    // Pass 2 — lay out each system with proportional bar widths, then draw.
+    const MOD_RESERVE = 70; // fixed space for clef (+ key sig) + time sig on a system's first bar
+    let globalIndex = 0;
+    let selPos: { x: number; y: number } | null = null;
+    for (let r = 0; r < rows; r++) {
+      const rowItems = built.slice(r * perRow, r * perRow + perRow);
+      const contentWidth = Math.max(1, logicalWidth - 16 - MOD_RESERVE);
+      const weights = rowItems.map((b) => b.minW + 20);
+      const totalW = weights.reduce((a, w) => a + w, 0) || 1;
+      let x = 8;
+      rowItems.forEach((b, i) => {
+        const mi = r * perRow + i;
+        const w = (weights[i] / totalW) * contentWidth + (i === 0 ? MOD_RESERVE : 0);
+        const stave = new Stave(x, TOP + r * SYSTEM_H, w);
+        if (i === 0) {
+          stave.addClef(VEX_CLEF[score.clef]);                                                     // clef opens every system
+          if (score.keyFifths !== 0) stave.addKeySignature(keySpec);                               // key signature too
+        }
+        if (mi === 0) stave.addTimeSignature(`${score.timeSig.beats}/${score.timeSig.beatType}`); // time sig only once
+        if (mi === measures.length - 1 && score.elements.length > 0) stave.setEndBarType(Barline.type.END);
+        stave.setContext(ctx).draw();
+
+        if (b.voice && b.notes.length) {
+          b.notes.forEach((sn, k) => {   // highlight the selected element in orange (before draw)
+            if (selectedIndex != null && globalIndex + k === selectedIndex) sn.setStyle({ fillStyle: SELECTED_COLOR, strokeStyle: SELECTED_COLOR });
+          });
+          const justifyW = Math.max(40, stave.getNoteEndX() - stave.getNoteStartX() - 10);
+          new Formatter().joinVoices([b.voice]).format([b.voice], justifyW);
+          b.voice.draw(ctx, stave);
+          b.beams.forEach((bm) => bm.setContext(ctx).draw());
+          b.notes.forEach((sn, k) => {
+            const idx = globalIndex + k;
+            (sn as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
+            if (idx === selectedIndex && b.m.elements[k].kind === 'note') {   // inline lyric cursor position
+              const yb = typeof (stave as any).getYForBottomText === 'function' ? (stave as any).getYForBottomText(1) : stave.getBottomY();
+              selPos = { x: (sn as any).getAbsoluteX() * SCALE, y: yb * SCALE };
             }
           });
-        } catch { /* tie rendering is cosmetic; never let it break the score render */ }
-      }
-      globalIndex += m.elements.length;
-    });
+          try {   // tie curves between paired start/stop notes within this measure
+            b.m.elements.forEach((el, k) => {
+              if (el.kind === 'note' && el.tie === 'start' && b.notes[k + 1]) {
+                new StaveTie({ firstNote: b.notes[k], lastNote: b.notes[k + 1], firstIndexes: [0], lastIndexes: [0] }).setContext(ctx).draw();
+              }
+            });
+          } catch { /* tie rendering is cosmetic; never let it break the score render */ }
+        }
+        x += w;
+        globalIndex += b.m.elements.length;
+      });
+    }
     setLyricPos(selPos);
   }, [score, width, measuredW, selectedIndex]);
 
