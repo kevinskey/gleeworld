@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter } from 'vexflow';
+import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie } from 'vexflow';
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration, vexAccidentalCode } from '@/lib/notation/toVexflow';
@@ -45,6 +45,15 @@ export function NotationView({ score, width = 720, onNoteClick }: {
           const idx = globalIndex + i;
           (n as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
         });
+        // Draw tie curves between paired start/stop notes within this measure.
+        try {
+          m.elements.forEach((el, i) => {
+            if (el.kind === 'note' && el.tie === 'start' && notes[i + 1]) {
+              new StaveTie({ firstNote: notes[i], lastNote: notes[i + 1], firstIndexes: [0], lastIndexes: [0] })
+                .setContext(ctx).draw();
+            }
+          });
+        } catch { /* tie rendering is cosmetic; never let it break the score render */ }
       }
       globalIndex += m.elements.length;
       x += measureWidth;
