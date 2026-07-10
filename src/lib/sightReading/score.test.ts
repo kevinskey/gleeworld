@@ -9,13 +9,15 @@ const perfect = ir.notes.map(n => ({ midi: n.midi, beatPos: n.beatPos }));
 // Hand-built IR for cases that need exact control over alignment/timing
 // (median tie-breaks, consecutive-run detection, bar arithmetic) rather than
 // whatever generateExercise's PRNG happens to produce for a given seed.
-function makeIR(notes: Array<{ midi: number; beatPos: number }>): ExerciseIR {
+// beatsPerBar defaults to 4 (4/4) but is overridable so a drift's onset can
+// be placed on a specific bar boundary without changing note count/spacing.
+function makeIR(notes: Array<{ midi: number; beatPos: number }>, beatsPerBar = 4): ExerciseIR {
   const irNotes: IRNote[] = notes.map((n) => ({
     midi: n.midi, beatPos: n.beatPos, durationBeats: 1, solfege: 'do', phraseIdx: 0,
   }));
   return {
     key: 'C', mode: 'major', tonicMidi: 60,
-    meter: { beats: 4, beatType: 4 }, tempo: 80,
+    meter: { beats: beatsPerBar, beatType: 4 }, tempo: 80,
     notes: irNotes, phrases: 1, difficulty: 1,
   };
 }
@@ -117,5 +119,35 @@ describe('scoreAttempt', () => {
     const wayOff = perfect.map(n => ({ ...n, beatPos: n.beatPos + 1000 }));
     const r = scoreAttempt(ir, wayOff);
     expect(r.retention).toBe(0);
+  });
+
+  it('does not let a drifted second half hijack the baseline when the split is exactly even', () => {
+    // 8 notes, 4/4: on pitch for beats 0-3, a semitone flat starting exactly
+    // at the midpoint (beat 4). With a median-over-the-whole-line baseline
+    // this is a dead tie that the lower-median tie-break resolves to the
+    // flat offset, scoring the correctly-sung opening as the drift. Anchored
+    // to the opening, the baseline stays 0 and the drift is correctly named
+    // partway through, not at the very start.
+    const notes = Array.from({ length: 8 }, (_, i) => ({ midi: 60, beatPos: i }));
+    const customIR = makeIR(notes);
+    const sung = notes.map((n, i) => (i >= 4 ? { ...n, midi: n.midi - 1 } : n));
+    const r = scoreAttempt(customIR, sung);
+    expect(r.retention).toBeGreaterThan(30);
+    expect(r.retention).toBeLessThan(70);
+    expect(r.driftBar).toBe(2);
+  });
+
+  it('anchors the baseline to the opening even when the drifted notes are an outright majority', () => {
+    // On pitch for the first three notes, then a semitone flat for the
+    // remaining five (3/4 meter so the drift's onset lands on a later bar).
+    // The drifted notes are a clear majority (5 of 8) — the exact regression:
+    // a median over the whole line would pick the flat offset as the
+    // baseline and score the correctly-sung opening as the deviation.
+    const notes = Array.from({ length: 8 }, (_, i) => ({ midi: 60, beatPos: i }));
+    const customIR = makeIR(notes, 3);
+    const sung = notes.map((n, i) => (i >= 3 ? { ...n, midi: n.midi - 1 } : n));
+    const r = scoreAttempt(customIR, sung);
+    expect(r.driftBar).toBeGreaterThan(1);
+    expect(r.retention).toBeGreaterThan(0);
   });
 });

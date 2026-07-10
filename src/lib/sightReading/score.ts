@@ -70,18 +70,23 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
     return { expectedMidi: exp.midi, sungMidi: best.midi, offset: best.midi - exp.midi };
   });
 
-  // The performance's own reference point: the MEDIAN offset across every
-  // aligned note. Everything else is judged for consistency against THIS,
-  // not against 0. That is what lets a whole-line semitone offset keep most
-  // of its pitch credit (the intervals between notes are all still correct)
-  // while the isolated firstNoteOk dimension is what actually fails the
-  // student for mis-placing that first note in the first place.
+  // The performance's own reference point: the median of the STUDENT'S
+  // OPENING — the first three aligned offsets (or all of them, if fewer
+  // than three notes aligned at all) — not the median of the whole line.
+  // Everything else is judged for consistency against THIS, not against 0.
+  // That is what lets a whole-line semitone offset keep most of its pitch
+  // credit (the intervals between notes are all still correct) while the
+  // isolated firstNoteOk dimension is what actually fails the student for
+  // mis-placing that first note in the first place.
   //
-  // Anchoring to the median (rather than the first aligned note) is what
-  // keeps a single bad note — including a wrong or dropped note 0 — from
-  // becoming a single point of failure for every other note's pitch credit:
-  // a lone outlier offset cannot move a median the way it moves "whatever
-  // note happened to come first."
+  // Anchoring to a median of the OPENING (rather than a median of every
+  // aligned note) is what keeps a single bad opening note — including a
+  // wrong or dropped note 0 — from becoming a single point of failure for
+  // every other note's pitch credit, while ALSO stopping a later, sustained
+  // drift from hijacking the baseline just because the drifted notes end up
+  // outnumbering the correctly-sung opening: a student who sings the first
+  // half on pitch and then drifts flat for the rest is judged against how
+  // they started, not against whichever half happened to have more notes.
   //
   // NOTE ON THE BRIEF'S REFERENCE IMPLEMENTATION: the brief's draft scored
   // `pitch` from a per-note ABSOLUTE pitch-class match against the expected
@@ -96,7 +101,7 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
   const alignedOffsets = aligned
     .map((a, i) => ({ i, offset: a.offset }))
     .filter((x): x is { i: number; offset: number } => x.offset !== null);
-  const baselineOffset = medianOffset(alignedOffsets.map(x => x.offset));
+  const baselineOffset = medianOffset(alignedOffsets.slice(0, 3).map(x => x.offset));
 
   const perNote = aligned.map((a) => {
     if (a.sungMidi === null || a.offset === null) {
