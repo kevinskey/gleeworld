@@ -158,7 +158,9 @@ export function usePartTracksProject(projectId: string | undefined) {
 }
 
 export async function createPartTracksProject(input: {
-  sheetMusicId: string;
+  // null = no score linked. Optional since 2026-07-10 (migration
+  // 20260710210000) — a project can be just a backing track + voices.
+  sheetMusicId: string | null;
   title: string;
   voicing: string | null;
   tempoBpm?: number | null;
