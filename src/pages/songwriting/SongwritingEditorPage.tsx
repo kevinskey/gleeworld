@@ -5,7 +5,8 @@
 // updateChart, attachNewChart, attachClipboardChart, detachChart,
 // copyChartToClipboard, chartRefCount) and the AI-panel wiring (insertLine,
 // replaceLine, selectedWord, focusedLine) are all still here even though
-// their consumer components aren't rendered yet — Tasks 9-11 reattach them.
+// some of their consumer components aren't rendered yet — the AI-panel
+// wiring is now live (Task 9); Task 10/11 reattach the rest.
 //
 // Deliberate changes for this port:
 //  - useParams key is `songId` (string, Supabase uuid) instead of `id` (number).
@@ -23,9 +24,9 @@
 //    survives an immediate back-navigation.
 //  - Added a Share toggle (song.visibility) — new in this multi-tenant app,
 //    the old app had no such concept.
-//  - AIPanel / ChordChartEditor (via SectionChordSlot) / RecorderPanel /
-//    TTSPlayButton are commented out — those files don't exist until
-//    Tasks 9-11 land.
+//  - ChordChartEditor (via SectionChordSlot) / RecorderPanel / TTSPlayButton
+//    are still commented out — those files don't exist until Tasks 10-11
+//    land. AIPanel is restored (Task 9).
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -34,7 +35,7 @@ import { getSong, updateSong, setVisibility } from '@/lib/songwriting/songsApi';
 import type { ChordChart, GraveyardEntry, Section, Song } from '@/lib/songwriting/types';
 import TopBar, { type SaveState } from './components/TopBar';
 import SectionBlock from './components/SectionBlock';
-// import AIPanel from './components/AIPanel'; // restored in Task 9
+import AIPanel from './components/AIPanel';
 // import RecorderPanel from './components/RecorderPanel'; // restored in Task 11
 // import SectionChordSlot from './components/SectionChordSlot'; // restored in Task 10 alongside ChordChartEditor
 
@@ -327,7 +328,7 @@ export default function SongwritingEditorPage() {
   }
 
   // Receive a line suggestion → insert at focused position
-  // (Consumed by AIPanel, not rendered until Task 9 — kept intact.)
+  // Consumed by AIPanel's "Use" button (Next line tab).
   function insertLine(line: string) {
     if (!song || !focusedLine) {
       toast.message('Click a line first to choose where this goes');
@@ -358,10 +359,8 @@ export default function SongwritingEditorPage() {
     return <div className="p-4 md:p-6 max-w-4xl mx-auto text-sm text-muted-foreground">Loading song…</div>;
   }
 
-  // Derived values for AIPanel — that component isn't rendered until Task 9,
-  // but these stay live (not commented) so the wiring is a straight drop-in
-  // when it lands. (Project tsconfig has noUnusedLocals/noUnusedParameters
-  // off, so leaving these computed-but-unused is safe for the build.)
+  // Derived values fed into AIPanel (current line / section / prior lines
+  // for its Rewrite and Next-line tabs).
   const currentLine = focusedLine
     ? song.sections.find((s) => s.id === focusedLine.sectionId)?.lines[focusedLine.index] || ''
     : '';
@@ -517,14 +516,14 @@ export default function SongwritingEditorPage() {
             </div>
           </div>
 
-          {/* <AIPanel
+          <AIPanel
             selectedWord={selectedWord}
             currentLine={currentLine}
             previousLines={prevLines}
             sectionType={currentSection?.type || 'verse'}
             onInsertLine={insertLine}
             onReplaceLine={replaceLine}
-          /> restored in Task 9 */}
+          />
 
           <div className="hidden lg:block">
             <div className="flex items-center gap-2 mb-3">
