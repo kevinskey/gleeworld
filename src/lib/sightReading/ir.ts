@@ -12,7 +12,7 @@ export interface ExerciseIR {
 const SOLFEGE = ['do','ra','re','me','mi','fa','fi','sol','le','la','te','ti'];
 
 // MIDI note number for the tonic of each key the app offers (in the octave beginning at C4/60).
-const KEY_TO_MIDI: Record<string, number> = {
+export const KEY_TO_MIDI: Record<string, number> = {
   C: 60, D: 62, Eb: 63, E: 64, F: 65, G: 67, A: 69, Bb: 70,
 };
 
