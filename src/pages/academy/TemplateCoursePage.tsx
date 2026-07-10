@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUserRole } from '@/hooks/useUserRole';
 import { LEVEL_LABEL } from '@/hooks/useCourseStore';
+import { ExercisePlayer } from '@/components/academy/exercise-player/ExercisePlayer';
 import {
   ArrowLeft, ChevronDown, ChevronRight, Loader2, Headphones, PenSquare,
   Pencil, Plus, X, Music,
@@ -464,11 +465,9 @@ function LessonRow({
           {lesson.gw_academy_exercises.length > 0 && (
             <div>
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Exercises</div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="space-y-3">
                 {lesson.gw_academy_exercises.map((ex) => (
-                  <Badge key={ex.id} variant="outline" className="text-xs">
-                    {ex.type.replace(/_/g, ' ')}
-                  </Badge>
+                  <ExercisePlayer key={ex.id} exercise={ex} />
                 ))}
               </div>
             </div>
