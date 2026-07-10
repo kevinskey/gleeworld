@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline } from 'vexflow';
+import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode } from 'vexflow';
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
-import { toVexKey, toVexDuration, vexAccidentalCode } from '@/lib/notation/toVexflow';
+import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
 
 const VEX_CLEF = { treble: 'treble', bass: 'bass', alto: 'alto' } as const;
+
+// keyFifths (−7..7) → VexFlow major-key spec, used both for the drawn key signature and for
+// the accidental engine (so an out-of-key note gets its natural/accidental automatically).
+const FIFTHS_KEY: Record<number, string> = {
+  0: 'C', 1: 'G', 2: 'D', 3: 'A', 4: 'E', 5: 'B', 6: 'F#', 7: 'C#',
+  [-1]: 'F', [-2]: 'Bb', [-3]: 'Eb', [-4]: 'Ab', [-5]: 'Db', [-6]: 'Gb', [-7]: 'Cb',
+};
 
 // Small, engraving-sized notation. Measures per line are fixed by viewport: 4 across on
 // desktop/iPad, 2 on phones (below Tailwind's md breakpoint).
@@ -58,12 +65,17 @@ export function NotationView({ score, width, onNoteClick }: {
     const ctx = renderer.getContext();
     ctx.scale(SCALE, SCALE);
 
+    const keySpec = FIFTHS_KEY[score.keyFifths] ?? 'C';
+
     let globalIndex = 0;
     measures.forEach((m, mi) => {
       const row = Math.floor(mi / perRow);
       const col = mi % perRow;
       const stave = new Stave(8 + col * measureWidth, TOP + row * SYSTEM_H, measureWidth);
-      if (col === 0) stave.addClef(VEX_CLEF[score.clef]);                                        // clef opens every system
+      if (col === 0) {
+        stave.addClef(VEX_CLEF[score.clef]);                                                     // clef opens every system
+        if (score.keyFifths !== 0) stave.addKeySignature(keySpec);                               // key signature too
+      }
       if (mi === 0) stave.addTimeSignature(`${score.timeSig.beats}/${score.timeSig.beatType}`); // time signature only once
       // Final barline (thin-thick) closes the last measure once the exercise has content.
       if (mi === measures.length - 1 && score.elements.length > 0) stave.setEndBarType(Barline.type.END);
@@ -75,16 +87,23 @@ export function NotationView({ score, width, onNoteClick }: {
           if (el.dots > 0) Dot.buildAndAttach([r], { all: true });   // augmentation dot glyph(s)
           return r;
         }
+        // Pitch spelling (incl. sharp/flat) is encoded in the key string; the key-aware
+        // accidental engine (applyAccidentals below) decides which glyphs actually draw.
         const sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
-        const acc = vexAccidentalCode(el.pitch.alter);
-        if (acc) sn.addModifier(new Accidental(acc), 0);
         // A dotted duration string ('qd') sets the note's dot count but does NOT draw the dot;
         // the glyph must be attached explicitly.
         if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
         return sn;
       });
       if (notes.length) {
-        Formatter.FormatAndDraw(ctx, stave, notes);
+        const voice = new Voice({ numBeats: score.timeSig.beats, beatValue: score.timeSig.beatType }).setMode(VoiceMode.SOFT);
+        voice.addTickables(notes);
+        // Given the key, draw sharps/flats that differ from the signature and naturals that
+        // cancel it — and omit accidentals already implied by the signature.
+        Accidental.applyAccidentals([voice], keySpec);
+        const noteAreaW = Math.max(50, stave.getNoteEndX() - stave.getNoteStartX() - 8);
+        new Formatter().joinVoices([voice]).format([voice], noteAreaW);
+        voice.draw(ctx, stave);
         // Wire click-to-select: attach the flat index to each drawn note's SVG group.
         notes.forEach((n, i) => {
           const idx = globalIndex + i;
