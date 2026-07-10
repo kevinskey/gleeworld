@@ -22,14 +22,22 @@ const PHONE_MAX_WIDTH = 768;
 
 const SELECTED_COLOR = '#ea580c'; // orange-600
 
-export function NotationView({ score, width, onNoteClick, selectedIndex }: {
+export function NotationView({
+  score, width, onNoteClick, selectedIndex,
+  editingLyric, lyricValue, onLyricChange, onLyricAdvance, onLyricExit,
+}: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void; selectedIndex?: number | null;
+  // Inline lyric editing: when on, a text cursor sits under the selected note (no dialog).
+  editingLyric?: boolean; lyricValue?: string;
+  onLyricChange?: (v: string) => void; onLyricAdvance?: () => void; onLyricExit?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const onNoteClickRef = useRef(onNoteClick);
   // Responsive: fill the container. Measured from the host; re-renders on container resize
   // (sidebar toggle, window resize) so the staff never strands at a fixed 720px.
   const [measuredW, setMeasuredW] = useState(width ?? 720);
+  // Pixel position (under the staff) of the selected note, for the inline lyric cursor.
+  const [lyricPos, setLyricPos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => { onNoteClickRef.current = onNoteClick; }, [onNoteClick]);
 
@@ -70,6 +78,7 @@ export function NotationView({ score, width, onNoteClick, selectedIndex }: {
     const keySpec = FIFTHS_KEY[score.keyFifths] ?? 'C';
 
     let globalIndex = 0;
+    let selPos: { x: number; y: number } | null = null;   // captured position of the selected note
     measures.forEach((m, mi) => {
       const row = Math.floor(mi / perRow);
       const col = mi % perRow;
@@ -129,6 +138,12 @@ export function NotationView({ score, width, onNoteClick, selectedIndex }: {
         notes.forEach((n, i) => {
           const idx = globalIndex + i;
           (n as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
+          // Record the selected note's on-screen position for the inline lyric cursor.
+          if (idx === selectedIndex && m.elements[i].kind === 'note') {
+            const yb = typeof (stave as any).getYForBottomText === 'function'
+              ? (stave as any).getYForBottomText(1) : stave.getBottomY();
+            selPos = { x: (n as any).getAbsoluteX() * SCALE, y: yb * SCALE };
+          }
         });
         // Draw tie curves between paired start/stop notes within this measure.
         try {
@@ -142,7 +157,36 @@ export function NotationView({ score, width, onNoteClick, selectedIndex }: {
       }
       globalIndex += m.elements.length;
     });
+    setLyricPos(selPos);
   }, [score, width, measuredW, selectedIndex]);
 
-  return <div ref={ref} className="w-full overflow-x-auto" />;
+  return (
+    <div className="relative w-full overflow-x-auto">
+      <div ref={ref} className="w-full" />
+      {editingLyric && lyricPos && (
+        <input
+          key={selectedIndex}
+          autoFocus
+          aria-label="Lyric"
+          value={lyricValue ?? ''}
+          onChange={(e) => onLyricChange?.(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === '-') {
+              // Hyphen = same-word continuation: mark this syllable hyphenated, then advance.
+              e.preventDefault();
+              onLyricChange?.((lyricValue ?? '') + '-');
+              onLyricAdvance?.();
+            } else if (e.key === ' ' || e.key === 'Tab' || e.key === 'Enter') {
+              e.preventDefault();       // Space/Tab/Enter = next note (new word, no hyphen)
+              onLyricAdvance?.();
+            } else if (e.key === 'Escape') {
+              onLyricExit?.();
+            }
+          }}
+          style={{ position: 'absolute', left: lyricPos.x - 14, top: lyricPos.y, width: 44 }}
+          className="rounded border border-orange-400 bg-white/95 px-1 py-0 text-center text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
+        />
+      )}
+    </div>
+  );
 }
