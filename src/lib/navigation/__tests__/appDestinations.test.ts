@@ -5,13 +5,13 @@ import type { NavContext } from '../navCatalog';
 const allOn: ModuleFlags = {
   hasViewer: true, hasPartTracks: true, hasStudio: true, hasSightReading: true,
   hasBoxOffice: true, hasConcertPlanner: true, hasMerch: true, hasFinance: true, hasAcademy: true,
-  hasStore: true,
+  hasStore: true, hasSongwriting: true,
 };
 
 const allOff: ModuleFlags = {
   hasViewer: false, hasPartTracks: false, hasStudio: false, hasSightReading: false,
   hasBoxOffice: false, hasConcertPlanner: false, hasMerch: false, hasFinance: false, hasAcademy: false,
-  hasStore: false,
+  hasStore: false, hasSongwriting: false,
 };
 
 // Mirrors toModuleFlags's key set so flags and nav agree in tests.
@@ -19,7 +19,7 @@ const FLAG_MODULE: Record<keyof ModuleFlags, string> = {
   hasViewer: 'viewer', hasPartTracks: 'part_tracks', hasStudio: 'studio',
   hasSightReading: 'sight_reading', hasBoxOffice: 'box_office',
   hasConcertPlanner: 'concert_planner', hasMerch: 'merch', hasStore: 'store',
-  hasFinance: 'finance', hasAcademy: 'academy',
+  hasFinance: 'finance', hasAcademy: 'academy', hasSongwriting: 'songwriting',
 };
 const navFor = (flags: ModuleFlags, over: Partial<NavContext> = {}): NavContext => ({
   hasModule: (k) => Object.entries(FLAG_MODULE).some(([f, m]) => m === k && flags[f as keyof ModuleFlags]),
@@ -131,7 +131,7 @@ const KNOWN_ROUTES = new Set([
   '/dashboard/auditions', '/dashboard/pr-hub', '/admin/fan-page',
   '/dashboard/feeds', '/dashboard/shop', '/dashboard/alumni',
   '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
-  '/dashboard/analytics', '/dashboard/workspace',
+  '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
 ]);
 
 describe('getAppTiles', () => {
