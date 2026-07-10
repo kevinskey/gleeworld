@@ -22,6 +22,12 @@ vi.mock('@/lib/sightReading/useMicPitch', () => ({
   }),
 }));
 
+// useUserRole reaches into AuthContext, which isn't mounted in this test tree;
+// stub it as a non-admin so the existing empty-state assertions still hold.
+vi.mock('@/hooks/useUserRole', () => ({
+  useUserRole: () => ({ isAdmin: () => false }),
+}));
+
 const renderPage = () => render(<MemoryRouter><SightReadingStudio /></MemoryRouter>);
 
 describe('SightReadingStudio — the empty state IS the primary state', () => {
