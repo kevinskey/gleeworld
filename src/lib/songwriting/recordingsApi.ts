@@ -22,9 +22,12 @@ export function pickRecordingMime(): { mimeType: string; ext: string } {
 }
 
 async function tenantAndUser(): Promise<{ tenantId: string; userId: string }> {
-  const { data } = await supabase.auth.getSession();
-  const token = data?.session?.access_token ?? '';
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  const token = data?.session?.access_token;
+  if (!token) throw new Error('Not signed in');
   const claims = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+  if (!claims.tenant_id || !claims.sub) throw new Error('Session is missing tenant claims — sign in again');
   return { tenantId: claims.tenant_id, userId: claims.sub };
 }
 
@@ -54,7 +57,8 @@ export async function uploadRecording(args: {
     .select('*').single();
   if (error) {
     // metadata failed → remove the orphan object so storage stays clean
-    await supabase.storage.from('songwriting').remove([key]);
+    const { error: cleanErr } = await supabase.storage.from('songwriting').remove([key]);
+    if (cleanErr) console.warn('[songwriting] storage cleanup failed', key, cleanErr);
     throw error;
   }
   return data as SongRecording;
@@ -66,17 +70,23 @@ export async function listRecordings(songId: string): Promise<(SongRecording & {
     .eq('song_id', songId).order('created_at', { ascending: false });
   if (error) throw error;
   const rows = (data ?? []) as SongRecording[];
-  const out: (SongRecording & { url: string })[] = [];
-  for (const rec of rows) {
-    const { data: signed } = await supabase.storage
-      .from('songwriting').createSignedUrl(rec.storage_key, 3600);
-    out.push({ ...rec, url: signed?.signedUrl ?? '' });
-  }
-  return out;
+  const signed = await Promise.all(
+    rows.map(async (rec) => {
+      const { data: s, error: signErr } = await supabase.storage
+        .from('songwriting').createSignedUrl(rec.storage_key, 3600);
+      if (signErr || !s?.signedUrl) {
+        console.error('[songwriting] could not sign recording url', rec.storage_key, signErr);
+        return null;
+      }
+      return { ...rec, url: s.signedUrl };
+    }),
+  );
+  return signed.filter((r): r is SongRecording & { url: string } => r !== null);
 }
 
 export async function deleteRecording(rec: SongRecording): Promise<void> {
   const { error } = await supabase.from('gw_song_recordings').delete().eq('id', rec.id);
   if (error) throw error;
-  await supabase.storage.from('songwriting').remove([rec.storage_key]);
+  const { error: cleanErr } = await supabase.storage.from('songwriting').remove([rec.storage_key]);
+  if (cleanErr) console.warn('[songwriting] storage cleanup failed', rec.storage_key, cleanErr);
 }
