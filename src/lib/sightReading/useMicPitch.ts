@@ -16,6 +16,9 @@ export function useMicPitch() {
   const ctxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const nodeRef = useRef<AudioWorkletNode | null>(null);
+  // Zero-gain node that silently terminates the graph at ctx.destination —
+  // see the comment where it's created in start() for why it must exist.
+  const muteGainRef = useRef<GainNode | null>(null);
   const capturedRef = useRef<SungNote[]>([]);
   const startedAtRef = useRef(0);
   const tempoRef = useRef(80);
@@ -43,6 +46,10 @@ export function useMicPitch() {
       nodeRef.current.port.onmessage = null;
       nodeRef.current.disconnect();
       nodeRef.current = null;
+    }
+    if (muteGainRef.current) {
+      muteGainRef.current.disconnect();
+      muteGainRef.current = null;
     }
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -101,6 +108,47 @@ export function useMicPitch() {
         // resampling to a fixed rate costs pitch-detection accuracy (cents).
         ctx = new AudioContext();
         ctxRef.current = ctx;
+
+        // Browsers create every AudioContext 'suspended' unless it was
+        // constructed synchronously inside a user gesture — and this one
+        // wasn't, since we're already past the `await getUserMedia()` above,
+        // which closed the gesture's synchronous window. A suspended context
+        // never renders, so the worklet's process() is never called and no
+        // pitch frames are ever posted — silently, with `permission` still
+        // reading 'granted' and `error` still null. Resume explicitly.
+        if (ctx.state !== 'running') {
+          await ctx.resume();
+        }
+
+        // Another start()/stop() could have landed while we awaited resume().
+        if (sessionId !== sessionIdRef.current) {
+          ctx.close();
+          stream.getTracks().forEach((t) => t.stop());
+          if (ctxRef.current === ctx) ctxRef.current = null;
+          if (streamRef.current === stream) streamRef.current = null;
+          return;
+        }
+
+        if (ctx.state !== 'running') {
+          // resume() didn't take. Most commonly this is iOS/WKWebView, which
+          // is stricter than desktop about requiring audio setup to happen
+          // inside a user gesture. Fail loudly via `error` instead of
+          // leaving the caller to guess why `live` never updates.
+          console.warn(
+            'useMicPitch: AudioContext did not reach "running" after resume() (state:',
+            ctx.state,
+            '). iOS requires audio setup to start from within a user gesture.',
+          );
+          setError(
+            `Pitch detection could not start (audio is "${ctx.state}"). On iOS, mic listening must be started by tapping directly — try again.`,
+          );
+          ctx.close();
+          stream.getTracks().forEach((t) => t.stop());
+          if (ctxRef.current === ctx) ctxRef.current = null;
+          if (streamRef.current === stream) streamRef.current = null;
+          return;
+        }
+
         await ctx.audioWorklet.addModule('/worklets/gw-pitch.js');
 
         // Same supersede check as above, but past the (also async) addModule
@@ -145,8 +193,20 @@ export function useMicPitch() {
         };
 
         src.connect(node);
-        // Do NOT connect to ctx.destination — the student must not hear
-        // themselves through this graph.
+
+        // Web Audio rendering is pull-based from ctx.destination: a node
+        // with no path to it is not guaranteed to ever be processed, so
+        // without a route onward the worklet's process() could simply never
+        // run. Terminate the graph *silently* instead — a zero-gain node
+        // gives the graph a path to pull from while the gain of 0 means
+        // nothing audible reaches the speakers, so the student still hears
+        // nothing. Do NOT remove this or connect `node` to destination
+        // directly: either would make the student hear themselves live.
+        const muteGain = ctx.createGain();
+        muteGain.gain.value = 0;
+        muteGainRef.current = muteGain;
+        node.connect(muteGain);
+        muteGain.connect(ctx.destination);
       } catch (err) {
         // addModule/AudioContext failures (e.g. worklet 404, CSP blocking it)
         // must not throw out of the hook either. Warn loudly (matching
@@ -173,6 +233,10 @@ export function useMicPitch() {
           ctxRef.current = null;
         }
         if (nodeRef.current === node) nodeRef.current = null;
+        if (muteGainRef.current) {
+          muteGainRef.current.disconnect();
+          muteGainRef.current = null;
+        }
       }
     },
     [stop],
