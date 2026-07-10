@@ -352,7 +352,7 @@ const W9 = week(9, 'Syncopation',
     [
       rhy(rhythmIr('w9-g1', { meter: M44, bars: 8, palette: SYNC, tempo: 76 }), { instructions: '4/4 — perform and conduct.' }),
       rhy(rhythmIr('w9-g2', { meter: M24, bars: 8, palette: SYNC, tempo: 76 }), { instructions: '2/4 — perform and conduct.' }),
-      mel(gen('w9-melody', { key: 'G', leaps: [3, 4], rhythmPalette: SYNC }), { instructions: 'Mark every syncopation before singing.', prepChecklist: PREP_CHECKLIST }),
+      mel(gen('w9-melody-s20', { key: 'G', leaps: [3, 4], rhythmPalette: SYNC }), { instructions: 'Mark every syncopation before singing.', prepChecklist: PREP_CHECKLIST }),
     ]),
   lesson('Module Assignment 9: Syncopation',
     'Perform four syncopated rhythms and a syncopated melody, recorded both conducted and unconducted, submit a marked score, and write a short paragraph on your pulse-keeping strategy.',
