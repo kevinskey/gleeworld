@@ -225,6 +225,10 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
   // Pull the linked score's title / composer / voicing for the header card.
   useEffect(() => {
     if (!project) return;
+    // Score link is optional — with none, skip the fetch (an eq(null)
+    // filter would misbehave) and leave score null so the "Open score"
+    // button stays hidden.
+    if (!project.sheet_music_id) { setScore(null); return; }
     (async () => {
       const { data } = await supabase
         .from('gw_sheet_music')

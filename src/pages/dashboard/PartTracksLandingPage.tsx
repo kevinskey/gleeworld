@@ -1,6 +1,8 @@
-// Part Tracks landing page — pick (or create) a project. Every project
-// must be linked to a score in the Music Library; there's no path that
-// lets a user create a recording divorced from a score.
+// Part Tracks landing page — pick (or create) a project. Since
+// 2026-07-10 both the score link AND the backing track are optional at
+// creation time (only a title is required): a project can be just
+// voices, and the backing track can be chosen right in the dialog or
+// later in the studio.
 
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -11,11 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Disc3, Plus, Music, Search, Loader2, Sparkles, Trash2 } from 'lucide-react';
+import { Disc3, Plus, Music, Search, Loader2, Sparkles, Trash2, Upload, Youtube, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { createPartTracksProject, deletePartTracksProject, type PartTracksProject, VOICING_TEMPLATES } from '@/hooks/usePartTracksProject';
 import { PartTracksStudio } from '@/components/partTracks/PartTracksStudio';
+import { AccompanimentPicker } from '@/components/partTracks/AccompanimentPicker';
 
 interface ScoreOption {
   id: string;
@@ -79,7 +82,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
             <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Part Tracks Studio</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            Build accompaniment and voice-part recordings linked to a score. Every project starts from your Music Library.
+            Build accompaniment and voice-part recordings. Link a score from your Music Library if you want one.
           </p>
         </div>
         <Button onClick={() => setCreating(true)}>
@@ -107,7 +110,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
             <Sparkles className="w-10 h-10 mx-auto text-amber-500/60" />
             <div>No projects yet.</div>
             <Button onClick={() => setCreating(true)}>
-              <Plus className="w-4 h-4 mr-1" /> Start one from a score
+              <Plus className="w-4 h-4 mr-1" /> Start your first project
             </Button>
           </CardContent>
         </Card>
@@ -132,7 +135,9 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
                   <span className="text-sm font-semibold truncate flex-1">{p.title}</span>
                 </div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {p.score_title}{p.score_composer ? ` · ${p.score_composer}` : ''}
+                  {p.score_title
+                    ? `${p.score_title}${p.score_composer ? ` · ${p.score_composer}` : ''}`
+                    : 'No score linked'}
                 </div>
                 <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                   {p.voicing && <Badge variant="outline" className="text-[10px]">{p.voicing}</Badge>}
@@ -182,6 +187,57 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
   );
 }
 
+// Backing-track selection held in dialog state until the project row
+// exists, then persisted with the same accompaniment_* shape the studio
+// handlers write — so entering the studio afterwards behaves exactly as
+// if the backing had been picked there.
+type BackingChoice =
+  | { kind: 'file'; file: File; label: string }
+  | { kind: 'apple_music' | 'apple_music_album'; id: string; storefront: string; title: string; artist: string; artworkUrl: string | null; label: string }
+  | { kind: 'youtube'; url: string; label: string };
+
+async function applyBackingChoice(projectId: string, choice: BackingChoice) {
+  if (choice.kind === 'file') {
+    const ext = (choice.file.name.split('.').pop() || 'mp3').toLowerCase();
+    const contentType = choice.file.type && choice.file.type !== 'application/octet-stream'
+      ? choice.file.type
+      : 'audio/mpeg';
+    const path = `part-tracks/${projectId}/accompaniment-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from('sheet-music').upload(path, choice.file, { contentType, upsert: true });
+    if (error) throw new Error(`Backing upload failed: ${error.message}`);
+    const url = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
+    await supabase.from('gw_part_tracks_projects').update({
+      accompaniment_url: url,
+      accompaniment_title: choice.file.name,
+      accompaniment_kind: 'file',
+      accompaniment_apple_music_id: null,
+      accompaniment_youtube_url: null,
+    } as any).eq('id', projectId);
+    await supabase.from('gw_part_tracks_tracks').update({ audio_url: url })
+      .eq('project_id', projectId).eq('kind', 'accompaniment');
+  } else if (choice.kind === 'youtube') {
+    await supabase.from('gw_part_tracks_projects').update({
+      accompaniment_url: null,
+      accompaniment_title: 'YouTube backing track',
+      accompaniment_kind: 'youtube',
+      accompaniment_apple_music_id: null,
+      accompaniment_youtube_url: choice.url,
+    } as any).eq('id', projectId);
+  } else {
+    await supabase.from('gw_part_tracks_projects').update({
+      accompaniment_url: null,
+      accompaniment_title: `${choice.title} · ${choice.artist}${choice.kind === 'apple_music_album' ? ' (album)' : ''}`,
+      accompaniment_kind: choice.kind,
+      accompaniment_apple_music_id: choice.id,
+      accompaniment_apple_music_storefront: choice.storefront,
+      accompaniment_apple_music_artist: choice.artist,
+      accompaniment_apple_music_artwork_url: choice.artworkUrl,
+      accompaniment_youtube_url: null,
+    } as any).eq('id', projectId);
+  }
+}
+
 function CreateProjectDialog({
   open, onOpenChange, userId, onCreated,
 }: {
@@ -195,6 +251,8 @@ function CreateProjectDialog({
   const [voicing, setVoicing] = useState<string>('SATB');
   const [title, setTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [backing, setBacking] = useState<BackingChoice | null>(null);
+  const [accPickerOpen, setAccPickerOpen] = useState(false);
 
   const { data: scores = [] } = useQuery<ScoreOption[]>({
     queryKey: ['part-tracks-score-picker', open],
@@ -219,16 +277,26 @@ function CreateProjectDialog({
   }, [scores, search]);
 
   const submit = async () => {
-    if (!picked) return;
+    const finalTitle = title.trim() || picked?.title || '';
+    if (!finalTitle) return;
     setSubmitting(true);
     const projectId = await createPartTracksProject({
-      sheetMusicId: picked.id,
-      title: title.trim() || picked.title,
-      voicing: voicing || picked.voicing,
+      sheetMusicId: picked?.id ?? null,
+      title: finalTitle,
+      voicing: voicing || picked?.voicing || null,
       userId,
     });
+    if (!projectId) { setSubmitting(false); toast.error('Could not create project'); return; }
+    if (backing) {
+      try {
+        await applyBackingChoice(projectId, backing);
+      } catch (e: any) {
+        // Non-fatal: the project exists; the studio can set the backing
+        // track again from its own picker.
+        toast.warning(`Project created, but the backing track could not be set (${e?.message ?? 'unknown error'}). Set it in the studio.`);
+      }
+    }
     setSubmitting(false);
-    if (!projectId) { toast.error('Could not create project'); return; }
     onCreated(projectId);
   };
 
@@ -248,7 +316,75 @@ function CreateProjectDialog({
         <div className="p-4 space-y-3 overflow-y-auto">
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-              1. Pick a score
+              1. Project title + voicing
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="col-span-2">
+                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Project title" />
+              </div>
+              <div className="col-span-2 flex gap-1 flex-wrap">
+                {Object.keys(VOICING_TEMPLATES).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setVoicing(v)}
+                    className={`px-2 py-1 text-xs rounded border ${
+                      voicing === v
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border hover:bg-accent'
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              The chosen voicing seeds the tracks list. SATB → S/A/T/B, SSA → S1/S2/A, etc.
+            </p>
+          </div>
+
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+              2. Backing track <span className="normal-case tracking-normal">(optional)</span>
+            </div>
+            {backing ? (
+              <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
+                {backing.kind === 'file' ? <Upload className="w-4 h-4 text-muted-foreground shrink-0" />
+                  : backing.kind === 'youtube' ? <Youtube className="w-4 h-4 text-muted-foreground shrink-0" />
+                  : <Music className="w-4 h-4 text-muted-foreground shrink-0" />}
+                <span className="text-sm truncate flex-1">{backing.label}</span>
+                <button
+                  type="button"
+                  onClick={() => setBacking(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Remove backing track"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => setAccPickerOpen(true)}>
+                <Music className="w-4 h-4 mr-1" /> Choose backing track
+              </Button>
+            )}
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Upload a file or link Apple Music / YouTube. You can also set or change it later in the studio.
+            </p>
+          </div>
+
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center justify-between">
+              <span>3. Link a score <span className="normal-case tracking-normal">(optional)</span></span>
+              {picked && (
+                <button
+                  type="button"
+                  onClick={() => setPicked(null)}
+                  className="normal-case tracking-normal underline hover:text-foreground"
+                >
+                  Clear
+                </button>
+              )}
             </div>
             <div className="relative mb-2">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -290,45 +426,26 @@ function CreateProjectDialog({
               )}
             </div>
           </div>
-
-          <div>
-            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-              2. Project title + voicing
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="col-span-2">
-                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Project title" />
-              </div>
-              <div className="col-span-2 flex gap-1 flex-wrap">
-                {Object.keys(VOICING_TEMPLATES).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setVoicing(v)}
-                    className={`px-2 py-1 text-xs rounded border ${
-                      voicing === v
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border hover:bg-accent'
-                    }`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-2">
-              The chosen voicing seeds the tracks list. SATB → S/A/T/B, SSA → S1/S2/A, etc.
-            </p>
-          </div>
         </div>
 
         <div className="px-4 py-3 border-t border-border flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={submit} disabled={!picked || submitting}>
+          <Button onClick={submit} disabled={(!title.trim() && !picked) || submitting}>
             {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Disc3 className="w-4 h-4 mr-1" />}
             Create project
           </Button>
         </div>
+
+        {/* Same picker the studio uses — the choice is held in dialog
+            state and persisted right after the project row exists. */}
+        <AccompanimentPicker
+          open={accPickerOpen}
+          onClose={() => setAccPickerOpen(false)}
+          onPickFile={(file) => setBacking({ kind: 'file', file, label: file.name })}
+          onPickAppleMusic={(t) => setBacking({ kind: 'apple_music', ...t, label: `${t.title} · ${t.artist}` })}
+          onPickAppleMusicAlbum={(a) => setBacking({ kind: 'apple_music_album', ...a, label: `${a.title} · ${a.artist} (album)` })}
+          onPickYouTube={(url) => setBacking({ kind: 'youtube', url, label: url })}
+        />
       </div>
     </div>
   );
