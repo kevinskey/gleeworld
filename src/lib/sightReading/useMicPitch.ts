@@ -92,10 +92,13 @@ export function useMicPitch() {
       streamRef.current = stream;
       setPermission('granted');
 
+      // Declare ctx outside try block so it's accessible in catch for identity checks.
+      let ctx: AudioContext | undefined;
+
       try {
         // Never hardcode a sample rate; the browser/device picks its own and
         // resampling to a fixed rate costs pitch-detection accuracy (cents).
-        const ctx = new AudioContext();
+        ctx = new AudioContext();
         ctxRef.current = ctx;
         await ctx.audioWorklet.addModule('/worklets/gw-pitch.js');
 
@@ -143,23 +146,30 @@ export function useMicPitch() {
         src.connect(node);
         // Do NOT connect to ctx.destination — the student must not hear
         // themselves through this graph.
-      } catch {
+      } catch (err) {
         // addModule/AudioContext failures (e.g. worklet 404, CSP blocking it)
         // must not throw out of the hook either. Warn loudly (matching
         // masterChain.ts's tryLoadWorklets precedent) instead of failing
         // silently — a silent addModule rejection here is the same class of
         // bug that caused the Cloudflare reload loop — and surface it via
         // `error` so a caller doesn't have to guess with a timeout.
-        console.warn(
-          'useMicPitch: AudioWorklet setup failed for /worklets/gw-pitch.js — live pitch tracking disabled.',
-        );
-        setError('Pitch detection failed to start (worklet /worklets/gw-pitch.js could not load).');
+        // Only set error state and log if this session still owns the current session.
+        if (sessionId === sessionIdRef.current) {
+          console.warn(
+            'useMicPitch: AudioWorklet setup failed for /worklets/gw-pitch.js — live pitch tracking disabled.',
+            err,
+          );
+          setError('Pitch detection failed to start (worklet /worklets/gw-pitch.js could not load).');
+        }
         // Tear down whatever mic access/context was already granted for this
-        // session so a failed start() doesn't leak them.
+        // session so a failed start() doesn't leak them. Guard against a newer
+        // session having superseded these refs in the interim.
         stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-        ctxRef.current?.close();
-        ctxRef.current = null;
+        if (streamRef.current === stream) streamRef.current = null;
+        if (ctxRef.current === ctx) {
+          ctxRef.current.close();
+          ctxRef.current = null;
+        }
         nodeRef.current = null;
       }
     },
