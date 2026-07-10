@@ -92,8 +92,9 @@ export function useMicPitch() {
       streamRef.current = stream;
       setPermission('granted');
 
-      // Declare ctx outside try block so it's accessible in catch for identity checks.
+      // Declare ctx and node outside try block so they're accessible in catch for identity checks.
       let ctx: AudioContext | undefined;
+      let node: AudioWorkletNode | undefined;
 
       try {
         // Never hardcode a sample rate; the browser/device picks its own and
@@ -113,7 +114,7 @@ export function useMicPitch() {
         }
 
         const src = ctx.createMediaStreamSource(stream);
-        const node = new AudioWorkletNode(ctx, 'gw-pitch');
+        node = new AudioWorkletNode(ctx, 'gw-pitch');
         nodeRef.current = node;
         startedAtRef.current = ctx.currentTime;
 
@@ -162,15 +163,16 @@ export function useMicPitch() {
           setError('Pitch detection failed to start (worklet /worklets/gw-pitch.js could not load).');
         }
         // Tear down whatever mic access/context was already granted for this
-        // session so a failed start() doesn't leak them. Guard against a newer
-        // session having superseded these refs in the interim.
+        // session so a failed start() doesn't leak them. Guard identity checks
+        // on all three refs so a stale call's failure cannot tear down a newer
+        // session's live resources.
         stream.getTracks().forEach((t) => t.stop());
         if (streamRef.current === stream) streamRef.current = null;
         if (ctxRef.current === ctx) {
           ctxRef.current.close();
           ctxRef.current = null;
         }
-        nodeRef.current = null;
+        if (nodeRef.current === node) nodeRef.current = null;
       }
     },
     [stop],
