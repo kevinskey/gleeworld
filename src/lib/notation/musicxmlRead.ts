@@ -20,6 +20,8 @@ export function musicXmlToEditorScore(xml: string): EditorScore {
   const beatType = parseInt(textOf(attrs, 'beat-type') ?? '4', 10);
   const sign = textOf(attrs, 'sign') ?? 'G';
   const clef = SIGN_CLEF[sign] ?? 'treble';
+  const soundTempo = parseInt(doc.getElementsByTagName('sound')[0]?.getAttribute('tempo') ?? '', 10);
+  const tempo = Number.isNaN(soundTempo) ? 120 : soundTempo;
 
   const elements: EditorElement[] = [];
   const noteEls = Array.from(doc.getElementsByTagName('note'));
@@ -47,7 +49,7 @@ export function musicXmlToEditorScore(xml: string): EditorScore {
     keyFifths, mode,
     timeSig: { beats, beatType },
     clef,
-    tempo: 120,
+    tempo,
     elements,
   };
 }

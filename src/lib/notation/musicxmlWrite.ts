@@ -32,7 +32,9 @@ export function editorScoreToMusicXML(score: EditorScore): string {
         + `<time><beats>${score.timeSig.beats}</beats><beat-type>${score.timeSig.beatType}</beat-type></time>`
         + `<clef><sign>${clef.sign}</sign><line>${clef.line}</line></clef></attributes>`
       : '';
-    return `<measure number="${i + 1}">${attrs}${m.elements.map(noteXml).join('')}</measure>`;
+    const notes = m.elements.map(noteXml).join('');
+    const body = i === 0 ? `${attrs}<sound tempo="${score.tempo}"/>${notes}` : notes;
+    return `<measure number="${i + 1}">${body}</measure>`;
   }).join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>`
