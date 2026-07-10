@@ -29,6 +29,22 @@ describe('parsedScoreToIR', () => {
     const ir = parsedScoreToIR(score, 'C', 'major');
     expect(ir.notes.map(n => n.solfege)).toEqual(['do', 're', 'mi']);
   });
+  it('derives the tonic from the declared key, not the first note (pickup-note safety)', () => {
+    const B4 = 493.88;
+    const pickupScore: ParsedScore = {
+      tempo: 120,
+      timeSignature: { beats: 4, beatType: 4 },
+      totalDuration: 0.5,
+      measures: [{ number: 1, notes: [
+        { step: 'B', octave: 4, frequency: B4, startTime: 0, duration: 0.5 },
+      ]}],
+    };
+    const ir = parsedScoreToIR(pickupScore, 'G', 'major');
+    // B4 (midi 71) is the third of G major; under the old first-note logic it would
+    // wrongly become the tonic and be labeled "do".
+    expect(ir.notes[0].midi).toBe(71);
+    expect(ir.notes[0].solfege).toBe('mi');
+  });
 });
 
 describe('midiToSolfege', () => {
