@@ -35,6 +35,12 @@ export function irToEditorScore(ir: ExerciseIR): EditorScore {
   let cursor = 0; // beat position filled so far
   const notes = [...ir.notes].sort((a, b) => a.beatPos - b.beatPos);
 
+  // Pick the clef from the median pitch of the line so a low melody doesn't sit in
+  // heavy ledger lines above a treble staff.
+  const mids = ir.notes.map((n) => n.midi).sort((a, b) => a - b);
+  const median = mids.length ? mids[Math.floor(mids.length / 2)] : 60;
+  const clef: EditorScore['clef'] = median < 57 ? 'bass' : 'treble'; // below A3 → bass
+
   for (const n of notes) {
     if (n.beatPos > cursor + 1e-6) {
       const rest = ticksToDur(Math.round((n.beatPos - cursor) * ticksPerBeat));
@@ -50,7 +56,7 @@ export function irToEditorScore(ir: ExerciseIR): EditorScore {
     keyFifths,
     mode: ir.mode === 'minor' ? 'minor' : 'major',
     timeSig: { beats: ir.meter.beats, beatType: ir.meter.beatType },
-    clef: 'treble',
+    clef,
     tempo: ir.tempo,
     elements,
   };

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode } from 'vexflow';
+import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam } from 'vexflow';
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
@@ -108,9 +108,13 @@ export function NotationView({ score, width, onNoteClick, selectedIndex }: {
         // Given the key, draw sharps/flats that differ from the signature and naturals that
         // cancel it — and omit accidentals already implied by the signature.
         Accidental.applyAccidentals([voice], keySpec);
-        const noteAreaW = Math.max(50, stave.getNoteEndX() - stave.getNoteStartX() - 8);
-        new Formatter().joinVoices([voice]).format([voice], noteAreaW);
+        // Auto-beam eighths (and shorter) into groups per the time signature so they
+        // render with beams instead of individual flags.
+        const beamGroups = Beam.getDefaultBeamGroups(`${score.timeSig.beats}/${score.timeSig.beatType}`);
+        const beams = Beam.generateBeams(voice.getTickables(), { groups: beamGroups });
+        new Formatter().joinVoices([voice]).formatToStave([voice], stave);
         voice.draw(ctx, stave);
+        beams.forEach((b) => b.setContext(ctx).draw());
         // Wire click-to-select: attach the flat index to each drawn note's SVG group.
         notes.forEach((n, i) => {
           const idx = globalIndex + i;
