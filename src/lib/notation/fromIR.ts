@@ -10,6 +10,13 @@ const KEY_FIFTHS: Record<string, number> = {
   C: 0, G: 1, D: 2, A: 3, E: 4, B: 5, 'F#': 6, 'C#': 7,
   F: -1, Bb: -2, Eb: -3, Ab: -4, Db: -5, Gb: -6, Cb: -7,
 };
+// A minor key's signature is its relative major's. `ir.key` names the minor
+// tonic (e.g. 'A' means A minor), so map the tonic name to the relative-major
+// fifths, else fall back to the major table.
+const MINOR_FIFTHS: Record<string, number> = {
+  A: 0, E: 1, B: 2, 'F#': 3, 'C#': 4, 'G#': 5, 'D#': 6, 'A#': 7,
+  D: -1, G: -2, C: -3, F: -4, Bb: -5, Eb: -6, Ab: -7,
+};
 // pitch-class → [step, alter]. Both tables spell naturals identically; they differ only
 // on the five black keys (sharp vs flat spelling).
 const SHARP: Array<[Pitch['step'], number]> = [
@@ -28,7 +35,7 @@ function spellMidi(midi: number, useFlats: boolean): Pitch {
 }
 
 export function irToEditorScore(ir: ExerciseIR): EditorScore {
-  const keyFifths = KEY_FIFTHS[ir.key] ?? 0;
+  const keyFifths = (ir.mode === 'minor' ? MINOR_FIFTHS[ir.key] : KEY_FIFTHS[ir.key]) ?? 0;
   const useFlats = keyFifths < 0;
   const ticksPerBeat = (DIVISIONS * 4) / ir.meter.beatType;
   const elements: EditorElement[] = [];
