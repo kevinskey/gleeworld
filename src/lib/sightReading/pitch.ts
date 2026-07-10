@@ -24,7 +24,8 @@ export function nearestMidi(hz: number): number {
 // true period rather than at its multiples, which is why a sung vowel (rich in
 // harmonics) doesn't get reported an octave low the way plain autocorrelation
 // reports it.
-const CLARITY_FLOOR = 0.8;   // below this we say "no note" rather than guess
+const CLARITY_FLOOR = 0.8;   // early-exit threshold: once a peak this clear is found, stop searching and take the earliest (octave-robustness)
+const MIN_CLARITY = 0.5;     // accept gate: below this we report no note rather than guess
 const MIN_HZ = 70;           // below a bass low-D; anything lower is rumble
 const MAX_HZ = 1200;         // above a soprano high-D; anything higher is noise
 
@@ -67,7 +68,7 @@ export function detectPitch(buf: Float32Array, sampleRate: number): { hz: number
       if (bestVal > CLARITY_FLOOR) break;                 // good enough, take the earliest
     }
   }
-  if (bestLag < 0 || bestVal < 0.5) return { hz: 0, clarity: 0 };
+  if (bestLag < 0 || bestVal < MIN_CLARITY) return { hz: 0, clarity: 0 };
 
   // Parabolic interpolation around the peak — without this the resolution is
   // quantized to whole samples, which is ~30 cents at the top of the range.
