@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie } from 'vexflow';
+import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot } from 'vexflow';
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration, vexAccidentalCode } from '@/lib/notation/toVexflow';
@@ -66,11 +66,16 @@ export function NotationView({ score, width, onNoteClick }: {
 
       const notes = m.elements.map((el) => {
         if (el.kind === 'rest') {
-          return new StaveNote({ keys: ['b/4'], duration: toVexDuration(el.base, el.dots) + 'r', clef: VEX_CLEF[score.clef] });
+          const r = new StaveNote({ keys: ['b/4'], duration: toVexDuration(el.base, el.dots) + 'r', clef: VEX_CLEF[score.clef] });
+          if (el.dots > 0) Dot.buildAndAttach([r], { all: true });   // augmentation dot glyph(s)
+          return r;
         }
         const sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
         const acc = vexAccidentalCode(el.pitch.alter);
         if (acc) sn.addModifier(new Accidental(acc), 0);
+        // A dotted duration string ('qd') sets the note's dot count but does NOT draw the dot;
+        // the glyph must be attached explicitly.
+        if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
         return sn;
       });
       if (notes.length) {
