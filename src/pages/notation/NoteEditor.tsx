@@ -10,6 +10,10 @@ const DURATIONS: { code: BaseDur; label: string; key: string }[] = [
   { code: '16th', label: '16th', key: '5' }, { code: '32nd', label: '32nd', key: '6' },
 ];
 
+// Compact toolbar-button style; dark when the option is armed/active.
+const pill = (active: boolean) =>
+  `rounded-md px-2.5 py-1.5 text-sm font-medium ${active ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`;
+
 // Place the pitch letter in the octave nearest the previous note (so C after a high B
 // stays close, rather than jumping to a fixed octave).
 function nearestPitch(step: Pitch['step'], prev: Pitch | null): Pitch {
@@ -110,34 +114,23 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
   }, [armed, armedDots, armedAlter, selected, dispatch]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
+    <div className="space-y-2">
+      {/* Duration palette + dots + accidentals — one compact row */}
+      <div className="flex flex-wrap items-center gap-1.5">
         {DURATIONS.map((d) => (
-          <button key={d.code} onClick={() => setArmed(d.code)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium ${armed === d.code ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
+          <button key={d.code} onClick={() => setArmed(d.code)} className={pill(armed === d.code)}>
             {d.label}
           </button>
         ))}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <button onClick={() => setArmedDots((d) => ((d + 1) % 3) as 0 | 1 | 2)}
-          className={`rounded-lg px-3 py-2 text-sm font-medium ${armedDots > 0 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
+        <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
+        <button onClick={() => setArmedDots((d) => ((d + 1) % 3) as 0 | 1 | 2)} className={pill(armedDots > 0)}>
           Dot: {armedDots}
         </button>
-        <button onClick={() => setArmedAlter(0)}
-          className={`rounded-lg px-3 py-2 text-sm font-medium ${armedAlter === 0 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
-          ♮
-        </button>
-        <button onClick={() => setArmedAlter(1)}
-          className={`rounded-lg px-3 py-2 text-sm font-medium ${armedAlter === 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
-          ♯
-        </button>
-        <button onClick={() => setArmedAlter(-1)}
-          className={`rounded-lg px-3 py-2 text-sm font-medium ${armedAlter === -1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}`}>
-          ♭
-        </button>
+        <button onClick={() => setArmedAlter(0)} className={pill(armedAlter === 0)}>♮</button>
+        <button onClick={() => setArmedAlter(1)} className={pill(armedAlter === 1)}>♯</button>
+        <button onClick={() => setArmedAlter(-1)} className={pill(armedAlter === -1)}>♭</button>
       </div>
-      <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600">
+      <div className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs leading-relaxed text-slate-600">
         <span className="font-medium text-slate-700">Type to write music.</span>{' '}
         Press <Kbd>A</Kbd>–<Kbd>G</Kbd> to add notes · <Kbd>1</Kbd>–<Kbd>6</Kbd> duration ·{' '}
         <Kbd>.</Kbd> dot · <Kbd>=</Kbd> sharp · <Kbd>-</Kbd> flat · <Kbd>R</Kbd> rest ·{' '}

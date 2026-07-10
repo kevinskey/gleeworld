@@ -12,6 +12,9 @@ import { AssignExerciseDialog } from './AssignExerciseDialog';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 
+const SELECT = 'rounded border border-slate-300 bg-white px-1.5 py-1 text-sm text-slate-900';
+const FIELD = 'flex items-center gap-1.5 text-xs font-medium text-slate-600';
+
 export default function NotationEditorPage() {
   const { exerciseId } = useParams();
   const { isAdmin, loading: roleLoading } = useUserRole();
@@ -65,148 +68,127 @@ export default function NotationEditorPage() {
   if (!isAdmin()) return <Navigate to="/dashboard/sight-reading" replace />;
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6">
-      <header className="space-y-3">
-        <label className="block text-sm font-medium text-slate-700" htmlFor="notation-title">
-          Title
-        </label>
+    <div className="mx-auto w-full max-w-5xl space-y-2 px-4 py-3">
+      {/* Row 1: title + primary actions */}
+      <div className="flex flex-wrap items-center gap-2">
         <Input
-          id="notation-title"
+          aria-label="Title"
           value={score.title}
           onChange={(e) => setScore((s) => ({ ...s, title: e.target.value }))}
-          placeholder="Untitled exercise"
+          placeholder="Exercise title"
+          className="h-9 w-full max-w-xs sm:flex-1"
         />
-
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-700" htmlFor="notation-key">
-              Key
-            </label>
-            <select
-              id="notation-key"
-              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
-              value={score.keyFifths}
-              onChange={(e) => setScore((s) => ({ ...s, keyFifths: Number(e.target.value) }))}
-            >
-              <option value={0}>C</option>
-              <option value={1}>G</option>
-              <option value={2}>D</option>
-              <option value={3}>A</option>
-              <option value={4}>E</option>
-              <option value={5}>B</option>
-              <option value={-1}>F</option>
-              <option value={-2}>Bb</option>
-              <option value={-3}>Eb</option>
-              <option value={-4}>Ab</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-700" htmlFor="notation-mode">
-              Mode
-            </label>
-            <select
-              id="notation-mode"
-              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
-              value={score.mode}
-              onChange={(e) =>
-                setScore((s) => ({ ...s, mode: e.target.value as EditorScore['mode'] }))
-              }
-            >
-              <option value="major">major</option>
-              <option value="minor">minor</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-700" htmlFor="notation-time">
-              Time
-            </label>
-            <select
-              id="notation-time"
-              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
-              value={`${score.timeSig.beats}/${score.timeSig.beatType}`}
-              onChange={(e) => {
-                const [b, bt] = e.target.value.split('/').map(Number);
-                setScore((s) => ({ ...s, timeSig: { beats: b, beatType: bt } }));
-              }}
-            >
-              <option value="4/4">4/4</option>
-              <option value="3/4">3/4</option>
-              <option value="2/4">2/4</option>
-              <option value="6/8">6/8</option>
-              <option value="3/8">3/8</option>
-              <option value="2/2">2/2</option>
-              <option value="5/4">5/4</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-700" htmlFor="notation-clef">
-              Clef
-            </label>
-            <select
-              id="notation-clef"
-              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
-              value={score.clef}
-              onChange={(e) =>
-                setScore((s) => ({ ...s, clef: e.target.value as EditorScore['clef'] }))
-              }
-            >
-              <option value="treble">treble</option>
-              <option value="bass">bass</option>
-              <option value="alto">alto</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-slate-700" htmlFor="notation-tempo">
-              Tempo
-            </label>
-            <input
-              id="notation-tempo"
-              type="number"
-              min="20"
-              max="400"
-              className="w-20 rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
-              value={tempoText}
-              onChange={(e) => setTempoText(e.target.value)}
-              onBlur={() => {
-                const n = Math.max(20, Math.min(400, Number(tempoText) || score.tempo));
-                setScore((s) => ({ ...s, tempo: n }));
-                setTempoText(String(n));
-              }}
-            />
-          </div>
+        <div className="flex items-center gap-2">
+          {isPlaying ? (
+            <Button type="button" size="sm" variant="outline" onClick={() => stopPlayback()}>
+              Stop
+            </Button>
+          ) : (
+            <Button type="button" size="sm" variant="outline" onClick={handlePlay}>
+              Play
+            </Button>
+          )}
+          <Button type="button" size="sm" onClick={handleSave} disabled={overfull || saving}>
+            {saving ? 'Saving…' : 'Save'}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setAssignOpen(true)}
+            disabled={!assignTargetId}
+          >
+            Assign
+          </Button>
         </div>
-      </header>
-
-      <div className="flex flex-wrap items-center gap-2">
-        {isPlaying ? (
-          <Button type="button" variant="outline" onClick={() => stopPlayback()}>
-            Stop
-          </Button>
-        ) : (
-          <Button type="button" variant="outline" onClick={handlePlay}>
-            Play
-          </Button>
-        )}
-        <Button type="button" onClick={handleSave} disabled={overfull || saving}>
-          {saving ? 'Saving…' : 'Save'}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setAssignOpen(true)}
-          disabled={!assignTargetId}
-        >
-          Assign
-        </Button>
         {overfull && (
-          <span className="text-sm text-amber-600">
-            A measure is overfull — fix it before saving.
-          </span>
+          <span className="text-xs text-amber-600">A measure is overfull — fix it before saving.</span>
         )}
+      </div>
+
+      {/* Row 2: score settings — inline label + control pairs on one compact line */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <label className={FIELD}>
+          Key
+          <select
+            className={SELECT}
+            value={score.keyFifths}
+            onChange={(e) => setScore((s) => ({ ...s, keyFifths: Number(e.target.value) }))}
+          >
+            <option value={0}>C</option>
+            <option value={1}>G</option>
+            <option value={2}>D</option>
+            <option value={3}>A</option>
+            <option value={4}>E</option>
+            <option value={5}>B</option>
+            <option value={-1}>F</option>
+            <option value={-2}>Bb</option>
+            <option value={-3}>Eb</option>
+            <option value={-4}>Ab</option>
+          </select>
+        </label>
+
+        <label className={FIELD}>
+          Mode
+          <select
+            className={SELECT}
+            value={score.mode}
+            onChange={(e) => setScore((s) => ({ ...s, mode: e.target.value as EditorScore['mode'] }))}
+          >
+            <option value="major">major</option>
+            <option value="minor">minor</option>
+          </select>
+        </label>
+
+        <label className={FIELD}>
+          Time
+          <select
+            className={SELECT}
+            value={`${score.timeSig.beats}/${score.timeSig.beatType}`}
+            onChange={(e) => {
+              const [b, bt] = e.target.value.split('/').map(Number);
+              setScore((s) => ({ ...s, timeSig: { beats: b, beatType: bt } }));
+            }}
+          >
+            <option value="4/4">4/4</option>
+            <option value="3/4">3/4</option>
+            <option value="2/4">2/4</option>
+            <option value="6/8">6/8</option>
+            <option value="3/8">3/8</option>
+            <option value="2/2">2/2</option>
+            <option value="5/4">5/4</option>
+          </select>
+        </label>
+
+        <label className={FIELD}>
+          Clef
+          <select
+            className={SELECT}
+            value={score.clef}
+            onChange={(e) => setScore((s) => ({ ...s, clef: e.target.value as EditorScore['clef'] }))}
+          >
+            <option value="treble">treble</option>
+            <option value="bass">bass</option>
+            <option value="alto">alto</option>
+          </select>
+        </label>
+
+        <label className={FIELD}>
+          Tempo
+          <input
+            type="number"
+            min="20"
+            max="400"
+            className={`${SELECT} w-16`}
+            value={tempoText}
+            onChange={(e) => setTempoText(e.target.value)}
+            onBlur={() => {
+              const n = Math.max(20, Math.min(400, Number(tempoText) || score.tempo));
+              setScore((s) => ({ ...s, tempo: n }));
+              setTempoText(String(n));
+            }}
+          />
+        </label>
       </div>
 
       <NoteEditor score={score} onChange={setScore} />

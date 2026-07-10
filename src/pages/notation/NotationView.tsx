@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot } from 'vexflow';
+import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline } from 'vexflow';
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration, vexAccidentalCode } from '@/lib/notation/toVexflow';
@@ -65,6 +65,8 @@ export function NotationView({ score, width, onNoteClick }: {
       const stave = new Stave(8 + col * measureWidth, TOP + row * SYSTEM_H, measureWidth);
       if (col === 0) stave.addClef(VEX_CLEF[score.clef]);                                        // clef opens every system
       if (mi === 0) stave.addTimeSignature(`${score.timeSig.beats}/${score.timeSig.beatType}`); // time signature only once
+      // Final barline (thin-thick) closes the last measure once the exercise has content.
+      if (mi === measures.length - 1 && score.elements.length > 0) stave.setEndBarType(Barline.type.END);
       stave.setContext(ctx).draw();
 
       const notes = m.elements.map((el) => {
