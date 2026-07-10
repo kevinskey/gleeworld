@@ -68,6 +68,109 @@ export default function NotationEditorPage() {
           onChange={(e) => setScore((s) => ({ ...s, title: e.target.value }))}
           placeholder="Untitled exercise"
         />
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-700" htmlFor="notation-key">
+              Key
+            </label>
+            <select
+              id="notation-key"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+              value={score.keyFifths}
+              onChange={(e) => setScore((s) => ({ ...s, keyFifths: Number(e.target.value) }))}
+            >
+              <option value={0}>C</option>
+              <option value={1}>G</option>
+              <option value={2}>D</option>
+              <option value={3}>A</option>
+              <option value={4}>E</option>
+              <option value={5}>B</option>
+              <option value={-1}>F</option>
+              <option value={-2}>Bb</option>
+              <option value={-3}>Eb</option>
+              <option value={-4}>Ab</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-700" htmlFor="notation-mode">
+              Mode
+            </label>
+            <select
+              id="notation-mode"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+              value={score.mode}
+              onChange={(e) =>
+                setScore((s) => ({ ...s, mode: e.target.value as EditorScore['mode'] }))
+              }
+            >
+              <option value="major">major</option>
+              <option value="minor">minor</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-700" htmlFor="notation-time">
+              Time
+            </label>
+            <select
+              id="notation-time"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+              value={`${score.timeSig.beats}/${score.timeSig.beatType}`}
+              onChange={(e) => {
+                const [b, bt] = e.target.value.split('/').map(Number);
+                setScore((s) => ({ ...s, timeSig: { beats: b, beatType: bt } }));
+              }}
+            >
+              <option value="4/4">4/4</option>
+              <option value="3/4">3/4</option>
+              <option value="2/4">2/4</option>
+              <option value="6/8">6/8</option>
+              <option value="3/8">3/8</option>
+              <option value="2/2">2/2</option>
+              <option value="5/4">5/4</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-700" htmlFor="notation-clef">
+              Clef
+            </label>
+            <select
+              id="notation-clef"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+              value={score.clef}
+              onChange={(e) =>
+                setScore((s) => ({ ...s, clef: e.target.value as EditorScore['clef'] }))
+              }
+            >
+              <option value="treble">treble</option>
+              <option value="bass">bass</option>
+              <option value="alto">alto</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-slate-700" htmlFor="notation-tempo">
+              Tempo
+            </label>
+            <input
+              id="notation-tempo"
+              type="number"
+              min="20"
+              max="400"
+              className="w-20 rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+              value={score.tempo}
+              onChange={(e) =>
+                setScore((s) => ({
+                  ...s,
+                  tempo: Math.max(20, Math.min(400, Number(e.target.value) || s.tempo)),
+                }))
+              }
+            />
+          </div>
+        </div>
       </header>
 
       <div className="flex flex-wrap items-center gap-2">
