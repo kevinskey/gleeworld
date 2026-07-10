@@ -92,6 +92,25 @@ export function toggleTie(at: number): Command {
   };
 }
 
+export function setAccidental(at: number, alter: number): Command {
+  // Directly set a note's alter (…, -1 flat, 0 natural, 1 sharp, 2 double-sharp …) WITHOUT
+  // the enharmonic re-spelling transpose does — an authored Bb stays Bb. Capture-and-restore
+  // on invert, same pattern as transpose/toggleTie; no-ops on a rest.
+  let prevAlter: number | undefined;
+  return {
+    label: 'accidental',
+    apply: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note') return e;
+      prevAlter = e.pitch.alter;
+      return { ...e, pitch: { ...e.pitch, alter } };
+    })),
+    invert: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note' || prevAlter === undefined) return e;
+      return { ...e, pitch: { ...e.pitch, alter: prevAlter } };
+    })),
+  };
+}
+
 export class CommandStack {
   private undoStack: Command[] = [];
   private redoStack: Command[] = [];

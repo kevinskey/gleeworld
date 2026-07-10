@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { insertElement, deleteElement, changeDuration, transpose, toggleTie, CommandStack } from './commands';
-import { emptyScore, noteOf } from './model';
+import { insertElement, deleteElement, changeDuration, transpose, toggleTie, setAccidental, CommandStack } from './commands';
+import { emptyScore, noteOf, restOf } from './model';
 
 const C4 = { step: 'C' as const, octave: 4, alter: 0 };
 const base = { ...emptyScore(), elements: [noteOf(C4, 'quarter'), noteOf(C4, 'half')] };
@@ -12,6 +12,7 @@ describe('commands are invertible', () => {
     changeDuration(1, 'quarter', 0),
     transpose(0, 2),
     toggleTie(0),
+    setAccidental(0, 1),
   ];
   for (const cmd of cases) {
     it(`invert(apply) is identity for "${cmd.label}"`, () => {
@@ -30,6 +31,17 @@ describe('invertibility holds for enharmonic spellings and all tie states', () =
     const after = cmd.apply(flatBase);
     expect(after).not.toEqual(flatBase);            // it actually moved the note
     expect(cmd.invert(after)).toEqual(flatBase);     // and restores Bb4, not A#4
+  });
+
+  it('setAccidental flats a natural and invert restores it; no-ops on a rest', () => {
+    const F4 = { step: 'F' as const, octave: 4, alter: 0 };
+    const noteBase = { ...emptyScore(), elements: [noteOf(F4, 'quarter')] };
+    const cmd = setAccidental(0, -1);
+    const after = cmd.apply(noteBase);
+    expect((after.elements[0] as any).pitch.alter).toBe(-1);
+    expect(cmd.invert(after)).toEqual(noteBase);
+    const restBase = { ...emptyScore(), elements: [restOf('quarter')] };
+    expect(setAccidental(0, 1).apply(restBase)).toEqual(restBase);
   });
 
   it('toggleTie restores a "stop" tie exactly, not "start" or "none"', () => {
