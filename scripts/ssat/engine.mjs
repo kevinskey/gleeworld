@@ -117,7 +117,12 @@ export function makeMelody(spec) {
       for (let k = 0; k < w; k++) candidates.push(j);
     }
     const next = candidates.length ? pick(rng, candidates) : Math.max(0, idx - 1);
-    lastWasLeap = Math.abs(ladder[next] - ladder[idx]) > 2;
+    // Leap-ness is ladder-index adjacency, same as the isLeap classification
+    // above: a scale-degree-adjacent move is always a step and must never set
+    // lastWasLeap, even when its semitone size exceeds 2 (harmonic minor's
+    // le→ti augmented 2nd is 3 semitones but still a step) — otherwise a plain
+    // step spuriously forces leap-recovery on the following move.
+    lastWasLeap = Math.abs(next - idx) > 1;
     lastDir = Math.sign(next - idx) || lastDir;
     idx = next;
     pitches.push(ladder[idx]);
@@ -150,8 +155,11 @@ export function makeMelody(spec) {
         // a contrary-direction step). Only stop here if that recovery still holds;
         // otherwise the leap's recovery step was the very thing we just
         // overwrote, so keep gliding backward through the leap itself, erasing it.
-        const incomingWasLeap = i > 0 && Math.abs(pitches[i] - pitches[i - 1]) > 2;
-        const leapDir = incomingWasLeap ? Math.sign(pitches[i] - pitches[i - 1]) : 0;
+        // Ladder-index adjacency here too (see lastWasLeap above): an adjacent
+        // scale-degree move is a step even when it spans 3 semitones.
+        const prevIdxInLadder = i > 0 ? ladder.indexOf(pitches[i - 1]) : -1;
+        const incomingWasLeap = i > 0 && Math.abs(curIdx - prevIdxInLadder) > 1;
+        const leapDir = incomingWasLeap ? Math.sign(curIdx - prevIdxInLadder) : 0;
         if (!incomingWasLeap || (gap !== 0 && Math.sign(gap) === -leapDir)) break; // glide done
         cursorIdx += -leapDir; // step away from the leap direction to actively erase it
       } else {

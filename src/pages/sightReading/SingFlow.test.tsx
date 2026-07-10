@@ -34,6 +34,13 @@ vi.mock('@/lib/sightReading/useMicPitch', () => ({
   }),
 }));
 
+// These take-lifecycle tests render SingFlow in isolation, without the auth/role
+// provider tree. Stub the role hook to a non-admin so the Save-to-Library button
+// stays out of the way; admin gating is exercised elsewhere.
+vi.mock('@/hooks/useUserRole', () => ({
+  useUserRole: () => ({ isAdmin: () => false }),
+}));
+
 // jsdom has no Web Audio. playPriming() constructs a real AudioContext, so
 // stand up a no-op fake that satisfies the calls it makes.
 class FakeParam {

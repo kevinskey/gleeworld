@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mic, Play } from 'lucide-react';
+import { Loader2, Mic, Play, Save } from 'lucide-react';
 import { useMicPitch } from '@/lib/sightReading/useMicPitch';
 import { scoreAttempt, type ScoreResult, type SungNote } from '@/lib/sightReading/score';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 import { ResultCard } from './ResultCard';
 import { NotationView } from '@/pages/notation/NotationView';
 import { irToEditorScore } from '@/lib/notation/fromIR';
+import { saveExercise } from '@/lib/notation/exercisesApi';
+import { useUserRole } from '@/hooks/useUserRole';
+import { toast } from 'sonner';
 
 // The count-in is four beats. useMicPitch's beatPos clock starts (startedAt =
 // ctx.currentTime) when the AudioWorklet node is constructed inside start(),
@@ -98,10 +101,31 @@ export function SingFlow({
   activityKey: string;
 }) {
   const mic = useMicPitch();
+  const { isAdmin } = useUserRole();
   const [phase, setPhase] = useState<Phase>('ready');
   const [countBeat, setCountBeat] = useState(0);
   const [result, setResult] = useState<ScoreResult | null>(null);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Save the currently-shown line into the teacher's exercise Library. The generated
+  // IR is converted to the editable EditorScore document and stored via saveExercise,
+  // so a teacher can keep a generated line they like and later edit or assign it.
+  const saveToLibrary = useCallback(async () => {
+    setSaveState('saving');
+    try {
+      const base = irToEditorScore(exercise);
+      const title =
+        base.title || `${exercise.key} ${exercise.mode} · level ${exercise.difficulty}`;
+      await saveExercise({ ...base, title });
+      setSaveState('saved');
+      toast.success('Saved to Library');
+    } catch (err) {
+      console.error('sight-reading: save to library failed', err);
+      setSaveState('idle');
+      toast.error('Could not save to Library — try again.');
+    }
+  }, [exercise]);
 
   const clearTimers = () => {
     timers.current.forEach(clearTimeout);
@@ -215,9 +239,23 @@ export function SingFlow({
     <div className="mx-auto w-full max-w-2xl px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Sing the line</h1>
-        <Button variant="ghost" size="sm" onClick={onExit}>
-          Exit
-        </Button>
+        <div className="flex items-center gap-1">
+          {isAdmin() && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={saveToLibrary}
+              disabled={saveState !== 'idle'}
+            >
+              <Save className="mr-1.5 h-4 w-4" />
+              {saveState === 'saved' ? 'Saved' : saveState === 'saving' ? 'Saving…' : 'Save to Library'}
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={onExit}>
+            Exit
+          </Button>
+        </div>
       </div>
 
       <NotationStrip ir={exercise} />
