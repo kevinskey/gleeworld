@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { EditorScore, noteOf, restOf, Pitch } from '@/lib/notation/model';
 import { BaseDur } from '@/lib/notation/duration';
 import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, respellEnharmonic, CommandStack } from '@/lib/notation/commands';
+import { playPitch } from '@/lib/notation/pitchAudio';
 import { NotationView } from './NotationView';
+
+const CHROMA_MIDI: Record<Pitch['step'], number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+const midiOf = (p: Pitch) => (p.octave + 1) * 12 + CHROMA_MIDI[p.step] + p.alter;
 
 const DURATIONS: { code: BaseDur; label: string; key: string }[] = [
   { code: 'whole', label: 'Whole', key: '1' }, { code: 'half', label: 'Half', key: '2' },
@@ -53,6 +57,7 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         const prev = [...s.elements].reverse().find((el) => el.kind === 'note') as any;
         const basePitch = nearestPitch(e.key.toUpperCase() as Pitch['step'], prev ? prev.pitch : null);
         const pitch = { ...basePitch, alter: armedAlter };
+        playPitch(midiOf(pitch));  // sound the entered pitch
         const insertAt = selected != null ? selected + 1 : s.elements.length;
         dispatch(insertElement(insertAt, noteOf(pitch, armed, armedDots)));
         if (selected != null) setSelected(insertAt);
@@ -111,6 +116,8 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
       }
       if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && selected != null) {
         e.preventDefault();
+        const el = s.elements[selected];
+        if (el?.kind === 'note') playPitch(midiOf(el.pitch) + (e.key === 'ArrowUp' ? 1 : -1));  // sound the new pitch
         dispatch(transpose(selected, e.key === 'ArrowUp' ? 1 : -1));
       }
     };

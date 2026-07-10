@@ -32,13 +32,14 @@ function isDo(pitch: number, tonicMidi: number): boolean {
   return (((pitch - tonicMidi) % 12) + 12) % 12 === 0;
 }
 
-export function generateExercise(opts: { level: number; key: string; seed: number }): ExerciseIR {
+export function generateExercise(opts: { level: number; key: string; seed: number; bars?: number }): ExerciseIR {
   const lv = LEVELS[opts.level] ?? LEVELS[1];
   const tonicMidi = KEY_TO_MIDI[opts.key] ?? 60;
   const rand = rng(opts.seed);
   const pick = <T,>(xs: T[]) => xs[Math.floor(rand() * xs.length)];
 
-  const beatsTotal = lv.bars * 4;
+  // Length: caller-chosen measures override the level's default bar count.
+  const beatsTotal = (opts.bars && opts.bars > 0 ? opts.bars : lv.bars) * 4;
   const midis: number[] = [tonicMidi + pick(TRIAD)];   // begin on a triad member
   let windowMin = midis[0];
   let windowMax = midis[0];

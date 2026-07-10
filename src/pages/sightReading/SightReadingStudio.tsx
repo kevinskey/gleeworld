@@ -90,6 +90,7 @@ export default function SightReadingStudio() {
   const [exercise, setExercise] = useState<ExerciseIR | null>(null);
   const [level, setLevel] = useState(1);
   const [musicKey, setMusicKey] = useState('C');
+  const [measures, setMeasures] = useState(8);
   const [priming, setPriming] = useState(false);
   const { isAdmin } = useUserRole();
   const [searchParams] = useSearchParams();
@@ -97,7 +98,7 @@ export default function SightReadingStudio() {
   const initialTab = searchParams.get('tab') === 'library' ? 'library' : 'practice';
 
   const start = () =>
-    setExercise(generateExercise({ level, key: musicKey, seed: Math.floor(Math.random() * 1e9) }));
+    setExercise(generateExercise({ level, key: musicKey, seed: Math.floor(Math.random() * 1e9), bars: measures }));
 
   // The pitch pipe is a chip, not a tab: it sounds the current key's tonic so a
   // student can find their footing before starting.
@@ -179,6 +180,21 @@ export default function SightReadingStudio() {
             }`}
           >
             {l}
+          </button>
+        ))}
+        <span className="ml-2 text-slate-600">Measures</span>
+        {[4, 8, 16].map((m) => (
+          <button
+            key={m}
+            type="button"
+            aria-label={`${m} measures`}
+            aria-pressed={measures === m}
+            onClick={() => setMeasures(m)}
+            className={`h-8 min-w-[2rem] rounded-full px-2 text-sm font-semibold ${
+              measures === m ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+            }`}
+          >
+            {m}
           </button>
         ))}
         <Button
