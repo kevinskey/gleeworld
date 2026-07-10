@@ -4,22 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Mic, 
-  Square, 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  Upload, 
-  Award,
+import {
+  Mic,
+  Square,
+  Play,
+  Pause,
+  RotateCcw,
+  Upload,
   Clock,
   CheckCircle,
   AlertTriangle,
   Volume2
 } from 'lucide-react';
 import { useAudioRecorder } from '@/components/sight-singing/hooks/useAudioRecorder';
-import { useGrading } from '@/components/sight-singing/hooks/useGrading';
 import { useAssignments } from '@/hooks/useAssignments';
 import { useToast } from '@/hooks/use-toast';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
@@ -49,12 +46,6 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({
     clearRecording,
   } = useAudioRecorder();
 
-  const {
-    gradingResults,
-    isGrading,
-    gradeRecording
-  } = useGrading();
-
   // Format recording duration
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -77,47 +68,6 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({
     audio.play();
     setPlaybackAudio(audio);
     setIsPlayingRecording(true);
-  };
-
-  // Handle AI grading
-  const handleGradeRecording = async () => {
-    if (!audioBlob) {
-      toast({
-        title: "Cannot Grade Recording",
-        description: "Recording data is missing.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Create a simple score structure for grading
-      const scoreData = {
-        key: { tonic: 'C', mode: 'major' as const },
-        time: { num: 4, den: 4 as const },
-        numMeasures: 4,
-        parts: [{
-          role: 'S' as const,
-          range: { min: 'C4', max: 'C5' },
-          measures: [[]]
-        }],
-        cadencePlan: []
-      };
-      
-      await gradeRecording(audioBlob, scoreData, 120);
-      
-      toast({
-        title: "Grading Complete",
-        description: "Your recording has been evaluated by AI.",
-      });
-    } catch (error) {
-      console.error('Grading error:', error);
-      toast({
-        title: "Grading Failed",
-        description: "Unable to grade the recording. Please try again.",
-        variant: "destructive",
-      });
-    }
   };
 
   // Handle submission
@@ -261,75 +211,10 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({
         </CardContent>
       </Card>
 
-      {/* AI Grading */}
       {audioBlob && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              AI Evaluation
-            </CardTitle>
-            <CardDescription>
-              Get instant feedback on your performance
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            {!gradingResults && !isGrading && (
-              <Button 
-                onClick={handleGradeRecording} 
-                className="w-full flex items-center gap-2"
-              >
-                <Award className="h-4 w-4" />
-                Grade My Performance
-              </Button>
-            )}
-            
-            {isGrading && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <span>Analyzing your performance...</span>
-                </div>
-                <Progress value={33} className="w-full" />
-              </div>
-            )}
-            
-            {gradingResults && (
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="text-center space-y-1">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {gradingResults.pitchAcc || 0}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">Pitch Accuracy</div>
-                  </div>
-                  
-                  <div className="text-center space-y-1">
-                    <div className="text-2xl font-bold text-green-600">
-                      {gradingResults.rhythmAcc || 0}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">Rhythm Accuracy</div>
-                  </div>
-                  
-                  <div className="text-center space-y-1">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {gradingResults.overall || 0}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">Overall Score</div>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <div className="text-sm font-medium mb-2">Grade: {gradingResults.letter || 'N/A'}</div>
-                  <div className="text-sm text-muted-foreground">
-                    AI evaluation based on pitch accuracy, rhythm precision, and overall musicality.
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <p className="text-sm text-muted-foreground">
+          Recorded — listen back, then submit.
+        </p>
       )}
 
       {/* Submission */}

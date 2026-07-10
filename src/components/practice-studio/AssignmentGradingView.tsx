@@ -364,32 +364,6 @@ export const AssignmentGradingView: React.FC<AssignmentGradingViewProps> = ({
                     </div>
                   </div>
                 )}
-                
-                {selectedSubmission.grading_results && (
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">AI Evaluation</div>
-                    <div className="grid gap-2 md:grid-cols-3">
-                      <div className="text-center p-2 bg-muted/50 rounded">
-                        <div className="text-lg font-semibold text-blue-600">
-                          {selectedSubmission.grading_results.pitchAccuracy}%
-                        </div>
-                        <div className="text-xs text-muted-foreground">Pitch</div>
-                      </div>
-                      <div className="text-center p-2 bg-muted/50 rounded">
-                        <div className="text-lg font-semibold text-green-600">
-                          {selectedSubmission.grading_results.rhythmAccuracy}%
-                        </div>
-                        <div className="text-xs text-muted-foreground">Rhythm</div>
-                      </div>
-                      <div className="text-center p-2 bg-muted/50 rounded">
-                        <div className="text-lg font-semibold text-purple-600">
-                          {selectedSubmission.grading_results.overallScore}%
-                        </div>
-                        <div className="text-xs text-muted-foreground">Overall</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </CardContent>

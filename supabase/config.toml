@@ -142,9 +142,6 @@ verify_jwt = false
 [functions.generate-musicxml]
 verify_jwt = false
 
-[functions.evaluate-singing]
-verify_jwt = true
-
 [functions.store-recording]
 verify_jwt = true
 
