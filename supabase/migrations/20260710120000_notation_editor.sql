@@ -1,11 +1,19 @@
 -- supabase/migrations/20260710120000_notation_editor.sql
+-- Atomic: wrap the whole migration so a failure at the gw_sight_reading_exercises
+-- ALTER (its precondition — table + tenant_id column — cannot be verified here)
+-- rolls back cleanly instead of leaving a half-applied schema. Every object is also
+-- individually idempotent, so the script is safely re-runnable by hand.
+BEGIN;
 
 -- Shared trigger: coalesce an explicit NULL tenant_id back to the tenant. The column
 -- DEFAULT is suppressed when a client serializes tenant_id: null, and a RESTRICTIVE
--- WITH CHECK then silently rejects the row. (create-or-replace: may already exist.)
+-- WITH CHECK then silently rejects the row. (create-or-replace: may already exist —
+-- schema-qualified call + pinned search_path so the shared fn resolves deterministically.)
 CREATE OR REPLACE FUNCTION public.set_tenant_id_default() RETURNS trigger
-LANGUAGE plpgsql AS $$ BEGIN
-  IF NEW.tenant_id IS NULL THEN NEW.tenant_id := current_tenant_id(); END IF; RETURN NEW; END $$;
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$ BEGIN
+  IF NEW.tenant_id IS NULL THEN NEW.tenant_id := public.current_tenant_id(); END IF; RETURN NEW; END $$;
 
 -- 1. Individual-student assignment. Nullable, no default: NULL = existing course-wide behavior.
 ALTER TABLE public.gw_assignments
@@ -43,3 +51,5 @@ CREATE POLICY srai_isolation ON public.gw_sight_reading_assignment_items
 DROP POLICY IF EXISTS srai_rw ON public.gw_sight_reading_assignment_items;
 CREATE POLICY srai_rw ON public.gw_sight_reading_assignment_items
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+COMMIT;
