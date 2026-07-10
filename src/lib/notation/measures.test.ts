@@ -33,4 +33,11 @@ describe('measure engine', () => {
     expect(m[0].ticks).toBe(2400);
     expect(m[0].overfull).toBe(true);
   });
+  it('an empty score still yields one empty measure so key/time/clef survive', () => {
+    const m = layoutMeasures(emptyScore());
+    expect(m).toHaveLength(1);
+    expect(m[0].elements).toEqual([]);
+    expect(m[0].ticks).toBe(0);
+    expect(m[0].overfull).toBe(false);
+  });
 });

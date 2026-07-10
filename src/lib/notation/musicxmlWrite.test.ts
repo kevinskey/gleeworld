@@ -32,3 +32,32 @@ describe('editorScoreToMusicXML', () => {
     expect(doc.getElementsByTagName('parsererror').length).toBe(0);
   });
 });
+
+describe('editorScoreToMusicXML — empty score', () => {
+  const xml = editorScoreToMusicXML(emptyScore());
+
+  it('still emits divisions, key, time, and clef via the single empty measure', () => {
+    expect(xml).toContain('<divisions>480</divisions>');
+    expect(xml).toContain('<sign>G</sign>');
+    expect(xml).toContain('<beats>4</beats>');
+    expect((xml.match(/<attributes>/g) || []).length).toBe(1);
+  });
+});
+
+describe('editorScoreToMusicXML — tie round-trip', () => {
+  const score = {
+    ...emptyScore(),
+    elements: [
+      { ...noteOf(C4, 'quarter'), tie: 'start' as const },
+      { ...noteOf(C4, 'quarter'), tie: 'stop' as const },
+    ],
+  };
+  const xml = editorScoreToMusicXML(score);
+
+  it('encodes both <tie> and <tied> start/stop pairs', () => {
+    expect(xml).toContain('<tie type="start"/>');
+    expect(xml).toContain('<tie type="stop"/>');
+    expect(xml).toContain('<tied type="start"/>');
+    expect(xml).toContain('<tied type="stop"/>');
+  });
+});

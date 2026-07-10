@@ -36,5 +36,8 @@ export function layoutMeasures(score: EditorScore): LaidMeasure[] {
     if (curTicks === cap) flush();
   }
   if (cur.length) flush();
+  // A score with no elements still needs one empty measure so the writer
+  // has somewhere to attach divisions/key/time/clef attributes.
+  if (out.length === 0) flush();
   return out;
 }
