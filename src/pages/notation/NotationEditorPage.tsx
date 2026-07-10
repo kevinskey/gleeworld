@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { emptyScore, EditorScore } from '@/lib/notation/model';
@@ -9,10 +9,12 @@ import { editorScoreToMusicXML } from '@/lib/notation/musicxmlWrite';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
 import { AssignExerciseDialog } from './AssignExerciseDialog';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 
 export default function NotationEditorPage() {
   const { exerciseId } = useParams();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const [score, setScore] = useState<EditorScore>(emptyScore());
   const [savedId, setSavedId] = useState<string | undefined>(exerciseId);
   const [saving, setSaving] = useState(false);
@@ -50,6 +52,9 @@ export default function NotationEditorPage() {
   };
 
   const assignTargetId = savedId ?? exerciseId;
+
+  if (roleLoading) return null;
+  if (!isAdmin()) return <Navigate to="/dashboard/sight-reading" replace />;
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-6">

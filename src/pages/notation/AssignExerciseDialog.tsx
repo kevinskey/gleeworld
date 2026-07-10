@@ -40,6 +40,7 @@ export function AssignExerciseDialog({ exerciseId, title, open, onOpenChange }: 
     supabase
       .from('gw_courses')
       .select('id, title, course_code')
+      .eq('is_active', true)
       .order('title')
       .then(({ data, error }) => {
         if (error) {
@@ -51,6 +52,10 @@ export function AssignExerciseDialog({ exerciseId, title, open, onOpenChange }: 
   }, [open]);
 
   useEffect(() => {
+    // Course changed — the previously selected student may not be enrolled
+    // in the new course, so force the teacher to re-pick. Applies to both
+    // class and student modes.
+    setStudentId('');
     if (!open || mode !== 'student' || !courseId) {
       setStudents([]);
       return;
@@ -105,7 +110,7 @@ export function AssignExerciseDialog({ exerciseId, title, open, onOpenChange }: 
         exerciseId,
         courseId,
         studentId: mode === 'student' ? studentId || undefined : undefined,
-        dueAt: dueDate ? new Date(dueDate).toISOString() : undefined,
+        dueAt: dueDate ? new Date(dueDate + 'T00:00:00').toISOString() : undefined,
         title,
       });
       toast.success('Exercise assigned.');

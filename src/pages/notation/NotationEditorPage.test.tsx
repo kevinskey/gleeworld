@@ -10,6 +10,10 @@ vi.mock('@/lib/notation/exercisesApi', () => ({
   loadExercise: vi.fn(),
 }));
 
+vi.mock('@/hooks/useUserRole', () => ({
+  useUserRole: () => ({ isAdmin: () => true, loading: false }),
+}));
+
 // MusicXMLPlayer reaches for window.AudioContext in its constructor, which
 // jsdom doesn't provide — mock the playback hook so the page can mount.
 vi.mock('@/components/sight-singing/hooks/useTonePlayback', () => ({
