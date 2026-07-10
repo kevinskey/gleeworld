@@ -115,10 +115,22 @@ export function SingFlow({
     timers.current = [];
   };
 
-  useEffect(() => () => {
-    clearTimers();
-    mic.stop();
-  }, [mic]);
+  // `mic` is a fresh (memoized) object whose identity changes on nearly every
+  // audio frame while singing, because `mic.live` updates that fast. Depending
+  // the teardown effect on `mic` (or `mic.stop`) therefore re-runs its CLEANUP
+  // on every frame — clearing the count-in/scoring timers and calling stop()
+  // mid-take, so the take never completes (BUG 1). Instead we hold the latest
+  // stop() in a ref and run the cleanup with an EMPTY dependency array, so it
+  // fires exactly once, on unmount, and never on a re-render.
+  const stopRef = useRef(mic.stop);
+  stopRef.current = mic.stop;
+  useEffect(
+    () => () => {
+      clearTimers();
+      stopRef.current();
+    },
+    [],
+  );
 
   const logOnce = useCallback(
     (r: ScoreResult) => {
@@ -147,9 +159,15 @@ export function SingFlow({
 
     // Await start() so the mic clock's zero is anchored to (approximately) this
     // instant; the count-in below is measured from here and later subtracted.
+    // Branch on the RETURNED outcome, not on `mic.permission`: on the first
+    // attempt that state is still the pre-start() value in this closure, so a
+    // denial read through it never fires (BUG 2). On anything but a live mic we
+    // stop here — no count-in, no scoring, and nothing written to localStorage
+    // — but the line stays on screen (and was just played), and the denied
+    // banner offers the way back in. A refused mic is never a dead end.
     setPhase('countin');
-    await mic.start(exercise.tempo);
-    if (mic.permission === 'denied') {
+    const outcome = await mic.start(exercise.tempo);
+    if (outcome !== 'granted') {
       setPhase('ready');
       return;
     }
@@ -219,7 +237,8 @@ export function SingFlow({
 
       {mic.permission === 'denied' && (
         <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800" role="alert">
-          Microphone access is off. Enable it and tap Start again.
+          Microphone access is off — you can still see and hear the line. Enable mic to get
+          scored, then tap Start take again.
         </div>
       )}
 

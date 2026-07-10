@@ -196,7 +196,6 @@ const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPag
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
-const SightReadingPage = lazy(() => import("./pages/member/SightReadingPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
 const BoxOfficePage = lazy(() => import("./pages/dashboard/BoxOfficePage"));
 const BoxOfficeEventPage = lazy(() => import("./pages/dashboard/BoxOfficeEventPage"));
@@ -300,10 +299,8 @@ const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ defa
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
 import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
 import GroupPresentationView from './pages/mus240/GroupPresentationView';
-const SightReadingGeneratorPage = lazy(() => import("./pages/SightReadingGenerator"));
 const AssignmentCreatorPage = lazy(() => import("./pages/AssignmentCreator"));
 const PracticeStudioPage = lazy(() => import("./pages/PracticeStudioPage"));
-import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
 const MessagingInterface = lazy(() => import("./components/messaging/MessagingInterface").then(m => ({ default: m.MessagingInterface })));
 
 const BookAppointmentPage = lazy(() => import("./pages/BookAppointmentPage"));

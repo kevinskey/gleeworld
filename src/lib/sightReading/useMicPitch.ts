@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { hzToMidi, nearestMidi } from './pitch';
 import type { SungNote } from './score';
 
@@ -58,8 +58,14 @@ export function useMicPitch() {
     setLive(null);
   }, []);
 
+  // Returns the outcome so the caller can branch on the ACTUAL result of this
+  // call rather than reading `permission`/`error` state, which — being state
+  // captured in the caller's render closure — still reflects the PRE-start()
+  // value on the very first attempt (BUG 2). 'granted' = mic live and worklet
+  // running; 'denied' = permission refused; 'failed' = the AudioContext/worklet
+  // path failed (see `error`) or a newer session superseded this call.
   const start = useCallback(
-    async (tempo = 80) => {
+    async (tempo = 80): Promise<'granted' | 'denied' | 'failed'> => {
       // Re-entrancy guard: tear down any active/in-flight session before
       // starting a new one. stop() is idempotent, so this is safe even if
       // no session exists yet.
@@ -85,7 +91,7 @@ export function useMicPitch() {
         // Denial, no device, insecure context, etc. — never throw out of this
         // hook; the caller only needs to know permission didn't come through.
         setPermission('denied');
-        return;
+        return 'denied';
       }
 
       // A newer start() (or an explicit stop()) happened while we were
@@ -93,7 +99,7 @@ export function useMicPitch() {
       // the newer one's refs, and don't leave this stream's mic open.
       if (sessionId !== sessionIdRef.current) {
         stream.getTracks().forEach((t) => t.stop());
-        return;
+        return 'failed';
       }
 
       streamRef.current = stream;
@@ -126,7 +132,7 @@ export function useMicPitch() {
           stream.getTracks().forEach((t) => t.stop());
           if (ctxRef.current === ctx) ctxRef.current = null;
           if (streamRef.current === stream) streamRef.current = null;
-          return;
+          return 'failed';
         }
 
         if (ctx.state !== 'running') {
@@ -146,7 +152,7 @@ export function useMicPitch() {
           stream.getTracks().forEach((t) => t.stop());
           if (ctxRef.current === ctx) ctxRef.current = null;
           if (streamRef.current === stream) streamRef.current = null;
-          return;
+          return 'failed';
         }
 
         await ctx.audioWorklet.addModule('/worklets/gw-pitch.js');
@@ -158,7 +164,7 @@ export function useMicPitch() {
           stream.getTracks().forEach((t) => t.stop());
           if (ctxRef.current === ctx) ctxRef.current = null;
           if (streamRef.current === stream) streamRef.current = null;
-          return;
+          return 'failed';
         }
 
         const src = ctx.createMediaStreamSource(stream);
@@ -207,6 +213,8 @@ export function useMicPitch() {
         muteGainRef.current = muteGain;
         node.connect(muteGain);
         muteGain.connect(ctx.destination);
+
+        return 'granted';
       } catch (err) {
         // addModule/AudioContext failures (e.g. worklet 404, CSP blocking it)
         // must not throw out of the hook either. Warn loudly (matching
@@ -237,6 +245,7 @@ export function useMicPitch() {
           muteGainRef.current.disconnect();
           muteGainRef.current = null;
         }
+        return 'failed';
       }
     },
     [stop],
@@ -251,5 +260,16 @@ export function useMicPitch() {
   // would never see updates since the ref's array identity never changes.
   const getCaptured = useCallback((): SungNote[] => [...capturedRef.current], []);
 
-  return { start, stop, permission, live, error, getCaptured };
+  // Return a MEMOIZED object so the hook's consumers can safely hold `mic`'s
+  // identity. `start`/`stop`/`getCaptured` are stable useCallbacks, so this
+  // object only churns when `live`/`permission`/`error` change. `live` still
+  // updates on ~every audio frame, so this identity DOES change every frame
+  // while singing — that is fine for rendering, but it means `mic` (or any
+  // field of it) must NEVER be used as a teardown effect dependency: doing so
+  // re-runs the effect's cleanup on every frame, killing the take mid-flight
+  // (BUG 1). Consumers must capture `stop` in a ref for unmount cleanup.
+  return useMemo(
+    () => ({ start, stop, permission, live, error, getCaptured }),
+    [start, stop, getCaptured, permission, live, error],
+  );
 }
