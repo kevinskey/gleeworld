@@ -34,7 +34,7 @@ const SUMMARY_COLS =
 function rowToSummary(row: SongRow): SongSummary {
   const sections = (row.sections as unknown[]) ?? [];
   const { sections: _s, ...rest } = rowToSong(row);
-  const { notes: _n, graveyard: _g, chord_chart: _c, ...summary } = rest as Song;
+  const { notes: _n, graveyard: _g, chord_chart: _c, chord_charts: _cc, ...summary } = rest as Song;
   return { ...(summary as Omit<SongSummary, 'section_count'>), section_count: sections.length };
 }
 

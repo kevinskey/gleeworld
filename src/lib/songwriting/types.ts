@@ -68,6 +68,6 @@ export type Song = {
   updated_at: string;
 };
 
-export type SongSummary = Omit<Song, 'sections' | 'notes' | 'graveyard' | 'chord_chart'> & {
+export type SongSummary = Omit<Song, 'sections' | 'notes' | 'graveyard' | 'chord_chart' | 'chord_charts'> & {
   section_count: number;
 };
