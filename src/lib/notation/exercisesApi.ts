@@ -18,8 +18,10 @@ export function scoreToRow(score: EditorScore) {
 export async function saveExercise(score: EditorScore, existingId?: string): Promise<{ id: string }> {
   const row = scoreToRow(score);
   if (existingId) {
-    const { error } = await supabase.from('gw_sight_reading_exercises').update(row).eq('id', existingId);
+    const { data, error } = await supabase.from('gw_sight_reading_exercises')
+      .update(row).eq('id', existingId).select('id').single();
     if (error) throw error;
+    if (!data) throw new Error('notation: exercise not found or not editable');
     return { id: existingId };
   }
   const { data: auth } = await supabase.auth.getUser();
