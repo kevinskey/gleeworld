@@ -207,14 +207,20 @@ Deno.serve(async (req) => {
     )
 
     // Entitlement: active/trial subscription row (or starter tier).
+    // .maybeSingle() errors out (spurious 403) if more than one row ever
+    // exists for this (tenant, module) pair. Select every row and allow if
+    // ANY of them is live — same array + .some() pattern as store-checkout's
+    // add-on gate (supabase/functions/store-checkout/index.ts).
     const { data: mod } = await sb.from('gw_billing_modules')
       .select('tier').eq('id', 'songwriting').maybeSingle()
     if (mod?.tier !== 'starter') {
-      const { data: sub } = await sb.from('gw_tenant_subscriptions')
+      const { data: subs } = await sb.from('gw_tenant_subscriptions')
         .select('status, current_period_end')
-        .eq('tenant_id', tenantId).eq('module_id', 'songwriting').maybeSingle()
-      const live = sub && ['active', 'trial'].includes(sub.status) &&
-        (!sub.current_period_end || new Date(sub.current_period_end) > new Date())
+        .eq('tenant_id', tenantId).eq('module_id', 'songwriting')
+      const live = Array.isArray(subs) && subs.some((s: any) =>
+        ['active', 'trial'].includes(s.status) &&
+        (!s.current_period_end || new Date(s.current_period_end) > new Date())
+      )
       if (!live) return json({ error: 'songwriting_not_enabled' }, 403)
     }
 
