@@ -197,6 +197,7 @@ const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
 const SightReadingPage = lazy(() => import("./pages/member/SightReadingPage"));
+const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
 const BoxOfficePage = lazy(() => import("./pages/dashboard/BoxOfficePage"));
 const BoxOfficeEventPage = lazy(() => import("./pages/dashboard/BoxOfficeEventPage"));
 const BoxOfficeCheckinPage = lazy(() => import("./pages/dashboard/BoxOfficeCheckinPage"));
@@ -297,10 +298,6 @@ const SoundCloudSearch = lazy(() => import("./pages/SoundCloudSearch"));
 const ShoutcastManagement = lazy(() => import("./pages/admin/ShoutcastManagement").then(m => ({ default: m.ShoutcastManagement })));
 const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ default: m.ReceiptsPage })));
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
-// Temporary Task 7 harness (Sight Reading Studio rebuild) — proves the mic ->
-// cents path on a physical iPhone. Remove this import + its route once the
-// on-device verification is recorded (see .superpowers/sdd/task-7-brief.md).
-const MicCheck = lazy(() => import("./pages/sightReading/MicCheck"));
 import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
 import GroupPresentationView from './pages/mus240/GroupPresentationView';
 const SightReadingSubmission = lazy(() => import("./pages/SightReadingSubmission"));
@@ -574,10 +571,6 @@ const App = () => {
               {/* Sandbox: animated cursor + spotlight tour over a mock Command Center.
                   Gated by ?key=preview inside the component itself. */}
               <Route path="/tour-sandbox" element={<TourSandbox />} />
-              {/* Temporary Task 7 harness (Sight Reading Studio rebuild) — remove
-                  alongside the MicCheck lazy import once on-device verification
-                  is recorded. See .superpowers/sdd/task-7-brief.md. */}
-              <Route path="/mic-check" element={<MicCheck />} />
               {/* One-click prospect demo entry — mints a read-only Director session. */}
               <Route path="/try" element={<TryDemo />} />
               <Route 
@@ -1442,7 +1435,7 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><SightReadingPage /></DashboardShell>
+                        <DashboardShell><SightReadingStudio /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
@@ -2753,12 +2746,8 @@ const App = () => {
                                      } 
                                    />
                                        <Route 
-                                        path="/sight-reading-generator" 
-                                        element={
-                                          <ProtectedRoute>
-                                            <SightReadingGeneratorPage />
-                                          </ProtectedRoute>
-                                        } 
+                                        path="/sight-reading-generator"
+                                        element={<Navigate to="/dashboard/sight-reading" replace />}
                                       />
                                       {/* /karaoke-challenge route removed with Karaoke module. */}
                                       <Route 
@@ -2778,12 +2767,8 @@ const App = () => {
                                         }
                                       />
                                       <Route 
-                                        path="/member-sight-reading-studio" 
-                                        element={
-                                          <ProtectedRoute>
-                                            <MemberSightReadingStudioPage />
-                                          </ProtectedRoute>
-                                        } 
+                                        path="/member-sight-reading-studio"
+                                        element={<Navigate to="/dashboard/sight-reading" replace />}
                                       />
                                            <Route 
                                              path="/setup-crews" 
@@ -2813,14 +2798,8 @@ const App = () => {
                              } 
                            />
                            <Route 
-                             path="/member/sight-reading" 
-                             element={
-                               <ProtectedRoute>
-                                 <UniversalLayout>
-                                   <SightReadingPage />
-                                 </UniversalLayout>
-                               </ProtectedRoute>
-                             } 
+                             path="/member/sight-reading"
+                             element={<Navigate to="/dashboard/sight-reading" replace />}
                            />
                            <Route 
                              path="/member/calendar" 
