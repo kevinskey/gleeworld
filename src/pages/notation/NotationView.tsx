@@ -43,16 +43,25 @@ export function NotationView({ score, width, onNoteClick }: {
     // The SVG is cssWidth CSS px wide; ctx.scale(SCALE) then draws everything SCALE× larger,
     // so we lay out in a logical space of cssWidth / SCALE.
     const logicalWidth = cssWidth / SCALE;
-    const measureWidth = Math.max(MIN_MEASURE, (logicalWidth - 16) / Math.max(measures.length, 1));
-    const logicalHeight = 150;
+    // Wrap measures onto multiple lines (systems) so a long exercise flows top-to-bottom
+    // like real sheet music instead of scrolling off the right edge. perRow fills the width
+    // with measures at least ~MIN_MEASURE wide; the height grows to fit every row.
+    const perRow = Math.max(1, Math.min(Math.floor((logicalWidth - 16) / MIN_MEASURE) || 1, measures.length));
+    const measureWidth = (logicalWidth - 16) / perRow;
+    const rows = Math.ceil(measures.length / perRow);
+    const TOP = 24, SYSTEM_H = 116, BOTTOM = 20;
+    const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
     renderer.resize(cssWidth, Math.ceil(logicalHeight * SCALE));
     const ctx = renderer.getContext();
     ctx.scale(SCALE, SCALE);
 
-    let x = 8, globalIndex = 0;
+    let globalIndex = 0;
     measures.forEach((m, mi) => {
-      const stave = new Stave(x, 24, measureWidth);
-      if (mi === 0) stave.addClef(VEX_CLEF[score.clef]).addTimeSignature(`${score.timeSig.beats}/${score.timeSig.beatType}`);
+      const row = Math.floor(mi / perRow);
+      const col = mi % perRow;
+      const stave = new Stave(8 + col * measureWidth, TOP + row * SYSTEM_H, measureWidth);
+      if (col === 0) stave.addClef(VEX_CLEF[score.clef]);                                        // clef opens every system
+      if (mi === 0) stave.addTimeSignature(`${score.timeSig.beats}/${score.timeSig.beatType}`); // time signature only once
       stave.setContext(ctx).draw();
 
       const notes = m.elements.map((el) => {
@@ -82,7 +91,6 @@ export function NotationView({ score, width, onNoteClick }: {
         } catch { /* tie rendering is cosmetic; never let it break the score render */ }
       }
       globalIndex += m.elements.length;
-      x += measureWidth;
     });
   }, [score, width, measuredW]);
 
