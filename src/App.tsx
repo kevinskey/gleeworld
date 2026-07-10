@@ -300,8 +300,6 @@ const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ defa
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
 import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
 import GroupPresentationView from './pages/mus240/GroupPresentationView';
-const SightReadingSubmission = lazy(() => import("./pages/SightReadingSubmission"));
-const SightReadingPreview = lazy(() => import("./pages/SightReadingPreview"));
 const SightReadingGeneratorPage = lazy(() => import("./pages/SightReadingGenerator"));
 const AssignmentCreatorPage = lazy(() => import("./pages/AssignmentCreator"));
 const PracticeStudioPage = lazy(() => import("./pages/PracticeStudioPage"));
@@ -348,7 +346,6 @@ const PeerReviewBrowserPage = lazy(() => import("./pages/mus240/PeerReviewBrowse
 const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
-const MUS100SightSingingPage = lazy(() => import("./pages/MUS100SightSingingPage"));
 const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
@@ -1216,14 +1213,10 @@ const App = () => {
                    </PublicRoute>
                  } 
                />
-               {/* MUS100 Sight Singing Practice */}
-               <Route 
-                 path="/mus100-sight-singing" 
-                 element={
-                   <PublicRoute>
-                     <MUS100SightSingingPage />
-                   </PublicRoute>
-                 } 
+               {/* MUS100 Sight Singing Practice - retired, redirects to canonical sight-reading studio */}
+               <Route
+                 path="/mus100-sight-singing"
+                 element={<Navigate to="/dashboard/sight-reading" replace />}
                />
               {/* MUS 240 Poll System */}
               <Route 
@@ -2729,21 +2722,13 @@ const App = () => {
                                       </ProtectedRoute>
                                     } 
                                   />
-                                   <Route 
-                                     path="/sight-reading-submission" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <SightReadingSubmission />
-                                       </ProtectedRoute>
-                                     } 
+                                   <Route
+                                     path="/sight-reading-submission"
+                                     element={<Navigate to="/dashboard/sight-reading" replace />}
                                    />
-                                   <Route 
-                                     path="/sight-reading-preview" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <SightReadingPreview />
-                                       </ProtectedRoute>
-                                     } 
+                                   <Route
+                                     path="/sight-reading-preview"
+                                     element={<Navigate to="/dashboard/sight-reading" replace />}
                                    />
                                        <Route 
                                         path="/sight-reading-generator"
