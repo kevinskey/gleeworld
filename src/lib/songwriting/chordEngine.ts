@@ -10,38 +10,7 @@
 
 import * as Tone from 'tone';
 import { parseChord } from './chords';
-
-// These three types mirror ../../lib/api.ts in the original standalone app
-// (kpjsongwriting.com), which is a REST client for a legacy Express backend
-// and is out of scope for this port (Task 2 only transplants dependency-free
-// pure libs). Inlined here verbatim — same shapes, zero runtime effect,
-// since only the type positions changed.
-export type TimeSignature = '4/4' | '3/4' | '6/8' | '2/4';
-
-export type ChordBar = {
-  id: string;
-  // One or more chord symbols, played in order across the bar's beats.
-  // Most bars will have a single chord; splits are handled by adding more.
-  chords: string[];
-};
-
-export type ChordLoop = {
-  // Both indexes are 0-based and inclusive.
-  startBar: number;
-  endBar: number;
-  // Number of times the loop region plays. 0 = infinite (until Stop).
-  count: number;
-};
-
-export type ChordChart = {
-  // Stable identity so sections can reference the chart by chart_id.
-  id: string;
-  // Optional human label shown alongside the chart.
-  name?: string;
-  time_signature: TimeSignature;
-  bars: ChordBar[];
-  loop?: ChordLoop | null;
-};
+import type { TimeSignature, ChordChart, ChordLoop } from './types';
 
 const beatsPerBar = (sig: TimeSignature): number => {
   switch (sig) {
