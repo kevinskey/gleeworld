@@ -18,6 +18,12 @@ type Props = {
   canMoveDown: boolean;
   focusedLine: number | null;
   highlightRhymes?: boolean;
+  // Viewer (non-owner) opening a tenant-shared song: render the label and
+  // lines as plain text (syllable badges stay), and hide every editing
+  // affordance (dictation mic, reorder/delete). Autosave is separately
+  // guarded at update()'s source in SongwritingEditorPage, so this is a UX
+  // affordance, not the write safety net.
+  readOnly?: boolean;
   onChange: (patch: Partial<Section>) => void;
   onDelete: () => void;
   onMoveUp: () => void;
@@ -36,7 +42,7 @@ const TYPE_COLORS: Record<Section['type'], string> = {
 };
 
 export default function SectionBlock({
-  section, canMoveUp, canMoveDown, focusedLine, highlightRhymes,
+  section, canMoveUp, canMoveDown, focusedLine, highlightRhymes, readOnly = false,
   onChange, onDelete, onMoveUp, onMoveDown, onFocusLine, onSelectWord,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -175,43 +181,67 @@ export default function SectionBlock({
   return (
     <div ref={containerRef} className="group">
       <div className="flex items-center gap-2 mb-2">
-        <input
-          type="text"
-          value={section.label || ''}
-          onChange={(e) => onChange({ label: e.target.value })}
-          className={`text-xs font-semibold uppercase tracking-widest bg-transparent border-0 focus:outline-none w-auto min-w-[5rem] ${TYPE_COLORS[section.type]}`}
-          placeholder={section.type}
-        />
+        {readOnly ? (
+          <span className={`text-xs font-semibold uppercase tracking-widest ${TYPE_COLORS[section.type]}`}>
+            {section.label || section.type}
+          </span>
+        ) : (
+          <input
+            type="text"
+            value={section.label || ''}
+            onChange={(e) => onChange({ label: e.target.value })}
+            className={`text-xs font-semibold uppercase tracking-widest bg-transparent border-0 focus:outline-none w-auto min-w-[5rem] ${TYPE_COLORS[section.type]}`}
+            placeholder={section.type}
+          />
+        )}
         <div className="flex-1 h-px bg-border" />
-        <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-          <button
-            onClick={onMoveUp}
-            disabled={!canMoveUp}
-            className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1"
-            aria-label="Move section up"
-          >
-            <ChevronUp className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onMoveDown}
-            disabled={!canMoveDown}
-            className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1"
-            aria-label="Move section down"
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="text-rose-500 hover:text-rose-700 p-1"
-            aria-label="Delete section"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+            <button
+              onClick={onMoveUp}
+              disabled={!canMoveUp}
+              className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1"
+              aria-label="Move section up"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onMoveDown}
+              disabled={!canMoveDown}
+              className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1"
+              aria-label="Move section down"
+            >
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onDelete}
+              className="text-rose-500 hover:text-rose-700 p-1"
+              aria-label="Delete section"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div>
-        {section.lines.map((line, i) => {
+        {readOnly && section.lines.map((line, i) => (
+          <div key={i}>
+            <div className="flex items-start gap-3 py-1">
+              <p className="flex-1 font-serif text-base leading-snug text-foreground whitespace-pre-wrap m-0">
+                {line || <span className="text-muted-foreground/60">(blank line)</span>}
+              </p>
+              <span
+                className="text-xs font-medium text-muted-foreground w-6 text-right tabular-nums select-none"
+                title="Syllable count"
+              >
+                {line ? countSyllables(line) : ''}
+              </span>
+            </div>
+            {highlightRhymes && line.trim() && <RhymePreview line={line} />}
+          </div>
+        ))}
+        {!readOnly && section.lines.map((line, i) => {
           const isDictating = dictatingIndex === i;
           return (
             <div key={i} className="group/line">

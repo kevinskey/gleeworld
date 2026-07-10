@@ -34,10 +34,27 @@
 //  - AIPanel is restored (Task 9). ChordChartEditor (via SectionChordSlot)
 //    and TTSPlayButton are restored (Task 10). RecorderPanel is restored
 //    (Task 11).
+//  - Read-only viewer mode (final review fix): a tenant-shared song is
+//    readable but NOT writable by anyone except its owner — RLS already
+//    blocks the write, but without a client-side guard every keystroke hit
+//    that RLS denial and looped the "Autosave failed" toast. `isOwner` is
+//    derived by comparing `song.user_id` to the signed-in user's id (same
+//    pattern as songsApi.listMySongs). update() — the single choke point
+//    every editing action funnels through (section/graveyard/template/chart
+//    helpers, insertLine/replaceLine) — no-ops for non-owners, so no code
+//    path can schedule a save. The UI additionally hides the save
+//    indicator, Share control, AIPanel, RecorderPanel, graveyard, and
+//    add-section/template affordances, and renders section lines as plain
+//    text (SectionBlock's `readOnly` prop). Chord charts are left exactly
+//    as-is: ChordChartEditor's Play button never calls onChange (it's pure
+//    local playback state), so charts stay viewable/playable for free once
+//    onChange is a guarded no-op — deliberately not given a new read-only
+//    prop surface for a feature that already degrades safely.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { getSong, updateSong, setVisibility } from '@/lib/songwriting/songsApi';
 import type { ChordChart, GraveyardEntry, Section, Song } from '@/lib/songwriting/types';
 import TopBar, { type SaveState } from './components/TopBar';
@@ -65,6 +82,11 @@ export default function SongwritingEditorPage() {
   const { songId } = useParams<{ songId: string }>();
 
   const [song, setSong] = useState<Song | null>(null);
+  // Signed-in user id, used only to derive `isOwner` below (same
+  // supabase.auth.getUser() pattern as songsApi.listMySongs). `undefined`
+  // means "still loading" — isOwner treats that as non-owner so no editing
+  // UI (and no autosave) can flash on before ownership is confirmed.
+  const [uid, setUid] = useState<string | null | undefined>(undefined);
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [focusedLine, setFocusedLine] = useState<{ sectionId: string; index: number } | null>(null);
   const [selectedWord, setSelectedWord] = useState('');
@@ -90,6 +112,15 @@ export default function SongwritingEditorPage() {
       .then(setSong)
       .catch((e: any) => toast.error(e.message || 'Could not load song'));
   }, [songId]);
+
+  // Resolve the signed-in user id once, purely to derive `isOwner`.
+  useEffect(() => {
+    supabase.auth.getUser()
+      .then(({ data }) => setUid(data?.user?.id ?? null))
+      .catch(() => setUid(null));
+  }, []);
+
+  const isOwner = !!song && uid != null && song.user_id === uid;
 
   // On unmount or navigating to a different song: invalidate any in-flight
   // save (no late response may flip saveState for the wrong song), and if a
@@ -147,13 +178,19 @@ export default function SongwritingEditorPage() {
   }, []);
 
   const update = useCallback((patch: Partial<Song>) => {
+    // Single choke point for every editing action (sections, graveyard,
+    // templates, chord charts, AI insert/replace). A non-owner viewing a
+    // tenant-shared song must never reach scheduleSave — RLS would reject
+    // the write anyway, but without this guard every keystroke throws and
+    // the "Autosave failed" toast loops forever.
+    if (!isOwner) return;
     setSong((curr) => {
       if (!curr) return curr;
       const next = { ...curr, ...patch } as Song;
       scheduleSave(next);
       return next;
     });
-  }, [scheduleSave]);
+  }, [scheduleSave, isOwner]);
 
   // Share toggle — new in this multi-tenant app (old app had no visibility concept).
   async function handleVisibilityChange(v: 'private' | 'tenant') {
@@ -360,7 +397,7 @@ export default function SongwritingEditorPage() {
     updateSection(section.id, { lines });
   }
 
-  if (!song) {
+  if (!song || uid === undefined) {
     return <div className="p-4 md:p-6 max-w-4xl mx-auto text-sm text-muted-foreground">Loading song…</div>;
   }
 
@@ -376,6 +413,12 @@ export default function SongwritingEditorPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
+      {!isOwner && (
+        <div className="mb-4 text-sm bg-muted/60 border border-border rounded-md px-3 py-2 text-muted-foreground">
+          Shared with your ensemble — read-only
+        </div>
+      )}
+
       <TopBar
         song={song}
         highlightRhymes={highlightRhymes}
@@ -383,23 +426,32 @@ export default function SongwritingEditorPage() {
         saveState={saveState}
         visibility={song.visibility}
         onVisibilityChange={handleVisibilityChange}
+        readOnly={!isOwner}
       />
 
-      {/* Compact recorder for mobile/iPad — sits near Play lyrics so it's always reachable. */}
-      <div className="mb-4 lg:hidden">
-        <RecorderPanel songId={song.id} compact />
-      </div>
+      {/* Compact recorder for mobile/iPad — sits near Play lyrics so it's always reachable. Owner-only: RLS blocks a viewer's insert, and the owner can't see it anyway. */}
+      {isOwner && (
+        <div className="mb-4 lg:hidden">
+          <RecorderPanel songId={song.id} compact />
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6">
+      <div className={`grid grid-cols-1 ${isOwner ? 'lg:grid-cols-[1fr_260px]' : ''} gap-6`}>
         {/* Editor column */}
         <div>
-          <input
-            type="text"
-            value={song.title}
-            onChange={(e) => update({ title: e.target.value })}
-            className="w-full font-serif text-3xl md:text-4xl font-bold bg-transparent border-0 focus:outline-none mb-2 text-foreground"
-            placeholder="Untitled"
-          />
+          {isOwner ? (
+            <input
+              type="text"
+              value={song.title}
+              onChange={(e) => update({ title: e.target.value })}
+              className="w-full font-serif text-3xl md:text-4xl font-bold bg-transparent border-0 focus:outline-none mb-2 text-foreground"
+              placeholder="Untitled"
+            />
+          ) : (
+            <h1 className="w-full font-serif text-3xl md:text-4xl font-bold mb-2 text-foreground">
+              {song.title || 'Untitled'}
+            </h1>
+          )}
 
           {/* Song meta */}
           <div className="flex gap-4 mb-8 text-sm">
@@ -408,14 +460,16 @@ export default function SongwritingEditorPage() {
               value={song.key_signature || ''}
               onChange={(e) => update({ key_signature: e.target.value || null })}
               placeholder="Key (e.g. G major)"
-              className="bg-transparent border-b border-border focus:border-primary focus:outline-none px-0 py-1 text-foreground placeholder:text-muted-foreground/60 w-36"
+              disabled={!isOwner}
+              className="bg-transparent border-b border-border focus:border-primary focus:outline-none px-0 py-1 text-foreground placeholder:text-muted-foreground/60 w-36 disabled:opacity-70"
             />
             <input
               type="number"
               value={song.tempo_bpm || ''}
               onChange={(e) => update({ tempo_bpm: e.target.value ? Number(e.target.value) : null })}
               placeholder="BPM"
-              className="bg-transparent border-b border-border focus:border-primary focus:outline-none px-0 py-1 text-foreground placeholder:text-muted-foreground/60 w-20"
+              disabled={!isOwner}
+              className="bg-transparent border-b border-border focus:border-primary focus:outline-none px-0 py-1 text-foreground placeholder:text-muted-foreground/60 w-20 disabled:opacity-70"
             />
           </div>
 
@@ -435,6 +489,7 @@ export default function SongwritingEditorPage() {
                     canMoveDown={i < song.sections.length - 1}
                     focusedLine={focusedLine?.sectionId === section.id ? focusedLine.index : null}
                     highlightRhymes={highlightRhymes}
+                    readOnly={!isOwner}
                     onChange={(patch) => updateSection(section.id, patch)}
                     onDelete={() => deleteSection(section.id)}
                     onMoveUp={() => moveSection(section.id, -1)}
@@ -468,18 +523,21 @@ export default function SongwritingEditorPage() {
           </div>
 
           {/* Notes */}
-          <div className="mt-10">
-            <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">Notes</label>
-            <textarea
-              value={song.notes}
-              onChange={(e) => update({ notes: e.target.value })}
-              placeholder="Story, mood, references, arrangement ideas…"
-              className="w-full min-h-[120px] bg-card border border-border rounded-md p-3 text-sm text-foreground focus:outline-none focus:border-primary"
-            />
-          </div>
+          {(isOwner || song.notes) && (
+            <div className="mt-10">
+              <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">Notes</label>
+              <textarea
+                value={song.notes}
+                onChange={(e) => update({ notes: e.target.value })}
+                placeholder="Story, mood, references, arrangement ideas…"
+                disabled={!isOwner}
+                className="w-full min-h-[120px] bg-card border border-border rounded-md p-3 text-sm text-foreground focus:outline-none focus:border-primary disabled:opacity-70"
+              />
+            </div>
+          )}
 
-          {/* Graveyard — cut lines saved here for restore */}
-          {song.graveyard && song.graveyard.length > 0 && (
+          {/* Graveyard — cut lines saved here for restore. Owner-only: it's the owner's curation tool. */}
+          {isOwner && song.graveyard && song.graveyard.length > 0 && (
             <details className="mt-10 border border-border rounded-md bg-card">
               <summary className="px-4 py-2 cursor-pointer text-xs uppercase tracking-wider text-muted-foreground select-none">
                 Graveyard · {song.graveyard.length} cut line{song.graveyard.length === 1 ? '' : 's'}
@@ -515,7 +573,8 @@ export default function SongwritingEditorPage() {
 
         </div>
 
-        {/* AI panel + Recordings */}
+        {/* AI panel + Recordings + add-section/template controls — owner-only editing tools, hidden entirely for a viewer of a tenant-shared song. */}
+        {isOwner && (
         <div className="lg:sticky lg:top-6 lg:h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-6">
           <div className="bg-card border border-border rounded-lg p-4">
             <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
@@ -556,6 +615,7 @@ export default function SongwritingEditorPage() {
             <RecorderPanel songId={song.id} />
           </div>
         </div>
+        )}
       </div>
     </div>
   );

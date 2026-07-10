@@ -40,6 +40,7 @@ export default function TopBar({
   saveState,
   visibility,
   onVisibilityChange,
+  readOnly = false,
 }: {
   song: Song;
   highlightRhymes: boolean;
@@ -47,6 +48,10 @@ export default function TopBar({
   saveState: SaveState;
   visibility: 'private' | 'tenant';
   onVisibilityChange: (v: 'private' | 'tenant') => void;
+  // Viewer (non-owner) opening a tenant-shared song: hide the Share control
+  // and the autosave indicator — there is nothing to save or share here.
+  // TTSPlayButton stays since "read aloud" is a read feature.
+  readOnly?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 flex-wrap mb-6 text-sm">
@@ -67,16 +72,18 @@ export default function TopBar({
           Internal rhymes
         </button>
         <TTSPlayButton song={song} />
-        <Select value={visibility} onValueChange={(v) => onVisibilityChange(v as 'private' | 'tenant')}>
-          <SelectTrigger className="h-8 min-h-0 w-auto text-xs gap-1.5 px-2 py-1" aria-label="Song visibility">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="private">Private</SelectItem>
-            <SelectItem value="tenant">Shared with your ensemble</SelectItem>
-          </SelectContent>
-        </Select>
-        <SaveIndicator state={saveState} />
+        {!readOnly && (
+          <Select value={visibility} onValueChange={(v) => onVisibilityChange(v as 'private' | 'tenant')}>
+            <SelectTrigger className="h-8 min-h-0 w-auto text-xs gap-1.5 px-2 py-1" aria-label="Song visibility">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="private">Private</SelectItem>
+              <SelectItem value="tenant">Shared with your ensemble</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+        {!readOnly && <SaveIndicator state={saveState} />}
       </div>
     </div>
   );
