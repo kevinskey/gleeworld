@@ -6,9 +6,30 @@ const SEEDS = Array.from({ length: 60 }, (_, i) => i + 1);
 
 describe('generateExercise', () => {
   it('is deterministic for a given seed', () => {
-    const a = generateExercise({ level: 3, key: 'C', seed: 42 });
-    const b = generateExercise({ level: 3, key: 'C', seed: 42 });
-    expect(a.notes).toEqual(b.notes);
+    for (const level of LEVELS) for (const seed of SEEDS.slice(0, 10)) {
+      const a = generateExercise({ level, key: 'C', seed });
+      const b = generateExercise({ level, key: 'C', seed });
+      expect(a).toEqual(b);
+    }
+  });
+
+  it('keeps every note within the declared phrase count', () => {
+    for (const level of LEVELS) for (const seed of SEEDS) {
+      const ir = generateExercise({ level, key: 'C', seed });
+      for (const note of ir.notes) {
+        expect([0, 1]).toContain(note.phraseIdx);
+      }
+      expect(Math.max(...ir.notes.map((n) => n.phraseIdx))).toBeLessThan(ir.phrases);
+    }
+  });
+
+  it('ends exactly at the realized total length', () => {
+    for (const level of LEVELS) for (const seed of SEEDS) {
+      const ir = generateExercise({ level, key: 'C', seed });
+      const realizedBeats = ir.notes.reduce((sum, n) => sum + n.durationBeats, 0);
+      const last = ir.notes.at(-1)!;
+      expect(last.beatPos + last.durationBeats).toBe(realizedBeats);
+    }
   });
 
   it('always begins and ends on a tonic-triad member', () => {

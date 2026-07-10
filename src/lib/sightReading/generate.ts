@@ -94,7 +94,18 @@ export function generateExercise(opts: { level: number; key: string; seed: numbe
   const durations: number[] = [];
   let beats = 0;
 
+  // Termination is otherwise empirical (steer-to-tonic + non-empty candidates,
+  // observed max 43 iterations) — this cap converts a latent infinite loop into
+  // a fast, debuggable failure instead of hanging the caller.
+  const MAX_STEPS = 200;
+  let steps = 0;
+
   while (true) {
+    steps++;
+    if (steps > MAX_STEPS) {
+      throw new Error(`generateExercise: no cadence found for level=${opts.level} key=${opts.key} seed=${opts.seed} after ${MAX_STEPS} steps`);
+    }
+
     const dur = pick(lv.rhythm);
     durations.push(dur);
     beats += dur;
@@ -157,17 +168,37 @@ export function generateExercise(opts: { level: number; key: string; seed: numbe
     durations[lastIdx] = Math.max(0.5, durations[lastIdx] - overshoot);
   }
 
+  // The walk terminates only once it naturally lands on "do" at/after the
+  // nominal length, so it routinely overshoots beatsTotal. phraseIdx must be
+  // derived from the REALIZED length (what we actually emitted), not the
+  // nominal one — otherwise a note can land in a phrase index the IR never
+  // declares (see review finding: phraseIdx reaching 2 while phrases: 2).
+  const realizedBeats = durations.reduce((sum, d) => sum + d, 0);
+
   let cursor = 0;
   const notes: IRNote[] = midis.map((midi, i) => {
     const durationBeats = durations[i] ?? 1;
+    const beatPos = cursor;
     const note: IRNote = {
-      midi, beatPos: cursor, durationBeats,
+      midi, beatPos, durationBeats,
       solfege: midiToSolfege(midi, tonicMidi),
-      phraseIdx: Math.floor(cursor / (beatsTotal / 2)),
+      phraseIdx: beatPos < realizedBeats / 2 ? 0 : 1,
     };
     cursor += durationBeats;
     return note;
   });
+
+  // Loud failure beats a silently malformed exercise: every note must land in
+  // one of the two declared phrases, and the last note must exactly reach the
+  // realized total (no dangling overshoot the IR doesn't account for).
+  const maxPhraseIdx = Math.max(...notes.map((n) => n.phraseIdx));
+  const lastNote = notes.at(-1)!;
+  if (maxPhraseIdx >= 2) {
+    throw new Error(`generateExercise: phraseIdx invariant violated (max=${maxPhraseIdx}) for level=${opts.level} key=${opts.key} seed=${opts.seed}`);
+  }
+  if (lastNote.beatPos + lastNote.durationBeats !== realizedBeats) {
+    throw new Error(`generateExercise: realized-length invariant violated for level=${opts.level} key=${opts.key} seed=${opts.seed}`);
+  }
 
   return {
     key: opts.key, mode: 'major', tonicMidi,
