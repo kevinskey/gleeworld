@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam } from 'vexflow';
+import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam, Annotation } from 'vexflow';
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
@@ -61,7 +61,7 @@ export function NotationView({ score, width, onNoteClick, selectedIndex }: {
     const perRow = Math.max(1, Math.min(isPhone ? PER_ROW_PHONE : PER_ROW_DESKTOP, measures.length));
     const measureWidth = (logicalWidth - 16) / perRow;
     const rows = Math.ceil(measures.length / perRow);
-    const TOP = 20, SYSTEM_H = 100, BOTTOM = 16;
+    const TOP = 20, SYSTEM_H = 120, BOTTOM = 16;
     const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
     renderer.resize(cssWidth, Math.ceil(logicalHeight * SCALE));
     const ctx = renderer.getContext();
@@ -95,6 +95,13 @@ export function NotationView({ score, width, onNoteClick, selectedIndex }: {
           sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
           // A dotted duration string ('qd') sets the note's dot count but does NOT draw the dot.
           if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
+          // Sung syllable, rendered under the staff. Added as a modifier before formatting
+          // so the Formatter accounts for its width.
+          if (el.lyric) {
+            const ann = new Annotation(el.lyric);
+            ann.setVerticalJustification(Annotation.VerticalJustify.BOTTOM);
+            sn.addModifier(ann, 0);
+          }
         }
         // Highlight the selected element in orange.
         if (selectedIndex != null && flatIndex === selectedIndex) {

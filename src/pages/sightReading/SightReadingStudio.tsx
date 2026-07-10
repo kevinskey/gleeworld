@@ -8,6 +8,8 @@ import { generateExercise } from '@/lib/sightReading/generate';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
+import { isValidIr } from '@/lib/sightReading/irValidate';
+import { toast } from 'sonner';
 
 interface LibraryRow {
   id: string;
@@ -96,6 +98,32 @@ export default function SightReadingStudio() {
   const [searchParams] = useSearchParams();
   // Open on the Library tab when arrived from the notation editor's "← Library" button.
   const initialTab = searchParams.get('tab') === 'library' ? 'library' : 'practice';
+
+  // Deep link from a Glee Academy template course: load that exercise's IR into
+  // the practice flow instead of a generated line. Invalid/missing → toast and
+  // fall back to the normal studio.
+  const academyExerciseId = searchParams.get('academyExercise');
+  useEffect(() => {
+    if (!academyExerciseId) return;
+    let cancelled = false;
+    supabase
+      .from('gw_academy_exercises')
+      .select('id, data')
+      .eq('id', academyExerciseId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        const ir = (data?.data as { ir?: unknown } | null)?.ir;
+        if (error || !isValidIr(ir)) {
+          toast.error('Could not load that exercise — generating a practice line instead.');
+          return;
+        }
+        setExercise(ir);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [academyExerciseId]);
 
   const start = () =>
     setExercise(generateExercise({ level, key: musicKey, seed: Math.floor(Math.random() * 1e9), bars: measures }));

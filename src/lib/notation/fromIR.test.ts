@@ -28,6 +28,22 @@ describe('irToEditorScore', () => {
     expect(s.elements[0]).toMatchObject({ kind: 'note', base: 'half', pitch: { step: 'E', octave: 4, alter: -1 } }); // Eb4
   });
 
+  it('uses the relative-major key signature for a minor exercise', () => {
+    // A minor → 0 sharps/flats (relative major C), not A major's 3 sharps.
+    const aMinor = irToEditorScore(ir(
+      [{ midi: 69, beatPos: 0, durationBeats: 1, solfege: 'do', phraseIdx: 0 }],
+      { key: 'A', mode: 'minor', tonicMidi: 69 },
+    ));
+    expect(aMinor.keyFifths).toBe(0);
+    expect(aMinor.mode).toBe('minor');
+    // D minor → 1 flat (relative major F).
+    const dMinor = irToEditorScore(ir(
+      [{ midi: 62, beatPos: 0, durationBeats: 1, solfege: 'do', phraseIdx: 0 }],
+      { key: 'D', mode: 'minor', tonicMidi: 62 },
+    ));
+    expect(dMinor.keyFifths).toBe(-1);
+  });
+
   it('inserts a rest for a gap between notes', () => {
     const s = irToEditorScore(ir([
       { midi: 60, beatPos: 0, durationBeats: 1, solfege: 'do', phraseIdx: 0 },

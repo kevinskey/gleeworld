@@ -50,27 +50,72 @@ describe('generateExercise', () => {
     }
   });
 
-  it('respects the level leap ceiling, apart from the final directed cadence resolution', () => {
-    const CEIL: Record<number, number> = { 1: 4, 2: 5, 3: 7, 4: 7, 5: 9, 6: 12 };
-    for (const level of LEVELS) for (const seed of SEEDS) {
-      const ir = generateExercise({ level, key: 'C', seed });
-      // The last note is a reserved downbeat-tonic cadence, not a stepwise/leap-limited
-      // continuation of the line — it may leap in from wherever the content line ended.
-      for (let i = 1; i < ir.notes.length - 1; i++) {
-        expect(Math.abs(ir.notes[i].midi - ir.notes[i - 1].midi)).toBeLessThanOrEqual(CEIL[level]);
+  it('never writes a melodic tritone', () => {
+    // The redesign has no per-level leap ceiling; instead every leap must be either
+    // consonant-and-resolved or shrunk away, and a bare tritone is never emitted.
+    for (const level of LEVELS) for (const seed of SEEDS) for (const bars of BARS_VARIANTS) {
+      const n = generateExercise({ level, key: 'C', seed, bars }).notes;
+      for (let i = 1; i < n.length; i++) {
+        expect(Math.abs(n[i].midi - n[i - 1].midi)).not.toBe(6);
       }
     }
   });
 
-  it('follows every leap of a 4th or more with stepwise motion the other way', () => {
-    for (const level of LEVELS) for (const seed of SEEDS) {
-      const n = generateExercise({ level, key: 'C', seed }).notes;
+  it('follows every leap of a 4th or more with a contrary step of a whole tone or less', () => {
+    // Replaces the old hard maxLeap ceiling: the singable invariant is not a leap
+    // size limit but that any leap resolves by contrary stepwise motion. The leap
+    // INTO the final cadence tonic is exempt (a reserved cadential gesture).
+    for (const level of LEVELS) for (const seed of SEEDS) for (const bars of BARS_VARIANTS) {
+      const n = generateExercise({ level, key: 'C', seed, bars }).notes;
       for (let i = 1; i < n.length - 1; i++) {
         const leap = n[i].midi - n[i - 1].midi;
         if (Math.abs(leap) >= 5) {
           const next = n[i + 1].midi - n[i].midi;
           expect(Math.abs(next)).toBeLessThanOrEqual(2);
           expect(Math.sign(next)).toBe(-Math.sign(leap));
+        }
+      }
+    }
+  });
+
+  it('builds to exactly one climax, in the second half for multi-phrase lines', () => {
+    for (const level of LEVELS) for (const seed of SEEDS) for (const bars of BARS_VARIANTS) {
+      const ir = generateExercise({ level, key: 'C', seed, bars });
+      const midis = ir.notes.map((n) => n.midi);
+      const peak = Math.max(...midis);
+      const peakIdxs = midis.map((m, i) => (m === peak ? i : -1)).filter((i) => i >= 0);
+      expect(peakIdxs).toHaveLength(1); // a single, unambiguous high point
+      const total = (bars ?? DEFAULT_BARS[level]) * 4;
+      if (total >= 16) expect(ir.notes[peakIdxs[0]].beatPos).toBeGreaterThanOrEqual(total / 2);
+    }
+  });
+
+  it('beams eighths in pairs — every eighth is adjacent to another within its beat', () => {
+    for (const level of LEVELS) for (const seed of SEEDS) for (const bars of BARS_VARIANTS) {
+      const n = generateExercise({ level, key: 'C', seed, bars }).notes;
+      for (let i = 0; i < n.length; i++) {
+        if (n[i].durationBeats !== 0.5) continue;
+        const beat = Math.floor(n[i].beatPos);
+        const pairAfter = n[i + 1]?.durationBeats === 0.5 && Math.floor(n[i + 1].beatPos) === beat;
+        const pairBefore = n[i - 1]?.durationBeats === 0.5 && Math.floor(n[i - 1].beatPos) === beat;
+        expect(pairAfter || pairBefore).toBe(true);
+      }
+    }
+  });
+
+  it('raises the leading tone and avoids augmented seconds in minor', () => {
+    for (const level of LEVELS) for (const seed of SEEDS.slice(0, 20)) for (const bars of [4, 8] as const) {
+      const ir = generateExercise({ level, key: 'A', seed, bars, mode: 'minor' });
+      expect(ir.mode).toBe('minor');
+      const n = ir.notes;
+      const rel = (m: number) => (((m - ir.tonicMidi) % 12) + 12) % 12;
+      // penultimate note is the raised leading tone (ti) or supertonic (re) into do
+      const penPc = rel(n[n.length - 2].midi);
+      expect([11, 2]).toContain(penPc);
+      // no ascending le(♭6)→ti(♯7) augmented second
+      for (let i = 1; i < n.length; i++) {
+        if (n[i].midi > n[i - 1].midi && Math.abs(n[i].midi - n[i - 1].midi) === 3) {
+          expect(rel(n[i - 1].midi) === 8 && rel(n[i].midi) === 11).toBe(false);
         }
       }
     }

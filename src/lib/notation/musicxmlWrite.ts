@@ -18,8 +18,9 @@ function noteXml(el: EditorElement): string {
   const tieXml = el.tie === 'start' ? '<tie type="start"/>' : el.tie === 'stop' ? '<tie type="stop"/>' : '';
   const notations = el.tie === 'start' ? '<notations><tied type="start"/></notations>'
     : el.tie === 'stop' ? '<notations><tied type="stop"/></notations>' : '';
+  const lyric = el.lyric ? `<lyric number="1"><syllabic>single</syllabic><text>${escapeXml(el.lyric)}</text></lyric>` : '';
   return `<note><pitch><step>${step}</step>${alterXml}<octave>${octave}</octave></pitch>`
-    + `<duration>${dur}</duration>${tieXml}${type}${dots}${notations}</note>`;
+    + `<duration>${dur}</duration>${tieXml}${type}${dots}${notations}${lyric}</note>`;
 }
 
 export function editorScoreToMusicXML(score: EditorScore): string {
