@@ -6,6 +6,50 @@ import {
 
 const beatsOf = (ir) => ir.notes.reduce((s, n) => Math.max(s, n.beatPos + n.durationBeats), 0);
 
+// --- scale-degree-aware rule-2 checker (mirrors the engine's ladder model) ---
+// A "step" is adjacency in scale-degree (ladder-index) space, NOT a semitone
+// threshold: harmonic minor's le→ti augmented 2nd spans 3 semitones but is a
+// step. Rule 2: leaps only from the allowed set, never twice in a row, always
+// recovered by a step in the opposite direction.
+const SCALES = {
+  major: [0, 2, 4, 5, 7, 9, 11],
+  natural: [0, 2, 3, 5, 7, 8, 10],
+  harmonic: [0, 2, 3, 5, 7, 8, 11],
+  melodic: [0, 2, 3, 5, 7, 9, 11],
+};
+function ladderOf(tonicMidi, scaleSemis, range) {
+  const ladder = [];
+  for (let m = range[0]; m <= range[1]; m++) {
+    if (scaleSemis.includes((((m - tonicMidi) % 12) + 12) % 12)) ladder.push(m);
+  }
+  return ladder;
+}
+function rule2Violations(ir, { leaps, range, scale }) {
+  const scaleSemis = SCALES[scale ?? (ir.mode === 'minor' ? 'natural' : 'major')];
+  const ladder = ladderOf(ir.tonicMidi, scaleSemis, range);
+  const violations = [];
+  let lastWasLeap = false, lastDir = 0;
+  for (let i = 1; i < ir.notes.length; i++) {
+    const a = ladder.indexOf(ir.notes[i - 1].midi);
+    const b = ladder.indexOf(ir.notes[i].midi);
+    if (a < 0 || b < 0) continue; // chromatic passing tone — not part of the diatonic walk
+    const diff = b - a;
+    const isStep = Math.abs(diff) === 1;
+    const isRepeat = diff === 0;
+    const isLeap = !isStep && !isRepeat;
+    const semis = Math.abs(ir.notes[i].midi - ir.notes[i - 1].midi);
+    if (isLeap && !leaps.includes(semis)) violations.push(`i=${i}: leap of ${semis} semitones not in allowed set`);
+    if (isLeap && lastWasLeap) violations.push(`i=${i}: two leaps in a row`);
+    if (lastWasLeap && !isLeap) {
+      if (isRepeat) violations.push(`i=${i}: leap recovered by repeat, not a contrary step`);
+      else if (Math.sign(diff) === lastDir) violations.push(`i=${i}: recovery step continues in the leap's direction`);
+    }
+    lastWasLeap = isLeap;
+    if (diff !== 0) lastDir = Math.sign(diff);
+  }
+  return violations;
+}
+
 describe('engine determinism', () => {
   it('same seed → identical melody; different seed → different', () => {
     const spec = { key: 'C', mode: 'major', meter: { beats: 4, beatType: 4 }, tempo: 90, bars: 8,
@@ -45,6 +89,61 @@ describe('makeMelody constraints', () => {
     const chroma = c.notes.filter((n) => ['ra', 'me', 'fi', 'le', 'te'].includes(n.solfege));
     expect(chroma.length).toBeGreaterThanOrEqual(3);
     expect(() => assertValidExercise(c)).not.toThrow();
+  });
+  it('every leap is recovered by a step in the opposite direction (rule 2, many seeds)', () => {
+    for (let seed = 0; seed < 100; seed++) {
+      const m = makeMelody({ ...spec, seed });
+      expect(rule2Violations(m, spec)).toEqual([]);
+    }
+  });
+  it('endOnTonic approaches do from re or ti (rule 4, many seeds)', () => {
+    for (let seed = 0; seed < 100; seed++) {
+      const m = makeMelody({ ...spec, seed });
+      const [penult, last] = m.notes.slice(-2);
+      expect(last.solfege).toBe('do');
+      expect(['re', 'ti']).toContain(penult.solfege);
+      expect(Math.abs(last.midi - penult.midi)).toBeLessThanOrEqual(2); // approach by step
+    }
+  });
+});
+
+describe('makeMelody harmonic minor', () => {
+  // leaps includes 3, which collides with harmonic minor's le→ti augmented-2nd
+  // STEP (3 semitones, adjacent scale degrees). The engine must classify that
+  // move as a step everywhere — candidate selection AND lastWasLeap tracking —
+  // or it spuriously forces leap-recovery after a plain step.
+  const spec = { key: 'A', mode: 'minor', scale: 'harmonic', meter: { beats: 4, beatType: 4 },
+    tempo: 90, bars: 6, seed: 0, range: [57, 74], leaps: [3, 4, 8], rhythmPalette: [[1], [2], [1, 1]] };
+  it('validates and obeys rule 2 across many seeds, including the le→ti step', () => {
+    let sawAug2Step = false;
+    for (let seed = 0; seed < 100; seed++) {
+      const m = makeMelody({ ...spec, seed });
+      expect(() => assertValidExercise(m)).not.toThrow();
+      expect(rule2Violations(m, spec)).toEqual([]);
+      expect(m.notes[m.notes.length - 1].solfege).toBe('do');
+      for (let i = 1; i < m.notes.length; i++) {
+        const pair = [m.notes[i - 1].solfege, m.notes[i].solfege];
+        if (pair.includes('le') && pair.includes('ti')) sawAug2Step = true;
+      }
+    }
+    expect(sawAug2Step).toBe(true); // the augmented-2nd step is actually exercised
+  });
+  it('treats le→ti as a step in lastWasLeap tracking (no spurious leap-recovery)', () => {
+    // If the walk classified the 3-semitone le→ti STEP as a leap when updating
+    // lastWasLeap, every ascending le→ti would be force-recovered by a contrary
+    // (downward) step, making an ascending le→ti→do line impossible. That line
+    // is idiomatic harmonic-minor motion and must be reachable. endOnTonic:false
+    // isolates the raw walk (the cadence rewrite could otherwise mask this by
+    // writing its own step runs into the tail).
+    let sawContinueUp = false;
+    for (let seed = 0; seed < 100; seed++) {
+      const m = makeMelody({ ...spec, seed, endOnTonic: false });
+      for (let i = 2; i < m.notes.length; i++) {
+        const [a, b, c] = [m.notes[i - 2], m.notes[i - 1], m.notes[i]];
+        if (a.solfege === 'le' && b.solfege === 'ti' && b.midi > a.midi && c.midi >= b.midi) sawContinueUp = true;
+      }
+    }
+    expect(sawContinueUp).toBe(true);
   });
 });
 
