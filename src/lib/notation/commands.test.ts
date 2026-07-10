@@ -22,6 +22,25 @@ describe('commands are invertible', () => {
   }
 });
 
+describe('invertibility holds for enharmonic spellings and all tie states', () => {
+  it('transpose restores a flat (Bb4) spelling exactly, not an enharmonic sharp', () => {
+    const Bb4 = { step: 'B' as const, octave: 4, alter: -1 };
+    const flatBase = { ...emptyScore(), elements: [noteOf(Bb4, 'quarter')] };
+    const cmd = transpose(0, 2);
+    const after = cmd.apply(flatBase);
+    expect(after).not.toEqual(flatBase);            // it actually moved the note
+    expect(cmd.invert(after)).toEqual(flatBase);     // and restores Bb4, not A#4
+  });
+
+  it('toggleTie restores a "stop" tie exactly, not "start" or "none"', () => {
+    const stoppedNote = { ...noteOf(C4, 'quarter'), tie: 'stop' as const };
+    const tieBase = { ...emptyScore(), elements: [stoppedNote] };
+    const cmd = toggleTie(0);
+    const after = cmd.apply(tieBase);
+    expect(cmd.invert(after)).toEqual(tieBase);
+  });
+});
+
 describe('CommandStack', () => {
   it('do → undo → redo round-trips the document', () => {
     const stack = new CommandStack();

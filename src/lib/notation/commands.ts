@@ -1,4 +1,4 @@
-import { EditorScore, EditorElement, EditorNote, Pitch } from './model';
+import { EditorScore, EditorElement, Pitch } from './model';
 
 export interface Command {
   readonly label: string;
@@ -53,25 +53,43 @@ function midiToPitch(m: number): Pitch {
 }
 
 export function transpose(at: number, semitones: number): Command {
+  // midiToPitch canonicalizes every black key to a sharp, so going pitch -> MIDI -> pitch
+  // loses enharmonic spelling (e.g. Bb4 -> A#4) even when the net semitone shift is 0.
+  // That's fine for computing the *moved* pitch on apply, but invert must restore the
+  // exact original pitch object (captured here) rather than recompute via MIDI math,
+  // or undo would silently corrupt spelling for any flat (or otherwise non-canonical) note.
+  let prevPitch: Pitch | undefined;
   return {
     label: 'transpose',
     apply: (s) => replaceElements(s, s.elements.map((e, i) => {
       if (i !== at || e.kind !== 'note') return e;
+      prevPitch = e.pitch;
       return { ...e, pitch: midiToPitch(pitchToMidi(e.pitch) + semitones) };
     })),
     invert: (s) => replaceElements(s, s.elements.map((e, i) => {
-      if (i !== at || e.kind !== 'note') return e;
-      return { ...e, pitch: midiToPitch(pitchToMidi(e.pitch) - semitones) };
+      if (i !== at || e.kind !== 'note' || !prevPitch) return e;
+      return { ...e, pitch: prevPitch };
     })),
   };
 }
 
 export function toggleTie(at: number): Command {
-  const flip = (s: EditorScore): EditorScore => replaceElements(s, s.elements.map((e, i) => {
-    if (i !== at || e.kind !== 'note') return e;
-    return { ...e, tie: e.tie === 'start' ? 'none' : 'start' };
-  }));
-  return { label: 'tie', apply: flip, invert: flip };   // flip is its own inverse
+  // 'tie' is a 3-state field ('start'|'stop'|'none'); a plain flip between 'start' and 'none'
+  // destroys 'stop' (stop -> start -> none, never back to stop). Capture the original tie on
+  // apply and restore it on invert, same pattern as deleteElement/changeDuration.
+  let prevTie: 'start' | 'stop' | 'none' | undefined;
+  return {
+    label: 'tie',
+    apply: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note') return e;
+      prevTie = e.tie;
+      return { ...e, tie: e.tie === 'start' ? 'none' : 'start' };
+    })),
+    invert: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note' || prevTie === undefined) return e;
+      return { ...e, tie: prevTie };
+    })),
+  };
 }
 
 export class CommandStack {
