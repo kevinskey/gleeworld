@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { ParsedScore } from '../utils/musicXMLParser';
+import { ParsedScore } from '@/lib/sightReading/musicXMLParser';
 import { useToast } from '@/hooks/use-toast';
 
 export interface CombinedAudioResult {
