@@ -85,8 +85,8 @@ describe('NotationEditorPage', () => {
       </MemoryRouter>
     );
     const select = screen.getByLabelText(/key/i) as HTMLSelectElement;
-    fireEvent.change(select, { target: { value: '1' } });
-    expect(select.value).toBe('1');
+    fireEvent.change(select, { target: { value: 'G' } });   // Key picks a tonic name now
+    expect(select.value).toBe('G');
   });
 
   it('changing the Clef select updates its reflected value', () => {

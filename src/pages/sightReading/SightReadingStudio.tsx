@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Music, Plus, Pencil } from 'lucide-react';
@@ -92,6 +92,9 @@ export default function SightReadingStudio() {
   const [musicKey, setMusicKey] = useState('C');
   const [priming, setPriming] = useState(false);
   const { isAdmin } = useUserRole();
+  const [searchParams] = useSearchParams();
+  // Open on the Library tab when arrived from the notation editor's "← Library" button.
+  const initialTab = searchParams.get('tab') === 'library' ? 'library' : 'practice';
 
   const start = () =>
     setExercise(generateExercise({ level, key: musicKey, seed: Math.floor(Math.random() * 1e9) }));
@@ -189,7 +192,7 @@ export default function SightReadingStudio() {
         </Button>
       </div>
 
-      <Tabs defaultValue="practice">
+      <Tabs defaultValue={initialTab}>
         <TabsList className="w-full">
           <TabsTrigger value="practice" className="flex-1">
             Practice

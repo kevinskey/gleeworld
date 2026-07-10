@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { emptyScore, EditorScore } from '@/lib/notation/model';
@@ -15,8 +16,29 @@ import { toast } from 'sonner';
 const SELECT = 'rounded border border-slate-300 bg-white px-1.5 py-1 text-sm text-slate-900';
 const FIELD = 'flex items-center gap-1.5 text-xs font-medium text-slate-600';
 
+// The Key control picks a TONIC; the key signature (keyFifths) is derived from tonic + mode,
+// so switching Mode re-signs the same tonic (C major = 0, C minor = 3 flats).
+const TONICS: { name: string; major: number; minor: number }[] = [
+  { name: 'C', major: 0, minor: -3 },
+  { name: 'G', major: 1, minor: -2 },
+  { name: 'D', major: 2, minor: -1 },
+  { name: 'A', major: 3, minor: 0 },
+  { name: 'E', major: 4, minor: 1 },
+  { name: 'B', major: 5, minor: 2 },
+  { name: 'F#', major: 6, minor: 3 },
+  { name: 'F', major: -1, minor: -4 },
+  { name: 'Bb', major: -2, minor: -5 },
+  { name: 'Eb', major: -3, minor: -6 },
+  { name: 'Ab', major: -4, minor: -7 },
+];
+const fifthsFor = (tonic: string, mode: 'major' | 'minor') =>
+  (TONICS.find((t) => t.name === tonic) ?? TONICS[0])[mode];
+const tonicFor = (fifths: number, mode: 'major' | 'minor') =>
+  (TONICS.find((t) => t[mode] === fifths) ?? TONICS[0]).name;
+
 export default function NotationEditorPage() {
   const { exerciseId } = useParams();
+  const navigate = useNavigate();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [score, setScore] = useState<EditorScore>(emptyScore());
   const [savedId, setSavedId] = useState<string | undefined>(exerciseId);
@@ -69,8 +91,18 @@ export default function NotationEditorPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-2 px-4 py-3">
-      {/* Row 1: title + primary actions */}
+      {/* Row 1: back-to-library + title + primary actions */}
       <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="gap-1 px-2"
+          onClick={() => navigate('/dashboard/sight-reading?tab=library')}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Library
+        </Button>
         <Input
           aria-label="Title"
           value={score.title}
@@ -112,19 +144,12 @@ export default function NotationEditorPage() {
           Key
           <select
             className={SELECT}
-            value={score.keyFifths}
-            onChange={(e) => setScore((s) => ({ ...s, keyFifths: Number(e.target.value) }))}
+            value={tonicFor(score.keyFifths, score.mode)}
+            onChange={(e) => setScore((s) => ({ ...s, keyFifths: fifthsFor(e.target.value, s.mode) }))}
           >
-            <option value={0}>C</option>
-            <option value={1}>G</option>
-            <option value={2}>D</option>
-            <option value={3}>A</option>
-            <option value={4}>E</option>
-            <option value={5}>B</option>
-            <option value={-1}>F</option>
-            <option value={-2}>Bb</option>
-            <option value={-3}>Eb</option>
-            <option value={-4}>Ab</option>
+            {TONICS.map((t) => (
+              <option key={t.name} value={t.name}>{t.name}</option>
+            ))}
           </select>
         </label>
 
@@ -133,7 +158,11 @@ export default function NotationEditorPage() {
           <select
             className={SELECT}
             value={score.mode}
-            onChange={(e) => setScore((s) => ({ ...s, mode: e.target.value as EditorScore['mode'] }))}
+            onChange={(e) => {
+              const mode = e.target.value as EditorScore['mode'];
+              // Keep the same tonic; re-derive the signature for the new mode.
+              setScore((s) => ({ ...s, mode, keyFifths: fifthsFor(tonicFor(s.keyFifths, s.mode), mode) }));
+            }}
           >
             <option value="major">major</option>
             <option value="minor">minor</option>
