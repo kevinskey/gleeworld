@@ -25,4 +25,14 @@ describe('pickRecordingMime', () => {
     vi.stubGlobal('navigator', { userAgent: 'Chrome', vendor: 'Google Inc.' });
     expect(pickRecordingMime()).toEqual({ mimeType: 'audio/webm;codecs=opus', ext: 'webm' });
   });
+
+  it('never returns webm on iOS Chrome (CriOS is still Apple WebKit under the hood)', () => {
+    vi.stubGlobal('MediaRecorder', { isTypeSupported: () => true });
+    vi.stubGlobal('navigator', {
+      userAgent:
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/120.0 Mobile/15E148 Safari/604.1',
+      vendor: 'Apple Computer, Inc.',
+    });
+    expect(pickRecordingMime().ext).toBe('m4a');
+  });
 });

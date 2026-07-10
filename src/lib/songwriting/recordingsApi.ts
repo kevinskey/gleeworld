@@ -6,16 +6,25 @@ export type SongRecording = {
   created_at: string;
 };
 
-// Safari claims webm MediaRecorder support but produces undecodable
-// 5-byte husks (Part Tracks bug, PR #80). Detect Safari by vendor and
-// force mp4/aac there; everywhere else prefer webm/opus.
+// Every iOS browser shell (Safari, Chrome-for-iOS/CriOS, Firefox-for-iOS/
+// FxiOS, ...) is forced onto Apple's WebKit under the hood, so they all
+// share Safari's webm bug: MediaRecorder.isTypeSupported claims webm/opus
+// support but decodeAudioData rejects it, producing undecodable husks
+// (Part Tracks bug, PR #80). Mirrors audioEngine.ts's isAppleWebEngine():
+// detect by vendor (catches every iOS shell + macOS Safari) OR by
+// iPhone/iPad/iPod in the UA as a belt-and-suspenders check, and force
+// mp4/aac there; everywhere else prefer webm/opus.
+function isAppleShell(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const vendor = navigator.vendor ?? '';
+  const ua = navigator.userAgent ?? '';
+  return /apple/i.test(vendor) || /iphone|ipad|ipod/i.test(ua);
+}
+
 export function pickRecordingMime(): { mimeType: string; ext: string } {
-  const isSafari =
-    typeof navigator !== 'undefined' &&
-    /apple/i.test(navigator.vendor ?? '') &&
-    !/chrome|crios|android/i.test(navigator.userAgent ?? '');
+  const isApple = isAppleShell();
   const webm = 'audio/webm;codecs=opus';
-  if (!isSafari && typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(webm)) {
+  if (!isApple && typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(webm)) {
     return { mimeType: webm, ext: 'webm' };
   }
   return { mimeType: 'audio/mp4', ext: 'm4a' };
