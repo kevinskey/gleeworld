@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Renderer, Stave, StaveNote, Accidental, Formatter } from 'vexflow';
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
-import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
+import { toVexKey, toVexDuration, vexAccidentalCode } from '@/lib/notation/toVexflow';
 
 const VEX_CLEF = { treble: 'treble', bass: 'bass', alto: 'alto' } as const;
 
@@ -10,6 +10,9 @@ export function NotationView({ score, width = 720, onNoteClick }: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const onNoteClickRef = useRef(onNoteClick);
+
+  useEffect(() => { onNoteClickRef.current = onNoteClick; }, [onNoteClick]);
 
   useEffect(() => {
     const host = ref.current; if (!host) return;
@@ -31,8 +34,8 @@ export function NotationView({ score, width = 720, onNoteClick }: {
           return new StaveNote({ keys: ['b/4'], duration: toVexDuration(el.base, el.dots) + 'r', clef: VEX_CLEF[score.clef] });
         }
         const sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
-        if (el.pitch.alter === 1) sn.addModifier(new Accidental('#'), 0);
-        if (el.pitch.alter === -1) sn.addModifier(new Accidental('b'), 0);
+        const acc = vexAccidentalCode(el.pitch.alter);
+        if (acc) sn.addModifier(new Accidental(acc), 0);
         return sn;
       });
       if (notes.length) {
@@ -40,13 +43,13 @@ export function NotationView({ score, width = 720, onNoteClick }: {
         // Wire click-to-select: attach the flat index to each drawn note's SVG group.
         notes.forEach((n, i) => {
           const idx = globalIndex + i;
-          (n as any).getSVGElement?.()?.addEventListener('click', () => onNoteClick?.(idx));
+          (n as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
         });
       }
       globalIndex += m.elements.length;
       x += measureWidth;
     });
-  }, [score, width, onNoteClick]);
+  }, [score, width]);
 
   return <div ref={ref} className="overflow-x-auto" />;
 }
