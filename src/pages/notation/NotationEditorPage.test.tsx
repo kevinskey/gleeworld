@@ -48,13 +48,77 @@ describe('NotationEditorPage', () => {
     expect(screen.getByLabelText(/tempo/i)).toBeInTheDocument();
   });
 
-  it('binds the tempo control to score state', () => {
+  it('binds the tempo control to score state, clamping only on blur (not per keystroke)', () => {
     render(
       <MemoryRouter>
         <NotationEditorPage />
       </MemoryRouter>
     );
-    fireEvent.change(screen.getByLabelText(/tempo/i), { target: { value: '96' } });
-    expect((screen.getByLabelText(/tempo/i) as HTMLInputElement).value).toBe('96');
+    const input = screen.getByLabelText(/tempo/i) as HTMLInputElement;
+    // Typing digit-by-digit must not get clobbered by mid-entry clamping.
+    fireEvent.change(input, { target: { value: '9' } });
+    expect(input.value).toBe('9');
+    fireEvent.change(input, { target: { value: '96' } });
+    expect(input.value).toBe('96');
+    // Clamping happens on blur.
+    fireEvent.blur(input);
+    expect(input.value).toBe('96');
+  });
+
+  it('clamps an out-of-range tempo to the bounds on blur', () => {
+    render(
+      <MemoryRouter>
+        <NotationEditorPage />
+      </MemoryRouter>
+    );
+    const input = screen.getByLabelText(/tempo/i) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '900' } });
+    expect(input.value).toBe('900');
+    fireEvent.blur(input);
+    expect(input.value).toBe('400');
+  });
+
+  it('changing the Key select updates its reflected value', () => {
+    render(
+      <MemoryRouter>
+        <NotationEditorPage />
+      </MemoryRouter>
+    );
+    const select = screen.getByLabelText(/key/i) as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: '1' } });
+    expect(select.value).toBe('1');
+  });
+
+  it('changing the Clef select updates its reflected value', () => {
+    render(
+      <MemoryRouter>
+        <NotationEditorPage />
+      </MemoryRouter>
+    );
+    const select = screen.getByLabelText(/clef/i) as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'bass' } });
+    expect(select.value).toBe('bass');
+  });
+
+  it('changing the Time select updates its reflected value', () => {
+    render(
+      <MemoryRouter>
+        <NotationEditorPage />
+      </MemoryRouter>
+    );
+    const select = screen.getByLabelText(/time/i) as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: '6/8' } });
+    expect(select.value).toBe('6/8');
+  });
+
+  it('changing the Mode select updates its reflected value', () => {
+    render(
+      <MemoryRouter>
+        <NotationEditorPage />
+      </MemoryRouter>
+    );
+    const select = screen.getByLabelText(/mode/i) as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'minor' } });
+    expect(select.value).toBe('minor');
   });
 });

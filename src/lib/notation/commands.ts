@@ -1,4 +1,4 @@
-import { EditorScore, EditorElement, Pitch } from './model';
+import { EditorScore, EditorElement, EditorNote, Pitch } from './model';
 
 export interface Command {
   readonly label: string;
@@ -89,6 +89,33 @@ export function toggleTie(at: number): Command {
       if (i !== at || e.kind !== 'note' || prevTie === undefined) return e;
       return { ...e, tie: prevTie };
     })),
+  };
+}
+
+export function tieToNext(at: number): Command {
+  // Tie the note at `at` to the following note: sets at -> 'start', at+1 -> 'stop'. This is
+  // the pairing toggleTie doesn't do — a lone 'start' with no matching 'stop' is invalid
+  // MusicXML and never merges in editorScoreToIR. If the pair is already tied, untie both.
+  // No-op unless BOTH positions are notes. Capture both prior tie values for a clean invert,
+  // same capture-and-restore pattern as toggleTie/transpose/setAccidental.
+  let prev: { a: EditorNote['tie']; b: EditorNote['tie'] } | undefined;
+  return {
+    label: 'tie',
+    apply: (s) => {
+      const a = s.elements[at]; const b = s.elements[at + 1];
+      if (!a || a.kind !== 'note' || !b || b.kind !== 'note') return s;
+      prev = { a: a.tie, b: b.tie };
+      const tied = a.tie === 'start' && b.tie === 'stop';
+      const na: EditorNote = { ...a, tie: tied ? 'none' : 'start' };
+      const nb: EditorNote = { ...b, tie: tied ? 'none' : 'stop' };
+      return replaceElements(s, s.elements.map((e, i) => (i === at ? na : i === at + 1 ? nb : e)));
+    },
+    invert: (s) => {
+      if (!prev) return s;
+      return replaceElements(s, s.elements.map((e, i) =>
+        (i === at && e.kind === 'note') ? { ...e, tie: prev!.a }
+        : (i === at + 1 && e.kind === 'note') ? { ...e, tie: prev!.b } : e));
+    },
   };
 }
 

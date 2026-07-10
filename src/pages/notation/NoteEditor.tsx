@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { EditorScore, noteOf, restOf, Pitch } from '@/lib/notation/model';
 import { BaseDur } from '@/lib/notation/duration';
-import { insertElement, deleteElement, transpose, changeDuration, toggleTie, setAccidental, CommandStack } from '@/lib/notation/commands';
+import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, CommandStack } from '@/lib/notation/commands';
 import { NotationView } from './NotationView';
 
 const DURATIONS: { code: BaseDur; label: string; key: string }[] = [
@@ -49,10 +49,17 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         const prev = [...s.elements].reverse().find((el) => el.kind === 'note') as any;
         const basePitch = nearestPitch(e.key.toUpperCase() as Pitch['step'], prev ? prev.pitch : null);
         const pitch = { ...basePitch, alter: armedAlter };
-        dispatch(insertElement(s.elements.length, noteOf(pitch, armed, armedDots)));
+        const insertAt = selected != null ? selected + 1 : s.elements.length;
+        dispatch(insertElement(insertAt, noteOf(pitch, armed, armedDots)));
+        if (selected != null) setSelected(insertAt);
         return;
       }
-      if (e.key === 'r' || e.key === 'R') { dispatch(insertElement(s.elements.length, restOf(armed, armedDots))); return; }
+      if (e.key === 'r' || e.key === 'R') {
+        const insertAt = selected != null ? selected + 1 : s.elements.length;
+        dispatch(insertElement(insertAt, restOf(armed, armedDots)));
+        if (selected != null) setSelected(insertAt);
+        return;
+      }
       if (e.key === 'Backspace' || e.key === 'Delete') {
         const at = selected ?? s.elements.length - 1;
         if (at >= 0) {
@@ -80,7 +87,7 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         return;
       }
       if (e.key === 't' || e.key === 'T') {
-        if (selected != null && s.elements[selected]?.kind === 'note') dispatch(toggleTie(selected));
+        if (selected != null && s.elements[selected]?.kind === 'note') dispatch(tieToNext(selected));
         return;
       }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {

@@ -73,12 +73,19 @@ describe('NoteEditor', () => {
     expect(latest.elements[0]).toMatchObject({ pitch: { step: 'F', alter: 1 } });
   });
 
-  it('ArrowRight selects the note then t ties it', () => {
-    const initial = { ...emptyScore(), elements: [noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter')] };
+  it('ArrowRight selects the note then t ties it to the following note (start/stop pair)', () => {
+    const initial = {
+      ...emptyScore(),
+      elements: [
+        noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter'),
+        noteOf({ step: 'D', octave: 4, alter: 0 }, 'quarter'),
+      ],
+    };
     render(<Harness initial={initial} />);
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     fireEvent.keyDown(window, { key: 't' });
     expect(latest.elements[0]).toMatchObject({ tie: 'start' });
+    expect(latest.elements[1]).toMatchObject({ tie: 'stop' });
   });
 
   it('ArrowRight selects the note then . dots it', () => {
@@ -87,5 +94,28 @@ describe('NoteEditor', () => {
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     fireEvent.keyDown(window, { key: '.' });
     expect(latest.elements[0].dots).toBe(1);
+  });
+
+  it('note insertion honors the cursor: inserts after the selected note, not just at the end', () => {
+    const initial = { ...emptyScore(), elements: [noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter')] };
+    render(<Harness initial={initial} />);
+    fireEvent.keyDown(window, { key: 'ArrowRight' }); // selects index 0
+    fireEvent.keyDown(window, { key: 'd' });
+    expect(latest.elements).toHaveLength(2);
+    expect(latest.elements[1]).toMatchObject({ pitch: { step: 'D' } });
+  });
+
+  it('note insertion in the middle: selecting the first of two notes and inserting lands between them', () => {
+    const initial = {
+      ...emptyScore(),
+      elements: [
+        noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter'),
+        noteOf({ step: 'E', octave: 4, alter: 0 }, 'quarter'),
+      ],
+    };
+    render(<Harness initial={initial} />);
+    fireEvent.keyDown(window, { key: 'ArrowRight' }); // selects C (index 0)
+    fireEvent.keyDown(window, { key: 'd' });
+    expect(latest.elements.map((e: any) => e.pitch.step)).toEqual(['C', 'D', 'E']);
   });
 });

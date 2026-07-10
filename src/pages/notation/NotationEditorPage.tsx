@@ -19,6 +19,7 @@ export default function NotationEditorPage() {
   const [savedId, setSavedId] = useState<string | undefined>(exerciseId);
   const [saving, setSaving] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [tempoText, setTempoText] = useState(String(score.tempo));
   const { isPlaying, startPlayback, stopPlayback } = useTonePlayback();
 
   useEffect(() => {
@@ -30,6 +31,11 @@ export default function NotationEditorPage() {
         toast.error('Could not load that exercise.');
       });
   }, [exerciseId]);
+
+  // Keep the raw text in sync when tempo changes from elsewhere (e.g. loading an exercise).
+  useEffect(() => {
+    setTempoText(String(score.tempo));
+  }, [score.tempo]);
 
   const overfull = layoutMeasures(score).some((m) => m.overfull);
 
@@ -161,13 +167,13 @@ export default function NotationEditorPage() {
               min="20"
               max="400"
               className="w-20 rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
-              value={score.tempo}
-              onChange={(e) =>
-                setScore((s) => ({
-                  ...s,
-                  tempo: Math.max(20, Math.min(400, Number(e.target.value) || s.tempo)),
-                }))
-              }
+              value={tempoText}
+              onChange={(e) => setTempoText(e.target.value)}
+              onBlur={() => {
+                const n = Math.max(20, Math.min(400, Number(tempoText) || score.tempo));
+                setScore((s) => ({ ...s, tempo: n }));
+                setTempoText(String(n));
+              }}
             />
           </div>
         </div>

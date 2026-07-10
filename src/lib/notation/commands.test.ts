@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { insertElement, deleteElement, changeDuration, transpose, toggleTie, setAccidental, CommandStack } from './commands';
+import { insertElement, deleteElement, changeDuration, transpose, toggleTie, tieToNext, setAccidental, CommandStack } from './commands';
 import { emptyScore, noteOf, restOf } from './model';
 
 const C4 = { step: 'C' as const, octave: 4, alter: 0 };
@@ -50,6 +50,34 @@ describe('invertibility holds for enharmonic spellings and all tie states', () =
     const cmd = toggleTie(0);
     const after = cmd.apply(tieBase);
     expect(cmd.invert(after)).toEqual(tieBase);
+  });
+});
+
+describe('tieToNext pairs a note with its follower (proper ties, not a lone toggle)', () => {
+  it('sets a start/stop pair on two adjacent notes and inverts cleanly', () => {
+    const twoNotes = { ...emptyScore(), elements: [noteOf(C4, 'quarter'), noteOf(C4, 'quarter')] };
+    const cmd = tieToNext(0);
+    const after = cmd.apply(twoNotes);
+    expect((after.elements[0] as any).tie).toBe('start');
+    expect((after.elements[1] as any).tie).toBe('stop');
+    expect(cmd.invert(after)).toEqual(twoNotes);
+  });
+
+  it('untying an already-tied pair restores both to none', () => {
+    const twoNotes = { ...emptyScore(), elements: [noteOf(C4, 'quarter'), noteOf(C4, 'quarter')] };
+    const cmd = tieToNext(0);
+    const tied = cmd.apply(twoNotes);
+    const untied = tieToNext(0).apply(tied);
+    expect((untied.elements[0] as any).tie).toBe('none');
+    expect((untied.elements[1] as any).tie).toBe('none');
+  });
+
+  it('no-ops when at+1 is out of range (single note)', () => {
+    const single = { ...emptyScore(), elements: [noteOf(C4, 'quarter')] };
+    const cmd = tieToNext(0);
+    const after = cmd.apply(single);
+    expect(after).toEqual(single);
+    expect(cmd.invert(after)).toEqual(single);
   });
 });
 
