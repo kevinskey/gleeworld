@@ -75,18 +75,18 @@ DO $$ BEGIN
 END $$;
 
 -- CHECK vocab: status/priority/note_type constraints present
+-- (pg_constraint, not information_schema.constraint_table_usage — the
+-- latter omits CHECK constraints entirely)
 DO $$ BEGIN
-  ASSERT (SELECT count(*) >= 1 FROM information_schema.check_constraints cc
-          JOIN information_schema.constraint_table_usage u
-            ON u.constraint_name = cc.constraint_name
-          WHERE u.table_name = 'gw_planner_tasks'
-            AND cc.check_clause ILIKE '%cancelled%'),
+  ASSERT (SELECT count(*) >= 1 FROM pg_constraint
+          WHERE conrelid = 'public.gw_planner_tasks'::regclass
+            AND contype = 'c'
+            AND pg_get_constraintdef(oid) ILIKE '%cancelled%'),
          'task status CHECK missing';
-  ASSERT (SELECT count(*) >= 1 FROM information_schema.check_constraints cc
-          JOIN information_schema.constraint_table_usage u
-            ON u.constraint_name = cc.constraint_name
-          WHERE u.table_name = 'gw_planner_notes'
-            AND cc.check_clause ILIKE '%quarterly%'),
+  ASSERT (SELECT count(*) >= 1 FROM pg_constraint
+          WHERE conrelid = 'public.gw_planner_notes'::regclass
+            AND contype = 'c'
+            AND pg_get_constraintdef(oid) ILIKE '%quarterly%'),
          'note_type CHECK missing';
 END $$;
 
