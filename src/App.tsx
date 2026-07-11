@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
 import { GraduatesRoute } from "@/components/routes/GraduatesRoute";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import GlobalDictation from "@/components/voice/GlobalDictation";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -501,6 +502,7 @@ const App = () => {
                   <TenantFavicon />
                   <Toaster />
                   <Sonner />
+                  <GlobalDictation />
                   <ServiceWorkerUpdateNotifier />
 
                   <AuthenticatedGlobals />
