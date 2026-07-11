@@ -92,8 +92,8 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
 
   // ── Pointer tool: select, marquee, move, resize, create ─────────────
   type Drag =
-    | { kind: 'move'; startCx: number; startCy: number; orig: MidiNote[]; sel: number[]; moved: boolean }
-    | { kind: 'resize'; edge: 'left' | 'right'; startCx: number; orig: MidiNote[] | null; sel: number[]; moved: boolean }
+    | { kind: 'move'; startCx: number; startCy: number; orig: MidiNote[]; sel: number[]; moved: boolean; draft?: MidiNote[] }
+    | { kind: 'resize'; edge: 'left' | 'right'; startCx: number; orig: MidiNote[] | null; sel: number[]; moved: boolean; draft?: MidiNote[] }
     | { kind: 'marquee'; startCx: number; startCy: number; cx: number; cy: number; base: number[] };
   const dragRef = useRef<Drag | null>(null);
 
@@ -165,17 +165,24 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       if (!d.moved && Math.abs(cx - d.startCx) < 3 && Math.abs(cy - d.startCy) < 3) return;
       d.moved = true;
       // Draft-only: preview the move without touching history or the
-      // engine on every pixel. Committed once in onPointerUp.
-      setDraftNotes(moveNotes(d.orig, d.sel, {
-        deltaSeconds, deltaSemitones, gridSeconds: snapMod(e), clipStartSeconds: clip.start_seconds }));
+      // engine on every pixel. Committed once in onPointerUp. Stash the
+      // same array on the drag ref (d.draft) — state updates are async
+      // under the concurrent renderer, so a pointerup that lands before
+      // this render flushes would otherwise read a stale/null closure.
+      const nextMove = moveNotes(d.orig, d.sel, {
+        deltaSeconds, deltaSemitones, gridSeconds: snapMod(e), clipStartSeconds: clip.start_seconds });
+      d.draft = nextMove;
+      setDraftNotes(nextMove);
     } else if (d.kind === 'resize') {
       if (!d.orig) d.orig = clip.notes;
       if (!d.moved && Math.abs(cx - d.startCx) < 3) return;
       d.moved = true;
       const deltaSeconds = (cx - d.startCx) / metrics.pxPerSecond;
-      // Draft-only, same as move — committed once in onPointerUp.
-      setDraftNotes(resizeNotes(d.orig, d.sel, {
-        edge: d.edge, deltaSeconds, gridSeconds: snapMod(e), clipStartSeconds: clip.start_seconds }));
+      // Draft-only, same as move — committed once in onPointerUp, ref-fresh.
+      const nextResize = resizeNotes(d.orig, d.sel, {
+        edge: d.edge, deltaSeconds, gridSeconds: snapMod(e), clipStartSeconds: clip.start_seconds });
+      d.draft = nextResize;
+      setDraftNotes(nextResize);
     } else {
       d.cx = cx; d.cy = cy;
       setSelection([...new Set([...d.base, ...notesInRect(metrics, clip.notes,
@@ -190,12 +197,27 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     // engine reload (via editClip → the skeleton sig picks up the note
     // content change). A click with no actual drag (moved === false)
     // commits nothing — see the pointerdown comment on history.
-    if (d && (d.kind === 'move' || d.kind === 'resize') && d.moved && draftNotes) {
+    // Commit from d.draft (the drag ref), not the draftNotes state: state
+    // renders (drives the live preview), the ref commits — under React's
+    // concurrent renderer a flick can fire pointerup before the last
+    // pointermove's setDraftNotes has flushed, so the state closure here
+    // may still be null or one move stale while the ref is always current.
+    if (d && (d.kind === 'move' || d.kind === 'resize') && d.moved && d.draft) {
       props.pushHistory();
-      editClip((c) => ({ ...c, notes: draftNotes }));
+      const notes = d.draft;
+      editClip((c) => ({ ...c, notes }));
     }
     setDraftNotes(null);
     dragRef.current = null;
+    scheduleDraw();
+  };
+
+  /** Touch scroll takeover (or any other pointercancel) aborts the
+   * gesture without committing — clear the draft so the canvas doesn't
+   * keep rendering a phantom in-flight drag. */
+  const onPointerCancel = () => {
+    dragRef.current = null;
+    setDraftNotes(null);
     scheduleDraw();
   };
 
@@ -206,6 +228,12 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     if (!clip) return;
     if ((e.key === 'Delete' || e.key === 'Backspace') && selection.length) {
       e.preventDefault();
+      // Cancel any in-flight drag first: without this, a later pointerup
+      // from a drag that was live when Delete fired would commit its
+      // (now stale/pre-delete) draft on top of the delete — resurrecting
+      // deleted notes and double-writing history.
+      dragRef.current = null;
+      setDraftNotes(null);
       props.pushHistory();
       editClip((c) => ({ ...c, notes: deleteNotes(c.notes, selection) }));
       setSelection([]);
@@ -409,6 +437,7 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
+            onPointerCancel={onPointerCancel}
             onKeyDown={onKeyDown}
           >
             <div style={{ width: totalW, height: totalH }} />
