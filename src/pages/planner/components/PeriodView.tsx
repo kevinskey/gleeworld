@@ -164,10 +164,18 @@ export default function PeriodView({ type, dateKey, onNavigate, onOpenNote }: Pe
         </div>
       )}
 
-      {!!events?.length && (
+      {(isDaily || !!events?.length) && (
         <section aria-label="Events" className="flex flex-col gap-1.5">
-          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Events</h2>
-          {events.map((e) => (
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Events</h2>
+            {isDaily && <AddEventDialog date={dateKey} />}
+          </div>
+          {!events?.length && isDaily && (
+            <p className="rounded-md border border-dashed border-border bg-card px-3 py-3 text-sm text-muted-foreground">
+              No events on this day — add a rehearsal, meeting, or concert and it lands on the main calendar too.
+            </p>
+          )}
+          {(events ?? []).map((e) => (
             <div key={e.id} className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2">
               <div className="w-16 shrink-0 text-xs text-muted-foreground">
                 {format(parseISO(e.start_date), isDaily ? 'h:mm a' : 'MMM d')}
