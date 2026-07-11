@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Music, Plus, Pencil } from 'lucide-react';
 import { SingFlow } from './SingFlow';
+import { ProgressTab } from './ProgressTab';
 import { generateExercise } from '@/lib/sightReading/generate';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -266,11 +267,7 @@ export default function SightReadingStudio() {
         </TabsContent>
 
         <TabsContent value="progress" className="pt-4">
-          <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="text-sm text-slate-600">
-              No takes yet. Sing your first line and your progress shows up here.
-            </p>
-          </div>
+          <ProgressTab activityKey={ACTIVITY_KEY} />
         </TabsContent>
       </Tabs>
     </div>
