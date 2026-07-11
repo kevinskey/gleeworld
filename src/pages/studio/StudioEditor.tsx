@@ -28,7 +28,7 @@ import {
   Magnet, Wrench,
 } from 'lucide-react';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
@@ -48,6 +48,7 @@ import {
 } from '@/lib/studio/transport';
 import { MidiClockSender } from '@/lib/studio/midiClock';
 import { PianoRollPanel } from '@/pages/studio/pianoroll/PianoRollPanel';
+import { MidiClipPreview } from '@/pages/studio/pianoroll/MidiClipPreview';
 import type { EngineState } from '@/lib/studio/engine/engine';
 import { openMicRecorder, type MicRecorder } from '@/lib/studio/engine/recorder';
 import { getConfiguredInputLatencyMs, getConfiguredDeviceLatencyMs, getOutputLatencyMs, msToSamples, DEFAULT_DEVICE_LATENCY_MS, DEFAULT_INPUT_LATENCY_MS } from '@/lib/audio/sharedRecorder';
@@ -2481,99 +2482,6 @@ function Editor({
 
 interface SelectedClip { trackId: string; clipId: string }
 
-function TrackRow({
-  session, track, positionSeconds, snapSeconds, selectedClip, onSelectClip,
-  onUpdate, onRemove, onStripChange,
-}: {
-  session: Session;
-  track: Track;
-  positionSeconds: number;
-  snapSeconds: number;
-  selectedClip: SelectedClip | null;
-  onSelectClip: (c: SelectedClip | null) => void;
-  onUpdate: (mut: (t: Track) => Track) => void;
-  onRemove: () => void;
-  onStripChange: (p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => void;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-0 flex">
-        <TrackStrip track={track} onUpdate={onUpdate} onRemove={onRemove} onStripChange={onStripChange} />
-        <div className="flex-1 overflow-x-auto bg-muted/20 relative">
-          <Timeline
-            session={session} track={track} positionSeconds={positionSeconds}
-            snapSeconds={snapSeconds}
-            selectedClip={selectedClip}
-            onSelectClip={onSelectClip}
-            onUpdate={onUpdate}
-          />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TrackStrip({
-  track, onUpdate, onRemove, onStripChange,
-}: {
-  track: Track;
-  onUpdate: (mut: (t: Track) => Track) => void;
-  onRemove: () => void;
-  onStripChange: (p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => void;
-}) {
-  const setStrip = (p: Partial<Pick<Track, 'name' | 'volume_db' | 'pan' | 'mute' | 'solo' | 'arm'>>) => {
-    onUpdate((t) => ({ ...t, ...p } as Track));
-    if (p.volume_db !== undefined || p.pan !== undefined || p.mute !== undefined || p.solo !== undefined) {
-      onStripChange(p as never);
-    }
-  };
-
-  return (
-    <div className="w-56 shrink-0 border-r border-border p-2 space-y-1.5">
-      <div className="flex items-center gap-1">
-        {isAudioTrack(track) ? <Mic className="w-3.5 h-3.5 shrink-0" style={{ color: track.color }} /> : <Drum className="w-3.5 h-3.5 shrink-0" style={{ color: track.color }} />}
-        <Input
-          value={track.name}
-          onChange={(e) => setStrip({ name: e.target.value })}
-          className="h-7 text-xs border-0 px-1 focus-visible:ring-1"
-        />
-        <ColorSwatch color={track.color} onChange={(c) => onUpdate((t) => ({ ...t, color: c } as Track))} />
-        <Button size="sm" variant="ghost" onClick={onRemove} className="h-6 w-6 p-0"><Trash2 className="w-4 h-4" /></Button>
-      </div>
-      <div className="flex items-center gap-1">
-        <Button size="sm" variant={track.mute ? 'default' : 'outline'} className="h-6 px-1.5 text-xs"
-          onClick={() => setStrip({ mute: !track.mute })}>M</Button>
-        <Button size="sm" variant={track.solo ? 'default' : 'outline'} className="h-6 px-1.5 text-xs"
-          onClick={() => setStrip({ solo: !track.solo })}>S</Button>
-        <Button size="sm" variant={track.arm ? 'destructive' : 'outline'} className="h-6 px-1.5 text-xs"
-          onClick={() => setStrip({ arm: !track.arm })}>
-          <Circle className="w-3.5 h-3.5" fill={track.arm ? 'currentColor' : 'none'} />
-        </Button>
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Volume2 className="w-4 h-4" />
-          <span className="w-8 tabular-nums text-right">{track.volume_db.toFixed(0)} dB</span>
-        </div>
-        <Slider
-          value={[track.volume_db]} min={-40} max={6} step={0.5}
-          onValueChange={(v) => setStrip({ volume_db: v[0] })}
-        />
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Headphones className="w-4 h-4" />
-          <span className="w-8 tabular-nums text-right">{track.pan.toFixed(2)}</span>
-        </div>
-        <Slider
-          value={[track.pan]} min={-1} max={1} step={0.05}
-          onValueChange={(v) => setStrip({ pan: v[0] })}
-        />
-      </div>
-      <TrackActions track={track} onUpdate={onUpdate} />
-      <FxRack track={track} onUpdate={onUpdate} />
-    </div>
-  );
-}
-
 // ── FX rack ──────────────────────────────────────────────────────────
 
 const FX_TYPES: { value: FxType; label: string }[] = [
@@ -2783,15 +2691,6 @@ function inferRange(key: string): { min: number; max: number; step: number } {
   return { min: -10, max: 10, step: 0.1 };
 }
 
-function TrackActions({ track, onUpdate }: { track: Track; onUpdate: (mut: (t: Track) => Track) => void }) {
-  return (
-    <div className="pt-1 border-t border-border/60">
-      {isAudioTrack(track) ? <AudioImportIconButton track={track} onUpdate={onUpdate} /> : null}
-      {isMidiTrack(track) ? <MidiTrackActions track={track} onUpdate={onUpdate} /> : null}
-    </div>
-  );
-}
-
 /** Compact icon-only import button rendered in the track header row.
  * Opens the existing ImportClipDialog. */
 function AudioImportIconButton({
@@ -2809,124 +2708,6 @@ function AudioImportIconButton({
       </button>
       <ImportClipDialog open={open} onOpenChange={setOpen} track={track} onUpdate={onUpdate} />
     </>
-  );
-}
-
-function MidiTrackActions({
-  track, onUpdate,
-}: { track: Track; onUpdate: (mut: (t: Track) => Track) => void }) {
-  const [openRoll, setOpenRoll] = useState(false);
-  if (!isMidiTrack(track)) return null;
-  const inst = track.instrument;
-  return (
-    <div className="space-y-1 pt-1">
-      <div className="flex gap-1">
-        <Select
-          value={`${inst.type}:${inst.preset_id ?? ''}`}
-          onValueChange={(v) => {
-            // Split on the FIRST colon only: a GM preset id is itself 'gm:<name>',
-            // so 'sampler:gm:violin' must yield type='sampler', preset='gm:violin'.
-            const i = v.indexOf(':');
-            const type = v.slice(0, i);
-            const preset = v.slice(i + 1);
-            onUpdate((t) => isMidiTrack(t)
-              ? { ...t, instrument: { ...t.instrument, type: type as 'synth_basic' | 'sampler', preset_id: preset || undefined } } as Track
-              : t);
-          }}
-        >
-          <SelectTrigger className="h-6 px-1 text-xs flex-1"><SelectValue /></SelectTrigger>
-          <SelectContent className="max-h-80">
-            <SelectItem value="synth_basic:sine">Synth · Sine</SelectItem>
-            <SelectItem value="synth_basic:triangle">Synth · Triangle</SelectItem>
-            <SelectItem value="synth_basic:square">Synth · Square</SelectItem>
-            <SelectItem value="synth_basic:sawtooth">Synth · Sawtooth</SelectItem>
-            <SelectItem value="sampler:kit_basic">Sampler · Basic kit</SelectItem>
-            {GM_GROUPED.map((group) => (
-              <SelectGroup key={group.family}>
-                <SelectLabel>{group.family}</SelectLabel>
-                {group.instruments.map((g) => (
-                  <SelectItem key={g.name} value={`sampler:${toGmPresetId(g.name)}`}>
-                    {g.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <Button size="sm" variant="outline" className="h-6 px-2 text-xs w-full" onClick={() => setOpenRoll(true)}>
-        Piano roll
-      </Button>
-      <PianoRollDialog open={openRoll} onOpenChange={setOpenRoll} track={track} onUpdate={onUpdate} />
-    </div>
-  );
-}
-
-function Timeline({
-  session, track, positionSeconds, snapSeconds, selectedClip, onSelectClip, onUpdate,
-}: {
-  session: Session; track: Track; positionSeconds: number;
-  snapSeconds: number;
-  selectedClip: SelectedClip | null;
-  onSelectClip: (c: SelectedClip | null) => void;
-  onUpdate: (mut: (t: Track) => Track) => void;
-}) {
-  const pxPerSecond = usePxPerSecond();
-  const totalWidth = session.length_seconds * pxPerSecond;
-  const secondsPerBeatLight = 60 / session.tempo_bpm;
-  const numeratorLight = session.time_signature.numerator;
-  const totalBeatsLight = Math.ceil(session.length_seconds / secondsPerBeatLight);
-  return (
-    <div className="relative h-20" style={{ width: totalWidth }}>
-      {/* Musical grid — strong bar lines, faint beat ticks (each tick is
-       * where the metronome click fires). */}
-      {Array.from({ length: totalBeatsLight + 1 }).map((_, i) => {
-        const isBar = i % numeratorLight === 0;
-        const x = i * secondsPerBeatLight * pxPerSecond;
-        return (
-          <div
-            key={i}
-            className={`absolute top-0 bottom-0 ${isBar ? 'border-l border-border' : 'border-l border-border/30'}`}
-            style={{ left: x }}
-          />
-        );
-      })}
-      {/* Clips */}
-      {isAudioTrack(track) && track.clips.map((c) => (
-        <AudioClipBlock
-          key={c.id} clip={c} session={session} trackColor={track.color}
-          snapSeconds={snapSeconds}
-          selected={selectedClip?.clipId === c.id}
-          onSelect={() => onSelectClip({ trackId: track.id, clipId: c.id })}
-          onChange={(patch) => onUpdate((t) => ({
-            ...t, clips: (t as never as { clips: AudioClip[] }).clips
-              .map((x) => x.id === c.id ? { ...x, ...patch } : x),
-          } as Track))}
-          onRemove={() => onUpdate((t) => ({
-            ...t, clips: (t as never as { clips: AudioClip[] }).clips.filter((x) => x.id !== c.id),
-          } as Track))}
-        />
-      ))}
-      {isMidiTrack(track) && track.clips.map((c) => (
-        <MidiClipBlock
-          key={c.id} clip={c} trackColor={track.color}
-          snapSeconds={snapSeconds}
-          selected={selectedClip?.clipId === c.id}
-          onSelect={() => onSelectClip({ trackId: track.id, clipId: c.id })}
-          onChange={(patch) => onUpdate((t) => ({
-            ...t, clips: (t as never as { clips: MidiClip[] }).clips
-              .map((x) => x.id === c.id ? { ...x, ...patch } : x),
-          } as Track))}
-          onRemove={() => onUpdate((t) => ({
-            ...t, clips: (t as never as { clips: MidiClip[] }).clips.filter((x) => x.id !== c.id),
-          } as Track))}
-        />
-      ))}
-      {/* Playhead */}
-      <div className="absolute top-0 bottom-0 w-px bg-primary pointer-events-none" style={{ left: positionSeconds * pxPerSecond }}>
-        <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-primary" />
-      </div>
-    </div>
   );
 }
 
@@ -2985,7 +2766,9 @@ function MidiClipBlock({
       tint={trackColor}
       start={clip.start_seconds}
       duration={clip.duration_seconds}
-      label={`${clip.notes.length} notes`}
+      label=""
+      preview={<MidiClipPreview notes={clip.notes} durationSeconds={clip.duration_seconds} />}
+      title={`${clip.notes.length} notes`}
       snapSeconds={snapSeconds}
       selected={selected}
       canTrimLeft={false}
@@ -3000,13 +2783,16 @@ function MidiClipBlock({
 }
 
 function DraggableClip({
-  tint, start, duration, offset = 0, label, peaks, assetDuration, snapSeconds, selected,
-  fadeIn = 0, fadeOut = 0, canTrimLeft = true,
+  tint, start, duration, offset = 0, label, peaks, preview, assetDuration, snapSeconds, selected,
+  fadeIn = 0, fadeOut = 0, canTrimLeft = true, title,
   onSelect, onChange, onRemove,
 }: {
   tint: string;
   start: number; duration: number; offset?: number; label: string;
   peaks?: number[];
+  /** Arbitrary overlay rendered in the same absolute inset position as
+   * the peaks waveform — used for the MIDI note-map preview. */
+  preview?: React.ReactNode;
   /** Total length of the underlying asset in seconds — used to map
    * the visible `[offset, offset + duration]` window into the peaks
    * array so trimming actually slices the waveform instead of
@@ -3020,6 +2806,8 @@ function DraggableClip({
   /** Left-edge trim is only valid when the underlying clip has an
    * `offset` (audio). MIDI clips disable it. */
   canTrimLeft?: boolean;
+  /** Tooltip text — defaults to the drag/trim/fade hint built from `label`. */
+  title?: string;
   onSelect: () => void;
   onChange: (p: {
     start?: number;
@@ -3166,7 +2954,7 @@ function DraggableClip({
       }}
       onPointerDown={onDragBody}
       onDoubleClick={onRemove}
-      title={`${label} — click to select · drag body to move · L/R edges to trim · corners to fade · Delete to remove`}
+      title={title ?? `${label} — click to select · drag body to move · L/R edges to trim · corners to fade · Delete to remove`}
     >
       {peaks && peaks.length > 0 && (() => {
         // Slice the asset's peaks to just the visible window so that
@@ -3180,6 +2968,7 @@ function DraggableClip({
         const slice = peaks.slice(i0, i1);
         return <PeaksCanvas peaks={slice} width={width} tint={tint} />;
       })()}
+      {preview}
 
       {/* Fade-in triangle (top-left → bottom-left wedge) */}
       {hasFades && fadeInW > 0 && (
@@ -3342,132 +3131,12 @@ function ImportClipDialog({
   );
 }
 
-// ── Piano roll: simple 16-step note grid for now ────────────────────
-
-function PianoRollDialog({
-  open, onOpenChange, track, onUpdate,
-}: { open: boolean; onOpenChange: (o: boolean) => void; track: Track; onUpdate: (mut: (t: Track) => Track) => void }) {
-  const clip = isMidiTrack(track) ? track.clips[0] : null;
-  const [bars, setBars] = useState(clip?.duration_seconds ?? 4);
-
-  const addClipIfMissing = () => {
-    if (!isMidiTrack(track) || track.clips.length > 0) return;
-    onUpdate((t) => {
-      if (!isMidiTrack(t)) return t;
-      const c: MidiClip = { id: newId(), kind: 'midi', start_seconds: 0, duration_seconds: bars, notes: [] };
-      return { ...t, clips: [c] } as Track;
-    });
-  };
-
-  useEffect(() => { if (open) addClipIfMissing(); }, [open]);
-
-  const toggleNote = (pitch: number, step: number, stepDur: number) => {
-    onUpdate((t) => {
-      if (!isMidiTrack(t)) return t;
-      const clip0 = t.clips[0];
-      const startSec = step * stepDur;
-      const exists = clip0.notes.find((n) => n.pitch === pitch && Math.abs(n.start_seconds - startSec) < 0.01);
-      const notes = exists
-        ? clip0.notes.filter((n) => n !== exists)
-        : [...clip0.notes, { pitch, velocity: 100, start_seconds: startSec, duration_seconds: stepDur }];
-      return { ...t, clips: [{ ...clip0, notes }] } as Track;
-    });
-  };
-
-  if (!isMidiTrack(track)) return null;
-
-  // Drum mode for the basic kit; full chromatic keyboard otherwise.
-  const isDrums = track.instrument.type === 'sampler' && (track.instrument.preset_id ?? 'kit_basic') === 'kit_basic';
-  const STEPS = 16;
-  const stepDur = bars / STEPS;
-  const clipNow = track.clips[0];
-
-  const drumRows = [
-    { pitch: 36, label: 'Kick' },
-    { pitch: 38, label: 'Snare' },
-    { pitch: 42, label: 'Hat' },
-  ];
-  // 2 octaves C3..B4 (MIDI 48..71)
-  const keyboardPitches = Array.from({ length: 24 }, (_, i) => 71 - i); // top-down
-  const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const isBlackKey = (p: number) => /#$/.test(NOTE_NAMES[p % 12]);
-  const labelFor = (p: number) => `${NOTE_NAMES[p % 12]}${Math.floor(p / 12) - 1}`;
-
-  const rows = isDrums
-    ? drumRows
-    : keyboardPitches.map((p) => ({ pitch: p, label: labelFor(p) }));
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader><DialogTitle>Piano roll · {track.name}</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-xs">
-            <Label>Length (sec)</Label>
-            <Input type="number" min="1" max="60" value={bars}
-              onChange={(e) => {
-                const v = Number(e.target.value) || 4;
-                setBars(v);
-                onUpdate((t) => isMidiTrack(t)
-                  ? { ...t, clips: t.clips.length ? [{ ...t.clips[0], duration_seconds: v }] : [{ id: newId(), kind: 'midi', start_seconds: 0, duration_seconds: v, notes: [] }] } as Track
-                  : t);
-              }}
-              className="w-20 h-8"
-            />
-            <span className="text-xs text-muted-foreground ml-auto">
-              {isDrums ? 'Drum grid · click to toggle hits' : '2-octave keyboard · click to toggle notes'}
-            </span>
-          </div>
-          <div className="max-h-[60vh] overflow-y-auto border border-border rounded">
-            <table className="text-xs w-full">
-              <tbody>
-                {rows.map((row) => {
-                  const black = !isDrums && isBlackKey(row.pitch);
-                  return (
-                    <tr key={row.pitch} className={black ? 'bg-muted/40' : ''}>
-                      <td className={`pr-1 pl-2 font-mono w-16 sticky left-0 ${black ? 'bg-muted/40 text-muted-foreground' : 'bg-card'}`}>
-                        {row.label}
-                      </td>
-                      {Array.from({ length: STEPS }).map((_, s) => {
-                        const startSec = s * stepDur;
-                        const active = clipNow?.notes.some((n) => n.pitch === row.pitch && Math.abs(n.start_seconds - startSec) < 0.01);
-                        const isBeat = s % 4 === 0;
-                        return (
-                          <td key={s} className="p-0.5">
-                            <button
-                              onClick={() => toggleNote(row.pitch, s, stepDur)}
-                              className={`w-6 h-5 rounded-sm border transition-colors
-                                ${active ? 'bg-primary border-primary' : `bg-card hover:bg-muted ${isBeat ? 'border-border' : 'border-border/40'}`}`}
-                            />
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex justify-between items-center">
-            <button
-              className="text-xs text-muted-foreground hover:text-rose-600"
-              onClick={() => onUpdate((t) => isMidiTrack(t) && t.clips.length
-                ? { ...t, clips: [{ ...t.clips[0], notes: [] }] } as Track : t)}
-            >Clear all notes</button>
-            <Button onClick={() => onOpenChange(false)}>Done</Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ── Tiny shared store for parent session access ──────────────────────
 //
-// The Import/Record/PianoRoll dialogs are nested inside per-track
-// strips. Rather than threading the session through five layers of
-// props we publish it on a module var when the Editor mounts. Safe
-// because the editor is single-instance (one session open at a time).
+// The Import/Record dialogs are nested inside per-track strips. Rather
+// than threading the session through five layers of props we publish
+// it on a module var when the Editor mounts. Safe because the editor
+// is single-instance (one session open at a time).
 
 let _currentSession: Session | null = null;
 let _addAsset: (asset: import('@/lib/studio/session').AudioAsset) => void = () => {};
@@ -4765,8 +4434,6 @@ function DarkTrackRow({
 function MidiInstrumentDropdown({
   track, onUpdate, onOpenPianoRoll,
 }: { track: Track; onUpdate: (mut: (t: Track) => Track) => void; onOpenPianoRoll: () => void }) {
-  // Kept for now — full removal of the dialog path is Task 13.
-  const [openRoll, setOpenRoll] = useState(false);
   if (!isMidiTrack(track)) return null;
   const inst = track.instrument;
   return (
@@ -4800,7 +4467,6 @@ function MidiInstrumentDropdown({
         ))}
       </select>
       <button onClick={onOpenPianoRoll} className="px-1.5 h-5 bg-zinc-800 border border-zinc-700 rounded hover:bg-zinc-700">Roll</button>
-      <PianoRollDialog open={openRoll} onOpenChange={setOpenRoll} track={track} onUpdate={onUpdate} />
     </div>
   );
 }
