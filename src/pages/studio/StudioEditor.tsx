@@ -3966,7 +3966,12 @@ function BarRuler({
       window.removeEventListener('pointerup', up);
       const sec = Math.max(0, Math.min(lengthSeconds, (ev.clientX - rect.left) / pxPerSecond));
       if (!dragged) {
-        // Tap: move playhead, leave any existing loop region alone.
+        // Tap: move playhead. A leftover region highlight with loop OFF
+        // is just a stale selection — clear it so the ruler doesn't stay
+        // highlighted forever (there was previously NO way to deselect).
+        // An ACTIVE loop region (Repeat on) survives taps, so seeking
+        // while looping doesn't kill the loop.
+        if (!loopEnabled) onLoopRegionChange?.(null);
         onSeek?.(sec);
       }
     };
