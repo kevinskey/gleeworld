@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseMidiMessage } from './midiMessage';
-import { captureNote, findMidiClipAt, recordStartMode } from './midiRecord';
+import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode } from './midiRecord';
 import type { MidiClip } from './session';
 
 describe('parseMidiMessage', () => {
@@ -80,5 +80,57 @@ describe('recordStartMode', () => {
 
   it('blocks a MIDI-only take on the native engine (web-only input path)', () => {
     expect(recordStartMode({ ...base, midiInputEnabled: true, hasMidiTarget: true, nativeEngine: true })).toBe('blocked');
+  });
+});
+
+describe('appendTakeNote', () => {
+  const note = (down: number, up: number) => ({ pitch: 60, velocity: 100, downAbsSeconds: down, upAbsSeconds: up });
+
+  it('starts a fresh clip at the first key-down of a take in empty space', () => {
+    const r = appendTakeNote([], null, note(5, 5.5), 'fresh');
+    expect(r.takeClipId).toBe('fresh');
+    expect(r.clips).toHaveLength(1);
+    expect(r.clips[0].start_seconds).toBe(5);
+    expect(r.clips[0].notes).toHaveLength(1);
+  });
+
+  it('keeps ONE clip per take — later notes extend it instead of spawning clips', () => {
+    const first = appendTakeNote([], null, note(5, 5.5), 'fresh');
+    // Second note lands well past the first clip's end (5 + 1s min duration).
+    const second = appendTakeNote(first.clips, first.takeClipId, note(9, 9.5), 'unused');
+    expect(second.clips).toHaveLength(1);
+    expect(second.takeClipId).toBe('fresh');
+    expect(second.clips[0].notes).toHaveLength(2);
+    // Clip grew to cover the new note's end (9.5 abs = 4.5 clip-relative).
+    expect(second.clips[0].duration_seconds).toBeCloseTo(4.5, 5);
+    // Note is clip-relative to the take clip's start.
+    expect(second.clips[0].notes[1].start_seconds).toBeCloseTo(4, 5);
+  });
+
+  it('adopts the clip under the first key-down (overdub) and grows it as the take runs on', () => {
+    const existing: MidiClip[] = [
+      { id: 'old', kind: 'midi', start_seconds: 2, duration_seconds: 4, notes: [] } as MidiClip,
+    ];
+    const first = appendTakeNote(existing, null, note(3, 3.5), 'unused');
+    expect(first.takeClipId).toBe('old');
+    const second = appendTakeNote(first.clips, first.takeClipId, note(10, 11), 'unused');
+    expect(second.clips).toHaveLength(1);
+    expect(second.clips[0].id).toBe('old');
+    expect(second.clips[0].duration_seconds).toBeCloseTo(9, 5); // grew from 4 to cover 11 abs
+    expect(second.clips[0].notes).toHaveLength(2);
+  });
+
+  it('leaves other clips untouched', () => {
+    const other: MidiClip = { id: 'other', kind: 'midi', start_seconds: 20, duration_seconds: 2, notes: [] } as MidiClip;
+    const r1 = appendTakeNote([other], null, note(5, 5.5), 'fresh');
+    const r2 = appendTakeNote(r1.clips, r1.takeClipId, note(7, 8), 'unused');
+    expect(r2.clips).toHaveLength(2);
+    expect(r2.clips.find((c) => c.id === 'other')).toEqual(other);
+  });
+
+  it('never shrinks a clip when a short note lands inside it', () => {
+    const first = appendTakeNote([], null, note(5, 12), 'fresh'); // long note → 7s clip
+    const second = appendTakeNote(first.clips, first.takeClipId, note(6, 6.2), 'unused');
+    expect(second.clips[0].duration_seconds).toBeCloseTo(7, 5);
   });
 });

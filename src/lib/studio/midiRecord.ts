@@ -41,3 +41,36 @@ export function captureNote(
     duration_seconds: Math.max(MIN_NOTE_SECONDS, upAbsSeconds - downAbsSeconds),
   };
 }
+
+// Commit one captured key press into a take, keeping ONE clip per recording
+// take: the first note either adopts the clip under its key-down (overdub) or
+// starts a fresh one (`newClipId`), and every later note of the same take
+// appends to that clip and grows it — committing per-note used to spawn a new
+// clip for each note that landed past the previous clip's edge.
+export function appendTakeNote(
+  clips: MidiClip[],
+  takeClipId: string | null,
+  press: { pitch: number; velocity: number; downAbsSeconds: number; upAbsSeconds: number },
+  newClipId: string,
+): { clips: MidiClip[]; takeClipId: string } {
+  const target = (takeClipId ? clips.find((c) => c.id === takeClipId) : null)
+    ?? findMidiClipAt(clips, press.downAbsSeconds);
+  if (target) {
+    const note = captureNote(press.pitch, press.velocity, press.downAbsSeconds, press.upAbsSeconds, target.start_seconds);
+    const noteEnd = note.start_seconds + note.duration_seconds;
+    return {
+      takeClipId: target.id,
+      clips: clips.map((c) => c.id === target.id
+        ? { ...c, notes: [...c.notes, note], duration_seconds: Math.max(c.duration_seconds, noteEnd) }
+        : c),
+    };
+  }
+  const note = captureNote(press.pitch, press.velocity, press.downAbsSeconds, press.upAbsSeconds, press.downAbsSeconds);
+  const clip: MidiClip = {
+    id: newClipId, kind: 'midi',
+    start_seconds: press.downAbsSeconds,
+    duration_seconds: Math.max(1, note.start_seconds + note.duration_seconds),
+    notes: [note],
+  };
+  return { takeClipId: clip.id, clips: [...clips, clip] };
+}
