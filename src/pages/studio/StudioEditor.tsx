@@ -2,7 +2,7 @@
 // strip per track, drop-to-import audio, record-to-armed-track,
 // piano roll for MIDI clips, mixdown export.
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +31,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel,
 } from '@/components/ui/select';
 import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
+import { LiveVoices } from '@/lib/studio/engine/liveVoices';
+import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
+import { findMidiClipAt, captureNote } from '@/lib/studio/midiRecord';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
@@ -419,6 +422,81 @@ function Editor({
     localStorage.getItem('studio.midiSyncOutputId') || '');
   useEffect(() => { localStorage.setItem('studio.midiSyncOutputId', midiSyncOutputId); }, [midiSyncOutputId]);
   useMidiClockSync(engineState.state, midiSyncEnabled && !engineState.native, midiSyncOutputId);
+
+  // ── USB/Web MIDI keyboard INPUT: play the armed MIDI track's instrument live,
+  // and capture notes into its clip while the transport is recording. ──────────
+  const [midiInputEnabled, setMidiInputEnabled] = useState<boolean>(() =>
+    localStorage.getItem('studio.midiInputEnabled') === '1');
+  useEffect(() => { localStorage.setItem('studio.midiInputEnabled', midiInputEnabled ? '1' : '0'); }, [midiInputEnabled]);
+  const [midiInputDeviceId, setMidiInputDeviceId] = useState<string>(() =>
+    localStorage.getItem('studio.midiInputDeviceId') || '');
+  useEffect(() => { localStorage.setItem('studio.midiInputDeviceId', midiInputDeviceId); }, [midiInputDeviceId]);
+
+  // The MIDI track that receives keyboard input: the armed one (red R), else the
+  // first MIDI track. Arming picks the target when there is more than one.
+  const midiInputTrack = useMemo(() => {
+    const midi = session.tracks.filter(isMidiTrack);
+    return midi.find((t) => t.arm) ?? midi[0];
+  }, [session.tracks]);
+
+  const liveVoicesRef = useRef<LiveVoices | null>(null);
+  const heldMidiRef = useRef<Map<number, { downAbs: number; velocity: number }>>(new Map());
+
+  // Build/tear down the live-audition voice manager with the input toggle
+  // (web engine only — the native engine owns its own audio path).
+  useEffect(() => {
+    if (!midiInputEnabled || engineState.native) return;
+    const lv = new LiveVoices();
+    liveVoicesRef.current = lv;
+    return () => { lv.dispose(); liveVoicesRef.current = null; heldMidiRef.current.clear(); };
+  }, [midiInputEnabled, engineState.native]);
+
+  // Keep the audition instrument matched to the target track's instrument.
+  useEffect(() => {
+    liveVoicesRef.current?.setInstrument(midiInputTrack?.instrument ?? null);
+  }, [midiInputEnabled, midiInputTrack?.instrument?.type, midiInputTrack?.instrument?.preset_id]);
+
+  const handleMidiNoteOn = (pitch: number, velocity: number) => {
+    liveVoicesRef.current?.noteOn(pitch, velocity / 127);
+    if (state?.recordingActive && midiInputTrack) {
+      heldMidiRef.current.set(pitch, { downAbs: state.positionSeconds, velocity });
+    }
+  };
+  const handleMidiNoteOff = (pitch: number) => {
+    liveVoicesRef.current?.noteOff(pitch);
+    const held = heldMidiRef.current.get(pitch);
+    if (!held || !midiInputTrack) return;
+    heldMidiRef.current.delete(pitch);
+    const upAbs = state?.positionSeconds ?? held.downAbs;
+    const trackId = midiInputTrack.id;
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => {
+        if (t.id !== trackId || !isMidiTrack(t)) return t;
+        const existing = findMidiClipAt(t.clips, held.downAbs);
+        if (existing) {
+          const note = captureNote(pitch, held.velocity, held.downAbs, upAbs, existing.start_seconds);
+          return { ...t, clips: t.clips.map((c) => c.id === existing.id ? { ...c, notes: [...c.notes, note] } : c) } as Track;
+        }
+        // No clip under the key-down — start a fresh clip there.
+        const note = captureNote(pitch, held.velocity, held.downAbs, upAbs, held.downAbs);
+        const clip: MidiClip = {
+          id: crypto.randomUUID(), kind: 'midi',
+          start_seconds: held.downAbs,
+          duration_seconds: Math.max(1, note.start_seconds + note.duration_seconds),
+          notes: [note],
+        };
+        return { ...t, clips: [...t.clips, clip] } as Track;
+      }),
+    }));
+  };
+
+  const midiIn = useStudioMidiInput({
+    enabled: midiInputEnabled && !engineState.native,
+    deviceId: midiInputDeviceId,
+    onNoteOn: handleMidiNoteOn,
+    onNoteOff: handleMidiNoteOff,
+  });
 
   // Tempo slider draft. While the user drags we only push the live
   // engine tempo (cheap) and hold the value here; the session write —
@@ -1428,10 +1506,18 @@ function Editor({
               </div>
             </SheetContent>
           </Sheet>
-          <AudioSettingsButton midiSync={engineState.native ? undefined : {
-            enabled: midiSyncEnabled, setEnabled: setMidiSyncEnabled,
-            outputId: midiSyncOutputId, setOutputId: setMidiSyncOutputId,
-          }} />
+          <AudioSettingsButton
+            midiSync={engineState.native ? undefined : {
+              enabled: midiSyncEnabled, setEnabled: setMidiSyncEnabled,
+              outputId: midiSyncOutputId, setOutputId: setMidiSyncOutputId,
+            }}
+            midiInput={engineState.native ? undefined : {
+              enabled: midiInputEnabled, setEnabled: setMidiInputEnabled,
+              deviceId: midiInputDeviceId, setDeviceId: setMidiInputDeviceId,
+              inputs: midiIn.inputs, status: midiIn.status, supported: midiIn.supported,
+              targetTrackName: midiInputTrack?.name,
+            }}
+          />
           <Button
             size="sm"
             variant={view === 'mix' ? 'default' : 'outline'}
@@ -5268,7 +5354,50 @@ function MidiSyncSection({ enabled, setEnabled, outputId, setOutputId }: MidiSyn
   );
 }
 
-function AudioSettingsButton({ midiSync }: { midiSync?: MidiSyncProps }) {
+interface MidiInputProps {
+  enabled: boolean;
+  setEnabled: (v: boolean) => void;
+  deviceId: string;
+  setDeviceId: (v: string) => void;
+  inputs: { id: string; name: string }[];
+  status: 'idle' | 'connected' | 'denied';
+  supported: boolean;
+  targetTrackName?: string;
+}
+
+function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName }: MidiInputProps) {
+  if (!supported) return null;
+  return (
+    <div className="border-t border-border pt-2">
+      <Label className="text-xs font-semibold">USB MIDI keyboard — play &amp; record</Label>
+      <p className="text-xs text-muted-foreground mb-1.5">
+        Plays the armed MIDI track&apos;s instrument live, and records into its clip while the transport is recording.{' '}
+        {targetTrackName
+          ? <>Input goes to <span className="font-medium">“{targetTrackName}”</span>.</>
+          : 'Add a MIDI track and arm it (red R) to receive input.'}
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setEnabled(!enabled)}
+          className={`h-8 px-3 rounded border text-sm font-bold ${enabled ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+        >
+          {enabled ? 'On' : 'Off'}
+        </button>
+        {enabled && (
+          <select value={deviceId} onChange={(e) => setDeviceId(e.target.value)}
+            className="flex-1 h-8 bg-background border border-border rounded px-2 text-sm">
+            <option value="">All MIDI inputs</option>
+            {inputs.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
+          </select>
+        )}
+      </div>
+      {enabled && status === 'denied' && <p className="text-xs text-red-500 mt-1">MIDI access was denied — enable it in the browser to play.</p>}
+      {enabled && status === 'connected' && inputs.length === 0 && <p className="text-xs text-muted-foreground mt-1">No MIDI inputs found — plug in a keyboard.</p>}
+    </div>
+  );
+}
+
+function AudioSettingsButton({ midiSync, midiInput }: { midiSync?: MidiSyncProps; midiInput?: MidiInputProps }) {
   const [open, setOpen] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [inputId, setInputId] = useState<string>(() => localStorage.getItem('studio.inputDeviceId') || '');
@@ -5388,6 +5517,7 @@ function AudioSettingsButton({ midiSync }: { midiSync?: MidiSyncProps }) {
             </Button>
           </div>
           {midiSync && <MidiSyncSection {...midiSync} />}
+          {midiInput && <MidiInputSection {...midiInput} />}
           <div className="flex justify-end gap-2 pt-2">
             <Button size="sm" variant="outline" onClick={refresh}>Refresh device list</Button>
             <Button size="sm" onClick={() => setOpen(false)}>Done</Button>
