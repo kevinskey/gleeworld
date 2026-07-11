@@ -102,6 +102,11 @@ describe('note ops', () => {
     expect(out[0].start_seconds).toBeCloseTo(1.2);
     expect(out[0].duration_seconds).toBeCloseTo(0.3);
   });
+  it('resize left enforces minimum duration floor', () => {
+    const out = resizeNotes([note(60, 0, 0.02)], [0],
+      { edge: 'left', deltaSeconds: 0.001, gridSeconds: 0, clipStartSeconds: 0 });
+    expect(out[0].duration_seconds).toBeGreaterThanOrEqual(0.05);
+  });
   it('velocity offset clamps 1..127', () => {
     const out = offsetVelocity([note(60, 0, 1, 120), note(62, 0, 1, 3)], [0, 1], 20);
     expect(out[0].velocity).toBe(127);
@@ -123,5 +128,10 @@ describe('sustain ranges', () => {
     const mod = { controller: 1, value: 30, time_seconds: 0.5 };
     const out = setSustainRanges([cc64(1, true), cc64(2, false), mod], [{ down: 0.5, up: 1.5 }]);
     expect(out).toEqual([mod, cc64(0.5, true), cc64(1.5, false)].sort((a, b) => a.time_seconds - b.time_seconds));
+  });
+  it('setSustainRanges merges overlapping ranges', () => {
+    const cc = setSustainRanges([], [{ down: 1, up: 3 }, { down: 2, up: 4 }]);
+    const ranges = sustainRanges(cc, 10);
+    expect(ranges).toEqual([{ down: 1, up: 4 }]);
   });
 });

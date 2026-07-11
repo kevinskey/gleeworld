@@ -13,7 +13,7 @@ export const MIN_NOTE_SECONDS = 0.05;
  * where the pedal was baked into recorded durations). */
 export function applySustain(notes: MidiNote[], cc: MidiCcEvent[]): MidiNote[] {
   const pedal = cc.filter((e) => e.controller === 64)
-    .slice().sort((a, b) => a.time_seconds - b.time_seconds);
+    .sort((a, b) => a.time_seconds - b.time_seconds);
   if (pedal.length === 0) return notes;
   const materialEnd = Math.max(
     ...pedal.map((e) => e.time_seconds),
@@ -45,7 +45,7 @@ export const ROLL_GRIDS: RollGrid[] = ['1/4', '1/8', '1/16', '1/32', '1/8T', '1/
 export function gridSeconds(grid: RollGrid, tempoBpm: number): number {
   const q = 60 / tempoBpm;
   const straight: Record<string, number> = { '1/4': q, '1/8': q / 2, '1/16': q / 4, '1/32': q / 8 };
-  if (grid.endsWith('T')) return (straight[grid.slice(0, -1)] / 1) * (2 / 3);
+  if (grid.endsWith('T')) return straight[grid.slice(0, -1)] * (2 / 3);
   return straight[grid];
 }
 
@@ -112,7 +112,7 @@ export function resizeNotes(
     const end = n.start_seconds + n.duration_seconds;
     const absStart = snapAbs(opts.clipStartSeconds + n.start_seconds + opts.deltaSeconds, opts.gridSeconds);
     const start = Math.max(0, Math.min(end - MIN_NOTE_SECONDS, absStart - opts.clipStartSeconds));
-    return { ...n, start_seconds: start, duration_seconds: end - start };
+    return { ...n, start_seconds: start, duration_seconds: Math.max(MIN_NOTE_SECONDS, end - start) };
   });
 }
 
@@ -143,7 +143,7 @@ export function deleteNotes(notes: MidiNote[], selection: number[]): MidiNote[] 
  * unmatched trailing pedal-down closes at `fallbackEnd`. */
 export function sustainRanges(cc: MidiCcEvent[], fallbackEnd: number): Array<{ down: number; up: number }> {
   const pedal = cc.filter((e) => e.controller === 64)
-    .slice().sort((a, b) => a.time_seconds - b.time_seconds);
+    .sort((a, b) => a.time_seconds - b.time_seconds);
   const ranges: Array<{ down: number; up: number }> = [];
   let openDown: number | null = null;
   for (const e of pedal) {
@@ -155,12 +155,29 @@ export function sustainRanges(cc: MidiCcEvent[], fallbackEnd: number): Array<{ d
 }
 
 /** Rebuild the CC64 stream from edited ranges; other controllers pass
- * through untouched. Result is time-sorted. */
+ * through untouched. Result is time-sorted.
+ * Overlapping or touching ranges are merged: if next.down <= current.up,
+ * the merged range extends to max(current.up, next.up). */
 export function setSustainRanges(cc: MidiCcEvent[], ranges: Array<{ down: number; up: number }>): MidiCcEvent[] {
   const others = cc.filter((e) => e.controller !== 64);
-  const rebuilt = ranges.flatMap((r) => [
-    { controller: 64, value: 127, time_seconds: Math.max(0, Math.min(r.down, r.up)) },
-    { controller: 64, value: 0, time_seconds: Math.max(r.down, r.up) },
+
+  // Normalize each range (down = min, up = max), sort by down, and merge overlapping/touching ranges
+  const normalized = ranges.map((r) => ({ down: Math.min(r.down, r.up), up: Math.max(r.down, r.up) }))
+    .sort((a, b) => a.down - b.down);
+
+  const merged: Array<{ down: number; up: number }> = [];
+  for (const r of normalized) {
+    if (merged.length > 0 && r.down <= merged[merged.length - 1].up) {
+      // Overlapping or touching: extend the current range
+      merged[merged.length - 1].up = Math.max(merged[merged.length - 1].up, r.up);
+    } else {
+      merged.push(r);
+    }
+  }
+
+  const rebuilt = merged.flatMap((r) => [
+    { controller: 64, value: 127, time_seconds: r.down },
+    { controller: 64, value: 0, time_seconds: r.up },
   ]);
   return [...others, ...rebuilt].sort((a, b) => a.time_seconds - b.time_seconds);
 }
