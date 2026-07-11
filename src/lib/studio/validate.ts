@@ -6,7 +6,7 @@
 // listing every problem found (no early bailout — easier to fix).
 
 import {
-  STUDIO_SCHEMA_VERSION, type Session, type FxNode, type Track,
+  STUDIO_SCHEMA_VERSIONS, type Session, type FxNode, type Track,
   isAudioClip, isAudioTrack, isMidiClip, isMidiTrack,
 } from './session';
 
@@ -26,8 +26,8 @@ export function validateSession(raw: unknown): ValidateResult {
   }
   const s = raw as Partial<Session>;
 
-  if (s.schema_version !== STUDIO_SCHEMA_VERSION) {
-    errors.push(`schema_version mismatch: got "${s.schema_version}", expected "${STUDIO_SCHEMA_VERSION}"`);
+  if (!s.schema_version || !STUDIO_SCHEMA_VERSIONS.includes(s.schema_version)) {
+    errors.push(`schema_version mismatch: got "${s.schema_version}", expected one of "1.0.0", "1.1.0"`);
   }
   must(typeof s.id === 'string', 'id must be a string');
   must(typeof s.title === 'string', 'title must be a string');

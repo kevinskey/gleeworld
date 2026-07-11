@@ -16,8 +16,12 @@
 //
 // Mirror this file faithfully in ios/App/App/StudioModel.swift.
 
-export const STUDIO_SCHEMA_VERSION = '1.0.0' as const;
-export type StudioSchemaVersion = typeof STUDIO_SCHEMA_VERSION;
+export const STUDIO_SCHEMA_VERSIONS = ['1.0.0', '1.1.0'] as const;
+export type StudioSchemaVersion = typeof STUDIO_SCHEMA_VERSIONS[number];
+/** Baseline version for sessions that use no 1.1.0 features. Kept at
+ * 1.0.0 so manifests stay openable by the shipped iOS app (its decoder
+ * hard-rejects unknown versions). Writers stamp requiredSchemaVersion(). */
+export const STUDIO_SCHEMA_VERSION: StudioSchemaVersion = '1.0.0';
 
 // ── Time + transport ─────────────────────────────────────────────────
 
@@ -81,12 +85,22 @@ export interface MidiNote {
   duration_seconds: number;
 }
 
+/** A recorded continuous-controller event. 1.1.0 feature — a clip that
+ * carries cc events forces the manifest to schema 1.1.0.
+ * controller 64 = sustain pedal (down at value >= 64), 1 = mod wheel. */
+export interface MidiCcEvent {
+  controller: number;   // 0..127
+  value: number;        // 0..127
+  time_seconds: number; // relative to clip start
+}
+
 export interface MidiClip {
   id: string;
   kind: 'midi';
   start_seconds: number;
   duration_seconds: number;
   notes: MidiNote[];
+  cc?: MidiCcEvent[];  // optional — absent on 1.0.0 clips
 }
 
 export type Clip = AudioClip | MidiClip;
@@ -256,4 +270,14 @@ export function withMasteringDefaults(session: Session): Session {
     ...session,
     master: { ...session.master, mastering: { ...DEFAULT_MASTERING } },
   };
+}
+
+/** The minimum schema version that can represent this session: 1.1.0
+ * only when some MIDI clip actually uses cc events, else 1.0.0. */
+export function requiredSchemaVersion(session: Session): StudioSchemaVersion {
+  for (const t of session.tracks) {
+    if (t.kind !== 'midi') continue;
+    for (const c of t.clips) if (c.cc && c.cc.length > 0) return '1.1.0';
+  }
+  return '1.0.0';
 }
