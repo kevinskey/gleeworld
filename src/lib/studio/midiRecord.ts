@@ -6,6 +6,23 @@ export function findMidiClipAt(clips: MidiClip[], posSeconds: number): MidiClip 
   return clips.find((c) => posSeconds >= c.start_seconds && posSeconds < c.start_seconds + c.duration_seconds) ?? null;
 }
 
+// What pressing ● should do given what's armed. Armed audio always wins the
+// classic mic take (MIDI capture rides along via recordingActive); with no
+// armed audio, a MIDI-only take runs when the USB input has a track to write
+// into — web engine only, matching useStudioMidiInput's enabled gate.
+export type RecordStartMode = 'audio' | 'midi' | 'blocked';
+
+export function recordStartMode(opts: {
+  armedAudioCount: number;
+  midiInputEnabled: boolean;
+  hasMidiTarget: boolean;
+  nativeEngine: boolean;
+}): RecordStartMode {
+  if (opts.armedAudioCount > 0) return 'audio';
+  if (opts.midiInputEnabled && opts.hasMidiTarget && !opts.nativeEngine) return 'midi';
+  return 'blocked';
+}
+
 const MIN_NOTE_SECONDS = 0.05; // floor so a fast tap still has audible length
 
 // Turn a captured key press (absolute transport seconds for down/up) into a
