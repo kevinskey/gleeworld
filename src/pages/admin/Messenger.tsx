@@ -254,6 +254,10 @@ export default function Messenger() {
       if (type === 'text') setComposer(text);
       return;
     }
+    // Show the sender their own message immediately — never depend on the
+    // realtime round-trip for that (it was silently dead on self-hosted
+    // when the publication was empty, and can drop under load regardless).
+    qc.invalidateQueries({ queryKey: ['messenger-messages', selectedGroupId] });
     // Push-notify other group members (fire-and-forget).
     supabase.from('gw_group_members')
       .select('user_id')
