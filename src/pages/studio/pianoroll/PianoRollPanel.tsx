@@ -1,9 +1,9 @@
 // Docked piano-roll editor — opens below Smart Controls when a MIDI clip
-// is selected. Canvas-rendered (like PeaksCanvas): one sticky canvas
-// draws the visible window of ruler + keys + note grid; a second canvas
-// below is the velocity/CC lane (Tasks 11-12). All note math is pure
-// (midiEdit.ts / rollGeometry.ts); edits flow through the session update
-// path, which reschedules the engine.
+// is selected. Canvas-rendered (like PeaksCanvas): one absolutely-positioned
+// canvas, translated in sync with scroll, draws the visible window of ruler
+// + keys + note grid; a second canvas below is the velocity/CC lane (Tasks
+// 11-12). All note math is pure (midiEdit.ts / rollGeometry.ts); edits flow
+// through the session update path, which reschedules the engine.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MidiClip, MidiNote, MidiCcEvent, Session } from '@/lib/studio/session';
@@ -627,6 +627,10 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       canvas.style.width = `${vw}px`; canvas.style.height = `${vh}px`;
     }
     const sx = holder.scrollLeft, sy = holder.scrollTop;
+    // Glue the absolutely-positioned canvas to the holder's visible corner —
+    // draw() runs on every scroll (via scheduleDraw), so this stays in sync
+    // with at most one rAF of lag.
+    canvas.style.transform = `translate(${sx}px, ${sy}px)`;
     const g = canvas.getContext('2d')!;
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const cBg = tokenColor(holder, '--card', '#111');
@@ -909,13 +913,17 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
             onKeyDown={onKeyDown}
           >
             <div style={{ width: totalW, height: totalH }} />
-            {/* Sticky canvas: kept `position: sticky` per the plan brief
-             * (matches PeaksCanvas' proven approach for a fixed-viewport
-             * canvas over a scrolling spacer). Visual verification is
-             * consolidated in a later task — if sticky misbehaves inside
-             * this flex layout, swap to `position: absolute` with
-             * left/top driven by scrollLeft/scrollTop in draw(). */}
-            <canvas ref={canvasRef} className="sticky top-0 left-0 block" style={{ position: 'sticky' }} />
+            {/* Absolute + translate canvas: `position: sticky` was tried
+             * first (matching PeaksCanvas' fixed-viewport-over-a-spacer
+             * approach) but never worked here — the canvas element renders
+             * AFTER the ~1550px spacer in normal flow, so sticky's fallback
+             * position sits below the spacer, off-viewport, and the note
+             * grid/keys/ruler never became visible (confirmed in browser
+             * verification 2026-07-11). Fixed with `position: absolute;
+             * top: 0; left: 0` and syncing a CSS transform to scrollLeft/
+             * scrollTop inside draw() every frame, which keeps the canvas
+             * glued to the holder's visible corner regardless of DOM order. */}
+            <canvas ref={canvasRef} className="block" style={{ position: 'absolute', top: 0, left: 0 }} />
           </div>
           <div className="flex border-t border-border">
             <select value={lane} onChange={(e) => setLane(e.target.value as RollLane)}
