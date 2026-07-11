@@ -19,6 +19,7 @@ export function toModuleFlags(modules: TenantModule[]): ModuleFlags {
     hasFinance: hasModule('finance'),
     hasAcademy: true, // Academy is core, not a gated add-on.
     hasSongwriting: hasModule('songwriting'),
+    hasPlanner: hasModule('planner'),
   };
 }
 
