@@ -11,6 +11,7 @@
 
 import * as Tone from 'tone';
 import type { Instrument } from '../session';
+import { fromGmPresetId, gmSamplerConfig } from '../gmInstruments';
 
 export interface EngineInstrument {
   output: Tone.ToneAudioNode;
@@ -51,14 +52,38 @@ function buildSynth(spec: Instrument): EngineInstrument {
 }
 
 function buildSampler(spec: Instrument): EngineInstrument {
+  // General MIDI soundfont instrument (preset_id 'gm:<name>'): stream real
+  // samples from the MusyngKite soundfont via Tone.Sampler.
+  const gmName = fromGmPresetId(spec.preset_id);
+  if (gmName) return buildGmSampler(gmName);
+
   // Built-in basic kit — synthesize short percussive hits and feed them
-  // to a Sampler. Avoids shipping audio files in the bundle. Replace
-  // with real samples in a future polish pass.
-  if (spec.preset_id === 'kit_basic' || !spec.preset_id) {
-    return buildBasicKit();
-  }
-  // Future: 'piano_basic', 'guitar_basic' loaded from /public/samples/...
+  // to a Sampler. Avoids shipping audio files in the bundle.
   return buildBasicKit();
+}
+
+// A pitched GM instrument backed by Tone.Sampler streaming MusyngKite samples.
+// Samples load lazily; triggers before load resolve silently (Tone queues
+// nothing), so the first note or two after selecting an instrument may not sound
+// until the fetch completes — subsequent playback is fully sampled.
+function buildGmSampler(name: string): EngineInstrument {
+  const { urls, baseUrl } = gmSamplerConfig(name);
+  let loaded = false;
+  const sampler = new Tone.Sampler({
+    urls,
+    baseUrl,
+    onload: () => { loaded = true; },
+    // A single failed note file must not sink the whole instrument.
+    onerror: () => { /* missing sample for this note; others still load */ },
+  });
+  return {
+    output: sampler,
+    triggerAttackRelease: (pitch, dur, time, vel) => {
+      if (!loaded) return;
+      sampler.triggerAttackRelease(midiToNote(pitch), dur, time, vel);
+    },
+    dispose: () => sampler.dispose(),
+  };
 }
 
 function buildBasicKit(): EngineInstrument {

@@ -28,8 +28,9 @@ import {
   Magnet, Wrench,
 } from 'lucide-react';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel,
 } from '@/components/ui/select';
+import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
@@ -2561,19 +2562,33 @@ function MidiTrackActions({
         <Select
           value={`${inst.type}:${inst.preset_id ?? ''}`}
           onValueChange={(v) => {
-            const [type, preset] = v.split(':');
+            // Split on the FIRST colon only: a GM preset id is itself 'gm:<name>',
+            // so 'sampler:gm:violin' must yield type='sampler', preset='gm:violin'.
+            const i = v.indexOf(':');
+            const type = v.slice(0, i);
+            const preset = v.slice(i + 1);
             onUpdate((t) => isMidiTrack(t)
               ? { ...t, instrument: { ...t.instrument, type: type as 'synth_basic' | 'sampler', preset_id: preset || undefined } } as Track
               : t);
           }}
         >
           <SelectTrigger className="h-6 px-1 text-xs flex-1"><SelectValue /></SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-80">
             <SelectItem value="synth_basic:sine">Synth · Sine</SelectItem>
             <SelectItem value="synth_basic:triangle">Synth · Triangle</SelectItem>
             <SelectItem value="synth_basic:square">Synth · Square</SelectItem>
             <SelectItem value="synth_basic:sawtooth">Synth · Sawtooth</SelectItem>
             <SelectItem value="sampler:kit_basic">Sampler · Basic kit</SelectItem>
+            {GM_GROUPED.map((group) => (
+              <SelectGroup key={group.family}>
+                <SelectLabel>{group.family}</SelectLabel>
+                {group.instruments.map((g) => (
+                  <SelectItem key={g.name} value={`sampler:${toGmPresetId(g.name)}`}>
+                    {g.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
           </SelectContent>
         </Select>
       </div>
