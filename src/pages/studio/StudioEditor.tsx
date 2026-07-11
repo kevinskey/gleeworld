@@ -47,6 +47,7 @@ import {
   nextMarker, prevMarker, sortMarkers, defaultMarkerName, shuttleStepSeconds,
 } from '@/lib/studio/transport';
 import { MidiClockSender } from '@/lib/studio/midiClock';
+import { PianoRollPanel } from '@/pages/studio/pianoroll/PianoRollPanel';
 import type { EngineState } from '@/lib/studio/engine/engine';
 import { openMicRecorder, type MicRecorder } from '@/lib/studio/engine/recorder';
 import { getConfiguredInputLatencyMs, getConfiguredDeviceLatencyMs, getOutputLatencyMs, msToSamples, DEFAULT_DEVICE_LATENCY_MS, DEFAULT_INPUT_LATENCY_MS } from '@/lib/audio/sharedRecorder';
@@ -654,6 +655,21 @@ function Editor({
     });
     if (didSplit) toast.success(inside0 ? 'Clip split at playhead' : 'Clip split at center');
     else toast.error("Couldn't split this clip");
+  };
+
+  // "Piano roll" on the track strip: select the first clip, creating an
+  // empty 4-bar clip when the track has none (compose-from-scratch path).
+  const openPianoRollForTrack = (trackId: string) => {
+    const t = session.tracks.find((x) => x.id === trackId);
+    if (!t || !isMidiTrack(t)) return;
+    if (t.clips.length > 0) { setSelectedClip({ trackId, clipId: t.clips[0].id }); return; }
+    const barSec = (60 / session.tempo_bpm) * session.time_signature.numerator * (4 / session.time_signature.denominator);
+    const clip: MidiClip = { id: crypto.randomUUID(), kind: 'midi', start_seconds: 0, duration_seconds: barSec * 4, notes: [] };
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((x) => x.id === trackId && isMidiTrack(x) ? { ...x, clips: [clip] } as Track : x),
+    }));
+    setSelectedClip({ trackId, clipId: clip.id });
   };
 
   /** True when the playhead currently intersects the selected clip —
@@ -2355,6 +2371,7 @@ function Editor({
               onStripChange={(p) => { updateTrackStrip(t.id, p); }}
               onSeek={(s) => engineState.seek?.(s)}
               onHeightChange={setTrackHeightClamped}
+              onOpenPianoRoll={() => openPianoRollForTrack(t.id)}
             />
           ))}
           {/* Single shared horizontal scrollbar — drags here scroll the
@@ -2381,6 +2398,26 @@ function Editor({
         }
         update={update}
       />
+
+      {(() => {
+        if (!selectedClip) return null;
+        const t = session.tracks.find((x) => x.id === selectedClip.trackId);
+        if (!t || !isMidiTrack(t) || !t.clips.some((c) => c.id === selectedClip.clipId)) return null;
+        return (
+          <PianoRollPanel
+            key={selectedClip.clipId}
+            session={session}
+            trackId={selectedClip.trackId}
+            clipId={selectedClip.clipId}
+            positionSeconds={state?.positionSeconds ?? 0}
+            nativeEngine={!!engineState.native}
+            update={update}
+            pushHistory={() => pushHistory(session)}
+            onSeek={(s) => engineState.seek?.(s)}
+            onClose={() => setSelectedClip(null)}
+          />
+        );
+      })()}
         </div>{/* /flex-1 right column */}
       </div>
       </>
@@ -4500,7 +4537,7 @@ function ClickTrackRow({
 function DarkTrackRow({
   index, session, track, positionSeconds, snapSeconds, selectedClip, recording,
   stripWidth, onStripWidthChange,
-  onSelectClip, onUpdate, onRemove, onStripChange, onSeek, onHeightChange,
+  onSelectClip, onUpdate, onRemove, onStripChange, onSeek, onHeightChange, onOpenPianoRoll,
 }: {
   index: number;
   session: Session;
@@ -4517,6 +4554,7 @@ function DarkTrackRow({
   onStripChange: (p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => void;
   onSeek?: (seconds: number) => void;
   onHeightChange?: (h: number) => void;
+  onOpenPianoRoll: () => void;
 }) {
   const pxPerSecond = usePxPerSecond();
   const trackHeight = useTrackHeight();
@@ -4681,7 +4719,7 @@ function DarkTrackRow({
           {/* Row 3: only MIDI tracks need the instrument picker now.
            * Audio tracks use the Import icon next to the color swatch. */}
           {isMidiTrack(track) && (
-            <MidiInstrumentDropdown track={track} onUpdate={onUpdate} />
+            <MidiInstrumentDropdown track={track} onUpdate={onUpdate} onOpenPianoRoll={onOpenPianoRoll} />
           )}
         </div>
       </div>
@@ -4725,8 +4763,9 @@ function DarkTrackRow({
 
 // MIDI instrument picker — compact dropdown style for the dark strip.
 function MidiInstrumentDropdown({
-  track, onUpdate,
-}: { track: Track; onUpdate: (mut: (t: Track) => Track) => void }) {
+  track, onUpdate, onOpenPianoRoll,
+}: { track: Track; onUpdate: (mut: (t: Track) => Track) => void; onOpenPianoRoll: () => void }) {
+  // Kept for now — full removal of the dialog path is Task 13.
   const [openRoll, setOpenRoll] = useState(false);
   if (!isMidiTrack(track)) return null;
   const inst = track.instrument;
@@ -4760,7 +4799,7 @@ function MidiInstrumentDropdown({
           </optgroup>
         ))}
       </select>
-      <button onClick={() => setOpenRoll(true)} className="px-1.5 h-5 bg-zinc-800 border border-zinc-700 rounded hover:bg-zinc-700">Roll</button>
+      <button onClick={onOpenPianoRoll} className="px-1.5 h-5 bg-zinc-800 border border-zinc-700 rounded hover:bg-zinc-700">Roll</button>
       <PianoRollDialog open={openRoll} onOpenChange={setOpenRoll} track={track} onUpdate={onUpdate} />
     </div>
   );
