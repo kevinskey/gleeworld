@@ -34,7 +34,7 @@ import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
 import {
-  appendTakeNote, recordStartMode, HeldNotes, attachTakeCc, getMidiTrimMs,
+  appendTakeNote, recordStartMode, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
   type HeldPress, type CapturedCc,
 } from '@/lib/studio/midiRecord';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
@@ -5251,6 +5251,9 @@ function MicLevelTester() {
       {/* Recording latency comp — pulls recorded clips earlier by this
        * many ms to counter the browser's mic-capture pipeline delay. */}
       <RecordingLatencyControl />
+      {/* MIDI recording offset — compensates for MIDI input latency and
+       * allows fine-tuning where recorded MIDI notes land relative to audio. */}
+      <MidiLatencyControl />
       {error && (
         <div className="text-xs text-rose-600 break-words">{error}</div>
       )}
@@ -5304,6 +5307,40 @@ function RecordingLatencyControl() {
         {Capacitor.isNativePlatform()
           ? 'Increase if takes land late, decrease if early. Use Snap to beat on a clip after a take.'
           : 'Covers mic/speaker hardware latency only — startup delay is measured automatically per take. Increase if takes still land late.'}
+      </div>
+    </div>
+  );
+}
+
+function MidiLatencyControl() {
+  const [trim, setTrim] = useState<number>(() => getMidiTrimMs());
+  // Auto value read once for display — the actual per-take value is
+  // sampled at record start (midiCompSecRef in startRecording).
+  const [autoMs] = useState(() => Math.round(getOutputLatencyMs()));
+  useEffect(() => { localStorage.setItem(MIDI_TRIM_STORAGE_KEY, String(trim)); }, [trim]);
+  return (
+    <div className="border-t border-border pt-1.5 space-y-0.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-semibold inline-flex items-center gap-1">
+          <Timer className="w-4 h-4" /> MIDI recording offset
+        </span>
+        <span className="font-mono tabular-nums">auto {autoMs} + trim {trim} ms</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <input
+          type="range" min={-100} max={100} step={5} value={trim}
+          onChange={(e) => setTrim(Number(e.target.value))}
+          className="flex-1 h-1 accent-primary"
+          title="Fine-tunes where recorded MIDI notes land. Positive = notes move earlier."
+        />
+        <button
+          onClick={() => setTrim(0)}
+          className="text-xs font-semibold px-1.5 py-0.5 rounded border border-border bg-muted hover:bg-muted/70 tabular-nums"
+          title="Reset trim to 0 ms"
+        >R</button>
+      </div>
+      <div className="text-[10px] text-muted-foreground italic">
+        Auto compensation is measured each take. Add trim if recorded notes still sit late against the click; go negative if they land early.
       </div>
     </div>
   );
