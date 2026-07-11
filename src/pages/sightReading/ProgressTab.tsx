@@ -31,7 +31,8 @@ export function ProgressTab({
   useEffect(() => {
     let cancelled = false;
     loadRemote().then((remote) => {
-      if (cancelled || !remote) return; // null = couldn't load → keep local
+      if (cancelled || !remote) return;      // null = couldn't load → keep local
+      if (remote.length === 0) return;        // no synced takes yet → keep local (don't blank the stats)
       setTakes(remote);
       setSynced(true);
     });
