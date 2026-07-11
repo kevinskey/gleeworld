@@ -19,6 +19,8 @@ import {
   hitTestNote, notesInRect, xToTime, yToPitch,
 } from './rollGeometry';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
+import { midiClipToMusicXml } from './midiToMusicXml';
+import { ScoreView } from './ScoreView';
 
 const KEYS_W = 48;      // piano-key gutter
 const RULER_H = 20;
@@ -75,6 +77,9 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   const [selectedRange, setSelectedRange] = useState<number | null>(null);
   const [selectedModPoint, setSelectedModPoint] = useState<number | null>(null);
   const [tool, setTool] = useState<'pointer' | 'pencil'>('pointer');
+  // Roll = the editable canvas grid; Score = read-only engraved notation
+  // (MusicXML via OSMD, generated fresh from clip.notes on each switch).
+  const [view, setView] = useState<'roll' | 'score'>('roll');
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,6 +89,18 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   const metrics: RollMetrics = useMemo(
     () => ({ pxPerSecond, rowHeight: ROW_H }), [pxPerSecond]);
   const gridSec = clip ? gridSeconds(grid, session.tempo_bpm) : 0;
+  // MusicXML for the Score view — regenerated when the notes change.
+  // Only computed while the Score view is showing (OSMD render is the
+  // expensive part anyway, but no point serializing on every roll edit).
+  const scoreXml = useMemo(() => (view === 'score' && clip)
+    ? midiClipToMusicXml(clip, {
+        tempoBpm: session.tempo_bpm,
+        numerator: session.time_signature.numerator,
+        denominator: session.time_signature.denominator,
+        partName: track?.name,
+      })
+    : '',
+    [view, clip, session.tempo_bpm, session.time_signature.numerator, session.time_signature.denominator, track?.name]);
 
   /** One history-free clip mutation; gestures call pushHistory() once first. */
   const editClip = (mut: (c: MidiClip) => MidiClip) => props.update((s) => ({
@@ -868,6 +885,14 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
         <span className="font-semibold uppercase tracking-wide text-muted-foreground">Piano roll</span>
         <span className="text-xs text-muted-foreground">· {track?.name}</span>
         <div className="ml-auto flex items-center gap-1">
+          <div className="flex border border-border mr-1" title="Roll = edit · Score = engraved notation (read-only)">
+            {(['roll', 'score'] as const).map((v) => (
+              <button key={v} onClick={() => setView(v)}
+                className={`text-xs px-2 py-0.5 ${view === v ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
+                {v === 'roll' ? 'Roll' : 'Score'}
+              </button>
+            ))}
+          </div>
           <button onClick={() => setPxPerSecond((z) => Math.max(30, z / 1.5))}
             className="text-xs px-1.5 py-0.5 border border-border bg-muted hover:bg-muted/70" title="Zoom out">−</button>
           <button onClick={() => setPxPerSecond((z) => Math.min(1000, z * 1.5))}
@@ -875,7 +900,10 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
           <button onClick={props.onClose} className="text-xs px-1.5 py-0.5 text-muted-foreground hover:text-foreground" title="Close">×</button>
         </div>
       </div>
-      {open && (
+      {open && view === 'score' && (
+        <ScoreView xml={scoreXml} height={GRID_BODY_H + LANE_H} />
+      )}
+      {open && view === 'roll' && (
         <>
           {/* Toolbar: grid/strength (quantize input) + quantize/transpose ops. */}
           <div className="px-3 py-1 border-b border-border flex items-center gap-2 text-xs flex-wrap" data-roll-toolbar>
