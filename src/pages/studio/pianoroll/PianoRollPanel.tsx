@@ -11,6 +11,7 @@ import { isMidiTrack } from '@/lib/studio/session';
 import {
   ROLL_GRIDS, type RollGrid, gridSeconds,
   addNote, moveNotes, resizeNotes, deleteNotes,
+  quantizeNotes, transposeNotes, offsetVelocity,
 } from '@/lib/studio/midiEdit';
 import {
   type RollMetrics, PITCH_MAX, ROLL_ROWS, timeToX, pitchToY,
@@ -22,6 +23,9 @@ const KEYS_W = 48;      // piano-key gutter
 const RULER_H = 20;
 const ROW_H = 12;       // px per semitone
 const GRID_BODY_H = 300;
+const LANE_H = 72;      // velocity/CC lane strip height
+
+export type RollLane = 'velocity' | 'sustain' | 'mod';
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const isBlackKey = (p: number) => NOTE_NAMES[p % 12].endsWith('#');
@@ -61,9 +65,11 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   // clip.notes so the drag feels live; hit-testing on pointerdown still
   // reads clip.notes (gestures always start from committed state).
   const [draftNotes, setDraftNotes] = useState<MidiNote[] | null>(null);
+  const [lane, setLane] = useState<RollLane>('velocity');
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const laneCanvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
 
   const metrics: RollMetrics = useMemo(
@@ -77,6 +83,20 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       ...t, clips: t.clips.map((c) => c.id === clipId ? mut(c) : c),
     }),
   }));
+
+  // ── Toolbar ops: one-shot edits, one history entry + one engine reload
+  // each (via editClip, same as any other committed mutation). ──────────
+  const applyQuantize = () => {
+    if (!selection.length || gridSec <= 0 || !clip) return;
+    props.pushHistory();
+    editClip((c) => ({ ...c, notes: quantizeNotes(c.notes, selection, {
+      gridSeconds: gridSec, strength: strengthPct / 100, clipStartSeconds: c.start_seconds }) }));
+  };
+  const applyTranspose = (semitones: number) => {
+    if (!selection.length) return;
+    props.pushHistory();
+    editClip((c) => ({ ...c, notes: transposeNotes(c.notes, selection, semitones) }));
+  };
 
   // ── Audition (web engine only) ─────────────────────────────────────
   const auditionRef = useRef<LiveVoices | null>(null);
@@ -96,6 +116,18 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     | { kind: 'resize'; edge: 'left' | 'right'; startCx: number; orig: MidiNote[] | null; sel: number[]; moved: boolean; draft?: MidiNote[] }
     | { kind: 'marquee'; startCx: number; startCy: number; cx: number; cy: number; base: number[] };
   const dragRef = useRef<Drag | null>(null);
+
+  // ── Velocity lane drag: same draft-commit discipline as move/resize —
+  // no history on pointerdown, compute every intermediate frame from the
+  // gesture-start snapshot (d.orig), commit d.draft once in the shared
+  // onPointerUp. A click with no movement still counts as an edit (it set
+  // one bar's velocity to the click position) so `changed` is true as soon
+  // as a bar is hit, not gated on a movement threshold like move/resize.
+  type LaneDrag = {
+    index: number; inSelection: boolean; orig: MidiNote[]; velAtDown: number;
+    draft: MidiNote[] | null; changed: boolean;
+  };
+  const laneDragRef = useRef<LaneDrag | null>(null);
 
   /** Pointer event → content-space coords + which chrome region it hit. */
   const contentPos = (e: React.PointerEvent): { cx: number; cy: number; region: 'ruler' | 'keys' | 'grid' } => {
@@ -207,8 +239,18 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       const notes = d.draft;
       editClip((c) => ({ ...c, notes }));
     }
+    // Same discipline for the velocity lane: a click-no-drag on a bar is
+    // still one edit (see LaneDrag comment above), so `changed` — not a
+    // movement flag — gates the commit here.
+    const ld = laneDragRef.current;
+    if (ld && ld.changed && ld.draft) {
+      props.pushHistory();
+      const notes = ld.draft;
+      editClip((c) => ({ ...c, notes }));
+    }
     setDraftNotes(null);
     dragRef.current = null;
+    laneDragRef.current = null;
     scheduleDraw();
   };
 
@@ -217,6 +259,7 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
    * keep rendering a phantom in-flight drag. */
   const onPointerCancel = () => {
     dragRef.current = null;
+    laneDragRef.current = null;
     setDraftNotes(null);
     scheduleDraw();
   };
@@ -245,10 +288,61 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     }
   };
 
+  // ── Velocity lane pointer handlers (velocity only for now; Task 12
+  // extends by `lane`). Mirrors move/resize: pointer position at the
+  // start of the gesture (velAtDown) is the anchor, every frame recomputes
+  // the delta against that anchor and reapplies it to the d.orig snapshot
+  // — pure/idempotent, so it doesn't matter how many pointermoves fire. ──
+  const lanePos = (e: React.PointerEvent) => {
+    const canvas = laneCanvasRef.current!, holder = scrollRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    return { cx: e.clientX - rect.left + holder.scrollLeft, vy: e.clientY - rect.top };
+  };
+
+  const velFromY = (vy: number) => Math.max(1, Math.min(127, Math.round(127 * (1 - vy / LANE_H))));
+
+  /** Selected bar with a multi-note selection: offset the whole selection
+   * by the delta since gesture start. Unselected (or lone-selected) bar:
+   * set just that note directly to the pointer-implied velocity. */
+  const laneVelocityDraft = (d: LaneDrag, vel: number): MidiNote[] => {
+    if (d.inSelection && selection.length > 1) {
+      return offsetVelocity(d.orig, selection, vel - d.velAtDown);
+    }
+    return d.orig.map((n, i) => (i === d.index ? { ...n, velocity: vel } : n));
+  };
+
+  const onLanePointerDown = (e: React.PointerEvent) => {
+    if (!clip || lane !== 'velocity') return;
+    const { cx, vy } = lanePos(e);
+    // Nearest note whose start bar column is within 4px (topmost wins).
+    let index = -1;
+    clip.notes.forEach((n, i) => { if (Math.abs(timeToX(metrics, n.start_seconds) - cx) <= 4) index = i; });
+    if (index < 0) return;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    // No pushHistory() here — mirrors the grid's pointerdown: history is
+    // recorded once in the shared onPointerUp.
+    const vel = velFromY(vy);
+    const inSelection = selection.includes(index);
+    const d: LaneDrag = { index, inSelection, orig: clip.notes, velAtDown: vel, draft: null, changed: true };
+    d.draft = laneVelocityDraft(d, vel);
+    laneDragRef.current = d;
+    setDraftNotes(d.draft);
+  };
+
+  const onLanePointerMove = (e: React.PointerEvent) => {
+    const d = laneDragRef.current;
+    if (!d || !clip) return;
+    const { vy } = lanePos(e);
+    const vel = velFromY(vy);
+    d.draft = laneVelocityDraft(d, vel);
+    d.changed = true;
+    setDraftNotes(d.draft);
+  };
+
   // ── Drawing ─────────────────────────────────────────────────────────
   const scheduleDraw = () => {
     if (rafRef.current !== null) return;
-    rafRef.current = requestAnimationFrame(() => { rafRef.current = null; draw(); });
+    rafRef.current = requestAnimationFrame(() => { rafRef.current = null; draw(); drawLane(); });
   };
 
   const draw = () => {
@@ -381,6 +475,44 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     g.beginPath(); g.moveTo(0, RULER_H - 0.5); g.lineTo(vw, RULER_H - 0.5); g.stroke();
   };
 
+  /** CC/velocity lane strip below the grid — shares scrollLeft with the
+   * main canvas so bars line up with their notes' start columns. */
+  const drawLane = () => {
+    const canvas = laneCanvasRef.current, holder = scrollRef.current;
+    if (!canvas || !holder || !clip) return;
+    const dpr = window.devicePixelRatio || 1;
+    const vw = canvas.clientWidth, vh = LANE_H;
+    if (canvas.width !== vw * dpr || canvas.height !== vh * dpr) { canvas.width = vw * dpr; canvas.height = vh * dpr; }
+    const g = canvas.getContext('2d')!;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const sx = holder.scrollLeft;
+    const cBg = tokenColor(holder, '--card', '#111');
+    const cBorder = tokenColor(holder, '--border', '#333');
+    const cPrimary = tokenColor(holder, '--primary', '#7c3aed');
+    const cFg = tokenColor(holder, '--foreground', '#eee');
+    g.fillStyle = cBg; g.fillRect(0, 0, vw, vh);
+    g.save(); g.translate(-sx, 0);
+    if (lane === 'velocity') {
+      // Render the in-flight lane-drag (or grid-drag velocity change)
+      // preview, same as draw()'s note grid — keeps the two canvases in
+      // sync without touching the committed clip per pixel.
+      const notes = draftNotes ?? clip.notes;
+      const selSet = new Set(selection);
+      notes.forEach((n, i) => {
+        const x = timeToX(metrics, n.start_seconds);
+        const h = (n.velocity / 127) * (vh - 4);
+        g.fillStyle = cPrimary;
+        g.globalAlpha = selSet.has(i) ? 1 : 0.55;
+        g.fillRect(x, vh - h, 4, h);
+        g.globalAlpha = 1;
+        if (selSet.has(i)) { g.strokeStyle = cFg; g.strokeRect(x + 0.5, vh - h + 0.5, 3, h - 1); }
+      });
+    }
+    // sustain + mod lanes render in Task 12.
+    g.restore();
+    g.strokeStyle = cBorder; g.strokeRect(0.5, 0.5, vw - 1, vh - 1);
+  };
+
   // Redraw on any input change; keep the playhead moving.
   useEffect(() => { scheduleDraw(); });
   // Auto-center the pitch content on open / clip switch.
@@ -415,7 +547,7 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       </div>
       {open && (
         <>
-          {/* Toolbar — tools + quantize land in Tasks 10-12. */}
+          {/* Toolbar: grid/strength (quantize input) + quantize/transpose ops. */}
           <div className="px-3 py-1 border-b border-border flex items-center gap-2 text-xs flex-wrap" data-roll-toolbar>
             <label className="text-muted-foreground">Grid</label>
             <select value={grid} onChange={(e) => setGrid(e.target.value as RollGrid)}
@@ -427,6 +559,23 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
               onChange={(e) => setStrengthPct(Number(e.target.value))}
               className="w-20 h-1 accent-primary" />
             <span className="font-mono tabular-nums w-8">{strengthPct}%</span>
+            <button onClick={applyQuantize} disabled={!selection.length}
+              className="px-2 py-0.5 border border-border bg-muted hover:bg-muted/70 disabled:opacity-40 font-semibold">
+              Quantize
+            </button>
+            <span className="text-muted-foreground">·</span>
+            {[
+              { label: '♯ +1', st: 1 }, { label: '♭ −1', st: -1 },
+              { label: '8va', st: 12 }, { label: '8vb', st: -12 },
+            ].map((b) => (
+              <button key={b.label} onClick={() => applyTranspose(b.st)} disabled={!selection.length}
+                className="px-2 py-0.5 border border-border bg-muted hover:bg-muted/70 disabled:opacity-40">
+                {b.label}
+              </button>
+            ))}
+            <span className="ml-auto text-muted-foreground">
+              {selection.length ? `${selection.length} selected` : `${clip.notes.length} notes`}
+            </span>
           </div>
           <div
             ref={scrollRef}
@@ -448,6 +597,24 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
              * this flex layout, swap to `position: absolute` with
              * left/top driven by scrollLeft/scrollTop in draw(). */}
             <canvas ref={canvasRef} className="sticky top-0 left-0 block" style={{ position: 'sticky' }} />
+          </div>
+          <div className="flex border-t border-border">
+            <select value={lane} onChange={(e) => setLane(e.target.value as RollLane)}
+              className="w-12 shrink-0 border-r border-border bg-background text-xs px-0.5"
+              style={{ width: KEYS_W }} title="Lane">
+              <option value="velocity">Vel</option>
+              <option value="sustain">Sus</option>
+              <option value="mod">Mod</option>
+            </select>
+            <canvas
+              ref={laneCanvasRef}
+              className="block flex-1"
+              style={{ height: LANE_H }}
+              onPointerDown={onLanePointerDown}
+              onPointerMove={onLanePointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel}
+            />
           </div>
         </>
       )}
