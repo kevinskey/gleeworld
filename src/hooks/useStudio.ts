@@ -596,6 +596,10 @@ export function useStudioEngine(session: Session | null) {
             volumeDb: p.volume_db, pan: p.pan, mute: p.mute, solo: p.solo,
           });
         },
+        // NativeStudio.updateStrip requires a trackId — there is no
+        // master-bus strip call in the plugin yet, so master volume/pan
+        // edits on iOS apply on the next full engine reload only.
+        updateMasterStrip: async (_p: { volume_db?: number; pan?: number }) => { /* not wired on native yet */ },
         updateTempo: async (bpm: number) => { await NativeStudio.updateTempo({ bpm }); },
         updateTimeSignature: async (_n: number, _d: number) => { /* not wired on native yet */ },
         updateTransport: async (_args: { tempo?: number; timeSignature?: [number, number]; loop?: { start: number; end: number; enabled: boolean } }) => {
@@ -643,6 +647,8 @@ export function useStudioEngine(session: Session | null) {
       seek: (s: number) => engineRef.current?.seek(s),
       updateTrackStrip: (id: string, p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) =>
         engineRef.current?.updateTrackStrip(id, p),
+      updateMasterStrip: (p: { volume_db?: number; pan?: number }) =>
+        engineRef.current?.updateMasterStrip(p),
       updateTempo: (bpm: number) => engineRef.current?.updateTransport({ tempo: bpm }),
       updateTimeSignature: (n: number, d: number) =>
         engineRef.current?.updateTransport({ timeSignature: [n, d] }),

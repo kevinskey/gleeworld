@@ -2214,6 +2214,8 @@ function Editor({
             (selectedClip && session.tracks.find((t) => t.id === selectedClip.trackId)?.id) ?? null
           }
           update={update}
+          onStripChange={(id, p) => engineState.updateTrackStrip?.(id, p)}
+          onMasterStripChange={(p) => engineState.updateMasterStrip?.(p)}
         />
         </div>
 
@@ -4654,13 +4656,19 @@ function LiveWaveform({
 // ── Inspector (left rail, Logic-style) ───────────────────────────────
 
 function Inspector({
-  width, onWidthChange, session, selectedTrackId, update,
+  width, onWidthChange, session, selectedTrackId, update, onStripChange, onMasterStripChange,
 }: {
   width: number;
   onWidthChange: (w: number) => void;
   session: Session;
   selectedTrackId: string | null;
   update: (mut: (s: Session) => Session) => void;
+  /** Live engine mirror for track fader/pan/mute/solo — session `update`
+   *  alone never reaches the running engine (strip fields are excluded
+   *  from the skeleton sig by design). */
+  onStripChange?: (trackId: string, p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => void;
+  /** Same, for the Master Out strip. */
+  onMasterStripChange?: (p: { volume_db?: number; pan?: number }) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const track = selectedTrackId ? session.tracks.find((t) => t.id === selectedTrackId) ?? null : null;
@@ -4707,18 +4715,30 @@ function Inspector({
           color={track.color}
           volumeDb={track.volume_db} pan={track.pan}
           mute={track.mute} solo={track.solo}
-          onVolume={(v) => update((s) => ({
-            ...s, tracks: s.tracks.map((t) => t.id === track.id ? { ...t, volume_db: v } as Track : t),
-          }))}
-          onPan={(p) => update((s) => ({
-            ...s, tracks: s.tracks.map((t) => t.id === track.id ? { ...t, pan: p } as Track : t),
-          }))}
-          onMute={() => update((s) => ({
-            ...s, tracks: s.tracks.map((t) => t.id === track.id ? { ...t, mute: !t.mute } as Track : t),
-          }))}
-          onSolo={() => update((s) => ({
-            ...s, tracks: s.tracks.map((t) => t.id === track.id ? { ...t, solo: !t.solo } as Track : t),
-          }))}
+          onVolume={(v) => {
+            update((s) => ({
+              ...s, tracks: s.tracks.map((t) => t.id === track.id ? { ...t, volume_db: v } as Track : t),
+            }));
+            onStripChange?.(track.id, { volume_db: v });
+          }}
+          onPan={(p) => {
+            update((s) => ({
+              ...s, tracks: s.tracks.map((t) => t.id === track.id ? { ...t, pan: p } as Track : t),
+            }));
+            onStripChange?.(track.id, { pan: p });
+          }}
+          onMute={() => {
+            update((s) => ({
+              ...s, tracks: s.tracks.map((t) => t.id === track.id ? { ...t, mute: !t.mute } as Track : t),
+            }));
+            onStripChange?.(track.id, { mute: !track.mute });
+          }}
+          onSolo={() => {
+            update((s) => ({
+              ...s, tracks: s.tracks.map((t) => t.id === track.id ? { ...t, solo: !t.solo } as Track : t),
+            }));
+            onStripChange?.(track.id, { solo: !track.solo });
+          }}
         />
       ) : (
         <div className="text-xs text-muted-foreground italic px-1">Click a clip to select its track.</div>
@@ -4735,8 +4755,14 @@ function Inspector({
           volumeDb={session.master.volume_db}
           pan={session.master.pan}
           mute={false} solo={false}
-          onVolume={(v) => update((s) => ({ ...s, master: { ...s.master, volume_db: v } }))}
-          onPan={(p) => update((s) => ({ ...s, master: { ...s.master, pan: p } }))}
+          onVolume={(v) => {
+            update((s) => ({ ...s, master: { ...s.master, volume_db: v } }));
+            onMasterStripChange?.({ volume_db: v });
+          }}
+          onPan={(p) => {
+            update((s) => ({ ...s, master: { ...s.master, pan: p } }));
+            onMasterStripChange?.({ pan: p });
+          }}
           onMute={() => { /* master no mute */ }}
           onSolo={() => { /* master no solo */ }}
           hideMS

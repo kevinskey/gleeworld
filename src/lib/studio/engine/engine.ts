@@ -82,6 +82,10 @@ export class StudioEngine {
   // Master bus: masterIn → masterFx → [masterChain?] → Destination
   // (+ post-FX, pre-mastering meter — see wireMasterOutput).
   private masterIn: Tone.Gain;
+  // Master balance — sits between masterIn and the FX chain. The
+  // Inspector's "Master Out" pan slider was previously session-only
+  // (no node existed), so it never made sound different.
+  private masterPan: Tone.Panner;
   private masterFx: EngineFxChain;
   private masterMeter: Tone.Meter;
   // Mastering chain (B1 task 4/5) — built async (AudioWorklet module
@@ -179,8 +183,10 @@ export class StudioEngine {
   constructor(opts: StudioEngineOptions = {}) {
     this.onMasteringDegraded = opts.onMasteringDegraded;
     this.masterIn = new Tone.Gain(1);
+    this.masterPan = new Tone.Panner(0);
     this.masterFx = buildFxChain([]);
-    this.masterIn.connect(this.masterFx.input);
+    this.masterIn.connect(this.masterPan);
+    this.masterPan.connect(this.masterFx.input);
     this.masterMeter = new Tone.Meter({ channelCount: 2, smoothing: 0.7 });
     // No session loaded yet, so no mastering chain either — this is the
     // bypass wiring (masterFx.output straight to Destination).
@@ -447,6 +453,7 @@ export class StudioEngine {
     this.metronomeAccent.dispose();
     this.masterMeter.dispose();
     this.masterFx.dispose();
+    this.masterPan.dispose();
     this.masterIn.dispose();
     Tone.getTransport().stop();
     Tone.getTransport().cancel();
@@ -464,11 +471,14 @@ export class StudioEngine {
     ];
 
     // Rebuild master FX chain (and reattach the meter post-FX).
-    this.masterIn.disconnect();
+    // masterIn → masterPan stays wired for the engine's lifetime; only
+    // the pan → (new) masterFx.input hop is rebuilt here.
+    this.masterPan.disconnect();
     this.masterFx.dispose();
     this.masterFx = buildFxChain(session.master.fx);
-    this.masterIn.connect(this.masterFx.input);
+    this.masterPan.connect(this.masterFx.input);
     this.masterIn.gain.value = dbToGain(session.master.volume_db);
+    this.masterPan.pan.value = session.master.pan ?? 0;
     // Converge the mastering chain with the session (builds/tears down
     // only on an actual enabled-toggle; otherwise just refreshes params).
     // rewireTail=true: masterFx was just disposed + rebuilt above, so the
@@ -569,6 +579,25 @@ export class StudioEngine {
     if (patch.solo !== undefined) t.userSolo = patch.solo;
     t.updateStrip({ volume_db: patch.volume_db, pan: patch.pan });
     this.recomputeSolo();
+  }
+
+  /** Live master strip (the Inspector's "Master Out") — click-free 30ms
+   *  ramps, no rebuild. Master volume/pan are deliberately NOT in the
+   *  skeleton sig (a fader drag must never force a reload), so without
+   *  this live path the sliders only mutated saved state and the bus
+   *  never changed until some unrelated full reload. Mirrors
+   *  EngineTrack.updateStrip's ramp/catch pattern. */
+  updateMasterStrip(patch: { volume_db?: number; pan?: number }): void {
+    const now = Tone.now();
+    if (patch.volume_db !== undefined) {
+      const g = dbToGain(patch.volume_db);
+      try { this.masterIn.gain.cancelScheduledValues(now); this.masterIn.gain.linearRampTo(g, 0.03, now); }
+      catch { this.masterIn.gain.value = g; }
+    }
+    if (patch.pan !== undefined) {
+      try { this.masterPan.pan.cancelScheduledValues(now); this.masterPan.pan.linearRampTo(patch.pan, 0.03, now); }
+      catch { this.masterPan.pan.value = patch.pan; }
+    }
   }
 
   /** Incremental clip add. The new asset's signed URL must already be
