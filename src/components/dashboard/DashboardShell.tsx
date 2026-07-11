@@ -39,6 +39,12 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/navigation/navCatalog';
+import {
+  DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core';
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useNavItemOrder } from '@/hooks/useNavItemOrder';
 import { setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,11 +82,38 @@ const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan
 // columns use. Sections with zero visible entries drop out (unchanged
 // behavior). label:'Today' historically rendered with its section label
 // like every other section.
-function buildNavSections(ctx: NavContext): Array<{ label: string; items: CatalogEntry[] }> {
+function buildNavSections(
+  ctx: NavContext,
+  userOrder?: string[] | null,
+): Array<{ label: string; items: CatalogEntry[] }> {
   const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
+  // per-user ordering applies WITHIN each section (sections stay semantic);
+  // items the user hasn't ordered keep catalog order after ordered ones
+  const rank = new Map((userOrder ?? []).map((k, i) => [k, i]));
+  const sortItems = (items: CatalogEntry[]) =>
+    userOrder?.length
+      ? [...items].sort((a, b) => (rank.get(a.key) ?? Infinity) - (rank.get(b.key) ?? Infinity))
+      : items;
   return SECTION_ORDER
-    .map((s) => ({ label: NAV_SECTION_LABELS[s], items: resolved.filter((e) => e.section === s) }))
+    .map((s) => ({ label: NAV_SECTION_LABELS[s], items: sortItems(resolved.filter((e) => e.section === s)) }))
     .filter((s) => s.items.length > 0);
+}
+
+// Sortable wrapper for a sidebar nav row. The 8px activation distance
+// keeps plain clicks navigating; only a real drag reorders.
+function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={isDragging ? 'opacity-60' : undefined}
+    >
+      {children}
+    </div>
+  );
 }
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
@@ -224,7 +257,22 @@ function Sidebar() {
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
     hiddenRoutes: hiddenNav,
   };
-  const sections = buildNavSections(navCtx);
+  const { navOrder, saveNavOrder } = useNavItemOrder();
+  const sections = buildNavSections(navCtx, navOrder?.order);
+  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const onNavDragEnd = (e: DragEndEvent) => {
+    const activeId = String(e.active.id);
+    const overId = e.over ? String(e.over.id) : null;
+    if (!overId || activeId === overId) return;
+    // reorder within the section that contains both rows
+    const section = sections.find((s) =>
+      s.items.some((i) => i.key === activeId) && s.items.some((i) => i.key === overId));
+    if (!section) return;
+    const keys = section.items.map((i) => i.key);
+    const moved = arrayMove(keys, keys.indexOf(activeId), keys.indexOf(overId));
+    const flat = sections.flatMap((s) => (s === section ? moved : s.items.map((i) => i.key)));
+    void saveNavOrder(flat);
+  };
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -269,6 +317,7 @@ function Sidebar() {
           padding (pt-4 sm:pt-5) gives the first item air below the
           brand block instead of glueing flush against the divider. */}
       <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2 space-y-1.5">
+        <DndContext sensors={dragSensors} onDragEnd={onNavDragEnd}>
         {sections.map((section, idx) => {
           if (section.items.length === 0) return null;
           const isCollapsible = !!section.label;
@@ -302,9 +351,11 @@ function Sidebar() {
                   )}
                 </button>
               )}
-              {!isCollapsed && section.items.map((item) => (
+              {!isCollapsed && (
+              <SortableContext items={section.items.map((i) => i.key)} strategy={verticalListSortingStrategy}>
+              {section.items.map((item) => (
+                <SortableNavRow key={item.key} id={item.key}>
                 <NavLink
-                  key={item.to}
                   to={item.to}
                   end={item.end}
                   data-tour={item.tourId}
@@ -328,10 +379,14 @@ function Sidebar() {
                   <item.icon className={`w-[18px] h-[18px] shrink-0 ${item.hero ? 'text-primary' : 'text-slate-500'}`} />
                   <span className="truncate">{item.label}</span>
                 </NavLink>
+                </SortableNavRow>
               ))}
+              </SortableContext>
+              )}
             </div>
           );
         })}
+        </DndContext>
       </nav>
 
       {/* Tenant pill — compact one-row footer. The brand + name are
@@ -383,7 +438,10 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
     hiddenRoutes: hiddenNav,
   };
-  const sections = buildNavSections(navCtx);
+  // same per-user ordering as the desktop sidebar (read-only here;
+  // reordering by drag is a desktop affordance)
+  const { navOrder } = useNavItemOrder();
+  const sections = buildNavSections(navCtx, navOrder?.order);
 
   return (
     <div className="flex flex-col h-full">
