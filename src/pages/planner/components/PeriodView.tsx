@@ -29,6 +29,7 @@ import {
   usePeriodEvents, usePeriodNote, useRescheduleTask, useSetTaskStatus, useTasksForDate,
   useTasksForRange, useTemplates,
 } from '../hooks';
+import AddEventDialog from './AddEventDialog';
 import DayTimeline, { slotToIso } from './DayTimeline';
 import NoteEditor from './NoteEditor';
 import TaskRow from './TaskRow';
