@@ -202,7 +202,7 @@ function Sidebar() {
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
 
   // Add-on modules — only render the nav entry if the tenant has access.
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting'] as const;
+  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
   // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
   const moduleAccess: Record<string, boolean> = {};
   for (const key of MODULE_KEYS) {
@@ -365,7 +365,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
   const userCanLibrarian = canEditMusicLibrary();
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting'] as const;
+  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
   // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
   const moduleAccess: Record<string, boolean> = {};
   for (const key of MODULE_KEYS) {

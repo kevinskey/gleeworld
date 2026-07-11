@@ -12,7 +12,7 @@ export interface ModuleFlags {
   hasViewer: boolean; hasPartTracks: boolean; hasStudio: boolean;
   hasSightReading: boolean; hasBoxOffice: boolean; hasConcertPlanner: boolean;
   hasMerch: boolean; hasFinance: boolean; hasAcademy: boolean; hasStore: boolean;
-  hasSongwriting: boolean;
+  hasSongwriting: boolean; hasPlanner: boolean;
 }
 
 export interface Destination { key: string; to: string; label: string; icon: LucideIcon; section?: NavSectionKey; }
