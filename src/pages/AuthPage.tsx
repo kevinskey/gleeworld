@@ -12,6 +12,7 @@ import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { getOrgName } from '@/lib/orgName';
 import { tenantAuthGradient, tenantButtonGradient } from '@/lib/tenantGradient';
 import { isDemoTenant } from '@/lib/demoTenant';
+import { useIsPortrait } from '@/hooks/use-mobile';
 import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
 
 export default function AuthPage() {
@@ -29,10 +30,15 @@ export default function AuthPage() {
   // If the tenant has set a hero image for auth, render it behind a dark
   // overlay so the form stays legible. Otherwise fall back to the
   // primary-color-derived gradient.
-  const hasAuthImage = !!branding.auth_background_url;
+  // Portrait viewports get the portrait crop when the tenant provided one —
+  // a landscape hero center-cropped onto a phone loses its subject.
+  const isPortrait = useIsPortrait();
+  const authImageUrl =
+    (isPortrait && branding.auth_background_mobile_url) || branding.auth_background_url;
+  const hasAuthImage = !!authImageUrl;
   const authBackgroundStyle: React.CSSProperties = hasAuthImage
     ? {
-        backgroundImage: `url(${branding.auth_background_url})`,
+        backgroundImage: `url(${authImageUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

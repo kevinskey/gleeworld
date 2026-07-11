@@ -9,6 +9,8 @@ export interface BrandingSettings {
   logo_url: string | null;
   /** Optional hero image rendered behind the auth page; falls back to the tenant gradient. */
   auth_background_url: string | null;
+  /** Optional portrait variant used on portrait viewports; falls back to auth_background_url. */
+  auth_background_mobile_url: string | null;
   primary_color: string;
   setup_completed: boolean;
 }
@@ -24,6 +26,7 @@ function fallback(): BrandingSettings {
     tagline: null,
     logo_url: TENANT?.logoUrl ?? null,
     auth_background_url: null,
+    auth_background_mobile_url: null,
     primary_color: '#150d26',
     setup_completed: false,
   };

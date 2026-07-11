@@ -70,3 +70,24 @@ export function useIsPhone() {
 
   return isPhone
 }
+
+/** True when the viewport is taller than it is wide (phones, iPad portrait).
+ *  Used to swap in portrait-cropped artwork (e.g. auth backgrounds) that
+ *  would otherwise lose its subject to a center crop. */
+export function useIsPortrait() {
+  const [isPortrait, setIsPortrait] = React.useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(orientation: portrait)').matches : false,
+  )
+
+  React.useEffect(() => {
+    const mql = window.matchMedia('(orientation: portrait)')
+    const onChange = () => {
+      setIsPortrait(mql.matches)
+    }
+    mql.addEventListener("change", onChange)
+    setIsPortrait(mql.matches)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+
+  return isPortrait
+}

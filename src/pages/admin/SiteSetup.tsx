@@ -33,9 +33,11 @@ export default function SiteSetup() {
   const [logoUrl, setLogoUrl] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#150d26');
   const [authBackgroundUrl, setAuthBackgroundUrl] = useState('');
+  const [authBackgroundMobileUrl, setAuthBackgroundMobileUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [bgUploading, setBgUploading] = useState(false);
+  const [bgMobileUploading, setBgMobileUploading] = useState(false);
 
   // Tenant URL + custom domain state
   const [tenant, setTenant] = useState<{ id: string; slug: string; subdomain: string | null; custom_domain: string | null } | null>(null);
@@ -67,6 +69,7 @@ export default function SiteSetup() {
       setLogoUrl(settings.logo_url ?? '');
       setPrimaryColor(settings.primary_color ?? '#150d26');
       setAuthBackgroundUrl(settings.auth_background_url ?? '');
+      setAuthBackgroundMobileUrl(settings.auth_background_mobile_url ?? '');
     }
   }, [isLoading, settings]);
 
@@ -136,6 +139,30 @@ export default function SiteSetup() {
     toast.success('Sign-in background uploaded');
   }
 
+  async function handleMobileBackgroundUpload(file: File) {
+    if (!user) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Background must be 5 MB or smaller.');
+      return;
+    }
+    setBgMobileUploading(true);
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const path = `authbg-mobile-${Date.now()}.${ext}`;
+    const { error: uploadErr } = await supabase
+      .storage
+      .from('site-branding')
+      .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+    if (uploadErr) {
+      setBgMobileUploading(false);
+      toast.error(`Upload failed: ${uploadErr.message}`);
+      return;
+    }
+    const { data: pub } = supabase.storage.from('site-branding').getPublicUrl(path);
+    setAuthBackgroundMobileUrl(pub.publicUrl);
+    setBgMobileUploading(false);
+    toast.success('Mobile sign-in background uploaded');
+  }
+
   async function handleSave(markComplete: boolean) {
     if (!orgName.trim()) {
       toast.error('Organization name is required.');
@@ -173,6 +200,7 @@ export default function SiteSetup() {
       logo_url: logoUrl.trim() || null,
       primary_color: primaryColor || '#150d26',
       auth_background_url: authBackgroundUrl.trim() || null,
+      auth_background_mobile_url: authBackgroundMobileUrl.trim() || null,
       ...(markComplete ? { setup_completed: true } : {}),
     };
 
@@ -403,6 +431,59 @@ export default function SiteSetup() {
                   </label>
                   <p className="text-xs text-slate-400 mt-2">
                     PNG, JPG, WebP. Max 5 MB. Wide (landscape) images work best.
+                  </p>
+                </div>
+              </div>
+            </Field>
+
+            <Field
+              label="Sign-in background (phones)"
+              hint="Optional portrait version of the background, shown on phones and other tall screens. Leave empty to reuse the image above."
+            >
+              <div className="flex flex-wrap items-start gap-4">
+                {authBackgroundMobileUrl ? (
+                  <div className="relative bg-white border border-slate-200 rounded-lg p-1.5 shadow-sm">
+                    <img
+                      src={authBackgroundMobileUrl}
+                      alt="Mobile sign-in background preview"
+                      className="w-24 h-40 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAuthBackgroundMobileUrl('')}
+                      className="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 rounded-full p-1 text-white hover:bg-slate-700"
+                      title="Remove mobile background"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-24 h-40 bg-white border border-slate-300 border-dashed rounded-lg flex items-center justify-center text-slate-400">
+                    <ImageIcon className="w-8 h-8" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-[12rem]">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium cursor-pointer transition-colors">
+                    {bgMobileUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {bgMobileUploading ? 'Uploading…' : authBackgroundMobileUrl ? 'Replace background' : 'Upload background'}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      disabled={bgMobileUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleMobileBackgroundUpload(file);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  <p className="text-xs text-slate-400 mt-2">
+                    PNG, JPG, WebP. Max 5 MB. Tall (portrait) images work best.
                   </p>
                 </div>
               </div>
