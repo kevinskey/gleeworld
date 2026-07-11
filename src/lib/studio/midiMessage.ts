@@ -1,10 +1,12 @@
 // Pure parser for Web MIDI input messages. Kept free of any Web Audio / DOM so
-// it can be unit-tested. Handles the two events we act on — note on / note off —
-// and reports everything else as 'other' (CC, pitch bend, clock, etc.).
+// it can be unit-tested. Handles the events we act on — note on / note off /
+// sustain pedal — and reports everything else as 'other' (CC, pitch bend,
+// clock, etc.).
 
 export type MidiEvent =
   | { type: 'noteon'; pitch: number; velocity: number }   // velocity 1..127
   | { type: 'noteoff'; pitch: number }
+  | { type: 'sustain'; down: boolean }                    // CC64, down at >= 64
   | { type: 'other' };
 
 export function parseMidiMessage(data: ArrayLike<number>): MidiEvent {
@@ -17,5 +19,7 @@ export function parseMidiMessage(data: ArrayLike<number>): MidiEvent {
   // widely-used "running status" note-off, so treat it as a release.
   if (status === 0x90 && velocity > 0) return { type: 'noteon', pitch, velocity };
   if (status === 0x80 || (status === 0x90 && velocity === 0)) return { type: 'noteoff', pitch };
+  // 0xB0 = control change; controller 64 is the sustain (damper) pedal.
+  if (status === 0xb0 && pitch === 64) return { type: 'sustain', down: velocity >= 64 };
   return { type: 'other' };
 }

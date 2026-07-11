@@ -34,6 +34,7 @@ import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
 import { appendTakeNote, recordStartMode } from '@/lib/studio/midiRecord';
+import { SustainTracker, type HeldPress } from '@/lib/studio/midiSustain';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
@@ -444,7 +445,8 @@ function Editor({
   }, [session.tracks]);
 
   const liveVoicesRef = useRef<LiveVoices | null>(null);
-  const heldMidiRef = useRef<Map<number, { downAbs: number; velocity: number }>>(new Map());
+  // Held/sustained-key bookkeeping incl. the damper pedal (pure, unit-tested).
+  const [midiTracker] = useState(() => new SustainTracker());
   // The single clip owned by the current recording take — every note of a
   // take appends here so one take never sprays one-clip-per-note.
   const midiTakeClipRef = useRef<string | null>(null);
@@ -455,7 +457,7 @@ function Editor({
     if (!midiInputEnabled || engineState.native) return;
     const lv = new LiveVoices();
     liveVoicesRef.current = lv;
-    return () => { lv.dispose(); liveVoicesRef.current = null; heldMidiRef.current.clear(); };
+    return () => { lv.dispose(); liveVoicesRef.current = null; midiTracker.flush(); };
   }, [midiInputEnabled, engineState.native]);
 
   // Keep the audition instrument matched to the target track's instrument.
@@ -474,33 +476,52 @@ function Editor({
     });
   }, [midiInputEnabled, midiInputTrack?.volume_db, midiInputTrack?.pan, midiInputTrack?.mute]);
 
-  const handleMidiNoteOn = (pitch: number, velocity: number) => {
-    liveVoicesRef.current?.noteOn(pitch, velocity / 127);
-    if (state?.recordingActive && midiInputTrack) {
-      heldMidiRef.current.set(pitch, { downAbs: state.positionSeconds, velocity });
-    }
-  };
-  const handleMidiNoteOff = (pitch: number) => {
-    liveVoicesRef.current?.noteOff(pitch);
-    const held = heldMidiRef.current.get(pitch);
-    if (!held || !midiInputTrack) return;
-    heldMidiRef.current.delete(pitch);
-    const upAbs = state?.positionSeconds ?? held.downAbs;
+  // Write finished presses into the take clip (one session update per event —
+  // a pedal-up can commit a whole chord at once).
+  const commitMidiPresses = (presses: HeldPress[], upAbs: number) => {
+    if (presses.length === 0 || !midiInputTrack) return;
     const trackId = midiInputTrack.id;
     const freshClipId = crypto.randomUUID();
     update((s) => ({
       ...s,
       tracks: s.tracks.map((t) => {
         if (t.id !== trackId || !isMidiTrack(t)) return t;
-        const committed = appendTakeNote(
-          t.clips, midiTakeClipRef.current,
-          { pitch, velocity: held.velocity, downAbsSeconds: held.downAbs, upAbsSeconds: upAbs },
-          freshClipId,
-        );
-        midiTakeClipRef.current = committed.takeClipId;
-        return { ...t, clips: committed.clips } as Track;
+        let clips = t.clips;
+        for (const press of presses) {
+          const committed = appendTakeNote(
+            clips, midiTakeClipRef.current,
+            { pitch: press.pitch, velocity: press.velocity, downAbsSeconds: press.downAbsSeconds, upAbsSeconds: upAbs },
+            freshClipId,
+          );
+          clips = committed.clips;
+          midiTakeClipRef.current = committed.takeClipId;
+        }
+        return { ...t, clips } as Track;
       }),
     }));
+  };
+
+  const handleMidiNoteOn = (pitch: number, velocity: number) => {
+    liveVoicesRef.current?.noteOn(pitch, velocity / 127);
+    if (state?.recordingActive && midiInputTrack) {
+      const at = state.positionSeconds;
+      // Re-striking a pedal-sustained pitch ends the old note here.
+      const evicted = midiTracker.keyDown(pitch, velocity, at);
+      if (evicted) commitMidiPresses([evicted], at);
+    }
+  };
+  const handleMidiNoteOff = (pitch: number) => {
+    liveVoicesRef.current?.noteOff(pitch);
+    const press = midiTracker.keyUp(pitch);
+    if (!press) return; // untracked, or the pedal is holding it
+    commitMidiPresses([press], state?.positionSeconds ?? press.downAbsSeconds);
+  };
+  const handleMidiSustain = (down: boolean) => {
+    liveVoicesRef.current?.sustain(down);
+    const released = midiTracker.setPedal(down);
+    if (released.length) {
+      commitMidiPresses(released, state?.positionSeconds ?? released[released.length - 1].downAbsSeconds);
+    }
   };
 
   const midiIn = useStudioMidiInput({
@@ -508,6 +529,7 @@ function Editor({
     deviceId: midiInputDeviceId,
     onNoteOn: handleMidiNoteOn,
     onNoteOff: handleMidiNoteOff,
+    onSustain: handleMidiSustain,
   });
 
   // Tempo slider draft. While the user drags we only push the live
@@ -1060,13 +1082,17 @@ function Editor({
     // park at the take's start like the audio path does.
     if (recording.midiOnly) {
       const midiElapsed = (performance.now() - recording.startWallMs) / 1000;
-      for (const pitch of [...heldMidiRef.current.keys()]) handleMidiNoteOff(pitch);
+      commitMidiPresses(midiTracker.flush(), state?.positionSeconds ?? recording.startSeconds);
       setRecording(null);
       engineState.setRecordingActive?.(false);
       try { engineState.seek?.(recording.startSeconds); } catch { /* ignore */ }
       toast.success(`Recorded ${midiElapsed.toFixed(1)}s of MIDI`);
       return;
     }
+
+    // MIDI notes riding along an audio take: commit anything still held or
+    // pedal-sustained before the transport gets parked.
+    commitMidiPresses(midiTracker.flush(), state?.positionSeconds ?? recording.startSeconds);
 
     const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, transportStartWallMs, armedTrackIds: armed } = recording;
     setRecording(null);

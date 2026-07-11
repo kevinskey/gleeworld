@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseMidiMessage } from './midiMessage';
+import { SustainTracker } from './midiSustain';
 import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode } from './midiRecord';
 import type { MidiClip } from './session';
 
@@ -18,9 +19,16 @@ describe('parseMidiMessage', () => {
   });
 
   it('classifies control/other messages as other', () => {
-    expect(parseMidiMessage([0xb0, 7, 100])).toEqual({ type: 'other' }); // CC
+    expect(parseMidiMessage([0xb0, 7, 100])).toEqual({ type: 'other' }); // CC volume
     expect(parseMidiMessage([0xf8])).toEqual({ type: 'other' });          // clock
     expect(parseMidiMessage([])).toEqual({ type: 'other' });
+  });
+
+  it('reads the sustain pedal (CC64) on any channel, down at value >= 64', () => {
+    expect(parseMidiMessage([0xb0, 64, 127])).toEqual({ type: 'sustain', down: true });
+    expect(parseMidiMessage([0xb2, 64, 64])).toEqual({ type: 'sustain', down: true });  // channel 2 (WP06 broadcasts 1-3)
+    expect(parseMidiMessage([0xb0, 64, 0])).toEqual({ type: 'sustain', down: false });
+    expect(parseMidiMessage([0xb1, 64, 63])).toEqual({ type: 'sustain', down: false });
   });
 });
 
@@ -132,5 +140,62 @@ describe('appendTakeNote', () => {
     const first = appendTakeNote([], null, note(5, 12), 'fresh'); // long note → 7s clip
     const second = appendTakeNote(first.clips, first.takeClipId, note(6, 6.2), 'unused');
     expect(second.clips[0].duration_seconds).toBeCloseTo(7, 5);
+  });
+});
+
+
+describe('SustainTracker', () => {
+  it('commits a normal press on key-up when the pedal is up', () => {
+    const t = new SustainTracker();
+    expect(t.keyDown(60, 100, 1.0)).toBeNull();
+    expect(t.keyUp(60)).toEqual({ pitch: 60, velocity: 100, downAbsSeconds: 1.0 });
+  });
+
+  it('holds a released key while the pedal is down and commits it on pedal-up', () => {
+    const t = new SustainTracker();
+    t.setPedal(true);
+    t.keyDown(60, 100, 1.0);
+    expect(t.keyUp(60)).toBeNull();                       // pedal is holding it
+    expect(t.setPedal(false)).toEqual([{ pitch: 60, velocity: 100, downAbsSeconds: 1.0 }]);
+    expect(t.setPedal(false)).toEqual([]);                // idempotent
+  });
+
+  it('ignores duplicate pedal-down messages (WP06 sends the pedal on 3 channels)', () => {
+    const t = new SustainTracker();
+    expect(t.setPedal(true)).toEqual([]);
+    expect(t.setPedal(true)).toEqual([]);
+    expect(t.setPedal(true)).toEqual([]);
+    t.keyDown(60, 90, 2.0);
+    t.keyUp(60);
+    expect(t.setPedal(false)).toHaveLength(1);
+  });
+
+  it('re-striking a sustained pitch commits the old press first', () => {
+    const t = new SustainTracker();
+    t.setPedal(true);
+    t.keyDown(60, 100, 1.0);
+    t.keyUp(60);                                          // sustained
+    expect(t.keyDown(60, 80, 3.0)).toEqual({ pitch: 60, velocity: 100, downAbsSeconds: 1.0 });
+    t.keyUp(60);                                          // second press sustained now
+    expect(t.setPedal(false)).toEqual([{ pitch: 60, velocity: 80, downAbsSeconds: 3.0 }]);
+  });
+
+  it('flush commits everything still held or sustained (record stop)', () => {
+    const t = new SustainTracker();
+    t.setPedal(true);
+    t.keyDown(60, 100, 1.0);
+    t.keyUp(60);                                          // sustained
+    t.keyDown(64, 90, 2.0);                               // still held
+    const flushed = t.flush();
+    expect(flushed.map((p) => p.pitch).sort()).toEqual([60, 64]);
+    expect(t.flush()).toEqual([]);                        // empty after
+    expect(t.setPedal(false)).toEqual([]);                // nothing left for the pedal
+  });
+
+  it('key-up for an untracked pitch and pedal moves with nothing held are no-ops', () => {
+    const t = new SustainTracker();
+    expect(t.keyUp(60)).toBeNull();
+    expect(t.setPedal(true)).toEqual([]);
+    expect(t.setPedal(false)).toEqual([]);
   });
 });

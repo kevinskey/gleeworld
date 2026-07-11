@@ -13,6 +13,8 @@ export class LiveVoices {
   private inst: EngineInstrument | null = null;
   private specKey = '';
   private held = new Set<number>();
+  private pedalDown = false;
+  private sustained = new Set<number>(); // key up, damper holding the voice
   private panvol: Tone.PanVol;
   private muteGate: Tone.Gain;
 
@@ -45,25 +47,44 @@ export class LiveVoices {
     const inst = this.inst;
     if (!inst) return;
     const now = Tone.now();
+    // Re-striking a sustained pitch: release the ringing voice first so the
+    // new attack doesn't stack on top of it.
+    if (this.sustained.delete(pitch) && inst.triggerRelease) inst.triggerRelease(pitch, now);
     this.held.add(pitch);
     if (inst.triggerAttack) inst.triggerAttack(pitch, now, velocity01);
     else inst.triggerAttackRelease(pitch, 0.3, now, velocity01); // one-shot fallback (drums)
   }
 
   noteOff(pitch: number): void {
-    const inst = this.inst;
     this.held.delete(pitch);
-    if (inst?.triggerRelease) inst.triggerRelease(pitch, Tone.now());
+    if (this.pedalDown) { this.sustained.add(pitch); return; } // damper keeps it ringing
+    if (this.inst?.triggerRelease) this.inst.triggerRelease(pitch, Tone.now());
+  }
+
+  /** Piano damper (CC64). Lifting releases every sustained pitch whose key
+   * is no longer physically held. Duplicate messages are no-ops. */
+  sustain(down: boolean): void {
+    if (down === this.pedalDown) return;
+    this.pedalDown = down;
+    if (down) return;
+    const inst = this.inst;
+    if (inst?.triggerRelease) {
+      const now = Tone.now();
+      for (const p of this.sustained) if (!this.held.has(p)) inst.triggerRelease(p, now);
+    }
+    this.sustained.clear();
   }
 
   dispose(): void {
     this.disposeInst();
     this.held.clear();
+    this.pedalDown = false;
     this.specKey = '';
     try { this.panvol.dispose(); this.muteGate.dispose(); } catch { /* already gone */ }
   }
 
   private disposeInst(): void {
+    this.sustained.clear(); // voices die with the instrument
     if (!this.inst) return;
     try { this.inst.dispose(); } catch { /* already gone */ }
     this.inst = null;
