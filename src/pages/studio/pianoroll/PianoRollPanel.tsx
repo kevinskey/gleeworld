@@ -6,12 +6,13 @@
 // path, which reschedules the engine.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { MidiClip, MidiNote, Session } from '@/lib/studio/session';
+import type { MidiClip, MidiNote, MidiCcEvent, Session } from '@/lib/studio/session';
 import { isMidiTrack } from '@/lib/studio/session';
 import {
   ROLL_GRIDS, type RollGrid, gridSeconds,
   addNote, moveNotes, resizeNotes, deleteNotes,
   quantizeNotes, transposeNotes, offsetVelocity,
+  sustainRanges, setSustainRanges, ccPoints, applySustain,
 } from '@/lib/studio/midiEdit';
 import {
   type RollMetrics, PITCH_MAX, ROLL_ROWS, timeToX, pitchToY,
@@ -65,7 +66,15 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   // clip.notes so the drag feels live; hit-testing on pointerdown still
   // reads clip.notes (gestures always start from committed state).
   const [draftNotes, setDraftNotes] = useState<MidiNote[] | null>(null);
+  // Draft-commit preview for CC lane edits (sustain ranges / mod points),
+  // mirrors draftNotes: drawLane renders `draftCc ?? clip.cc ?? []` while a
+  // gesture is live, and draw()'s ghost tails use the same fallback so the
+  // note-tail preview tracks an in-flight sustain edit too.
+  const [draftCc, setDraftCc] = useState<MidiCcEvent[] | null>(null);
   const [lane, setLane] = useState<RollLane>('velocity');
+  const [selectedRange, setSelectedRange] = useState<number | null>(null);
+  const [selectedModPoint, setSelectedModPoint] = useState<number | null>(null);
+  const [tool, setTool] = useState<'pointer' | 'pencil'>('pointer');
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -111,10 +120,14 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   };
 
   // ── Pointer tool: select, marquee, move, resize, create ─────────────
+  // Every drag variant carries `pointerId` (multi-pointer safety, Task 12):
+  // onPointerUp/onPointerCancel receive the triggering event and only
+  // settle the drag whose pointerId matches, so a second touch/pen mid-
+  // gesture can't cross-commit or cross-cancel an unrelated drag.
   type Drag =
-    | { kind: 'move'; startCx: number; startCy: number; orig: MidiNote[]; sel: number[]; moved: boolean; draft?: MidiNote[] }
-    | { kind: 'resize'; edge: 'left' | 'right'; startCx: number; orig: MidiNote[] | null; sel: number[]; moved: boolean; draft?: MidiNote[] }
-    | { kind: 'marquee'; startCx: number; startCy: number; cx: number; cy: number; base: number[] };
+    | { kind: 'move'; pointerId: number; startCx: number; startCy: number; orig: MidiNote[]; sel: number[]; moved: boolean; draft?: MidiNote[] }
+    | { kind: 'resize'; pointerId: number; edge: 'left' | 'right'; startCx: number; orig: MidiNote[] | null; sel: number[]; moved: boolean; draft?: MidiNote[]; skipHistory?: boolean }
+    | { kind: 'marquee'; pointerId: number; startCx: number; startCy: number; cx: number; cy: number; base: number[] };
   const dragRef = useRef<Drag | null>(null);
 
   // ── Velocity lane drag: same draft-commit discipline as move/resize —
@@ -124,10 +137,24 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   // one bar's velocity to the click position) so `changed` is true as soon
   // as a bar is hit, not gated on a movement threshold like move/resize.
   type LaneDrag = {
-    index: number; inSelection: boolean; orig: MidiNote[]; velAtDown: number;
+    pointerId: number; index: number; inSelection: boolean; orig: MidiNote[]; velAtDown: number;
     draft: MidiNote[] | null; changed: boolean;
   };
   const laneDragRef = useRef<LaneDrag | null>(null);
+
+  // ── CC lane drag (sustain ranges / mod points): same draft-commit
+  // discipline — no history on pointerdown, per-move results computed
+  // pure from a gesture-start snapshot, one pushHistory + editClip at
+  // pointerup from the ref (mirrors LaneDrag/Drag above). `changed` mirrors
+  // Drag's `moved`: merely clicking to select a range/point (no drag) must
+  // NOT push a no-op history entry, so the commit in onPointerUp is gated
+  // on it (unlike the velocity lane, where a click alone already implies a
+  // real value change).
+  type CcDrag =
+    | { kind: 'sus-edge'; pointerId: number; range: number; edge: 'down' | 'up'; ranges: Array<{ down: number; up: number }>; draft: MidiCcEvent[]; changed: boolean }
+    | { kind: 'sus-move'; pointerId: number; range: number; startCx: number; ranges: Array<{ down: number; up: number }>; draft: MidiCcEvent[]; changed: boolean }
+    | { kind: 'mod'; pointerId: number; index: number; draft: MidiCcEvent[]; changed: boolean };
+  const ccDragRef = useRef<CcDrag | null>(null);
 
   /** Pointer event → content-space coords + which chrome region it hit. */
   const contentPos = (e: React.PointerEvent): { cx: number; cy: number; region: 'ruler' | 'keys' | 'grid' } => {
@@ -147,6 +174,41 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     if (region === 'ruler') { props.onSeek(clip.start_seconds + xToTime(metrics, cx)); return; }
     if (region === 'keys') { audition(yToPitch(metrics, cy), 100); return; }
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    if (tool === 'pencil') {
+      const hit = hitTestNote(metrics, clip.notes, cx, cy);
+      props.pushHistory();
+      if (hit) { // pencil-click an existing note deletes it (DAW standard)
+        editClip((c) => ({ ...c, notes: deleteNotes(c.notes, [hit.index]) }));
+        setSelection([]);
+        return;
+      }
+      const start = snapAbsForClip(xToTime(metrics, cx));
+      const dur = gridSec > 0 ? gridSec : 0.25;
+      let created = -1;
+      let createdNotes: MidiNote[] | null = null;
+      editClip((c) => {
+        const r = addNote(c.notes, { pitch: yToPitch(metrics, cy), velocity: 100, start_seconds: start, duration_seconds: dur });
+        created = r.index;
+        createdNotes = r.notes;
+        return { ...c, notes: r.notes, duration_seconds: Math.max(c.duration_seconds, start + dur) };
+      });
+      setSelection(created >= 0 ? [created] : []);
+      audition(yToPitch(metrics, cy), 100);
+      // Drag-out lengthens the freshly drawn note. The create above is
+      // already pushHistory'd + committed (one-shot); this follow-on drag
+      // is a normal resize gesture seeded with the post-create notes array
+      // (so the freshly-created note has a valid orig snapshot to resize
+      // from) but must NOT push a second history entry at ITS pointerup —
+      // that would split one pencil stroke into two undo steps. skipHistory
+      // is honored in onPointerUp.
+      if (created >= 0 && createdNotes) {
+        dragRef.current = {
+          kind: 'resize', pointerId: e.pointerId, edge: 'right', startCx: cx,
+          orig: createdNotes, sel: [created], moved: false, skipHistory: true,
+        };
+      }
+      return;
+    }
     const hit = hitTestNote(metrics, clip.notes, cx, cy);
     if (hit) {
       const already = selection.includes(hit.index);
@@ -159,8 +221,8 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       // touch the undo stack. History is recorded once in onPointerUp,
       // only if the gesture actually moved/resized something.
       dragRef.current = hit.zone === 'body'
-        ? { kind: 'move', startCx: cx, startCy: cy, orig: clip.notes, sel, moved: false }
-        : { kind: 'resize', edge: hit.zone, startCx: cx, orig: clip.notes, sel, moved: false };
+        ? { kind: 'move', pointerId: e.pointerId, startCx: cx, startCy: cy, orig: clip.notes, sel, moved: false }
+        : { kind: 'resize', pointerId: e.pointerId, edge: hit.zone, startCx: cx, orig: clip.notes, sel, moved: false };
       return;
     }
     if (e.detail === 2) { // double-click empty: create a note at grid length
@@ -176,7 +238,7 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       setSelection(created >= 0 ? [created] : []);
       return;
     }
-    dragRef.current = { kind: 'marquee', startCx: cx, startCy: cy, cx, cy, base: e.shiftKey ? selection : [] };
+    dragRef.current = { kind: 'marquee', pointerId: e.pointerId, startCx: cx, startCy: cy, cx, cy, base: e.shiftKey ? selection : [] };
     if (!e.shiftKey) setSelection([]);
   };
 
@@ -189,7 +251,9 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
 
   const onPointerMove = (e: React.PointerEvent) => {
     const d = dragRef.current;
-    if (!d || !clip) return;
+    // Multi-pointer safety: a second pointer moving mid-gesture must not
+    // steer the first pointer's drag (there's only one dragRef slot).
+    if (!d || d.pointerId !== e.pointerId || !clip) return;
     const { cx, cy } = contentPos(e);
     if (d.kind === 'move') {
       const deltaSeconds = (cx - d.startCx) / metrics.pxPerSecond;
@@ -223,7 +287,11 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     }
   };
 
-  const onPointerUp = () => {
+  // Multi-pointer safety: settle ONLY the drag whose pointerId matches the
+  // triggering event, leaving any other in-flight gesture (a second touch/
+  // pen down mid-drag) untouched. Each of the three drag refs is checked
+  // and cleared independently.
+  const onPointerUp = (e: React.PointerEvent) => {
     const d = dragRef.current;
     // Commit exactly once per completed gesture: one history entry, one
     // engine reload (via editClip → the skeleton sig picks up the note
@@ -234,33 +302,61 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     // concurrent renderer a flick can fire pointerup before the last
     // pointermove's setDraftNotes has flushed, so the state closure here
     // may still be null or one move stale while the ref is always current.
-    if (d && (d.kind === 'move' || d.kind === 'resize') && d.moved && d.draft) {
-      props.pushHistory();
-      const notes = d.draft;
-      editClip((c) => ({ ...c, notes }));
+    if (d && d.pointerId === e.pointerId) {
+      if ((d.kind === 'move' || d.kind === 'resize') && d.moved && d.draft) {
+        // skipHistory: the pencil-drawn note that seeds this resize was
+        // already pushHistory'd + committed at creation — one pencil
+        // stroke must stay ONE undo step, so this commit reuses that
+        // entry instead of pushing a second one.
+        if (!(d.kind === 'resize' && d.skipHistory)) props.pushHistory();
+        const notes = d.draft;
+        editClip((c) => ({ ...c, notes }));
+      }
+      dragRef.current = null;
     }
     // Same discipline for the velocity lane: a click-no-drag on a bar is
     // still one edit (see LaneDrag comment above), so `changed` — not a
     // movement flag — gates the commit here.
     const ld = laneDragRef.current;
-    if (ld && ld.changed && ld.draft) {
-      props.pushHistory();
-      const notes = ld.draft;
-      editClip((c) => ({ ...c, notes }));
+    if (ld && ld.pointerId === e.pointerId) {
+      if (ld.changed && ld.draft) {
+        props.pushHistory();
+        const notes = ld.draft;
+        editClip((c) => ({ ...c, notes }));
+      }
+      laneDragRef.current = null;
     }
-    setDraftNotes(null);
-    dragRef.current = null;
-    laneDragRef.current = null;
+    // draftNotes is shared between the grid drag (dragRef) and the
+    // velocity-lane drag (laneDragRef) previews — only clear it once
+    // NEITHER ref still owns an in-flight gesture, so settling one
+    // pointer's drag can't stomp a different pointer's still-live preview.
+    if (!dragRef.current && !laneDragRef.current) setDraftNotes(null);
+    // CC lane (sustain ranges / mod points): same draft-commit discipline
+    // as move/resize/lane above — single pushHistory + editClip here.
+    const cd = ccDragRef.current;
+    if (cd && cd.pointerId === e.pointerId) {
+      if (cd.changed) {
+        props.pushHistory();
+        const cc = cd.draft;
+        editClip((c) => ({ ...c, cc }));
+      }
+      setDraftCc(null);
+      ccDragRef.current = null;
+    }
     scheduleDraw();
   };
 
   /** Touch scroll takeover (or any other pointercancel) aborts the
    * gesture without committing — clear the draft so the canvas doesn't
-   * keep rendering a phantom in-flight drag. */
-  const onPointerCancel = () => {
-    dragRef.current = null;
-    laneDragRef.current = null;
-    setDraftNotes(null);
+   * keep rendering a phantom in-flight drag. Only the drag matching this
+   * event's pointerId is aborted (multi-pointer safety); draftNotes is
+   * shared across dragRef/laneDragRef so it's only cleared once neither
+   * still owns a live gesture (mirrors onPointerUp). */
+  const onPointerCancel = (e: React.PointerEvent) => {
+    if (dragRef.current?.pointerId === e.pointerId) dragRef.current = null;
+    if (laneDragRef.current?.pointerId === e.pointerId) laneDragRef.current = null;
+    if (!dragRef.current && !laneDragRef.current) setDraftNotes(null);
+    if (ccDragRef.current?.pointerId === e.pointerId) { ccDragRef.current = null; setDraftCc(null); }
     scheduleDraw();
   };
 
@@ -280,11 +376,44 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       props.pushHistory();
       editClip((c) => ({ ...c, notes: deleteNotes(c.notes, selection) }));
       setSelection([]);
+    } else if ((e.key === 'Delete' || e.key === 'Backspace') && !selection.length
+      && lane === 'sustain' && selectedRange !== null) {
+      e.preventDefault();
+      ccDragRef.current = null;
+      setDraftCc(null);
+      props.pushHistory();
+      const ranges = sustainRanges(clip.cc ?? [], clip.duration_seconds)
+        .filter((_, i) => i !== selectedRange);
+      editClip((c) => ({ ...c, cc: setSustainRanges(c.cc ?? [], ranges) }));
+      setSelectedRange(null);
+    } else if ((e.key === 'Delete' || e.key === 'Backspace') && !selection.length
+      && lane === 'mod' && selectedModPoint !== null) {
+      e.preventDefault();
+      ccDragRef.current = null;
+      setDraftCc(null);
+      props.pushHistory();
+      const target = ccPoints(clip.cc ?? [], 1)[selectedModPoint];
+      if (target) editClip((c) => ({ ...c, cc: (c.cc ?? []).filter((_, i) => i !== target.index) }));
+      setSelectedModPoint(null);
     } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
       e.preventDefault();
       setSelection(clip.notes.map((_, i) => i));
     } else if (e.key === 'Escape') {
-      setSelection([]);
+      // DAW convention: Escape mid-drag aborts the in-flight gesture (clear
+      // refs + drafts, no commit) rather than clearing selection. Only
+      // falls through to the existing clear-selection behavior when no
+      // drag is live.
+      const hadDrag = dragRef.current || laneDragRef.current || ccDragRef.current;
+      if (hadDrag) {
+        dragRef.current = null;
+        laneDragRef.current = null;
+        ccDragRef.current = null;
+        setDraftNotes(null);
+        setDraftCc(null);
+        scheduleDraw();
+      } else {
+        setSelection([]);
+      }
     }
   };
 
@@ -323,7 +452,7 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     // recorded once in the shared onPointerUp.
     const vel = velFromY(vy);
     const inSelection = selection.includes(index);
-    const d: LaneDrag = { index, inSelection, orig: clip.notes, velAtDown: vel, draft: null, changed: true };
+    const d: LaneDrag = { pointerId: e.pointerId, index, inSelection, orig: clip.notes, velAtDown: vel, draft: null, changed: true };
     d.draft = laneVelocityDraft(d, vel);
     laneDragRef.current = d;
     setDraftNotes(d.draft);
@@ -331,12 +460,110 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
 
   const onLanePointerMove = (e: React.PointerEvent) => {
     const d = laneDragRef.current;
-    if (!d || !clip) return;
+    if (!d || d.pointerId !== e.pointerId || !clip) return;
     const { vy } = lanePos(e);
     const vel = velFromY(vy);
     d.draft = laneVelocityDraft(d, vel);
     d.changed = true;
     setDraftNotes(d.draft);
+  };
+
+  // ── CC lane pointer handlers (sustain ranges / mod points). Same
+  // draft-commit discipline as the velocity lane above: no pushHistory on
+  // pointerdown for a drag (only for the one-shot double-click add), the
+  // gesture-start snapshot of ranges/points lives on the drag ref, every
+  // intermediate frame recomputes purely from that snapshot into
+  // ccDragRef.current.draft + the mirrored draftCc state, single
+  // pushHistory + editClip at pointerup (in the shared onPointerUp above).
+  // lane === 'sustain': click selects a range; drag its edges (±5px)
+  // retimes pedal-down/up; drag the body moves the whole range; double-
+  // click empty adds a one-beat range; Delete (panel keydown) removes the
+  // selected range.
+  // lane === 'mod': drag a point to move it (time+value); double-click
+  // adds a point; Delete removes the selected point. Point indices are
+  // ALWAYS re-derived from `ccPoints` (never cached raw `cc` indices)
+  // because a move re-sorts the array by time.
+  const onLaneDownCc = (e: React.PointerEvent) => {
+    if (!clip) return;
+    const { cx, vy } = lanePos(e);
+    const t = Math.max(0, xToTime(metrics, cx));
+    if (lane === 'sustain') {
+      const ranges = sustainRanges(clip.cc ?? [], clip.duration_seconds);
+      const hitIdx = ranges.findIndex((r) => t >= r.down - 0.05 && t <= r.up + 0.05);
+      if (hitIdx >= 0) {
+        setSelectedRange(hitIdx);
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+        // No pushHistory() here — draft-commit, mirrors move/resize/lane.
+        const r = ranges[hitIdx];
+        const edgePx = 5 / metrics.pxPerSecond;
+        const base = Math.abs(t - r.down) <= edgePx
+          ? { kind: 'sus-edge' as const, range: hitIdx, edge: 'down' as const, ranges }
+          : Math.abs(t - r.up) <= edgePx
+            ? { kind: 'sus-edge' as const, range: hitIdx, edge: 'up' as const, ranges }
+            : { kind: 'sus-move' as const, range: hitIdx, startCx: cx, ranges };
+        ccDragRef.current = { ...base, pointerId: e.pointerId, draft: clip.cc ?? [], changed: false };
+      } else if (e.detail === 2) {
+        props.pushHistory();
+        const beat = 60 / session.tempo_bpm;
+        const next = [...sustainRanges(clip.cc ?? [], clip.duration_seconds), { down: t, up: t + beat }];
+        editClip((c) => ({ ...c, cc: setSustainRanges(c.cc ?? [], next) }));
+        setSelectedRange(next.length - 1);
+      } else setSelectedRange(null);
+    } else if (lane === 'mod') {
+      const pts = ccPoints(clip.cc ?? [], 1);
+      const hitIdx = pts.findIndex((p) => Math.abs(timeToX(metrics, p.time) - cx) <= 5);
+      if (hitIdx >= 0) {
+        setSelectedModPoint(hitIdx);
+        (e.target as HTMLElement).setPointerCapture(e.pointerId);
+        // No pushHistory() here — draft-commit, mirrors move/resize/lane.
+        ccDragRef.current = { kind: 'mod', pointerId: e.pointerId, index: hitIdx, draft: clip.cc ?? [], changed: false };
+      } else if (e.detail === 2) {
+        props.pushHistory();
+        const value = Math.max(0, Math.min(127, Math.round(127 * (1 - vy / LANE_H))));
+        editClip((c) => ({
+          ...c,
+          cc: [...(c.cc ?? []), { controller: 1, value, time_seconds: t }]
+            .sort((a, b) => a.time_seconds - b.time_seconds),
+        }));
+      } else setSelectedModPoint(null);
+    }
+  };
+
+  const onLaneMoveCc = (e: React.PointerEvent) => {
+    const d = ccDragRef.current;
+    if (!d || d.pointerId !== e.pointerId || !clip) return;
+    const { cx, vy } = lanePos(e);
+    const t = Math.max(0, xToTime(metrics, cx));
+    if (d.kind === 'sus-edge' || d.kind === 'sus-move') {
+      const next = d.ranges.map((r, i) => {
+        if (i !== d.range) return r;
+        if (d.kind === 'sus-edge') {
+          // Clamp at 0: setSustainRanges no longer clamps negatives itself.
+          return d.edge === 'down'
+            ? { ...r, down: Math.max(0, Math.min(t, r.up - 0.01)) }
+            : { ...r, up: Math.max(0, Math.max(t, r.down + 0.01)) };
+        }
+        const delta = (cx - d.startCx) / metrics.pxPerSecond;
+        return { down: Math.max(0, r.down + delta), up: Math.max(0, r.up + delta) };
+      });
+      const cc = setSustainRanges(clip.cc ?? [], next);
+      d.draft = cc;
+      d.changed = true;
+      setDraftCc(cc);
+    } else {
+      const value = Math.max(0, Math.min(127, Math.round(127 * (1 - vy / LANE_H))));
+      // Re-derive from ccPoints (time-sorted) each move — never cache a raw
+      // `cc` index across moves, since a prior move's sort can shift it.
+      const pts = ccPoints(clip.cc ?? [], 1);
+      const target = pts[d.index];
+      if (!target) return;
+      const cc = (clip.cc ?? [])
+        .map((ev, i) => i === target.index ? { ...ev, value, time_seconds: t } : ev)
+        .sort((a, b) => a.time_seconds - b.time_seconds);
+      d.draft = cc;
+      d.changed = true;
+      setDraftCc(cc);
+    }
   };
 
   // ── Drawing ─────────────────────────────────────────────────────────
@@ -407,6 +634,10 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     // without touching the committed clip (and the engine) per pixel.
     const notes = draftNotes ?? clip.notes;
     const selSet = new Set(selection);
+    // Ghost tails: pedal-lengthened durations so sight matches sound. Uses
+    // draftCc ?? clip.cc so an in-flight sustain-lane drag previews the
+    // tail change live, same discipline as draftNotes above.
+    const effective = applySustain(notes, draftCc ?? clip.cc ?? []);
     notes.forEach((n, i) => {
       const x = timeToX(metrics, n.start_seconds);
       const w = Math.max(3, timeToX(metrics, n.duration_seconds));
@@ -419,6 +650,12 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
         g.strokeStyle = cFg; g.lineWidth = 1.5;
         g.strokeRect(x + 0.5, y + 1.5, w - 1, ROW_H - 3);
         g.lineWidth = 1;
+      }
+      const ext = effective[i].duration_seconds - n.duration_seconds;
+      if (ext > 0) {
+        g.fillStyle = cPrimary; g.globalAlpha = 0.25;
+        g.fillRect(x + w, y + 1, timeToX(metrics, ext), ROW_H - 2);
+        g.globalAlpha = 1;
       }
     });
     // Marquee selection overlay.
@@ -508,7 +745,34 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
         if (selSet.has(i)) { g.strokeStyle = cFg; g.strokeRect(x + 0.5, vh - h + 0.5, 3, h - 1); }
       });
     }
-    // sustain + mod lanes render in Task 12.
+    // Draft-commit preview for CC lane edits — render the in-flight drag
+    // over the committed clip.cc, same discipline as draftNotes above.
+    const cc = draftCc ?? clip.cc ?? [];
+    if (lane === 'sustain') {
+      const ranges = sustainRanges(cc, clip.duration_seconds);
+      ranges.forEach((r, i) => {
+        const x0 = timeToX(metrics, r.down), x1 = timeToX(metrics, r.up);
+        g.fillStyle = cPrimary;
+        g.globalAlpha = selectedRange === i ? 0.8 : 0.45;
+        g.fillRect(x0, 8, Math.max(2, x1 - x0), vh - 16);
+        g.globalAlpha = 1;
+        if (selectedRange === i) { g.strokeStyle = cFg; g.strokeRect(x0 + 0.5, 8.5, Math.max(2, x1 - x0) - 1, vh - 17); }
+      });
+    }
+    if (lane === 'mod') {
+      const pts = ccPoints(cc, 1);
+      g.strokeStyle = cPrimary; g.beginPath();
+      pts.forEach((p, i) => {
+        const x = timeToX(metrics, p.time), y = vh - (p.value / 127) * (vh - 4) - 2;
+        if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+      });
+      g.stroke();
+      pts.forEach((p, i) => {
+        const x = timeToX(metrics, p.time), y = vh - (p.value / 127) * (vh - 4) - 2;
+        g.fillStyle = selectedModPoint === i ? cFg : cPrimary;
+        g.beginPath(); g.arc(x, y, 3, 0, Math.PI * 2); g.fill();
+      });
+    }
     g.restore();
     g.strokeStyle = cBorder; g.strokeRect(0.5, 0.5, vw - 1, vh - 1);
   };
@@ -523,6 +787,8 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     const mid = pitches.length ? (Math.min(...pitches) + Math.max(...pitches)) / 2 : 60;
     holder.scrollTop = Math.max(0, pitchToY(metrics, Math.round(mid)) - (holder.clientHeight - RULER_H) / 2);
     setSelection([]);
+    setSelectedRange(null);
+    setSelectedModPoint(null);
   }, [clipId]);
 
   if (!clip) return null;
@@ -549,6 +815,14 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
         <>
           {/* Toolbar: grid/strength (quantize input) + quantize/transpose ops. */}
           <div className="px-3 py-1 border-b border-border flex items-center gap-2 text-xs flex-wrap" data-roll-toolbar>
+            <div className="flex border border-border">
+              {(['pointer', 'pencil'] as const).map((t) => (
+                <button key={t} onClick={() => setTool(t)}
+                  className={`px-2 py-0.5 ${tool === t ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
+                  {t === 'pointer' ? 'Pointer' : 'Pencil'}
+                </button>
+              ))}
+            </div>
             <label className="text-muted-foreground">Grid</label>
             <select value={grid} onChange={(e) => setGrid(e.target.value as RollGrid)}
               className="border border-border bg-background px-1 py-0.5 text-xs">
@@ -610,8 +884,8 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
               ref={laneCanvasRef}
               className="block flex-1"
               style={{ height: LANE_H }}
-              onPointerDown={onLanePointerDown}
-              onPointerMove={onLanePointerMove}
+              onPointerDown={lane === 'velocity' ? onLanePointerDown : onLaneDownCc}
+              onPointerMove={lane === 'velocity' ? onLanePointerMove : onLaneMoveCc}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerCancel}
             />
