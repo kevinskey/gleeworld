@@ -52,6 +52,10 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'home',     to: '/dashboard',           label: 'Command Center', icon: Home,          section: 'today', tone: 'bg-primary/10 text-primary', tourId: 'nav-command-center', end: true, surfaces: ['sidebar'] },
   { key: 'messages', to: '/dashboard/messenger', label: 'Messenger',      icon: MessageSquare, section: 'today', tone: 'bg-cyan-50 text-cyan-600',   tourId: 'nav-messenger',      surfaces: ['sidebar'] },
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
+  // Notes (GleeWorld Planner add-on, module id 'planner') lives right under
+  // Calendar per Kevin 2026-07-11; keeps its home-grid tile unlike the
+  // sidebar-only tab-bar trio above.
+  { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
   // Music
   { key: 'music-library', to: '/dashboard/music-library', label: 'Music Library', icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
   { key: 'music',         to: '/dashboard/viewer',        label: 'Viewer',        icon: ScanEye,  section: 'music', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-viewer',        gridLabel: 'Music', gridIcon: Music, gate: { module: 'viewer' } },
@@ -69,9 +73,6 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'music-tools', to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, section: 'make', tone: 'bg-cyan-50 text-cyan-600', tourId: 'nav-music-tools' },
   { key: 'songwriting', to: '/songwriting', label: 'Songwriting', icon: PenLine, section: 'make', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-songwriting', gate: { module: 'songwriting' } },
   // Plan
-  // 'notes' is the GleeWorld Planner add-on (billing module id 'planner');
-  // the catalog key 'planner' was already claimed by Concert Planner.
-  { key: 'notes',     to: '/planner',                   label: 'Notes',           icon: NotebookPen,   section: 'plan', tone: 'bg-amber-50 text-amber-700',     tourId: 'nav-notes', gate: { module: 'planner' } },
   { key: 'planner',   to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, section: 'plan', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-concert-planner', gridLabel: 'Programs', gridIcon: ListMusic, gate: { module: 'concert_planner' } },
   { key: 'liturgy',   to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        section: 'plan', tone: 'bg-amber-50 text-amber-700',     tourId: 'nav-liturgy-planner', gate: { module: 'liturgy_planner' } },
   { key: 'tour',      to: '/tour-manager',              label: 'Tour Manager',    icon: RouteIcon,     section: 'plan', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-tour-manager', gate: { module: 'tour' } },
