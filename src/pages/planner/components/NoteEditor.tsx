@@ -68,7 +68,12 @@ export interface NoteEditorProps {
 
 export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps) {
   const [saveState, setSaveState] = useState<SaveState>('saved');
-  const [title, setTitle] = useState(note.title);
+  // The title input is deliberately UNCONTROLLED (ref + DOM value): a
+  // controlled value tied to React state could be reset by save-cycle
+  // re-renders, eating typed characters (the launch-day "can't type a
+  // title" bug). The DOM owns keystrokes; we only write to it when
+  // switching notes or adopting a fresher server copy.
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const versionRef = useRef(note.version);
   const titleRef = useRef(note.title);
   const noteIdRef = useRef(note.id);
@@ -164,7 +169,7 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
     noteIdRef.current = note.id;
     versionRef.current = note.version;
     titleRef.current = note.title;
-    setTitle(note.title);
+    if (titleInputRef.current) titleInputRef.current.value = note.title;
     stateRef.current = 'saved';
     setSaveState('saved');
     editor.commands.setContent(note.content);
@@ -189,9 +194,9 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
       <div className="flex items-center justify-between gap-2">
         {!hideTitle ? (
           <input
-            value={title}
+            ref={titleInputRef}
+            defaultValue={note.title}
             onChange={(e) => {
-              setTitle(e.target.value);
               titleRef.current = e.target.value;
               markDirty();
             }}
