@@ -56,6 +56,11 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   const [strengthPct, setStrengthPct] = useState(80);
   const [pxPerSecond, setPxPerSecond] = useState(120);
   const [selection, setSelection] = useState<number[]>([]);
+  // In-flight move/resize preview — never touches history or the engine
+  // until the gesture completes (onPointerUp). draw() renders this over
+  // clip.notes so the drag feels live; hit-testing on pointerdown still
+  // reads clip.notes (gestures always start from committed state).
+  const [draftNotes, setDraftNotes] = useState<MidiNote[] | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -88,7 +93,7 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   // ── Pointer tool: select, marquee, move, resize, create ─────────────
   type Drag =
     | { kind: 'move'; startCx: number; startCy: number; orig: MidiNote[]; sel: number[]; moved: boolean }
-    | { kind: 'resize'; edge: 'left' | 'right'; startCx: number; orig: MidiNote[] | null; sel: number[] }
+    | { kind: 'resize'; edge: 'left' | 'right'; startCx: number; orig: MidiNote[] | null; sel: number[]; moved: boolean }
     | { kind: 'marquee'; startCx: number; startCy: number; cx: number; cy: number; base: number[] };
   const dragRef = useRef<Drag | null>(null);
 
@@ -118,10 +123,12 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
         : (already ? selection : [hit.index]);
       setSelection(sel);
       if (!e.shiftKey) audition(clip.notes[hit.index].pitch, clip.notes[hit.index].velocity);
-      props.pushHistory();
+      // No pushHistory() here — a plain click (audition, select) must not
+      // touch the undo stack. History is recorded once in onPointerUp,
+      // only if the gesture actually moved/resized something.
       dragRef.current = hit.zone === 'body'
         ? { kind: 'move', startCx: cx, startCy: cy, orig: clip.notes, sel, moved: false }
-        : { kind: 'resize', edge: hit.zone, startCx: cx, orig: clip.notes, sel };
+        : { kind: 'resize', edge: hit.zone, startCx: cx, orig: clip.notes, sel, moved: false };
       return;
     }
     if (e.detail === 2) { // double-click empty: create a note at grid length
@@ -157,13 +164,18 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       const deltaSemitones = -Math.round((cy - d.startCy) / ROW_H);
       if (!d.moved && Math.abs(cx - d.startCx) < 3 && Math.abs(cy - d.startCy) < 3) return;
       d.moved = true;
-      editClip((c) => ({ ...c, notes: moveNotes(d.orig, d.sel, {
-        deltaSeconds, deltaSemitones, gridSeconds: snapMod(e), clipStartSeconds: c.start_seconds }) }));
+      // Draft-only: preview the move without touching history or the
+      // engine on every pixel. Committed once in onPointerUp.
+      setDraftNotes(moveNotes(d.orig, d.sel, {
+        deltaSeconds, deltaSemitones, gridSeconds: snapMod(e), clipStartSeconds: clip.start_seconds }));
     } else if (d.kind === 'resize') {
       if (!d.orig) d.orig = clip.notes;
+      if (!d.moved && Math.abs(cx - d.startCx) < 3) return;
+      d.moved = true;
       const deltaSeconds = (cx - d.startCx) / metrics.pxPerSecond;
-      editClip((c) => ({ ...c, notes: resizeNotes(d.orig!, d.sel, {
-        edge: d.edge, deltaSeconds, gridSeconds: snapMod(e), clipStartSeconds: c.start_seconds }) }));
+      // Draft-only, same as move — committed once in onPointerUp.
+      setDraftNotes(resizeNotes(d.orig, d.sel, {
+        edge: d.edge, deltaSeconds, gridSeconds: snapMod(e), clipStartSeconds: clip.start_seconds }));
     } else {
       d.cx = cx; d.cy = cy;
       setSelection([...new Set([...d.base, ...notesInRect(metrics, clip.notes,
@@ -172,7 +184,20 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     }
   };
 
-  const onPointerUp = () => { dragRef.current = null; scheduleDraw(); };
+  const onPointerUp = () => {
+    const d = dragRef.current;
+    // Commit exactly once per completed gesture: one history entry, one
+    // engine reload (via editClip → the skeleton sig picks up the note
+    // content change). A click with no actual drag (moved === false)
+    // commits nothing — see the pointerdown comment on history.
+    if (d && (d.kind === 'move' || d.kind === 'resize') && d.moved && draftNotes) {
+      props.pushHistory();
+      editClip((c) => ({ ...c, notes: draftNotes }));
+    }
+    setDraftNotes(null);
+    dragRef.current = null;
+    scheduleDraw();
+  };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     // The panel owns keys while focused — never let Delete bubble to the
@@ -256,8 +281,11 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     drawVerticals(secondsPerBeat, 0.5);
     drawVerticals(secondsPerBeat * beatsPerBar, 1);
     // Notes — velocity as alpha, selection ringed in foreground color.
+    // Render the in-flight drag preview when present so drags feel live
+    // without touching the committed clip (and the engine) per pixel.
+    const notes = draftNotes ?? clip.notes;
     const selSet = new Set(selection);
-    clip.notes.forEach((n, i) => {
+    notes.forEach((n, i) => {
       const x = timeToX(metrics, n.start_seconds);
       const w = Math.max(3, timeToX(metrics, n.duration_seconds));
       const y = pitchToY(metrics, n.pitch);
