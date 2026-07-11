@@ -2,7 +2,7 @@
 // source note's doc (checked state) so the two never disagree; completing
 // a recurring task spawns the next occurrence instead of rewriting
 // history. All writes are owner-scoped by RLS.
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { docToMarkdown, docToText } from './markdown';
 import { nextOccurrence } from './recurrence';
@@ -186,24 +186,6 @@ async function spawnNextOccurrence(task: PlannerTask): Promise<void> {
     recurrence_parent_id: seriesHead,
     tags: task.tags,
   });
-}
-
-/**
- * Place (or clear) a task's timeline block. Blocking a task also
- * schedules it on that date so the Day list and timeline agree.
- */
-export async function setTimeBlock(
-  id: string,
-  blockStart: string | null,
-  blockMinutes: number | null,
-): Promise<void> {
-  const patch: Record<string, unknown> = {
-    block_start: blockStart,
-    block_minutes: blockStart ? (blockMinutes ?? 60) : null,
-  };
-  if (blockStart) patch.scheduled_date = format(parseISO(blockStart), 'yyyy-MM-dd');
-  const { error } = await supabase.from('gw_planner_tasks').update(patch).eq('id', id);
-  if (error) throw error;
 }
 
 export async function rescheduleTask(id: string, date: string | null): Promise<void> {

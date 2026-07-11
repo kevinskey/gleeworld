@@ -76,9 +76,6 @@ export interface PlannerTask {
   completed_at: string | null;
   recurrence: Recurrence | null;
   recurrence_parent_id: string | null;
-  /** timeline block (Day tab); null = not time-blocked */
-  block_start: string | null;
-  block_minutes: number | null;
   tags: string[];
   position: number;
   deleted_at: string | null;

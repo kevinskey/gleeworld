@@ -16,7 +16,7 @@ const docWith = (...items: DocNode[]): DocNode => ({
 const row = (over: Partial<PlannerTask>): PlannerTask => ({
   id: 'id', user_id: 'u', note_id: 'n', block_id: null, title: '', status: 'open',
   priority: 'none', scheduled_date: null, due_at: null, completed_at: null,
-  recurrence: null, recurrence_parent_id: null, tags: [], position: 0,
+  recurrence: null, recurrence_parent_id: null, block_start: null, block_minutes: null, tags: [], position: 0,
   deleted_at: null, created_at: '', updated_at: '', ...over,
 });
 

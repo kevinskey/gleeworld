@@ -135,7 +135,6 @@ None new. No edge functions, no external providers in v1.
 - **Publishing/share links, comments** — Phase 4.
 - **AI actions, voice transcription** — Phase 5 (mirror `songwriting-ai`
   entitlement/rate-limit pattern; ElevenLabs Scribe for transcription).
-- **External calendars (Google/Outlook/ICS), time-block timeline,
   import/export files, offline queue** — Phase 5.
 - **Attachments in notes** — image nodes render but there's no upload UI yet;
   use the tenant-scoped storage pattern from `src/lib/songwriting/recordingsApi.ts`.

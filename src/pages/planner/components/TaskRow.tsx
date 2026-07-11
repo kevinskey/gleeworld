@@ -35,11 +35,13 @@ export interface TaskRowProps {
   onSetPriority: (id: string, priority: TaskPriority) => void;
   onDelete: (id: string) => void;
   onOpenNote?: (noteId: string) => void;
+  /** Day view only: menu path for placing a timeline block (a11y twin of drag) */
+  onBlockHour?: (id: string, hour: number) => void;
   showDate?: boolean;
 }
 
 export default function TaskRow({
-  task, onSetStatus, onReschedule, onSetPriority, onDelete, onOpenNote, showDate = true,
+  task, onSetStatus, onReschedule, onSetPriority, onDelete, onOpenNote, onBlockHour, showDate = true,
 }: TaskRowProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const done = task.status === 'done';
@@ -116,6 +118,23 @@ export default function TaskRow({
               ))}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+          {onBlockHour && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2">
+                  <CalendarDays className="h-4 w-4" /> Block time <ChevronRight className="ml-auto h-4 w-4" />
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="max-h-64 overflow-y-auto">
+                  {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21].map((h) => (
+                    <DropdownMenuItem key={h} onClick={() => onBlockHour(task.id, h)}>
+                      {h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </>
+          )}
           <DropdownMenuSeparator />
           {!cancelled ? (
             <DropdownMenuItem onClick={() => onSetStatus(task.id, 'cancelled')} className="gap-2">
