@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -126,17 +127,12 @@ export default function MusicLibraryPage() {
   }, [rows, search]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-6">
-      <header className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Music Library</h1>
-          <p className="text-sm text-muted-foreground mt-1.5">
-            Sheet music scores across your ensembles. Other media types live in the Media Library.
-          </p>
-        </div>
-        {/* Score upload + URL import live in the Librarian add-on. The
-            Music Library is read-only for browsing/playback. */}
-      </header>
+    <DashboardPageShell
+      title="Music Library"
+      subtitle="Sheet music scores across your ensembles. Other media types live in the Media Library."
+    >
+      {/* Score upload + URL import live in the Librarian add-on. The
+          Music Library is read-only for browsing/playback. */}
 
       {/* Top-level tabs: Scores | Setlists | Public Domain (CPDL search). */}
       <div className="flex gap-2 border-b border-border">
@@ -366,7 +362,7 @@ export default function MusicLibraryPage() {
       </Dialog>
 
       <CopyrightPolicyLink />
-    </div>
+    </DashboardPageShell>
   );
 }
 

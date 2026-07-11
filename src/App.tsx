@@ -229,8 +229,6 @@ const AttendanceScanPage = lazy(() => import("./pages/AttendanceScanPage"));
 const AttendancePinPage = lazy(() => import("./pages/AttendancePinPage"));
 // Existing AttendancePage (legacy)
 const AttendancePageLegacy = lazy(() => import("./pages/AttendancePage"));
-// MusicLibraryPage (legacy route reuses member page)
-const MusicLibraryPageLegacy = MusicLibraryPage;
 
 const Budgets = lazy(() => import("./pages/Budgets"));
 const Treasurer = lazy(() => import("./pages/Treasurer"));
@@ -1109,7 +1107,7 @@ const App = () => {
               />
               <Route
                 path="/messenger"
-                element={<Navigate to="/communications" replace />}
+                element={<Navigate to="/dashboard/messenger" replace />}
               />
               <Route
                 path="/admin/communications"
@@ -2050,14 +2048,6 @@ const App = () => {
                   path="/calendar"
                   element={<Navigate to="/dashboard/calendar" replace />}
                 />
-                <Route 
-                  path="/messenger" 
-                  element={
-                    <ProtectedRoute>
-                      <Messenger />
-                    </ProtectedRoute>
-                  } 
-                />
                 <Route
                   path="/public-calendar"
                   element={
@@ -2202,13 +2192,9 @@ const App = () => {
                         </ProtectedRoute>
                       }
                     />
-                   <Route 
-                     path="/music-library" 
-                     element={
-                       <PublicRoute>
-                         <MusicLibraryPageLegacy />
-                       </PublicRoute>
-                     } 
+                   <Route
+                     path="/music-library"
+                     element={<Navigate to="/dashboard/music-library" replace />}
                     />
                       <Route 
                         path="/librarian-dashboard" 

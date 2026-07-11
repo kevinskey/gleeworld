@@ -4,7 +4,7 @@ import { toZonedTime } from "date-fns-tz";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
+import { CategoryConfig, CategoryFilter, CATEGORY_FALLBACK_COLOR } from "./CommandCenterCalendar";
 import { CommandCenterEventCard } from "./CommandCenterEventCard";
 import { cn } from "@/lib/utils";
 
@@ -170,7 +170,7 @@ export const AgendaView = ({
                     <CommandCenterEventCard
                       key={event.id}
                       event={event}
-                      categoryColor={config?.color || '#708090'}
+                      categoryColor={config?.color || CATEGORY_FALLBACK_COLOR}
                       categoryIcon={config?.icon || 'calendar'}
                       compact={false}
                       onEventDeleted={onEventDeleted}
@@ -195,7 +195,7 @@ export const AgendaView = ({
                     <div key={event.id} className="flex items-center gap-3 p-2 rounded-lg bg-slate-50">
                       <div 
                         className="w-2 h-10 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: config?.color || '#708090' }}
+                        style={{ backgroundColor: config?.color || CATEGORY_FALLBACK_COLOR }}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-slate-900 truncate">

@@ -3,7 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, start
 import { toZonedTime } from "date-fns-tz";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
-import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
+import { CategoryConfig, CategoryFilter, CATEGORY_FALLBACK_COLOR } from "./CommandCenterCalendar";
 import { EventQRCode } from "../EventQRCode";
 import { OfficeHoursBooking } from "../OfficeHoursBooking";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
@@ -107,7 +107,7 @@ export const MobileMonthGrid = ({
           const hasEvents = dayEvents.length > 0;
 
           const categoryColors = hasEvents
-            ? [...new Set(dayEvents.map(e => getCategoryConfig(getCategoryForEvent(e))?.color || '#708090'))].slice(0, 3)
+            ? [...new Set(dayEvents.map(e => getCategoryConfig(getCategoryForEvent(e))?.color || CATEGORY_FALLBACK_COLOR))].slice(0, 3)
             : [];
 
           return (
@@ -174,7 +174,7 @@ export const MobileMonthGrid = ({
                   {/* Category color bar */}
                   <div
                     className="w-1 self-stretch min-h-[36px] rounded-full flex-shrink-0"
-                    style={{ backgroundColor: config?.color || '#708090' }}
+                    style={{ backgroundColor: config?.color || CATEGORY_FALLBACK_COLOR }}
                   />
 
                   {/* Event details */}

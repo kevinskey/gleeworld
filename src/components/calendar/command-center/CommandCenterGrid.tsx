@@ -4,7 +4,7 @@ import { toZonedTime } from "date-fns-tz";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { ProviderAvailability } from "@/hooks/useServiceProviders";
 import { cn } from "@/lib/utils";
-import { CategoryConfig, CategoryFilter, ViewMode } from "./CommandCenterCalendar";
+import { CategoryConfig, CategoryFilter, ViewMode, CATEGORY_FALLBACK_COLOR } from "./CommandCenterCalendar";
 import { CommandCenterEventCard } from "./CommandCenterEventCard";
 
 const isSameDayET = (date1: Date, date2: Date): boolean => {
@@ -168,7 +168,7 @@ export const CommandCenterGrid = ({
                       <CommandCenterEventCard
                         key={event.id}
                         event={event}
-                        categoryColor={config?.color || '#708090'}
+                        categoryColor={config?.color || CATEGORY_FALLBACK_COLOR}
                         categoryIcon={config?.icon || 'calendar'}
                         compact={viewMode === 'month'}
                         onEventDeleted={onEventDeleted}

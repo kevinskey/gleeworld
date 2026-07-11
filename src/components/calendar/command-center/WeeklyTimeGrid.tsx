@@ -3,7 +3,7 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "da
 import { toZonedTime } from "date-fns-tz";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
-import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
+import { CategoryConfig, CategoryFilter, CATEGORY_FALLBACK_COLOR } from "./CommandCenterCalendar";
 import { EventPeekPopover } from "./EventPeekPopover";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -126,7 +126,7 @@ export const WeeklyTimeGrid = ({
         top,
         height,
         category,
-        color: config?.color || '#708090',
+        color: config?.color || CATEGORY_FALLBACK_COLOR,
       };
     });
   };

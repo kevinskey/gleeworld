@@ -30,6 +30,7 @@ import { EmailClient } from '@/components/messenger/EmailClient';
 import { NewsletterStudio } from '@/components/messenger/NewsletterStudio';
 import { JitsiMeetingPanel } from '@/components/messenger/JitsiEmbedModal';
 import { MessageTemplatesPanel } from '@/components/messenger/MessageTemplatesPanel';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 interface Group {
   id: string;
@@ -467,11 +468,8 @@ export default function Messenger() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]">
-      {/* Page title row — explicit `!text-lg` overrides the global
-          `h1 { clamp(1.75rem, 4.5vw, 2.5rem) }` reset in index.css, which
-          otherwise pushes this title to 40px+ on wide monitors. */}
       <div className="shrink-0 px-4 sm:px-6 pt-3 pb-1.5 bg-card">
-        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight leading-none">Messenger</h1>
+        <PageTitle className="leading-none">Messages</PageTitle>
       </div>
 
       {/* Mode tab bar — underline-style, like Gmail's primary nav. The
@@ -971,10 +969,10 @@ export default function Messenger() {
       {/* Broadcast modal */}
       {showBroadcast && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
-          <Card className="w-full max-w-md my-4 bg-white text-gray-900">
-            <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-white text-gray-900 z-10 border-b rounded-t-xl">
-              <CardTitle className="flex items-center gap-2 text-gray-900"><Megaphone className="w-5 h-5 text-red-600" /> Emergency broadcast</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setShowBroadcast(false)} aria-label="Close" className="text-gray-900 hover:bg-gray-100"><X className="w-4 h-4" /></Button>
+          <Card className="w-full max-w-md my-4 bg-card text-foreground">
+            <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-card text-foreground z-10 border-b rounded-t-xl">
+              <CardTitle className="flex items-center gap-2 text-foreground"><Megaphone className="w-5 h-5 text-red-600" /> Emergency broadcast</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setShowBroadcast(false)} aria-label="Close" className="text-foreground hover:bg-muted"><X className="w-4 h-4" /></Button>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-xs text-muted-foreground">Posts this message to all {groups.length} groups with a 🚨 prefix.</p>
