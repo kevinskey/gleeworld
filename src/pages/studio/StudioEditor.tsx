@@ -33,7 +33,7 @@ import {
 import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
-import { findMidiClipAt, captureNote, recordStartMode } from '@/lib/studio/midiRecord';
+import { appendTakeNote, recordStartMode } from '@/lib/studio/midiRecord';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
@@ -445,6 +445,9 @@ function Editor({
 
   const liveVoicesRef = useRef<LiveVoices | null>(null);
   const heldMidiRef = useRef<Map<number, { downAbs: number; velocity: number }>>(new Map());
+  // The single clip owned by the current recording take — every note of a
+  // take appends here so one take never sprays one-clip-per-note.
+  const midiTakeClipRef = useRef<string | null>(null);
 
   // Build/tear down the live-audition voice manager with the input toggle
   // (web engine only — the native engine owns its own audio path).
@@ -460,6 +463,17 @@ function Editor({
     liveVoicesRef.current?.setInstrument(midiInputTrack?.instrument ?? null);
   }, [midiInputEnabled, midiInputTrack?.instrument?.type, midiInputTrack?.instrument?.preset_id]);
 
+  // Live monitor follows the target track's strip — volume/pan/mute on the
+  // MIDI track control what you hear while playing, same as playback.
+  useEffect(() => {
+    if (!midiInputTrack) return;
+    liveVoicesRef.current?.setStrip({
+      volume_db: midiInputTrack.volume_db,
+      pan: midiInputTrack.pan,
+      mute: midiInputTrack.mute,
+    });
+  }, [midiInputEnabled, midiInputTrack?.volume_db, midiInputTrack?.pan, midiInputTrack?.mute]);
+
   const handleMidiNoteOn = (pitch: number, velocity: number) => {
     liveVoicesRef.current?.noteOn(pitch, velocity / 127);
     if (state?.recordingActive && midiInputTrack) {
@@ -473,24 +487,18 @@ function Editor({
     heldMidiRef.current.delete(pitch);
     const upAbs = state?.positionSeconds ?? held.downAbs;
     const trackId = midiInputTrack.id;
+    const freshClipId = crypto.randomUUID();
     update((s) => ({
       ...s,
       tracks: s.tracks.map((t) => {
         if (t.id !== trackId || !isMidiTrack(t)) return t;
-        const existing = findMidiClipAt(t.clips, held.downAbs);
-        if (existing) {
-          const note = captureNote(pitch, held.velocity, held.downAbs, upAbs, existing.start_seconds);
-          return { ...t, clips: t.clips.map((c) => c.id === existing.id ? { ...c, notes: [...c.notes, note] } : c) } as Track;
-        }
-        // No clip under the key-down — start a fresh clip there.
-        const note = captureNote(pitch, held.velocity, held.downAbs, upAbs, held.downAbs);
-        const clip: MidiClip = {
-          id: crypto.randomUUID(), kind: 'midi',
-          start_seconds: held.downAbs,
-          duration_seconds: Math.max(1, note.start_seconds + note.duration_seconds),
-          notes: [note],
-        };
-        return { ...t, clips: [...t.clips, clip] } as Track;
+        const committed = appendTakeNote(
+          t.clips, midiTakeClipRef.current,
+          { pitch, velocity: held.velocity, downAbsSeconds: held.downAbs, upAbsSeconds: upAbs },
+          freshClipId,
+        );
+        midiTakeClipRef.current = committed.takeClipId;
+        return { ...t, clips: committed.clips } as Track;
       }),
     }));
   };
@@ -868,6 +876,7 @@ function Editor({
 
   const startRecording = async () => {
     if (recording) return;
+    midiTakeClipRef.current = null; // each take owns a fresh clip
     const mode = recordStartMode({
       armedAudioCount: armedTrackIds.length,
       midiInputEnabled,
@@ -1257,6 +1266,7 @@ function Editor({
 
   const startPunchRecord = async () => {
     if (recording || punchRef.current) return;
+    midiTakeClipRef.current = null; // each take owns a fresh clip
     if (engineState.native) {
       toast.info('Punch recording is available in the web Studio for now.');
       return;

@@ -3,14 +3,25 @@ import type { Instrument } from '../session';
 import { buildInstrument, type EngineInstrument } from './instruments';
 
 // Plays a MIDI keyboard live through a track's instrument, independent of the
-// scheduled-playback engine. Builds one EngineInstrument from the given spec and
-// routes it straight to the main output (track FX/mixer are intentionally NOT in
-// this monitoring path — v1). Rebuild via setInstrument() when the armed track's
-// instrument changes; dispose() when input turns off.
+// scheduled-playback engine. Builds one EngineInstrument from the given spec
+// and routes it through a strip mirror (PanVol + mute gate, kept in sync with
+// the target track via setStrip) so live playing obeys the same volume/pan/
+// mute as playback — track FX are still NOT in this monitoring path. Rebuild
+// via setInstrument() when the armed track's instrument changes; dispose()
+// when input turns off.
 export class LiveVoices {
   private inst: EngineInstrument | null = null;
   private specKey = '';
   private held = new Set<number>();
+  private panvol: Tone.PanVol;
+  private muteGate: Tone.Gain;
+
+  constructor() {
+    this.panvol = new Tone.PanVol(0, 0);
+    this.muteGate = new Tone.Gain(1);
+    this.panvol.connect(this.muteGate);
+    this.muteGate.connect(Tone.getDestination());
+  }
 
   setInstrument(spec: Instrument | null): void {
     const key = spec ? `${spec.type}:${spec.preset_id ?? ''}` : '';
@@ -19,7 +30,15 @@ export class LiveVoices {
     this.specKey = key;
     if (!spec) return;
     this.inst = buildInstrument(spec);
-    this.inst.output.connect(Tone.getDestination());
+    this.inst.output.connect(this.panvol);
+  }
+
+  /** Mirror the target track's strip so the live monitor is controlled by
+   * the same knobs the user sees on the track. */
+  setStrip(strip: { volume_db: number; pan: number; mute: boolean }): void {
+    this.panvol.volume.value = strip.volume_db;
+    this.panvol.pan.value = strip.pan;
+    this.muteGate.gain.value = strip.mute ? 0 : 1;
   }
 
   noteOn(pitch: number, velocity01: number): void {
@@ -41,6 +60,7 @@ export class LiveVoices {
     this.disposeInst();
     this.held.clear();
     this.specKey = '';
+    try { this.panvol.dispose(); this.muteGate.dispose(); } catch { /* already gone */ }
   }
 
   private disposeInst(): void {
