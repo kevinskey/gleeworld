@@ -6,7 +6,7 @@
 // listing every problem found (no early bailout — easier to fix).
 
 import {
-  STUDIO_SCHEMA_VERSION, type Session, type FxNode, type Track,
+  STUDIO_SCHEMA_VERSIONS, type Session, type FxNode, type Track,
   isAudioClip, isAudioTrack, isMidiClip, isMidiTrack,
 } from './session';
 
@@ -26,8 +26,8 @@ export function validateSession(raw: unknown): ValidateResult {
   }
   const s = raw as Partial<Session>;
 
-  if (s.schema_version !== STUDIO_SCHEMA_VERSION) {
-    errors.push(`schema_version mismatch: got "${s.schema_version}", expected "${STUDIO_SCHEMA_VERSION}"`);
+  if (!s.schema_version || !STUDIO_SCHEMA_VERSIONS.includes(s.schema_version)) {
+    errors.push(`schema_version mismatch: got "${s.schema_version}", expected one of "1.0.0", "1.1.0"`);
   }
   must(typeof s.id === 'string', 'id must be a string');
   must(typeof s.title === 'string', 'title must be a string');
@@ -120,6 +120,19 @@ function validateTrack(t: unknown, i: number, assetIds: Set<string>, errors: str
         if (n.start_seconds < 0) errors.push(nAt('start_seconds') + ' must be >= 0');
         if (n.duration_seconds <= 0) errors.push(nAt('duration_seconds') + ' must be > 0');
       });
+      // cc is optional (absent on 1.0.0 clips) — spec §7 requires corrupt/
+      // absent cc to be treated as [], so only validate the shape when
+      // present; a missing field is not an error.
+      if (c.cc !== undefined) {
+        if (!Array.isArray(c.cc)) { errors.push(cAt('cc') + ' must be an array'); }
+        else c.cc.forEach((ev, k) => {
+          const eAt = (...p: (string | number)[]) => ['tracks', i, 'clips', j, 'cc', k, ...p].join('.');
+          if (!ev || typeof ev !== 'object') { errors.push(eAt() + ' is not an object'); return; }
+          if (!Number.isInteger(ev.controller) || ev.controller < 0 || ev.controller > 127) errors.push(eAt('controller') + ' must be 0..127');
+          if (!Number.isInteger(ev.value) || ev.value < 0 || ev.value > 127) errors.push(eAt('value') + ' must be 0..127');
+          if (typeof ev.time_seconds !== 'number' || !Number.isFinite(ev.time_seconds) || ev.time_seconds < 0) errors.push(eAt('time_seconds') + ' must be >= 0');
+        });
+      }
     });
   }
 }

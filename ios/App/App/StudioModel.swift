@@ -11,7 +11,14 @@
 import Foundation
 
 public enum Studio {
+    // Native writes stay baseline until native cc playback exists —
+    // known limitation: native playback ignores `cc`, so pedal-lengthening
+    // is web-only until a later iOS pass.
     public static let schemaVersion = "1.0.0"
+    /// Manifests at any of these versions can be decoded. 1.1.0 adds
+    /// optional MidiClip.cc — this decoder tolerates it (and simply
+    /// ignores it, since native playback doesn't consume cc yet).
+    public static let acceptedSchemaVersions: Set<String> = ["1.0.0", "1.1.0"]
 
     // MARK: - Transport
 
@@ -85,12 +92,22 @@ public enum Studio {
         public var duration_seconds: Double
     }
 
+    /// A recorded continuous-controller event. 1.1.0 feature — a clip
+    /// that carries cc events forces the manifest to schema 1.1.0.
+    /// controller 64 = sustain pedal (down at value >= 64), 1 = mod wheel.
+    public struct MidiCcEvent: Codable, Equatable, Sendable {
+        public var controller: Int  // 64 = sustain, 1 = mod
+        public var value: Int       // 0..127
+        public var time_seconds: Double
+    }
+
     public struct MidiClip: Codable, Equatable, Sendable, Identifiable {
         public var id: String
         public var kind: ClipKind = .midi
         public var start_seconds: Double
         public var duration_seconds: Double
         public var notes: [MidiNote]
+        public var cc: [MidiCcEvent]?
     }
 
     // MARK: - Instruments (MIDI tracks)
@@ -231,10 +248,10 @@ public enum Studio {
     public static func decode(_ data: Data) throws -> Session {
         let dec = JSONDecoder()
         let s = try dec.decode(Session.self, from: data)
-        guard s.schema_version == Studio.schemaVersion else {
+        guard Studio.acceptedSchemaVersions.contains(s.schema_version) else {
             throw NSError(domain: "Studio", code: 1, userInfo: [
                 NSLocalizedDescriptionKey:
-                    "schema_version mismatch: got \(s.schema_version), expected \(Studio.schemaVersion)"
+                    "schema_version mismatch: got \(s.schema_version), expected one of \(Studio.acceptedSchemaVersions.sorted())"
             ])
         }
         return s

@@ -22,12 +22,14 @@ export function useStudioMidiInput({
   onNoteOn,
   onNoteOff,
   onSustain,
+  onCc,
 }: {
   enabled: boolean;
   deviceId: string;
   onNoteOn: (pitch: number, velocity: number) => void;
   onNoteOff: (pitch: number) => void;
   onSustain?: (down: boolean) => void;
+  onCc?: (controller: number, value: number) => void;
 }) {
   const [inputs, setInputs] = useState<{ id: string; name: string }[]>([]);
   const [status, setStatus] = useState<'idle' | 'connected' | 'denied'>('idle');
@@ -35,6 +37,7 @@ export function useStudioMidiInput({
   const onOnRef = useRef(onNoteOn); onOnRef.current = onNoteOn;
   const onOffRef = useRef(onNoteOff); onOffRef.current = onNoteOff;
   const onSustainRef = useRef(onSustain); onSustainRef.current = onSustain;
+  const onCcRef = useRef(onCc); onCcRef.current = onCc;
 
   useEffect(() => {
     if (!enabled || !supported) { setStatus('idle'); return; }
@@ -46,6 +49,7 @@ export function useStudioMidiInput({
       if (ev.type === 'noteon') onOnRef.current(ev.pitch, ev.velocity);
       else if (ev.type === 'noteoff') onOffRef.current(ev.pitch);
       else if (ev.type === 'sustain') onSustainRef.current?.(ev.down);
+      else if (ev.type === 'cc') onCcRef.current?.(ev.controller, ev.value);
     };
     const attach = (acc: MidiAccessLike) => {
       const list = [...acc.inputs.values()];

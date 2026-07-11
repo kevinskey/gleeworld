@@ -12,8 +12,9 @@
 
 import * as Tone from 'tone';
 import type { AudioAsset, AudioClip, MidiClip, Track } from '../session';
-import { isAudioTrack, isMidiTrack } from '../session';
+import { isAudioTrack, isMidiTrack, sanitizeCc } from '../session';
 import { dbToGain } from './engine';
+import { applySustain } from '../midiEdit';
 import { buildFxChain, type EngineFxChain } from './fx';
 import { buildInstrument, type EngineInstrument } from './instruments';
 import { getAssetUrlSync } from './assetUrlCache';
@@ -237,7 +238,12 @@ function scheduleMidiClip(
 ) {
   const transport = Tone.getTransport();
   const eventIds: number[] = [];
-  for (const note of clip.notes) {
+  // Pedal-lengthened effective durations (1.1.0 cc clips). Legacy clips
+  // (no cc) pass through applySustain untouched — identical output.
+  // sanitizeCc guards against a corrupt/malformed cc reaching the
+  // scheduler even on a path that skipped validateSession() (spec §7:
+  // corrupt/absent cc must behave as []).
+  for (const note of applySustain(clip.notes, sanitizeCc(clip.cc))) {
     const noteStart = clip.start_seconds + note.start_seconds;
     const id = transport.schedule((time) => {
       inst.triggerAttackRelease(note.pitch, note.duration_seconds, time, note.velocity / 127);

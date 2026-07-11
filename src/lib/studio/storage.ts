@@ -11,7 +11,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import {
-  STUDIO_SCHEMA_VERSION, type Session, type AudioAsset,
+  STUDIO_SCHEMA_VERSION, requiredSchemaVersion, type Session, type AudioAsset,
 } from './session';
 import { newId, newSession } from './defaults';
 import { validateSession } from './validate';
@@ -106,12 +106,20 @@ export async function loadSession(sessionId: string): Promise<Session> {
 // ── Save a session (manifest + index row) ────────────────────────────
 
 export async function saveSession(session: Session): Promise<void> {
+  // Stamp the manifest with the minimum schema version that can
+  // represent it (e.g. a clip that picked up cc events forces 1.1.0)
+  // before validating and serializing, so both the manifest and the
+  // index row agree.
+  session = {
+    ...session,
+    schema_version: requiredSchemaVersion(session),
+    updated_at: new Date().toISOString(),
+  };
   const validated = validateSession(session);
   if (!validated.ok) {
     throw new Error('Refusing to save invalid session:\n' + validated.errors.join('\n'));
   }
   const prefix = sessionPrefix(session.tenant_id, session.id);
-  session.updated_at = new Date().toISOString();
   await writeManifest(prefix, session);
 
   const { error } = await supabase.from('gw_studio_sessions').update({

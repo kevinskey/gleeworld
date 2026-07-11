@@ -13,7 +13,7 @@ import { StudioEngine, type EngineState } from '@/lib/studio/engine/engine';
 import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { renderSessionToWav } from '@/lib/studio/engine/mixdown';
-import type { Session } from '@/lib/studio/session';
+import type { Session, MidiClip } from '@/lib/studio/session';
 import {
   isNativeStudioAvailable, openNativeStudio, NativeStudio, type NativeEngineState,
 } from '@/plugins/studioEngine';
@@ -165,6 +165,15 @@ function fxStructSig(f: { id: string; type: string }): string {
   // remove / reorder change this structure signature → full reload.
   return `${f.id}:${f.type}`;
 }
+/** djb2 over the fields that affect scheduling — any note/cc edit changes
+ * the skeleton and forces the full MIDI reload path (see comment above). */
+export function midiContentSig(c: MidiClip): string {
+  let h = 5381;
+  const mix = (n: number) => { h = ((h * 33) ^ Math.round(n * 1000)) >>> 0; };
+  for (const n of c.notes) { mix(n.pitch); mix(n.velocity); mix(n.start_seconds); mix(n.duration_seconds); }
+  for (const e of c.cc ?? []) { mix(e.controller); mix(e.value); mix(e.time_seconds); }
+  return `${c.notes.length}.${(c.cc ?? []).length}.${h.toString(36)}`;
+}
 function buildSkeletonSig(session: Session | null, fxFn: (f: { id: string; type: string; enabled: boolean; params?: Record<string, unknown> }) => string): string {
   if (!session) return '';
   const parts: string[] = [
@@ -180,11 +189,12 @@ function buildSkeletonSig(session: Session | null, fxFn: (f: { id: string; type:
     parts.push(trackEqSig(t.eq));
     if (t.kind === 'midi') {
       // MIDI tracks still need full rebuild for clip / note edits — the
-      // incremental path here only covers audio clips. List midi notes
-      // in the skeleton so any edit triggers reload.
+      // incremental path here only covers audio clips. Hash midi note/cc
+      // CONTENT (not just count) in the skeleton so any edit — move,
+      // resize, velocity, quantize, transpose, CC — triggers reload.
       parts.push(`${t.instrument.type}:${t.instrument.preset_id ?? ''}`);
       for (const c of t.clips) {
-        parts.push(`${c.id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${c.notes.length}`);
+        parts.push(`${c.id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${midiContentSig(c)}`);
       }
     }
   }

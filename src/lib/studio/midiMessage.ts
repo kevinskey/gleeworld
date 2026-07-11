@@ -7,6 +7,7 @@ export type MidiEvent =
   | { type: 'noteon'; pitch: number; velocity: number }   // velocity 1..127
   | { type: 'noteoff'; pitch: number }
   | { type: 'sustain'; down: boolean }                    // CC64, down at >= 64
+  | { type: 'cc'; controller: number; value: number }     // CC1 (mod wheel) for now
   | { type: 'other' };
 
 export function parseMidiMessage(data: ArrayLike<number>): MidiEvent {
@@ -21,5 +22,7 @@ export function parseMidiMessage(data: ArrayLike<number>): MidiEvent {
   if (status === 0x80 || (status === 0x90 && velocity === 0)) return { type: 'noteoff', pitch };
   // 0xB0 = control change; controller 64 is the sustain (damper) pedal.
   if (status === 0xb0 && pitch === 64) return { type: 'sustain', down: velocity >= 64 };
+  // Controller 1 is the mod wheel — recorded into MidiClip.cc since 1.1.0.
+  if (status === 0xb0 && pitch === 1) return { type: 'cc', controller: 1, value: velocity };
   return { type: 'other' };
 }
