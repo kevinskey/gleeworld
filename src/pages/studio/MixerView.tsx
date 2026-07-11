@@ -23,7 +23,6 @@
 // knob into a ~90px-wide column.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -125,6 +124,11 @@ export function MixerView({
   const isPhone = useIsPhone();
   const [meters, setMeters] = useState<Record<string, MeterEntry>>({});
   const [activePhoneTrackId, setActivePhoneTrackId] = useState<string | null>(null);
+  // Which track's EQ editor is docked open below the strips. Previously
+  // a portaled bottom Sheet — it escaped the Studio's `.dark` container
+  // (rendered LIGHT) and modally dimmed the whole app; Kevin: "should
+  // open in studio, not full screen".
+  const [eqTrackId, setEqTrackId] = useState<string | null>(null);
 
   // ── Meter rAF loop — polls engineState.getTrackPeakDb per track + the
   // existing master peakDbL/R off `state`, applies PPM release
@@ -209,13 +213,24 @@ export function MixerView({
             meter={meters[t.id] ?? EMPTY_METER}
             onResetHold={() => resetHold(t.id)}
             onStripChange={(p) => setStrip(t.id, p)}
-            onEqChange={(eq) => setTrackEq(t.id, eq)}
+            eqOpen={eqTrackId === t.id}
+            onToggleEq={() => setEqTrackId(eqTrackId === t.id ? null : t.id)}
             isPhone={isPhone}
             onTapPhone={() => setActivePhoneTrackId(t.id)}
           />
         ))}
         <MasterStrip session={session} update={update} state={state} meter={meters.master ?? EMPTY_METER} onResetHold={() => resetHold('master')} onExport={onOpenExport} />
       </div>
+      {(() => {
+        const eqTrack = eqTrackId ? session.tracks.find((t) => t.id === eqTrackId) ?? null : null;
+        return eqTrack && (
+          <TrackEqPanel
+            track={eqTrack}
+            onChange={(eq) => setTrackEq(eqTrack.id, eq)}
+            onClose={() => setEqTrackId(null)}
+          />
+        );
+      })()}
       {isPhone && activePhoneTrack && (
         <MiniFader
           track={activePhoneTrack}
@@ -257,18 +272,19 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
 // ═══════════════════════════════════════════════════════════════════
 
 function ChannelStrip({
-  index, track, meter, onResetHold, onStripChange, onEqChange, isPhone, onTapPhone,
+  index, track, meter, onResetHold, onStripChange, eqOpen, onToggleEq, isPhone, onTapPhone,
 }: {
   index: number;
   track: Track;
   meter: MeterEntry;
   onResetHold: () => void;
   onStripChange: (p: StripPatch) => void;
-  onEqChange: (eq: TrackEqBand[]) => void;
+  /** Whether this strip's EQ panel is the one docked open below. */
+  eqOpen: boolean;
+  onToggleEq: () => void;
   isPhone: boolean;
   onTapPhone: () => void;
 }) {
-  const [eqOpen, setEqOpen] = useState(false);
   const hasEnabledBand = (track.eq ?? []).some((b) => b.enabled);
 
   return (
@@ -286,11 +302,12 @@ function ChannelStrip({
         <span className="text-xs font-semibold truncate flex-1 min-w-0">{track.name}</span>
       </button>
 
-      {/* EQ disclosure chip */}
+      {/* EQ disclosure chip — toggles the docked EQ panel below the strips. */}
       <button
         type="button"
-        onClick={() => setEqOpen(true)}
-        className="w-full h-7 rounded border border-border bg-muted hover:bg-muted/70 text-xs font-semibold inline-flex items-center justify-center gap-1"
+        onClick={onToggleEq}
+        className={`w-full h-7 rounded border text-xs font-semibold inline-flex items-center justify-center gap-1 ${
+          eqOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
         title="Track EQ"
       >
         EQ
@@ -323,20 +340,22 @@ function ChannelStrip({
           className={`text-sm font-bold px-1.5 py-0.5 rounded border ${track.solo ? 'bg-yellow-400 border-yellow-400 text-yellow-950' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}>S</button>
       </div>
 
-      <StripEqSheet open={eqOpen} onOpenChange={setEqOpen} track={track} onChange={onEqChange} />
     </div>
   );
 }
 
-// ── StripEqSheet — bottom sheet listing up to 4 bands ────────────────
+// ── TrackEqPanel — docked below the strip row (up to 4 bands) ─────────
+// Deliberately NOT a Sheet/Dialog: portaled overlays escape the Studio's
+// `.dark` container (they rendered light-mode) and modally take over the
+// screen. Docked in the mixer flow, it inherits the dark tokens and the
+// strips + transport stay visible and usable while EQing.
 
-function StripEqSheet({
-  open, onOpenChange, track, onChange,
+function TrackEqPanel({
+  track, onChange, onClose,
 }: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
   track: Track;
   onChange: (eq: TrackEqBand[]) => void;
+  onClose: () => void;
 }) {
   const bands = track.eq ?? [];
 
@@ -350,15 +369,24 @@ function StripEqSheet({
     onChange(bands.map((b, i) => i === idx ? { ...b, ...patch } : b));
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[80dvh] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{track.name} · EQ</SheetTitle>
-        </SheetHeader>
-        <div className="space-y-4 text-sm pb-4">
-          {bands.length === 0 && (
-            <p className="text-xs text-muted-foreground">No EQ bands yet — add one below.</p>
-          )}
+    <div className="bg-card border border-border rounded-md" data-testid="track-eq-panel">
+      <div className="px-3 py-1.5 border-b border-border flex items-center gap-2 text-sm">
+        <span className="font-semibold uppercase tracking-wide text-muted-foreground">EQ</span>
+        <span className="text-xs text-muted-foreground">· {track.name}</span>
+        <button
+          onClick={onClose}
+          className="ml-auto text-xs px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
+          title="Close EQ"
+          aria-label="Close EQ"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="p-3 text-sm">
+        {bands.length === 0 && (
+          <p className="text-xs text-muted-foreground mb-2">No EQ bands yet — add one below.</p>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 mb-2">
           {bands.map((band, idx) => (
             <div key={idx} className="border border-border rounded-md p-2.5 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
@@ -418,16 +446,16 @@ function StripEqSheet({
               </div>
             </div>
           ))}
-          <button
-            onClick={addBand}
-            disabled={bands.length >= MAX_EQ_BANDS}
-            className="w-full h-11 rounded border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 text-sm font-semibold"
-          >
-            <Plus className="w-4 h-4" /> Add band {bands.length >= MAX_EQ_BANDS ? '(max 4)' : ''}
-          </button>
         </div>
-      </SheetContent>
-    </Sheet>
+        <button
+          onClick={addBand}
+          disabled={bands.length >= MAX_EQ_BANDS}
+          className="w-full h-9 rounded border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 text-sm font-semibold"
+        >
+          <Plus className="w-4 h-4" /> Add band {bands.length >= MAX_EQ_BANDS ? '(max 4)' : ''}
+        </button>
+      </div>
+    </div>
   );
 }
 
