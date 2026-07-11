@@ -13,7 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { StudioEngineStatus } from '@/components/studio/StudioEngineStatus';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { renderRegionMix, renderRegionStems, zipBlobs, safeName } from '@/lib/studio/engine/regionExport';
+import { renderRegionMix, renderRegionStems, renderRegionBuffer, zipBlobs, safeName } from '@/lib/studio/engine/regionExport';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Metronome } from '@/components/audioTools/Metronome';
@@ -686,17 +686,42 @@ function Editor({
   })();
 
   const [exportingClip, setExportingClip] = useState(false);
-  /** Export the selected AUDIO clip as a 320kbps MP3: slice the source
-   * asset (offset/duration), apply clip gain + fades (+reverse) at the
-   * sample level, encode in the shared worker. pitch/time_stretch are
-   * intentionally not applied (spec'd v1 non-goal). */
+  /** Export the selected clip as a 320kbps MP3.
+   * AUDIO clip: slice the source asset (offset/duration), apply clip
+   * gain + fades (+reverse) at the sample level, encode in the shared
+   * worker. pitch/time_stretch are intentionally not applied (spec'd v1
+   * non-goal).
+   * MIDI clip: no source asset exists — offline-bounce the clip's time
+   * window on just its track (notes through the track's instrument, same
+   * renderer as Region export), then encode. */
   const exportSelectedClipMp3 = async () => {
     if (!selectedClip || exportingClip) return;
     const track = session.tracks.find((t) => t.id === selectedClip.trackId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clip: any = track && (track as any).clips?.find((c: any) => c.id === selectedClip.clipId);
     if (!track || !clip) return;
-    if (clip.kind !== 'audio') { toast.error('MP3 export works on audio clips (MIDI export comes later).'); return; }
+    if (clip.kind === 'midi') {
+      setExportingClip(true);
+      try {
+        const buf = await renderRegionBuffer(
+          session, [track.id], clip.start_seconds, clip.start_seconds + clip.duration_seconds,
+        );
+        const channels = Array.from({ length: buf.numberOfChannels }, (_, i) => buf.getChannelData(i));
+        const blob = await encodeMp3(channels, buf.sampleRate, 320);
+        const dlUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = dlUrl;
+        a.download = `${track.name} — MIDI clip`.replace(/[^\p{L}\p{N}\s—_-]+/gu, '').trim() + '.mp3';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(dlUrl), 30_000);
+        toast.success('Clip bounced to MP3');
+      } catch (e) {
+        toast.error('Clip export failed', { description: e instanceof Error ? e.message : String(e) });
+      } finally {
+        setExportingClip(false);
+      }
+      return;
+    }
     const asset = session.assets.find((a) => a.id === clip.asset_id);
     if (!asset) { toast.error('Clip source not found.'); return; }
     setExportingClip(true);
@@ -1621,6 +1646,25 @@ function Editor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, start, play, pause, stop, setMetronome, update, recording, selectedClip, session, session.tempo_bpm, session.time_signature.numerator, session.length_seconds, loopEnabled, loopRegion?.start, loopRegion?.end, punchEnabled, markers]);
 
+  // Timeline extent — the grid must NEVER stop before the content does.
+  // Clips (and an in-flight recording) can run past session.length_seconds
+  // ("End"): the length only auto-extends when a recording FINALIZES, so
+  // during a take — and for any clip dragged/trimmed past End — lanes
+  // sized by length_seconds alone left content floating in gridless
+  // space. Extend to the furthest clip end, keep a few bars of runway
+  // ahead of the live playhead while recording, and round up to a whole
+  // bar so the last measure is always bookended.
+  const timelineEndSeconds = (() => {
+    const secondsPerBar = (60 / session.tempo_bpm) * session.time_signature.numerator;
+    let end = session.length_seconds;
+    for (const t of session.tracks) {
+      if (!isAudioTrack(t) && !isMidiTrack(t)) continue;
+      for (const c of t.clips) end = Math.max(end, c.start_seconds + c.duration_seconds);
+    }
+    if (recording) end = Math.max(end, (state?.positionSeconds ?? 0) + secondsPerBar * 4);
+    return Math.ceil(end / secondsPerBar - 1e-6) * secondsPerBar;
+  })();
+
   return (
     <ZoomContext.Provider value={pxPerSecond}>
     <TrackHeightContext.Provider value={trackHeight}>
@@ -2327,7 +2371,7 @@ function Editor({
             <div className="shrink-0 border-r border-border" style={{ width: effectiveStripWidth }} />
             <div className="flex-1 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" ref={scrollSync.register}>
               <BarRuler
-                lengthSeconds={session.length_seconds}
+                lengthSeconds={timelineEndSeconds}
                 tempoBpm={session.tempo_bpm}
                 numerator={session.time_signature.numerator}
                 positionSeconds={state?.positionSeconds ?? 0}
@@ -2347,6 +2391,7 @@ function Editor({
            * Lane shows where each click hits, accent on beat 1. */}
           <ClickTrackRow
             session={session}
+            endSeconds={timelineEndSeconds}
             stripWidth={effectiveStripWidth}
             metronomeOn={state?.metronomeOn ?? false}
             metronomeVolumeDb={state?.metronomeVolumeDb ?? 0}
@@ -2371,6 +2416,7 @@ function Editor({
               track={t}
               positionSeconds={state?.positionSeconds ?? 0}
               snapSeconds={snapSeconds}
+              endSeconds={timelineEndSeconds}
               selectedClip={selectedClip}
               recording={recording}
               stripWidth={effectiveStripWidth}
@@ -2394,7 +2440,7 @@ function Editor({
               ref={scrollSync.register}
               title="Drag to scroll the timeline horizontally — all tracks move together"
             >
-              <div style={{ width: session.length_seconds * pxPerSecond, height: 1 }} />
+              <div style={{ width: timelineEndSeconds * pxPerSecond, height: 1 }} />
             </div>
           </div>
         </div>
@@ -4079,10 +4125,12 @@ function BarRuler({
 // would sound like against the project.
 
 function ClickTrackRow({
-  session, stripWidth, metronomeOn, metronomeVolumeDb,
+  session, endSeconds, stripWidth, metronomeOn, metronomeVolumeDb,
   onToggle, onVolume, onSeek, onHeightChange,
 }: {
   session: Session;
+  /** Timeline extent (>= session.length_seconds) — see timelineEndSeconds. */
+  endSeconds: number;
   stripWidth: number;
   metronomeOn: boolean;
   metronomeVolumeDb: number;
@@ -4103,13 +4151,13 @@ function ClickTrackRow({
   const clickHeight = Math.min(trackHeight, Math.max(CLICK_MIN_HEIGHT, Math.floor(trackHeight / 3)));
   const numerator = session.time_signature.numerator;
   const secondsPerBeat = 60 / session.tempo_bpm;
-  const totalWidth = session.length_seconds * pxPerSecond;
-  const totalBeats = Math.ceil(session.length_seconds / secondsPerBeat);
+  const totalWidth = endSeconds * pxPerSecond;
+  const totalBeats = Math.ceil(endSeconds / secondsPerBeat);
 
   const onLaneClick = (e: React.MouseEvent) => {
     if (e.target !== e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const sec = Math.max(0, Math.min(session.length_seconds, (e.clientX - rect.left) / pxPerSecond));
+    const sec = Math.max(0, Math.min(endSeconds, (e.clientX - rect.left) / pxPerSecond));
     onSeek(sec);
   };
 
@@ -4218,7 +4266,7 @@ function ClickTrackRow({
 // with M/S/R inline + a thin volume slider + live mini-meter.
 
 function DarkTrackRow({
-  index, session, track, positionSeconds, snapSeconds, selectedClip, recording,
+  index, session, track, positionSeconds, snapSeconds, endSeconds, selectedClip, recording,
   stripWidth, onStripWidthChange,
   onSelectClip, onUpdate, onRemove, onStripChange, onSeek, onHeightChange, onOpenPianoRoll,
 }: {
@@ -4227,6 +4275,8 @@ function DarkTrackRow({
   track: Track;
   positionSeconds: number;
   snapSeconds: number;
+  /** Timeline extent (>= session.length_seconds) — see timelineEndSeconds. */
+  endSeconds: number;
   selectedClip: SelectedClip | null;
   recording: RecordingSession | null;
   stripWidth: number;
@@ -4412,6 +4462,7 @@ function DarkTrackRow({
         <DarkTimeline
           session={session} track={track} positionSeconds={positionSeconds}
           snapSeconds={snapSeconds}
+          endSeconds={endSeconds}
           selectedClip={selectedClip}
           onSelectClip={onSelectClip}
           onUpdate={onUpdate}
@@ -4488,10 +4539,12 @@ function MidiInstrumentDropdown({
 // ── Dark timeline lane (clips + playhead) ────────────────────────────
 
 function DarkTimeline({
-  session, track, positionSeconds, snapSeconds, selectedClip, onSelectClip, onUpdate, onSeek,
+  session, track, positionSeconds, snapSeconds, endSeconds, selectedClip, onSelectClip, onUpdate, onSeek,
 }: {
   session: Session; track: Track; positionSeconds: number;
   snapSeconds: number;
+  /** Timeline extent (>= session.length_seconds) — see timelineEndSeconds. */
+  endSeconds: number;
   selectedClip: SelectedClip | null;
   onSelectClip: (c: SelectedClip | null) => void;
   onUpdate: (mut: (t: Track) => Track) => void;
@@ -4500,10 +4553,10 @@ function DarkTimeline({
   const pxPerSecond = usePxPerSecond();
   const trackHeight = useTrackHeight();
   const gridLevel = useGridLevel();
-  const totalWidth = session.length_seconds * pxPerSecond;
+  const totalWidth = endSeconds * pxPerSecond;
   const secondsPerBeat = 60 / session.tempo_bpm;
   const secondsPerBar = secondsPerBeat * session.time_signature.numerator;
-  const totalBars = Math.ceil(session.length_seconds / secondsPerBar);
+  const totalBars = Math.ceil(endSeconds / secondsPerBar);
 
   // Click on the lane background (NOT on a clip) sets the playhead.
   // Clips stop propagation via onPointerDown so they keep their own
@@ -4512,7 +4565,7 @@ function DarkTimeline({
     if (!onSeek) return;
     if (e.target !== e.currentTarget) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const sec = Math.max(0, Math.min(session.length_seconds, (e.clientX - rect.left) / pxPerSecond));
+    const sec = Math.max(0, Math.min(endSeconds, (e.clientX - rect.left) / pxPerSecond));
     onSeek(sec);
     onSelectClip(null);
   };
@@ -4536,7 +4589,7 @@ function DarkTimeline({
         // Bars-only: bar boundaries at every measure start AND the very
         // end of the timeline, so each measure visibly bookended.
         if (sub === 0) {
-          const totalBarsB = Math.ceil(session.length_seconds / secondsPerBar);
+          const totalBarsB = Math.ceil(endSeconds / secondsPerBar);
           return Array.from({ length: totalBarsB + 1 }).map((_, b) => (
             <div
               key={`bar${b}`}
@@ -4548,7 +4601,7 @@ function DarkTimeline({
         const stepSec = secondsPerBeat * (4 / sub);
         const beatStride = sub / 4;             // steps per beat (may be < 1 for sub=2)
         const barStride = beatStride * numerator;
-        const totalSteps = Math.ceil(session.length_seconds / stepSec);
+        const totalSteps = Math.ceil(endSeconds / stepSec);
         const lines = [];
         // Exclusive end (`<` not `<=`) so per-measure count equals the
         // subdivision name. The line at position `totalSteps` would be

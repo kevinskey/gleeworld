@@ -28,8 +28,10 @@ export interface RegionExportOpts {
  *  Starts the offline transport at `startSec` (its `offset` arg) so clips
  *  play from the region's left edge, and renders exactly the region
  *  length. No mastering chain — this is a clean sum of the selected
- *  tracks, which is what a partial-selection bounce should be. */
-async function renderRegionBuffer(
+ *  tracks, which is what a partial-selection bounce should be.
+ *  Exported for the per-clip MP3 path: a MIDI clip has no source asset
+ *  to slice, so it bounces its own time window through this instead. */
+export async function renderRegionBuffer(
   session: Session, trackIds: string[], startSec: number, endSec: number,
 ): Promise<AudioBuffer> {
   const durationSec = Math.max(0.01, endSec - startSec);
