@@ -33,7 +33,7 @@ import {
 import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
-import { findMidiClipAt, captureNote } from '@/lib/studio/midiRecord';
+import { findMidiClipAt, captureNote, recordStartMode } from '@/lib/studio/midiRecord';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
@@ -291,6 +291,10 @@ interface RecordingSession {
   /** true → this take was dropped in by the auto punch flow; finalize
    * must not yank the playhead back while the post-roll is playing. */
   punch?: boolean;
+  /** true → no mic at all: the transport rolls purely so USB MIDI note
+   * capture can write into the target MIDI track; finalize skips the
+   * whole audio-take pipeline. */
+  midiOnly?: boolean;
   startSeconds: number;
   startWallMs: number;
   /** Wall stamps for measured take alignment (web path only). Native
@@ -864,8 +868,16 @@ function Editor({
 
   const startRecording = async () => {
     if (recording) return;
-    if (armedTrackIds.length === 0) {
-      toast.error('Arm at least one audio track first (red R button on the strip).');
+    const mode = recordStartMode({
+      armedAudioCount: armedTrackIds.length,
+      midiInputEnabled,
+      hasMidiTarget: !!midiInputTrack,
+      nativeEngine: !!engineState.native,
+    });
+    if (mode === 'blocked') {
+      toast.error(engineState.native
+        ? 'Arm at least one audio track first (red R button on the strip).'
+        : 'Arm an audio track (red R) — or turn on the USB MIDI keyboard in Settings to record a MIDI take.');
       return;
     }
     try {
@@ -973,6 +985,27 @@ function Editor({
       }
       const startedAt = performance.now();
 
+      // MIDI-only take: no mic to open. The transport rolls with
+      // recordingActive set so handleMidiNoteOn/Off capture into the
+      // target MIDI track; notes commit clip-side on each key release.
+      if (mode === 'midi') {
+        engineState.setRecordingActive?.(true);
+        let midiTransportStartWallMs: number | null = null;
+        if (!state?.isPlaying) {
+          play();
+          midiTransportStartWallMs = performance.now();
+        }
+        setRecording({
+          recorder: null, native: false, midiOnly: true,
+          startSeconds: startSec, startWallMs: startedAt,
+          pressWallMs, captureStartWallMs: startedAt,
+          transportStartWallMs: midiTransportStartWallMs,
+          armedTrackIds: [], peaks: [],
+        });
+        toast.success('Recording MIDI — click ● again to stop');
+        return;
+      }
+
       // Web path: Tone.UserMedia + MediaRecorder.
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
@@ -1011,6 +1044,21 @@ function Editor({
       nativePeakSubRef.current = null;
     }
     latestPeakDbRef.current = -Infinity;
+
+    // MIDI-only take: notes already committed on each key release — there
+    // is no blob/asset to finalize. Flush any keys still held (their
+    // note-off would otherwise land after the playhead is parked), then
+    // park at the take's start like the audio path does.
+    if (recording.midiOnly) {
+      const midiElapsed = (performance.now() - recording.startWallMs) / 1000;
+      for (const pitch of [...heldMidiRef.current.keys()]) handleMidiNoteOff(pitch);
+      setRecording(null);
+      engineState.setRecordingActive?.(false);
+      try { engineState.seek?.(recording.startSeconds); } catch { /* ignore */ }
+      toast.success(`Recorded ${midiElapsed.toFixed(1)}s of MIDI`);
+      return;
+    }
+
     const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, transportStartWallMs, armedTrackIds: armed } = recording;
     setRecording(null);
     engineState.setRecordingActive?.(false);
@@ -4513,13 +4561,11 @@ function DarkTrackRow({
               className={`text-sm font-bold px-1.5 py-0.5 rounded border ${track.mute ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}>M</button>
             <button onClick={() => setStrip({ solo: !track.solo })}
               className={`text-sm font-bold px-1.5 py-0.5 rounded border ${track.solo ? 'bg-yellow-400 border-yellow-400 text-yellow-950' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}>S</button>
-            {isAudioTrack(track) && (
-              <button onClick={() => setStrip({ arm: !track.arm })}
-                className={`text-sm font-bold px-1.5 py-0.5 rounded border inline-flex items-center gap-0.5 ${track.arm ? 'bg-rose-500 border-rose-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-rose-50 hover:border-rose-300'}`}
-                title="Arm for recording">
-                <Circle className={`w-2 h-2 ${track.arm ? 'fill-current' : ''}`} /> R
-              </button>
-            )}
+            <button onClick={() => setStrip({ arm: !track.arm })}
+              className={`text-sm font-bold px-1.5 py-0.5 rounded border inline-flex items-center gap-0.5 ${track.arm ? 'bg-rose-500 border-rose-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-rose-50 hover:border-rose-300'}`}
+              title={isAudioTrack(track) ? 'Arm for recording' : 'Arm as the USB MIDI input target'}>
+              <Circle className={`w-2 h-2 ${track.arm ? 'fill-current' : ''}`} /> R
+            </button>
             <input
               type="range" min={-40} max={6} step={0.5} value={track.volume_db}
               onChange={(e) => setStrip({ volume_db: Number(e.target.value) })}

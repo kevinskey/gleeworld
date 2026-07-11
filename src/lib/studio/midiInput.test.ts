@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseMidiMessage } from './midiMessage';
-import { captureNote, findMidiClipAt } from './midiRecord';
+import { captureNote, findMidiClipAt, recordStartMode } from './midiRecord';
 import type { MidiClip } from './session';
 
 describe('parseMidiMessage', () => {
@@ -53,5 +53,32 @@ describe('findMidiClipAt', () => {
   it('returns null in empty space (caller starts a fresh clip)', () => {
     expect(findMidiClipAt(clips, 6)).toBeNull();
     expect(findMidiClipAt(clips, 4)).toBeNull(); // end-exclusive
+  });
+});
+
+describe('recordStartMode', () => {
+  const base = { armedAudioCount: 0, midiInputEnabled: false, hasMidiTarget: false, nativeEngine: false };
+
+  it('records audio whenever an audio track is armed (MIDI capture rides along)', () => {
+    expect(recordStartMode({ ...base, armedAudioCount: 1 })).toBe('audio');
+    expect(recordStartMode({ ...base, armedAudioCount: 2, midiInputEnabled: true, hasMidiTarget: true })).toBe('audio');
+    expect(recordStartMode({ ...base, armedAudioCount: 1, nativeEngine: true })).toBe('audio');
+  });
+
+  it('records a MIDI-only take when no audio is armed but MIDI input has a target', () => {
+    expect(recordStartMode({ ...base, midiInputEnabled: true, hasMidiTarget: true })).toBe('midi');
+  });
+
+  it('blocks when nothing is armed and MIDI input is off', () => {
+    expect(recordStartMode(base)).toBe('blocked');
+    expect(recordStartMode({ ...base, hasMidiTarget: true })).toBe('blocked');
+  });
+
+  it('blocks a MIDI-only take when there is no MIDI track to capture into', () => {
+    expect(recordStartMode({ ...base, midiInputEnabled: true })).toBe('blocked');
+  });
+
+  it('blocks a MIDI-only take on the native engine (web-only input path)', () => {
+    expect(recordStartMode({ ...base, midiInputEnabled: true, hasMidiTarget: true, nativeEngine: true })).toBe('blocked');
   });
 });
