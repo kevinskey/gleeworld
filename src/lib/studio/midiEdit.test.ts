@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { applySustain } from './midiEdit';
+import {
+  applySustain,
+  gridSeconds, quantizeNotes, transposeNotes, moveNotes, resizeNotes,
+  offsetVelocity, addNote, deleteNotes, sustainRanges, setSustainRanges,
+} from './midiEdit';
 import type { MidiNote, MidiCcEvent } from './session';
 
 const note = (pitch: number, start: number, dur: number, vel = 100): MidiNote =>
@@ -36,5 +40,88 @@ describe('applySustain', () => {
   it('pedal never lifted: extends to the end of the material', () => {
     const out = applySustain([note(60, 0, 0.4), note(64, 1.0, 0.6)], [cc64(0.1, true)]);
     expect(out[0].duration_seconds).toBeCloseTo(1.6); // last note end
+  });
+});
+
+describe('gridSeconds', () => {
+  it('derives straight and triplet grids from tempo', () => {
+    expect(gridSeconds('1/4', 120)).toBeCloseTo(0.5);
+    expect(gridSeconds('1/16', 120)).toBeCloseTo(0.125);
+    expect(gridSeconds('1/8T', 120)).toBeCloseTo(0.5 / 3);
+  });
+});
+
+describe('quantizeNotes', () => {
+  it('hard-snaps selected notes to the TIMELINE grid (clip offset honored)', () => {
+    // Clip starts mid-bar at 0.3s; a note at clip-relative 0.15 sits at
+    // absolute 0.45 → nearest 0.5 gridline → clip-relative 0.2.
+    const out = quantizeNotes([note(60, 0.15, 0.2)], [0],
+      { gridSeconds: 0.5, strength: 1, clipStartSeconds: 0.3 });
+    expect(out[0].start_seconds).toBeCloseTo(0.2);
+  });
+  it('strength moves notes only part-way', () => {
+    const out = quantizeNotes([note(60, 0.15, 0.2)], [0],
+      { gridSeconds: 0.5, strength: 0.5, clipStartSeconds: 0.3 });
+    expect(out[0].start_seconds).toBeCloseTo(0.175); // half of the 0.05 correction
+  });
+  it('never moves unselected notes, and clamps at clip start', () => {
+    // Unselected note (index 0) must not move.
+    const out = quantizeNotes([note(60, 0.15, 0.2), note(62, 0.6, 0.2)], [1],
+      { gridSeconds: 0.5, strength: 1, clipStartSeconds: 0 });
+    expect(out[0].start_seconds).toBeCloseTo(0.15);
+    expect(out[1].start_seconds).toBeCloseTo(0.5);
+    // A clip starting at 0.4 with a note at rel 0.05 (abs 0.45 → grid 0.5)
+    // snaps to rel 0.1; but a grid target BEFORE the clip start clamps to 0:
+    // abs 0.45 with grid 2.0 → target 0.0 → rel would be −0.4 → clamped 0.
+    const clamped = quantizeNotes([note(60, 0.05, 0.2)], [0],
+      { gridSeconds: 2.0, strength: 1, clipStartSeconds: 0.4 });
+    expect(clamped[0].start_seconds).toBe(0);
+  });
+});
+
+describe('note ops', () => {
+  it('transpose clamps to 0..127', () => {
+    const out = transposeNotes([note(126, 0, 1), note(1, 0, 1)], [0, 1], 12);
+    expect(out[0].pitch).toBe(127);
+    expect(out[1].pitch).toBe(13);
+  });
+  it('move shifts time+pitch with grid snap and floors at 0', () => {
+    const out = moveNotes([note(60, 1.0, 0.5)], [0],
+      { deltaSeconds: 0.26, deltaSemitones: -2, gridSeconds: 0.25, clipStartSeconds: 0 });
+    expect(out[0].start_seconds).toBeCloseTo(1.25);
+    expect(out[0].pitch).toBe(58);
+  });
+  it('resize right enforces the minimum duration', () => {
+    const out = resizeNotes([note(60, 0, 0.5)], [0],
+      { edge: 'right', deltaSeconds: -0.49, gridSeconds: 0, clipStartSeconds: 0 });
+    expect(out[0].duration_seconds).toBeCloseTo(0.05);
+  });
+  it('resize left moves start and preserves the end', () => {
+    const out = resizeNotes([note(60, 1.0, 0.5)], [0],
+      { edge: 'left', deltaSeconds: 0.2, gridSeconds: 0, clipStartSeconds: 0 });
+    expect(out[0].start_seconds).toBeCloseTo(1.2);
+    expect(out[0].duration_seconds).toBeCloseTo(0.3);
+  });
+  it('velocity offset clamps 1..127', () => {
+    const out = offsetVelocity([note(60, 0, 1, 120), note(62, 0, 1, 3)], [0, 1], 20);
+    expect(out[0].velocity).toBe(127);
+    expect(out[1].velocity).toBe(23);
+  });
+  it('add returns the new index; delete filters the selection', () => {
+    const { notes, index } = addNote([note(60, 0, 1)], note(64, 1, 1));
+    expect(index).toBe(1);
+    expect(deleteNotes(notes, [0])).toEqual([note(64, 1, 1)]);
+  });
+});
+
+describe('sustain ranges', () => {
+  it('pairs down/up events into ranges (open range ends at fallbackEnd)', () => {
+    expect(sustainRanges([cc64(1, true), cc64(2, false), cc64(3, true)], 5))
+      .toEqual([{ down: 1, up: 2 }, { down: 3, up: 5 }]);
+  });
+  it('setSustainRanges rebuilds CC64 and keeps other controllers', () => {
+    const mod = { controller: 1, value: 30, time_seconds: 0.5 };
+    const out = setSustainRanges([cc64(1, true), cc64(2, false), mod], [{ down: 0.5, up: 1.5 }]);
+    expect(out).toEqual([mod, cc64(0.5, true), cc64(1.5, false)].sort((a, b) => a.time_seconds - b.time_seconds));
   });
 });
