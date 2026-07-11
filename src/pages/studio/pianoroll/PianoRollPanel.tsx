@@ -605,7 +605,8 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       // select that position instead.
       const newPts = ccPoints(cc, 1);
       const newPos = newPts.findIndex((p) => cc[p.index] === updated);
-      d.index = newPos >= 0 ? newPos : d.index;
+      // d.index is committed-order (frozen at pointerdown); never rewrite with newPos
+      // (a draft-order position). That mixup made crossing drags move the wrong point.
       setSelectedModPoint(newPos >= 0 ? newPos : null);
     }
   };
