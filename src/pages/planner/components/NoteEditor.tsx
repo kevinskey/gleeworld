@@ -75,6 +75,7 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const savingRef = useRef(false);
   const pendingRef = useRef(false);
+  const stateRef = useRef<SaveState>('saved');
 
   const editor = useEditor({
     extensions: [
@@ -103,6 +104,7 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
       return;
     }
     savingRef.current = true;
+    stateRef.current = 'saving';
     setSaveState('saving');
     try {
       const saved = await saveNote(noteIdRef.current, {
@@ -111,13 +113,16 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
         expectedVersion: versionRef.current,
       });
       versionRef.current = saved.version;
+      stateRef.current = 'saved';
       setSaveState('saved');
       onSaved?.(saved);
     } catch (err) {
       if (err instanceof NoteConflictError) {
+        stateRef.current = 'conflict';
         setSaveState('conflict');
       } else {
         console.error(err);
+        stateRef.current = 'error';
         setSaveState('error');
         toast.error('Could not save the note');
       }
@@ -131,26 +136,41 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
   }, [editor, onSaved]);
 
   const markDirty = useCallback(() => {
-    setSaveState((s) => (s === 'conflict' ? s : 'dirty'));
+    // in conflict, autosaving again is futile (the version guard will
+    // reject every attempt) — wait for reload/adoption instead
+    if (stateRef.current === 'conflict') return;
+    stateRef.current = 'dirty';
+    setSaveState('dirty');
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => void doSave(), 1200);
   }, [doSave]);
 
-  // switching to a different note: reset editor + trackers
+  // Reconcile with the note prop: reset on a different note id, and ADOPT
+  // fresher server copies of the SAME note (a remount initializes from the
+  // React Query cache, which can be stale — the pre-fix failure mode was a
+  // versionRef stuck at 1 silently losing every subsequent save).
   useEffect(() => {
     if (!editor) return;
-    if (noteIdRef.current !== note.id) {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      noteIdRef.current = note.id;
-      versionRef.current = note.version;
-      titleRef.current = note.title;
-      setTitle(note.title);
-      setSaveState('saved');
-      editor.commands.setContent(note.content);
-      assignBlockIds(editor);
+    const switching = noteIdRef.current !== note.id;
+    const serverIsAhead = !switching && note.version > versionRef.current;
+    if (!switching && !serverIsAhead) return;
+    if (serverIsAhead && (stateRef.current === 'dirty' || stateRef.current === 'saving')) {
+      // genuine concurrent edit: local unsaved changes vs newer server copy
+      stateRef.current = 'conflict';
+      setSaveState('conflict');
+      return;
     }
+    if (timerRef.current) clearTimeout(timerRef.current);
+    noteIdRef.current = note.id;
+    versionRef.current = note.version;
+    titleRef.current = note.title;
+    setTitle(note.title);
+    stateRef.current = 'saved';
+    setSaveState('saved');
+    editor.commands.setContent(note.content);
+    assignBlockIds(editor);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [note.id, editor]);
+  }, [note.id, note.version, editor]);
 
   // flush on unmount
   useEffect(() => () => {

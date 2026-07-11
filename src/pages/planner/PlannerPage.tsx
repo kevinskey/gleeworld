@@ -229,7 +229,10 @@ function NoteView({ noteId, onOpenNote, onBack }: {
           </div>
         </div>
         <div className="rounded-lg border border-border bg-card p-4">
-          <NoteEditor note={note} />
+          <NoteEditor
+            note={note}
+            onSaved={(saved) => qc.setQueryData(['planner', 'note', noteId], saved)}
+          />
         </div>
       </div>
 

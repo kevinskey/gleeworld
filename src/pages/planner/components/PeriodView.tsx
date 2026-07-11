@@ -159,7 +159,11 @@ export default function PeriodView({ type, dateKey, onNavigate, onOpenNote }: Pe
           </p>
         ) : (
           <div className="rounded-lg border border-border bg-card p-4">
-            <NoteEditor note={note} hideTitle />
+            <NoteEditor
+              note={note}
+              hideTitle
+              onSaved={(saved) => qc.setQueryData(['planner', 'period-note', type, dateKey], saved)}
+            />
           </div>
         )}
       </section>
