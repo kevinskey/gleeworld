@@ -8,7 +8,7 @@ if (!file) {
   console.error('Usage: node scripts/seed-course-templates.mjs <courses.json>');
   process.exit(1);
 }
-const { template_courses } = JSON.parse(readFileSync(file, 'utf8'));
+const { template_courses, products: jsonProducts = [] } = JSON.parse(readFileSync(file, 'utf8'));
 
 const q = (v) => (v === null || v === undefined ? 'null' : `'${String(v).replace(/'/g, "''")}'`);
 const qj = (v) => `${q(JSON.stringify(v ?? []))}::jsonb`;
@@ -56,6 +56,14 @@ for (const p of products) {
   out.push(`insert into gw_course_product (template_course_id, sku, name, level, price_cents, bundle_key)
 select ${p.slug ? `(select id from gw_academy_courses where slug = ${q(p.slug)} and is_template)` : 'null'},
   ${q(p.sku)}, ${q(p.name)}, ${q(p.level)}, ${p.price}, 'history-choral'
+on conflict (sku) do nothing;`);
+}
+
+// Products supplied by the JSON itself (newer course families carry their own).
+for (const p of jsonProducts) {
+  out.push(`insert into gw_course_product (template_course_id, sku, name, level, price_cents, bundle_key)
+select ${p.slug ? `(select id from gw_academy_courses where slug = ${q(p.slug)} and is_template)` : 'null'},
+  ${q(p.sku)}, ${q(p.name)}, ${q(p.level)}, ${Number(p.price_cents) || 0}, ${q(p.bundle_key)}
 on conflict (sku) do nothing;`);
 }
 

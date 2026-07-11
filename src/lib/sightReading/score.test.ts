@@ -56,6 +56,35 @@ describe('scoreAttempt', () => {
     expect(r.pitch).toBeGreaterThan(80);
   });
 
+  it('gives ramped partial credit for a slightly-off note instead of a full miss', () => {
+    // Four notes; note 2 sung 60 cents flat (a semitone down, +40c back up).
+    // Pass/fail scored that 0; the credit ramp earns it 0.5 → pitch 88, not 75.
+    const notes = [0, 1, 2, 3].map((beatPos, i) => ({ midi: 60 + i, beatPos }));
+    const customIR = makeIR(notes);
+    const sung = notes.map((n, i) =>
+      i === 2 ? { midi: n.midi - 1, cents: 40, beatPos: n.beatPos } : { midi: n.midi, cents: 0, beatPos: n.beatPos });
+    const r = scoreAttempt(customIR, sung);
+    // ~87.5 = (1 + 1 + 0.5 + 1) / 4. The point is it clears the old pass/fail 75
+    // (that note used to score a flat 0) without reaching a perfect 100.
+    expect(r.pitch).toBeGreaterThan(75);
+    expect(r.pitch).toBeLessThan(100);
+    expect(r.perNote[2].centsOff).toBe(-60);  // real fractional cents, not a semitone multiple
+  });
+
+  it('leaves a note the mic never captured out of the pitch denominator', () => {
+    // Expected at beats 0,2,4,6; the note at beat 4 is never sung. The three
+    // captured notes are perfect, so pitch is 100 despite the gap (the dropped
+    // note still shows as not-ok in the per-note breakdown and dents rhythm).
+    const notes = [0, 2, 4, 6].map((beatPos, i) => ({ midi: 60 + i, beatPos }));
+    const customIR = makeIR(notes);
+    const sung = [notes[0], notes[1], notes[3]].map((n) => ({ midi: n.midi, cents: 0, beatPos: n.beatPos }));
+    const r = scoreAttempt(customIR, sung);
+    expect(r.pitch).toBe(100);
+    expect(r.perNote[2].sungMidi).toBeNull();
+    expect(r.perNote[2].ok).toBe(false);
+    expect(r.rhythm).toBe(75);                // 3 of 4 on time — coverage still counts here
+  });
+
   it('names the bar where the tonal centre drifted', () => {
     const half = Math.floor(perfect.length / 2);
     const drifting = perfect.map((n, i) => (i >= half ? { ...n, midi: n.midi - 1 } : n));

@@ -273,11 +273,19 @@ const W6 = week(6, 'Compound Meter',
       ['Recording of the compound rhythms and melody.', 'Written count analysis of a compound rhythm.'])]));
 
 // ============================ WEEK 7 ============================
-const romanItem = (degrees, answer, choices, mode = 'major') => ({
-  ir: degIr({ key: mode === 'minor' ? 'A' : 'C', mode, tempo: 84, degrees, durations: ones(degrees.length) }),
-  choices,
-  answer,
-});
+// Progression ear item. The correct choice's position is derived from the
+// item's tag via hashSeed (deterministic, varied — never always index 0).
+const romanItem = (tag, degrees, correct, distractors, explanation, mode = 'major') => {
+  const answer = hashSeed(`ssat-college-roman-${tag}`) % (distractors.length + 1);
+  const choices = [...distractors];
+  choices.splice(answer, 0, correct);
+  return {
+    ir: degIr({ key: mode === 'minor' ? 'A' : 'C', mode, tempo: 84, degrees, durations: ones(degrees.length) }),
+    choices,
+    answer,
+    explanation,
+  };
+};
 const W7 = week(7, 'Harmonic Function',
   lesson('Concepts & Warm-ups',
     'Melodies imply harmony. The three primary triads — tonic (I), subdominant (IV), and dominant (V) — supply the functional framework of tonal music: stability, departure, and return. Arpeggiate each chord on solfège so you can recognize its outline inside a melodic line.',
@@ -292,14 +300,14 @@ const W7 = week(7, 'Harmonic Function',
     ['Identify progressions by root motion.', 'Sing a melody that outlines primary triads.', 'Label harmonic function under a melodic line.'],
     [
       ear('Identify the progression.', [
-        romanItem([0, 5, 7, 0], 0, ['I–IV–V–I', 'I–V–IV–I', 'I–IV–I']),
-        romanItem([0, 7, 9, 5], 0, ['I–V–vi–IV', 'I–vi–V–IV', 'vi–V–I–IV']),
-        romanItem([0, 5, 0], 0, ['I–IV–I', 'I–V–I', 'IV–I–IV']),
-        romanItem([2, 7, 0], 0, ['ii–V–I', 'IV–V–I', 'vi–V–I']),
-        romanItem([0, 9, 5, 7], 0, ['I–vi–IV–V', 'I–IV–vi–V', 'vi–IV–I–V']),
-        romanItem([0, 7, 0], 0, ['I–V–I', 'I–IV–I', 'V–I–V']),
-        romanItem([9, 5, 0, 7], 0, ['vi–IV–I–V', 'I–IV–vi–V', 'vi–I–IV–V']),
-        romanItem([0, 5, 7], 0, ['I–IV–V', 'I–V–IV', 'ii–IV–V']),
+        romanItem('w7-p1', [0, 5, 7, 0], 'I–IV–V–I', ['I–V–IV–I', 'I–IV–I'], 'do–fa–sol–do: tonic, subdominant, dominant, tonic — the complete functional cycle.'),
+        romanItem('w7-p2', [0, 7, 9, 5], 'I–V–vi–IV', ['I–vi–V–IV', 'vi–V–I–IV'], 'do–sol–la–fa: the deceptive V–vi motion is followed by the subdominant.'),
+        romanItem('w7-p3', [0, 5, 0], 'I–IV–I', ['I–V–I', 'IV–I–IV'], 'do–fa–do: a plagal departure to the subdominant and return.'),
+        romanItem('w7-p4', [2, 7, 0], 'ii–V–I', ['IV–V–I', 'vi–V–I'], 're–sol–do: the pre-dominant ii falls by fifth to V, then resolves home.'),
+        romanItem('w7-p5', [0, 9, 5, 7], 'I–vi–IV–V', ['I–IV–vi–V', 'vi–IV–I–V'], 'do–la–fa–sol: descending-third motion through vi to the pre-dominant, ending open on V.'),
+        romanItem('w7-p6', [0, 7, 0], 'I–V–I', ['I–IV–I', 'V–I–V'], 'do–sol–do: authentic motion — dominant resolving to tonic.'),
+        romanItem('w7-p7', [9, 5, 0, 7], 'vi–IV–I–V', ['I–IV–vi–V', 'vi–I–IV–V'], 'la–fa–do–sol: the rotation begins on the submediant, not the tonic.'),
+        romanItem('w7-p8', [0, 5, 7], 'I–IV–V', ['I–V–IV', 'ii–IV–V'], 'do–fa–sol: a half cadence — the progression stops open on the dominant.'),
       ]),
       mel(gen('w7-melody', { key: 'C', leaps: [3, 4, 5, 7] }), { instructions: 'Melody outlines I, IV, and V — label the function under each measure.', prepChecklist: PREP_CHECKLIST }),
     ]),
@@ -514,11 +522,11 @@ const W15 = week(15, 'Synthesis and Final Portfolio',
       mel(gen('w15-advanced', { key: 'Bb', bars: 12, leaps: [3, 4, 5, 7], rhythmPalette: SYNC, chromatic: { count: 3 } }), { instructions: 'Prepared advanced melody — syncopation plus three chromatic tones.', prepChecklist: PREP_CHECKLIST }),
       dict('Notate this 4-bar melody. Play limit 3.', gen('w15-dictation', { key: 'F', bars: 4, leaps: [3, 4] }), 3),
       ear('Cadence and progression review.', [
-        romanItem([0, 7, 0], 0, ['I–V–I', 'I–IV–I', 'V–I–V']),
-        romanItem([0, 5, 7, 0], 0, ['I–IV–V–I', 'I–V–IV–I', 'ii–V–I–IV']),
-        romanItem([0, 5, 7, 0], 0, ['i–iv–V–i', 'i–V–iv–i', 'i–iv–i'], 'minor'),
-        romanItem([2, 7, 0], 0, ['ii–V–I', 'IV–V–I', 'I–V–I']),
-        romanItem([0, 5, 0], 0, ['i–iv–i', 'i–V–i', 'iv–i–iv'], 'minor'),
+        romanItem('w15-p1', [0, 7, 0], 'I–V–I', ['I–IV–I', 'V–I–V'], 'do–sol–do: authentic dominant-to-tonic motion.'),
+        romanItem('w15-p2', [0, 5, 7, 0], 'I–IV–V–I', ['I–V–IV–I', 'ii–V–I–IV'], 'do–fa–sol–do: the full functional cycle closing with an authentic cadence.'),
+        romanItem('w15-p3', [0, 5, 7, 0], 'i–iv–V–i', ['i–V–iv–i', 'i–iv–i'], 'do–fa–sol–do in minor: minor subdominant, then major dominant with the leading tone.', 'minor'),
+        romanItem('w15-p4', [2, 7, 0], 'ii–V–I', ['IV–V–I', 'I–V–I'], 're–sol–do: pre-dominant to dominant to tonic.'),
+        romanItem('w15-p5', [0, 5, 0], 'i–iv–i', ['i–V–i', 'iv–i–iv'], 'do–fa–do in minor: plagal motion to the minor subdominant and back.', 'minor'),
       ]),
     ]),
   lesson('Module Assignment 15: Final Examination and Growth Portfolio',
