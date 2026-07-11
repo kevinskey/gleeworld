@@ -915,14 +915,22 @@ function Editor({
     recRafRef.current = requestAnimationFrame(tick);
   };
 
-  const startRecording = async () => {
-    if (recording) return;
-    midiTakeClipRef.current = null; // each take owns a fresh clip
+  // Reset the MIDI capture buffers for a fresh take — CC/pedal state must
+  // not leak across takes, and compensation is re-measured each time since
+  // output latency can drift between takes. Shared by the normal record
+  // path and punch-record's in-point.
+  const resetMidiCapture = () => {
     midiCcRef.current = [];
     midiPedalRef.current = false;
     // Auto compensation measured once per take; ±trim from the settings dial.
     midiCompSecRef.current = engineState.native ? 0
       : Math.max(0, getOutputLatencyMs() + getMidiTrimMs()) / 1000;
+  };
+
+  const startRecording = async () => {
+    if (recording) return;
+    midiTakeClipRef.current = null; // each take owns a fresh clip
+    resetMidiCapture();
     const mode = recordStartMode({
       armedAudioCount: armedTrackIds.length,
       midiInputEnabled,
@@ -1329,12 +1337,17 @@ function Editor({
     const p = punchRef.current;
     punchRef.current = null;
     if (p && p.phase === 'pre') { try { p.recorder.dispose(); } catch { /* ignore */ } }
+    // Cancelling must leave no trace — discard any captured MIDI rather
+    // than committing it, or it leaks into the next take's clip.
+    midiHeld.flush();
+    midiCcRef.current = [];
     engineState.setRecordingActive?.(false);
   };
 
   const startPunchRecord = async () => {
     if (recording || punchRef.current) return;
     midiTakeClipRef.current = null; // each take owns a fresh clip
+    resetMidiCapture();
     if (engineState.native) {
       toast.info('Punch recording is available in the web Studio for now.');
       return;
