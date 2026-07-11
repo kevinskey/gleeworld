@@ -239,7 +239,7 @@ function Sidebar() {
   if (inStudioSession || inViewerReader) return null;
 
   return (
-    <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 border-r border-border bg-card self-stretch min-h-screen gw-collapsible-sidebar">
+    <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 bg-card self-stretch min-h-screen gw-collapsible-sidebar">
       {/* Site brand — tenant logo when set; if the logo image fails to
           load (broken URL / wrong tenant settings), fall back to a
           colored monogram so the brand block never disappears. Larger
