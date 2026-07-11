@@ -381,19 +381,31 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       e.preventDefault();
       ccDragRef.current = null;
       setDraftCc(null);
-      props.pushHistory();
-      const ranges = sustainRanges(clip.cc ?? [], clip.duration_seconds)
-        .filter((_, i) => i !== selectedRange);
-      editClip((c) => ({ ...c, cc: setSustainRanges(c.cc ?? [], ranges) }));
+      // Bounds guard: selectedRange is re-synced on every drag move (see
+      // onLaneMoveCc), but stays defensive here too — an out-of-range
+      // stale index (e.g. a merge shrank the derived array between a
+      // selection and this keypress) must no-op rather than delete
+      // whatever now happens to sit at that index.
+      const allRanges = sustainRanges(clip.cc ?? [], clip.duration_seconds);
+      const targetRange = allRanges[selectedRange];
+      if (targetRange) {
+        props.pushHistory();
+        const ranges = allRanges.filter((_, i) => i !== selectedRange);
+        editClip((c) => ({ ...c, cc: setSustainRanges(c.cc ?? [], ranges) }));
+      }
       setSelectedRange(null);
     } else if ((e.key === 'Delete' || e.key === 'Backspace') && !selection.length
       && lane === 'mod' && selectedModPoint !== null) {
       e.preventDefault();
       ccDragRef.current = null;
       setDraftCc(null);
-      props.pushHistory();
+      // Bounds guard (see sustain branch above): no-op on a stale
+      // out-of-range index rather than deleting the wrong point.
       const target = ccPoints(clip.cc ?? [], 1)[selectedModPoint];
-      if (target) editClip((c) => ({ ...c, cc: (c.cc ?? []).filter((_, i) => i !== target.index) }));
+      if (target) {
+        props.pushHistory();
+        editClip((c) => ({ ...c, cc: (c.cc ?? []).filter((_, i) => i !== target.index) }));
+      }
       setSelectedModPoint(null);
     } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
       e.preventDefault();
@@ -543,13 +555,31 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
             ? { ...r, down: Math.max(0, Math.min(t, r.up - 0.01)) }
             : { ...r, up: Math.max(0, Math.max(t, r.down + 0.01)) };
         }
+        // Rigid shift, clamped at 0: clamp the TRANSLATION once (not down
+        // and up independently) so dragging the whole range left past the
+        // clip start pins the range at 0 without shrinking its width. The
+        // old per-edge `Math.max(0, ...)` let `down` hit 0 while `up` kept
+        // sliding left, collapsing (and eventually inverting) the range.
         const delta = (cx - d.startCx) / metrics.pxPerSecond;
-        return { down: Math.max(0, r.down + delta), up: Math.max(0, r.up + delta) };
+        const clamped = Math.max(delta, -r.down);
+        return { down: r.down + clamped, up: r.up + clamped };
       });
       const cc = setSustainRanges(clip.cc ?? [], next);
       d.draft = cc;
       d.changed = true;
       setDraftCc(cc);
+      // Re-sync selection to the dragged range's new identity: setSustain-
+      // Ranges re-sorts (and may MERGE overlapping/touching ranges), so the
+      // raw `d.range` index captured at pointerdown can name a different
+      // range than the one under the pointer once a drag crosses a
+      // neighbor. Locate whichever derived range now contains the dragged
+      // range's (possibly-clamped) down time and select THAT instead, so
+      // drawLane highlights — and a post-drag Delete removes — the range
+      // that actually moved, not whatever now sits at the old index.
+      const draggedDown = next[d.range].down;
+      const derivedRanges = sustainRanges(cc, clip.duration_seconds);
+      const newRangeIdx = derivedRanges.findIndex((r) => r.down <= draggedDown && draggedDown <= r.up);
+      setSelectedRange(newRangeIdx >= 0 ? newRangeIdx : null);
     } else {
       const value = Math.max(0, Math.min(127, Math.round(127 * (1 - vy / LANE_H))));
       // Re-derive from ccPoints (time-sorted) each move — never cache a raw
@@ -557,12 +587,26 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       const pts = ccPoints(clip.cc ?? [], 1);
       const target = pts[d.index];
       if (!target) return;
+      // Build the updated event once and splice it in by raw index so we
+      // hold a stable object reference to it — used below to re-locate the
+      // dragged point after the array is time-sorted.
+      const updated = { ...(clip.cc ?? [])[target.index], value, time_seconds: t };
       const cc = (clip.cc ?? [])
-        .map((ev, i) => i === target.index ? { ...ev, value, time_seconds: t } : ev)
+        .map((ev, i) => i === target.index ? updated : ev)
         .sort((a, b) => a.time_seconds - b.time_seconds);
       d.draft = cc;
       d.changed = true;
       setDraftCc(cc);
+      // Re-sync selection to the dragged point's new position: a move that
+      // crosses a neighbor re-sorts ccPoints, so `d.index` (fixed at
+      // pointerdown) can point at the wrong point mid-drag or after commit.
+      // Find `updated` by object reference (unambiguous, unlike matching on
+      // {time, value} which could tie) among the freshly-derived points and
+      // select that position instead.
+      const newPts = ccPoints(cc, 1);
+      const newPos = newPts.findIndex((p) => cc[p.index] === updated);
+      d.index = newPos >= 0 ? newPos : d.index;
+      setSelectedModPoint(newPos >= 0 ? newPos : null);
     }
   };
 
