@@ -685,7 +685,70 @@ function Editor({
     return pos > c.start_seconds && pos < c.start_seconds + c.duration_seconds;
   })();
 
+  const { user: authUser } = useAuth();
   const [exportingClip, setExportingClip] = useState(false);
+  // Pre-export prompt — the user names the file and picks a destination
+  // (Download vs Media Library → Studio folder) BEFORE the render runs.
+  // Previously the MP3 button downloaded immediately with an auto name.
+  const [clipExportPrompt, setClipExportPrompt] = useState<{ name: string; dest: 'download' | 'library' } | null>(null);
+
+  const openClipExportPrompt = () => {
+    if (!selectedClip || exportingClip) return;
+    const track = session.tracks.find((t) => t.id === selectedClip.trackId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clip: any = track && (track as any).clips?.find((c: any) => c.id === selectedClip.clipId);
+    if (!track || !clip) return;
+    const base = clip.kind === 'midi'
+      ? `${track.name} — MIDI clip`
+      : `${track.name} — ${(session.assets.find((a) => a.id === clip.asset_id)?.filename ?? 'clip').replace(/\.[^.]+$/, '')}`;
+    setClipExportPrompt({ name: base.replace(/[^\p{L}\p{N}\s—_-]+/gu, '').trim(), dest: 'download' });
+  };
+
+  /** MP3 flavor of RegionExportSheet's sendToLibrary (same bucket/path/
+   *  row shape — columns must match the LIVE gw_media_library schema). */
+  const saveClipMp3ToLibrary = async (filename: string, blob: Blob) => {
+    if (!authUser?.id) throw new Error('Not signed in.');
+    const path = `media/${authUser.id}/studio/${Date.now()}-${filename}`;
+    const { error: upErr } = await supabase.storage
+      .from('media-library').upload(path, blob, { contentType: 'audio/mpeg', upsert: true });
+    if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
+    const fileUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
+    const { error: insErr } = await supabase.from('gw_media_library').insert({
+      title: filename.replace(/\.mp3$/i, ''),
+      file_url: fileUrl,
+      file_path: path,
+      file_type: 'audio/mpeg',
+      file_size: blob.size,
+      folder: 'Studio',
+      category: 'studio',
+      is_public: false,
+      is_featured: false,
+      is_deleted: false,
+      course_id: null,
+      uploaded_by: authUser.id,
+      download_count: 0,
+      view_count: 0,
+    } as never);
+    if (insErr) throw new Error(`Library save failed: ${insErr.message}`);
+  };
+
+  const deliverClipMp3 = async (blob: Blob, name: string, dest: 'download' | 'library') => {
+    const clean = name.replace(/[/\\]+/g, '-').trim();
+    const filename = /\.mp3$/i.test(clean) ? clean : `${clean}.mp3`;
+    if (dest === 'library') {
+      await saveClipMp3ToLibrary(filename, blob);
+      toast.success(`Saved to Media Library (Studio): ${filename}`);
+      return;
+    }
+    const dlUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = dlUrl;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(dlUrl), 30_000);
+    toast.success('Clip exported as MP3');
+  };
+
   /** Export the selected clip as a 320kbps MP3.
    * AUDIO clip: slice the source asset (offset/duration), apply clip
    * gain + fades (+reverse) at the sample level, encode in the shared
@@ -694,7 +757,7 @@ function Editor({
    * MIDI clip: no source asset exists — offline-bounce the clip's time
    * window on just its track (notes through the track's instrument, same
    * renderer as Region export), then encode. */
-  const exportSelectedClipMp3 = async () => {
+  const exportSelectedClipMp3 = async (name: string, dest: 'download' | 'library') => {
     if (!selectedClip || exportingClip) return;
     const track = session.tracks.find((t) => t.id === selectedClip.trackId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -708,13 +771,7 @@ function Editor({
         );
         const channels = Array.from({ length: buf.numberOfChannels }, (_, i) => buf.getChannelData(i));
         const blob = await encodeMp3(channels, buf.sampleRate, 320);
-        const dlUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = dlUrl;
-        a.download = `${track.name} — MIDI clip`.replace(/[^\p{L}\p{N}\s—_-]+/gu, '').trim() + '.mp3';
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(dlUrl), 30_000);
-        toast.success('Clip bounced to MP3');
+        await deliverClipMp3(blob, name, dest);
       } catch (e) {
         toast.error('Clip export failed', { description: e instanceof Error ? e.message : String(e) });
       } finally {
@@ -743,13 +800,7 @@ function Editor({
         reverse: !!clip.reverse,
       });
       const blob = await encodeMp3(sliced, buf.sampleRate, 320);
-      const dlUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = dlUrl;
-      a.download = `${track.name} — ${asset.filename.replace(/\.[^.]+$/, '')}`.replace(/[^\p{L}\p{N}\s—_-]+/gu, '').trim() + '.mp3';
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(dlUrl), 30_000);
-      toast.success('Clip exported as MP3');
+      await deliverClipMp3(blob, name, dest);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if (/not found|Failed to fetch|load clip audio|decod/i.test(msg)) {
@@ -1760,6 +1811,65 @@ function Editor({
 
       <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} engineState={engineState} />
       <RegionExportSheet session={session} region={loopRegion} open={regionExportOpen} onOpenChange={setRegionExportOpen} />
+      {/* Clip MP3 export prompt — name + destination before rendering.
+       * `dark` classes forced: DialogContent portals to document.body,
+       * outside the Studio's .dark scope (same trap as the old EQ sheet). */}
+      <Dialog open={!!clipExportPrompt} onOpenChange={(o) => { if (!o) setClipExportPrompt(null); }}>
+        <DialogContent className="dark bg-card text-foreground border-border max-w-sm">
+          <DialogHeader><DialogTitle>Export clip as MP3</DialogTitle></DialogHeader>
+          {clipExportPrompt && (
+            <div className="space-y-3 text-sm">
+              <div className="space-y-1">
+                <Label className="text-xs">File name</Label>
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    value={clipExportPrompt.name}
+                    onChange={(e) => setClipExportPrompt({ ...clipExportPrompt, name: e.target.value })}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    autoFocus
+                  />
+                  <span className="text-xs text-muted-foreground shrink-0">.mp3</span>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Destination</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['download', 'library'] as const).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setClipExportPrompt({ ...clipExportPrompt, dest: d })}
+                      className={`h-9 rounded border text-sm font-semibold ${clipExportPrompt.dest === d
+                        ? 'bg-primary border-primary text-primary-foreground'
+                        : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+                    >
+                      {d === 'download' ? 'Download' : 'Media Library'}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {clipExportPrompt.dest === 'library'
+                    ? 'Saves into your Media Library → Studio folder.'
+                    : 'Downloads the MP3 to this device.'}
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <Button variant="outline" onClick={() => setClipExportPrompt(null)}>Cancel</Button>
+                <Button
+                  disabled={!clipExportPrompt.name.trim() || exportingClip}
+                  onClick={() => {
+                    const { name, dest } = clipExportPrompt;
+                    setClipExportPrompt(null);
+                    void exportSelectedClipMp3(name, dest);
+                  }}
+                >
+                  Export
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Transport bar — single dense row */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 flex items-center gap-0.5 sm:gap-2 flex-wrap">
@@ -2279,7 +2389,7 @@ function Editor({
                 <Scissors className="w-4 h-4" /> Split
               </button>
               <button
-                onClick={exportSelectedClipMp3}
+                onClick={openClipExportPrompt}
                 disabled={exportingClip}
                 title="Export this clip as a 320kbps MP3"
                 className="h-10 px-3 rounded-full border border-border inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--tint)] hover:bg-muted disabled:opacity-40 shrink-0"
