@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Music, Plus, Pencil } from 'lucide-react';
 import { SingFlow } from './SingFlow';
 import { ProgressTab } from './ProgressTab';
+import { ClassProgressTab } from './ClassProgressTab';
 import { generateExercise } from '@/lib/sightReading/generate';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -248,6 +249,11 @@ export default function SightReadingStudio() {
           <TabsTrigger value="progress" className="flex-1">
             Progress
           </TabsTrigger>
+          {isAdmin() && (
+            <TabsTrigger value="class" className="flex-1">
+              Class
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="practice" className="pt-4">
@@ -269,6 +275,12 @@ export default function SightReadingStudio() {
         <TabsContent value="progress" className="pt-4">
           <ProgressTab activityKey={ACTIVITY_KEY} />
         </TabsContent>
+
+        {isAdmin() && (
+          <TabsContent value="class" className="pt-4">
+            <ClassProgressTab />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
