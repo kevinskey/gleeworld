@@ -159,7 +159,7 @@ export default function HouseHome() {
               <div className="text-xs font-bold uppercase tracking-widest text-primary tabular-nums">
                 Up next · {format(new Date(upNext.event_at), 'h:mm a')}
               </div>
-              <div className="font-serif text-lg">{upNext.title}</div>
+              <div className="py-1.5 font-serif text-lg">{upNext.title}</div>
               {upNext.detail && <div className="text-sm text-muted-foreground">{upNext.detail}</div>}
               <div className="h-0.5 bg-muted mt-2 overflow-hidden">
                 <div className="h-full bg-primary origin-left motion-reduce:transition-none"
