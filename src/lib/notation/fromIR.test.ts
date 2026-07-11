@@ -52,4 +52,27 @@ describe('irToEditorScore', () => {
     expect(s.elements.map((e) => e.kind)).toEqual(['note', 'rest', 'note']);
     expect(s.elements[1]).toMatchObject({ kind: 'rest', base: 'quarter' });
   });
+
+  it('splits a leading rest gap longer than one glyph into per-bar whole rests', () => {
+    // An 8-beat leading gap in 4/4 has no single-glyph rest form; it must split
+    // at the barline (beat 4) into two whole rests, not silently drop.
+    const s = irToEditorScore(ir([
+      { midi: 60, beatPos: 8, durationBeats: 1, solfege: 'do', phraseIdx: 0 },
+    ]));
+    expect(s.elements.map((e) => e.kind)).toEqual(['rest', 'rest', 'note']);
+    expect(s.elements[0]).toMatchObject({ kind: 'rest', base: 'whole', dots: 0 });
+    expect(s.elements[1]).toMatchObject({ kind: 'rest', base: 'whole', dots: 0 });
+  });
+
+  it('splits a rest gap that crosses a barline instead of one glyph spanning it', () => {
+    // First note ends at beat 3, next starts at beat 5 (4/4, barline at beat 4):
+    // the 2-beat gap must become two 1-beat rests, not one half-rest crossing the bar.
+    const s = irToEditorScore(ir([
+      { midi: 60, beatPos: 0, durationBeats: 3, solfege: 'do', phraseIdx: 0 }, // ends beat 3
+      { midi: 62, beatPos: 5, durationBeats: 1, solfege: 're', phraseIdx: 0 }, // starts beat 5
+    ]));
+    expect(s.elements.map((e) => e.kind)).toEqual(['note', 'rest', 'rest', 'note']);
+    expect(s.elements[1]).toMatchObject({ kind: 'rest', base: 'quarter', dots: 0 });
+    expect(s.elements[2]).toMatchObject({ kind: 'rest', base: 'quarter', dots: 0 });
+  });
 });

@@ -28,7 +28,12 @@ export function parseExercise(type: string, data: unknown): ParsedExercise | nul
       segments: segments as ExerciseIR[],
       instructions: typeof d.instructions === 'string' ? d.instructions : undefined,
       prepChecklist: strArr(d.prepChecklist) ? d.prepChecklist : undefined,
-      deepLink: type === 'melody',
+      // The studio's deep-link loader only reads the raw top-level `ir` field
+      // (see SightReadingStudio's academyExercise effect), not `segments`. A
+      // segments-only melody (e.g. Week 13's changing-meter exercise) has no
+      // valid top-level ir, so offering the deep-link button would always
+      // fail with a toast — gate it on the same check the loader performs.
+      deepLink: type === 'melody' && isValidIr(d.ir),
       modulation: mod && Number.isFinite(mod.atBeat) && typeof mod.toKey === 'string' ? mod : undefined,
     };
   }
@@ -37,7 +42,7 @@ export function parseExercise(type: string, data: unknown): ParsedExercise | nul
     const items = d.items as { ir: unknown; choices: unknown; answer: unknown; explanation?: unknown }[];
     for (const it of items) {
       if (!isValidIr(it.ir) || !strArr(it.choices)) return null;
-      if (typeof it.answer !== 'number' || it.answer < 0 || it.answer >= it.choices.length) return null;
+      if (typeof it.answer !== 'number' || !Number.isInteger(it.answer) || it.answer < 0 || it.answer >= it.choices.length) return null;
     }
     return { kind: 'ear_training', prompt: d.prompt, items: items as EarItem[] };
   }

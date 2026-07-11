@@ -9964,7 +9964,7 @@
                 },
                 {
                   "type": "ensemble",
-                  "instructions": "Canon: both voices sing the same melody; the follower enters two bars later. Balance the entrances and keep a shared pulse.",
+                  "instructions": "Canon: both voices sing the same melody; the follower enters one bar later. Balance the entrances and keep a shared pulse.",
                   "parts": [
                     {
                       "label": "Leader (enter m. 1)",
@@ -10187,7 +10187,7 @@
                       }
                     },
                     {
-                      "label": "Follower (enter m. 3)",
+                      "label": "Follower (enters m. 2)",
                       "ir": {
                         "key": "C",
                         "mode": "major",
@@ -10200,72 +10200,51 @@
                         "notes": [
                           {
                             "midi": 67,
-                            "beatPos": 0,
-                            "durationBeats": 1,
-                            "solfege": "sol",
-                            "phraseIdx": 0
-                          },
-                          {
-                            "midi": 69,
-                            "beatPos": 1,
-                            "durationBeats": 1,
-                            "solfege": "la",
-                            "phraseIdx": 0
-                          },
-                          {
-                            "midi": 67,
-                            "beatPos": 2,
-                            "durationBeats": 1,
-                            "solfege": "sol",
-                            "phraseIdx": 0
-                          },
-                          {
-                            "midi": 69,
-                            "beatPos": 3,
-                            "durationBeats": 1,
-                            "solfege": "la",
-                            "phraseIdx": 0
-                          },
-                          {
-                            "midi": 65,
                             "beatPos": 4,
                             "durationBeats": 1,
+                            "solfege": "sol",
+                            "phraseIdx": 0
+                          },
+                          {
+                            "midi": 69,
+                            "beatPos": 5,
+                            "durationBeats": 1,
+                            "solfege": "la",
+                            "phraseIdx": 0
+                          },
+                          {
+                            "midi": 67,
+                            "beatPos": 6,
+                            "durationBeats": 1,
+                            "solfege": "sol",
+                            "phraseIdx": 0
+                          },
+                          {
+                            "midi": 69,
+                            "beatPos": 7,
+                            "durationBeats": 1,
+                            "solfege": "la",
+                            "phraseIdx": 0
+                          },
+                          {
+                            "midi": 65,
+                            "beatPos": 8,
+                            "durationBeats": 1,
                             "solfege": "fa",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 67,
-                            "beatPos": 5,
+                            "beatPos": 9,
                             "durationBeats": 1,
                             "solfege": "sol",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 65,
-                            "beatPos": 6,
-                            "durationBeats": 1,
-                            "solfege": "fa",
-                            "phraseIdx": 0
-                          },
-                          {
-                            "midi": 64,
-                            "beatPos": 7,
-                            "durationBeats": 1,
-                            "solfege": "mi",
-                            "phraseIdx": 0
-                          },
-                          {
-                            "midi": 60,
-                            "beatPos": 8,
-                            "durationBeats": 2,
-                            "solfege": "do",
-                            "phraseIdx": 0
-                          },
-                          {
-                            "midi": 62,
                             "beatPos": 10,
                             "durationBeats": 1,
-                            "solfege": "re",
+                            "solfege": "fa",
                             "phraseIdx": 0
                           },
                           {
@@ -10276,31 +10255,24 @@
                             "phraseIdx": 0
                           },
                           {
-                            "midi": 65,
+                            "midi": 60,
                             "beatPos": 12,
-                            "durationBeats": 1,
-                            "solfege": "fa",
+                            "durationBeats": 2,
+                            "solfege": "do",
                             "phraseIdx": 0
                           },
                           {
-                            "midi": 69,
-                            "beatPos": 13,
-                            "durationBeats": 1,
-                            "solfege": "la",
-                            "phraseIdx": 0
-                          },
-                          {
-                            "midi": 67,
+                            "midi": 62,
                             "beatPos": 14,
                             "durationBeats": 1,
-                            "solfege": "sol",
+                            "solfege": "re",
                             "phraseIdx": 0
                           },
                           {
-                            "midi": 69,
+                            "midi": 64,
                             "beatPos": 15,
                             "durationBeats": 1,
-                            "solfege": "la",
+                            "solfege": "mi",
                             "phraseIdx": 0
                           },
                           {
@@ -10311,92 +10283,120 @@
                             "phraseIdx": 0
                           },
                           {
-                            "midi": 67,
+                            "midi": 69,
                             "beatPos": 17,
+                            "durationBeats": 1,
+                            "solfege": "la",
+                            "phraseIdx": 0
+                          },
+                          {
+                            "midi": 67,
+                            "beatPos": 18,
                             "durationBeats": 1,
                             "solfege": "sol",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 69,
-                            "beatPos": 18,
+                            "beatPos": 19,
+                            "durationBeats": 1,
+                            "solfege": "la",
+                            "phraseIdx": 0
+                          },
+                          {
+                            "midi": 65,
+                            "beatPos": 20,
+                            "durationBeats": 1,
+                            "solfege": "fa",
+                            "phraseIdx": 0
+                          },
+                          {
+                            "midi": 67,
+                            "beatPos": 21,
+                            "durationBeats": 1,
+                            "solfege": "sol",
+                            "phraseIdx": 0
+                          },
+                          {
+                            "midi": 69,
+                            "beatPos": 22,
                             "durationBeats": 1,
                             "solfege": "la",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 71,
-                            "beatPos": 19,
+                            "beatPos": 23,
                             "durationBeats": 1,
                             "solfege": "ti",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 72,
-                            "beatPos": 20,
+                            "beatPos": 24,
                             "durationBeats": 1,
                             "solfege": "do",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 72,
-                            "beatPos": 21,
+                            "beatPos": 25,
                             "durationBeats": 1,
                             "solfege": "do",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 71,
-                            "beatPos": 22,
+                            "beatPos": 26,
                             "durationBeats": 2,
                             "solfege": "ti",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 69,
-                            "beatPos": 24,
+                            "beatPos": 28,
                             "durationBeats": 1,
                             "solfege": "la",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 71,
-                            "beatPos": 25,
+                            "beatPos": 29,
                             "durationBeats": 1,
                             "solfege": "ti",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 74,
-                            "beatPos": 26,
+                            "beatPos": 30,
                             "durationBeats": 1,
                             "solfege": "re",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 72,
-                            "beatPos": 27,
+                            "beatPos": 31,
                             "durationBeats": 1,
                             "solfege": "do",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 74,
-                            "beatPos": 28,
+                            "beatPos": 32,
                             "durationBeats": 1,
                             "solfege": "re",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 74,
-                            "beatPos": 29,
+                            "beatPos": 33,
                             "durationBeats": 1,
                             "solfege": "re",
                             "phraseIdx": 0
                           },
                           {
                             "midi": 72,
-                            "beatPos": 30,
+                            "beatPos": 34,
                             "durationBeats": 2,
                             "solfege": "do",
                             "phraseIdx": 0

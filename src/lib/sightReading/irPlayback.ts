@@ -25,7 +25,16 @@ export async function playIr(ir: ExerciseIR, mode: 'pitch' | 'click' = 'pitch'):
   if (!AC) return;
   const ctx = new AC();
   try {
-    if (ctx.state !== 'running') await ctx.resume();
+    if (ctx.state !== 'running') {
+      // Autoplay policies can reject resume() outside a user gesture; treat that
+      // as a silent no-op rather than letting it reject the whole call — callers
+      // rely on playIr() always resolving.
+      try {
+        await ctx.resume();
+      } catch {
+        return;
+      }
+    }
     const t0 = ctx.currentTime + 0.05;
     const events = irToToneEvents(ir, mode);
     let end = 0;

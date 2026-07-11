@@ -17,10 +17,13 @@ describe('parseExercise', () => {
     const p = parseExercise('rhythm', { ir });
     expect(p).toMatchObject({ kind: 'notated', mode: 'click', deepLink: false });
   });
-  it('parses segments without top-level ir', () => {
+  it('parses segments without top-level ir and gates the deep link off', () => {
     const p = parseExercise('melody', { segments: [ir, ir] });
     expect(p?.kind).toBe('notated');
-    if (p?.kind === 'notated') expect(p.segments).toHaveLength(2);
+    if (p?.kind === 'notated') {
+      expect(p.segments).toHaveLength(2);
+      expect(p.deepLink).toBe(false);
+    }
   });
   it('parses ear_training items', () => {
     const p = parseExercise('ear_training', { prompt: 'Which interval?', items: [{ ir, choices: ['M2', 'M3'], answer: 1 }] });
@@ -39,5 +42,6 @@ describe('parseExercise', () => {
     expect(parseExercise('melody', {})).toBeNull();
     expect(parseExercise('melody', { ir: { key: 'C' } })).toBeNull();
     expect(parseExercise('ear_training', { prompt: 'x', items: [{ ir, choices: ['a'], answer: 5 }] })).toBeNull();
+    expect(parseExercise('ear_training', { prompt: 'x', items: [{ ir, choices: ['a', 'b'], answer: 0.5 }] })).toBeNull();
   });
 });
