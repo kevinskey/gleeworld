@@ -79,7 +79,8 @@ export function appendTakeNote(
 // Since schema 1.1.0 the sustain pedal is recorded as CC64 events, so
 // recorded notes carry their TRUE key-up duration — the pedal no longer
 // holds presses open (that behavior lives in applySustain at playback,
-// and in LiveVoices for live monitoring). This replaces SustainTracker.
+// and in LiveVoices for live monitoring). This replaces the old
+// held+sustained pedal-tracking approach.
 
 export interface HeldPress {
   pitch: number;
