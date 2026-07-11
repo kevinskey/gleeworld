@@ -40,7 +40,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/navigation/navCatalog';
 import {
-  DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent,
+  DndContext, PointerSensor, useDroppable, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -85,18 +85,38 @@ const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan
 function buildNavSections(
   ctx: NavContext,
   userOrder?: string[] | null,
-): Array<{ label: string; items: CatalogEntry[] }> {
+  sectionOverrides?: Record<string, string> | null,
+): Array<{ key: string; label: string; items: CatalogEntry[] }> {
   const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
-  // per-user ordering applies WITHIN each section (sections stay semantic);
-  // items the user hasn't ordered keep catalog order after ordered ones
+  // users may re-home an item into any section; the override wins over
+  // the catalog's section (invalid section names fall back to catalog)
+  const sectionOf = (e: CatalogEntry): string => {
+    const override = sectionOverrides?.[e.key];
+    return override && (SECTION_ORDER as readonly string[]).includes(override) ? override : e.section;
+  };
+  // per-user ordering within each (possibly overridden) section; items
+  // the user hasn't ordered keep catalog order after ordered ones
   const rank = new Map((userOrder ?? []).map((k, i) => [k, i]));
   const sortItems = (items: CatalogEntry[]) =>
     userOrder?.length
       ? [...items].sort((a, b) => (rank.get(a.key) ?? Infinity) - (rank.get(b.key) ?? Infinity))
       : items;
   return SECTION_ORDER
-    .map((s) => ({ label: NAV_SECTION_LABELS[s], items: sortItems(resolved.filter((e) => e.section === s)) }))
+    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
     .filter((s) => s.items.length > 0);
+}
+
+// Droppable shell for a nav section, so an item can be dragged into a
+// section even when it's collapsed (drop on the header) or at its end.
+function DroppableSection({ sectionKey, className, children }: {
+  sectionKey: string; className?: string; children: ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `section:${sectionKey}` });
+  return (
+    <div ref={setNodeRef} className={`${className ?? ''} ${isOver ? 'ring-2 ring-primary/40' : ''}`}>
+      {children}
+    </div>
+  );
 }
 
 // Sortable wrapper for a sidebar nav row. The 8px activation distance
@@ -258,20 +278,44 @@ function Sidebar() {
     hiddenRoutes: hiddenNav,
   };
   const { navOrder, saveNavOrder } = useNavItemOrder();
-  const sections = buildNavSections(navCtx, navOrder?.order);
+  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
   const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const onNavDragEnd = (e: DragEndEvent) => {
     const activeId = String(e.active.id);
     const overId = e.over ? String(e.over.id) : null;
     if (!overId || activeId === overId) return;
-    // reorder within the section that contains both rows
-    const section = sections.find((s) =>
-      s.items.some((i) => i.key === activeId) && s.items.some((i) => i.key === overId));
-    if (!section) return;
-    const keys = section.items.map((i) => i.key);
-    const moved = arrayMove(keys, keys.indexOf(activeId), keys.indexOf(overId));
-    const flat = sections.flatMap((s) => (s === section ? moved : s.items.map((i) => i.key)));
-    void saveNavOrder(flat);
+    const from = sections.find((s) => s.items.some((i) => i.key === activeId));
+    if (!from) return;
+    // target: another row, or a section container (id "section:<key>")
+    const overSectionKey = overId.startsWith('section:') ? overId.slice(8) : null;
+    const to = overSectionKey
+      ? sections.find((s) => s.key === overSectionKey)
+      : sections.find((s) => s.items.some((i) => i.key === overId));
+    if (!to) return;
+
+    const display = new Map(sections.map((s) => [s.key, s.items.map((i) => i.key)]));
+    const fromKeys = display.get(from.key)!.filter((k) => k !== activeId);
+    display.set(from.key, fromKeys);
+    if (to.key === from.key && !overSectionKey) {
+      display.set(from.key, arrayMove(
+        from.items.map((i) => i.key),
+        from.items.findIndex((i) => i.key === activeId),
+        from.items.findIndex((i) => i.key === overId),
+      ));
+    } else if (overSectionKey) {
+      display.set(to.key, [...display.get(to.key)!, activeId]);
+    } else {
+      const toKeys = [...display.get(to.key)!];
+      toKeys.splice(toKeys.indexOf(overId), 0, activeId);
+      display.set(to.key, toKeys);
+    }
+
+    const flat = sections.flatMap((s) => display.get(s.key)!);
+    const catalogSection = from.items.find((i) => i.key === activeId)?.section;
+    const overrides = { ...(navOrder?.sections ?? {}) };
+    if (to.key === catalogSection) delete overrides[activeId];
+    else if (to.key !== from.key) overrides[activeId] = to.key;
+    void saveNavOrder(flat, overrides);
   };
 
   // Studio session editor needs the full window for clips + mixer.
@@ -333,8 +377,9 @@ function Sidebar() {
             // background so the long nav reads as grouped sections rather
             // than one giant flat list. Section labels are bigger and
             // higher-contrast to give the eye an anchor.
-            <div
-              key={section.label ?? `section-${idx}`}
+            <DroppableSection
+              key={section.key ?? `section-${idx}`}
+              sectionKey={section.key}
               className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
             >
               {section.label && (
@@ -383,7 +428,7 @@ function Sidebar() {
               ))}
               </SortableContext>
               )}
-            </div>
+            </DroppableSection>
           );
         })}
         </DndContext>
@@ -438,10 +483,10 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
     hiddenRoutes: hiddenNav,
   };
-  // same per-user ordering as the desktop sidebar (read-only here;
-  // reordering by drag is a desktop affordance)
+  // same per-user ordering + section overrides as the desktop sidebar
+  // (read-only here; reordering by drag is a desktop affordance)
   const { navOrder } = useNavItemOrder();
-  const sections = buildNavSections(navCtx, navOrder?.order);
+  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
 
   return (
     <div className="flex flex-col h-full">
