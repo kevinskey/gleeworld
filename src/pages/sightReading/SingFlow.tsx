@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Mic, Play, Save } from 'lucide-react';
 import { useMicPitch } from '@/lib/sightReading/useMicPitch';
 import { scoreAttempt, type ScoreResult, type SungNote } from '@/lib/sightReading/score';
+import { recordTake } from '@/lib/sightReading/takesApi';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 import { ResultCard } from './ResultCard';
 import { NotationView } from '@/pages/notation/NotationView';
@@ -217,7 +218,8 @@ export function SingFlow({
           .map((s) => ({ midi: s.midi, cents: s.cents, beatPos: s.beatPos - COUNT_IN_BEATS }))
           .filter((s) => s.beatPos >= -0.5);
         const r = scoreAttempt(exercise, sung);
-        logOnce(r);
+        logOnce(r);              // device-local log (always, offline-safe)
+        void recordTake(exercise, r);  // best-effort server sync for signed-in students
         setResult(r);
         setPhase('done');
       }, takeMs),

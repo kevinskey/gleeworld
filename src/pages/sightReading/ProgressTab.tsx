@@ -1,33 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { band } from './ResultCard';
-
-// One practiced take, as flattened from the activity log that SingFlow writes
-// on every completed attempt. Kept deliberately small: the tab reads this shape
-// today from localStorage, and a future server-backed source can produce the
-// same shape so nothing downstream changes.
-export interface Take {
-  ts: number;
-  overall: number;
-  level?: number;
-  musicKey?: string;
-}
-
-// Read + normalize the practice log. Tolerant of anything malformed (old
-// entries, partial writes, quota-cleared storage) — a bad blob yields an empty
-// history, never a throw.
-export function readTakes(storageKey: string): Take[] {
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return [];
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list)) return [];
-    return list
-      .filter((e) => e && e.kind === 'practiced' && e.meta && typeof e.meta.overall === 'number')
-      .map((e) => ({ ts: e.ts, overall: e.meta.overall, level: e.meta.level, musicKey: e.meta.key }));
-  } catch {
-    return [];
-  }
-}
+import { type Take, readLocalTakes, fetchServerTakes } from '@/lib/sightReading/takesApi';
 
 const fmtDate = (ts: number) =>
   new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -41,11 +14,31 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-// Practice history for the current device. Reads the same log SingFlow writes
-// after each scored take. Empty until the first take — the empty state is the
-// primary state, exactly as the rest of this page treats scoring data.
-export function ProgressTab({ activityKey }: { activityKey: string }) {
-  const [takes] = useState<Take[]>(() => readTakes(activityKey));
+// Practice history. Shows the device-local log instantly, then swaps in the
+// signed-in student's server history once it loads (so progress follows them
+// across devices). Falls back to local if the server is unreachable or has no
+// rows. Empty until the first take — the empty state is the primary state.
+export function ProgressTab({
+  activityKey,
+  loadRemote = fetchServerTakes,
+}: {
+  activityKey: string;
+  loadRemote?: () => Promise<Take[] | null>;
+}) {
+  const [takes, setTakes] = useState<Take[]>(() => readLocalTakes(activityKey));
+  const [synced, setSynced] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadRemote().then((remote) => {
+      if (cancelled || !remote) return; // null = couldn't load → keep local
+      setTakes(remote);
+      setSynced(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [loadRemote]);
 
   if (takes.length === 0) {
     return (
@@ -83,7 +76,9 @@ export function ProgressTab({ activityKey }: { activityKey: string }) {
         ))}
       </ul>
 
-      <p className="px-1 text-xs text-slate-400">Saved on this device.</p>
+      <p className="px-1 text-xs text-slate-400">
+        {synced ? 'Synced to your account.' : 'Saved on this device.'}
+      </p>
     </div>
   );
 }

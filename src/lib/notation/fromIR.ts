@@ -1,5 +1,5 @@
 import { EditorScore, EditorElement, noteOf, restOf, Pitch } from './model';
-import { DIVISIONS, ticksToDur } from './duration';
+import { BaseDur, DIVISIONS, dottedTicks, ticksToDur } from './duration';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 
 // Render a sight-reading ExerciseIR (midi + beats) as real notation. Spell each MIDI
@@ -34,6 +34,38 @@ function spellMidi(midi: number, useFlats: boolean): Pitch {
   return { step, octave, alter };
 }
 
+// Every (base, dots) duration, largest tick value first. Used to greedily fill a
+// rest gap with the fewest, largest glyphs (e.g. an 8-beat 4/4 gap → two wholes,
+// not a dropped rest — ticksToDur only matches a gap that is itself one glyph).
+const ALL_RESTS: Array<{ base: BaseDur; dots: number; ticks: number }> = (
+  ['whole', 'half', 'quarter', 'eighth', '16th', '32nd'] as BaseDur[]
+).flatMap((base) => [0, 1, 2].map((dots) => ({ base, dots, ticks: dottedTicks(base, dots) })))
+  .sort((a, b) => b.ticks - a.ticks);
+
+// Fill the gap [fromBeat, toBeat) with rests, splitting at barlines (multiples of
+// `meterBeats`, in the same beat-position units as ir.notes) so no single rest
+// glyph ever implies a duration that crosses a bar — then within each bar chunk,
+// greedily emit the largest ticksToDur-expressible rest until the chunk is filled.
+function fillGapRests(fromBeat: number, toBeat: number, meterBeats: number, ticksPerBeat: number): EditorElement[] {
+  const EPS = 1e-6;
+  const elements: EditorElement[] = [];
+  let p = fromBeat;
+  while (toBeat - p > EPS) {
+    const barIndex = Math.floor((p + EPS) / meterBeats);
+    const nextBarline = (barIndex + 1) * meterBeats;
+    const chunkEnd = Math.min(nextBarline, toBeat);
+    let remainingTicks = Math.round((chunkEnd - p) * ticksPerBeat);
+    while (remainingTicks > 0) {
+      const fit = ALL_RESTS.find((d) => d.ticks <= remainingTicks);
+      if (!fit) break; // remainder smaller than the shortest expressible rest — drop it
+      elements.push(restOf(fit.base, fit.dots));
+      remainingTicks -= fit.ticks;
+    }
+    p = chunkEnd;
+  }
+  return elements;
+}
+
 export function irToEditorScore(ir: ExerciseIR): EditorScore {
   const keyFifths = (ir.mode === 'minor' ? MINOR_FIFTHS[ir.key] : KEY_FIFTHS[ir.key]) ?? 0;
   const useFlats = keyFifths < 0;
@@ -50,8 +82,7 @@ export function irToEditorScore(ir: ExerciseIR): EditorScore {
 
   for (const n of notes) {
     if (n.beatPos > cursor + 1e-6) {
-      const rest = ticksToDur(Math.round((n.beatPos - cursor) * ticksPerBeat));
-      if (rest) elements.push(restOf(rest.base, rest.dots));
+      elements.push(...fillGapRests(cursor, n.beatPos, ir.meter.beats, ticksPerBeat));
     }
     const dur = ticksToDur(Math.round(n.durationBeats * ticksPerBeat));
     if (dur) elements.push(noteOf(spellMidi(n.midi, useFlats), dur.base, dur.dots));

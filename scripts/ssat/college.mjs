@@ -371,6 +371,9 @@ const W9 = week(9, 'Syncopation',
 
 // ============================ WEEK 10 ============================
 const w10CanonMel = gen('w10-canon', { key: 'C', leaps: [3, 4] });
+// A canon is the same melody delayed against itself — the follower must actually
+// start later, not just carry a different label. Offset by one 4/4 bar (4 beats).
+const w10CanonFollower = offsetIr(w10CanonMel, 4);
 const w10Part1 = gen('w10-part1', { key: 'C', leaps: [3, 4] });
 const w10Part2 = degIr({
   key: 'C', tempo: 88,
@@ -384,9 +387,9 @@ const W10 = week(10, 'Two-Part Singing',
     [
       rhy(rhythmIr('w10-duo1', { meter: M44, bars: 8, palette: E, tempo: 80 }), { instructions: 'Two-part rhythm — Performer A. Perform as a duo against Part B.' }),
       rhy(rhythmIr('w10-duo2', { meter: M44, bars: 8, palette: E, tempo: 80 }), { instructions: 'Two-part rhythm — Performer B. Lock in with Part A.' }),
-      ens('Canon: both voices sing the same melody; the follower enters two bars later. Balance the entrances and keep a shared pulse.', [
+      ens('Canon: both voices sing the same melody; the follower enters one bar later. Balance the entrances and keep a shared pulse.', [
         { label: 'Leader (enter m. 1)', ir: w10CanonMel },
-        { label: 'Follower (enter m. 3)', ir: w10CanonMel },
+        { label: 'Follower (enters m. 2)', ir: w10CanonFollower },
       ]),
     ]),
   lesson('Guided Practice',
