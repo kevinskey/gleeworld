@@ -16,6 +16,11 @@ import { fromGmPresetId, gmSamplerConfig } from '../gmInstruments';
 export interface EngineInstrument {
   output: Tone.ToneAudioNode;
   triggerAttackRelease: (pitch: number, durationSeconds: number, time: number, velocity01: number) => void;
+  // Live (unknown-duration) playing for MIDI-keyboard input: attack on key-down,
+  // release on key-up. Optional — one-shot instruments (drums) omit release and
+  // LiveVoices falls back to a short triggerAttackRelease.
+  triggerAttack?: (pitch: number, time: number, velocity01: number) => void;
+  triggerRelease?: (pitch: number, time: number) => void;
   dispose: () => void;
 }
 
@@ -47,6 +52,8 @@ function buildSynth(spec: Instrument): EngineInstrument {
     triggerAttackRelease: (pitch, dur, time, vel) => {
       synth.triggerAttackRelease(midiToNote(pitch), dur, time, vel);
     },
+    triggerAttack: (pitch, time, vel) => synth.triggerAttack(midiToNote(pitch), time, vel),
+    triggerRelease: (pitch, time) => synth.triggerRelease(midiToNote(pitch), time),
     dispose: () => synth.dispose(),
   };
 }
@@ -79,9 +86,10 @@ function buildGmSampler(name: string): EngineInstrument {
   return {
     output: sampler,
     triggerAttackRelease: (pitch, dur, time, vel) => {
-      if (!loaded) return;
-      sampler.triggerAttackRelease(midiToNote(pitch), dur, time, vel);
+      if (loaded) sampler.triggerAttackRelease(midiToNote(pitch), dur, time, vel);
     },
+    triggerAttack: (pitch, time, vel) => { if (loaded) sampler.triggerAttack(midiToNote(pitch), time, vel); },
+    triggerRelease: (pitch, time) => { if (loaded) sampler.triggerRelease(midiToNote(pitch), time); },
     dispose: () => sampler.dispose(),
   };
 }
@@ -101,19 +109,18 @@ function buildBasicKit(): EngineInstrument {
     harmonicity: 5.1, modulationIndex: 32, resonance: 4000, octaves: 1.5,
   }).connect(out);
 
+  // GM drum mapping (close enough): 35-36 kick, 38/40 snare, 42/44/46 hat.
+  const hit = (pitch: number, dur: number, time: number, vel: number) => {
+    const v = Math.max(0.05, Math.min(1, vel));
+    if (pitch <= 37) kick.triggerAttackRelease('C2', dur, time, v);
+    else if (pitch <= 41) snare.triggerAttackRelease(dur, time, v);
+    else hat.triggerAttackRelease('C5', dur, time, v);
+  };
   return {
     output: out,
-    triggerAttackRelease: (pitch, dur, time, vel) => {
-      // GM drum mapping (close enough): 35-36 kick, 38/40 snare, 42/44/46 hat
-      const v = Math.max(0.05, Math.min(1, vel));
-      if (pitch <= 37) {
-        kick.triggerAttackRelease('C2', dur, time, v);
-      } else if (pitch <= 41) {
-        snare.triggerAttackRelease(dur, time, v);
-      } else {
-        hat.triggerAttackRelease('C5', dur, time, v);
-      }
-    },
+    triggerAttackRelease: (pitch, dur, time, vel) => hit(pitch, dur, time, vel),
+    // Drums are one-shot: key-down fires a short hit, key-up does nothing.
+    triggerAttack: (pitch, time, vel) => hit(pitch, 0.2, time, vel),
     dispose: () => {
       kick.dispose(); snare.dispose(); hat.dispose(); out.dispose();
     },
