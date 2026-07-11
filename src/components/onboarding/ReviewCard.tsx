@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, User, Mail, Phone, Ruler, FileCheck, Camera } from 'lucide-react';
+import { CheckCircle, XCircle, MinusCircle, User, Mail, Phone, Ruler, FileCheck, Camera } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { OnboardingProfile } from '@/hooks/useOnboardingProfile';
+import { OnboardingProfile, getOnboardingCompletion } from '@/hooks/useOnboardingProfile';
 
 interface ReviewCardProps {
   profile: OnboardingProfile;
@@ -24,20 +24,10 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
     }, 1000);
   };
 
-  const getCompletionStatus = () => {
-    const profileComplete = !!(profile.first_name && profile.last_name && profile.email && profile.headshot_url);
-    const uniformComplete = !!(profile.measurements?.height_feet && profile.measurements?.height_inches && profile.measurements?.chest && profile.measurements?.waist && profile.measurements?.hips && profile.measurements?.shoe_size);
-    const agreementsComplete = !!(profile.photo_consent && profile.media_release_signed_at);
-    
-    return {
-      profileComplete,
-      uniformComplete,
-      agreementsComplete,
-      allComplete: profileComplete && uniformComplete && agreementsComplete
-    };
-  };
-
-  const status = getCompletionStatus();
+  // Shared completion policy: only basic profile (name + email) is required;
+  // uniform + agreements are optional. Same source the stepper uses, so Review
+  // never contradicts the stepper.
+  const status = getOnboardingCompletion(profile);
 
   return (
     <Card>
@@ -48,44 +38,50 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        
+
         {/* Completion Status */}
         <div className="space-y-3">
           <h3 className="font-medium flex items-center gap-2">
             Completion Status
-            {status.allComplete ? (
-              <Badge variant="default" className="bg-green-500">Complete</Badge>
+            {status.required ? (
+              <Badge variant="default" className="bg-green-500">Ready to submit</Badge>
             ) : (
               <Badge variant="secondary">In Progress</Badge>
             )}
           </h3>
-          
+
           <div className="space-y-2">
+            {/* Profile — the only required section */}
             <div className="flex items-center gap-3">
-              {status.profileComplete ? (
+              {status.profile ? (
                 <CheckCircle className="w-4 h-4 text-green-500" />
               ) : (
                 <XCircle className="w-4 h-4 text-red-500" />
               )}
               <span className="text-sm">Profile Information</span>
+              {!status.profile && <span className="ml-auto text-xs text-red-500">Required</span>}
             </div>
-            
+
+            {/* Uniform — optional */}
             <div className="flex items-center gap-3">
-              {status.uniformComplete ? (
+              {status.uniform ? (
                 <CheckCircle className="w-4 h-4 text-green-500" />
               ) : (
-                <XCircle className="w-4 h-4 text-red-500" />
+                <MinusCircle className="w-4 h-4 text-slate-300" />
               )}
               <span className="text-sm">Uniform & Measurements</span>
+              {!status.uniform && <span className="ml-auto text-xs text-slate-400">Optional</span>}
             </div>
-            
+
+            {/* Agreements — optional */}
             <div className="flex items-center gap-3">
-              {status.agreementsComplete ? (
+              {status.agreements ? (
                 <CheckCircle className="w-4 h-4 text-green-500" />
               ) : (
-                <XCircle className="w-4 h-4 text-red-500" />
+                <MinusCircle className="w-4 h-4 text-slate-300" />
               )}
               <span className="text-sm">Agreements & Consent</span>
+              {!status.agreements && <span className="ml-auto text-xs text-slate-400">Optional</span>}
             </div>
           </div>
         </div>
@@ -227,9 +223,9 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
 
         {/* Submit Button */}
         <div className="pt-4">
-          <Button 
+          <Button
             onClick={handleSubmit}
-            disabled={!status.allComplete || isCompleting || saving}
+            disabled={!status.required || isCompleting || saving}
             className="w-full"
             size="lg"
           >
@@ -239,10 +235,10 @@ export const ReviewCard = ({ profile, onComplete, saving }: ReviewCardProps) => 
               'Complete Onboarding'
             )}
           </Button>
-          
-          {!status.allComplete && (
+
+          {!status.required && (
             <p className="text-sm text-muted-foreground mt-2 text-center">
-              Please complete all required sections before submitting
+              Add your name and email to finish. Uniform and agreements are optional.
             </p>
           )}
         </div>

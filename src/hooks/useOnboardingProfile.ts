@@ -47,6 +47,32 @@ export interface OnboardingProfile {
   parent_guardian_contact?: string;
 }
 
+export interface OnboardingCompletion {
+  /** The only thing REQUIRED to finish onboarding: basic profile (name + email). */
+  required: boolean;
+  profile: boolean;    // name + email present
+  headshot: boolean;   // optional
+  uniform: boolean;    // optional — all measurement fields present
+  agreements: boolean; // optional — photo consent + media release
+}
+
+// Single source of truth for onboarding completion, shared by the stepper/nav
+// (via getStepCompletion) and the Review screen. Per product policy only the
+// basic profile is required; uniform measurements and media agreements are
+// optional so non-Brand tenants aren't blocked. Keeping both surfaces on this
+// one function is what prevents the stepper and Review from disagreeing.
+export function getOnboardingCompletion(profile: OnboardingProfile): OnboardingCompletion {
+  const m = profile.measurements;
+  const profileBasics = !!(profile.first_name && profile.last_name && profile.email);
+  return {
+    required: profileBasics,
+    profile: profileBasics,
+    headshot: !!profile.headshot_url,
+    uniform: !!(m?.height_feet && m?.height_inches && m?.chest && m?.waist && m?.hips && m?.shoe_size),
+    agreements: !!(profile.photo_consent && profile.media_release_signed_at),
+  };
+}
+
 export const useOnboardingProfile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -178,14 +204,14 @@ export const useOnboardingProfile = () => {
   }, [profile, debouncedUpdate]);
 
   // Step completion. Only the basic Profile (name + email) is required — uniform
-  // measurements and media agreements are now optional so non-Brand tenants
-  // can finish onboarding without being blocked by ensemble-specific fields.
+  // measurements and media agreements are optional so non-Brand tenants can
+  // finish onboarding without being blocked by ensemble-specific fields.
+  // uniform/agreements report `true` here so navigation treats them as
+  // skippable; ReviewCard uses getOnboardingCompletion() (below) for the SAME
+  // policy, so the stepper and the Review screen can never disagree again.
   const getStepCompletion = useCallback(() => {
-    return {
-      profile: !!(profile.first_name && profile.last_name && profile.email),
-      uniform: true,
-      agreements: true,
-    };
+    const c = getOnboardingCompletion(profile);
+    return { profile: c.profile, uniform: true, agreements: true };
   }, [profile]);
 
   useEffect(() => {
