@@ -57,8 +57,8 @@ export default function TemplatesView({ onOpenNote }: { onOpenNote: (noteId: str
       ) : !templates?.length ? (
         <EmptyState icon={FileStack} title="No templates" body="System templates load with the module; you can also save your own." />
       ) : (
-        {/* container-width columns (not viewport breakpoints): with both
-            sidebars open on a tablet, sm:grid-cols-2 crushed the cards */}
+        // container-width columns (not viewport breakpoints): with both
+        // sidebars open on a tablet, sm:grid-cols-2 crushed the cards
         <div className="grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-3">
           {templates.map((tpl) => (
             <div key={tpl.id} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
