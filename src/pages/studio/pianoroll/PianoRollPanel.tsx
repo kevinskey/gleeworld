@@ -6,14 +6,17 @@
 // path, which reschedules the engine.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { MidiClip, Session } from '@/lib/studio/session';
+import type { MidiClip, MidiNote, Session } from '@/lib/studio/session';
 import { isMidiTrack } from '@/lib/studio/session';
 import {
   ROLL_GRIDS, type RollGrid, gridSeconds,
+  addNote, moveNotes, resizeNotes, deleteNotes,
 } from '@/lib/studio/midiEdit';
 import {
   type RollMetrics, PITCH_MAX, ROLL_ROWS, timeToX, pitchToY,
+  hitTestNote, notesInRect, xToTime, yToPitch,
 } from './rollGeometry';
+import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 
 const KEYS_W = 48;      // piano-key gutter
 const RULER_H = 20;
@@ -69,6 +72,125 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       ...t, clips: t.clips.map((c) => c.id === clipId ? mut(c) : c),
     }),
   }));
+
+  // ── Audition (web engine only) ─────────────────────────────────────
+  const auditionRef = useRef<LiveVoices | null>(null);
+  useEffect(() => () => { auditionRef.current?.dispose(); auditionRef.current = null; }, []);
+  const audition = (pitch: number, velocity: number) => {
+    if (props.nativeEngine || !track || !isMidiTrack(track)) return;
+    if (!auditionRef.current) auditionRef.current = new LiveVoices();
+    auditionRef.current.setInstrument(track.instrument);
+    auditionRef.current.setStrip({ volume_db: track.volume_db, pan: track.pan, mute: track.mute });
+    auditionRef.current.noteOn(pitch, velocity / 127);
+    window.setTimeout(() => auditionRef.current?.noteOff(pitch), 250);
+  };
+
+  // ── Pointer tool: select, marquee, move, resize, create ─────────────
+  type Drag =
+    | { kind: 'move'; startCx: number; startCy: number; orig: MidiNote[]; sel: number[]; moved: boolean }
+    | { kind: 'resize'; edge: 'left' | 'right'; startCx: number; orig: MidiNote[] | null; sel: number[] }
+    | { kind: 'marquee'; startCx: number; startCy: number; cx: number; cy: number; base: number[] };
+  const dragRef = useRef<Drag | null>(null);
+
+  /** Pointer event → content-space coords + which chrome region it hit. */
+  const contentPos = (e: React.PointerEvent): { cx: number; cy: number; region: 'ruler' | 'keys' | 'grid' } => {
+    const holder = scrollRef.current!;
+    const rect = holder.getBoundingClientRect();
+    const vx = e.clientX - rect.left, vy = e.clientY - rect.top;
+    const region = vy < RULER_H ? 'ruler' : vx < KEYS_W ? 'keys' : 'grid';
+    return { cx: vx - KEYS_W + holder.scrollLeft, cy: vy - RULER_H + holder.scrollTop, region };
+  };
+
+  const snapMod = (e: { altKey: boolean }) => (e.altKey ? 0 : gridSec);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!clip || e.button !== 0) return;
+    scrollRef.current?.focus();
+    const { cx, cy, region } = contentPos(e);
+    if (region === 'ruler') { props.onSeek(clip.start_seconds + xToTime(metrics, cx)); return; }
+    if (region === 'keys') { audition(yToPitch(metrics, cy), 100); return; }
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    const hit = hitTestNote(metrics, clip.notes, cx, cy);
+    if (hit) {
+      const already = selection.includes(hit.index);
+      const sel = e.shiftKey
+        ? (already ? selection.filter((i) => i !== hit.index) : [...selection, hit.index])
+        : (already ? selection : [hit.index]);
+      setSelection(sel);
+      if (!e.shiftKey) audition(clip.notes[hit.index].pitch, clip.notes[hit.index].velocity);
+      props.pushHistory();
+      dragRef.current = hit.zone === 'body'
+        ? { kind: 'move', startCx: cx, startCy: cy, orig: clip.notes, sel, moved: false }
+        : { kind: 'resize', edge: hit.zone, startCx: cx, orig: clip.notes, sel };
+      return;
+    }
+    if (e.detail === 2) { // double-click empty: create a note at grid length
+      props.pushHistory();
+      const start = snapAbsForClip(xToTime(metrics, cx));
+      const dur = gridSec > 0 ? gridSec : 0.25;
+      let created = -1;
+      editClip((c) => {
+        const r = addNote(c.notes, { pitch: yToPitch(metrics, cy), velocity: 100, start_seconds: start, duration_seconds: dur });
+        created = r.index;
+        return { ...c, notes: r.notes, duration_seconds: Math.max(c.duration_seconds, start + dur) };
+      });
+      setSelection(created >= 0 ? [created] : []);
+      return;
+    }
+    dragRef.current = { kind: 'marquee', startCx: cx, startCy: cy, cx, cy, base: e.shiftKey ? selection : [] };
+    if (!e.shiftKey) setSelection([]);
+  };
+
+  /** Snap a clip-relative time onto the TIMELINE grid (matches quantize). */
+  const snapAbsForClip = (t: number): number => {
+    if (gridSec <= 0 || !clip) return Math.max(0, t);
+    const abs = clip.start_seconds + t;
+    return Math.max(0, Math.round(abs / gridSec) * gridSec - clip.start_seconds);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = dragRef.current;
+    if (!d || !clip) return;
+    const { cx, cy } = contentPos(e);
+    if (d.kind === 'move') {
+      const deltaSeconds = (cx - d.startCx) / metrics.pxPerSecond;
+      const deltaSemitones = -Math.round((cy - d.startCy) / ROW_H);
+      if (!d.moved && Math.abs(cx - d.startCx) < 3 && Math.abs(cy - d.startCy) < 3) return;
+      d.moved = true;
+      editClip((c) => ({ ...c, notes: moveNotes(d.orig, d.sel, {
+        deltaSeconds, deltaSemitones, gridSeconds: snapMod(e), clipStartSeconds: c.start_seconds }) }));
+    } else if (d.kind === 'resize') {
+      if (!d.orig) d.orig = clip.notes;
+      const deltaSeconds = (cx - d.startCx) / metrics.pxPerSecond;
+      editClip((c) => ({ ...c, notes: resizeNotes(d.orig!, d.sel, {
+        edge: d.edge, deltaSeconds, gridSeconds: snapMod(e), clipStartSeconds: c.start_seconds }) }));
+    } else {
+      d.cx = cx; d.cy = cy;
+      setSelection([...new Set([...d.base, ...notesInRect(metrics, clip.notes,
+        { x0: d.startCx, y0: d.startCy, x1: cx, y1: cy })])]);
+      scheduleDraw();
+    }
+  };
+
+  const onPointerUp = () => { dragRef.current = null; scheduleDraw(); };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    // The panel owns keys while focused — never let Delete bubble to the
+    // editor's clip-delete shortcut.
+    e.stopPropagation();
+    if (!clip) return;
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selection.length) {
+      e.preventDefault();
+      props.pushHistory();
+      editClip((c) => ({ ...c, notes: deleteNotes(c.notes, selection) }));
+      setSelection([]);
+    } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+      e.preventDefault();
+      setSelection(clip.notes.map((_, i) => i));
+    } else if (e.key === 'Escape') {
+      setSelection([]);
+    }
+  };
 
   // ── Drawing ─────────────────────────────────────────────────────────
   const scheduleDraw = () => {
@@ -149,6 +271,14 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
         g.lineWidth = 1;
       }
     });
+    // Marquee selection overlay.
+    const d = dragRef.current;
+    if (d && d.kind === 'marquee') {
+      g.strokeStyle = cFg; g.globalAlpha = 0.7; g.setLineDash([4, 3]);
+      g.strokeRect(Math.min(d.startCx, d.cx) + 0.5, Math.min(d.startCy, d.cy) + 0.5,
+        Math.abs(d.cx - d.startCx), Math.abs(d.cy - d.startCy));
+      g.setLineDash([]); g.globalAlpha = 1;
+    }
     // Playhead (clip-relative).
     const ph = props.positionSeconds - clip.start_seconds;
     if (ph >= 0 && ph <= clip.duration_seconds) {
@@ -248,6 +378,10 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
             style={{ height: GRID_BODY_H }}
             tabIndex={0}
             onScroll={scheduleDraw}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onKeyDown={onKeyDown}
           >
             <div style={{ width: totalW, height: totalH }} />
             {/* Sticky canvas: kept `position: sticky` per the plan brief
