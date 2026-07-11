@@ -1,4 +1,4 @@
-import type { MidiClip, MidiNote } from './session';
+import type { MidiClip, MidiNote, MidiCcEvent } from './session';
 
 // The clip under the playhead on a MIDI track, or null if the playhead sits in
 // empty space (the caller then starts a fresh clip).
@@ -73,4 +73,76 @@ export function appendTakeNote(
     notes: [note],
   };
   return { takeClipId: clip.id, clips: [...clips, clip] };
+}
+
+// ── Held-note bookkeeping (recording) ────────────────────────────────
+// Since schema 1.1.0 the sustain pedal is recorded as CC64 events, so
+// recorded notes carry their TRUE key-up duration — the pedal no longer
+// holds presses open (that behavior lives in applySustain at playback,
+// and in LiveVoices for live monitoring). This replaces SustainTracker.
+
+export interface HeldPress {
+  pitch: number;
+  velocity: number;
+  downAbsSeconds: number;
+}
+
+export class HeldNotes {
+  private held = new Map<number, HeldPress>();
+  /** Track a key-down. Returns a stale press to commit when a note-off
+   * was missed for this pitch, else null. */
+  keyDown(pitch: number, velocity: number, atSeconds: number): HeldPress | null {
+    const stale = this.held.get(pitch) ?? null;
+    this.held.set(pitch, { pitch, velocity, downAbsSeconds: atSeconds });
+    return stale;
+  }
+  keyUp(pitch: number): HeldPress | null {
+    const press = this.held.get(pitch) ?? null;
+    this.held.delete(pitch);
+    return press;
+  }
+  /** Record stop: commit everything still physically held. */
+  flush(): HeldPress[] {
+    const commits = [...this.held.values()];
+    this.held.clear();
+    return commits;
+  }
+}
+
+// ── CC capture ───────────────────────────────────────────────────────
+
+export interface CapturedCc { controller: number; value: number; timeAbsSeconds: number; }
+
+/** Fold a take's captured CC events into the take clip: clip-relative
+ * times (clamped ≥ 0), merged with any existing cc (overdub), sorted;
+ * the clip grows to cover a trailing event (e.g. a pedal-up after the
+ * last key-up). CC captured with no take clip is dropped by the caller. */
+export function attachTakeCc(clips: MidiClip[], takeClipId: string, events: CapturedCc[]): MidiClip[] {
+  if (events.length === 0) return clips;
+  return clips.map((c) => {
+    if (c.id !== takeClipId) return c;
+    const rel: MidiCcEvent[] = events.map((e) => ({
+      controller: e.controller, value: e.value,
+      time_seconds: Math.max(0, e.timeAbsSeconds - c.start_seconds),
+    }));
+    const cc = [...(c.cc ?? []), ...rel].sort((a, b) => a.time_seconds - b.time_seconds);
+    const last = cc[cc.length - 1].time_seconds;
+    return { ...c, cc, duration_seconds: Math.max(c.duration_seconds, last) };
+  });
+}
+
+// ── MIDI recording offset (auto + trim) ──────────────────────────────
+// The player performs in time with what they HEAR, which is late by the
+// audio output latency — so captured event times are shifted earlier by
+// getOutputLatencyMs() (read once per take by the caller) plus this
+// user trim. Mirrors the audio path's takeAlignment approach.
+
+export const MIDI_TRIM_STORAGE_KEY = 'studio.midiTrimMs';
+
+export function getMidiTrimMs(): number {
+  if (typeof localStorage === 'undefined') return 0;
+  const raw = localStorage.getItem(MIDI_TRIM_STORAGE_KEY);
+  if (raw === null) return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.max(-100, Math.min(100, n)) : 0;
 }

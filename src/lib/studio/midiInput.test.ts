@@ -1,7 +1,9 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { parseMidiMessage } from './midiMessage';
 import { SustainTracker } from './midiSustain';
 import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode } from './midiRecord';
+import { HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY } from './midiRecord';
 import type { MidiClip } from './session';
 
 describe('parseMidiMessage', () => {
@@ -143,6 +145,68 @@ describe('appendTakeNote', () => {
   });
 });
 
+
+describe('parseMidiMessage cc', () => {
+  it('reads the mod wheel (CC1) on any channel', () => {
+    expect(parseMidiMessage([0xb0, 1, 90])).toEqual({ type: 'cc', controller: 1, value: 90 });
+    expect(parseMidiMessage([0xb2, 1, 0])).toEqual({ type: 'cc', controller: 1, value: 0 });
+  });
+  it('still special-cases sustain and ignores other CCs', () => {
+    expect(parseMidiMessage([0xb0, 64, 127])).toEqual({ type: 'sustain', down: true });
+    expect(parseMidiMessage([0xb0, 7, 100])).toEqual({ type: 'other' });
+  });
+});
+
+describe('HeldNotes', () => {
+  it('keyUp returns the press with its true down time (no pedal hold)', () => {
+    const h = new HeldNotes();
+    expect(h.keyDown(60, 100, 1.0)).toBeNull();
+    expect(h.keyUp(60)).toEqual({ pitch: 60, velocity: 100, downAbsSeconds: 1.0 });
+    expect(h.keyUp(60)).toBeNull();
+  });
+  it('a re-strike with a missed note-off commits the stale press', () => {
+    const h = new HeldNotes();
+    h.keyDown(60, 100, 1.0);
+    expect(h.keyDown(60, 90, 2.0)).toEqual({ pitch: 60, velocity: 100, downAbsSeconds: 1.0 });
+  });
+  it('flush commits everything still held', () => {
+    const h = new HeldNotes();
+    h.keyDown(60, 100, 1.0); h.keyDown(64, 80, 1.5);
+    expect(h.flush()).toHaveLength(2);
+    expect(h.flush()).toEqual([]);
+  });
+});
+
+describe('attachTakeCc', () => {
+  const clip: MidiClip = { id: 'c1', kind: 'midi', start_seconds: 10, duration_seconds: 2, notes: [] };
+  it('converts to clip-relative, sorts, merges, and grows the clip', () => {
+    const out = attachTakeCc([clip], 'c1', [
+      { controller: 64, value: 0, timeAbsSeconds: 13 },
+      { controller: 64, value: 127, timeAbsSeconds: 10.5 },
+    ]);
+    expect(out[0].cc).toEqual([
+      { controller: 64, value: 127, time_seconds: 0.5 },
+      { controller: 64, value: 0, time_seconds: 3 },
+    ]);
+    expect(out[0].duration_seconds).toBe(3);
+  });
+  it('leaves other clips and empty event lists untouched', () => {
+    expect(attachTakeCc([clip], 'c1', [])).toEqual([clip]);
+    expect(attachTakeCc([clip], 'other', [{ controller: 64, value: 127, timeAbsSeconds: 11 }])).toEqual([clip]);
+  });
+});
+
+describe('getMidiTrimMs', () => {
+  it('defaults to 0 and clamps to ±100', () => {
+    localStorage.removeItem(MIDI_TRIM_STORAGE_KEY);
+    expect(getMidiTrimMs()).toBe(0);
+    localStorage.setItem(MIDI_TRIM_STORAGE_KEY, '250');
+    expect(getMidiTrimMs()).toBe(100);
+    localStorage.setItem(MIDI_TRIM_STORAGE_KEY, '-40');
+    expect(getMidiTrimMs()).toBe(-40);
+    localStorage.removeItem(MIDI_TRIM_STORAGE_KEY);
+  });
+});
 
 describe('SustainTracker', () => {
   it('commits a normal press on key-up when the pedal is up', () => {
