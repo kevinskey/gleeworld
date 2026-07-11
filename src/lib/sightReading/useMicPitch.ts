@@ -193,7 +193,7 @@ export function useMicPitch() {
 
           const beats = ((ctx.currentTime - startedAtRef.current) * tempoRef.current) / 60;
           if (lastVoicedMidiRef.current !== midi) {
-            capturedRef.current.push({ midi, beatPos: beats });
+            capturedRef.current.push({ midi, cents, beatPos: beats });
           }
           lastVoicedMidiRef.current = midi;
         };

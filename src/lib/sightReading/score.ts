@@ -1,14 +1,18 @@
 import type { ExerciseIR } from './ir';
 
-export interface SungNote { midi: number; beatPos: number; }
+// `cents` is the sung note's real deviation from `midi` (nearest semitone),
+// carried through from the pitch tracker so grading can judge intonation
+// rather than only which semitone bin the note landed in. Optional: callers
+// that don't have it (older takes, tests) leave it undefined and are treated
+// as dead-centre (0 cents).
+export interface SungNote { midi: number; beatPos: number; cents?: number; }
 export interface ScoreResult {
   firstNoteOk: boolean; pitch: number; rhythm: number; retention: number; overall: number;
   perNote: {
     expectedMidi: number; sungMidi: number | null;
-    // Semitone-quantized, NOT true cents: SungNote.midi is an integer, so this
-    // is always a multiple of 100 (e.g. an octave slip reports exactly -1200
-    // even though `ok` may still be true). A UI that wants real sub-semitone
-    // cents must read the live pitch tracker directly rather than this field.
+    // Real cents of deviation from the expected note, folded into the nearest
+    // octave (so an octave slip reads ~0, not ∓1200). Fractional intonation is
+    // preserved when the take carried per-note cents.
     centsOff: number | null;
     ok: boolean;
   }[];
@@ -21,19 +25,38 @@ const RHYTHM_TOLERANCE_BEATS = 0.25;
 // treated as "no attempt at this note" rather than a mis-aligned match.
 const ALIGNMENT_TOLERANCE_BEATS = 1;
 
-// True when two raw semitone offsets are the same modulo an octave — i.e. the
-// singer's displacement from the expected note is octave-equivalent, whether
-// that displacement is 0 (dead on), -12 (an octave down), or some other
-// octave multiple of a shared pitch-class offset.
-const sameOctaveClass = (a: number, b: number) => (((a - b) % 12) + 12) % 12 === 0;
+// Per-note pitch credit is a ramp, not pass/fail: a note within FULL_CREDIT_CENTS
+// of the baseline earns full marks, sliding linearly to zero by ZERO_CREDIT_CENTS
+// (a full semitone off). OK_CENTS is the quarter-tone boundary used for the ✓/✗
+// per-note display and for drift detection.
+const FULL_CREDIT_CENTS = 20;
+const ZERO_CREDIT_CENTS = 100;
+const OK_CENTS = 50;
+
+// Signed cents between a sung offset and a reference, folded into the nearest
+// octave so octave displacement reads as ~0 (a singer an octave down still has
+// the right pitch class). Both inputs are in semitones and may be fractional
+// now that real cents ride along on each captured note.
+function octaveFoldedCents(offset: number, ref: number): number {
+  const rel = offset - ref;
+  return (rel - 12 * Math.round(rel / 12)) * 100;
+}
+
+// Ramp from full credit (≤ FULL_CREDIT_CENTS) down to none (≥ ZERO_CREDIT_CENTS).
+function noteCredit(absCents: number): number {
+  if (absCents <= FULL_CREDIT_CENTS) return 1;
+  if (absCents >= ZERO_CREDIT_CENTS) return 0;
+  return 1 - (absCents - FULL_CREDIT_CENTS) / (ZERO_CREDIT_CENTS - FULL_CREDIT_CENTS);
+}
 
 // The "lower median" of a set of semitone offsets: sorted-and-indexed rather
 // than averaged, so the result is always one of the actual observed offsets
-// (an integer) instead of e.g. 3.5 between two middle values — averaging
-// would make sameOctaveClass's exact modulo comparison never match anything.
+// instead of a value between two of them.
 // A single outlier offset (including at index 0) cannot move this value,
 // which is the whole point: the baseline is "what most of the performance
-// agreed on," not "wherever the take happened to start."
+// agreed on," not "wherever the take happened to start." Returning an OBSERVED
+// offset (not an average) also keeps the baseline from landing between two real
+// offsets and skewing every note's cents distance from it.
 function medianOffset(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -67,7 +90,11 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
     if (!best || bestDist > ALIGNMENT_TOLERANCE_BEATS) {
       return { expectedMidi: exp.midi, sungMidi: null as number | null, offset: null as number | null };
     }
-    return { expectedMidi: exp.midi, sungMidi: best.midi, offset: best.midi - exp.midi };
+    // Offset is the CONTINUOUS distance (semitones, fractional) from the
+    // expected note, folding the tracker's real cents back onto the integer
+    // midi. sungMidi stays the integer for display.
+    const sungPitch = best.midi + (best.cents ?? 0) / 100;
+    return { expectedMidi: exp.midi, sungMidi: best.midi, offset: sungPitch - exp.midi };
   });
 
   // The performance's own reference point: the median of the STUDENT'S
@@ -107,8 +134,8 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
     if (a.sungMidi === null || a.offset === null) {
       return { expectedMidi: a.expectedMidi, sungMidi: null, centsOff: null, ok: false };
     }
-    const ok = sameOctaveClass(a.offset, baselineOffset);
-    return { expectedMidi: a.expectedMidi, sungMidi: a.sungMidi, centsOff: a.offset * 100, ok };
+    const ok = Math.abs(octaveFoldedCents(a.offset, baselineOffset)) <= OK_CENTS;
+    return { expectedMidi: a.expectedMidi, sungMidi: a.sungMidi, centsOff: Math.round(octaveFoldedCents(a.offset, 0)), ok };
   });
 
   // firstNoteOk is judged against 0, not against the baseline — this is the
@@ -116,10 +143,17 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
   // because how you started IS the thing being judged. Octave is still
   // forgiven (pc comparison), but any non-octave offset is not.
   const firstAligned = aligned[0];
-  const firstNoteOk = firstAligned?.sungMidi !== null && firstAligned?.offset !== null
-    && sameOctaveClass(firstAligned.offset, 0);
+  const firstNoteOk = firstAligned?.sungMidi != null && firstAligned?.offset != null
+    && Math.abs(octaveFoldedCents(firstAligned.offset, 0)) <= OK_CENTS;
 
-  const pitch = Math.round((perNote.filter(p => p.ok).length / expected.length) * 100);
+  // Pitch is the AVERAGE ramped credit over the notes actually captured — a note
+  // the mic never heard is left OUT of the denominator, not counted as a miss, so
+  // a soft note or a timing slip can't crater the pitch score. Each captured note
+  // earns credit for how close it sits to the baseline, folded by octave.
+  const credits = alignedOffsets.map(({ offset }) => noteCredit(Math.abs(octaveFoldedCents(offset, baselineOffset))));
+  const pitch = credits.length === 0
+    ? 0
+    : Math.round((credits.reduce((s, c) => s + c, 0) / credits.length) * 100);
 
   const onTime = expected.filter((exp) =>
     sung.some(s => Math.abs(s.beatPos - exp.beatPos) <= RHYTHM_TOLERANCE_BEATS)).length;
@@ -139,7 +173,7 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
     let runStartIdx: number | null = null;
     let runLen = 0;
     for (const { i, offset } of alignedOffsets) {
-      if (!sameOctaveClass(offset, baselineOffset)) {
+      if (Math.abs(octaveFoldedCents(offset, baselineOffset)) > OK_CENTS) {
         if (runLen === 0) runStartIdx = i;
         runLen++;
         if (runLen >= 2) { driftIdx = runStartIdx; break; }

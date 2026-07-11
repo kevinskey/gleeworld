@@ -214,7 +214,7 @@ export function SingFlow({
         // up with the exercise downbeat, and drop anything captured during the
         // count-in itself.
         const sung: SungNote[] = raw
-          .map((s) => ({ midi: s.midi, beatPos: s.beatPos - COUNT_IN_BEATS }))
+          .map((s) => ({ midi: s.midi, cents: s.cents, beatPos: s.beatPos - COUNT_IN_BEATS }))
           .filter((s) => s.beatPos >= -0.5);
         const r = scoreAttempt(exercise, sung);
         logOnce(r);
