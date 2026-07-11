@@ -17,7 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  keyTitle, keyToDate, parentPeriod, periodKey, shiftKey, type PeriodType, PERIOD_TYPES,
+  childPeriods, keyRange, keyTitle, keyToDate, parentPeriod, periodKey, shiftKey,
+  type PeriodType, PERIOD_TYPES,
 } from '@/lib/planner/dateKeys';
 import { isDocEmpty } from '@/lib/planner/markdown';
 import { saveNote } from '@/lib/planner/notesApi';
@@ -25,7 +26,8 @@ import { defaultTemplateContext, substituteDoc } from '@/lib/planner/templates';
 import * as tasksApi from '@/lib/planner/tasksApi';
 import type { PlannerNote, PlannerTemplate, TaskPriority, TaskStatus } from '@/lib/planner/types';
 import {
-  usePeriodEvents, usePeriodNote, useRescheduleTask, useSetTaskStatus, useTasksForDate, useTemplates,
+  usePeriodEvents, usePeriodNote, useRescheduleTask, useSetTaskStatus, useTasksForDate,
+  useTasksForRange, useTemplates,
 } from '../hooks';
 import DayTimeline, { slotToIso } from './DayTimeline';
 import NoteEditor from './NoteEditor';
@@ -48,6 +50,11 @@ export default function PeriodView({ type, dateKey, onNavigate, onOpenNote }: Pe
   const { data: events } = usePeriodEvents(type, dateKey);
   const isDaily = type === 'daily';
   const { data: dayTasks } = useTasksForDate(isDaily ? dateKey : null);
+  const range = useMemo(() => keyRange(dateKey, type), [dateKey, type]);
+  const rangeStart = !isDaily && range ? format(range.start, 'yyyy-MM-dd') : null;
+  const rangeEnd = !isDaily && range ? format(range.end, 'yyyy-MM-dd') : null;
+  const { data: periodTasks } = useTasksForRange(rangeStart, rangeEnd);
+  const children = useMemo(() => childPeriods(dateKey, type), [dateKey, type]);
   const qc = useQueryClient();
   const setStatus = useSetTaskStatus();
   const reschedule = useRescheduleTask();
@@ -140,6 +147,23 @@ export default function PeriodView({ type, dateKey, onNavigate, onOpenNote }: Pe
         )}
       </div>
 
+      {/* drill-down: this period's children (week→days, month→weeks, …) */}
+      {!!children.length && (
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Jump into this period">
+          {children.map((c) => (
+            <Button
+              key={c.key}
+              size="sm"
+              variant={c.isCurrent ? 'default' : 'outline'}
+              className="h-7 rounded-full text-xs"
+              onClick={() => onNavigate(c.type, c.key)}
+            >
+              {c.label}
+            </Button>
+          ))}
+        </div>
+      )}
+
       {!!events?.length && (
         <section aria-label="Events" className="flex flex-col gap-1.5">
           <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Events</h2>
@@ -206,6 +230,47 @@ export default function PeriodView({ type, dateKey, onNavigate, onOpenNote }: Pe
         </DndContext>
       )}
 
+      {/* non-daily periods: every task scheduled inside the period, by day */}
+      {!isDaily && (
+        <section aria-label="Tasks in this period" className="flex flex-col gap-2">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tasks this {PERIOD_LABELS[type].toLowerCase()}</h2>
+          <QuickAddTask
+            defaultDate={rangeStart && rangeEnd && format(new Date(), 'yyyy-MM-dd') >= rangeStart && format(new Date(), 'yyyy-MM-dd') <= rangeEnd
+              ? format(new Date(), 'yyyy-MM-dd')
+              : rangeStart ?? undefined}
+            onCreated={() => qc.invalidateQueries({ queryKey: ['planner'] })}
+          />
+          {!(periodTasks ?? []).length ? (
+            <p className="rounded-md border border-dashed border-border bg-card px-3 py-4 text-sm text-muted-foreground">
+              Nothing scheduled in this {PERIOD_LABELS[type].toLowerCase()} yet.
+            </p>
+          ) : (
+            groupByDate(periodTasks ?? []).map((g) => (
+              <div key={g.date} className="flex flex-col gap-1.5">
+                <button
+                  onClick={() => onNavigate('daily', g.date)}
+                  className="self-start text-xs font-medium text-muted-foreground underline-offset-2 hover:underline"
+                >
+                  {format(parseISO(g.date), 'EEEE, MMM d')}
+                </button>
+                {g.tasks.map((t) => (
+                  <TaskRow
+                    key={t.id}
+                    task={t}
+                    showDate={false}
+                    onSetStatus={(id, status: TaskStatus) => setStatus.mutate({ id, status })}
+                    onReschedule={(id, date) => reschedule.mutate({ id, date })}
+                    onSetPriority={(id, priority) => setPriority.mutate({ id, priority })}
+                    onDelete={(id) => remove.mutate(id)}
+                    onOpenNote={onOpenNote}
+                  />
+                ))}
+              </div>
+            ))
+          )}
+        </section>
+      )}
+
       <section aria-label="Note" className="flex flex-col gap-2">
         <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Note</h2>
         {isLoading ? (
@@ -237,6 +302,17 @@ export default function PeriodView({ type, dateKey, onNavigate, onOpenNote }: Pe
   );
 }
 
+function groupByDate(tasks: import('@/lib/planner/types').PlannerTask[]): { date: string; tasks: typeof tasks }[] {
+  const byDate = new Map<string, typeof tasks>();
+  for (const t of tasks) {
+    const d = t.scheduled_date ?? '';
+    if (!d) continue;
+    if (!byDate.has(d)) byDate.set(d, []);
+    byDate.get(d)!.push(t);
+  }
+  return [...byDate.entries()].map(([date, list]) => ({ date, tasks: list }));
+}
+
 function DraggableRow({ id, children }: { id: string; children: React.ReactNode }) {
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id });
   return (
@@ -254,9 +330,10 @@ function TemplateChips({ note, periodType, onApplied }: {
 }) {
   const { data: templates } = useTemplates();
   const [applying, setApplying] = useState<string | null>(null);
-  const matching = (templates ?? []).filter(
-    (t) => t.note_type === periodType || t.note_type === 'note',
-  ).slice(0, 4);
+  const matching = (templates ?? [])
+    .filter((t) => t.note_type === periodType || t.note_type === 'note')
+    .sort((a, b) => Number(b.note_type === periodType) - Number(a.note_type === periodType))
+    .slice(0, 4);
   if (!matching.length) return null;
 
   const apply = async (tpl: PlannerTemplate) => {

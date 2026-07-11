@@ -108,6 +108,68 @@ export function keyTitle(key: string, type: PeriodType): string {
   }
 }
 
+export interface ChildPeriod {
+  key: string;
+  type: PeriodType;
+  /** short chip label, e.g. "Mon 6", "W28", "Jul", "Q3" */
+  label: string;
+  /** true when the child period contains today */
+  isCurrent: boolean;
+}
+
+/**
+ * Drill-down chain: a week's days, a month's ISO weeks, a quarter's
+ * months, a year's quarters. Daily has no children.
+ */
+export function childPeriods(key: string, type: PeriodType, now: Date = new Date()): ChildPeriod[] {
+  const range = keyRange(key, type);
+  if (!range) return [];
+  const currentKeyOf = (t: PeriodType) => periodKey(now, t);
+  switch (type) {
+    case 'daily':
+      return [];
+    case 'weekly': {
+      const days: ChildPeriod[] = [];
+      for (let i = 0; i < 7; i++) {
+        const d = addDays(range.start, i);
+        const k = periodKey(d, 'daily');
+        days.push({ key: k, type: 'daily', label: format(d, 'EEE d'), isCurrent: k === currentKeyOf('daily') });
+      }
+      return days;
+    }
+    case 'monthly': {
+      const weeks: ChildPeriod[] = [];
+      let cursor = startOfISOWeek(range.start);
+      while (cursor <= range.end) {
+        const k = periodKey(cursor, 'weekly');
+        if (!weeks.some((w) => w.key === k)) {
+          weeks.push({ key: k, type: 'weekly', label: `W${getISOWeek(cursor)}`, isCurrent: k === currentKeyOf('weekly') });
+        }
+        cursor = addWeeks(cursor, 1);
+      }
+      return weeks;
+    }
+    case 'quarterly': {
+      const months: ChildPeriod[] = [];
+      for (let i = 0; i < 3; i++) {
+        const d = addMonths(range.start, i);
+        const k = periodKey(d, 'monthly');
+        months.push({ key: k, type: 'monthly', label: format(d, 'MMM'), isCurrent: k === currentKeyOf('monthly') });
+      }
+      return months;
+    }
+    case 'yearly': {
+      const quarters: ChildPeriod[] = [];
+      for (let i = 0; i < 4; i++) {
+        const d = addQuarters(range.start, i);
+        const k = periodKey(d, 'quarterly');
+        quarters.push({ key: k, type: 'quarterly', label: `Q${i + 1}`, isCurrent: k === currentKeyOf('quarterly') });
+      }
+      return quarters;
+    }
+  }
+}
+
 /** The "zoom out" chain: daily → weekly → monthly → quarterly → yearly. */
 export function parentPeriod(key: string, type: PeriodType): { key: string; type: PeriodType } | null {
   const date = keyToDate(key, type);

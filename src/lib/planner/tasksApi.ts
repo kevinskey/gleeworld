@@ -63,6 +63,21 @@ export async function listTasksForDate(date: string): Promise<PlannerTask[]> {
   return (data ?? []) as PlannerTask[];
 }
 
+/** Tasks scheduled within [start, end] (inclusive, YYYY-MM-DD). */
+export async function listTasksForRange(start: string, end: string): Promise<PlannerTask[]> {
+  const { data, error } = await supabase
+    .from('gw_planner_tasks')
+    .select('*')
+    .is('deleted_at', null)
+    .gte('scheduled_date', start)
+    .lte('scheduled_date', end)
+    .order('scheduled_date')
+    .order('position')
+    .limit(300);
+  if (error) throw error;
+  return (data ?? []) as PlannerTask[];
+}
+
 export async function listTasksForNote(noteId: string): Promise<PlannerTask[]> {
   const { data, error } = await supabase
     .from('gw_planner_tasks')

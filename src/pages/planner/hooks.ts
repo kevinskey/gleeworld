@@ -55,6 +55,14 @@ export function useTasks(view: tasksApi.TaskView) {
   });
 }
 
+export function useTasksForRange(start: string | null, end: string | null) {
+  return useQuery({
+    queryKey: ['planner', 'tasks-range', start, end],
+    queryFn: () => tasksApi.listTasksForRange(start!, end!),
+    enabled: !!start && !!end,
+  });
+}
+
 export function useTasksForDate(date: string | null) {
   return useQuery({
     queryKey: ['planner', 'tasks-date', date],
