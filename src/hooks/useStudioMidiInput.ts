@@ -21,17 +21,20 @@ export function useStudioMidiInput({
   deviceId,
   onNoteOn,
   onNoteOff,
+  onSustain,
 }: {
   enabled: boolean;
   deviceId: string;
   onNoteOn: (pitch: number, velocity: number) => void;
   onNoteOff: (pitch: number) => void;
+  onSustain?: (down: boolean) => void;
 }) {
   const [inputs, setInputs] = useState<{ id: string; name: string }[]>([]);
   const [status, setStatus] = useState<'idle' | 'connected' | 'denied'>('idle');
   // Latest callbacks via refs so re-subscription isn't triggered every render.
   const onOnRef = useRef(onNoteOn); onOnRef.current = onNoteOn;
   const onOffRef = useRef(onNoteOff); onOffRef.current = onNoteOff;
+  const onSustainRef = useRef(onSustain); onSustainRef.current = onSustain;
 
   useEffect(() => {
     if (!enabled || !supported) { setStatus('idle'); return; }
@@ -42,6 +45,7 @@ export function useStudioMidiInput({
       const ev = parseMidiMessage(e.data);
       if (ev.type === 'noteon') onOnRef.current(ev.pitch, ev.velocity);
       else if (ev.type === 'noteoff') onOffRef.current(ev.pitch);
+      else if (ev.type === 'sustain') onSustainRef.current?.(ev.down);
     };
     const attach = (acc: MidiAccessLike) => {
       const list = [...acc.inputs.values()];
