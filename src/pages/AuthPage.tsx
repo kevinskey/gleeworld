@@ -232,7 +232,11 @@ export default function AuthPage() {
         Back to Home
       </Button>
 
-      <div className="w-full max-w-md relative z-10 sm:translate-x-[200px]">
+      {/* Card sits left-of-center on wide screens so the artwork's focal
+          point (right-of-center in the desktop crop) stays visible.
+          lg: only — tablets and phones keep the centered layout, where a
+          fixed shift would push the card off-viewport. */}
+      <div className="w-full max-w-md relative z-10 lg:-translate-x-[22vw]">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
@@ -265,12 +269,14 @@ export default function AuthPage() {
             The supports- variants fall back to a near-opaque card wherever
             backdrop-filter is unavailable, so the form never loses contrast. */}
         <div
-          className="relative rounded-3xl overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)]
+          className="relative rounded-3xl overflow-hidden
+                     shadow-[0_8px_40px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.6),inset_0_-1px_1px_rgba(255,255,255,0.2)]
                      bg-white/80
-                     supports-[backdrop-filter]:bg-white/55
-                     supports-[backdrop-filter]:backdrop-blur-2xl
-                     supports-[backdrop-filter]:backdrop-saturate-150
-                     border border-white/50 ring-1 ring-inset ring-white/25"
+                     supports-[backdrop-filter]:bg-white/35
+                     supports-[backdrop-filter]:backdrop-blur-3xl
+                     supports-[backdrop-filter]:backdrop-saturate-[1.8]
+                     supports-[backdrop-filter]:backdrop-brightness-110
+                     border border-white/60 ring-1 ring-inset ring-white/30"
         >
           {/* Specular highlight: the bright top edge and soft sheen that make
               glass read as a lens rather than a translucent rectangle. */}
@@ -278,6 +284,14 @@ export default function AuthPage() {
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 top-0 h-24
                        bg-gradient-to-b from-white/45 to-transparent"
+          />
+          {/* Refraction sheen: a soft diagonal band of light, the "liquid"
+              half of liquid glass. Decorative only — heavily blurred so it
+              never interferes with text legibility. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-1/4 top-0 h-full w-2/3 rotate-12
+                       bg-gradient-to-r from-transparent via-white/20 to-transparent blur-2xl"
           />
           <div className="relative px-7 sm:px-8 py-7 sm:py-8">
             <div className="flex items-center justify-center gap-2 mb-6 text-slate-900">
