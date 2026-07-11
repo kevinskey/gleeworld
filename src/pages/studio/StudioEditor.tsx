@@ -939,9 +939,16 @@ function Editor({
   const resetMidiCapture = () => {
     midiCcRef.current = [];
     midiPedalRef.current = false;
-    // Auto compensation measured once per take; ±trim from the settings dial.
+    // Auto compensation measured once per take; ±trim from the settings
+    // dial. Do NOT clamp the total at 0 here: the trim UI explicitly
+    // promises "go negative if they land early" (MidiLatencyControl), and
+    // clamping the sum would make a negative trim a no-op whenever auto
+    // latency is 0 (Safari). A negative total is fine — compNow() below
+    // subtracts this value, so a negative comp SHIFTS captured times
+    // later, and compNow's own `Math.max(0, position - comp)` still floors
+    // the result at 0.
     midiCompSecRef.current = engineState.native ? 0
-      : Math.max(0, getOutputLatencyMs() + getMidiTrimMs()) / 1000;
+      : (getOutputLatencyMs() + getMidiTrimMs()) / 1000;
   };
 
   const startRecording = async () => {

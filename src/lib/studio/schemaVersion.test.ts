@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { requiredSchemaVersion, STUDIO_SCHEMA_VERSIONS, type Session } from './session';
+import { requiredSchemaVersion, sanitizeCc, STUDIO_SCHEMA_VERSIONS, type MidiCcEvent, type Session } from './session';
 import { newSession } from './defaults';
 import { validateSession } from './validate';
 
@@ -36,5 +36,50 @@ describe('schema versions', () => {
     }
     const bad = { ...base(), schema_version: '2.0.0' } as unknown as Session;
     expect(errorsOf(bad).some((e) => e.includes('schema_version'))).toBe(true);
+  });
+
+  it('a clip with a corrupt (non-array) cc does not require 1.1.0', () => {
+    const s = base();
+    s.tracks.push({
+      id: 'm1', kind: 'midi', name: 'Keys', color: '#888888', volume_db: 0, pan: 0,
+      mute: false, solo: false, arm: false, fx: [],
+      instrument: { type: 'synth_basic', params: {} },
+      clips: [{ id: 'c1', kind: 'midi', start_seconds: 0, duration_seconds: 4, notes: [],
+        cc: 'not-an-array' as unknown as MidiCcEvent[] }],
+    });
+    expect(requiredSchemaVersion(s)).toBe('1.0.0');
+  });
+});
+
+describe('sanitizeCc', () => {
+  it('returns [] for undefined', () => {
+    expect(sanitizeCc(undefined)).toEqual([]);
+  });
+
+  it('returns [] for a non-array (e.g. a corrupt string)', () => {
+    expect(sanitizeCc('nope')).toEqual([]);
+  });
+
+  it('filters out garbage entries from an otherwise-array cc', () => {
+    const cc = [
+      { controller: 64, value: 127, time_seconds: 1 },      // valid
+      null,                                                  // not an object
+      { controller: -1, value: 127, time_seconds: 1 },       // controller out of range
+      { controller: 64, value: 200, time_seconds: 1 },       // value out of range
+      { controller: 64, value: 127, time_seconds: -1 },      // negative time
+      { controller: 64, value: 127, time_seconds: Infinity }, // non-finite time
+      { controller: 1.5, value: 127, time_seconds: 1 },      // non-integer controller
+      { value: 127, time_seconds: 1 },                       // missing controller
+      { controller: 1, value: 64, time_seconds: 2 },         // valid
+    ];
+    expect(sanitizeCc(cc)).toEqual([
+      { controller: 64, value: 127, time_seconds: 1 },
+      { controller: 1, value: 64, time_seconds: 2 },
+    ]);
+  });
+
+  it('passes through a fully valid array unchanged', () => {
+    const cc = [{ controller: 64, value: 127, time_seconds: 1 }, { controller: 1, value: 0, time_seconds: 2 }];
+    expect(sanitizeCc(cc)).toEqual(cc);
   });
 });

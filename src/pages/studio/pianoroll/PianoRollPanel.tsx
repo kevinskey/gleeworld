@@ -310,7 +310,13 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
         // entry instead of pushing a second one.
         if (!(d.kind === 'resize' && d.skipHistory)) props.pushHistory();
         const notes = d.draft;
-        editClip((c) => ({ ...c, notes }));
+        // Mirror the create paths (pencil/double-click): a move or resize
+        // that drags a note past the clip's current end must grow the clip
+        // too, not just the create paths. Compute the committed notes'
+        // furthest end once and only ever extend (never shrink — trimming
+        // stays a separate, explicit op).
+        const maxEnd = notes.reduce((m, n) => Math.max(m, n.start_seconds + n.duration_seconds), 0);
+        editClip((c) => ({ ...c, notes, duration_seconds: Math.max(c.duration_seconds, maxEnd) }));
       }
       dragRef.current = null;
     }
@@ -361,11 +367,20 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    // The panel owns keys while focused — never let Delete bubble to the
-    // editor's clip-delete shortcut.
-    e.stopPropagation();
     if (!clip) return;
-    if ((e.key === 'Delete' || e.key === 'Backspace') && selection.length) {
+    // The panel only owns the keys it actually handles — Delete/Backspace
+    // (note/range/point delete), ⌘A/Ctrl+A (select all notes), and Escape
+    // (abort drag / clear selection). Every other key (⌘Z undo, Space
+    // transport, R record, ...) must fall through untouched to the
+    // editor's window keydown handler — stopPropagation()/preventDefault()
+    // are scoped to just these three key groups below, never called
+    // unconditionally.
+    const isDeleteKey = e.key === 'Delete' || e.key === 'Backspace';
+    const isSelectAll = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a';
+    const isEscape = e.key === 'Escape';
+    if (!isDeleteKey && !isSelectAll && !isEscape) return;
+    e.stopPropagation();
+    if (isDeleteKey && selection.length) {
       e.preventDefault();
       // Cancel any in-flight drag first: without this, a later pointerup
       // from a drag that was live when Delete fired would commit its

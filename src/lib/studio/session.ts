@@ -272,12 +272,33 @@ export function withMasteringDefaults(session: Session): Session {
   };
 }
 
+/** Load-time guard against a corrupt/absent `cc` field (spec §7: treat
+ * corrupt/absent cc as `[]`). Used wherever a clip's cc is read on a path
+ * that can't rely on validateSession() having run first — e.g. the engine
+ * scheduling a clip straight from a loaded session. Returns [] unless the
+ * input is an array, and filters out any entry that isn't a well-formed
+ * MidiCcEvent (numeric controller/value in 0..127, finite time_seconds
+ * >= 0) rather than rejecting the whole array for one bad entry. */
+export function sanitizeCc(cc: unknown): MidiCcEvent[] {
+  if (!Array.isArray(cc)) return [];
+  return cc.filter((ev): ev is MidiCcEvent => {
+    if (!ev || typeof ev !== 'object') return false;
+    const e = ev as Partial<MidiCcEvent>;
+    return Number.isInteger(e.controller) && e.controller! >= 0 && e.controller! <= 127
+      && Number.isInteger(e.value) && e.value! >= 0 && e.value! <= 127
+      && typeof e.time_seconds === 'number' && Number.isFinite(e.time_seconds) && e.time_seconds >= 0;
+  });
+}
+
 /** The minimum schema version that can represent this session: 1.1.0
- * only when some MIDI clip actually uses cc events, else 1.0.0. */
+ * only when some MIDI clip actually uses cc events, else 1.0.0. A
+ * corrupt/non-array `cc` (truthy but not a real array) must NOT stamp
+ * 1.1.0 — it's not a real cc feature, it's garbage that sanitizeCc()
+ * will reduce to [] on load, so schema stays at the 1.0.0 baseline. */
 export function requiredSchemaVersion(session: Session): StudioSchemaVersion {
   for (const t of session.tracks) {
     if (t.kind !== 'midi') continue;
-    for (const c of t.clips) if (c.cc && c.cc.length > 0) return '1.1.0';
+    for (const c of t.clips) if (sanitizeCc(c.cc).length > 0) return '1.1.0';
   }
   return '1.0.0';
 }
