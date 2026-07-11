@@ -4680,7 +4680,12 @@ function MidiInstrumentDropdown({
       <select
         value={`${inst.type}:${inst.preset_id ?? ''}`}
         onChange={(e) => {
-          const [type, preset] = e.target.value.split(':');
+          // Split on the FIRST colon only: a GM preset id is itself 'gm:<name>',
+          // so 'sampler:gm:violin' must yield type='sampler', preset='gm:violin'.
+          const v = e.target.value;
+          const i = v.indexOf(':');
+          const type = v.slice(0, i);
+          const preset = v.slice(i + 1);
           onUpdate((t) => isMidiTrack(t)
             ? { ...t, instrument: { ...t.instrument, type: type as 'synth_basic' | 'sampler', preset_id: preset || undefined } } as Track
             : t);
@@ -4692,6 +4697,13 @@ function MidiInstrumentDropdown({
         <option value="synth_basic:square">Synth · Square</option>
         <option value="synth_basic:sawtooth">Synth · Sawtooth</option>
         <option value="sampler:kit_basic">Sampler · Kit</option>
+        {GM_GROUPED.map((group) => (
+          <optgroup key={group.family} label={group.family}>
+            {group.instruments.map((g) => (
+              <option key={g.name} value={`sampler:${toGmPresetId(g.name)}`}>{g.label}</option>
+            ))}
+          </optgroup>
+        ))}
       </select>
       <button onClick={() => setOpenRoll(true)} className="px-1.5 h-5 bg-zinc-800 border border-zinc-700 rounded hover:bg-zinc-700">Roll</button>
       <PianoRollDialog open={openRoll} onOpenChange={setOpenRoll} track={track} onUpdate={onUpdate} />
