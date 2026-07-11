@@ -64,7 +64,9 @@ export default function TasksView({ onOpenNote }: { onOpenNote: (noteId: string)
         )}
       </div>
 
-      <QuickAddTask onCreated={invalidate} />
+      {/* On the Today tab, an undated quick-add means "today" — otherwise
+          it lands in No date and looks like it vanished. */}
+      <QuickAddTask onCreated={invalidate} defaultDate={view === 'today' ? format(new Date(), 'yyyy-MM-dd') : undefined} />
 
       <Tabs value={view} onValueChange={(v) => setView(v as tasksApi.TaskView)}>
         <TabsList className="flex-wrap">
@@ -171,12 +173,21 @@ export function QuickAddTask({ onCreated, defaultDate }: { onCreated: () => void
     if (!title) return;
     setBusy(true);
     try {
+      const scheduledDate = parsed?.date ?? defaultDate ?? null;
       await tasksApi.createTask({
         title,
-        scheduled_date: parsed?.date ?? defaultDate ?? null,
+        scheduled_date: scheduledDate,
         recurrence: parsed?.recurrence ?? null,
       });
       setText('');
+      // say where it landed — a task filed outside the visible tab
+      // otherwise looks like it never saved
+      const today = format(new Date(), 'yyyy-MM-dd');
+      toast.success(
+        !scheduledDate ? 'Task added under "No date"'
+          : scheduledDate === today ? 'Task added for today'
+          : `Task added for ${format(parseISO(scheduledDate), 'EEE, MMM d')}`,
+      );
       onCreated();
     } catch (err) {
       console.error(err);
