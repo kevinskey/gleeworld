@@ -42,41 +42,53 @@ public class GWMidiPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Lifecycle
 
     @objc func start(_ call: CAPPluginCall) {
-        if running { call.resolve(); return }
+        // Capacitor invokes plugin methods on a background queue, but the
+        // setup-changed handler touches the port on main. Confine ALL
+        // client/inputPort/running lifecycle mutation to the main queue so
+        // teardown can never race a queued connectAllSources().
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { call.reject("plugin deallocated"); return }
+            if self.running { call.resolve(); return }
 
-        var status = MIDIClientCreateWithBlock("GWMidiClient" as CFString, &client) { [weak self] notification in
-            // Hot-plug / Bluetooth connect+disconnect. CoreMIDI posts this
-            // on its own thread; hop to main for connect + notify.
-            if notification.pointee.messageID == .msgSetupChanged {
-                DispatchQueue.main.async {
-                    self?.connectAllSources()
-                    self?.emitStateChange()
+            var status = MIDIClientCreateWithBlock("GWMidiClient" as CFString, &self.client) { [weak self] notification in
+                // Hot-plug / Bluetooth connect+disconnect. CoreMIDI posts this
+                // on its own thread; hop to main for connect + notify.
+                if notification.pointee.messageID == .msgSetupChanged {
+                    DispatchQueue.main.async {
+                        self?.connectAllSources()
+                        self?.emitStateChange()
+                    }
                 }
             }
-        }
-        guard status == noErr else { call.reject("MIDIClientCreate failed (\(status))"); return }
+            guard status == noErr else { call.reject("MIDIClientCreate failed (\(status))"); return }
 
-        status = MIDIInputPortCreateWithProtocol(client, "GWMidiInput" as CFString, ._1_0, &inputPort) { [weak self] eventListPtr, srcConnRefCon in
-            self?.handle(eventListPtr: eventListPtr, refCon: srcConnRefCon)
-        }
-        guard status == noErr else {
-            MIDIClientDispose(client)
-            client = MIDIClientRef()
-            call.reject("MIDIInputPortCreate failed (\(status))")
-            return
-        }
+            status = MIDIInputPortCreateWithProtocol(self.client, "GWMidiInput" as CFString, ._1_0, &self.inputPort) { [weak self] eventListPtr, srcConnRefCon in
+                self?.handle(eventListPtr: eventListPtr, refCon: srcConnRefCon)
+            }
+            guard status == noErr else {
+                MIDIClientDispose(self.client)
+                self.client = MIDIClientRef()
+                call.reject("MIDIInputPortCreate failed (\(status))")
+                return
+            }
 
-        connectAllSources()
-        running = true
-        call.resolve()
+            self.connectAllSources()
+            self.running = true
+            call.resolve()
+        }
     }
 
     @objc func stop(_ call: CAPPluginCall) {
-        teardown()
-        call.resolve()
+        DispatchQueue.main.async { [weak self] in
+            self?.teardown()
+            call.resolve()
+        }
     }
 
     deinit {
+        // Direct call is safe here: once deinit runs, no [weak self]
+        // main-queue blocks can fire, so there's no concurrent access
+        // to race with.
         teardown()
     }
 
@@ -143,6 +155,10 @@ public class GWMidiPlugin: CAPPlugin, CAPBridgedPlugin {
             let tsMs = Double(packetPtr.pointee.timeStamp) * Self.timebase
             for word in packetPtr.words() {
                 // Universal MIDI Packet, message type 0x2 = MIDI 1.0 channel voice.
+                // words() yields raw words, so a SysEx7 continuation word whose
+                // top nibble happens to be 0x2 could slip through — harmless
+                // because its "status" byte is 7-bit (< 0x80) and the JS
+                // parseMidiMessage drops it.
                 guard (word >> 28) & 0xF == 0x2 else { continue }
                 let status = Int((word >> 16) & 0xFF)
                 // Channel-voice only: sysex / realtime never cross the bridge.
