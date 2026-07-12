@@ -92,6 +92,27 @@ export function HomeNewsRail() {
   const [reading, setReading] = useState<NewsItem | null>(null);
   const [readerOpen, setReaderOpen] = useState(false);
 
+  // Full-article extraction: the sheet opens instantly on the feed summary,
+  // then the server-extracted body streams in underneath when it lands.
+  // Extraction is best-effort (paywalls/JS pages fail) — on failure the
+  // summary simply stays, no error surfaced.
+  const { data: fullArticle, isFetching: extracting } = useQuery({
+    queryKey: ['article-extract', reading?.link],
+    enabled: readerOpen && !!reading?.link,
+    staleTime: Infinity,
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('extract-article', {
+        body: { url: reading!.link },
+      });
+      // Throw on failure (rather than returning null) so react-query keeps
+      // it as an error state — a transient blip retries on next open instead
+      // of being cached forever as a successful "no article".
+      if (error || !data?.success) throw new Error(data?.error || 'extraction failed');
+      return data as { paragraphs: string[]; byline: string | null; siteName: string | null; truncated: boolean };
+    },
+  });
+
   const listRef = useRef<HTMLUListElement>(null);
   const sentinelRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
@@ -206,14 +227,43 @@ export function HomeNewsRail() {
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
               )}
-              <SheetDescription className="mt-3 text-sm leading-relaxed text-foreground/90">
-                {reading.description
-                  // Strip tags AFTER decoding: feeds ship entity-encoded
-                  // markup (&lt;em&gt;) that the server's pre-decode strip
-                  // pass can't see, and it would render as literal text.
-                  ? decodeEntities(reading.description).replace(/<[^>]+>/g, '')
-                  : "This source didn't include a summary. Open the full article to read the story."}
-              </SheetDescription>
+              {fullArticle?.paragraphs?.length ? (
+                <div className="mt-3 space-y-3">
+                  {/* Radix wires aria-describedby to SheetDescription; keep
+                      one (visually hidden) when the full article replaces
+                      the summary so the dialog stays described. */}
+                  <SheetDescription className="sr-only">
+                    Full article text from {fullArticle.siteName || reading.source}
+                  </SheetDescription>
+                  {fullArticle.byline && (
+                    <p className="text-xs text-muted-foreground">{fullArticle.byline}</p>
+                  )}
+                  {fullArticle.paragraphs.map((p, i) => (
+                    <p key={i} className="text-sm leading-relaxed text-foreground/90">{p}</p>
+                  ))}
+                  {fullArticle.truncated && (
+                    <p className="text-xs text-muted-foreground">
+                      Story shortened for the reader — the full version is on the source site.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <SheetDescription className="mt-3 text-sm leading-relaxed text-foreground/90">
+                    {reading.description
+                      // Strip tags AFTER decoding: feeds ship entity-encoded
+                      // markup (&lt;em&gt;) that the server's pre-decode strip
+                      // pass can't see, and it would render as literal text.
+                      ? decodeEntities(reading.description).replace(/<[^>]+>/g, '')
+                      : "This source didn't include a summary. Open the full article to read the story."}
+                  </SheetDescription>
+                  {extracting && (
+                    <p className="mt-3 text-xs text-muted-foreground" role="status" aria-live="polite">
+                      Loading the full story…
+                    </p>
+                  )}
+                </>
+              )}
               <div className="mt-5">
                 <Button asChild className="w-full sm:w-auto">
                   <a href={reading.link} target="_blank" rel="noopener noreferrer">
