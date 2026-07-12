@@ -34,7 +34,7 @@ function extractImageFromContent(content: string): string | null {
   return null;
 }
 
-function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number): FeedItem[] {
+function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number, descLen = 150): FeedItem[] {
   const items: FeedItem[] = [];
   const isAtom = xml.includes('<feed') && xml.includes('xmlns="http://www.w3.org/2005/Atom"');
 
@@ -70,33 +70,13 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
         items.push({
           title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
           link: link.trim(),
-          // 400 chars: enough for the Command Center reader sheet's summary
-          // without shipping whole articles over the wire.
-          description: description.replace(/<[^>]+>/g, '').substring(0, 400),
+          description: description.replace(/<[^>]+>/g, '').substring(0, descLen),
           pubDate, source, sourceIcon, imageUrl,
         });
       }
     }
   }
   return items;
-}
-
-// Fallback tenant resolution: when the page doesn't declare a tenant (the
-// platform site has no __TENANT_CONFIG__), use the signed-in caller's own
-// tenant from their JWT so personal Feed Control sources follow the user.
-// Decode-only (no signature check): the claim merely selects which feed
-// URLs to aggregate, and the anon key's JWT has no tenant_id claim.
-function tenantIdFromAuthHeader(req: Request): string | null {
-  try {
-    const auth = req.headers.get('authorization') ?? '';
-    const token = auth.replace(/^Bearer\s+/i, '');
-    const payloadB64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
-    if (!payloadB64) return null;
-    const payload = JSON.parse(atob(payloadB64));
-    return typeof payload?.tenant_id === 'string' && payload.tenant_id ? payload.tenant_id : null;
-  } catch {
-    return null;
-  }
 }
 
 Deno.serve(async (req) => {
@@ -129,15 +109,26 @@ Deno.serve(async (req) => {
     // legacy callers (no offset/limit) keep the original slice(0, maxTotal).
     const paged = Number.isFinite(Number(body?.offset)) || Number.isFinite(Number(body?.limit));
     const offset = Math.max(0, Math.trunc(Number(body?.offset)) || 0);
-    const limit = Math.min(50, Math.max(1, Math.trunc(Number(body?.limit)) || 15));
+    const limit = Math.min(150, Math.max(1, Math.trunc(Number(body?.limit)) || 15));
 
+    // Degrade, don't die: any failure while resolving WHICH sources to use
+    // falls back toward the platform defaults; only "nothing servable at
+    // all" becomes an error response. (An earlier revision threw on every
+    // query error, which turned transient DB blips into rail-wide 500s.)
     let tenantId: string | null = null;
     if (tenantSlug) {
       const { data: t, error: tErr } = await sb.from('gw_tenants').select('id').eq('slug', tenantSlug).maybeSingle();
-      if (tErr) throw new Error(`tenant lookup failed: ${tErr.message}`);
+      if (tErr) console.error('tenant lookup failed, using defaults:', tErr.message);
       tenantId = t?.id ?? null;
-    } else {
-      tenantId = tenantIdFromAuthHeader(req);
+    } else if (paged) {
+      // New-protocol callers only: when the page declares no tenant, use the
+      // signed-in caller's own tenant so personal Feed Control sources follow
+      // the user. Signature-verified via GoTrue (the functions gateway runs
+      // VERIFY_JWT=false, so a bare payload decode would honor forged
+      // tenant_id claims). Legacy no-body callers keep platform defaults.
+      const token = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
+      const claims = await verifyJwtClaims(token);
+      tenantId = typeof claims?.tenant_id === 'string' && claims.tenant_id ? claims.tenant_id : null;
     }
 
     const loadDefaults = async () => {
@@ -151,10 +142,11 @@ Deno.serve(async (req) => {
     if (tenantId) {
       const { data: tenantRows, error: sErr } = await sb.from('gw_feed_sources').select('*')
         .eq('feed_type', 'news').eq('tenant_id', tenantId).order('display_order');
-      if (sErr) throw new Error(`tenant sources query failed: ${sErr.message}`);
-      feedSources = tenantRows && tenantRows.length > 0
-        ? tenantRows.filter((r: any) => r.is_active)
-        : await loadDefaults();
+      if (sErr) console.error('tenant sources query failed, using defaults:', sErr.message);
+      // A tenant owns its list only when it has ACTIVE rows; rows that are
+      // all toggled off fall back to defaults rather than an empty rail.
+      const activeTenantRows = (tenantRows ?? []).filter((r: any) => r.is_active);
+      feedSources = activeTenantRows.length > 0 ? activeTenantRows : await loadDefaults();
     } else {
       feedSources = await loadDefaults();
     }
@@ -177,9 +169,11 @@ Deno.serve(async (req) => {
         if (!response.ok) { console.warn(`Failed to fetch ${feed.name}: ${response.status}`); return []; }
         const xml = await response.text();
         // Paged mode parses deeper per source (×4) so scrolling has a real
-        // pool to page through while keeping the configured source mix.
+        // pool to page through while keeping the configured source mix, and
+        // carries longer summaries for the reader sheet. Legacy callers keep
+        // the original 150-char description contract.
         const perSource = (feed.max_items_per_source || 5) * (paged ? 4 : 1);
-        return parseRSSItems(xml, feed.name, feed.icon, perSource);
+        return parseRSSItems(xml, feed.name, feed.icon, perSource, paged ? 400 : 150);
       } catch (err) { console.warn(`Error fetching ${feed.name}:`, err); return []; }
     });
 
@@ -192,12 +186,15 @@ Deno.serve(async (req) => {
     });
 
     if (paged) {
-      const pageItems = allItems.slice(offset, offset + limit);
+      // Honor the admin's max_total_items in spirit: paged depth is 4× the
+      // legacy cap, mirroring the 4× parse depth.
+      const pool = allItems.slice(0, maxTotal * 4);
+      const pageItems = pool.slice(offset, offset + limit);
       return new Response(JSON.stringify({
         success: true,
         items: pageItems,
-        total: allItems.length,
-        hasMore: offset + limit < allItems.length,
+        total: pool.length,
+        hasMore: offset + limit < pool.length,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     return new Response(JSON.stringify({ success: true, items: allItems.slice(0, maxTotal) }), {

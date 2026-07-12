@@ -4,13 +4,16 @@
 // and the app CSP's connect-src would block them anyway. Sources are
 // managed by admins in Feed Control (/dashboard/feeds).
 //
-// Infinite scroll: pages of PAGE_SIZE via the function's offset/limit mode;
-// a sentinel row inside the rail's own scroll container fetches the next
-// page. Headlines open in an in-app reader sheet (most news sites block
-// iframing, so the sheet shows the feed's own summary with an explicit
-// "Open full article" escape hatch).
+// Infinite scroll uses a GROWING-LIMIT single query (offset always 0,
+// limit grows by PAGE_SIZE): the server rebuilds its pool from live RSS on
+// every request, so slicing separate offset pages would drift between
+// requests (duplicate/skipped headlines). One growing request is always
+// internally consistent, and the 15-minute refetch re-runs one request,
+// not one per accumulated page. Headlines open in an in-app reader sheet
+// (most news sites block iframing, so the sheet shows the feed's own
+// summary with an explicit "Open full article" escape hatch).
 import { useEffect, useRef, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ExternalLink, Newspaper, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -27,12 +30,8 @@ interface NewsItem {
   imageUrl?: string | null;
 }
 
-interface NewsPage {
-  items: NewsItem[];
-  hasMore: boolean;
-}
-
 const PAGE_SIZE = 15;
+const MAX_ITEMS = 150; // matches the edge function's limit clamp
 
 // The edge function decodes the common entities but feeds still leak a few.
 function decodeEntities(s: string): string {
@@ -60,33 +59,38 @@ function timeAgo(dateStr: string): string {
 
 export function HomeNewsRail() {
   // Feeds are per-tenant: the function uses this tenant's Feed Control
-  // sources when any exist, else the signed-in caller's own tenant (from
-  // their JWT, resolved server-side), else the platform defaults.
+  // sources when any exist, else the signed-in caller's own tenant
+  // (verified JWT, resolved server-side), else the platform defaults.
   const tenantSlug: string | null =
     (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__?.tenant) || null;
 
-  const {
-    data, isLoading, isError, refetch,
-    fetchNextPage, hasNextPage, isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['home-news-feed', tenantSlug],
-    initialPageParam: 0,
-    queryFn: async ({ pageParam }): Promise<NewsPage> => {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
+    queryKey: ['home-news-feed', tenantSlug, visibleCount],
+    // Growing the limit keeps the previous list rendered while the larger
+    // page loads, so scroll position never jumps.
+    placeholderData: keepPreviousData,
+    queryFn: async (): Promise<{ items: NewsItem[]; hasMore: boolean }> => {
       const { data, error } = await supabase.functions.invoke('fetch-news-feeds', {
-        body: { tenant: tenantSlug, offset: pageParam, limit: PAGE_SIZE },
+        body: { tenant: tenantSlug, offset: 0, limit: visibleCount },
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Failed to fetch news');
       return { items: (data.items ?? []) as NewsItem[], hasMore: !!data.hasMore };
     },
-    getNextPageParam: (last, all) =>
-      last.hasMore ? all.reduce((n, p) => n + p.items.length, 0) : undefined,
     staleTime: 15 * 60 * 1000,
     refetchInterval: 15 * 60 * 1000,
   });
 
-  const items = data?.pages.flatMap((p) => p.items) ?? [];
+  const items = data?.items ?? [];
+  const hasMore = !!data?.hasMore && visibleCount < MAX_ITEMS;
+
+  // Reader sheet: `readerOpen` drives the sheet so `reading` can stay
+  // mounted through the close animation (nulling it immediately would
+  // blank the panel on the first frame of the slide-out).
   const [reading, setReading] = useState<NewsItem | null>(null);
+  const [readerOpen, setReaderOpen] = useState(false);
 
   const listRef = useRef<HTMLUListElement>(null);
   const sentinelRef = useRef<HTMLLIElement>(null);
@@ -95,13 +99,15 @@ export function HomeNewsRail() {
     if (!el) return;
     const obs = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage();
+        if (entries[0].isIntersecting && hasMore && !isFetching) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, MAX_ITEMS));
+        }
       },
       { root: listRef.current, rootMargin: '120px' },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, items.length]);
+  }, [hasMore, isFetching, items.length]);
 
   return (
     // relative + lg:absolute-inset scroll area: the rail scrolls within
@@ -119,7 +125,9 @@ export function HomeNewsRail() {
               </div>
             ))}
           </div>
-        ) : isError ? (
+        ) : isError && !items.length ? (
+          // Only surface the error panel when there's nothing to show — a
+          // failed background refetch must not wipe loaded headlines.
           <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-6 text-center">
             <Newspaper className="h-6 w-6 text-muted-foreground" aria-hidden />
             <p className="text-sm font-medium">News is having trouble loading.</p>
@@ -150,6 +158,7 @@ export function HomeNewsRail() {
                     if (e.metaKey || e.ctrlKey || e.shiftKey) return;
                     e.preventDefault();
                     setReading(n);
+                    setReaderOpen(true);
                   }}
                 >
                   <p className="line-clamp-2 text-sm leading-snug group-hover:underline">
@@ -162,10 +171,10 @@ export function HomeNewsRail() {
                 </a>
               </li>
             ))}
-            {(hasNextPage || isFetchingNextPage) && (
-              <li ref={sentinelRef} aria-hidden className="py-3 text-center">
+            {hasMore && (
+              <li ref={sentinelRef} role="status" aria-live="polite" className="py-3 text-center">
                 <span className="text-xs text-muted-foreground">
-                  {isFetchingNextPage ? 'Loading more…' : ''}
+                  {isFetching ? 'Loading more…' : ''}
                 </span>
               </li>
             )}
@@ -173,7 +182,7 @@ export function HomeNewsRail() {
         )}
       </div>
 
-      <Sheet open={!!reading} onOpenChange={(o) => !o && setReading(null)}>
+      <Sheet open={readerOpen} onOpenChange={setReaderOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
           {reading && (
             <>
@@ -194,15 +203,11 @@ export function HomeNewsRail() {
                   loading="lazy"
                 />
               )}
-              {reading.description ? (
-                <SheetDescription className="mt-3 text-sm leading-relaxed text-foreground/90">
-                  {decodeEntities(reading.description)}
-                </SheetDescription>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  This source didn't include a summary. Open the full article to read the story.
-                </p>
-              )}
+              <SheetDescription className="mt-3 text-sm leading-relaxed text-foreground/90">
+                {reading.description
+                  ? decodeEntities(reading.description)
+                  : "This source didn't include a summary. Open the full article to read the story."}
+              </SheetDescription>
               <div className="mt-5">
                 <Button asChild className="w-full sm:w-auto">
                   <a href={reading.link} target="_blank" rel="noopener noreferrer">
