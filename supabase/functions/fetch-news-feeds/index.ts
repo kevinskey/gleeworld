@@ -34,10 +34,10 @@ function extractImageFromContent(content: string): string | null {
   return null;
 }
 
-function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number): FeedItem[] {
-  // Parse EVERY item, then keep the newest maxItems. Google News search RSS
-  // is relevance-ordered (100 items), so truncating in feed order ships
-  // days-old items while newer ones are discarded.
+function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number | null): FeedItem[] {
+  // Parse EVERY item, then keep the newest maxItems (null = uncapped).
+  // Google News search RSS is relevance-ordered (100 items), so truncating
+  // in feed order ships days-old items while newer ones are discarded.
   const items: FeedItem[] = [];
   const isAtom = xml.includes('<feed') && xml.includes('xmlns="http://www.w3.org/2005/Atom"');
 
@@ -91,7 +91,7 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
     const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
     return dateB - dateA;
   });
-  return items.slice(0, maxItems);
+  return maxItems ? items.slice(0, maxItems) : items;
 }
 
 Deno.serve(async (req) => {
@@ -111,7 +111,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    const maxTotal = settingsData?.max_total_items ?? 25;
+    // Caps are opt-in: no settings row / NULL per-source value = uncapped.
+    const maxTotal = settingsData?.max_total_items ?? null;
 
     // Per-tenant sources. A tenant that has configured ANY news sources in
     // Feed Control owns its list (only its active rows are fetched); a
@@ -160,7 +161,7 @@ Deno.serve(async (req) => {
         clearTimeout(timeout);
         if (!response.ok) { console.warn(`Failed to fetch ${feed.name}: ${response.status}`); return []; }
         const xml = await response.text();
-        return parseRSSItems(xml, feed.name, feed.icon, feed.max_items_per_source || 5);
+        return parseRSSItems(xml, feed.name, feed.icon, feed.max_items_per_source ?? null);
       } catch (err) { console.warn(`Error fetching ${feed.name}:`, err); return []; }
     });
 
@@ -184,7 +185,7 @@ Deno.serve(async (req) => {
       return true;
     });
 
-    return new Response(JSON.stringify({ success: true, items: deduped.slice(0, maxTotal) }), {
+    return new Response(JSON.stringify({ success: true, items: maxTotal ? deduped.slice(0, maxTotal) : deduped }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

@@ -83,7 +83,7 @@ export function HomeNewsRail() {
           </div>
         ) : (
           <ul className="max-h-96 flex-1 divide-y divide-border overflow-y-auto lg:max-h-none">
-            {items.slice(0, 15).map((n) => (
+            {items.map((n) => (
               <li key={n.link}>
                 <a
                   href={n.link}

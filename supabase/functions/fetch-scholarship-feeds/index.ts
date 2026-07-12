@@ -34,14 +34,16 @@ function extractImageFromContent(content: string): string | null {
   return null;
 }
 
-function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number): FeedItem[] {
+function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number | null): FeedItem[] {
+  // Parse every item, then keep the newest maxItems (null = uncapped) —
+  // truncating in feed order ships stale items when feeds are relevance-ordered.
   const items: FeedItem[] = [];
   const isAtom = xml.includes('<feed') && xml.includes('xmlns="http://www.w3.org/2005/Atom"');
 
   if (isAtom) {
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/gi;
     let entryMatch;
-    while ((entryMatch = entryRegex.exec(xml)) !== null && items.length < maxItems) {
+    while ((entryMatch = entryRegex.exec(xml)) !== null) {
       const entry = entryMatch[1];
       const title = extractText(entry, 'title');
       const linkMatch = entry.match(/<link[^>]+href=["']([^"']+)["']/);
@@ -57,7 +59,7 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
   } else {
     const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
     let itemMatch;
-    while ((itemMatch = itemRegex.exec(xml)) !== null && items.length < maxItems) {
+    while ((itemMatch = itemRegex.exec(xml)) !== null) {
       const item = itemMatch[1];
       const title = extractText(item, 'title');
       const link = extractText(item, 'link') || item.match(/<link>([^<]+)/)?.[1] || '';
@@ -74,7 +76,12 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
       }
     }
   }
-  return items;
+  items.sort((a, b) => {
+    const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+    const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+    return dateB - dateA;
+  });
+  return maxItems ? items.slice(0, maxItems) : items;
 }
 
 Deno.serve(async (req) => {
@@ -94,7 +101,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    const maxTotal = settingsData?.max_total_items ?? 25;
+    const maxTotal = settingsData?.max_total_items ?? null;
 
     // Load active sources from DB
     const { data: dbSources } = await sb.from('gw_feed_sources').select('*').eq('feed_type', 'scholarship').eq('is_active', true).order('display_order');
@@ -117,7 +124,7 @@ Deno.serve(async (req) => {
         clearTimeout(timeout);
         if (!response.ok) { console.warn(`Failed to fetch ${feed.name}: ${response.status}`); return []; }
         const xml = await response.text();
-        return parseRSSItems(xml, feed.name, feed.icon, feed.max_items_per_source || 5);
+        return parseRSSItems(xml, feed.name, feed.icon, feed.max_items_per_source ?? null);
       } catch (err) { console.warn(`Error fetching ${feed.name}:`, err); return []; }
     });
 
@@ -129,7 +136,7 @@ Deno.serve(async (req) => {
       return dateB - dateA;
     });
 
-    return new Response(JSON.stringify({ success: true, items: allItems.slice(0, maxTotal) }), {
+    return new Response(JSON.stringify({ success: true, items: maxTotal ? allItems.slice(0, maxTotal) : allItems }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
