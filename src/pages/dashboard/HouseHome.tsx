@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Newspaper } from 'lucide-react';
+import { HomeNewsRail } from '@/components/dashboard/HomeNewsRail';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
@@ -237,19 +237,9 @@ export default function HouseHome() {
         </div>
         </div>
 
-        {/* News — right rail beside the status cards. Placeholder until the
-            news add-on (Google News + curated sources) ships; the feed needs
-            a server-side proxy (CORS + CSP) so it can't be a client fetch. */}
-        <aside className="bg-card border border-border p-3 flex flex-col min-h-[16rem]" aria-label="News">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">News</div>
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-6 text-center">
-            <Newspaper className="h-6 w-6 text-muted-foreground" aria-hidden />
-            <p className="text-sm font-medium">Your news briefing is on its way.</p>
-            <p className="text-xs text-muted-foreground">
-              Headlines from Google News and the music world will land here.
-            </p>
-          </div>
-        </aside>
+        {/* News — right rail beside the status cards, fed by the
+            fetch-news-feeds edge function (sources managed in Feed Control). */}
+        <HomeNewsRail />
         </div>
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
