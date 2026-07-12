@@ -110,3 +110,107 @@ describe('createWebMidiInputSource', () => {
     expect(got).toEqual([[0x90, 72, 80]]);
   });
 });
+
+import { createNativeMidiInputSource } from '../midiInputSource';
+import type { GWMidiPluginShape } from '@/plugins/gwMidi';
+
+function makeFakePlugin() {
+  const handlers: Record<string, (e: unknown) => void> = {};
+  const plugin = {
+    start: vi.fn().mockResolvedValue(undefined),
+    stop: vi.fn().mockResolvedValue(undefined),
+    listInputs: vi.fn().mockResolvedValue({ inputs: [{ id: '101', name: 'WP06' }] }),
+    showBluetoothPairing: vi.fn().mockResolvedValue(undefined),
+    addListener: vi.fn(async (evt: string, cb: (e: unknown) => void) => {
+      handlers[evt] = cb;
+      return { remove: vi.fn(async () => { delete handlers[evt]; }) };
+    }),
+  };
+  return {
+    plugin: plugin as unknown as GWMidiPluginShape,
+    raw: plugin,
+    emit(evt: 'midiMessage' | 'stateChange', payload: unknown) { handlers[evt]?.(payload); },
+  };
+}
+
+const flush = () => new Promise((r) => setTimeout(r, 0));
+
+describe('createNativeMidiInputSource', () => {
+  it('is supported and kind native', () => {
+    const src = createNativeMidiInputSource(makeFakePlugin().plugin);
+    expect(src.supported).toBe(true);
+    expect(src.kind).toBe('native');
+  });
+
+  it('lists inputs from the plugin', async () => {
+    const src = createNativeMidiInputSource(makeFakePlugin().plugin);
+    expect(await src.listInputs()).toEqual([{ id: '101', name: 'WP06' }]);
+  });
+
+  it('starts the plugin once for many subscribers and converts data to Uint8Array', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    const got: Uint8Array[] = [];
+    await src.subscribe('', (d) => got.push(d));
+    await src.subscribe('', () => {});
+    expect(fake.raw.start).toHaveBeenCalledTimes(1);
+    fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 12.5 });
+    expect(got).toHaveLength(1);
+    expect(got[0]).toBeInstanceOf(Uint8Array);
+    expect([...got[0]]).toEqual([0x90, 60, 100]);
+  });
+
+  it('filters by portId when a deviceId is chosen', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    const got: number[][] = [];
+    await src.subscribe('202', (d) => got.push([...d]));
+    fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 0 });
+    fake.emit('midiMessage', { portId: '202', data: [0x90, 64, 90], tsMs: 0 });
+    expect(got).toEqual([[0x90, 64, 90]]);
+  });
+
+  it('stops the plugin after the last unsubscribe', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    const unsub1 = await src.subscribe('', () => {});
+    const unsub2 = await src.subscribe('', () => {});
+    unsub1();
+    await flush();
+    expect(fake.raw.stop).not.toHaveBeenCalled();
+    unsub2();
+    await flush();
+    expect(fake.raw.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('restarts cleanly after a full stop', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    const unsub = await src.subscribe('', () => {});
+    unsub();
+    await flush();
+    const got: number[][] = [];
+    await src.subscribe('', (d) => got.push([...d]));
+    expect(fake.raw.start).toHaveBeenCalledTimes(2);
+    fake.emit('midiMessage', { portId: '101', data: [0x80, 60, 0], tsMs: 0 });
+    expect(got).toEqual([[0x80, 60, 0]]);
+  });
+
+  it('fans stateChange out to listeners', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    const cb = vi.fn();
+    src.onStateChange(cb);
+    await src.subscribe('', () => {}); // listeners attach on first subscribe
+    fake.emit('stateChange', { inputs: [] });
+    expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  it('showBluetoothPairing resolves true on success, false on failure', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    await expect(src.showBluetoothPairing()).resolves.toBe(true);
+    (fake.raw.showBluetoothPairing as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('no vc'));
+    await expect(src.showBluetoothPairing()).resolves.toBe(false);
+  });
+});

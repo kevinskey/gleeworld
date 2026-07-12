@@ -10,6 +10,9 @@
 // Consumers import getMidiInputSource() and never branch on platform.
 // Raw bytes go to the existing parseMidiMessage; no parsing lives here.
 
+import { GWMidi, isNativeMidiAvailable, type GWMidiPluginShape, type GWMidiMessageEvent, type GWMidiStateChangeEvent } from '@/plugins/gwMidi';
+import type { PluginListenerHandle } from '@capacitor/core';
+
 export interface MidiInputDescriptor { id: string; name: string }
 
 export interface MidiInputSource {
@@ -101,11 +104,83 @@ export function createWebMidiInputSource(nav: Navigator = globalThis.navigator):
   };
 }
 
+export function createNativeMidiInputSource(plugin: GWMidiPluginShape): MidiInputSource {
+  const subscribers = new Set<Subscriber>();
+  const stateCbs = new Set<() => void>();
+  let started = false;
+  let handles: PluginListenerHandle[] = [];
+
+  const ensureStarted = async () => {
+    if (started) return;
+    started = true;
+    handles = [
+      await plugin.addListener('midiMessage', (e: GWMidiMessageEvent) => {
+        const data = Uint8Array.from(e.data);
+        subscribers.forEach((s) => {
+          if (s.deviceId === '' || s.deviceId === e.portId) s.cb(data);
+        });
+      }),
+      await plugin.addListener('stateChange', (_e: GWMidiStateChangeEvent) => {
+        stateCbs.forEach((f) => f());
+      }),
+    ];
+    await plugin.start();
+  };
+
+  const stopIfIdle = async () => {
+    if (!started || subscribers.size > 0) return;
+    started = false;
+    const toRemove = handles;
+    handles = [];
+    for (const h of toRemove) await h.remove();
+    await plugin.stop();
+  };
+
+  return {
+    kind: 'native',
+    supported: true,
+    async listInputs() {
+      const { inputs } = await plugin.listInputs();
+      return inputs;
+    },
+    async subscribe(deviceId, onMessage) {
+      const sub: Subscriber = { deviceId, cb: onMessage };
+      subscribers.add(sub);
+      try {
+        await ensureStarted();
+      } catch (err) {
+        subscribers.delete(sub);
+        throw err;
+      }
+      return () => {
+        subscribers.delete(sub);
+        void stopIfIdle();
+      };
+    },
+    onStateChange(cb) {
+      stateCbs.add(cb);
+      return () => { stateCbs.delete(cb); };
+    },
+    async showBluetoothPairing() {
+      try {
+        await plugin.showBluetoothPairing();
+        return true;
+      } catch {
+        return false;
+      }
+    },
+  };
+}
+
 let singleton: MidiInputSource | null = null;
 
-/** The app-wide MIDI input source. Native backend lands in a follow-up
- *  task; until then every platform gets the web backend. */
+/** The app-wide MIDI input source: CoreMIDI plugin inside the iOS app,
+ *  Web MIDI everywhere else. Consumers never branch on platform. */
 export function getMidiInputSource(): MidiInputSource {
-  if (!singleton) singleton = createWebMidiInputSource();
+  if (!singleton) {
+    singleton = isNativeMidiAvailable()
+      ? createNativeMidiInputSource(GWMidi)
+      : createWebMidiInputSource();
+  }
   return singleton;
 }
