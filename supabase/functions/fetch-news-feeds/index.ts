@@ -77,7 +77,9 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
           // so decode before stripping tags or the markup survives as text.
           description: description
             .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+            .replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
             .replace(/<[^>]+>/g, '')
+            .replace(/\s+/g, ' ')
             .substring(0, 150),
           pubDate, source, sourceIcon, imageUrl,
         });
@@ -170,7 +172,19 @@ Deno.serve(async (req) => {
       return dateB - dateA;
     });
 
-    return new Response(JSON.stringify({ success: true, items: allItems.slice(0, maxTotal) }), {
+    // Google carries the same story from several outlets (and overlapping
+    // queries re-surface it); dedupe on the title minus the trailing
+    // " - Publisher" so repeats don't eat item slots. Sorted newest-first
+    // above, so the freshest copy wins.
+    const seenTitles = new Set<string>();
+    const deduped = allItems.filter((item) => {
+      const key = item.title.replace(/\s+-\s+[^-]+$/, '').toLowerCase().trim();
+      if (seenTitles.has(key)) return false;
+      seenTitles.add(key);
+      return true;
+    });
+
+    return new Response(JSON.stringify({ success: true, items: deduped.slice(0, maxTotal) }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
