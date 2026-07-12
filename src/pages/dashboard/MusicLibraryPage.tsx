@@ -22,7 +22,7 @@ import {
 import {
   Music, Upload, Search, Loader2, FileMusic, ListMusic,
   PencilLine, Headphones, Youtube, X, Pencil, Library as LibraryIcon,
-  Maximize2, Minimize2,
+  Maximize2, Minimize2, LayoutGrid, List as ListIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -77,6 +77,17 @@ export default function MusicLibraryPage() {
   const canEdit = canEditMusicLibrary();
   const [topTab, setTopTab] = useState<TopTab>('scores');
   const [search, setSearch] = useState('');
+  // Scores layout: card grid (default) or compact list. Persisted so the
+  // librarian's preference survives reloads.
+  const [scoresView, setScoresView] = useState<'cards' | 'list'>(() =>
+    typeof window !== 'undefined' && localStorage.getItem('gw-music-library-view') === 'list'
+      ? 'list'
+      : 'cards',
+  );
+  const changeScoresView = (v: 'cards' | 'list') => {
+    setScoresView(v);
+    try { localStorage.setItem('gw-music-library-view', v); } catch { /* private mode */ }
+  };
   // Annotation viewer state — when set, opens a full-screen dialog with the
   // annotated PDF viewer so the user can mark up the score.
   const [viewing, setViewing] = useState<{ id: string; title: string; pdfUrl: string } | null>(null);
@@ -199,14 +210,38 @@ export default function MusicLibraryPage() {
                 <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Scope</div>
                 <ScopeFilterChips active={scope} options={options} onChange={setScope} />
               </div>
-              <div className="relative max-w-md">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by title, composer, voicing…"
-                  className="pl-9 h-9"
-                />
+              <div className="flex items-center gap-3">
+                <div className="relative max-w-md flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by title, composer, voicing…"
+                    className="pl-9 h-9"
+                  />
+                </div>
+                <div className="ml-auto flex items-center gap-0.5 rounded-lg border border-border p-0.5" role="group" aria-label="Layout">
+                  <Button
+                    variant={scoresView === 'cards' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="h-8 px-2.5"
+                    onClick={() => changeScoresView('cards')}
+                    aria-label="Card view"
+                    aria-pressed={scoresView === 'cards'}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={scoresView === 'list' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="h-8 px-2.5"
+                    onClick={() => changeScoresView('list')}
+                    aria-label="List view"
+                    aria-pressed={scoresView === 'list'}
+                  >
+                    <ListIcon className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -227,7 +262,7 @@ export default function MusicLibraryPage() {
                 </p>
               </CardContent>
             </Card>
-          ) : (
+          ) : scoresView === 'cards' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map((r) => (
                 <ScoreCard
@@ -241,6 +276,22 @@ export default function MusicLibraryPage() {
                 />
               ))}
             </div>
+          ) : (
+            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+              <div className="divide-y divide-border">
+                {filtered.map((r) => (
+                  <ScoreListRow
+                    key={r.id}
+                    row={r}
+                    courseCode={r.course_id ? courseCodeById[r.course_id] ?? null : null}
+                    canEdit={canEdit}
+                    onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
+                    onAttachAudio={() => setAttachingAudio(r)}
+                    onEdit={() => setEditing(r)}
+                  />
+                ))}
+              </div>
+            </Card>
           )}
         </>
       )}
@@ -506,6 +557,112 @@ function ScoreCard({
   );
 }
 
+// Compact one-line-per-score rendering for the list layout. Same data and
+// actions as ScoreCard; the badge cluster collapses away below md so phone
+// rows stay title + actions.
+function ScoreListRow({
+  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit,
+}: {
+  row: ScoreRow;
+  courseCode: string | null;
+  canEdit: boolean;
+  onAnnotate: () => void;
+  onAttachAudio: () => void;
+  onEdit: () => void;
+}) {
+  const hasPdf = !!row.pdf_url;
+  const hasAudio = !!row.audio_url;
+  const copies = row.physical_copies_count ?? 0;
+  return (
+    <div
+      className={`flex items-center gap-3 px-3 sm:px-4 py-3 ${hasPdf ? 'cursor-pointer transition-colors hover:bg-accent/40' : ''}`}
+      onClick={hasPdf ? onAnnotate : undefined}
+      role={hasPdf ? 'button' : undefined}
+      tabIndex={hasPdf ? 0 : undefined}
+      onKeyDown={
+        hasPdf
+          ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAnnotate(); } }
+          : undefined
+      }
+    >
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+        <Music className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold leading-snug truncate">{row.title || 'Untitled'}</div>
+        <div className="text-xs text-muted-foreground truncate mt-0.5">{row.composer || ' '}</div>
+      </div>
+      <div className="hidden md:flex items-center gap-2 shrink-0">
+        <RightsBadge
+          status={row.rights_status}
+          seatCount={row.license_seat_count}
+          warning={
+            row.rights_status === 'licensed' && row.license_expires_at && new Date(row.license_expires_at) < new Date()
+              ? 'expired'
+              : null
+          }
+          compact
+        />
+        {row.voicing && <Badge variant="outline" className="text-xs">{row.voicing}</Badge>}
+        {courseCode ? (
+          <Badge variant="outline" className="text-xs">{courseCode}</Badge>
+        ) : (
+          <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">Platform</Badge>
+        )}
+        {hasAudio && (
+          <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">
+            <Headphones className="w-3 h-3 mr-1" />
+            Audio
+          </Badge>
+        )}
+        <Badge
+          variant="outline"
+          className="text-xs"
+          title={`${copies} ${copies === 1 ? 'physical copy' : 'physical copies'}${row.physical_location ? ` · ${row.physical_location}` : ''}`}
+        >
+          <LibraryIcon className="w-3 h-3 mr-1" />
+          {copies}
+        </Badge>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        {canEdit && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            aria-label="Edit score details"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+        )}
+        {hasPdf && (
+          <>
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden sm:inline-flex"
+                onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
+              >
+                <Headphones className="w-4 h-4 mr-1.5" />
+                {hasAudio ? 'Audio' : 'Attach audio'}
+              </Button>
+            )}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
+              aria-label="Annotate score"
+            >
+              <PencilLine className="w-4 h-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Annotate</span>
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function AttachAudioDialog({
   score, userId, onOpenChange, onSaved,
