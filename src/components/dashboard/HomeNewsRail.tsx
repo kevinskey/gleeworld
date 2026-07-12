@@ -201,6 +201,9 @@ export function HomeNewsRail() {
                   alt=""
                   className="mt-3 w-full max-h-56 object-cover border border-border"
                   loading="lazy"
+                  // Most outlets' image hosts aren't in the CSP img-src
+                  // allowlist — hide the frame instead of showing a broken box.
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
               )}
               <SheetDescription className="mt-3 text-sm leading-relaxed text-foreground/90">
