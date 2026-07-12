@@ -5616,9 +5616,20 @@ function AudioSettingsButton({ midiSync, midiInput }: { midiSync?: MidiSyncProps
           </div>
           {midiSync && <MidiSyncSection {...midiSync} />}
           {midiInput && <MidiInputSection {...midiInput} />}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button size="sm" variant="outline" onClick={refresh}>Refresh device list</Button>
-            <Button size="sm" onClick={() => setOpen(false)}>Done</Button>
+          <div className="flex items-center justify-between gap-2 pt-2">
+            {/* CC-BY attribution for the premium instrument sample libraries. */}
+            <a
+              href="/studio-sound-credits.html"
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              Sound credits
+            </a>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={refresh}>Refresh device list</Button>
+              <Button size="sm" onClick={() => setOpen(false)}>Done</Button>
+            </div>
           </div>
         </div>
       </DialogContent>

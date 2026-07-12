@@ -36,7 +36,9 @@ One-time conversion tooling in `scripts/studio-samples/` (Node + ffmpeg, run loc
 4. Emit `manifest.json` per instrument: `{ layers: [{ maxVel: 42, urls: { "C4": "l1/C4.mp3", ... } }, ...], release?: {...}, kit?: { "38": [{maxVel, url}, ...] } }` — the engine is fully manifest-driven, no hardcoded file lists.
 5. Upload to the existing `glee-world` Space (SFO3) under `studio-samples/<instrument>/`, per-object public-read, `Cache-Control: public, max-age=31536000, immutable`.
 
-App streams from `https://glee-world.sfo3.digitaloceanspaces.com/studio-samples/…` — already allowed by the CSP (`https://*.digitaloceanspaces.com` in connect-src). Nothing ships in the app bundle; iOS is unaffected by sample updates.
+App streams from `https://supabase.gleeworld.org/storage/v1/object/public/studio-samples/…` — the nginx public-storage proxy in front of the glee-world Space. Direct Spaces URLs turned out to send no `Access-Control-Allow-Origin` header (bucket CORS is unset), while the proxy adds `Access-Control-Allow-Origin: *` and is already in the CSP. Objects live in the glee-world Space under `studio-samples/` (a prefix the Supabase storage layout never touches). Nothing ships in the app bundle; iOS is unaffected by sample updates.
+
+**Build-time deviations from the source table above** (final state in `scripts/studio-samples/CREDITS.md`): steel-string guitar dropped (only free option is GPL — copyleft unsuitable for sample redistribution); choir comes from the Fluid R3 SoundFont (MIT) extracted and loop-unrolled by `extract-sf2.mjs`, since VCSL has no vocal content; solo cello doesn't exist in VSCO2 CE, so the cello slot is a Cello Section; kits are MuldjordKit (Studio, CC-BY 4.0, remapped to GM notes), AVL Red Zeppelin (Rock), and AVL Black Pearl (Jazz), both CC-BY-SA 3.0.
 
 ## Engine
 

@@ -1,0 +1,92 @@
+[
+  {
+    "key": "salamander_piano",
+    "dir": "salamander_piano/SalamanderGrandPiano-SFZ+FLAC-V3+20200602",
+    "license": "CC-BY 3.0",
+    "attribution": "Salamander Grand Piano by Alexander Holm (axeldenstore@gmail.com), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)",
+    "url": "https://freepats.zenvoid.org/Piano/SalamanderGrandPiano/SalamanderGrandPiano-SFZ+FLAC-V3+20200602.tar.gz",
+    "format": "sfz+flac",
+    "notes": "Yamaha C5, 48kHz/24bit, 641 FLACs in samples/. Note samples: <Note><Octave>v<1-16>.flac (e.g. A0v1..A0v16, C8v16) at minor-third spacing on notes A, C, D#, F# of each octave, 16 velocity layers. 88 release samples rel1.flac..rel88.flac (one per key, numbered chromatically from A0). String-resonance harmonics: harmS/harmL/harmV+<note> (short/long pedal-down harmonics). Pedal noises: pedalU1/pedalU2 (up), pedalD1/pedalD2 (down). Two SFZ files at dir root: SalamanderGrandPiano-V3+20200602.sfz and SalamanderGrandPianoRetuned-V3+20200602.sfz (retuned variant fixes stretch tuning); parse SFZ for exact key/velocity mapping."
+  },
+  {
+    "key": "salamander_drumkit",
+    "dir": "salamander_drumkit",
+    "license": "CC-BY-SA 3.0",
+    "attribution": "Salamander Drumkit by Alexander Holm (axeldenstore@gmail.com), licensed under CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/)",
+    "url": "https://archive.org/download/SalamanderDrumkit/salamanderDrumkit.tar.bz2",
+    "format": "sfz+wav",
+    "notes": "License confirmed in bundled REAMDE file (sic): 'Licence: CC-by-sa 3.0'. WAV 48kHz. All samples in OH/ folder (overhead mic mix only in this distribution). Naming: <articulation>_OH_<dynamic>_<roundrobin>.wav, e.g. kick_OH_P_3.wav, snare2OFF_OH_F_10.wav, hihatSemiOpen7_OH_F_3.wav. Dynamics: PP/P/MP/MF/F/FF plus Ghost for snare; FEW velocity layers (often 2) but MANY round robins per layer (closed hat has 20 RRs). SFZ files at root: ALL.sfz (whole kit), kick.sfz, snare.sfz, hihat.sfz, ride.sfz, hitom.sfz, lotom.sfz, crashesFX.sfz — parse these for MIDI note/velocity mapping. Kit: 18x18 kick, 12x7 rack tom, 14x14 floor tom, 2 snares, hihat, multiple Paiste/Stagg/Masterworks cymbals."
+  },
+  {
+    "key": "vsco2_ce_strings",
+    "dir": "vsco2_ce_strings/Strings",
+    "license": "CC0 1.0",
+    "attribution": "None required (CC0). Courtesy credit requested by author: 'VSCO 2 Community Edition by Versilian Studios LLC / Sam Gossner'",
+    "url": "https://github.com/sgossner/VSCO-2-CE (git sparse checkout of Strings/)",
+    "format": "wav",
+    "notes": "Sparse checkout (git clone --filter=blob:none --sparse, sparse-checkout set /Strings). Folders: 'Violin Section' (Trem/susVib/Pizz/Spic), 'Solo Violin' (Trem/'Arco Vib'/Pizz/spic), 'Viola Section' (trem/susvib/pizz/spic), 'Cello Section' (trem/susvib/pizzT/spic), 'Solo Contrabass' (Trem/SusVib/SusNV/Pizz/Spic), 'Harp'. NOTE inconsistent case of articulation folder names between instruments. No solo cello in CE. WAV naming: <Instr>_<Artic>_<Note><Octave>_v<velLayer>.wav e.g. 'VlnEns_Trem_B2_v1.wav'; some files add round-robin suffixes (e.g. _rr1). Typically 1-2 velocity layers, sparse note coverage (every few semitones) — pipeline must pitch-fill gaps. No SFZ files; mapping must be derived from filenames. LICENSE (CC0) and Readme.txt kept at vsco2_ce_strings/ root; .git dir retained (blob:none partial clone)."
+  },
+  {
+    "key": "avl_drumkits",
+    "dir": "avl_drums",
+    "license": "CC-BY-SA 3.0",
+    "attribution": "AVL Drumkits (Black Pearl 5-piece, Red Zeppelin 4-piece) by Glen MacArthur / bandshed.net, licensed under CC BY-SA 3.0. Site states attribution is required if you modify or redistribute the samples themselves (which MP3 conversion does).",
+    "url": "https://www.bandshed.net/sounds/AVLDrumkits_SFZ/BLACK_PEARL_2023_repack.zip and https://www.bandshed.net/sounds/AVLDrumkits_SFZ/RED_ZEPPELIN_2023_repack.zip",
+    "format": "sfz+wav",
+    "notes": "Two kits: avl_drums/BLACK_PEARL_2023_repack (129 files incl. Black_Pearl_2023_repack.sfz) and avl_drums/RED_ZEPPELIN_2023_repack (129 files incl. Red_Zeppelin_2023_repack.sfz). Flat folders, WAV naming: <midiNote>-<Brand>-<size>-<Articulation>-<n>.wav e.g. 36-Pearl-22-Kick-1.wav, 51-Zildjian-24-Ride-3.wav. The -1..-5 suffix is a TRUE VELOCITY LAYER, not round robin: sfz maps lovel/hivel bands 1-26/27-52/53-77/78-102/103-127 per numbered sample. MIDI note is the filename prefix (GM drum mapping). SFZ has 128 lovel/hivel region lines per kit — parse it for exact mapping. No license file inside zips; license documented at https://bandshed.net/avldrumkits/."
+  },
+  {
+    "key": "muldjord_kit",
+    "dir": "muldjord_kit/MuldjordKit SFZ+FLAC-20201018",
+    "license": "CC-BY 4.0",
+    "attribution": "MuldjordKit by Lars Muldjord (muldjord.com / drumgizmo.org), FreePats stereo edition by Roberto (zenvoid.org), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+    "url": "https://github.com/freepats/muldjordkit/releases/download/2020-10-18/MuldjordKit-SFZ+FLAC-20201018.7z",
+    "format": "sfz+flac",
+    "notes": "Bonus second acoustic kit (CC-BY, no SA copyleft — cleanest license of the drum kits). Dir name contains a space. SFZ: 'MuldjordKit 20201018.sfz' at dir root; LICENSE.txt + README.txt included. samples/ has per-articulation subfolders: KdrumL, KdrumR, Snare1, Snare2, SnareRest1/2, Tom1-4, HihatClosed, HihatOpen, CrashL, CrashR, RideL, RideR, RideLBell, RideRBell, China. Files named <n>-<Name>.flac (e.g. Snare1/1-Snare.flac..56-Snare.flac) ordered from softest to loudest hit — the SFZ assigns velocity bands across the numbered files. Stereo 2-channel mixdown of the 16-channel DrumGizmo original."
+  },
+  {
+    "key": "spanish_classical_guitar",
+    "dir": "spanish_guitar/SpanishClassicalGuitar-SFZ+FLAC-20190618",
+    "license": "CC0 1.0",
+    "attribution": "None required (CC0). Source: Spanish Classical Guitar by Roberto (zenvoid.org), FreePats project.",
+    "url": "https://freepats.zenvoid.org/Guitar/SpanishClassicalGuitar/SpanishClassicalGuitar-SFZ+FLAC-20190618.7z",
+    "format": "sfz+flac",
+    "notes": "Nylon-string classical guitar. 48 FLACs in samples/, one per chromatic note named <Note><Octave>.flac with sharps as '#' in filenames (A1.flac, A#1.flac ... B5.flac). SINGLE velocity layer (sfz has no lovel/hivel). SFZ: SpanishClassicalGuitar-20190618.sfz at dir root; cc0.txt + readme.txt included."
+  },
+  {
+    "key": "fss_steel_guitar",
+    "dir": "fss_steel_guitar/FSS-SteelStringGuitar-SFZ-20200521",
+    "license": "GPLv3-or-later WITH FreePats sampling exception — NOT a CC license, REVIEW BEFORE SHIPPING",
+    "attribution": "FS Seagull Steel String Acoustic Guitar, Copyright 2008 Gary Campion (FlameStudios), modified 2016-2020 by roberto@zenvoid.org for FreePats. GPLv3+ with exception.",
+    "url": "https://freepats.zenvoid.org/Guitar/FSS-SteelStringGuitar/FSS-SteelStringGuitar-SFZ-20200521.tar.xz",
+    "format": "sfz+wav",
+    "notes": "LICENSE CAVEAT: the bundled special exception only covers COMPOSITIONS made with the sounds; redistributing the converted samples themselves falls under plain GPLv3 (permitted commercially, but the MP3 sample set must be offered under GPL with license text — copyleft). Included because NO CC-licensed steel-string acoustic could be found anywhere (UIowa guitar is a nylon Raimundo 118; VCSL has no guitar; sfzinstruments has no CC steel acoustic). Orchestrator must decide: accept GPL terms for this one instrument or drop steel-string. Structure: 59 WAVs in samples/ named <H|M>V_<midiNote>.wav (HV_40.wav..MV_84.wav) = 2 velocity layers (High/Medium), MIDI note number in name. SFZ: FSS-SteelStringGuitar-20200521.sfz; gpl.txt + readme.txt (contains the exception text and author email trail) included."
+  },
+  {
+    "key": "greg_sullivan_epianos",
+    "dir": "greg_sullivan_epianos",
+    "license": "CC-BY 3.0 Unported",
+    "attribution": "Electric piano samples by Greg Sullivan (sullivang.net), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)",
+    "url": "https://github.com/sfzinstruments/GregSullivan.E-Pianos (git clone --depth 1)",
+    "format": "sfz+flac",
+    "notes": "Three electromechanical/electric pianos, each in own folder with <Name>.sfz + Samples/ subfolder: 'CP80' (Yamaha CP80 electric grand), 'Pianet T' (Hohner), 'Wurlitzer EP200' (closest to Rhodes-style tine sound; no true Rhodes exists in CC form here). FLAC naming: <note><octave><dyn>.flac with lowercase note and flats as 'b' (e.g. db4pp.flac, g5mp.flac, f2f.flac); 3 velocity layers pp/mp/f (Wurlitzer). Parse each SFZ for exact key/vel mapping. LICENSE (CC BY 3.0 full text) + README.md at repo root."
+  },
+  {
+    "key": "church_organ",
+    "dir": "church_organ/ChurchOrganEmulation-SFZ-20190924",
+    "license": "CC0 1.0",
+    "attribution": "None required (CC0). Source: Church Organ Emulation by Roberto (zenvoid.org), FreePats project; rendered from the Aeolus pipe organ synthesizer by Fons Adriaensen.",
+    "url": "https://freepats.zenvoid.org/Organ/ChurchOrganEmulation/ChurchOrganEmulation-SFZ-20190924.tar.xz",
+    "format": "sfz+wav",
+    "notes": "11 WAVs in samples/ named <Note><Octave>.wav sampled at tritone spacing (C2, F#2, C3, F#3 ... C7) — pipeline must pitch-shift to fill; single velocity layer (organs have none). SFZ: ChurchOrganEmulation-20190924.sfz. Sustained looping tones — check SFZ loop points. Note: this is a recording of the free Aeolus emulator, not a sampled real pipe organ. Jeux d'orgues (Stiehr-Mockers) was evaluated and SKIPPED: freeware license requiring the author's permission for redistribution, not CC."
+  },
+  {
+    "key": "fluidr3_gm_choir",
+    "dir": "fluidr3_gm/fluid-soundfont-3.1",
+    "license": "MIT",
+    "attribution": "Fluid (R3) SoundFont, Copyright (c) 2000-2002, 2008 Frank Wen. MIT license — include the copyright notice and permission notice (COPYING file) with distributed copies.",
+    "url": "http://deb.debian.org/debian/pool/main/f/fluid-soundfont/fluid-soundfont_3.1.orig.tar.gz",
+    "format": "sf2",
+    "notes": "CHOIR FALLBACK: no CC0/CC-BY multisampled choir library could be located (VCSL repo contains NO Vox/Choir folders — verified against full git tree; FreePats has no choir section; Musical Artifacts is Cloudflare-blocked). FluidR3_GM.sf2 (148 MB, 44.1kHz 16-bit) is MIT-licensed and its GM presets 052 'Choir Aahs' and 053 'Voice Oohs' (bank 0) plus 054 'Synth Voice' are multisampled choir sounds; pipeline needs an SF2 parser (e.g. sf2utils/polyphone CLI) to extract sample WAVs + key ranges for those presets. FluidR3_GS.sf2 (3 MB) also included in tarball. COPYING (MIT text) and README at dir root. License verified from the file itself: 'I hereby release Fluid under the MIT license'."
+  }
+]

@@ -1,14 +1,16 @@
 // GleeWorld Studio premium instrument catalog ("gw:" presets). These are
 // self-hosted, velocity-layered sample sets converted from free/open-license
-// libraries (see CREDITS.md) and served from the gleeworld-studio Space —
-// already allow-listed in the CSP via *.digitaloceanspaces.com.
+// libraries (see scripts/studio-samples/CREDITS.md), stored in the glee-world
+// Space under studio-samples/ and served through the supabase.gleeworld.org
+// public-storage proxy — that path already sends Access-Control-Allow-Origin
+// (plain Spaces URLs don't) and is allow-listed in the CSP.
 //
 // Each instrument is described by a manifest.json (see GwManifest) generated
 // by scripts/studio-samples/; the engine is fully manifest-driven and never
 // hardcodes sample file lists.
 
 export const GW_SAMPLE_BASE =
-  'https://gleeworld-studio.sfo3.digitaloceanspaces.com/studio-samples';
+  'https://supabase.gleeworld.org/storage/v1/object/public/studio-samples';
 
 export interface GwInstrument {
   name: string;          // manifest folder name, e.g. 'grand_piano'
@@ -23,10 +25,9 @@ export const GW_INSTRUMENTS: GwInstrument[] = [
   { name: 'choir_aahs',       label: 'Choir Aahs',               kind: 'pitched' },
   { name: 'string_ensemble',  label: 'String Ensemble',          kind: 'pitched' },
   { name: 'violin',           label: 'Violin',                   kind: 'pitched' },
-  { name: 'cello',            label: 'Cello',                    kind: 'pitched' },
+  { name: 'cello',            label: 'Cello Section',            kind: 'pitched' },
   { name: 'pizzicato',        label: 'Pizzicato Strings',        kind: 'pitched' },
-  { name: 'guitar_nylon',     label: 'Acoustic Guitar · Nylon',  kind: 'pitched' },
-  { name: 'guitar_steel',     label: 'Acoustic Guitar · Steel',  kind: 'pitched' },
+  { name: 'guitar_nylon',     label: 'Acoustic Guitar',          kind: 'pitched' },
   { name: 'pipe_organ',       label: 'Pipe Organ',               kind: 'pitched' },
   { name: 'kit_studio',       label: 'Drum Kit · Studio',        kind: 'kit' },
   { name: 'kit_rock',         label: 'Drum Kit · Rock',          kind: 'kit' },
