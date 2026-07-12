@@ -95,8 +95,9 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
   const [forwardNote, setForwardNote] = useState('');
   const { toast } = useToast();
 
-  // Check if user is superadmin
-  const isSuperAdmin = user?.role === 'superadmin' || user?.role === 'admin';
+  // Admin gate. gw_profiles.role carries both 'super_admin' (canonical) and
+  // legacy 'super-admin'; 'superadmin' kept for old callers that still pass it.
+  const isSuperAdmin = ['superadmin', 'super_admin', 'super-admin', 'admin', 'director'].includes(user?.role ?? '');
 
   const loadBookingRequests = async () => {
     try {

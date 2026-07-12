@@ -900,6 +900,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
   const isCalendar = pathname.startsWith('/dashboard/calendar');
+  // Tour Manager is a full-height self-scrolling layout (own header +
+  // section sidebar); it fills the viewport below the topbar exactly, so
+  // any main padding would force a phantom page scroll.
+  const isTourManager = pathname.startsWith('/tour-manager') || pathname.startsWith('/tour-planner');
   // User-controlled nav collapse (persisted). Collapsing frees the full
   // window width for work surfaces like Calendar and Studio; the topbar
   // grows an expand button + compact brand while collapsed.
@@ -921,10 +925,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             pb-20 sm:pb-0 reserves room for the MobileBottomNav strip
             (only rendered on phones; sm+ has no bottom nav). */}
         <main className={cn(
-          "flex-1 min-w-0 overflow-x-hidden pb-20 sm:pb-0",
-          // Calendar manages its own compact header spacing — no extra
-          // breathing room below the topbar.
-          isCalendar ? "pt-0" : "pt-3 sm:pt-4",
+          "flex-1 min-w-0 overflow-x-hidden",
+          isTourManager ? "pb-0" : "pb-20 sm:pb-0",
+          // Calendar and Tour Manager manage their own compact header
+          // spacing — no extra breathing room below the topbar.
+          isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",
         )}>{children}</main>
       </div>
       {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
