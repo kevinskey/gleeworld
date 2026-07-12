@@ -34,6 +34,15 @@ Affected surfaces (all three are in scope):
   `navigator.requestMIDIAccess` polyfill). No global monkey-patching;
   each consumer imports a shared facade. The facade keeps the adapter
   logic in one place so "per-hook" doesn't mean "three copies."
+- **Studio native-engine gate (amended during final review):** StudioEditor
+  predated this feature with `!engineState.native` gates on the MIDI hook,
+  the settings section, and the LiveVoices web-audio monitor — which made
+  the whole Studio surface unreachable on iPad. Decision (Kevin,
+  2026-07-12): lift all three gates. Recording was already engine-agnostic
+  (native latency compensation existed); the live monitor now plays through
+  the WKWebView's web audio alongside the native engine (shared
+  playAndRecord + mixWithOthers session). Monitor feel on a real iPad is a
+  device-QA gate. MIDI Clock output stays web-only, unchanged.
 
 ## Components
 
