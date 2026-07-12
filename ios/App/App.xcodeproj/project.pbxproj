@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0F8FC03F74824DDFA1681673 /* StudioEnginePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */; };
+		6A1D00000000000000000001 /* GWMidiPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000002 /* GWMidiPlugin.swift */; };
 		1A2A2A2A2A2A2A2A2A2A2A2A /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1A1A1A1A1A1A1A1A1A1A1A /* MainViewController.swift */; };
 		1D09D689DC86B0FDB970E0F3 /* Engine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20BECA3F13EF2967946AC20 /* Engine.swift */; };
 		2A2A2A2A2A2A2A2A2A2A2A2A /* AudioSessionConfigPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1A1A1A1A1A1A1A1A1A1A1A /* AudioSessionConfigPlugin.swift */; };
@@ -39,6 +40,7 @@
 
 /* Begin PBXFileReference section */
 		170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioEnginePlugin.swift; sourceTree = "<group>"; };
+		6A1D00000000000000000002 /* GWMidiPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWMidiPlugin.swift; sourceTree = "<group>"; };
 		1A1A1A1A1A1A1A1A1A1A1A1A /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		1DAD2143C4798E9ADDA1A3AF /* StudioModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioModel.swift; sourceTree = "<group>"; };
 		2A1A1A1A1A1A1A1A1A1A1A1A /* AudioSessionConfigPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionConfigPlugin.swift; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 				1DAD2143C4798E9ADDA1A3AF /* StudioModel.swift */,
 				170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */,
+				6A1D00000000000000000002 /* GWMidiPlugin.swift */,
 				F0CB09196F6C93C644BF4557 /* Studio */,
 				F32A6B44BE5444770C30D5EB /* StudioObjC.m */,
 				693451AC85FAAD6C29DB7ED2 /* StudioObjC.h */,
@@ -289,6 +292,7 @@
 				3A2A2A2A2A2A2A2A2A2A2A2A /* NativeMusicKitPlugin.swift in Sources */,
 				7696E25FC90C885166862AE1 /* StudioModel.swift in Sources */,
 				0F8FC03F74824DDFA1681673 /* StudioEnginePlugin.swift in Sources */,
+				6A1D00000000000000000001 /* GWMidiPlugin.swift in Sources */,
 				1D09D689DC86B0FDB970E0F3 /* Engine.swift in Sources */,
 				D4910ED7763D327934102420 /* Tracks.swift in Sources */,
 				F3827DBA2B1BCFB65967AA84 /* Fx.swift in Sources */,

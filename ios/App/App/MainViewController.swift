@@ -18,6 +18,9 @@ class MainViewController: CAPBridgeViewController {
         // StudioEnginePlugin — the AVAudioEngine bridge for Studio. Same
         // dead-strip problem as the others, same explicit fix.
         bridge?.registerPluginInstance(StudioEnginePlugin())
+        // GWMidiPlugin — CoreMIDI input bridge (iOS WebKit has no Web
+        // MIDI). Same dead-strip problem as the others, same explicit fix.
+        bridge?.registerPluginInstance(GWMidiPlugin())
         // RecordingLiveActivityPlugin disabled — needs widget extension's
         // GleeWorldRecordingAttributes type that's not in the main target.
     }
