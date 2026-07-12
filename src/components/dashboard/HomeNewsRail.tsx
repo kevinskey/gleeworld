@@ -87,9 +87,20 @@ export function HomeNewsRail() {
               <li key={n.link}>
                 <a
                   href={n.link}
-                  target="_blank"
                   rel="noopener noreferrer"
                   className="group block min-h-[44px] py-2"
+                  onClick={(e) => {
+                    // Open in a standalone window, not a tab — reading a
+                    // story shouldn't bury the dashboard in tab clutter.
+                    // (Modifier/middle clicks keep native tab behavior.)
+                    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+                    e.preventDefault();
+                    window.open(
+                      n.link,
+                      '_blank',
+                      'noopener,noreferrer,popup,width=1100,height=820,left=120,top=80',
+                    );
+                  }}
                 >
                   <p className="line-clamp-2 text-sm leading-snug group-hover:underline">
                     {decodeEntities(n.title)}
