@@ -1,0 +1,80 @@
+import { describe, expect, it } from 'vitest';
+import {
+  GW_BY_NAME, GW_INSTRUMENTS, GW_SAMPLE_BASE,
+  fromGwPresetId, gwLayerIndexForVelocity, gwManifestUrl, gwSampleUrl, toGwPresetId,
+} from './gwInstruments';
+
+describe('gwInstruments catalog', () => {
+  it('has unique names and labels', () => {
+    const names = GW_INSTRUMENTS.map((g) => g.name);
+    expect(new Set(names).size).toBe(names.length);
+    const labels = GW_INSTRUMENTS.map((g) => g.label);
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it('names are valid folder names (lowercase snake_case)', () => {
+    for (const g of GW_INSTRUMENTS) expect(g.name).toMatch(/^[a-z0-9_]+$/);
+  });
+
+  it('includes the three drum kits as kind=kit', () => {
+    const kits = GW_INSTRUMENTS.filter((g) => g.kind === 'kit').map((g) => g.name);
+    expect(kits).toEqual(['kit_studio', 'kit_rock', 'kit_jazz']);
+  });
+
+  it('GW_BY_NAME indexes every instrument', () => {
+    for (const g of GW_INSTRUMENTS) expect(GW_BY_NAME[g.name]).toBe(g);
+  });
+});
+
+describe('gw preset ids', () => {
+  it('round-trips', () => {
+    expect(fromGwPresetId(toGwPresetId('grand_piano'))).toBe('grand_piano');
+  });
+
+  it('rejects non-gw ids', () => {
+    expect(fromGwPresetId('gm:violin')).toBeNull();
+    expect(fromGwPresetId('kit_basic')).toBeNull();
+    expect(fromGwPresetId(undefined)).toBeNull();
+  });
+});
+
+describe('sample URLs', () => {
+  it('manifest and sample URLs live under the instrument folder', () => {
+    expect(gwManifestUrl('grand_piano')).toBe(`${GW_SAMPLE_BASE}/grand_piano/manifest.json`);
+    expect(gwSampleUrl('grand_piano', 'l1/C4.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/l1/C4.mp3`);
+  });
+
+  it('percent-encodes sharps so "#" cannot start a URL fragment', () => {
+    expect(gwSampleUrl('grand_piano', 'l0/C#4.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/l0/C%234.mp3`);
+    expect(gwSampleUrl('grand_piano', 'rel/F#2.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/rel/F%232.mp3`);
+  });
+
+  it('every pitched instrument has a GM fallback; kits have none', () => {
+    for (const g of GW_INSTRUMENTS) {
+      if (g.kind === 'pitched') expect(g.gmFallback, g.name).toBeTruthy();
+      else expect(g.gmFallback, g.name).toBeUndefined();
+    }
+  });
+});
+
+describe('gwLayerIndexForVelocity', () => {
+  const layers = [{ maxVel: 42 }, { maxVel: 84 }, { maxVel: 127 }];
+
+  it('routes each velocity to the first covering layer', () => {
+    expect(gwLayerIndexForVelocity(layers, 1)).toBe(0);
+    expect(gwLayerIndexForVelocity(layers, 42)).toBe(0);
+    expect(gwLayerIndexForVelocity(layers, 43)).toBe(1);
+    expect(gwLayerIndexForVelocity(layers, 84)).toBe(1);
+    expect(gwLayerIndexForVelocity(layers, 85)).toBe(2);
+    expect(gwLayerIndexForVelocity(layers, 127)).toBe(2);
+  });
+
+  it('clamps velocities past the last maxVel to the top layer', () => {
+    expect(gwLayerIndexForVelocity([{ maxVel: 60 }, { maxVel: 100 }], 127)).toBe(1);
+  });
+
+  it('single-layer instruments always use layer 0', () => {
+    expect(gwLayerIndexForVelocity([{ maxVel: 127 }], 1)).toBe(0);
+    expect(gwLayerIndexForVelocity([{ maxVel: 127 }], 127)).toBe(0);
+  });
+});

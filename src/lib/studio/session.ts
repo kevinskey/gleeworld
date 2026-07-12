@@ -291,13 +291,17 @@ export function sanitizeCc(cc: unknown): MidiCcEvent[] {
 }
 
 /** The minimum schema version that can represent this session: 1.1.0
- * only when some MIDI clip actually uses cc events, else 1.0.0. A
- * corrupt/non-array `cc` (truthy but not a real array) must NOT stamp
- * 1.1.0 — it's not a real cc feature, it's garbage that sanitizeCc()
- * will reduce to [] on load, so schema stays at the 1.0.0 baseline. */
+ * when some MIDI clip actually uses cc events OR a track uses a premium
+ * 'gw:' instrument (a 1.0.0-only client would render those as the basic
+ * synth kit — garbled noise — so it must refuse the manifest instead),
+ * else 1.0.0. A corrupt/non-array `cc` (truthy but not a real array)
+ * must NOT stamp 1.1.0 — it's not a real cc feature, it's garbage that
+ * sanitizeCc() will reduce to [] on load, so schema stays at the 1.0.0
+ * baseline. */
 export function requiredSchemaVersion(session: Session): StudioSchemaVersion {
   for (const t of session.tracks) {
     if (t.kind !== 'midi') continue;
+    if (t.instrument?.preset_id?.startsWith('gw:')) return '1.1.0';
     for (const c of t.clips) if (sanitizeCc(c.cc).length > 0) return '1.1.0';
   }
   return '1.0.0';

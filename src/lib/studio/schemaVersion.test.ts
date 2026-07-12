@@ -29,6 +29,17 @@ describe('schema versions', () => {
     expect(requiredSchemaVersion(s)).toBe('1.1.0');
   });
 
+  it('a premium gw: instrument requires 1.1.0 (1.0.0 clients would garble it)', () => {
+    const s = base();
+    s.tracks.push({
+      id: 'm2', kind: 'midi', name: 'Piano', color: '#888888', volume_db: 0, pan: 0,
+      mute: false, solo: false, arm: false, fx: [],
+      instrument: { type: 'sampler', preset_id: 'gw:grand_piano', params: {} },
+      clips: [],
+    });
+    expect(requiredSchemaVersion(s)).toBe('1.1.0');
+  });
+
   it('validate accepts both known versions and rejects others', () => {
     for (const v of STUDIO_SCHEMA_VERSIONS) {
       const s = { ...base(), schema_version: v };

@@ -14,6 +14,7 @@ import type { Session, Track } from '../session';
 import { buildTrack } from './tracks';
 import { audioBufferToWavBlob } from './mixdown';
 import { EXPORT_SAMPLE_RATE } from './exportRender';
+import { preloadGwSession } from './layeredSampler';
 
 export interface RegionExportOpts {
   trackIds: string[];
@@ -34,6 +35,9 @@ export interface RegionExportOpts {
 export async function renderRegionBuffer(
   session: Session, trackIds: string[], startSec: number, endSec: number,
 ): Promise<AudioBuffer> {
+  // gw: instruments need their manifests cached before Tone.Offline —
+  // see the same call in mixdown.renderSessionToWav.
+  await preloadGwSession(session);
   const durationSec = Math.max(0.01, endSec - startSec);
   const chosen = session.tracks.filter((t) => trackIds.includes(t.id));
   const toneBuffer = await Tone.Offline(({ transport }) => {
