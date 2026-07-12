@@ -4,7 +4,7 @@
 // path — the clock button on each task row. Blocks move by drag or via
 // their popover; removing a block never deletes the task. Overlaps
 // split into columns and get an amber edge.
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { addMinutes, format, isSameDay, parseISO, setHours, setMinutes, startOfDay } from 'date-fns';
 import { AlertTriangle, Clock } from 'lucide-react';
@@ -74,8 +74,25 @@ export default function DayTimeline({ date, events, tasks, onSetBlock, onSetStat
   const laid = useMemo(() => layoutTimeline(items), [items]);
   const taskById = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks]);
 
+  // The full 7:00–22:00 grid is 720px tall — rendered inline it buried the
+  // daily note below a screenful of empty hours on phones and iPads. The
+  // grid scrolls inside its own container instead, opened centered on "now"
+  // (mid-morning for other days). Scrolling the container never moves the
+  // page, so the top bar and note stay where the user left them.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || el.scrollHeight <= el.clientHeight) return;
+    const target = showNow && nowOffset >= 0 ? nowOffset : (10 - DAY_START_HOUR) * 48;
+    el.scrollTop = Math.max(0, target - el.clientHeight / 2);
+    // Position once per displayed day; re-running on data refetch would
+    // yank the user's scroll position away mid-interaction.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
+
   return (
     <div className="relative rounded-lg border border-border bg-card">
+      <div ref={scrollRef} className="max-h-[24rem] overflow-y-auto overscroll-contain lg:max-h-[32rem]">
       <div className="relative" style={{ height: HOURS.length * 48 }}>
         {/* hour rows + droppable half-hour slots */}
         {HOURS.map((h, i) => (
@@ -119,6 +136,7 @@ export default function DayTimeline({ date, events, tasks, onSetBlock, onSetStat
             />
           );
         })}
+      </div>
       </div>
     </div>
   );

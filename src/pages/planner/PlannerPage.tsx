@@ -85,14 +85,16 @@ export default function PlannerPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl px-2 sm:px-4">
-      {/* Desktop sidebar */}
-      <aside className="sticky top-[var(--gw-header-h,64px)] hidden h-[calc(100vh-var(--gw-header-h,64px))] w-60 shrink-0 self-start overflow-y-auto border-r border-border md:block">
+      {/* Desktop sidebar. lg+ only — at md (iPad portrait) the dashboard nav
+          is already showing, and a second inline sidebar squeezed the actual
+          content into a sliver. Tablets use the Menu sheet like phones. */}
+      <aside className="sticky top-[var(--gw-header-h,64px)] hidden h-[calc(100vh-var(--gw-header-h,64px))] w-60 shrink-0 self-start overflow-y-auto border-r border-border lg:block">
         {sidebar}
       </aside>
 
-      <div className="min-w-0 flex-1 py-4 md:px-6">
-        {/* Mobile top bar */}
-        <div className="mb-3 flex items-center gap-2 md:hidden">
+      <div className="min-w-0 flex-1 py-4 lg:px-6">
+        {/* Mobile / tablet top bar */}
+        <div className="mb-3 flex items-center gap-2 lg:hidden">
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5" aria-label="Open planner menu">
