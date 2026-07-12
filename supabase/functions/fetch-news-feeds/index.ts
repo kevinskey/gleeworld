@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { verifyJwtClaims } from '../_shared/verifyJwt.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
