@@ -682,11 +682,11 @@ function ScoreListRow({
           <Button
             variant={row.shared_with_members ? 'secondary' : 'outline'}
             size="sm"
-            className="hidden sm:inline-flex text-xs"
+            className="text-xs"
             onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
           >
-            <Share2 className="w-4 h-4 mr-1.5" />
-            {row.shared_with_members ? 'Shared' : 'Share'}
+            <Share2 className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">{row.shared_with_members ? 'Shared' : 'Share'}</span>
           </Button>
         )}
         {hasPdf && (
