@@ -22,7 +22,7 @@ import {
 import {
   Music, Upload, Search, Loader2, FileMusic, ListMusic,
   PencilLine, Headphones, Youtube, X, Pencil, Library as LibraryIcon,
-  Maximize2, Minimize2, LayoutGrid, List as ListIcon,
+  Maximize2, Minimize2, LayoutGrid, List as ListIcon, Share2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -32,6 +32,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 import { RightsBadge } from '@/components/policies/RightsBadge';
 import { PublicDomainSearch } from '@/components/music-library/PublicDomainSearch';
+import { MyMusicTab } from '@/components/music-library/MyMusicTab';
 import { BookOpen as BookOpenIcon } from 'lucide-react';
 
 const SetlistBuilder = lazy(() =>
@@ -41,7 +42,7 @@ const PDFViewerWithAnnotations = lazy(() =>
   import('@/components/PDFViewerWithAnnotations').then((m) => ({ default: m.PDFViewerWithAnnotations })),
 );
 
-type TopTab = 'scores' | 'setlists' | 'public-domain';
+type TopTab = 'scores' | 'my-music' | 'setlists' | 'public-domain';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -67,6 +68,12 @@ interface ScoreRow {
   license_seat_count: number | null;
   license_expires_at: string | null;
   copyright_holder: string | null;
+  // Member-visibility flag (migration 20260712120000_personal_music_library.sql).
+  // Browse filter only: the Scores tab hides unflagged scores from members,
+  // but this is NOT an access control — RLS is unchanged and deep-link/
+  // setlist flows still open unshared scores (server-side hardening is a
+  // phase-2 follow-up).
+  shared_with_members: boolean | null;
 }
 
 export default function MusicLibraryPage() {
@@ -138,14 +145,20 @@ export default function MusicLibraryPage() {
   const toggleViewerFullscreen = () => setIsViewerFullscreen((v) => !v);
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
-    queryKey: ['music-library-scores', scope],
+    queryKey: ['music-library-scores', scope, canEdit],
     queryFn: async () => {
       let q = supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members')
         .eq('is_archived', false)
         .order('title')
         .limit(200);
+      // Browse filter only: the Scores tab hides unflagged scores from
+      // members, but this is NOT an access control — RLS is unchanged and
+      // deep-link/setlist flows still open unshared scores (server-side
+      // hardening is a phase-2 follow-up). Editors see everything and can
+      // toggle the flag.
+      if (!canEdit) q = q.eq('shared_with_members', true);
       q = applyFilter(q as any);
       const { data } = await q;
       return (data ?? []) as ScoreRow[];
@@ -168,6 +181,20 @@ export default function MusicLibraryPage() {
     );
   }, [rows, search]);
 
+  // Editor-only toggle: flips shared_with_members so the score does/doesn't
+  // show up in members' (non-editors') filtered query above. `shared_with_members`
+  // isn't in the generated Supabase types yet (Task 1 column), hence the cast.
+  const handleToggleShare = async (row: ScoreRow) => {
+    const next = !row.shared_with_members;
+    const { error } = await (supabase as any)
+      .from('gw_sheet_music')
+      .update({ shared_with_members: next })
+      .eq('id', row.id);
+    if (error) { toast.error('Could not update sharing'); return; }
+    qc.invalidateQueries({ queryKey: ['music-library-scores'] });
+    toast.success(next ? 'Shared with members' : 'No longer shared');
+  };
+
   return (
     <DashboardPageShell
       title="Music Library"
@@ -180,6 +207,7 @@ export default function MusicLibraryPage() {
       <div className="flex gap-2 border-b border-border">
         {([
           { key: 'scores',        label: 'Scores',         Icon: Music },
+          { key: 'my-music',      label: 'My Music',       Icon: FileMusic },
           { key: 'setlists',      label: 'Setlists',       Icon: ListMusic },
           { key: 'public-domain', label: 'Public Domain',  Icon: BookOpenIcon },
         ] as Array<{ key: TopTab; label: string; Icon: React.ComponentType<{ className?: string }> }>).map((t) => {
@@ -273,6 +301,7 @@ export default function MusicLibraryPage() {
                   onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
                   onAttachAudio={() => setAttachingAudio(r)}
                   onEdit={() => setEditing(r)}
+                  onToggleShare={() => handleToggleShare(r)}
                 />
               ))}
             </div>
@@ -288,6 +317,7 @@ export default function MusicLibraryPage() {
                     onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
                     onAttachAudio={() => setAttachingAudio(r)}
                     onEdit={() => setEditing(r)}
+                    onToggleShare={() => handleToggleShare(r)}
                   />
                 ))}
               </div>
@@ -295,6 +325,8 @@ export default function MusicLibraryPage() {
           )}
         </>
       )}
+
+      {topTab === 'my-music' && <MyMusicTab />}
 
       {topTab === 'setlists' && (
         // Setlists tab — wraps the existing SetlistBuilder inside the same
@@ -449,7 +481,7 @@ export default function MusicLibraryPage() {
 }
 
 function ScoreCard({
-  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit,
+  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare,
 }: {
   row: ScoreRow;
   courseCode: string | null;
@@ -457,6 +489,7 @@ function ScoreCard({
   onAnnotate: () => void;
   onAttachAudio: () => void;
   onEdit: () => void;
+  onToggleShare: () => void;
 }) {
   const hasPdf = !!row.pdf_url;
   const hasAudio = !!row.audio_url;
@@ -529,6 +562,17 @@ function ScoreCard({
               <Pencil className="w-4 h-4" />
             </Button>
           )}
+          {canEdit && (
+            <Button
+              variant={row.shared_with_members ? 'secondary' : 'outline'}
+              size="sm"
+              className="text-xs"
+              onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
+            >
+              <Share2 className="w-4 h-4 mr-1.5" />
+              {row.shared_with_members ? 'Shared' : 'Share'}
+            </Button>
+          )}
           {hasPdf && (
             <>
               {canEdit && (
@@ -561,7 +605,7 @@ function ScoreCard({
 // actions as ScoreCard; the badge cluster collapses away below md so phone
 // rows stay title + actions.
 function ScoreListRow({
-  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit,
+  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare,
 }: {
   row: ScoreRow;
   courseCode: string | null;
@@ -569,6 +613,7 @@ function ScoreListRow({
   onAnnotate: () => void;
   onAttachAudio: () => void;
   onEdit: () => void;
+  onToggleShare: () => void;
 }) {
   const hasPdf = !!row.pdf_url;
   const hasAudio = !!row.audio_url;
@@ -637,6 +682,18 @@ function ScoreListRow({
             aria-label="Edit score details"
           >
             <Pencil className="w-4 h-4" />
+          </Button>
+        )}
+        {canEdit && (
+          <Button
+            variant={row.shared_with_members ? 'secondary' : 'outline'}
+            size="sm"
+            className="text-xs"
+            onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
+            aria-label={row.shared_with_members ? 'Shared with members' : 'Share with members'}
+          >
+            <Share2 className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">{row.shared_with_members ? 'Shared' : 'Share'}</span>
           </Button>
         )}
         {hasPdf && (
