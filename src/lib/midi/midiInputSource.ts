@@ -156,7 +156,9 @@ export function createNativeMidiInputSource(plugin: GWMidiPluginShape): MidiInpu
     for (const h of toRemove) {
       try { await h.remove(); } catch { /* best effort */ }
     }
-    await plugin.stop();
+    // Unsubscribe fires this op fire-and-forget, so a rejected stop() must
+    // not become an unhandled rejection.
+    try { await plugin.stop(); } catch { /* best effort — native side may already be gone */ }
   };
 
   return {

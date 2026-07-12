@@ -245,8 +245,11 @@ describe('createNativeMidiInputSource', () => {
 
     const unsub = await src.subscribe('', (d) => got.push([...d]));
     unsub();
-    // No flush between unsub() and the resubscribe — this is the race that
-    // used to let a stale plugin.stop() land after the fresh plugin.start().
+    // One flush so the teardown genuinely runs (plugin.stop() is really
+    // called), then resubscribe with NO flush in between — this is the race
+    // that used to let a stale plugin.stop() land after the fresh
+    // plugin.start().
+    await flush();
     const resub = await src.subscribe('', (d) => got.push([...d]));
     void resub;
     await flush();
@@ -254,6 +257,8 @@ describe('createNativeMidiInputSource', () => {
     fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 0 });
     expect(got).toEqual([[0x90, 60, 100]]);
 
+    // Guard against a vacuous pass: the stop path must actually have run.
+    expect(fake.raw.stop).toHaveBeenCalled();
     const lastStartIdx = fake.calls.lastIndexOf('start');
     const lastStopIdx = fake.calls.lastIndexOf('stop');
     expect(lastStartIdx).toBeGreaterThanOrEqual(0);
