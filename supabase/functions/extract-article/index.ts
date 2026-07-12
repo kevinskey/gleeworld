@@ -8,7 +8,7 @@
 // (paywalls/JS-rendered pages fail → client keeps the feed summary), and
 // full-text display is a republication call made knowingly; the sheet always
 // keeps the "Open full article" attribution link to the source.
-import { parseHTML } from 'https://esm.sh/linkedom@0.16.11';
+import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.48/deno-dom-wasm.ts';
 import { Readability } from 'https://esm.sh/@mozilla/readability@0.5.0';
 
 const corsHeaders = {
@@ -19,7 +19,9 @@ const corsHeaders = {
 const MAX_HTML_BYTES = 3 * 1024 * 1024;
 const MAX_TEXT_CHARS = 20000;
 const FETCH_TIMEOUT_MS = 10000;
-const UA = 'Mozilla/5.0 (compatible; GleeWorld News Reader/1.0)';
+// Full browser UA: many outlets 403 anything that self-identifies as a bot,
+// and this fetch is a reader-app page load on a user's behalf, not a crawl.
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
 // SSRF guard: this function fetches caller-supplied URLs, so refuse anything
 // that could reach the droplet's internal network.
@@ -61,20 +63,81 @@ async function fetchPage(url: string): Promise<{ html: string; finalUrl: string 
 }
 
 // Google News RSS links point at news.google.com interstitials that redirect
-// via JS, not HTTP — dig the publisher URL out of the interstitial markup.
-function publisherUrlFromGoogleNews(html: string): string | null {
-  const meta = html.match(/http-equiv=["']refresh["'][^>]*url=([^"'>]+)/i);
-  if (meta && !meta[1].includes('google.')) return meta[1];
-  const links = html.match(/https?:\/\/[^"'\s<>]+/g) ?? [];
-  for (const link of links) {
-    try {
-      const u = new URL(link);
-      if (u.hostname.includes('google') || u.hostname.includes('gstatic') || u.hostname.includes('w3.org')) continue;
-      if (isBlockedUrl(u)) continue;
-      return link;
-    } catch { /* not a URL */ }
-  }
+// via JS, not HTTP. Old-format article ids embed the publisher URL in the
+// base64 payload; new-format ids (post-2024, the common case) require asking
+// Google's own DotsSplashUi batchexecute endpoint to decode them — the same
+// mechanism the interstitial page itself uses (and what the public
+// googlenewsdecoder tooling does). Everything is best-effort: any failure
+// returns null and the caller reports extraction failure.
+function urlFromArticleId(articleId: string): string | null {
+  // Old format: the base64url payload contains the URL as printable ASCII.
+  try {
+    const b64 = articleId.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '='));
+    const m = decoded.match(/https?:\/\/[!-~]+/);
+    if (m) {
+      const candidate = m[0].replace(/[^\x20-\x7E]+.*$/, '');
+      const u = new URL(candidate);
+      if (!u.hostname.includes('google') && !isBlockedUrl(u)) return candidate;
+    }
+  } catch { /* fall through */ }
   return null;
+}
+
+async function resolveGoogleNews(url: URL): Promise<string | null> {
+  const idMatch = url.pathname.match(/\/(?:rss\/)?articles\/([^/?]+)/);
+  if (!idMatch) return null;
+  const articleId = idMatch[1];
+
+  const embedded = urlFromArticleId(articleId);
+  if (embedded) return embedded;
+
+  // New format: scrape the interstitial's signature/timestamp attributes,
+  // then ask batchexecute to decode the id into the publisher URL.
+  try {
+    const page = await fetchPage(`https://news.google.com/articles/${articleId}?hl=en-US&gl=US&ceid=US:en`);
+    if (!page) return null;
+    const sg = page.html.match(/data-n-a-sg="([^"]+)"/)?.[1];
+    const ts = page.html.match(/data-n-a-ts="([^"]+)"/)?.[1];
+    if (!sg || !ts) return null;
+
+    const garturlreq = [
+      ['X', 'X', ['X', 'X'], null, null, 1, 1, 'US:en', null, 1, null, null, null, null, null, 0, 1],
+      'X', 'X', 1, [1, 1, 1], 1, 1, null, 0, 0, null, 0,
+    ];
+    const fReq = [[[
+      'Fbv4je',
+      JSON.stringify(['garturlreq', garturlreq, articleId, Number(ts), sg]),
+      null,
+      'generic',
+    ]]];
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const res = await fetch('https://news.google.com/_/DotsSplashUi/data/batchexecute', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'User-Agent': UA,
+      },
+      body: 'f.req=' + encodeURIComponent(JSON.stringify(fReq)),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const text = await res.text();
+    const chunk = text.split('\n\n')[1] ?? text;
+    const outer = JSON.parse(chunk.substring(chunk.indexOf('[')));
+    const frame = outer.find((x: unknown[]) => Array.isArray(x) && x[0] === 'wrb.fr');
+    if (!frame || typeof frame[2] !== 'string') return null;
+    const inner = JSON.parse(frame[2]);
+    const target = inner?.[1];
+    if (typeof target !== 'string') return null;
+    const u = new URL(target);
+    if (u.hostname.includes('google') || isBlockedUrl(u)) return null;
+    return target;
+  } catch {
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -99,17 +162,20 @@ Deno.serve(async (req) => {
     }
     if (isBlockedUrl(target)) return fail('blocked url');
 
-    let page = await fetchPage(target.toString());
-    if (!page) return fail('fetch failed');
-
-    if (new URL(page.finalUrl).hostname.endsWith('news.google.com')) {
-      const publisherUrl = publisherUrlFromGoogleNews(page.html);
+    // Resolve Google News interstitials to the publisher URL BEFORE the main
+    // fetch — their pages redirect via JS, so fetching them yields no article.
+    if (target.hostname.endsWith('news.google.com')) {
+      const publisherUrl = await resolveGoogleNews(target);
       if (!publisherUrl) return fail('could not resolve google news link');
-      page = await fetchPage(publisherUrl);
-      if (!page) return fail('publisher fetch failed');
+      target = new URL(publisherUrl);
+      if (isBlockedUrl(target)) return fail('blocked url');
     }
 
-    const { document } = parseHTML(page.html);
+    const page = await fetchPage(target.toString());
+    if (!page) return fail('fetch failed');
+
+    const document = new DOMParser().parseFromString(page.html, 'text/html');
+    if (!document) return fail('unparseable page');
     const article = new Readability(document as unknown as Document).parse();
     if (!article?.textContent?.trim()) return fail('no readable content');
 
