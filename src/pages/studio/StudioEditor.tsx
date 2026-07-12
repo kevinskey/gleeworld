@@ -38,6 +38,7 @@ import {
   type HeldPress, type CapturedCc,
 } from '@/lib/studio/midiRecord';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
+import { retainUnsavedWork } from '@/lib/unsavedWork';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
 import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
@@ -318,6 +319,18 @@ export default function StudioEditor() {
   const { id } = useParams<{ id: string }>();
   const sessionState = useStudioSession(id ?? null);
   const engineState = useStudioEngine(sessionState.session);
+
+  // A DAW session is unsaved work the whole time it's open: the session doc
+  // autosaves on an 800ms debounce and an in-flight recording lives only in
+  // memory, so ANY page reload can lose data. While mounted with a session,
+  // arm the leave-confirmation and block BootErrorBoundary's silent
+  // stale-chunk reload (the 2026-07-12 lost-take incident). In-app route
+  // changes are unaffected — beforeunload only fires on real unloads.
+  const hasSession = !!sessionState.session;
+  useEffect(() => {
+    if (!hasSession) return;
+    return retainUnsavedWork('studio-session');
+  }, [hasSession]);
 
   if (sessionState.loading) return (
     <div className="flex items-center justify-center py-16 text-muted-foreground">

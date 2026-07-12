@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { hasUnsavedWork } from './lib/unsavedWork';
 
 interface State {
   error: Error | null;
@@ -20,6 +21,13 @@ const isStaleChunkError = (e: Error) =>
 
 const reloadOnceForStaleChunk = (): boolean => {
   try {
+    // NEVER silently reload over unsaved work (a Studio recording, an
+    // unsaved editor) — a transient chunk-fetch blip mid-session used to
+    // location.reload() here and wipe an in-flight take (2026-07-12).
+    // With unsaved work at stake we fall through to the visible error
+    // screen instead, and the beforeunload guard the unsaved-work holder
+    // armed makes even a manual reload ask first.
+    if (hasUnsavedWork()) return false;
     if (sessionStorage.getItem('gw-chunk-retried')) return false;
     sessionStorage.setItem('gw-chunk-retried', '1');
     window.location.reload();
