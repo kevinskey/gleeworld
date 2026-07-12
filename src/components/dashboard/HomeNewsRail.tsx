@@ -105,7 +105,10 @@ export function HomeNewsRail() {
       const { data, error } = await supabase.functions.invoke('extract-article', {
         body: { url: reading!.link },
       });
-      if (error || !data?.success) return null;
+      // Throw on failure (rather than returning null) so react-query keeps
+      // it as an error state — a transient blip retries on next open instead
+      // of being cached forever as a successful "no article".
+      if (error || !data?.success) throw new Error(data?.error || 'extraction failed');
       return data as { paragraphs: string[]; byline: string | null; siteName: string | null; truncated: boolean };
     },
   });
@@ -226,6 +229,12 @@ export function HomeNewsRail() {
               )}
               {fullArticle?.paragraphs?.length ? (
                 <div className="mt-3 space-y-3">
+                  {/* Radix wires aria-describedby to SheetDescription; keep
+                      one (visually hidden) when the full article replaces
+                      the summary so the dialog stays described. */}
+                  <SheetDescription className="sr-only">
+                    Full article text from {fullArticle.siteName || reading.source}
+                  </SheetDescription>
                   {fullArticle.byline && (
                     <p className="text-xs text-muted-foreground">{fullArticle.byline}</p>
                   )}
