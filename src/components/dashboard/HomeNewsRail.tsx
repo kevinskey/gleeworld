@@ -205,7 +205,10 @@ export function HomeNewsRail() {
               )}
               <SheetDescription className="mt-3 text-sm leading-relaxed text-foreground/90">
                 {reading.description
-                  ? decodeEntities(reading.description)
+                  // Strip tags AFTER decoding: feeds ship entity-encoded
+                  // markup (&lt;em&gt;) that the server's pre-decode strip
+                  // pass can't see, and it would render as literal text.
+                  ? decodeEntities(reading.description).replace(/<[^>]+>/g, '')
                   : "This source didn't include a summary. Open the full article to read the story."}
               </SheetDescription>
               <div className="mt-5">
