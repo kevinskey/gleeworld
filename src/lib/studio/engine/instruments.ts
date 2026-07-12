@@ -12,6 +12,8 @@
 import * as Tone from 'tone';
 import type { Instrument } from '../session';
 import { fromGmPresetId, gmSamplerConfig } from '../gmInstruments';
+import { fromGwPresetId } from '../gwInstruments';
+import { buildGwInstrument } from './layeredSampler';
 
 export interface EngineInstrument {
   output: Tone.ToneAudioNode;
@@ -59,6 +61,11 @@ function buildSynth(spec: Instrument): EngineInstrument {
 }
 
 function buildSampler(spec: Instrument): EngineInstrument {
+  // Premium studio instrument (preset_id 'gw:<name>'): velocity-layered
+  // samples self-hosted on the gleeworld-studio Space.
+  const gwName = fromGwPresetId(spec.preset_id);
+  if (gwName) return buildGwInstrument(gwName);
+
   // General MIDI soundfont instrument (preset_id 'gm:<name>'): stream real
   // samples from the MusyngKite soundfont via Tone.Sampler.
   const gmName = fromGmPresetId(spec.preset_id);

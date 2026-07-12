@@ -31,6 +31,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
+import { GW_INSTRUMENTS, toGwPresetId } from '@/lib/studio/gwInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
 import {
@@ -4628,6 +4629,11 @@ function MidiInstrumentDropdown({
         }}
         className="h-5 bg-zinc-950 border border-zinc-800 rounded text-zinc-300 px-1 flex-1 min-w-0"
       >
+        <optgroup label="Studio">
+          {GW_INSTRUMENTS.map((g) => (
+            <option key={g.name} value={`sampler:${toGwPresetId(g.name)}`}>{g.label}</option>
+          ))}
+        </optgroup>
         <option value="synth_basic:sine">Synth · Sine</option>
         <option value="synth_basic:triangle">Synth · Triangle</option>
         <option value="synth_basic:square">Synth · Square</option>
