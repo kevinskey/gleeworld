@@ -105,6 +105,62 @@ describe('NoteEditor', () => {
     expect(latest.elements[1]).toMatchObject({ pitch: { step: 'D' } });
   });
 
+  // ── On-screen note pad (phone/tablet entry — no hardware keyboard) ──
+
+  it('tapping the C pad button appends a middle-C note of the armed duration', () => {
+    render(<Harness initial={emptyScore()} />);
+    fireEvent.click(screen.getByRole('button', { name: /half/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add note C' }));
+    expect(latest.elements[0]).toMatchObject({ kind: 'note', base: 'half', pitch: { step: 'C' } });
+  });
+
+  it('pad pitch buttons honor an armed accidental', () => {
+    render(<Harness initial={emptyScore()} />);
+    fireEvent.click(screen.getByRole('button', { name: '♭' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add note E' }));
+    expect(latest.elements[0]).toMatchObject({ pitch: { step: 'E', alter: -1 } });
+  });
+
+  it('tapping the rest pad button inserts a rest of the armed duration', () => {
+    render(<Harness initial={emptyScore()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add rest' }));
+    expect(latest.elements[0]).toMatchObject({ kind: 'rest', base: 'quarter' });
+  });
+
+  it('tapping delete removes the last element', () => {
+    const initial = { ...emptyScore(), elements: [noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter')] };
+    render(<Harness initial={initial} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(latest.elements).toHaveLength(0);
+  });
+
+  it('pad selection arrows + pitch nudge transpose the selected note', () => {
+    const initial = { ...emptyScore(), elements: [noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter')] };
+    render(<Harness initial={initial} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select next note' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pitch up' }));
+    expect(latest.elements[0]).toMatchObject({ pitch: { step: 'C', alter: 1 } });
+  });
+
+  it('pad insertion honors the cursor like typing does', () => {
+    const initial = {
+      ...emptyScore(),
+      elements: [
+        noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter'),
+        noteOf({ step: 'E', octave: 4, alter: 0 }, 'quarter'),
+      ],
+    };
+    render(<Harness initial={initial} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select next note' })); // selects C
+    fireEvent.click(screen.getByRole('button', { name: 'Add note D' }));
+    expect(latest.elements.map((e: { pitch: { step: string } }) => e.pitch.step)).toEqual(['C', 'D', 'E']);
+  });
+
+  it('duration pills show their keyboard number', () => {
+    render(<Harness initial={emptyScore()} />);
+    expect(screen.getByRole('button', { name: /3.*quarter/i })).toBeTruthy();
+  });
+
   it('note insertion in the middle: selecting the first of two notes and inserting lands between them', () => {
     const initial = {
       ...emptyScore(),

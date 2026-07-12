@@ -51,6 +51,50 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
     }
   }, []);
 
+  // Shared entry actions — fired by the desktop keyboard shortcuts AND the
+  // on-screen note pad below (phones/tablets have no hardware keyboard, so
+  // the pad is the only way to enter pitches there).
+  const addPitch = useCallback((step: Pitch['step']) => {
+    const s = scoreRef.current;
+    const prev = [...s.elements].reverse().find((el) => el.kind === 'note') as any;
+    const basePitch = nearestPitch(step, prev ? prev.pitch : null);
+    const pitch = { ...basePitch, alter: armedAlter };
+    playPitch(midiOf(pitch));  // sound the entered pitch
+    const insertAt = selected != null ? selected + 1 : s.elements.length;
+    dispatch(insertElement(insertAt, noteOf(pitch, armed, armedDots)));
+    if (selected != null) setSelected(insertAt);
+  }, [armed, armedDots, armedAlter, selected, dispatch]);
+
+  const addRest = useCallback(() => {
+    const insertAt = selected != null ? selected + 1 : scoreRef.current.elements.length;
+    dispatch(insertElement(insertAt, restOf(armed, armedDots)));
+    if (selected != null) setSelected(insertAt);
+  }, [armed, armedDots, selected, dispatch]);
+
+  const deleteAtCursor = useCallback(() => {
+    const at = selected ?? scoreRef.current.elements.length - 1;
+    if (at < 0) return false;
+    dispatch(deleteElement(at));
+    setSelected(null);
+    return true;
+  }, [selected, dispatch]);
+
+  const moveSelection = useCallback((dir: 1 | -1) => {
+    const s = scoreRef.current;
+    if (s.elements.length === 0) return;
+    setSelected((cur) => {
+      const next = cur == null ? (dir === 1 ? 0 : s.elements.length - 1) : cur + dir;
+      return Math.max(0, Math.min(s.elements.length - 1, next));
+    });
+  }, []);
+
+  const nudgePitch = useCallback((dir: 1 | -1) => {
+    if (selected == null) return;
+    const el = scoreRef.current.elements[selected];
+    if (el?.kind === 'note') playPitch(midiOf(el.pitch) + dir);  // sound the new pitch
+    dispatch(transpose(selected, dir));
+  }, [selected, dispatch]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // Task 12 puts this editor on a page with a title <input>, due-date input, and
@@ -63,28 +107,15 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
       const dur = DURATIONS.find((d) => d.key === e.key);
       if (dur) { setArmed(dur.code); return; }
       if (/^[a-gA-G]$/.test(e.key)) {
-        const prev = [...s.elements].reverse().find((el) => el.kind === 'note') as any;
-        const basePitch = nearestPitch(e.key.toUpperCase() as Pitch['step'], prev ? prev.pitch : null);
-        const pitch = { ...basePitch, alter: armedAlter };
-        playPitch(midiOf(pitch));  // sound the entered pitch
-        const insertAt = selected != null ? selected + 1 : s.elements.length;
-        dispatch(insertElement(insertAt, noteOf(pitch, armed, armedDots)));
-        if (selected != null) setSelected(insertAt);
+        addPitch(e.key.toUpperCase() as Pitch['step']);
         return;
       }
       if (e.key === 'r' || e.key === 'R') {
-        const insertAt = selected != null ? selected + 1 : s.elements.length;
-        dispatch(insertElement(insertAt, restOf(armed, armedDots)));
-        if (selected != null) setSelected(insertAt);
+        addRest();
         return;
       }
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        const at = selected ?? s.elements.length - 1;
-        if (at >= 0) {
-          e.preventDefault();
-          dispatch(deleteElement(at));
-          setSelected(null);
-        }
+        if (deleteAtCursor()) e.preventDefault();
         return;
       }
       if (e.key === '.') {
@@ -115,24 +146,17 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
       }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         e.preventDefault();
-        if (s.elements.length === 0) return;
-        setSelected((cur) => {
-          const next = cur == null ? (e.key === 'ArrowRight' ? 0 : s.elements.length - 1)
-                                   : cur + (e.key === 'ArrowRight' ? 1 : -1);
-          return Math.max(0, Math.min(s.elements.length - 1, next));
-        });
+        moveSelection(e.key === 'ArrowRight' ? 1 : -1);
         return;
       }
       if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && selected != null) {
         e.preventDefault();
-        const el = s.elements[selected];
-        if (el?.kind === 'note') playPitch(midiOf(el.pitch) + (e.key === 'ArrowUp' ? 1 : -1));  // sound the new pitch
-        dispatch(transpose(selected, e.key === 'ArrowUp' ? 1 : -1));
+        nudgePitch(e.key === 'ArrowUp' ? 1 : -1);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [armed, armedDots, armedAlter, selected, dispatch]);
+  }, [selected, dispatch, addPitch, addRest, deleteAtCursor, moveSelection, nudgePitch]);
 
   return (
     <div className="space-y-2">
@@ -140,6 +164,7 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
       <div className="flex flex-wrap items-center gap-1.5">
         {DURATIONS.map((d) => (
           <button key={d.code} onClick={() => setArmed(d.code)} className={pill(armed === d.code)}>
+            <span className={`mr-1 font-mono text-[11px] ${armed === d.code ? 'text-slate-300' : 'text-slate-400'}`}>{d.key}</span>
             {d.label}
           </button>
         ))}
@@ -167,12 +192,34 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         </button>
       </div>
       <div className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs leading-relaxed text-slate-600">
-        <span className="font-medium text-slate-700">Type to write music.</span>{' '}
+        <span className="font-medium text-slate-700">Type to write music — or tap the note pad below.</span>{' '}
         Press <Kbd>A</Kbd>–<Kbd>G</Kbd> to add notes · <Kbd>1</Kbd>–<Kbd>6</Kbd> duration ·{' '}
         <Kbd>.</Kbd> dot · <Kbd>=</Kbd> sharp · <Kbd>-</Kbd> flat · <Kbd>R</Kbd> rest ·{' '}
         <Kbd>←</Kbd>/<Kbd>→</Kbd> select a note · <Kbd>↑</Kbd>/<Kbd>↓</Kbd> move its pitch ·{' '}
         <Kbd>T</Kbd> tie to next · <Kbd>↵</Kbd> respell (♯/♭) · <Kbd>⌫</Kbd> delete ·{' '}
         <Kbd>Lyrics</Kbd> then type under the note: <Kbd>Space</Kbd> = next word, <Kbd>-</Kbd> = hyphen to next syllable.
+      </div>
+      {/* On-screen note pad — tap-to-enter for phones/tablets (the keydown
+          shortcuts above need a hardware keyboard, which touch devices lack).
+          Also usable with a mouse; fires the exact same shared actions. */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {(['C', 'D', 'E', 'F', 'G', 'A', 'B'] as const).map((step) => (
+          <button
+            key={step}
+            aria-label={`Add note ${step}`}
+            onClick={() => addPitch(step)}
+            className="min-w-10 rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-slate-200 active:bg-slate-900 active:text-white"
+          >
+            {step}
+          </button>
+        ))}
+        <button aria-label="Add rest" onClick={addRest} className={pill(false)}>Rest</button>
+        <button aria-label="Delete" onClick={deleteAtCursor} className={pill(false)}>⌫</button>
+        <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
+        <button aria-label="Select previous note" onClick={() => moveSelection(-1)} className={pill(false)}>◀</button>
+        <button aria-label="Select next note" onClick={() => moveSelection(1)} className={pill(false)}>▶</button>
+        <button aria-label="Pitch up" onClick={() => nudgePitch(1)} className={pill(false)}>▲</button>
+        <button aria-label="Pitch down" onClick={() => nudgePitch(-1)} className={pill(false)}>▼</button>
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <NotationView
