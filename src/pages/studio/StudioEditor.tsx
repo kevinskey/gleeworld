@@ -34,6 +34,7 @@ import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { GW_INSTRUMENTS, toGwPresetId } from '@/lib/studio/gwInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
+import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
   appendTakeNote, recordStartMode, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
   type HeldPress, type CapturedCc,
@@ -5480,7 +5481,7 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
   if (!supported) return null;
   return (
     <div className="border-t border-border pt-2">
-      <Label className="text-xs font-semibold">USB MIDI keyboard — play &amp; record</Label>
+      <Label className="text-xs font-semibold">MIDI keyboard — play &amp; record</Label>
       <p className="text-xs text-muted-foreground mb-1.5">
         Plays the armed MIDI track&apos;s instrument live, and records into its clip while the transport is recording.{' '}
         {targetTrackName
@@ -5502,6 +5503,18 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
           </select>
         )}
       </div>
+      {enabled && getMidiInputSource().kind === 'native' && (
+        <button
+          onClick={() => {
+            void getMidiInputSource().showBluetoothPairing().then((ok) => {
+              if (!ok) toast.error('Could not open Bluetooth MIDI pairing.');
+            });
+          }}
+          className="mt-1.5 h-8 px-3 rounded border text-sm bg-muted border-border text-muted-foreground hover:bg-muted/70"
+        >
+          Pair Bluetooth MIDI…
+        </button>
+      )}
       {enabled && status === 'denied' && <p className="text-xs text-red-500 mt-1">MIDI access was denied — enable it in the browser to play.</p>}
       {enabled && status === 'connected' && inputs.length === 0 && <p className="text-xs text-muted-foreground mt-1">No MIDI inputs found — plug in a keyboard.</p>}
     </div>
