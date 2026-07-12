@@ -591,8 +591,11 @@ function ScoreListRow({
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold leading-snug truncate">{row.title || 'Untitled'}</div>
         <div className="text-xs text-muted-foreground truncate mt-0.5">{row.composer || ' '}</div>
-      </div>
-      <div className="hidden md:flex items-center gap-2 shrink-0">
+        {/* Badges live inside the flexible title column and wrap, so they can
+            never squeeze the title to zero width or push the actions off the
+            card edge (which is exactly what happened at iPad widths when this
+            cluster was a shrink-0 sibling of the title). */}
+        <div className="hidden md:flex items-center gap-2 flex-wrap mt-1.5">
         <RightsBadge
           status={row.rights_status}
           seatCount={row.license_seat_count}
@@ -623,6 +626,7 @@ function ScoreListRow({
           <LibraryIcon className="w-3 h-3 mr-1" />
           {copies}
         </Badge>
+        </div>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         {canEdit && (
