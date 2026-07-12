@@ -4,7 +4,7 @@ import { toZonedTime } from "date-fns-tz";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
+import { CategoryConfig, CategoryFilter, CATEGORY_FALLBACK_COLOR } from "./CommandCenterCalendar";
 import { CommandCenterEventCard } from "./CommandCenterEventCard";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +72,7 @@ export const AgendaView = ({
   const isToday = isSameDayET(selectedDate, new Date());
 
   return (
-    <div className="flex flex-col h-full bg-white text-slate-900 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="flex flex-col h-full bg-card text-foreground rounded-xl shadow-sm border border-border overflow-hidden">
       {/* Date Header with Swipe Navigation */}
       <div className="bg-card border-b border-border  text-foreground p-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
@@ -121,7 +121,7 @@ export const AgendaView = ({
                 </span>
                 <span className={cn(
                   "text-lg font-bold",
-                  isDayToday && !isSelected && "text-[#B8860B]"
+                  isDayToday && !isSelected && "text-primary"
                 )}>
                   {format(day, 'd')}
                 </span>
@@ -132,7 +132,7 @@ export const AgendaView = ({
                         key={idx} 
                         className={cn(
                           "w-1 h-1 rounded-full",
-                          isSelected ? "bg-white/70" : "bg-primary"
+                          isSelected ? "bg-primary-foreground/70" : "bg-primary"
                         )} 
                       />
                     ))}
@@ -157,7 +157,7 @@ export const AgendaView = ({
               </span>
             </h3>
             {dayEvents.length === 0 ? (
-              <div className="text-center py-8 bg-slate-50 rounded-lg">
+              <div className="text-center py-8 bg-muted/50 rounded-lg">
                 <Calendar className="h-10 w-10 text-foreground mx-auto mb-2" />
                 <p className="text-muted-foreground font-medium">No events scheduled</p>
               </div>
@@ -170,7 +170,7 @@ export const AgendaView = ({
                     <CommandCenterEventCard
                       key={event.id}
                       event={event}
-                      categoryColor={config?.color || '#708090'}
+                      categoryColor={config?.color || CATEGORY_FALLBACK_COLOR}
                       categoryIcon={config?.icon || 'calendar'}
                       compact={false}
                       onEventDeleted={onEventDeleted}
@@ -192,13 +192,13 @@ export const AgendaView = ({
                   const category = getCategoryForEvent(event);
                   const config = getCategoryConfig(category);
                   return (
-                    <div key={event.id} className="flex items-center gap-3 p-2 rounded-lg bg-slate-50">
+                    <div key={event.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
                       <div 
                         className="w-2 h-10 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: config?.color || '#708090' }}
+                        style={{ backgroundColor: config?.color || CATEGORY_FALLBACK_COLOR }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {event.title}
                         </p>
                         <p className="text-xs text-muted-foreground">

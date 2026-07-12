@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus, ClipboardList, Calendar, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -32,23 +33,16 @@ export default function ConcertPlannerPage() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-10 space-y-6">
-      <header className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight flex items-center gap-2">
-            <ClipboardList className="w-7 h-7 text-primary" />
-            Concert Planner
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Build printed programs and public web pages from your library. One data set drives
-            both the printout and the published page.
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Concert Planner"
+      icon={ClipboardList}
+      subtitle="Build printed programs and public web pages from your library. One data set drives both the printout and the published page."
+      actions={
         <Button onClick={() => setCreating(true)}>
           <Plus className="w-4 h-4 mr-1" /> New program
         </Button>
-      </header>
-
+      }
+    >
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : programs.length === 0 ? (
@@ -111,7 +105,7 @@ export default function ConcertPlannerPage() {
           navigate(`/dashboard/concert-planner/${id}`);
         }}
       />
-    </div>
+    </DashboardPageShell>
   );
 }
 

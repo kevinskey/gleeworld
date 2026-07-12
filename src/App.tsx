@@ -229,8 +229,15 @@ const AttendanceScanPage = lazy(() => import("./pages/AttendanceScanPage"));
 const AttendancePinPage = lazy(() => import("./pages/AttendancePinPage"));
 // Existing AttendancePage (legacy)
 const AttendancePageLegacy = lazy(() => import("./pages/AttendancePage"));
-// MusicLibraryPage (legacy route reuses member page)
-const MusicLibraryPageLegacy = MusicLibraryPage;
+
+// Redirect that carries the query string along. Bare <Navigate to="/x" />
+// clears location.search, which silently breaks deep links like
+// /music-library?view=<scoreId> (assistant open-score) and
+// /messenger?join=<room> (meeting invites).
+const RedirectWithSearch = ({ to }: { to: string }) => {
+  const location = useLocation();
+  return <Navigate to={{ pathname: to, search: location.search }} replace />;
+};
 
 const Budgets = lazy(() => import("./pages/Budgets"));
 const Treasurer = lazy(() => import("./pages/Treasurer"));
@@ -1109,7 +1116,7 @@ const App = () => {
               />
               <Route
                 path="/messenger"
-                element={<Navigate to="/communications" replace />}
+                element={<RedirectWithSearch to="/dashboard/messenger" />}
               />
               <Route
                 path="/admin/communications"
@@ -2048,15 +2055,7 @@ const App = () => {
                 />
                 <Route
                   path="/calendar"
-                  element={<Navigate to="/dashboard/calendar" replace />}
-                />
-                <Route 
-                  path="/messenger" 
-                  element={
-                    <ProtectedRoute>
-                      <Messenger />
-                    </ProtectedRoute>
-                  } 
+                  element={<RedirectWithSearch to="/dashboard/calendar" />}
                 />
                 <Route
                   path="/public-calendar"
@@ -2202,13 +2201,9 @@ const App = () => {
                         </ProtectedRoute>
                       }
                     />
-                   <Route 
-                     path="/music-library" 
-                     element={
-                       <PublicRoute>
-                         <MusicLibraryPageLegacy />
-                       </PublicRoute>
-                     } 
+                   <Route
+                     path="/music-library"
+                     element={<RedirectWithSearch to="/dashboard/music-library" />}
                     />
                       <Route 
                         path="/librarian-dashboard" 

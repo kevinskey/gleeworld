@@ -58,6 +58,10 @@ export interface CategoryConfig {
 
 // Palette aligned with the Command Center dashboard tints:
 //   cyan / orange / amber / purple / rose / teal / emerald / slate (-600).
+// These stay as hex literals (not CSS vars) because consumers do hex math on
+// them — `${color}1F` alpha suffixes and getContrastTextColor() parsing.
+// Fallback for events whose category has no config (legacy/unknown slugs).
+export const CATEGORY_FALLBACK_COLOR = '#708090';
 export const CATEGORY_CONFIGS: CategoryConfig[] = [
   { id: 'glee',         label: 'Glee Club',           color: '#0891b2', icon: 'music' },
   { id: 'courses',      label: 'Courses',             color: '#ea580c', icon: 'book-open' },
@@ -338,10 +342,10 @@ export const CommandCenterCalendar = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-slate-100">
+      <div className="flex items-center justify-center h-full bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-600 font-medium">Loading Command Center...</p>
+          <p className="text-muted-foreground font-medium">Loading Command Center...</p>
         </div>
       </div>
     );
@@ -352,7 +356,7 @@ export const CommandCenterCalendar = () => {
   const colorForEvent = (e: GleeWorldEvent) => {
     const cat = getCategoryForEvent(e);
     const cfg = CATEGORY_CONFIGS.find((c) => c.id === cat);
-    return cfg?.color || '#94a3b8';
+    return cfg?.color || CATEGORY_FALLBACK_COLOR;
   };
 
   return (

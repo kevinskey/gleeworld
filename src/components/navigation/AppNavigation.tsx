@@ -63,15 +63,15 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { label: "Home", href: "/dashboard", icon: Home },
-      { label: "Calendar", href: "/calendar", icon: Calendar },
-      { label: "Messenger", href: "/messenger", icon: MessageCircle },
+      { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
+      { label: "Messages", href: "/dashboard/messenger", icon: MessageCircle },
     ],
   },
   {
     label: "Music",
     defaultOpen: true,
     items: [
-      { label: "Music Library", href: "/music-library", icon: Music },
+      { label: "Music Library", href: "/dashboard/music-library", icon: Music },
       { label: "Concert Planner", href: "/dashboard/concert-planner", icon: CalendarDays },
       { label: "Part Tracks", href: "/dashboard/part-tracks", icon: Disc3 },
       { label: "Practice Studio", href: "/practice-studio", icon: Mic },

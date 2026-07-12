@@ -28,8 +28,8 @@ const navFor = (flags: ModuleFlags, over: Partial<NavContext> = {}): NavContext 
 });
 
 // Routes that are always available regardless of module flags (Home,
-// Messages, Schedule, and the flagless attendance/roster surface).
-const FLAGLESS_CORE_ROUTES = new Set(['/dashboard', '/messenger', '/dashboard/calendar', '/attendance', '/dashboard/people']);
+// Messages, Calendar, and the flagless attendance/roster surface).
+const FLAGLESS_CORE_ROUTES = new Set(['/dashboard', '/dashboard/messenger', '/dashboard/calendar', '/attendance', '/dashboard/people']);
 
 // Maps a destination route to the ModuleFlags key that gates it, when the
 // route is module-gated (used only by the sweep invariant test below).
@@ -42,13 +42,13 @@ const ROUTE_FLAG: Record<string, keyof ModuleFlags> = {
 };
 
 describe('getTabItems', () => {
-  it('student gets Home/Messages/Music/Studio/Schedule', () => {
+  it('student gets Home/Messages/Music/Studio/Calendar', () => {
     expect(getTabItems('student', allOn).map((t) => t.label))
-      .toEqual(['Home', 'Messages', 'Music', 'Studio', 'Schedule']);
+      .toEqual(['Home', 'Messages', 'Music', 'Studio', 'Calendar']);
   });
   it('faculty gets Roster instead of Studio', () => {
     expect(getTabItems('faculty', allOn).map((t) => t.label))
-      .toEqual(['Home', 'Messages', 'Roster', 'Music', 'Schedule']);
+      .toEqual(['Home', 'Messages', 'Roster', 'Music', 'Calendar']);
   });
   it('student without Studio module gets Schedule slot filled, never a dead tab', () => {
     const tabs = getTabItems('student', { ...allOn, hasStudio: false });
@@ -63,7 +63,7 @@ describe('getTabItems', () => {
   });
   it('student with all module flags false falls back to Attendance only, never a duplicate', () => {
     const tabs = getTabItems('student', allOff);
-    expect(tabs.map((t) => t.label)).toEqual(['Home', 'Messages', 'Attendance', 'Schedule']);
+    expect(tabs.map((t) => t.label)).toEqual(['Home', 'Messages', 'Attendance', 'Calendar']);
     expect(tabs).toHaveLength(4);
     expect(new Set(tabs.map((t) => t.key)).size).toBe(4);
     expect(new Set(tabs.map((t) => t.to)).size).toBe(4);
@@ -100,10 +100,10 @@ describe('getTabItems', () => {
         expect(new Set(tabs.map((t) => t.key)).size).toBe(tabs.length);
         expect(new Set(tabs.map((t) => t.to)).size).toBe(tabs.length);
 
-        // Fixed positions: Home first, Messages second, Schedule last.
+        // Fixed positions: Home first, Messages second, Calendar last.
         expect(tabs[0].label).toBe('Home');
         expect(tabs[1].label).toBe('Messages');
-        expect(tabs[tabs.length - 1].label).toBe('Schedule');
+        expect(tabs[tabs.length - 1].label).toBe('Calendar');
 
         // Every tab is either a flagless-core route or gated by a
         // currently-true module flag — never a dead, flag-off route.

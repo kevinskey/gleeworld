@@ -12,7 +12,7 @@ import {
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
+import { CategoryConfig, CategoryFilter, CATEGORY_FALLBACK_COLOR } from "./CommandCenterCalendar";
 import { CommandCenterEventCard } from "./CommandCenterEventCard";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,7 +157,7 @@ export const DailyRunSheet = ({
                   <div key={event.id}>
                     <CommandCenterEventCard
                       event={event}
-                      categoryColor={config?.color || '#708090'}
+                      categoryColor={config?.color || CATEGORY_FALLBACK_COLOR}
                       categoryIcon={config?.icon || 'calendar'}
                       compact={false}
                       onEventDeleted={onEventDeleted}

@@ -102,9 +102,9 @@ export const CommandCenterHeader = ({
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <div className="min-w-[88px] text-center">
-                <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-base">
+                <h2 className="font-sans normal-case font-bold tracking-tight leading-none text-base">
                   {title}
-                </h1>
+                </h2>
               </div>
               <button 
                 onClick={() => onNavigateMonth('next')} 
@@ -172,7 +172,7 @@ export const CommandCenterHeader = ({
                   className={cn(
                     "px-2 py-1.5 rounded-full text-xs font-medium transition-all",
                     viewMode === m
-                      ? "bg-white text-foreground font-semibold shadow-sm"
+                      ? "bg-card text-foreground font-semibold shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -187,7 +187,7 @@ export const CommandCenterHeader = ({
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-9 h-9 w-full bg-muted border-border  text-foreground text-base placeholder:text-muted-foreground focus:bg-white focus:text-foreground focus:placeholder:text-muted-foreground transition-all"
+                className="pl-9 h-9 w-full bg-muted border-border  text-foreground text-base placeholder:text-muted-foreground focus:bg-card focus:text-foreground focus:placeholder:text-muted-foreground transition-all"
               />
             </div>
           </div>
@@ -204,7 +204,7 @@ export const CommandCenterHeader = ({
                 <button
                   onClick={onOpenFilters}
                   className={cn(
-                    "relative h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 transition-colors",
+                    "relative h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border transition-colors",
                     filtersActive ? "text-primary" : "text-foreground"
                   )}
                   title="Calendars"
@@ -220,7 +220,7 @@ export const CommandCenterHeader = ({
               {onOpenOfficeHours && (
                 <button
                   onClick={onOpenOfficeHours}
-                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 text-foreground transition-colors"
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border text-foreground transition-colors"
                   title="Office hours"
                 >
                   <Inbox className="h-4 w-4" />
@@ -229,7 +229,7 @@ export const CommandCenterHeader = ({
               {onOpenAgenda && (
                 <button
                   onClick={onOpenAgenda}
-                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 text-foreground transition-colors"
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border text-foreground transition-colors"
                   title="List"
                 >
                   <List className="h-4 w-4" />
@@ -238,7 +238,7 @@ export const CommandCenterHeader = ({
               {canManageEvents && (
                 <button
                   onClick={onAddEvent}
-                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 text-foreground transition-colors"
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border text-foreground transition-colors"
                   title="Add event"
                 >
                   <Plus className="h-4 w-4" />
@@ -247,7 +247,7 @@ export const CommandCenterHeader = ({
               {canManageEvents && onOpenSettings && (
                 <button
                   onClick={onOpenSettings}
-                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-slate-200 text-foreground transition-colors"
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border text-foreground transition-colors"
                   title="Calendar settings"
                 >
                   <Settings className="h-4 w-4" />
@@ -264,7 +264,7 @@ export const CommandCenterHeader = ({
                     className={cn(
                       "px-3 lg:px-3.5 h-7 rounded-full text-sm font-medium transition-all inline-flex items-center",
                       viewMode === m
-                        ? "bg-white text-foreground font-semibold shadow-sm"
+                        ? "bg-card text-foreground font-semibold shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -282,12 +282,12 @@ export const CommandCenterHeader = ({
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-9 pr-9 h-9 w-full rounded-full bg-muted border-transparent text-sm text-foreground placeholder:text-muted-foreground focus:bg-white transition-all"
+                className="pl-9 pr-9 h-9 w-full rounded-full bg-muted border-transparent text-sm text-foreground placeholder:text-muted-foreground focus:bg-card transition-all"
               />
               <button
                 type="button"
                 onClick={startDictation}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-slate-200 transition-colors"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border transition-colors"
                 title="Dictate search"
               >
                 <Mic className="h-4 w-4" />
@@ -297,7 +297,7 @@ export const CommandCenterHeader = ({
 
           {/* Row 2: big title + navigation cluster */}
           <div className="flex items-end justify-between gap-3">
-            <h1 className="font-sans normal-case tracking-tight leading-none text-2xl lg:text-3xl">
+            <h2 className="font-sans normal-case tracking-tight leading-none text-2xl lg:text-3xl">
               {viewMode === 'year' ? (
                 <span className="font-bold">{title}</span>
               ) : (
@@ -306,7 +306,7 @@ export const CommandCenterHeader = ({
                   <span className="font-normal">{format(currentDate, 'yyyy')}</span>
                 </>
               )}
-            </h1>
+            </h2>
             <div className="flex items-center gap-0.5 flex-shrink-0">
               <button
                 onClick={() => onNavigateMonth('prev')}

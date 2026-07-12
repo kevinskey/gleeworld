@@ -19,10 +19,10 @@ export interface Destination { key: string; to: string; label: string; icon: Luc
 
 const D = {
   home:     { key: 'home',     to: '/dashboard',            label: 'Home',     icon: Home } as Destination,
-  messages: { key: 'messages', to: '/messenger',            label: 'Messages', icon: MessageSquare } as Destination,
+  messages: { key: 'messages', to: '/dashboard/messenger',  label: 'Messages', icon: MessageSquare } as Destination,
   music:    { key: 'music',    to: '/dashboard/viewer',     label: 'Music',    icon: Music } as Destination,
   studio:   { key: 'studio',   to: '/studio',               label: 'Studio',   icon: Disc3 } as Destination,
-  schedule: { key: 'schedule', to: '/dashboard/calendar',   label: 'Schedule', icon: Calendar } as Destination,
+  schedule: { key: 'schedule', to: '/dashboard/calendar',   label: 'Calendar', icon: Calendar } as Destination,
   roster:   { key: 'roster',   to: '/dashboard/people',     label: 'Roster',   icon: Users } as Destination,
   tracks:   { key: 'tracks',   to: '/dashboard/part-tracks',label: 'Tracks',   icon: Mic } as Destination,
   sight:    { key: 'sight',    to: '/dashboard/sight-reading', label: 'Sight Reading', icon: ScanEye } as Destination,

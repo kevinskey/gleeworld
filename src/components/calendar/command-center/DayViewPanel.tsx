@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { CategoryConfig, CategoryFilter } from "./CommandCenterCalendar";
+import { CategoryConfig, CategoryFilter, CATEGORY_FALLBACK_COLOR } from "./CommandCenterCalendar";
 import { WeeklyTimeGrid } from "./WeeklyTimeGrid";
 import { EventQRCode } from "../EventQRCode";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
@@ -218,7 +218,7 @@ export const DayViewPanel = ({
                     <span className="flex items-center gap-2 text-[15px] text-muted-foreground">
                       <span
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: selectedConfig?.color || '#708090' }}
+                        style={{ backgroundColor: selectedConfig?.color || CATEGORY_FALLBACK_COLOR }}
                       />
                       {selectedEvent.gw_calendars?.name || selectedConfig?.label || 'Events'}
                     </span>
