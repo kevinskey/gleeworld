@@ -98,9 +98,35 @@ Deno.serve(async (req) => {
     }
     const maxTotal = settingsData?.max_total_items ?? 25;
 
-    // Load active sources from DB
-    const { data: dbSources } = await sb.from('gw_feed_sources').select('*').eq('feed_type', 'news').eq('is_active', true).order('display_order');
-    const feedSources = dbSources || [];
+    // Per-tenant sources. A tenant that has configured ANY news sources in
+    // Feed Control owns its list (only its active rows are fetched); a
+    // tenant with no rows — and callers with no tenant — get the platform
+    // defaults (tenant_id IS NULL, seeded by migration; invisible to
+    // clients because of tenant RLS, hence resolved here with service role).
+    const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
+    const tenantSlug = typeof body?.tenant === 'string' && body.tenant ? body.tenant : null;
+    let tenantId: string | null = null;
+    if (tenantSlug) {
+      const { data: t } = await sb.from('gw_tenants').select('id').eq('slug', tenantSlug).maybeSingle();
+      tenantId = t?.id ?? null;
+    }
+
+    const loadDefaults = async () => {
+      const { data } = await sb.from('gw_feed_sources').select('*')
+        .eq('feed_type', 'news').eq('is_active', true).is('tenant_id', null).order('display_order');
+      return data ?? [];
+    };
+
+    let feedSources: any[] = [];
+    if (tenantId) {
+      const { data: tenantRows } = await sb.from('gw_feed_sources').select('*')
+        .eq('feed_type', 'news').eq('tenant_id', tenantId).order('display_order');
+      feedSources = tenantRows && tenantRows.length > 0
+        ? tenantRows.filter((r: any) => r.is_active)
+        : await loadDefaults();
+    } else {
+      feedSources = await loadDefaults();
+    }
 
     if (feedSources.length === 0) {
       return new Response(JSON.stringify({ success: true, items: [] }), {

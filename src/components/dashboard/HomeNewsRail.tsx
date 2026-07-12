@@ -39,10 +39,16 @@ function timeAgo(dateStr: string): string {
 }
 
 export function HomeNewsRail() {
+  // Feeds are per-tenant: the function uses this tenant's Feed Control
+  // sources when any exist, else the platform defaults.
+  const tenantSlug: string | null =
+    (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__?.tenant) || null;
   const { data: items, isLoading, isError } = useQuery({
-    queryKey: ['home-news-feed'],
+    queryKey: ['home-news-feed', tenantSlug],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('fetch-news-feeds');
+      const { data, error } = await supabase.functions.invoke('fetch-news-feeds', {
+        body: { tenant: tenantSlug },
+      });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Failed to fetch news');
       return (data.items ?? []) as NewsItem[];

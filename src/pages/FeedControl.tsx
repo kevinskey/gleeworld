@@ -133,6 +133,9 @@ export default function FeedControl() {
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Pick what shows up in the News and Scholarship widgets on your dashboard.
+          Until you turn on a source of your own, your site uses the GleeWorld
+          default news mix (Google News choral &amp; music education, NPR Music);
+          once you add any source here, only your list is used.
         </p>
       </div>
 
