@@ -39,7 +39,9 @@ export function useStudioMidiInput({
     let unsub: (() => void) | null = null;
 
     const refreshInputs = () => {
-      void source.listInputs().then((list) => { if (!cancelled) setInputs(list); });
+      void source.listInputs()
+        .then((list) => { if (!cancelled) setInputs(list); })
+        .catch(() => { /* device list unavailable — keep last known */ });
     };
     const offState = source.onStateChange(refreshInputs);
 
