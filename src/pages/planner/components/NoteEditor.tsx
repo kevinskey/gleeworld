@@ -263,28 +263,33 @@ function EditorToolbar({ editor, onDirty }: { editor: Editor; onDirty: () => voi
     fn();
     onDirty();
   };
-  const c = editor.chain().focus();
+  // MUST be a function: tiptap chains execute each command's side effects
+  // the moment it's invoked (.run() only dispatches), so a shared
+  // `editor.chain().focus()` built during render stole focus into the
+  // editor on every toolbar re-render — scrolling the page to the editor
+  // on load and instantly dismissing any open popover/menu.
+  const c = () => editor.chain().focus();
   return (
     <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-border bg-card px-1 py-0.5" role="toolbar" aria-label="Formatting">
-      <ToolbarButton label="Heading 1" active={editor.isActive('heading', { level: 1 })} onClick={run(() => c.toggleHeading({ level: 1 }).run())}><Heading1 className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Heading 2" active={editor.isActive('heading', { level: 2 })} onClick={run(() => c.toggleHeading({ level: 2 }).run())}><Heading2 className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Heading 3" active={editor.isActive('heading', { level: 3 })} onClick={run(() => c.toggleHeading({ level: 3 }).run())}><Heading3 className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Heading 1" active={editor.isActive('heading', { level: 1 })} onClick={run(() => c().toggleHeading({ level: 1 }).run())}><Heading1 className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Heading 2" active={editor.isActive('heading', { level: 2 })} onClick={run(() => c().toggleHeading({ level: 2 }).run())}><Heading2 className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Heading 3" active={editor.isActive('heading', { level: 3 })} onClick={run(() => c().toggleHeading({ level: 3 }).run())}><Heading3 className="h-4 w-4" /></ToolbarButton>
       <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-      <ToolbarButton label="Bold" active={editor.isActive('bold')} onClick={run(() => c.toggleBold().run())}><Bold className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Italic" active={editor.isActive('italic')} onClick={run(() => c.toggleItalic().run())}><Italic className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Underline" active={editor.isActive('underline')} onClick={run(() => c.toggleUnderline().run())}><UnderlineIcon className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Strikethrough" active={editor.isActive('strike')} onClick={run(() => c.toggleStrike().run())}><Strikethrough className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Inline code" active={editor.isActive('code')} onClick={run(() => c.toggleCode().run())}><Code className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Bold" active={editor.isActive('bold')} onClick={run(() => c().toggleBold().run())}><Bold className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Italic" active={editor.isActive('italic')} onClick={run(() => c().toggleItalic().run())}><Italic className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Underline" active={editor.isActive('underline')} onClick={run(() => c().toggleUnderline().run())}><UnderlineIcon className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Strikethrough" active={editor.isActive('strike')} onClick={run(() => c().toggleStrike().run())}><Strikethrough className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Inline code" active={editor.isActive('code')} onClick={run(() => c().toggleCode().run())}><Code className="h-4 w-4" /></ToolbarButton>
       <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-      <ToolbarButton label="Bulleted list" active={editor.isActive('bulletList')} onClick={run(() => c.toggleBulletList().run())}><List className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Numbered list" active={editor.isActive('orderedList')} onClick={run(() => c.toggleOrderedList().run())}><ListOrdered className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Task list" active={editor.isActive('taskList')} onClick={run(() => c.toggleTaskList().run())}><ListChecks className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Quote" active={editor.isActive('blockquote')} onClick={run(() => c.toggleBlockquote().run())}><Quote className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Bulleted list" active={editor.isActive('bulletList')} onClick={run(() => c().toggleBulletList().run())}><List className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Numbered list" active={editor.isActive('orderedList')} onClick={run(() => c().toggleOrderedList().run())}><ListOrdered className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Task list" active={editor.isActive('taskList')} onClick={run(() => c().toggleTaskList().run())}><ListChecks className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Quote" active={editor.isActive('blockquote')} onClick={run(() => c().toggleBlockquote().run())}><Quote className="h-4 w-4" /></ToolbarButton>
       <span className="mx-1 h-5 w-px bg-border" aria-hidden />
       <WikiLinkButton editor={editor} onDirty={onDirty} />
       <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-      <ToolbarButton label="Undo" onClick={run(() => c.undo().run())}><Undo2 className="h-4 w-4" /></ToolbarButton>
-      <ToolbarButton label="Redo" onClick={run(() => c.redo().run())}><Redo2 className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Undo" onClick={run(() => c().undo().run())}><Undo2 className="h-4 w-4" /></ToolbarButton>
+      <ToolbarButton label="Redo" onClick={run(() => c().redo().run())}><Redo2 className="h-4 w-4" /></ToolbarButton>
     </div>
   );
 }

@@ -8,10 +8,11 @@
 // panel for open notes (inline on xl, sheet below).
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Info, Menu, NotebookPen, Trash2 } from 'lucide-react';
+import { ArrowLeft, Info, Menu, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { periodKey, PERIOD_TYPES, type PeriodType } from '@/lib/planner/dateKeys';
@@ -95,21 +96,18 @@ export default function PlannerPage() {
       <div className="min-w-0 flex-1 py-4 lg:px-6">
         {/* Mobile / tablet top bar */}
         <div className="mb-3 flex items-center gap-2 lg:hidden">
-          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetTrigger asChild>
+          {/* Local dropdown anchored to the button — a full-screen sheet
+              was heavy-handed for what is just the planner's section nav. */}
+          <Popover open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5" aria-label="Open planner menu">
                 <Menu className="h-4 w-4" /> Menu
               </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 overflow-y-auto p-0">
-              <SheetHeader className="border-b border-border p-3">
-                <SheetTitle className="flex items-center gap-2 text-base">
-                  <NotebookPen className="h-4 w-4" /> Notes
-                </SheetTitle>
-              </SheetHeader>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="max-h-[70vh] w-72 overflow-y-auto p-0">
               {sidebar}
-            </SheetContent>
-          </Sheet>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {noteId ? (
