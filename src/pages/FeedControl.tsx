@@ -54,6 +54,8 @@ export default function FeedControl() {
   const [customUrl, setCustomUrl] = useState('');
   const [customName, setCustomName] = useState('');
   const [adding, setAdding] = useState(false);
+  const [gnTopic, setGnTopic] = useState('');
+  const [addingTopic, setAddingTopic] = useState(false);
 
   const { data: sources = [] } = useQuery<FeedSource[]>({
     queryKey: ['feed-sources'],
@@ -114,6 +116,32 @@ export default function FeedControl() {
     }
   }
 
+  // Google News publishes a search-RSS endpoint, so any topic string
+  // becomes a feed — no scraping, no API key.
+  async function addGoogleNewsTopic() {
+    const topic = gnTopic.trim();
+    if (!topic) return;
+    setAddingTopic(true);
+    try {
+      const { error } = await supabase.from('gw_feed_sources').insert({
+        feed_type: 'news',
+        name: `Google News · ${topic}`,
+        url: `https://news.google.com/rss/search?q=${encodeURIComponent(topic)}&hl=en-US&gl=US&ceid=US:en`,
+        icon: '📰',
+        is_active: true,
+        created_by: user?.id,
+      });
+      if (error) throw error;
+      setGnTopic('');
+      qc.invalidateQueries({ queryKey: ['feed-sources'] });
+      toast({ title: 'Google News topic added' });
+    } catch (e: any) {
+      toast({ title: 'Could not add topic', description: e.message, variant: 'destructive' });
+    } finally {
+      setAddingTopic(false);
+    }
+  }
+
   async function deleteSource(id: string) {
     const { error } = await supabase.from('gw_feed_sources').delete().eq('id', id);
     if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
@@ -168,6 +196,31 @@ export default function FeedControl() {
               })}
             </CardContent>
           </Card>
+
+          {tab === 'news' && (
+            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+              <CardHeader><CardTitle>Google News topics</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Follow any topic — Google News headlines about it join your feed.
+                  Try your ensemble's name, your city's arts scene, or a genre like gospel choir.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    placeholder="Topic (e.g., HBCU choirs, a cappella, Atlanta arts)"
+                    value={gnTopic}
+                    onChange={(e) => setGnTopic(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') void addGoogleNewsTopic(); }}
+                    className="sm:flex-1"
+                  />
+                  <Button onClick={addGoogleNewsTopic} disabled={addingTopic || !gnTopic.trim()}>
+                    {addingTopic ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                    Add topic
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
             <CardHeader><CardTitle>Add your own</CardTitle></CardHeader>
