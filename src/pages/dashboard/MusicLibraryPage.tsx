@@ -22,7 +22,7 @@ import {
 import {
   Music, Upload, Search, Loader2, FileMusic, ListMusic,
   PencilLine, Headphones, Youtube, X, Pencil, Library as LibraryIcon,
-  Maximize2, Minimize2, LayoutGrid, List as ListIcon,
+  Maximize2, Minimize2, LayoutGrid, List as ListIcon, Share2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -68,6 +68,9 @@ interface ScoreRow {
   license_seat_count: number | null;
   license_expires_at: string | null;
   copyright_holder: string | null;
+  // Member-visibility flag (migration 20260711_shared_with_members — Task 1).
+  // Members (non-editors) only ever see scores librarians have flagged shared.
+  shared_with_members: boolean | null;
 }
 
 export default function MusicLibraryPage() {
@@ -139,14 +142,17 @@ export default function MusicLibraryPage() {
   const toggleViewerFullscreen = () => setIsViewerFullscreen((v) => !v);
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
-    queryKey: ['music-library-scores', scope],
+    queryKey: ['music-library-scores', scope, canEdit],
     queryFn: async () => {
       let q = supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members')
         .eq('is_archived', false)
         .order('title')
         .limit(200);
+      // Members (non-editors) only ever see scores the librarian has flagged
+      // shared; editors see everything and can toggle the flag.
+      if (!canEdit) q = q.eq('shared_with_members', true);
       q = applyFilter(q as any);
       const { data } = await q;
       return (data ?? []) as ScoreRow[];
@@ -168,6 +174,20 @@ export default function MusicLibraryPage() {
       r.voicing?.toLowerCase().includes(s),
     );
   }, [rows, search]);
+
+  // Editor-only toggle: flips shared_with_members so the score does/doesn't
+  // show up in members' (non-editors') filtered query above. `shared_with_members`
+  // isn't in the generated Supabase types yet (Task 1 column), hence the cast.
+  const handleToggleShare = async (row: ScoreRow) => {
+    const next = !row.shared_with_members;
+    const { error } = await (supabase as any)
+      .from('gw_sheet_music')
+      .update({ shared_with_members: next })
+      .eq('id', row.id);
+    if (error) { toast.error('Could not update sharing'); return; }
+    qc.invalidateQueries({ queryKey: ['music-library-scores'] });
+    toast.success(next ? 'Shared with members' : 'No longer shared');
+  };
 
   return (
     <DashboardPageShell
@@ -275,6 +295,7 @@ export default function MusicLibraryPage() {
                   onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
                   onAttachAudio={() => setAttachingAudio(r)}
                   onEdit={() => setEditing(r)}
+                  onToggleShare={() => handleToggleShare(r)}
                 />
               ))}
             </div>
@@ -290,6 +311,7 @@ export default function MusicLibraryPage() {
                     onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
                     onAttachAudio={() => setAttachingAudio(r)}
                     onEdit={() => setEditing(r)}
+                    onToggleShare={() => handleToggleShare(r)}
                   />
                 ))}
               </div>
@@ -453,7 +475,7 @@ export default function MusicLibraryPage() {
 }
 
 function ScoreCard({
-  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit,
+  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare,
 }: {
   row: ScoreRow;
   courseCode: string | null;
@@ -461,6 +483,7 @@ function ScoreCard({
   onAnnotate: () => void;
   onAttachAudio: () => void;
   onEdit: () => void;
+  onToggleShare: () => void;
 }) {
   const hasPdf = !!row.pdf_url;
   const hasAudio = !!row.audio_url;
@@ -533,6 +556,17 @@ function ScoreCard({
               <Pencil className="w-4 h-4" />
             </Button>
           )}
+          {canEdit && (
+            <Button
+              variant={row.shared_with_members ? 'secondary' : 'outline'}
+              size="sm"
+              className="text-xs"
+              onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
+            >
+              <Share2 className="w-4 h-4 mr-1.5" />
+              {row.shared_with_members ? 'Shared' : 'Share'}
+            </Button>
+          )}
           {hasPdf && (
             <>
               {canEdit && (
@@ -565,7 +599,7 @@ function ScoreCard({
 // actions as ScoreCard; the badge cluster collapses away below md so phone
 // rows stay title + actions.
 function ScoreListRow({
-  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit,
+  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare,
 }: {
   row: ScoreRow;
   courseCode: string | null;
@@ -573,6 +607,7 @@ function ScoreListRow({
   onAnnotate: () => void;
   onAttachAudio: () => void;
   onEdit: () => void;
+  onToggleShare: () => void;
 }) {
   const hasPdf = !!row.pdf_url;
   const hasAudio = !!row.audio_url;
@@ -641,6 +676,17 @@ function ScoreListRow({
             aria-label="Edit score details"
           >
             <Pencil className="w-4 h-4" />
+          </Button>
+        )}
+        {canEdit && (
+          <Button
+            variant={row.shared_with_members ? 'secondary' : 'outline'}
+            size="sm"
+            className="hidden sm:inline-flex text-xs"
+            onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
+          >
+            <Share2 className="w-4 h-4 mr-1.5" />
+            {row.shared_with_members ? 'Shared' : 'Share'}
           </Button>
         )}
         {hasPdf && (
