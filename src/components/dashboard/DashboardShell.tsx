@@ -35,6 +35,8 @@ import {
   Menu,
   User as UserIcon,
   Sparkles,
+  PanelLeft,
+  PanelLeftClose,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -217,7 +219,7 @@ function loadCollapsed(): Set<string> {
   return new Set(DEFAULT_COLLAPSED);
 }
 
-function Sidebar() {
+function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const { settings: branding } = useBrandingSettings();
   // Prefer the short_name for sidebar chrome — most org_names overflow
   // the 256px column. Falls back to org_name then the platform/tenant
@@ -336,23 +338,36 @@ function Sidebar() {
           load (broken URL / wrong tenant settings), fall back to a
           colored monogram so the brand block never disappears. Larger
           glyph + bigger type so it visibly anchors the page. */}
-      <Link to="/dashboard" className="flex items-center gap-3 px-4 h-[80px] border-b border-border">
-        <BrandLogo
-          logoUrl={branding?.logo_url}
-          fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
-          alt={tenantName}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
-            {tenantName}
-          </div>
-          {branding?.short_name && branding?.org_name && branding.short_name !== branding.org_name && (
-            <div className="text-[12px] text-muted-foreground truncate leading-tight mt-0.5">
-              {branding.org_name}
+      <div className="flex items-center h-[80px] border-b border-border pr-2">
+        <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-4 h-full">
+          <BrandLogo
+            logoUrl={branding?.logo_url}
+            fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
+            alt={tenantName}
+          />
+          <div className="min-w-0 flex-1">
+            <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
+              {tenantName}
             </div>
-          )}
-        </div>
-      </Link>
+            {branding?.short_name && branding?.org_name && branding.short_name !== branding.org_name && (
+              <div className="text-[12px] text-muted-foreground truncate leading-tight mt-0.5">
+                {branding.org_name}
+              </div>
+            )}
+          </div>
+        </Link>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition"
+            aria-label="Hide navigation"
+            title="Hide navigation"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        )}
+      </div>
 
       {/* Nav — grouped by section. Sections with zero visible items are
           skipped. Labeled sections (Add-ons, Admin) are collapsible; if
@@ -610,7 +625,7 @@ function ViewsSwitcher() {
   );
 }
 
-function TopBar() {
+function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean; onExpandNav?: () => void }) {
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { toggleMessenger } = useMessenger();
@@ -628,8 +643,9 @@ function TopBar() {
   // left slot to preserve the tenant identity.
   const inImmersiveRoute =
     /^\/studio\/sessions\/[^/]+/.test(location.pathname) ||
-    /^\/dashboard\/viewer\/[^/]+/.test(location.pathname) ||
-    location.pathname.startsWith('/dashboard/calendar');
+    /^\/dashboard\/viewer\/[^/]+/.test(location.pathname);
+  // The brand block also moves up here when the user collapses the nav.
+  const sidebarHidden = inImmersiveRoute || navCollapsed;
   const compactBrandName =
     branding?.short_name || branding?.org_name || getOrgName();
 
@@ -698,7 +714,18 @@ function TopBar() {
           shows tenant identity. On non-immersive routes this slot is
           empty and the sidebar carries the brand. Click returns to
           /dashboard. */}
-      {inImmersiveRoute && (
+      {navCollapsed && (
+        <button
+          type="button"
+          onClick={onExpandNav}
+          className="hidden md:inline-flex w-9 h-9 shrink-0 items-center justify-center rounded-full hover:bg-muted transition"
+          aria-label="Show navigation"
+          title="Show navigation"
+        >
+          <PanelLeft className="w-5 h-5" />
+        </button>
+      )}
+      {sidebarHidden && (
         <Link
           to="/dashboard"
           className="hidden md:inline-flex items-center gap-2 shrink-0 pl-1 pr-2 py-1 rounded-md hover:bg-muted transition"
@@ -869,16 +896,25 @@ function TopBar() {
 // ── Shell ───────────────────────────────────────────────────────────────────
 
 export function DashboardShell({ children }: { children: ReactNode }) {
-  // The calendar runs full-bleed like a standalone app (Apple Calendar
-  // idiom): the shell sidebar hides and the page provides its own
-  // "back to Command Center" affordance.
+  // Calendar keeps its compact header spacing but shows the nav like every
+  // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
-  const isFullBleed = pathname.startsWith('/dashboard/calendar');
+  const isCalendar = pathname.startsWith('/dashboard/calendar');
+  // User-controlled nav collapse (persisted). Collapsing frees the full
+  // window width for work surfaces like Calendar and Studio; the topbar
+  // grows an expand button + compact brand while collapsed.
+  const [navCollapsed, setNavCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem('gw_sidebar_collapsed') === '1'; } catch { return false; }
+  });
+  const setCollapsed = (v: boolean) => {
+    setNavCollapsed(v);
+    try { localStorage.setItem('gw_sidebar_collapsed', v ? '1' : '0'); } catch { /* private mode */ }
+  };
   return (
     <div className="flex min-h-screen w-full bg-background">
-      {!isFullBleed && <Sidebar />}
+      {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
       <div className="flex-1 flex flex-col min-w-0">
-        <TopBar />
+        <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} />
         {/* pt-3 gives every page a small breath of space below the
             sticky topbar — pages that want more (CommandCenter, Viewer
             landing) add their own larger top padding on top of this.
@@ -886,9 +922,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             (only rendered on phones; sm+ has no bottom nav). */}
         <main className={cn(
           "flex-1 min-w-0 overflow-x-hidden pb-20 sm:pb-0",
-          // Full-bleed routes (calendar) manage their own compact header
-          // spacing — no extra breathing room below the topbar.
-          isFullBleed ? "pt-0" : "pt-3 sm:pt-4",
+          // Calendar manages its own compact header spacing — no extra
+          // breathing room below the topbar.
+          isCalendar ? "pt-0" : "pt-3 sm:pt-4",
         )}>{children}</main>
       </div>
       {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
