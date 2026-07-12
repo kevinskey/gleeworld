@@ -3,16 +3,35 @@
 // gw_feed_sources) — fetched server-side because the feeds have no CORS
 // and the app CSP's connect-src would block them anyway. Sources are
 // managed by admins in Feed Control (/dashboard/feeds).
-import { useQuery } from '@tanstack/react-query';
-import { Newspaper } from 'lucide-react';
+//
+// Infinite scroll uses a GROWING-LIMIT single query (offset always 0,
+// limit grows by PAGE_SIZE): the server rebuilds its pool from live RSS on
+// every request, so slicing separate offset pages would drift between
+// requests (duplicate/skipped headlines). One growing request is always
+// internally consistent, and the 15-minute refetch re-runs one request,
+// not one per accumulated page. Headlines open in an in-app reader sheet
+// (most news sites block iframing, so the sheet shows the feed's own
+// summary with an explicit "Open full article" escape hatch).
+import { useEffect, useRef, useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { ExternalLink, Newspaper, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet';
 
 interface NewsItem {
   title: string;
   link: string;
   pubDate: string;
   source: string;
+  description?: string;
+  imageUrl?: string | null;
 }
+
+const PAGE_SIZE = 15;
+const MAX_ITEMS = 150; // matches the edge function's limit clamp
 
 // The edge function decodes the common entities but feeds still leak a few.
 function decodeEntities(s: string): string {
@@ -40,22 +59,55 @@ function timeAgo(dateStr: string): string {
 
 export function HomeNewsRail() {
   // Feeds are per-tenant: the function uses this tenant's Feed Control
-  // sources when any exist, else the platform defaults.
+  // sources when any exist, else the signed-in caller's own tenant
+  // (verified JWT, resolved server-side), else the platform defaults.
   const tenantSlug: string | null =
     (typeof window !== 'undefined' && (window as any).__TENANT_CONFIG__?.tenant) || null;
-  const { data: items, isLoading, isError } = useQuery({
-    queryKey: ['home-news-feed', tenantSlug],
-    queryFn: async () => {
+
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
+    queryKey: ['home-news-feed', tenantSlug, visibleCount],
+    // Growing the limit keeps the previous list rendered while the larger
+    // page loads, so scroll position never jumps.
+    placeholderData: keepPreviousData,
+    queryFn: async (): Promise<{ items: NewsItem[]; hasMore: boolean }> => {
       const { data, error } = await supabase.functions.invoke('fetch-news-feeds', {
-        body: { tenant: tenantSlug },
+        body: { tenant: tenantSlug, offset: 0, limit: visibleCount },
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Failed to fetch news');
-      return (data.items ?? []) as NewsItem[];
+      return { items: (data.items ?? []) as NewsItem[], hasMore: !!data.hasMore };
     },
     staleTime: 15 * 60 * 1000,
     refetchInterval: 15 * 60 * 1000,
   });
+
+  const items = data?.items ?? [];
+  const hasMore = !!data?.hasMore && visibleCount < MAX_ITEMS;
+
+  // Reader sheet: `readerOpen` drives the sheet so `reading` can stay
+  // mounted through the close animation (nulling it immediately would
+  // blank the panel on the first frame of the slide-out).
+  const [reading, setReading] = useState<NewsItem | null>(null);
+  const [readerOpen, setReaderOpen] = useState(false);
+
+  const listRef = useRef<HTMLUListElement>(null);
+  const sentinelRef = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetching) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, MAX_ITEMS));
+        }
+      },
+      { root: listRef.current, rootMargin: '120px' },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasMore, isFetching, items.length]);
 
   return (
     // relative + lg:absolute-inset scroll area: the rail scrolls within
@@ -73,7 +125,17 @@ export function HomeNewsRail() {
               </div>
             ))}
           </div>
-        ) : isError || !items?.length ? (
+        ) : isError && !items.length ? (
+          // Only surface the error panel when there's nothing to show — a
+          // failed background refetch must not wipe loaded headlines.
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-6 text-center">
+            <Newspaper className="h-6 w-6 text-muted-foreground" aria-hidden />
+            <p className="text-sm font-medium">News is having trouble loading.</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="w-4 h-4 mr-1" /> Try again
+            </Button>
+          </div>
+        ) : !items.length ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-6 text-center">
             <Newspaper className="h-6 w-6 text-muted-foreground" aria-hidden />
             <p className="text-sm font-medium">No headlines right now.</p>
@@ -82,24 +144,21 @@ export function HomeNewsRail() {
             </p>
           </div>
         ) : (
-          <ul className="max-h-96 flex-1 divide-y divide-border overflow-y-auto lg:max-h-none">
-            {items.slice(0, 15).map((n) => (
+          <ul ref={listRef} className="max-h-96 flex-1 divide-y divide-border overflow-y-auto lg:max-h-none">
+            {items.map((n) => (
               <li key={n.link}>
                 <a
                   href={n.link}
                   rel="noopener noreferrer"
                   className="group block min-h-[44px] py-2"
                   onClick={(e) => {
-                    // Open in a standalone window, not a tab — reading a
-                    // story shouldn't bury the dashboard in tab clutter.
-                    // (Modifier/middle clicks keep native tab behavior.)
+                    // Open in the in-app reader sheet — reading a story
+                    // shouldn't leave the dashboard. (Modifier/middle
+                    // clicks keep native link behavior for power users.)
                     if (e.metaKey || e.ctrlKey || e.shiftKey) return;
                     e.preventDefault();
-                    window.open(
-                      n.link,
-                      '_blank',
-                      'noopener,noreferrer,popup,width=1100,height=820,left=120,top=80',
-                    );
+                    setReading(n);
+                    setReaderOpen(true);
                   }}
                 >
                   <p className="line-clamp-2 text-sm leading-snug group-hover:underline">
@@ -112,9 +171,54 @@ export function HomeNewsRail() {
                 </a>
               </li>
             ))}
+            {hasMore && (
+              <li ref={sentinelRef} role="status" aria-live="polite" className="py-3 text-center">
+                <span className="text-xs text-muted-foreground">
+                  {isFetching ? 'Loading more…' : ''}
+                </span>
+              </li>
+            )}
           </ul>
         )}
       </div>
+
+      <Sheet open={readerOpen} onOpenChange={setReaderOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          {reading && (
+            <>
+              <SheetHeader className="text-left">
+                <p className="text-xs text-muted-foreground">
+                  {reading.source}
+                  {timeAgo(reading.pubDate) && ` · ${timeAgo(reading.pubDate)}`}
+                </p>
+                <SheetTitle className="text-lg leading-snug">
+                  {decodeEntities(reading.title)}
+                </SheetTitle>
+              </SheetHeader>
+              {reading.imageUrl && (
+                <img
+                  src={reading.imageUrl}
+                  alt=""
+                  className="mt-3 w-full max-h-56 object-cover border border-border"
+                  loading="lazy"
+                />
+              )}
+              <SheetDescription className="mt-3 text-sm leading-relaxed text-foreground/90">
+                {reading.description
+                  ? decodeEntities(reading.description)
+                  : "This source didn't include a summary. Open the full article to read the story."}
+              </SheetDescription>
+              <div className="mt-5">
+                <Button asChild className="w-full sm:w-auto">
+                  <a href={reading.link} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-4 h-4 mr-1.5" /> Open full article
+                  </a>
+                </Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </aside>
   );
 }

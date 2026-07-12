@@ -34,7 +34,7 @@ function extractImageFromContent(content: string): string | null {
   return null;
 }
 
-function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number): FeedItem[] {
+function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number, descLen = 150): FeedItem[] {
   const items: FeedItem[] = [];
   const isAtom = xml.includes('<feed') && xml.includes('xmlns="http://www.w3.org/2005/Atom"');
 
@@ -70,7 +70,7 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
         items.push({
           title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
           link: link.trim(),
-          description: description.replace(/<[^>]+>/g, '').substring(0, 150),
+          description: description.replace(/<[^>]+>/g, '').substring(0, descLen),
           pubDate, source, sourceIcon, imageUrl,
         });
       }
@@ -105,25 +105,48 @@ Deno.serve(async (req) => {
     // clients because of tenant RLS, hence resolved here with service role).
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const tenantSlug = typeof body?.tenant === 'string' && body.tenant ? body.tenant : null;
+    // Paged mode (offset/limit present) powers the rail's infinite scroll;
+    // legacy callers (no offset/limit) keep the original slice(0, maxTotal).
+    const paged = Number.isFinite(Number(body?.offset)) || Number.isFinite(Number(body?.limit));
+    const offset = Math.max(0, Math.trunc(Number(body?.offset)) || 0);
+    const limit = Math.min(150, Math.max(1, Math.trunc(Number(body?.limit)) || 15));
+
+    // Degrade, don't die: any failure while resolving WHICH sources to use
+    // falls back toward the platform defaults; only "nothing servable at
+    // all" becomes an error response. (An earlier revision threw on every
+    // query error, which turned transient DB blips into rail-wide 500s.)
     let tenantId: string | null = null;
     if (tenantSlug) {
-      const { data: t } = await sb.from('gw_tenants').select('id').eq('slug', tenantSlug).maybeSingle();
+      const { data: t, error: tErr } = await sb.from('gw_tenants').select('id').eq('slug', tenantSlug).maybeSingle();
+      if (tErr) console.error('tenant lookup failed, using defaults:', tErr.message);
       tenantId = t?.id ?? null;
+    } else if (paged) {
+      // New-protocol callers only: when the page declares no tenant, use the
+      // signed-in caller's own tenant so personal Feed Control sources follow
+      // the user. Signature-verified via GoTrue (the functions gateway runs
+      // VERIFY_JWT=false, so a bare payload decode would honor forged
+      // tenant_id claims). Legacy no-body callers keep platform defaults.
+      const token = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
+      const claims = await verifyJwtClaims(token);
+      tenantId = typeof claims?.tenant_id === 'string' && claims.tenant_id ? claims.tenant_id : null;
     }
 
     const loadDefaults = async () => {
-      const { data } = await sb.from('gw_feed_sources').select('*')
+      const { data, error } = await sb.from('gw_feed_sources').select('*')
         .eq('feed_type', 'news').eq('is_active', true).is('tenant_id', null).order('display_order');
+      if (error) throw new Error(`default sources query failed: ${error.message}`);
       return data ?? [];
     };
 
     let feedSources: any[] = [];
     if (tenantId) {
-      const { data: tenantRows } = await sb.from('gw_feed_sources').select('*')
+      const { data: tenantRows, error: sErr } = await sb.from('gw_feed_sources').select('*')
         .eq('feed_type', 'news').eq('tenant_id', tenantId).order('display_order');
-      feedSources = tenantRows && tenantRows.length > 0
-        ? tenantRows.filter((r: any) => r.is_active)
-        : await loadDefaults();
+      if (sErr) console.error('tenant sources query failed, using defaults:', sErr.message);
+      // A tenant owns its list only when it has ACTIVE rows; rows that are
+      // all toggled off fall back to defaults rather than an empty rail.
+      const activeTenantRows = (tenantRows ?? []).filter((r: any) => r.is_active);
+      feedSources = activeTenantRows.length > 0 ? activeTenantRows : await loadDefaults();
     } else {
       feedSources = await loadDefaults();
     }
@@ -145,7 +168,12 @@ Deno.serve(async (req) => {
         clearTimeout(timeout);
         if (!response.ok) { console.warn(`Failed to fetch ${feed.name}: ${response.status}`); return []; }
         const xml = await response.text();
-        return parseRSSItems(xml, feed.name, feed.icon, feed.max_items_per_source || 5);
+        // Paged mode parses deeper per source (×4) so scrolling has a real
+        // pool to page through while keeping the configured source mix, and
+        // carries longer summaries for the reader sheet. Legacy callers keep
+        // the original 150-char description contract.
+        const perSource = (feed.max_items_per_source || 5) * (paged ? 4 : 1);
+        return parseRSSItems(xml, feed.name, feed.icon, perSource, paged ? 400 : 150);
       } catch (err) { console.warn(`Error fetching ${feed.name}:`, err); return []; }
     });
 
@@ -157,6 +185,18 @@ Deno.serve(async (req) => {
       return dateB - dateA;
     });
 
+    if (paged) {
+      // Honor the admin's max_total_items in spirit: paged depth is 4× the
+      // legacy cap, mirroring the 4× parse depth.
+      const pool = allItems.slice(0, maxTotal * 4);
+      const pageItems = pool.slice(offset, offset + limit);
+      return new Response(JSON.stringify({
+        success: true,
+        items: pageItems,
+        total: pool.length,
+        hasMore: offset + limit < pool.length,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     return new Response(JSON.stringify({ success: true, items: allItems.slice(0, maxTotal) }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
