@@ -6,6 +6,7 @@ import { GleeWorldEvent } from '@/hooks/useGleeWorldEvents';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { isGoogleSyncedEvent } from '@/utils/googleCalendarEvents';
 interface EventContextMenuProps {
   event: GleeWorldEvent;
   children: React.ReactNode;
@@ -18,12 +19,15 @@ interface EventContextMenuProps {
 export const EventContextMenu: React.FC<EventContextMenuProps> = ({
   event,
   children,
-  canEdit,
-  canDelete,
+  canEdit: canEditProp,
+  canDelete: canDeleteProp,
   onView,
   onEdit,
   onDeleted
 }) => {
+  // Google-synced overlay rows aren't gw_events — read-only here.
+  const canEdit = canEditProp && !isGoogleSyncedEvent(event);
+  const canDelete = canDeleteProp && !isGoogleSyncedEvent(event);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
@@ -38,8 +42,14 @@ export const EventContextMenu: React.FC<EventContextMenuProps> = ({
       const table = (event as any).source === 'appointment' || (event as any).is_appointment
         ? 'gw_appointments'
         : 'gw_events';
-      const { error } = await supabase.from(table).delete().eq('id', event.id);
+      const { data: deleted, error } = await supabase
+        .from(table).delete().eq('id', event.id).select('id');
       if (error) throw error;
+      // RLS-blocked deletes return success with zero rows — surface that
+      // honestly instead of pretending it worked.
+      if (!deleted || deleted.length === 0) {
+        throw new Error('Not permitted to delete this event');
+      }
       toast.success(`"${event.title}" deleted`);
       onDeleted?.();
     } catch (error) {

@@ -11,6 +11,7 @@ import { WeeklyTimeGrid } from "./WeeklyTimeGrid";
 import { EventQRCode } from "../EventQRCode";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
 import { EditEventDialog } from "../EditEventDialog";
+import { isGoogleSyncedEvent } from "@/utils/googleCalendarEvents";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -83,7 +84,9 @@ export const DayViewPanel = ({
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [selectedDate]);
 
-  const canEditSelected = canManage || (selectedEvent && user?.id === selectedEvent.created_by);
+  // Google-synced overlay rows aren't gw_events — read-only here.
+  const canEditSelected = !isGoogleSyncedEvent(selectedEvent) &&
+    (canManage || (selectedEvent && user?.id === selectedEvent.created_by));
   const selectedConfig = selectedEvent
     ? categoryConfigs.find((c) => c.id === getCategoryForEvent(selectedEvent))
     : null;

@@ -29,6 +29,7 @@ import { EventClassListManager } from "./EventClassListManager";
 import { EventQRCode } from "./EventQRCode";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { isGoogleSyncedEvent } from "@/utils/googleCalendarEvents";
 
 interface EventDetailDialogProps {
   event: GleeWorldEvent | null;
@@ -44,7 +45,8 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
   
   if (!event) return null;
 
-  const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin' || user.role === 'executive');
+  // Google-synced overlay rows aren't gw_events — read-only here.
+  const canEdit = !isGoogleSyncedEvent(event) && user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin' || user.role === 'executive');
 
   const getEventTypeColor = (type: string | null) => {
     switch (type) {
