@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock, Hotel, CheckCircle2, LayoutGrid, ArrowLeft, MessageSquare, CloudSun, Receipt } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Menu, Home, Clock, Hotel, CheckCircle2, LayoutGrid, MessageSquare, CloudSun, Receipt } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -31,7 +29,6 @@ import { TourRollCallSection } from './TourRollCallSection';
 import { TourWeatherSection } from './TourWeatherSection';
 import { BusDriverTipReceiptSection } from '@/components/tour/BusDriverTipReceiptSection';
 import { supabase } from '@/integrations/supabase/client';
-import { useHomePath } from '@/hooks/useHomePath';
 interface TourManagerDashboardProps {
   user?: {
     id: string;
@@ -216,8 +213,6 @@ const contentConfig: Record<string, {
 export const TourManagerDashboard = ({
   user
 }: TourManagerDashboardProps) => {
-  const navigate = useNavigate();
-  const homePath = useHomePath();
   const [activeSection, setActiveSection] = useState('overview');
   const [contractEventData, setContractEventData] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -339,10 +334,17 @@ export const TourManagerDashboard = ({
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
   };
-  return <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
+  // The page renders inside DashboardShell, whose sticky topbar is h-14
+  // (md:h-20) and z-30, offset by the demo banner via --gw-demo-bar-h.
+  // The shell's <main> is overflow-x-hidden, which silently disables
+  // viewport sticky for descendants — so, like Calendar, this is a
+  // full-height self-scrolling layout: header and sidebar sit in flow and
+  // only the content pane scrolls. Height fills the viewport minus demo
+  // bar + topbar; DashboardShell zeroes its main padding for tour routes.
+  return <div className="h-[calc(100vh-var(--gw-demo-bar-h,0px)-3.5rem)] md:h-[calc(100vh-var(--gw-demo-bar-h,0px)-5rem)] bg-background flex flex-col overflow-hidden">
+      <header className="flex-shrink-0 z-20 bg-background border-b border-border">
         <div className="flex items-center justify-between px-3 lg:px-4 h-12 bg-brand-900">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             {/* text-white, not text-primary-foreground: the bar is fixed
                 bg-brand-900, and tenant themes may define
                 --primary-foreground as a dark color (dark-on-dark). */}
@@ -355,25 +357,11 @@ export const TourManagerDashboard = ({
             <span className="text-xs hidden sm:inline text-white/70">—</span>
             <span className="text-xs hidden sm:inline truncate text-white/70">{currentContent.description}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative w-96 hidden md:block">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input placeholder="Search" className="pl-8 h-8 text-sm bg-background border focus-visible:ring-1" />
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden h-8 w-8 text-white"
-              onClick={() => navigate(homePath)}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </div>
         </div>
       </header>
 
-      <div className="flex-1 flex flex-row">
-        <aside className={cn("fixed top-12 bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:sticky lg:top-0 lg:h-[calc(100vh-48px)] lg:inset-y-0 lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
+      <div className="flex-1 flex flex-row min-h-0">
+        <aside className={cn("fixed top-[calc(var(--gw-demo-bar-h,0px)+6.5rem)] md:top-[calc(var(--gw-demo-bar-h,0px)+8rem)] bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:static lg:h-full lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
           <div
             className="flex flex-col h-full px-0 pt-2 overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide"
             style={{
@@ -404,14 +392,21 @@ export const TourManagerDashboard = ({
 
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
-          <div ref={mainContentRef} className="flex-1 overflow-auto p-4">
+        <main className="flex-1 flex flex-col min-w-0 min-h-0">
+          {/* Bottom padding lives inside the scroll container so content can
+              clear the fixed section bar + global nav pill on small screens. */}
+          <div ref={mainContentRef} className="flex-1 overflow-auto p-4 pb-36 sm:pb-20 lg:pb-4">
             {renderContent()}
           </div>
         </main>
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-[99998]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      {/* Tour section switcher for <lg. On phones (<sm) it rides above the
+          global MobileBottomNav pill (bottom 16px + 48px pill + gap); on
+          tablets the pill doesn't render, so the bar sits flush at the
+          bottom. z-20 keeps it under the pill (z-30), never burying the
+          platform nav. */}
+      <nav className="fixed bottom-[76px] sm:bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-20" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="overflow-x-auto scrollbar-hide overscroll-x-contain touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="flex items-center h-14 px-2 min-w-max">
             {navItems.map(item => <button key={item.value} onClick={() => handleSectionChange(item.value)} className={cn("flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-primary bg-primary/10" : "text-muted-foreground")}>

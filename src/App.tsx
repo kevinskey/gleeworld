@@ -2558,21 +2558,25 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                               />
-                              <Route 
-                                path="/tour-planner" 
+                              <Route
+                                path="/tour-planner"
                                 element={
                                   <ProtectedRoute>
-                                    <TourPlanner />
+                                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                      <DashboardShell><TourPlanner /></DashboardShell>
+                                    </UniversalLayout>
                                   </ProtectedRoute>
-                                } 
+                                }
                                />
-                               <Route 
-                                 path="/tour-manager" 
+                               <Route
+                                 path="/tour-manager"
                                  element={
                                    <ProtectedRoute>
-                                     <TourPlanner />
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell><TourPlanner /></DashboardShell>
+                                     </UniversalLayout>
                                    </ProtectedRoute>
-                                 } 
+                                 }
                                 />
                                 <Route 
                                   path="/weather" 
