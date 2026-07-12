@@ -119,12 +119,19 @@ export default function Messenger() {
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
     const open = searchParams.get('open');
-    if (!open) return;
+    // Meeting invite links land here as /dashboard/messenger?join=<room>
+    // (MeetingInviteDialog, ActiveMeetingsSidebar, group-chat join buttons).
+    const join = searchParams.get('join');
+    if (!open && !join) return;
     if (open === 'email') setShowEmailClient(true);
     else if (open === 'newsletter') setShowNewsletters(true);
     else if (open === 'blast') setQuickBlastMode('group');
     else if (open === 'sms') setShowSmsComposer(true);
     else if (open === 'video') setActiveMeetingRoom(`gleeworld-meeting-${Date.now().toString(36)}`);
+    if (join) {
+      setMode('video');
+      setActiveMeetingRoom(join);
+    }
     setSearchParams({}, { replace: true });
   }, [searchParams, setSearchParams]);
 

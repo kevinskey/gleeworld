@@ -204,7 +204,7 @@ export const CommandCenterHeader = ({
                 <button
                   onClick={onOpenFilters}
                   className={cn(
-                    "relative h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-accent transition-colors",
+                    "relative h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border transition-colors",
                     filtersActive ? "text-primary" : "text-foreground"
                   )}
                   title="Calendars"
@@ -220,7 +220,7 @@ export const CommandCenterHeader = ({
               {onOpenOfficeHours && (
                 <button
                   onClick={onOpenOfficeHours}
-                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-accent text-foreground transition-colors"
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border text-foreground transition-colors"
                   title="Office hours"
                 >
                   <Inbox className="h-4 w-4" />
@@ -229,7 +229,7 @@ export const CommandCenterHeader = ({
               {onOpenAgenda && (
                 <button
                   onClick={onOpenAgenda}
-                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-accent text-foreground transition-colors"
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border text-foreground transition-colors"
                   title="List"
                 >
                   <List className="h-4 w-4" />
@@ -238,7 +238,7 @@ export const CommandCenterHeader = ({
               {canManageEvents && (
                 <button
                   onClick={onAddEvent}
-                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-accent text-foreground transition-colors"
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border text-foreground transition-colors"
                   title="Add event"
                 >
                   <Plus className="h-4 w-4" />
@@ -247,7 +247,7 @@ export const CommandCenterHeader = ({
               {canManageEvents && onOpenSettings && (
                 <button
                   onClick={onOpenSettings}
-                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-accent text-foreground transition-colors"
+                  className="h-9 w-9 rounded-full flex items-center justify-center bg-muted hover:bg-border text-foreground transition-colors"
                   title="Calendar settings"
                 >
                   <Settings className="h-4 w-4" />
@@ -287,7 +287,7 @@ export const CommandCenterHeader = ({
               <button
                 type="button"
                 onClick={startDictation}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-border transition-colors"
                 title="Dictate search"
               >
                 <Mic className="h-4 w-4" />

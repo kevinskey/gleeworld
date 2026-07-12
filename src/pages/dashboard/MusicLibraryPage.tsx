@@ -6,6 +6,7 @@
 // flows. The legacy /music-library two-pane viewer remains for deep links.
 
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -79,6 +80,36 @@ export default function MusicLibraryPage() {
   // Annotation viewer state — when set, opens a full-screen dialog with the
   // annotated PDF viewer so the user can mark up the score.
   const [viewing, setViewing] = useState<{ id: string; title: string; pdfUrl: string } | null>(null);
+
+  // Deep link: /dashboard/music-library?view=<scoreId> opens the score viewer
+  // (the Glee Assistant's open-score action navigates here). Fetch by id
+  // rather than searching `rows` — the list is scope-filtered and capped.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewParam = searchParams.get('view');
+  useEffect(() => {
+    if (!viewParam) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('gw_sheet_music')
+        .select('id, title, pdf_url')
+        .eq('id', viewParam)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.pdf_url) {
+        setViewing({ id: data.id, title: data.title, pdfUrl: data.pdf_url });
+      } else {
+        toast.error('Could not open that score — it may have been removed.');
+      }
+      // Consume the param so closing the viewer doesn't reopen it.
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('view');
+        return next;
+      }, { replace: true });
+    })();
+    return () => { cancelled = true; };
+  }, [viewParam, setSearchParams]);
   // Audio attach dialog state — opens the per-score "Attach audio" picker.
   const [attachingAudio, setAttachingAudio] = useState<ScoreRow | null>(null);
   // Edit dialog state — librarian edit (title, composer, voicing, copies, location).
