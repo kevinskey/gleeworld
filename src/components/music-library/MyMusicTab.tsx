@@ -28,7 +28,7 @@ export function MyMusicTab() {
   const [viewingTitle, setViewingTitle] = useState('');
 
   const openScore = async (s: PersonalScore) => {
-    const url = await getSignedUrl(PERSONAL_SCORES_BUCKET, s.storage_path);
+    const url = await getSignedUrl(PERSONAL_SCORES_BUCKET, s.storage_path, 3600, true);
     if (!url) { toast.error('Could not open that score. Try again.'); return; }
     setViewingTitle(s.title);
     setViewingUrl(url);

@@ -68,8 +68,11 @@ interface ScoreRow {
   license_seat_count: number | null;
   license_expires_at: string | null;
   copyright_holder: string | null;
-  // Member-visibility flag (migration 20260711_shared_with_members — Task 1).
-  // Members (non-editors) only ever see scores librarians have flagged shared.
+  // Member-visibility flag (migration 20260712120000_personal_music_library.sql).
+  // Browse filter only: the Scores tab hides unflagged scores from members,
+  // but this is NOT an access control — RLS is unchanged and deep-link/
+  // setlist flows still open unshared scores (server-side hardening is a
+  // phase-2 follow-up).
   shared_with_members: boolean | null;
 }
 
@@ -150,8 +153,11 @@ export default function MusicLibraryPage() {
         .eq('is_archived', false)
         .order('title')
         .limit(200);
-      // Members (non-editors) only ever see scores the librarian has flagged
-      // shared; editors see everything and can toggle the flag.
+      // Browse filter only: the Scores tab hides unflagged scores from
+      // members, but this is NOT an access control — RLS is unchanged and
+      // deep-link/setlist flows still open unshared scores (server-side
+      // hardening is a phase-2 follow-up). Editors see everything and can
+      // toggle the flag.
       if (!canEdit) q = q.eq('shared_with_members', true);
       q = applyFilter(q as any);
       const { data } = await q;
@@ -684,6 +690,7 @@ function ScoreListRow({
             size="sm"
             className="text-xs"
             onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
+            aria-label={row.shared_with_members ? 'Shared with members' : 'Share with members'}
           >
             <Share2 className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline">{row.shared_with_members ? 'Shared' : 'Share'}</span>
