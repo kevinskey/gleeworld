@@ -144,7 +144,7 @@ export default function HouseHome() {
 
   return (
     <DashboardShell>
-      <div className="max-w-3xl mx-auto px-4 pt-3 pb-8 space-y-4">
+      <div className="px-4 sm:px-6 pt-3 pb-8 space-y-4">
         <div>
           <h1 className="font-serif text-2xl font-semibold">{greetingFor(now.getHours(), firstName)}</h1>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">

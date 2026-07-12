@@ -192,7 +192,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
         <div className={saving ? 'pointer-events-none opacity-60' : undefined}>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext items={draftPrimary.map((t) => t.key)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
                 {draftPrimary.map((t, i) => (
                   <SortableTile key={t.key} tile={t} index={i}
                     onRemove={(key) => setDraft((d) => (d ? d.filter((k) => k !== key) : d))} />
@@ -217,7 +217,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
                       <div className="text-xs uppercase tracking-widest text-muted-foreground/70 mt-3 mb-2">
                         {NAV_SECTION_LABELS[s]}
                       </div>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
                         {tiles.map((t, i) => (
                           <AddTile key={t.key} tile={t} index={i}
                             onAdd={(key) => setDraft((d) => (d && !d.includes(key) ? [...d, key] : d))} />
@@ -229,7 +229,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
                     MORE_SECTIONS (e.g. a future grid-surface entry like
                     'today') still lands here instead of being unpinnable. */}
                 {draftOverflow.filter((t) => !t.section || !MORE_SECTIONS.includes(t.section)).length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
                     {draftOverflow.filter((t) => !t.section || !MORE_SECTIONS.includes(t.section)).map((t, i) => (
                       <AddTile key={t.key} tile={t} index={i}
                         onAdd={(key) => setDraft((d) => (d && !d.includes(key) ? [...d, key] : d))} />
@@ -247,7 +247,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
               Your grid is empty — tap Edit to add apps.
             </p>
           ) : (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
               {primary.map((t) => (
                 <Link key={t.key} to={t.to}
                   onPointerDown={onTilePointerDown}
@@ -266,7 +266,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
               <summary className="text-muted-foreground cursor-pointer py-2 min-h-[44px] flex items-center">
                 More ({overflow.length})
               </summary>
-              <div className="grid grid-cols-4 gap-2 pt-2">
+              <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2 pt-2">
                 {overflow.map((t) => (
                   <Link key={t.key} to={t.to}
                     className="flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px]">

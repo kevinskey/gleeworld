@@ -60,7 +60,7 @@ export default function MusicToolsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-4">
+    <div className="px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-4">
       <header>
         <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Music Tools</h1>
         <p className="text-sm text-muted-foreground mt-1">
