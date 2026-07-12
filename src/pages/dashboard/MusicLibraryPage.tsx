@@ -32,6 +32,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 import { RightsBadge } from '@/components/policies/RightsBadge';
 import { PublicDomainSearch } from '@/components/music-library/PublicDomainSearch';
+import { MyMusicTab } from '@/components/music-library/MyMusicTab';
 import { BookOpen as BookOpenIcon } from 'lucide-react';
 
 const SetlistBuilder = lazy(() =>
@@ -41,7 +42,7 @@ const PDFViewerWithAnnotations = lazy(() =>
   import('@/components/PDFViewerWithAnnotations').then((m) => ({ default: m.PDFViewerWithAnnotations })),
 );
 
-type TopTab = 'scores' | 'setlists' | 'public-domain';
+type TopTab = 'scores' | 'my-music' | 'setlists' | 'public-domain';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -180,6 +181,7 @@ export default function MusicLibraryPage() {
       <div className="flex gap-2 border-b border-border">
         {([
           { key: 'scores',        label: 'Scores',         Icon: Music },
+          { key: 'my-music',      label: 'My Music',       Icon: FileMusic },
           { key: 'setlists',      label: 'Setlists',       Icon: ListMusic },
           { key: 'public-domain', label: 'Public Domain',  Icon: BookOpenIcon },
         ] as Array<{ key: TopTab; label: string; Icon: React.ComponentType<{ className?: string }> }>).map((t) => {
@@ -295,6 +297,8 @@ export default function MusicLibraryPage() {
           )}
         </>
       )}
+
+      {topTab === 'my-music' && <MyMusicTab />}
 
       {topTab === 'setlists' && (
         // Setlists tab — wraps the existing SetlistBuilder inside the same
