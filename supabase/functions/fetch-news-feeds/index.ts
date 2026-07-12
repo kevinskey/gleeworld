@@ -35,14 +35,17 @@ function extractImageFromContent(content: string): string | null {
   return null;
 }
 
-function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number, descLen = 150): FeedItem[] {
+function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number | null, descLen = 150): FeedItem[] {
+  // Parse EVERY item, then keep the newest maxItems (null = uncapped).
+  // Google News search RSS is relevance-ordered (100 items), so truncating
+  // in feed order ships days-old items while newer ones are discarded.
   const items: FeedItem[] = [];
   const isAtom = xml.includes('<feed') && xml.includes('xmlns="http://www.w3.org/2005/Atom"');
 
   if (isAtom) {
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/gi;
     let entryMatch;
-    while ((entryMatch = entryRegex.exec(xml)) !== null && items.length < maxItems) {
+    while ((entryMatch = entryRegex.exec(xml)) !== null) {
       const entry = entryMatch[1];
       const title = extractText(entry, 'title');
       const linkMatch = entry.match(/<link[^>]+href=["']([^"']+)["']/);
@@ -60,7 +63,7 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
   } else {
     const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
     let itemMatch;
-    while ((itemMatch = itemRegex.exec(xml)) !== null && items.length < maxItems) {
+    while ((itemMatch = itemRegex.exec(xml)) !== null) {
       const item = itemMatch[1];
       const title = extractText(item, 'title');
       const link = extractText(item, 'link') || item.match(/<link>([^<]+)/)?.[1] || '';
@@ -71,13 +74,25 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
         items.push({
           title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
           link: link.trim(),
-          description: description.replace(/<[^>]+>/g, '').substring(0, descLen),
+          // Google News descriptions arrive entity-encoded (&lt;a href=…&gt;),
+          // so decode before stripping tags or the markup survives as text.
+          description: description
+            .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+            .replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+            .replace(/<[^>]+>/g, '')
+            .replace(/\s+/g, ' ')
+            .substring(0, descLen),
           pubDate, source, sourceIcon, imageUrl,
         });
       }
     }
   }
-  return items;
+  items.sort((a, b) => {
+    const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+    const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+    return dateB - dateA;
+  });
+  return maxItems ? items.slice(0, maxItems) : items;
 }
 
 Deno.serve(async (req) => {
@@ -97,25 +112,25 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    const maxTotal = settingsData?.max_total_items ?? 25;
+    // Caps are opt-in: no settings row / NULL per-source value = uncapped.
+    const maxTotal = settingsData?.max_total_items ?? null;
 
-    // Per-tenant sources. A tenant that has configured ANY news sources in
-    // Feed Control owns its list (only its active rows are fetched); a
-    // tenant with no rows — and callers with no tenant — get the platform
-    // defaults (tenant_id IS NULL, seeded by migration; invisible to
-    // clients because of tenant RLS, hence resolved here with service role).
+    // Per-tenant sources. A tenant that has ACTIVE news sources in Feed
+    // Control owns its list; otherwise (no rows, all rows toggled off, or
+    // no tenant at all) the platform defaults serve (tenant_id IS NULL,
+    // seeded by migration; invisible to clients because of tenant RLS,
+    // hence resolved here with service role).
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const tenantSlug = typeof body?.tenant === 'string' && body.tenant ? body.tenant : null;
     // Paged mode (offset/limit present) powers the rail's infinite scroll;
-    // legacy callers (no offset/limit) keep the original slice(0, maxTotal).
+    // legacy callers (no offset/limit) keep the original response shape.
     const paged = Number.isFinite(Number(body?.offset)) || Number.isFinite(Number(body?.limit));
     const offset = Math.max(0, Math.trunc(Number(body?.offset)) || 0);
     const limit = Math.min(150, Math.max(1, Math.trunc(Number(body?.limit)) || 15));
 
     // Degrade, don't die: any failure while resolving WHICH sources to use
     // falls back toward the platform defaults; only "nothing servable at
-    // all" becomes an error response. (An earlier revision threw on every
-    // query error, which turned transient DB blips into rail-wide 500s.)
+    // all" becomes an error response.
     let tenantId: string | null = null;
     if (tenantSlug) {
       const { data: t, error: tErr } = await sb.from('gw_tenants').select('id').eq('slug', tenantSlug).maybeSingle();
@@ -153,7 +168,7 @@ Deno.serve(async (req) => {
     }
 
     if (feedSources.length === 0) {
-      return new Response(JSON.stringify({ success: true, items: [] }), {
+      return new Response(JSON.stringify({ success: true, items: [], ...(paged ? { total: 0, hasMore: false } : {}) }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -169,11 +184,12 @@ Deno.serve(async (req) => {
         clearTimeout(timeout);
         if (!response.ok) { console.warn(`Failed to fetch ${feed.name}: ${response.status}`); return []; }
         const xml = await response.text();
-        // Paged mode parses deeper per source (×4) so scrolling has a real
-        // pool to page through while keeping the configured source mix, and
-        // carries longer summaries for the reader sheet. Legacy callers keep
-        // the original 150-char description contract.
-        const perSource = (feed.max_items_per_source || 5) * (paged ? 4 : 1);
+        // Caps are opt-in (NULL = uncapped). When a per-source cap IS set,
+        // paged mode parses 4× deeper so scrolling has a real pool while
+        // keeping the configured source mix. Paged mode also carries longer
+        // summaries for the reader sheet; legacy keeps the 150-char contract.
+        const perSourceCap = feed.max_items_per_source ?? null;
+        const perSource = perSourceCap ? perSourceCap * (paged ? 4 : 1) : null;
         return parseRSSItems(xml, feed.name, feed.icon, perSource, paged ? 400 : 150);
       } catch (err) { console.warn(`Error fetching ${feed.name}:`, err); return []; }
     });
@@ -186,10 +202,22 @@ Deno.serve(async (req) => {
       return dateB - dateA;
     });
 
+    // Google carries the same story from several outlets (and overlapping
+    // queries re-surface it); dedupe on the title minus the trailing
+    // " - Publisher" so repeats don't eat item slots. Sorted newest-first
+    // above, so the freshest copy wins.
+    const seenTitles = new Set<string>();
+    const deduped = allItems.filter((item) => {
+      const key = item.title.replace(/\s+-\s+[^-]+$/, '').toLowerCase().trim();
+      if (seenTitles.has(key)) return false;
+      seenTitles.add(key);
+      return true;
+    });
+
     if (paged) {
-      // Honor the admin's max_total_items in spirit: paged depth is 4× the
-      // legacy cap, mirroring the 4× parse depth.
-      const pool = allItems.slice(0, maxTotal * 4);
+      // Honor an admin-set total cap in spirit at scroll depth (4×, mirroring
+      // the parse depth); with no cap set the whole deduped pool pages out.
+      const pool = maxTotal ? deduped.slice(0, maxTotal * 4) : deduped;
       const pageItems = pool.slice(offset, offset + limit);
       return new Response(JSON.stringify({
         success: true,
@@ -198,7 +226,7 @@ Deno.serve(async (req) => {
         hasMore: offset + limit < pool.length,
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    return new Response(JSON.stringify({ success: true, items: allItems.slice(0, maxTotal) }), {
+    return new Response(JSON.stringify({ success: true, items: maxTotal ? deduped.slice(0, maxTotal) : deduped }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

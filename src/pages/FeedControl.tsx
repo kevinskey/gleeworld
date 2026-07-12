@@ -117,16 +117,24 @@ export default function FeedControl() {
   }
 
   // Google News publishes a search-RSS endpoint, so any topic string
-  // becomes a feed — no scraping, no API key.
+  // becomes a feed — no scraping, no API key. Comma-separated topics must
+  // become an OR query: Google ANDs bare terms, and a query like
+  // "ai music, choral, claude cli" matches nothing (empty feed → empty rail).
   async function addGoogleNewsTopic() {
     const topic = gnTopic.trim();
     if (!topic) return;
+    const query = topic
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .map((t) => (t.includes(' ') ? `"${t}"` : t))
+      .join(' OR ');
     setAddingTopic(true);
     try {
       const { error } = await supabase.from('gw_feed_sources').insert({
         feed_type: 'news',
         name: `Google News · ${topic}`,
-        url: `https://news.google.com/rss/search?q=${encodeURIComponent(topic)}&hl=en-US&gl=US&ceid=US:en`,
+        url: `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`,
         icon: '📰',
         is_active: true,
         created_by: user?.id,
@@ -203,6 +211,7 @@ export default function FeedControl() {
               <CardContent className="space-y-3">
                 <p className="text-xs text-muted-foreground">
                   Follow any topic — Google News headlines about it join your feed.
+                  Separate topics with commas to match any of them.
                   Try your ensemble's name, your city's arts scene, or a genre like gospel choir.
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
