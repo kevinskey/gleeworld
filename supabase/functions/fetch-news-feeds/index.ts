@@ -35,13 +35,16 @@ function extractImageFromContent(content: string): string | null {
 }
 
 function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems: number): FeedItem[] {
+  // Parse EVERY item, then keep the newest maxItems. Google News search RSS
+  // is relevance-ordered (100 items), so truncating in feed order ships
+  // days-old items while newer ones are discarded.
   const items: FeedItem[] = [];
   const isAtom = xml.includes('<feed') && xml.includes('xmlns="http://www.w3.org/2005/Atom"');
 
   if (isAtom) {
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/gi;
     let entryMatch;
-    while ((entryMatch = entryRegex.exec(xml)) !== null && items.length < maxItems) {
+    while ((entryMatch = entryRegex.exec(xml)) !== null) {
       const entry = entryMatch[1];
       const title = extractText(entry, 'title');
       const linkMatch = entry.match(/<link[^>]+href=["']([^"']+)["']/);
@@ -59,7 +62,7 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
   } else {
     const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
     let itemMatch;
-    while ((itemMatch = itemRegex.exec(xml)) !== null && items.length < maxItems) {
+    while ((itemMatch = itemRegex.exec(xml)) !== null) {
       const item = itemMatch[1];
       const title = extractText(item, 'title');
       const link = extractText(item, 'link') || item.match(/<link>([^<]+)/)?.[1] || '';
@@ -70,13 +73,23 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
         items.push({
           title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
           link: link.trim(),
-          description: description.replace(/<[^>]+>/g, '').substring(0, 150),
+          // Google News descriptions arrive entity-encoded (&lt;a href=…&gt;),
+          // so decode before stripping tags or the markup survives as text.
+          description: description
+            .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+            .replace(/<[^>]+>/g, '')
+            .substring(0, 150),
           pubDate, source, sourceIcon, imageUrl,
         });
       }
     }
   }
-  return items;
+  items.sort((a, b) => {
+    const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+    const dateB = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+    return dateB - dateA;
+  });
+  return items.slice(0, maxItems);
 }
 
 Deno.serve(async (req) => {
