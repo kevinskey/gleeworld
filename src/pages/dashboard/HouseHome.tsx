@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { Newspaper } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
@@ -152,6 +153,10 @@ export default function HouseHome() {
           </p>
         </div>
 
+        {/* Status cards sit in a left column; the News panel on the right
+            spans their combined height (single column again below lg). */}
+        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
         {/* Up next — the plate that answers what/where/when. */}
         <div className="bg-card border border-border border-t-2 border-t-primary p-3">
           {upNext ? (
@@ -229,6 +234,22 @@ export default function HouseHome() {
               ))}
             </ul>
           )}
+        </div>
+        </div>
+
+        {/* News — right rail beside the status cards. Placeholder until the
+            news add-on (Google News + curated sources) ships; the feed needs
+            a server-side proxy (CORS + CSP) so it can't be a client fetch. */}
+        <aside className="bg-card border border-border p-3 flex flex-col min-h-[16rem]" aria-label="News">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">News</div>
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-6 text-center">
+            <Newspaper className="h-6 w-6 text-muted-foreground" aria-hidden />
+            <p className="text-sm font-medium">Your news briefing is on its way.</p>
+            <p className="text-xs text-muted-foreground">
+              Headlines from Google News and the music world will land here.
+            </p>
+          </div>
+        </aside>
         </div>
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
