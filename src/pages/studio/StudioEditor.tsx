@@ -480,14 +480,16 @@ function Editor({
   // take appends here so one take never sprays one-clip-per-note.
   const midiTakeClipRef = useRef<string | null>(null);
 
-  // Build/tear down the live-audition voice manager with the input toggle
-  // (web engine only — the native engine owns its own audio path).
+  // Build/tear down the live-audition voice manager with the input toggle.
+  // The audition voices always run in the webview, on every platform; on
+  // iOS they play alongside the native engine through the shared audio
+  // session (playAndRecord + mixWithOthers).
   useEffect(() => {
-    if (!midiInputEnabled || engineState.native) return;
+    if (!midiInputEnabled) return;
     const lv = new LiveVoices();
     liveVoicesRef.current = lv;
     return () => { lv.dispose(); liveVoicesRef.current = null; midiHeld.flush(); };
-  }, [midiInputEnabled, engineState.native]);
+  }, [midiInputEnabled]);
 
   // Keep the audition instrument matched to the target track's instrument.
   useEffect(() => {
@@ -560,7 +562,7 @@ function Editor({
   };
 
   const midiIn = useStudioMidiInput({
-    enabled: midiInputEnabled && !engineState.native,
+    enabled: midiInputEnabled,
     deviceId: midiInputDeviceId,
     onNoteOn: handleMidiNoteOn,
     onNoteOff: handleMidiNoteOff,
@@ -1784,7 +1786,7 @@ function Editor({
               enabled: midiSyncEnabled, setEnabled: setMidiSyncEnabled,
               outputId: midiSyncOutputId, setOutputId: setMidiSyncOutputId,
             }}
-            midiInput={engineState.native ? undefined : {
+            midiInput={{
               enabled: midiInputEnabled, setEnabled: setMidiInputEnabled,
               deviceId: midiInputDeviceId, setDeviceId: setMidiInputDeviceId,
               inputs: midiIn.inputs, status: midiIn.status, supported: midiIn.supported,
@@ -5515,7 +5517,7 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
           Pair Bluetooth MIDI…
         </button>
       )}
-      {enabled && status === 'denied' && <p className="text-xs text-red-500 mt-1">MIDI access was denied — enable it in the browser to play.</p>}
+      {enabled && status === 'denied' && <p className="text-xs text-red-500 mt-1">MIDI access was denied — check MIDI permissions and try again.</p>}
       {enabled && status === 'connected' && inputs.length === 0 && <p className="text-xs text-muted-foreground mt-1">No MIDI inputs found — plug in a keyboard.</p>}
     </div>
   );
