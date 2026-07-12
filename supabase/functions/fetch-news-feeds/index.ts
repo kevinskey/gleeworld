@@ -70,13 +70,33 @@ function parseRSSItems(xml: string, source: string, sourceIcon: string, maxItems
         items.push({
           title: title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
           link: link.trim(),
-          description: description.replace(/<[^>]+>/g, '').substring(0, 150),
+          // 400 chars: enough for the Command Center reader sheet's summary
+          // without shipping whole articles over the wire.
+          description: description.replace(/<[^>]+>/g, '').substring(0, 400),
           pubDate, source, sourceIcon, imageUrl,
         });
       }
     }
   }
   return items;
+}
+
+// Fallback tenant resolution: when the page doesn't declare a tenant (the
+// platform site has no __TENANT_CONFIG__), use the signed-in caller's own
+// tenant from their JWT so personal Feed Control sources follow the user.
+// Decode-only (no signature check): the claim merely selects which feed
+// URLs to aggregate, and the anon key's JWT has no tenant_id claim.
+function tenantIdFromAuthHeader(req: Request): string | null {
+  try {
+    const auth = req.headers.get('authorization') ?? '';
+    const token = auth.replace(/^Bearer\s+/i, '');
+    const payloadB64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+    if (!payloadB64) return null;
+    const payload = JSON.parse(atob(payloadB64));
+    return typeof payload?.tenant_id === 'string' && payload.tenant_id ? payload.tenant_id : null;
+  } catch {
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -105,22 +125,33 @@ Deno.serve(async (req) => {
     // clients because of tenant RLS, hence resolved here with service role).
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const tenantSlug = typeof body?.tenant === 'string' && body.tenant ? body.tenant : null;
+    // Paged mode (offset/limit present) powers the rail's infinite scroll;
+    // legacy callers (no offset/limit) keep the original slice(0, maxTotal).
+    const paged = Number.isFinite(Number(body?.offset)) || Number.isFinite(Number(body?.limit));
+    const offset = Math.max(0, Math.trunc(Number(body?.offset)) || 0);
+    const limit = Math.min(50, Math.max(1, Math.trunc(Number(body?.limit)) || 15));
+
     let tenantId: string | null = null;
     if (tenantSlug) {
-      const { data: t } = await sb.from('gw_tenants').select('id').eq('slug', tenantSlug).maybeSingle();
+      const { data: t, error: tErr } = await sb.from('gw_tenants').select('id').eq('slug', tenantSlug).maybeSingle();
+      if (tErr) throw new Error(`tenant lookup failed: ${tErr.message}`);
       tenantId = t?.id ?? null;
+    } else {
+      tenantId = tenantIdFromAuthHeader(req);
     }
 
     const loadDefaults = async () => {
-      const { data } = await sb.from('gw_feed_sources').select('*')
+      const { data, error } = await sb.from('gw_feed_sources').select('*')
         .eq('feed_type', 'news').eq('is_active', true).is('tenant_id', null).order('display_order');
+      if (error) throw new Error(`default sources query failed: ${error.message}`);
       return data ?? [];
     };
 
     let feedSources: any[] = [];
     if (tenantId) {
-      const { data: tenantRows } = await sb.from('gw_feed_sources').select('*')
+      const { data: tenantRows, error: sErr } = await sb.from('gw_feed_sources').select('*')
         .eq('feed_type', 'news').eq('tenant_id', tenantId).order('display_order');
+      if (sErr) throw new Error(`tenant sources query failed: ${sErr.message}`);
       feedSources = tenantRows && tenantRows.length > 0
         ? tenantRows.filter((r: any) => r.is_active)
         : await loadDefaults();
@@ -145,7 +176,10 @@ Deno.serve(async (req) => {
         clearTimeout(timeout);
         if (!response.ok) { console.warn(`Failed to fetch ${feed.name}: ${response.status}`); return []; }
         const xml = await response.text();
-        return parseRSSItems(xml, feed.name, feed.icon, feed.max_items_per_source || 5);
+        // Paged mode parses deeper per source (×4) so scrolling has a real
+        // pool to page through while keeping the configured source mix.
+        const perSource = (feed.max_items_per_source || 5) * (paged ? 4 : 1);
+        return parseRSSItems(xml, feed.name, feed.icon, perSource);
       } catch (err) { console.warn(`Error fetching ${feed.name}:`, err); return []; }
     });
 
@@ -157,6 +191,15 @@ Deno.serve(async (req) => {
       return dateB - dateA;
     });
 
+    if (paged) {
+      const pageItems = allItems.slice(offset, offset + limit);
+      return new Response(JSON.stringify({
+        success: true,
+        items: pageItems,
+        total: allItems.length,
+        hasMore: offset + limit < allItems.length,
+      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     return new Response(JSON.stringify({ success: true, items: allItems.slice(0, maxTotal) }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
