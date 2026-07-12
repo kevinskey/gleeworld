@@ -8,10 +8,15 @@ import { buildFxChain } from './fx';
 import { buildTrack } from './tracks';
 import { dbToGain } from './engine';
 import { encodeWavFromBufferLike } from '@/lib/audio/sharedRecorder';
+import { preloadGwSession } from './layeredSampler';
 
 const TAIL_SECONDS = 1.5;
 
 export async function renderSessionToWav(session: Session): Promise<Blob> {
+  // Premium (gw:) instruments load their manifests asynchronously; warm the
+  // module cache first so buildTrack constructs them synchronously inside
+  // Tone.Offline — otherwise those tracks render as silence.
+  await preloadGwSession(session);
   const totalSeconds = Math.max(session.length_seconds + TAIL_SECONDS, 1);
 
   // Tone.Offline lets us re-build the same engine graph against an

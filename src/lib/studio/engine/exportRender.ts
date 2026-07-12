@@ -48,6 +48,7 @@ import { buildTrack } from './tracks';
 import { dbToGain } from './engine';
 import { buildMasterChain } from './masterChain';
 import { audioBufferToWavBlob } from './mixdown';
+import { preloadGwSession } from './layeredSampler';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
 
 const TAIL_SECONDS = 1.5; // matches mixdown.ts — captures reverb/delay decay past the declared session length
@@ -319,6 +320,9 @@ export interface RenderMasterOptions {
  * Overload-Protection-Only normalization (scan peak, scale by 1/peak
  * only if >1) — mastered output relies on the limiter's own ceiling. */
 export async function renderMaster(session: Session, opts: RenderMasterOptions): Promise<AudioBuffer> {
+  // gw: instruments need their manifests cached before Tone.Offline —
+  // see the same call in mixdown.renderSessionToWav.
+  await preloadGwSession(session);
   const sampleRate = EXPORT_SAMPLE_RATE;
   const totalSeconds = Math.max(session.length_seconds + TAIL_SECONDS, 1);
   const mastering = opts.mastering

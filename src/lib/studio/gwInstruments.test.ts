@@ -43,6 +43,18 @@ describe('sample URLs', () => {
     expect(gwManifestUrl('grand_piano')).toBe(`${GW_SAMPLE_BASE}/grand_piano/manifest.json`);
     expect(gwSampleUrl('grand_piano', 'l1/C4.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/l1/C4.mp3`);
   });
+
+  it('percent-encodes sharps so "#" cannot start a URL fragment', () => {
+    expect(gwSampleUrl('grand_piano', 'l0/C#4.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/l0/C%234.mp3`);
+    expect(gwSampleUrl('grand_piano', 'rel/F#2.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/rel/F%232.mp3`);
+  });
+
+  it('every pitched instrument has a GM fallback; kits have none', () => {
+    for (const g of GW_INSTRUMENTS) {
+      if (g.kind === 'pitched') expect(g.gmFallback, g.name).toBeTruthy();
+      else expect(g.gmFallback, g.name).toBeUndefined();
+    }
+  });
 });
 
 describe('gwLayerIndexForVelocity', () => {

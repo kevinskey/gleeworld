@@ -16,19 +16,23 @@ export interface GwInstrument {
   name: string;          // manifest folder name, e.g. 'grand_piano'
   label: string;         // picker label, e.g. 'Grand Piano'
   kind: 'pitched' | 'kit';
+  // GM soundfont instrument to fall back to when the premium manifest can't
+  // be fetched (offline bank, renamed instrument). Kits omit it and fall
+  // back to the synthesized basic kit instead.
+  gmFallback?: string;
 }
 
 // Picker order: keyboard → voices → strings → guitars → organ → kits.
 export const GW_INSTRUMENTS: GwInstrument[] = [
-  { name: 'grand_piano',      label: 'Grand Piano',              kind: 'pitched' },
-  { name: 'electric_piano',   label: 'Electric Piano',           kind: 'pitched' },
-  { name: 'choir_aahs',       label: 'Choir Aahs',               kind: 'pitched' },
-  { name: 'string_ensemble',  label: 'String Ensemble',          kind: 'pitched' },
-  { name: 'violin',           label: 'Violin',                   kind: 'pitched' },
-  { name: 'cello',            label: 'Cello Section',            kind: 'pitched' },
-  { name: 'pizzicato',        label: 'Pizzicato Strings',        kind: 'pitched' },
-  { name: 'guitar_nylon',     label: 'Acoustic Guitar',          kind: 'pitched' },
-  { name: 'pipe_organ',       label: 'Pipe Organ',               kind: 'pitched' },
+  { name: 'grand_piano',      label: 'Grand Piano',              kind: 'pitched', gmFallback: 'acoustic_grand_piano' },
+  { name: 'electric_piano',   label: 'Electric Piano',           kind: 'pitched', gmFallback: 'electric_piano_1' },
+  { name: 'choir_aahs',       label: 'Choir Aahs',               kind: 'pitched', gmFallback: 'choir_aahs' },
+  { name: 'string_ensemble',  label: 'String Ensemble',          kind: 'pitched', gmFallback: 'string_ensemble_1' },
+  { name: 'violin',           label: 'Violin',                   kind: 'pitched', gmFallback: 'violin' },
+  { name: 'cello',            label: 'Cello Section',            kind: 'pitched', gmFallback: 'cello' },
+  { name: 'pizzicato',        label: 'Pizzicato Strings',        kind: 'pitched', gmFallback: 'pizzicato_strings' },
+  { name: 'guitar_nylon',     label: 'Acoustic Guitar',          kind: 'pitched', gmFallback: 'acoustic_guitar_nylon' },
+  { name: 'pipe_organ',       label: 'Pipe Organ',               kind: 'pitched', gmFallback: 'church_organ' },
   { name: 'kit_studio',       label: 'Drum Kit · Studio',        kind: 'kit' },
   { name: 'kit_rock',         label: 'Drum Kit · Rock',          kind: 'kit' },
   { name: 'kit_jazz',         label: 'Drum Kit · Jazz',          kind: 'kit' },
@@ -67,7 +71,11 @@ export function gwManifestUrl(name: string): string {
 }
 
 export function gwSampleUrl(name: string, relative: string): string {
-  return `${GW_SAMPLE_BASE}/${name}/${relative}`;
+  // Sample filenames use sharp note names ('l0/C#4.mp3'); an unencoded '#'
+  // would start a URL fragment and truncate the request. Encode each path
+  // segment, never the separators.
+  const encoded = relative.split('/').map(encodeURIComponent).join('/');
+  return `${GW_SAMPLE_BASE}/${name}/${encoded}`;
 }
 
 // Pick the layer index for a MIDI velocity (1..127): first layer whose

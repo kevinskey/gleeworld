@@ -12,7 +12,7 @@
 import * as Tone from 'tone';
 import type { Instrument } from '../session';
 import { fromGmPresetId, gmSamplerConfig } from '../gmInstruments';
-import { fromGwPresetId } from '../gwInstruments';
+import { GW_BY_NAME, fromGwPresetId } from '../gwInstruments';
 import { buildGwInstrument } from './layeredSampler';
 
 export interface EngineInstrument {
@@ -61,10 +61,17 @@ function buildSynth(spec: Instrument): EngineInstrument {
 }
 
 function buildSampler(spec: Instrument): EngineInstrument {
-  // Premium studio instrument (preset_id 'gw:<name>'): velocity-layered
-  // samples self-hosted on the gleeworld-studio Space.
+  // Premium studio instrument (preset_id 'gw:<name>'): velocity-layered,
+  // self-hosted samples. Only catalog names are routed here — an unknown
+  // 'gw:' id keeps the old invariant and falls through to the audible
+  // basic kit. If the manifest can't be fetched, the instrument falls
+  // back to its GM equivalent (kits: the basic kit) instead of silence.
   const gwName = fromGwPresetId(spec.preset_id);
-  if (gwName) return buildGwInstrument(gwName);
+  const gw = gwName ? GW_BY_NAME[gwName] : undefined;
+  if (gwName && gw) {
+    return buildGwInstrument(gwName, () =>
+      gw.gmFallback ? buildGmSampler(gw.gmFallback) : buildBasicKit());
+  }
 
   // General MIDI soundfont instrument (preset_id 'gm:<name>'): stream real
   // samples from the MusyngKite soundfont via Tone.Sampler.
