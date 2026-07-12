@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
 import { format, isSameDay, addMonths, subMonths, addDays, subDays, addYears, subYears, addWeeks, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useGleeWorldEvents, GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
@@ -27,7 +26,7 @@ import { DailyRunSheet } from "./DailyRunSheet";
 import { AgendaView } from "./AgendaView";
 import { MobileMonthGrid } from "./MobileMonthGrid";
 import { CreateEventDialog } from "../CreateEventDialog";
-import { CalendarDays, ChevronLeft } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SuperAdminControlPanel } from "./SuperAdminControlPanel";
 import { CalendarSettingsDialog } from "./CalendarSettingsDialog";
@@ -122,7 +121,6 @@ const getCategoryForEvent = (event: GleeWorldEvent): CategoryFilter => {
 };
 
 export const CommandCenterCalendar = () => {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   // iPad / narrow-laptop viewports (≤1439px) can't fit the calendar's
   // three-column layout, so we hide the right detail sidebar and start
@@ -361,25 +359,6 @@ export const CommandCenterCalendar = () => {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Page header — back to Command Center + title. The shell sidebar
-          is hidden on this route, so this is the way home. Fixed compact
-          height with the text vertically centered. */}
-      <div className="px-3 md:px-6 h-11 flex items-center gap-2 flex-shrink-0">
-        <button
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          className="inline-flex items-center gap-1 h-8 pl-1.5 pr-3 rounded-full text-sm font-medium text-primary hover:bg-primary/10 transition-colors -ml-1.5"
-          title="Back to Command Center"
-        >
-          <ChevronLeft className="h-5 w-5" />
-          <span className="hidden sm:inline">Command Center</span>
-          <span className="sm:hidden">Back</span>
-        </button>
-        <h1 className="font-sans normal-case font-bold leading-none text-xl tracking-tight">
-          Calendar
-        </h1>
-      </div>
-
       {/* Header */}
       <CommandCenterHeader
         currentDate={currentDate}
