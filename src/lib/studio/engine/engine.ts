@@ -570,6 +570,16 @@ export class StudioEngine {
     for (const track of this.tracks.values()) {
       for (const pb of track.playbacks) this.schedulePlayback(pb, seconds);
     }
+    // Re-phase the click. The metronome is a wall-clock interval that
+    // knows nothing about transport jumps, so a loop wrap would leave it
+    // on its old phase — and each repeat overshoots loopEnd by up to one
+    // 25ms watchdog tick, so the click drifts further off the downbeat
+    // on every pass. Restarting here fires beat 1 at the new position,
+    // matching what play() does when starting a looped region.
+    if (this.metronomeIntervalId !== null) {
+      this.stopMetronomeInterval();
+      this.startMetronomeInterval();
+    }
   }
 
   updateTrackStrip(trackId: string, patch: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }): void {
