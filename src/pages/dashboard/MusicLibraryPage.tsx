@@ -186,11 +186,18 @@ export default function MusicLibraryPage() {
   // isn't in the generated Supabase types yet (Task 1 column), hence the cast.
   const handleToggleShare = async (row: ScoreRow) => {
     const next = !row.shared_with_members;
-    const { error } = await (supabase as any)
+    // .select() so RLS-silenced writes are detectable: restrictive policies
+    // (e.g. the demo tenant's read-only guard) make the UPDATE match 0 rows
+    // without erroring, which previously produced a false success toast.
+    const { data, error } = await (supabase as any)
       .from('gw_sheet_music')
       .update({ shared_with_members: next })
-      .eq('id', row.id);
-    if (error) { toast.error('Could not update sharing'); return; }
+      .eq('id', row.id)
+      .select('id');
+    if (error || !data?.length) {
+      toast.error("Sharing couldn't be updated — your role may not have permission.");
+      return;
+    }
     qc.invalidateQueries({ queryKey: ['music-library-scores'] });
     toast.success(next ? 'Shared with members' : 'No longer shared');
   };
