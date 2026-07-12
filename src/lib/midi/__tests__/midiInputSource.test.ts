@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createWebMidiInputSource } from '../midiInputSource';
+import { createWebMidiInputSource, createNativeMidiInputSource } from '../midiInputSource';
+import type { GWMidiPluginShape } from '@/plugins/gwMidi';
 
 // Minimal fake Web MIDI: ports with the single-slot onmidimessage handler
 // the real API has, plus a fire() helper to simulate hardware input.
@@ -111,24 +112,27 @@ describe('createWebMidiInputSource', () => {
   });
 });
 
-import { createNativeMidiInputSource } from '../midiInputSource';
-import type { GWMidiPluginShape } from '@/plugins/gwMidi';
-
 function makeFakePlugin() {
   const handlers: Record<string, (e: unknown) => void> = {};
+  const calls: string[] = [];
+  const removeMocks: ReturnType<typeof vi.fn>[] = [];
   const plugin = {
-    start: vi.fn().mockResolvedValue(undefined),
-    stop: vi.fn().mockResolvedValue(undefined),
+    start: vi.fn(async () => { calls.push('start'); }),
+    stop: vi.fn(async () => { calls.push('stop'); }),
     listInputs: vi.fn().mockResolvedValue({ inputs: [{ id: '101', name: 'WP06' }] }),
     showBluetoothPairing: vi.fn().mockResolvedValue(undefined),
     addListener: vi.fn(async (evt: string, cb: (e: unknown) => void) => {
       handlers[evt] = cb;
-      return { remove: vi.fn(async () => { delete handlers[evt]; }) };
+      const removeMock = vi.fn(async () => { delete handlers[evt]; });
+      removeMocks.push(removeMock);
+      return { remove: removeMock };
     }),
   };
   return {
     plugin: plugin as unknown as GWMidiPluginShape,
     raw: plugin,
+    calls,
+    removeMocks,
     emit(evt: 'midiMessage' | 'stateChange', payload: unknown) { handlers[evt]?.(payload); },
   };
 }
@@ -212,5 +216,68 @@ describe('createNativeMidiInputSource', () => {
     await expect(src.showBluetoothPairing()).resolves.toBe(true);
     (fake.raw.showBluetoothPairing as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('no vc'));
     await expect(src.showBluetoothPairing()).resolves.toBe(false);
+  });
+
+  it('subscribe rejects when plugin.start fails, and a later subscribe retries cleanly', async () => {
+    const fake = makeFakePlugin();
+    (fake.raw.start as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('bt off'));
+    const src = createNativeMidiInputSource(fake.plugin);
+
+    await expect(src.subscribe('', () => {})).rejects.toThrow('bt off');
+    // Listeners added before the failing start() must be rolled back, not leaked.
+    expect(fake.removeMocks.length).toBeGreaterThan(0);
+    for (const removeMock of fake.removeMocks) {
+      expect(removeMock).toHaveBeenCalledTimes(1);
+    }
+
+    // The singleton must not be wedged: a later subscribe retries start() fresh.
+    const got: number[][] = [];
+    await expect(src.subscribe('', (d) => got.push([...d]))).resolves.toBeTypeOf('function');
+    expect(fake.raw.start).toHaveBeenCalledTimes(2);
+    fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 0 });
+    expect(got).toEqual([[0x90, 60, 100]]);
+  });
+
+  it('rapid unsubscribe-then-resubscribe never stops the new session', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    const got: number[][] = [];
+
+    const unsub = await src.subscribe('', (d) => got.push([...d]));
+    unsub();
+    // No flush between unsub() and the resubscribe — this is the race that
+    // used to let a stale plugin.stop() land after the fresh plugin.start().
+    const resub = await src.subscribe('', (d) => got.push([...d]));
+    void resub;
+    await flush();
+
+    fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 0 });
+    expect(got).toEqual([[0x90, 60, 100]]);
+
+    const lastStartIdx = fake.calls.lastIndexOf('start');
+    const lastStopIdx = fake.calls.lastIndexOf('stop');
+    expect(lastStartIdx).toBeGreaterThanOrEqual(0);
+    expect(lastStopIdx).toBeLessThan(lastStartIdx);
+  });
+
+  it('concurrent subscribes settle truthfully when the first start fails', async () => {
+    const fake = makeFakePlugin();
+    (fake.raw.start as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('bt off'));
+    const src = createNativeMidiInputSource(fake.plugin);
+    const got: number[][] = [];
+
+    const [first, second] = await Promise.allSettled([
+      src.subscribe('', (d) => got.push([...d])),
+      src.subscribe('', (d) => got.push([...d])),
+    ]);
+
+    expect(first.status).toBe('rejected');
+    expect(second.status).toBe('fulfilled');
+    expect(fake.raw.start).toHaveBeenCalledTimes(2);
+
+    if (second.status === 'fulfilled') {
+      fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 0 });
+      expect(got).toEqual([[0x90, 60, 100]]);
+    }
   });
 });

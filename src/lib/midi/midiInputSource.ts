@@ -107,32 +107,55 @@ export function createWebMidiInputSource(nav: Navigator = globalThis.navigator):
 export function createNativeMidiInputSource(plugin: GWMidiPluginShape): MidiInputSource {
   const subscribers = new Set<Subscriber>();
   const stateCbs = new Set<() => void>();
-  let started = false;
+  let running = false; // actual native state; mutated only inside chained ops
   let handles: PluginListenerHandle[] = [];
+  // All start/stop work runs through this chain, one op at a time, FIFO —
+  // so a teardown always finishes before the next start begins, and a
+  // failed start rolls back cleanly for the subscriber that triggered it.
+  let chain: Promise<void> = Promise.resolve();
 
-  const ensureStarted = async () => {
-    if (started) return;
-    started = true;
-    handles = [
-      await plugin.addListener('midiMessage', (e: GWMidiMessageEvent) => {
-        const data = Uint8Array.from(e.data);
-        subscribers.forEach((s) => {
-          if (s.deviceId === '' || s.deviceId === e.portId) s.cb(data);
-        });
-      }),
-      await plugin.addListener('stateChange', (_e: GWMidiStateChangeEvent) => {
-        stateCbs.forEach((f) => f());
-      }),
-    ];
-    await plugin.start();
+  const run = <T>(op: () => Promise<T>): Promise<T> => {
+    const p = chain.then(op, op);
+    chain = p.then(() => undefined, () => undefined);
+    return p;
   };
 
-  const stopIfIdle = async () => {
-    if (!started || subscribers.size > 0) return;
-    started = false;
+  const startOp = async () => {
+    if (running || subscribers.size === 0) return;
+    const added: PluginListenerHandle[] = [];
+    try {
+      added.push(
+        await plugin.addListener('midiMessage', (e: GWMidiMessageEvent) => {
+          const data = Uint8Array.from(e.data);
+          subscribers.forEach((s) => {
+            if (s.deviceId === '' || s.deviceId === e.portId) s.cb(data);
+          });
+        }),
+      );
+      added.push(
+        await plugin.addListener('stateChange', (_e: GWMidiStateChangeEvent) => {
+          stateCbs.forEach((f) => f());
+        }),
+      );
+      await plugin.start();
+    } catch (err) {
+      for (const h of added) {
+        try { await h.remove(); } catch { /* best effort */ }
+      }
+      throw err;
+    }
+    handles = added;
+    running = true;
+  };
+
+  const stopOp = async () => {
+    if (!running || subscribers.size > 0) return;
+    running = false;
     const toRemove = handles;
     handles = [];
-    for (const h of toRemove) await h.remove();
+    for (const h of toRemove) {
+      try { await h.remove(); } catch { /* best effort */ }
+    }
     await plugin.stop();
   };
 
@@ -147,14 +170,14 @@ export function createNativeMidiInputSource(plugin: GWMidiPluginShape): MidiInpu
       const sub: Subscriber = { deviceId, cb: onMessage };
       subscribers.add(sub);
       try {
-        await ensureStarted();
+        await run(startOp);
       } catch (err) {
         subscribers.delete(sub);
         throw err;
       }
       return () => {
         subscribers.delete(sub);
-        void stopIfIdle();
+        void run(stopOp);
       };
     },
     onStateChange(cb) {
