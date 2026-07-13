@@ -30,6 +30,8 @@
 	<string>GleeWorld uses the camera for video meetings and profile photos.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>GleeWorld uses the microphone for the instrument tuner and music practice tools.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>GleeWorld transcribes your voice so you can talk to the GleeWorld Assistant.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

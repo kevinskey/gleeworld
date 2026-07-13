@@ -1,3 +1,6 @@
+import { GWSpeech, isNativeSpeechAvailable, type GWSpeechPluginShape } from '@/plugins/gwSpeech';
+import type { PluginListenerHandle } from '@capacitor/core';
+
 export interface SpeechInputSource {
   available: boolean;
   start(onResult: (transcript: string, isFinal: boolean) => void, onEnd: () => void): void;
@@ -6,10 +9,67 @@ export interface SpeechInputSource {
 
 const MUTE_KEY = 'gw-assistant-muted';
 
-export function getSpeechInput(win?: Window & typeof globalThis): SpeechInputSource {
+interface NativeSpeechBackend { available: boolean; plugin: GWSpeechPluginShape }
+
+/** SpeechInputSource over the GWSpeech Capacitor plugin (iOS app only —
+ *  WKWebView has no SpeechRecognition). Same contract as the web source:
+ *  results stream to onResult, and onEnd always fires exactly once per
+ *  session, whether it ends by silence, explicit stop(), or start failure. */
+export function createNativeSpeechInput(plugin: GWSpeechPluginShape): SpeechInputSource {
+  // Sessions are numbered so a listener that resolves late (or an event
+  // from a session that already ended) can never leak into the next one.
+  let session = 0;
+  return {
+    available: true,
+    start(onResult, onEnd) {
+      const mySession = ++session;
+      let ended = false;
+      const added: PluginListenerHandle[] = [];
+      const finish = () => {
+        if (ended) return;
+        ended = true;
+        for (const h of added) void h.remove().catch(() => { /* best effort */ });
+        onEnd();
+      };
+      void (async () => {
+        try {
+          added.push(await plugin.addListener('speechResult', (e) => {
+            if (session === mySession && !ended) onResult(e.transcript, e.isFinal);
+          }));
+          added.push(await plugin.addListener('speechEnd', () => {
+            if (session === mySession) finish();
+          }));
+          if (session !== mySession) {
+            // A newer start() superseded us while listeners registered.
+            for (const h of added) void h.remove().catch(() => { /* best effort */ });
+            return;
+          }
+          await plugin.start();
+        } catch {
+          // Permission denied or native failure — mirror the web source,
+          // where onerror routes to onEnd.
+          if (session === mySession) finish();
+        }
+      })();
+    },
+    stop() {
+      // The native side always emits speechEnd after stop (delivering the
+      // final transcript first), which runs finish() above — same shape as
+      // web rec.stop() triggering onend.
+      void plugin.stop().catch(() => { /* best effort */ });
+    },
+  };
+}
+
+export function getSpeechInput(
+  win?: Window & typeof globalThis,
+  native?: NativeSpeechBackend,
+): SpeechInputSource {
   const w = (win ?? (typeof window !== 'undefined' ? window : undefined)) as any;
   const Ctor = w?.SpeechRecognition ?? w?.webkitSpeechRecognition;
   if (!Ctor) {
+    const nat = native ?? { available: isNativeSpeechAvailable(), plugin: GWSpeech };
+    if (nat.available) return createNativeSpeechInput(nat.plugin);
     return { available: false, start: () => {}, stop: () => {} };
   }
   let rec: any = null;
