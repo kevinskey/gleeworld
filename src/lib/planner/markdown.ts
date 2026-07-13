@@ -112,6 +112,18 @@ export function docToText(doc: DocNode): string {
 
 export const EMPTY_DOC: DocNode = { type: 'doc', content: [{ type: 'paragraph' }] };
 
+export function textToDoc(text: string): DocNode {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return EMPTY_DOC;
+  return {
+    type: 'doc',
+    content: lines.map((line) => ({
+      type: 'paragraph',
+      content: [{ type: 'text', text: line }],
+    })),
+  };
+}
+
 export function isDocEmpty(doc: DocNode): boolean {
   return docToText(doc).trim().length === 0;
 }

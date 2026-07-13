@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { HomeNewsRail } from '@/components/dashboard/HomeNewsRail';
+import { AssistantLauncher } from '@/components/assistant/AssistantLauncher';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
@@ -146,11 +147,14 @@ export default function HouseHome() {
   return (
     <DashboardShell>
       <div className="px-4 sm:px-6 pt-3 pb-8 space-y-4">
-        <div>
-          <h1 className="font-serif text-2xl font-semibold">{greetingFor(now.getHours(), firstName)}</h1>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            {format(now, 'EEE · MMM d')}
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="font-serif text-2xl font-semibold">{greetingFor(now.getHours(), firstName)}</h1>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">
+              {format(now, 'EEE · MMM d')}
+            </p>
+          </div>
+          <AssistantLauncher />
         </div>
 
         {/* Status cards sit in a left column; the News panel on the right
