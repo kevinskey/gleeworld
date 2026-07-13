@@ -1,20 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { parseMidiMessage } from '@/lib/studio/midiMessage';
-
-// Web MIDI types aren't in the default TS DOM lib; keep these local + loose,
-// matching the existing requestMIDIAccess usage elsewhere in the Studio.
-interface MidiPort { id: string; name?: string; onmidimessage: ((e: { data: Uint8Array }) => void) | null }
-interface MidiAccessLike {
-  inputs: Map<string, MidiPort>;
-  onstatechange: (() => void) | null;
-}
-
-const supported = typeof navigator !== 'undefined' && 'requestMIDIAccess' in navigator;
+import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 
 /**
- * Subscribe to USB/Web MIDI note input. When `enabled`, requests MIDI access,
- * lists input devices, and routes note on/off from the chosen device (or all
- * devices when deviceId is '') to the callbacks. Hot-plug aware.
+ * Subscribe to hardware MIDI note input (Web MIDI on desktop browsers,
+ * the CoreMIDI GWMidi plugin inside the iOS app). When `enabled`,
+ * lists input devices and routes note on/off from the chosen device
+ * (or all devices when deviceId is '') to the callbacks. Hot-plug aware.
  */
 export function useStudioMidiInput({
   enabled,
@@ -26,10 +18,13 @@ export function useStudioMidiInput({
 }: {
   enabled: boolean;
   deviceId: string;
-  onNoteOn: (pitch: number, velocity: number) => void;
-  onNoteOff: (pitch: number) => void;
-  onSustain?: (down: boolean) => void;
-  onCc?: (controller: number, value: number) => void;
+  /** `timeStampMs` = hardware event time (performance.now() domain) where
+   *  the backend provides one (Web MIDI); undefined on the native plugin.
+   *  Recording maps it onto the transport for jitter-free note placement. */
+  onNoteOn: (pitch: number, velocity: number, timeStampMs?: number) => void;
+  onNoteOff: (pitch: number, timeStampMs?: number) => void;
+  onSustain?: (down: boolean, timeStampMs?: number) => void;
+  onCc?: (controller: number, value: number, timeStampMs?: number) => void;
 }) {
   const [inputs, setInputs] = useState<{ id: string; name: string }[]>([]);
   const [status, setStatus] = useState<'idle' | 'connected' | 'denied'>('idle');
@@ -39,43 +34,44 @@ export function useStudioMidiInput({
   const onSustainRef = useRef(onSustain); onSustainRef.current = onSustain;
   const onCcRef = useRef(onCc); onCcRef.current = onCc;
 
+  const source = getMidiInputSource();
+
   useEffect(() => {
-    if (!enabled || !supported) { setStatus('idle'); return; }
+    if (!enabled || !source.supported) { setStatus('idle'); return; }
     let cancelled = false;
-    let access: MidiAccessLike | null = null;
+    let unsub: (() => void) | null = null;
 
-    const handle = (e: { data: Uint8Array }) => {
-      const ev = parseMidiMessage(e.data);
-      if (ev.type === 'noteon') onOnRef.current(ev.pitch, ev.velocity);
-      else if (ev.type === 'noteoff') onOffRef.current(ev.pitch);
-      else if (ev.type === 'sustain') onSustainRef.current?.(ev.down);
-      else if (ev.type === 'cc') onCcRef.current?.(ev.controller, ev.value);
+    const refreshInputs = () => {
+      void source.listInputs()
+        .then((list) => { if (!cancelled) setInputs(list); })
+        .catch(() => { /* device list unavailable — keep last known */ });
     };
-    const attach = (acc: MidiAccessLike) => {
-      const list = [...acc.inputs.values()];
-      setInputs(list.map((i) => ({ id: i.id, name: i.name ?? i.id })));
-      list.forEach((inp) => { inp.onmidimessage = deviceId === '' || inp.id === deviceId ? handle : null; });
-    };
+    const offState = source.onStateChange(refreshInputs);
 
-    (navigator as unknown as { requestMIDIAccess: (o: { sysex: boolean }) => Promise<MidiAccessLike> })
-      .requestMIDIAccess({ sysex: false })
-      .then((acc) => {
-        if (cancelled) return;
-        access = acc;
+    source
+      .subscribe(deviceId, (data, timeStampMs) => {
+        const ev = parseMidiMessage(data);
+        if (ev.type === 'noteon') onOnRef.current(ev.pitch, ev.velocity, timeStampMs);
+        else if (ev.type === 'noteoff') onOffRef.current(ev.pitch, timeStampMs);
+        else if (ev.type === 'sustain') onSustainRef.current?.(ev.down, timeStampMs);
+        else if (ev.type === 'cc') onCcRef.current?.(ev.controller, ev.value, timeStampMs);
+      })
+      .then((u) => {
+        if (cancelled) { u(); return; }
+        unsub = u;
         setStatus('connected');
-        attach(acc);
-        acc.onstatechange = () => attach(acc); // re-attach on plug/unplug
+        refreshInputs();
       })
       .catch(() => { if (!cancelled) setStatus('denied'); });
 
     return () => {
       cancelled = true;
-      if (access) {
-        access.inputs.forEach((inp) => { inp.onmidimessage = null; });
-        access.onstatechange = null;
-      }
+      offState();
+      unsub?.();
     };
+    // `source` is a module singleton — stable for the app lifetime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, deviceId]);
 
-  return { supported, inputs, status };
+  return { supported: source.supported, inputs, status };
 }

@@ -34,10 +34,12 @@ import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { GW_INSTRUMENTS, toGwPresetId } from '@/lib/studio/gwInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
+import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
   appendTakeNote, recordStartMode, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
   type HeldPress, type CapturedCc,
 } from '@/lib/studio/midiRecord';
+import { MidiTimebase } from '@/lib/studio/midiTimebase';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
@@ -472,21 +474,34 @@ function Editor({
   const midiPedalRef = useRef(false);   // dedupe (WP06 broadcasts CC64 on 3 channels)
   // Capture compensation for this take, seconds (auto output latency + trim).
   const midiCompSecRef = useRef(0);
+  // Hardware-timestamp → transport mapping for the current take. The
+  // positionSeconds snapshot only updates ~30Hz, so stamping notes at
+  // handler run time quantized them to a ±33ms grid plus main-thread lag
+  // ("fast eighths don't lock"). The timebase anchors Web MIDI's
+  // performance.now()-domain event timestamps to the transport once per
+  // take and places every note by hardware delta instead.
+  const [midiTimebase] = useState(() => new MidiTimebase());
+  useEffect(() => { midiTimebase.reset(); }, [state?.recordingActive, midiTimebase]);
   // Transport position minus recording compensation — the musical moment
   // the player MEANT, given they play in time with late-by-outputLatency audio.
   const compNow = () => Math.max(0, (state?.positionSeconds ?? 0) - midiCompSecRef.current);
+  // Same, but placed by the event's hardware timestamp when it has one.
+  const compAt = (timeStampMs?: number) => Math.max(0,
+    midiTimebase.toTransportSeconds(timeStampMs, state?.positionSeconds ?? 0) - midiCompSecRef.current);
   // The single clip owned by the current recording take — every note of a
   // take appends here so one take never sprays one-clip-per-note.
   const midiTakeClipRef = useRef<string | null>(null);
 
-  // Build/tear down the live-audition voice manager with the input toggle
-  // (web engine only — the native engine owns its own audio path).
+  // Build/tear down the live-audition voice manager with the input toggle.
+  // The audition voices always run in the webview, on every platform; on
+  // iOS they play alongside the native engine through the shared audio
+  // session (playAndRecord + mixWithOthers).
   useEffect(() => {
-    if (!midiInputEnabled || engineState.native) return;
+    if (!midiInputEnabled) return;
     const lv = new LiveVoices();
     liveVoicesRef.current = lv;
     return () => { lv.dispose(); liveVoicesRef.current = null; midiHeld.flush(); };
-  }, [midiInputEnabled, engineState.native]);
+  }, [midiInputEnabled]);
 
   // Keep the audition instrument matched to the target track's instrument.
   useEffect(() => {
@@ -529,37 +544,37 @@ function Editor({
     }));
   };
 
-  const handleMidiNoteOn = (pitch: number, velocity: number) => {
+  const handleMidiNoteOn = (pitch: number, velocity: number, timeStampMs?: number) => {
     liveVoicesRef.current?.noteOn(pitch, velocity / 127);
     if (state?.recordingActive && midiInputTrack) {
-      const at = compNow();
+      const at = compAt(timeStampMs);
       const stale = midiHeld.keyDown(pitch, velocity, at);
       if (stale) commitMidiPresses([stale], at); // missed note-off
     }
   };
-  const handleMidiNoteOff = (pitch: number) => {
+  const handleMidiNoteOff = (pitch: number, timeStampMs?: number) => {
     liveVoicesRef.current?.noteOff(pitch);
     const press = midiHeld.keyUp(pitch);
     if (!press) return;
-    commitMidiPresses([press], compNow());
+    commitMidiPresses([press], compAt(timeStampMs));
   };
-  const handleMidiSustain = (down: boolean) => {
+  const handleMidiSustain = (down: boolean, timeStampMs?: number) => {
     liveVoicesRef.current?.sustain(down); // monitoring feel unchanged
     if (state?.recordingActive && down !== midiPedalRef.current) {
       midiPedalRef.current = down;
-      midiCcRef.current.push({ controller: 64, value: down ? 127 : 0, timeAbsSeconds: compNow() });
+      midiCcRef.current.push({ controller: 64, value: down ? 127 : 0, timeAbsSeconds: compAt(timeStampMs) });
     }
     if (!state?.recordingActive) midiPedalRef.current = down;
   };
-  const handleMidiCc = (controller: number, value: number) => {
+  const handleMidiCc = (controller: number, value: number, timeStampMs?: number) => {
     if (!state?.recordingActive) return;
     const prev = midiCcRef.current[midiCcRef.current.length - 1];
     if (prev && prev.controller === controller && prev.value === value) return; // coalesce dupes
-    midiCcRef.current.push({ controller, value, timeAbsSeconds: compNow() });
+    midiCcRef.current.push({ controller, value, timeAbsSeconds: compAt(timeStampMs) });
   };
 
   const midiIn = useStudioMidiInput({
-    enabled: midiInputEnabled && !engineState.native,
+    enabled: midiInputEnabled,
     deviceId: midiInputDeviceId,
     onNoteOn: handleMidiNoteOn,
     onNoteOff: handleMidiNoteOff,
@@ -1783,7 +1798,7 @@ function Editor({
               enabled: midiSyncEnabled, setEnabled: setMidiSyncEnabled,
               outputId: midiSyncOutputId, setOutputId: setMidiSyncOutputId,
             }}
-            midiInput={engineState.native ? undefined : {
+            midiInput={{
               enabled: midiInputEnabled, setEnabled: setMidiInputEnabled,
               deviceId: midiInputDeviceId, setDeviceId: setMidiInputDeviceId,
               inputs: midiIn.inputs, status: midiIn.status, supported: midiIn.supported,
@@ -5505,7 +5520,7 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
   if (!supported) return null;
   return (
     <div className="border-t border-border pt-2">
-      <Label className="text-xs font-semibold">USB MIDI keyboard — play &amp; record</Label>
+      <Label className="text-xs font-semibold">MIDI keyboard — play &amp; record</Label>
       <p className="text-xs text-muted-foreground mb-1.5">
         Plays the armed MIDI track&apos;s instrument live, and records into its clip while the transport is recording.{' '}
         {targetTrackName
@@ -5527,7 +5542,19 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
           </select>
         )}
       </div>
-      {enabled && status === 'denied' && <p className="text-xs text-red-500 mt-1">MIDI access was denied — enable it in the browser to play.</p>}
+      {enabled && getMidiInputSource().kind === 'native' && (
+        <button
+          onClick={() => {
+            void getMidiInputSource().showBluetoothPairing().then((ok) => {
+              if (!ok) toast.error('Could not open Bluetooth MIDI pairing.');
+            });
+          }}
+          className="mt-1.5 h-8 px-3 rounded border text-sm bg-muted border-border text-muted-foreground hover:bg-muted/70"
+        >
+          Pair Bluetooth MIDI…
+        </button>
+      )}
+      {enabled && status === 'denied' && <p className="text-xs text-red-500 mt-1">MIDI access was denied — check MIDI permissions and try again.</p>}
       {enabled && status === 'connected' && inputs.length === 0 && <p className="text-xs text-muted-foreground mt-1">No MIDI inputs found — plug in a keyboard.</p>}
     </div>
   );

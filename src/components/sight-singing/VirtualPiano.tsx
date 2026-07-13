@@ -8,6 +8,7 @@ import { Volume2, VolumeX, X, Keyboard } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { WebAudioSynth, SYNTH_INSTRUMENTS } from '@/utils/webAudioSynth';
 import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio, getSharedAudioContext } from '@/utils/mobileAudioUnlock';
+import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 interface VirtualPianoProps {
   className?: string;
   onClose?: () => void;
@@ -21,6 +22,17 @@ const getFrequency = (note: string, octave: number): number => {
   };
   const semitones = noteOffsets[note] + (octave - 4) * 12;
   return 440 * Math.pow(2, semitones / 12);
+};
+
+// Convert MIDI note number to note name and frequency
+const midiNoteToName = (midiNote: number): { name: string; frequency: number } => {
+  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const octave = Math.floor(midiNote / 12) - 1;
+  const noteIndex = midiNote % 12;
+  const name = `${noteNames[noteIndex]}${octave}`;
+  // A4 (MIDI 69) = 440Hz
+  const frequency = 440 * Math.pow(2, (midiNote - 69) / 12);
+  return { name, frequency };
 };
 
 // Generate full piano range A0 to C8 (88 keys)
@@ -378,84 +390,34 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     };
   }, []); // No dependencies - stable listener
 
-  // MIDI Controller Support
+  // Hardware MIDI input — Web MIDI on desktop, GWMidi plugin on iPad.
   useEffect(() => {
-    let midiAccess: MIDIAccess | null = null;
-    
-    // Convert MIDI note number to note name and frequency
-    const midiNoteToName = (midiNote: number): { name: string; frequency: number } => {
-      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-      const octave = Math.floor(midiNote / 12) - 1;
-      const noteIndex = midiNote % 12;
-      const name = `${noteNames[noteIndex]}${octave}`;
-      // A4 (MIDI 69) = 440Hz
-      const frequency = 440 * Math.pow(2, (midiNote - 69) / 12);
-      return { name, frequency };
-    };
-    
-    const handleMIDIMessage = (event: MIDIMessageEvent) => {
-      const [status, note, velocity] = event.data as Uint8Array;
-      const command = status & 0xf0;
-      
-      // Note On (144) or Note Off (128)
-      if (command === 144 && velocity > 0) {
-        // Note On
-        const { name, frequency } = midiNoteToName(note);
-        console.log('🎹 MIDI Note On:', name, 'velocity:', velocity);
-        
-        // Auto-scroll removed - keyboard stays in place, user scrolls manually or uses octave selector
-        
-        playNote(name, frequency, velocity);
-      } else if (command === 128 || (command === 144 && velocity === 0)) {
-        // Note Off
-        const { name } = midiNoteToName(note);
-        console.log('🎹 MIDI Note Off:', name);
-        stopNote(name);
-      }
-    };
-    
-    const setupMIDI = async () => {
-      try {
-        if (navigator.requestMIDIAccess) {
-          midiAccess = await navigator.requestMIDIAccess();
-          console.log('🎹 MIDI Access granted');
-          
-          // Connect to all available MIDI inputs
-          midiAccess.inputs.forEach((input) => {
-            console.log('🎹 MIDI Input connected:', input.name);
-            input.onmidimessage = handleMIDIMessage;
-          });
-          
-          // Listen for new MIDI devices
-          midiAccess.onstatechange = (event) => {
-            const port = event.port as MIDIInput;
-            if (port.type === 'input') {
-              if (port.state === 'connected') {
-                console.log('🎹 MIDI Device connected:', port.name);
-                port.onmidimessage = handleMIDIMessage;
-              } else {
-                console.log('🎹 MIDI Device disconnected:', port.name);
-              }
-            }
-          };
-        } else {
-          console.log('🎹 Web MIDI API not supported');
+    const source = getMidiInputSource();
+    if (!source.supported) return;
+    let cancelled = false;
+    let unsub: (() => void) | null = null;
+
+    source
+      .subscribe('', (data) => {
+        const [status, note, velocity] = data;
+        const command = status & 0xf0;
+        // Note On (144) or Note Off (128); note-on with velocity 0 is a release.
+        if (command === 144 && velocity > 0) {
+          const { name, frequency } = midiNoteToName(note);
+          playNote(name, frequency, velocity);
+        } else if (command === 128 || (command === 144 && velocity === 0)) {
+          const { name } = midiNoteToName(note);
+          stopNote(name);
         }
-      } catch (error) {
-        console.error('🎹 MIDI Access denied:', error);
-      }
-    };
-    
-    setupMIDI();
-    
+      })
+      .then((u) => { if (cancelled) u(); else unsub = u; })
+      .catch(() => { /* MIDI access denied — piano still works by touch */ });
+
     return () => {
-      if (midiAccess) {
-        midiAccess.inputs.forEach((input) => {
-          input.onmidimessage = null;
-        });
-      }
+      cancelled = true;
+      unsub?.();
     };
-  }, [playNote, stopNote, isMobile, isFullScreen, dynamicKeyWidth]);
+  }, [playNote, stopNote]);
 
   // Cleanup on unmount - don't close shared audio context
   useEffect(() => {

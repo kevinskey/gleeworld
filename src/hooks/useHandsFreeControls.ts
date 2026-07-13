@@ -12,6 +12,7 @@
 //     (loaded lazily; ~8MB model on first use).
 
 import { useEffect, useRef, useState } from 'react';
+import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 
 const STORAGE_KEY = 'gw-handsfree-settings-v1';
 
@@ -95,30 +96,25 @@ export function useHandsFreeControls({ onNext, onPrev }: HandsFreeHandlers) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // --- Web MIDI -----------------------------------------------------------
+  // --- MIDI (Web MIDI on desktop, GWMidi plugin on iPad) --------------------
   useEffect(() => {
-    let access: any = null;
+    const source = getMidiInputSource();
+    if (!source.supported) { setMidiAvailable(false); return; }
     let cancelled = false;
-    (async () => {
-      if (!('requestMIDIAccess' in navigator)) { setMidiAvailable(false); return; }
-      try {
-        access = await (navigator as any).requestMIDIAccess({ sysex: false });
-      } catch { setMidiAvailable(false); return; }
-      if (cancelled) return;
-      setMidiAvailable(true);
+    let unsub: (() => void) | null = null;
 
-      const updateInputs = () => {
-        const names: string[] = [];
-        access.inputs.forEach((inp: any) => names.push(inp.name ?? '(unnamed)'));
-        setMidiInputs(names);
-      };
-      updateInputs();
-      access.onstatechange = updateInputs;
+    const refreshInputs = () => {
+      void source.listInputs()
+        .then((list) => { if (!cancelled) setMidiInputs(list.map((i) => i.name)); })
+        .catch(() => { /* device list unavailable — keep last known */ });
+    };
+    const offState = source.onStateChange(refreshInputs);
 
-      const onMessage = (msg: any) => {
+    source
+      .subscribe('', (data) => {
         const s = settingsRef.current;
         if (!s.midiEnabled && learningRef.current === null) return;
-        const [status, data1, data2] = msg.data;
+        const [status, data1, data2] = data;
         const cmd = status & 0xf0;
         let evt: MidiBinding | null = null;
         if (cmd === 0x90 && data2 > 0) {
@@ -145,14 +141,19 @@ export function useHandsFreeControls({ onNext, onPrev }: HandsFreeHandlers) {
           if (nextB && nextB.type === evt.type && nextB.key === evt.key) handlersRef.current.onNext();
           else if (prevB && prevB.type === evt.type && prevB.key === evt.key) handlersRef.current.onPrev();
         }
-      };
-      access.inputs.forEach((inp: any) => { inp.onmidimessage = onMessage; });
-    })();
+      })
+      .then((u) => {
+        if (cancelled) { u(); return; }
+        unsub = u;
+        setMidiAvailable(true);
+        refreshInputs();
+      })
+      .catch(() => { if (!cancelled) setMidiAvailable(false); });
+
     return () => {
       cancelled = true;
-      if (access) {
-        try { access.inputs.forEach((inp: any) => { inp.onmidimessage = null; }); } catch {}
-      }
+      offState();
+      unsub?.();
     };
   }, []);
 
