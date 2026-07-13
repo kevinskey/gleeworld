@@ -20,6 +20,14 @@ CREATE POLICY "Anyone can view active courses" ON public.gw_courses
     AND (status = 'published' OR created_by = auth.uid() OR instructor_id = auth.uid())
   );
 
+-- The legacy blanket SELECT policy from 20251203192132 ("Authenticated users can
+-- view courses", USING (true)) was never dropped and gw_courses was never
+-- recreated, so it is still live. Permissive policies OR together: leaving it in
+-- place would show draft courses to every authenticated user and make the status
+-- gate above a no-op. Its function is fully covered by the status-aware policy
+-- above plus "Admins can manage courses".
+DROP POLICY IF EXISTS "Authenticated users can view courses" ON public.gw_courses;
+
 -- 3) Normalize course-satellite write policies -------------------------------
 -- assistant_create_course is SECURITY INVOKER: the whole transaction fails if
 -- ANY satellite insert is blocked by RLS. The legacy policies disagree on role
@@ -37,6 +45,17 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
 $$;
 REVOKE ALL ON FUNCTION public.is_course_editor() FROM public;
 GRANT EXECUTE ON FUNCTION public.is_course_editor() TO authenticated;
+
+-- gw_courses itself has NO instructor write path: every existing permissive write
+-- policy (20251203 "Admins can insert/update/delete courses", 20251215 "Admins can
+-- manage courses") requires the is_admin/is_super_admin flags. A role='instructor'
+-- caller would therefore fail assistant_create_course at the very first INSERT.
+-- Draft-course creation is exactly the editor predicate's job, so give course
+-- editors an INSERT path (the draft-hiding SELECT policy already carves out
+-- created_by/instructor_id for them).
+DROP POLICY IF EXISTS "Course editors can insert courses" ON public.gw_courses;
+CREATE POLICY "Course editors can insert courses" ON public.gw_courses
+  FOR INSERT WITH CHECK (public.is_course_editor());
 
 DROP POLICY IF EXISTS "Instructors can manage modules" ON public.gw_course_modules;
 CREATE POLICY "Instructors can manage modules" ON public.gw_course_modules
@@ -110,7 +129,11 @@ BEGIN
   IF v_title = '' THEN RAISE EXCEPTION 'spec.title is required'; END IF;
   v_start := (spec->>'start_date')::date;
   v_end := (spec->>'end_date')::date;
-  IF v_end <= v_start THEN RAISE EXCEPTION 'end_date must be after start_date'; END IF;
+  -- NULL-safe: an absent key yields NULL and `v_end <= v_start` would be
+  -- silently false, letting a spec with no dates through.
+  IF v_start IS NULL OR v_end IS NULL OR v_end <= v_start THEN
+    RAISE EXCEPTION 'start_date/end_date invalid';
+  END IF;
   IF jsonb_typeof(spec->'modules') <> 'array' OR jsonb_array_length(spec->'modules') < 1 THEN
     RAISE EXCEPTION 'at least one module is required';
   END IF;
@@ -144,6 +167,7 @@ BEGIN
     SELECT value AS mod, ordinality AS ord
     FROM jsonb_array_elements(spec->'modules') WITH ORDINALITY
   LOOP
+    IF trim(coalesce(m.mod->>'title','')) = '' THEN RAISE EXCEPTION 'module title missing at position %', m.ord; END IF;
     INSERT INTO gw_course_modules
       (course_id, module_id, title, description, week_number, is_active, is_locked,
        display_order, learning_objectives)
