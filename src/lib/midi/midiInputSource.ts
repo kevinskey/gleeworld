@@ -23,10 +23,14 @@ export interface MidiInputSource {
   listInputs(): Promise<MidiInputDescriptor[]>;
   /**
    * Deliver raw MIDI bytes from the chosen device ('' = all devices).
+   * `timeStampMs` is the event's hardware timestamp in the
+   * performance.now() domain (Web MIDI event.timeStamp); undefined where
+   * the backend has none (native plugin). Recording uses it to place
+   * notes precisely instead of trusting handler run time.
    * Rejects if access is denied (web permission prompt).
    * Resolves to an unsubscribe function.
    */
-  subscribe(deviceId: string, onMessage: (data: Uint8Array) => void): Promise<() => void>;
+  subscribe(deviceId: string, onMessage: (data: Uint8Array, timeStampMs?: number) => void): Promise<() => void>;
   /** Fires on device hot-plug / disconnect. Returns un-listen function. */
   onStateChange(cb: () => void): () => void;
   /** Opens the OS Bluetooth MIDI pairing sheet. Resolves false where
@@ -36,10 +40,10 @@ export interface MidiInputSource {
 
 // Web MIDI types aren't in the default TS DOM lib; keep these local +
 // loose, same as the previous inline usage.
-interface MidiPort { id: string; name?: string; onmidimessage: ((e: { data: Uint8Array }) => void) | null }
+interface MidiPort { id: string; name?: string; onmidimessage: ((e: { data: Uint8Array; timeStamp?: number }) => void) | null }
 interface MidiAccessLike { inputs: Map<string, MidiPort>; onstatechange: (() => void) | null }
 
-interface Subscriber { deviceId: string; cb: (data: Uint8Array) => void }
+interface Subscriber { deviceId: string; cb: (data: Uint8Array, timeStampMs?: number) => void }
 
 export function createWebMidiInputSource(nav: Navigator = globalThis.navigator): MidiInputSource {
   const supported = typeof nav !== 'undefined' && !!nav && 'requestMIDIAccess' in nav;
@@ -54,7 +58,7 @@ export function createWebMidiInputSource(nav: Navigator = globalThis.navigator):
     acc.inputs.forEach((inp) => {
       inp.onmidimessage = (e) => {
         subscribers.forEach((s) => {
-          if (s.deviceId === '' || s.deviceId === inp.id) s.cb(e.data);
+          if (s.deviceId === '' || s.deviceId === inp.id) s.cb(e.data, e.timeStamp);
         });
       };
     });
@@ -127,8 +131,11 @@ export function createNativeMidiInputSource(plugin: GWMidiPluginShape): MidiInpu
       added.push(
         await plugin.addListener('midiMessage', (e: GWMidiMessageEvent) => {
           const data = Uint8Array.from(e.data);
+          // tsMs is CoreMIDI's monotonic clock, not performance.now() —
+          // consumers must use it for DELTAS only (MidiTimebase anchors
+          // per-take, so any monotonic ms clock works). 0 = "no timestamp".
           subscribers.forEach((s) => {
-            if (s.deviceId === '' || s.deviceId === e.portId) s.cb(data);
+            if (s.deviceId === '' || s.deviceId === e.portId) s.cb(data, e.tsMs > 0 ? e.tsMs : undefined);
           });
         }),
       );

@@ -39,6 +39,7 @@ import {
   appendTakeNote, recordStartMode, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
   type HeldPress, type CapturedCc,
 } from '@/lib/studio/midiRecord';
+import { MidiTimebase } from '@/lib/studio/midiTimebase';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
@@ -473,9 +474,20 @@ function Editor({
   const midiPedalRef = useRef(false);   // dedupe (WP06 broadcasts CC64 on 3 channels)
   // Capture compensation for this take, seconds (auto output latency + trim).
   const midiCompSecRef = useRef(0);
+  // Hardware-timestamp → transport mapping for the current take. The
+  // positionSeconds snapshot only updates ~30Hz, so stamping notes at
+  // handler run time quantized them to a ±33ms grid plus main-thread lag
+  // ("fast eighths don't lock"). The timebase anchors Web MIDI's
+  // performance.now()-domain event timestamps to the transport once per
+  // take and places every note by hardware delta instead.
+  const [midiTimebase] = useState(() => new MidiTimebase());
+  useEffect(() => { midiTimebase.reset(); }, [state?.recordingActive, midiTimebase]);
   // Transport position minus recording compensation — the musical moment
   // the player MEANT, given they play in time with late-by-outputLatency audio.
   const compNow = () => Math.max(0, (state?.positionSeconds ?? 0) - midiCompSecRef.current);
+  // Same, but placed by the event's hardware timestamp when it has one.
+  const compAt = (timeStampMs?: number) => Math.max(0,
+    midiTimebase.toTransportSeconds(timeStampMs, state?.positionSeconds ?? 0) - midiCompSecRef.current);
   // The single clip owned by the current recording take — every note of a
   // take appends here so one take never sprays one-clip-per-note.
   const midiTakeClipRef = useRef<string | null>(null);
@@ -532,33 +544,33 @@ function Editor({
     }));
   };
 
-  const handleMidiNoteOn = (pitch: number, velocity: number) => {
+  const handleMidiNoteOn = (pitch: number, velocity: number, timeStampMs?: number) => {
     liveVoicesRef.current?.noteOn(pitch, velocity / 127);
     if (state?.recordingActive && midiInputTrack) {
-      const at = compNow();
+      const at = compAt(timeStampMs);
       const stale = midiHeld.keyDown(pitch, velocity, at);
       if (stale) commitMidiPresses([stale], at); // missed note-off
     }
   };
-  const handleMidiNoteOff = (pitch: number) => {
+  const handleMidiNoteOff = (pitch: number, timeStampMs?: number) => {
     liveVoicesRef.current?.noteOff(pitch);
     const press = midiHeld.keyUp(pitch);
     if (!press) return;
-    commitMidiPresses([press], compNow());
+    commitMidiPresses([press], compAt(timeStampMs));
   };
-  const handleMidiSustain = (down: boolean) => {
+  const handleMidiSustain = (down: boolean, timeStampMs?: number) => {
     liveVoicesRef.current?.sustain(down); // monitoring feel unchanged
     if (state?.recordingActive && down !== midiPedalRef.current) {
       midiPedalRef.current = down;
-      midiCcRef.current.push({ controller: 64, value: down ? 127 : 0, timeAbsSeconds: compNow() });
+      midiCcRef.current.push({ controller: 64, value: down ? 127 : 0, timeAbsSeconds: compAt(timeStampMs) });
     }
     if (!state?.recordingActive) midiPedalRef.current = down;
   };
-  const handleMidiCc = (controller: number, value: number) => {
+  const handleMidiCc = (controller: number, value: number, timeStampMs?: number) => {
     if (!state?.recordingActive) return;
     const prev = midiCcRef.current[midiCcRef.current.length - 1];
     if (prev && prev.controller === controller && prev.value === value) return; // coalesce dupes
-    midiCcRef.current.push({ controller, value, timeAbsSeconds: compNow() });
+    midiCcRef.current.push({ controller, value, timeAbsSeconds: compAt(timeStampMs) });
   };
 
   const midiIn = useStudioMidiInput({

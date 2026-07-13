@@ -8,9 +8,9 @@ function makeFakePort(id: string, name: string) {
   return {
     id,
     name,
-    onmidimessage: null as ((e: { data: Uint8Array }) => void) | null,
-    fire(bytes: number[]) {
-      this.onmidimessage?.({ data: Uint8Array.from(bytes) });
+    onmidimessage: null as ((e: { data: Uint8Array; timeStamp?: number }) => void) | null,
+    fire(bytes: number[], timeStamp?: number) {
+      this.onmidimessage?.({ data: Uint8Array.from(bytes), timeStamp });
     },
   };
 }
@@ -58,6 +58,16 @@ describe('createWebMidiInputSource', () => {
     access.ports.a.fire([0x90, 60, 100]);
     access.ports.b.fire([0x80, 60, 0]);
     expect(got).toEqual([[0x90, 60, 100], [0x80, 60, 0]]);
+  });
+
+  it('passes the hardware event timeStamp through to subscribers', async () => {
+    const access = makeFakeAccess();
+    const src = createWebMidiInputSource(navWith(access));
+    const got: Array<number | undefined> = [];
+    await src.subscribe('', (_d, ts) => got.push(ts));
+    access.ports.a.fire([0x90, 60, 100], 1234.5);
+    access.ports.a.fire([0x80, 60, 0]); // no timestamp on the event
+    expect(got).toEqual([1234.5, undefined]);
   });
 
   it('subscribe(deviceId) filters to that port', async () => {
@@ -162,6 +172,16 @@ describe('createNativeMidiInputSource', () => {
     expect(got).toHaveLength(1);
     expect(got[0]).toBeInstanceOf(Uint8Array);
     expect([...got[0]]).toEqual([0x90, 60, 100]);
+  });
+
+  it('passes tsMs through as the timestamp, mapping 0 to undefined', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    const got: Array<number | undefined> = [];
+    await src.subscribe('', (_d, ts) => got.push(ts));
+    fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 987.25 });
+    fake.emit('midiMessage', { portId: '101', data: [0x80, 60, 0], tsMs: 0 }); // 0 = "no timestamp"
+    expect(got).toEqual([987.25, undefined]);
   });
 
   it('filters by portId when a deviceId is chosen', async () => {

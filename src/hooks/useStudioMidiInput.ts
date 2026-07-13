@@ -18,10 +18,13 @@ export function useStudioMidiInput({
 }: {
   enabled: boolean;
   deviceId: string;
-  onNoteOn: (pitch: number, velocity: number) => void;
-  onNoteOff: (pitch: number) => void;
-  onSustain?: (down: boolean) => void;
-  onCc?: (controller: number, value: number) => void;
+  /** `timeStampMs` = hardware event time (performance.now() domain) where
+   *  the backend provides one (Web MIDI); undefined on the native plugin.
+   *  Recording maps it onto the transport for jitter-free note placement. */
+  onNoteOn: (pitch: number, velocity: number, timeStampMs?: number) => void;
+  onNoteOff: (pitch: number, timeStampMs?: number) => void;
+  onSustain?: (down: boolean, timeStampMs?: number) => void;
+  onCc?: (controller: number, value: number, timeStampMs?: number) => void;
 }) {
   const [inputs, setInputs] = useState<{ id: string; name: string }[]>([]);
   const [status, setStatus] = useState<'idle' | 'connected' | 'denied'>('idle');
@@ -46,12 +49,12 @@ export function useStudioMidiInput({
     const offState = source.onStateChange(refreshInputs);
 
     source
-      .subscribe(deviceId, (data) => {
+      .subscribe(deviceId, (data, timeStampMs) => {
         const ev = parseMidiMessage(data);
-        if (ev.type === 'noteon') onOnRef.current(ev.pitch, ev.velocity);
-        else if (ev.type === 'noteoff') onOffRef.current(ev.pitch);
-        else if (ev.type === 'sustain') onSustainRef.current?.(ev.down);
-        else if (ev.type === 'cc') onCcRef.current?.(ev.controller, ev.value);
+        if (ev.type === 'noteon') onOnRef.current(ev.pitch, ev.velocity, timeStampMs);
+        else if (ev.type === 'noteoff') onOffRef.current(ev.pitch, timeStampMs);
+        else if (ev.type === 'sustain') onSustainRef.current?.(ev.down, timeStampMs);
+        else if (ev.type === 'cc') onCcRef.current?.(ev.controller, ev.value, timeStampMs);
       })
       .then((u) => {
         if (cancelled) { u(); return; }
