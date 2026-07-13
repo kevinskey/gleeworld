@@ -21,6 +21,9 @@ class MainViewController: CAPBridgeViewController {
         // GWMidiPlugin — CoreMIDI input bridge (iOS WebKit has no Web
         // MIDI). Same dead-strip problem as the others, same explicit fix.
         bridge?.registerPluginInstance(GWMidiPlugin())
+        // GWSpeechPlugin — Assistant speech-to-text (iOS WebKit has no
+        // SpeechRecognition). Same dead-strip problem, same explicit fix.
+        bridge?.registerPluginInstance(GWSpeechPlugin())
         // RecordingLiveActivityPlugin disabled — needs widget extension's
         // GleeWorldRecordingAttributes type that's not in the main target.
     }
