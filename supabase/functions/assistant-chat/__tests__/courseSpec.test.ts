@@ -123,4 +123,43 @@ describe('validateCourseSpec', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error.toLowerCase()).toContain('too large');
   });
+
+  it('rejects a roster entry with a non-string name', () => {
+    const bad = { ...valid(), roster: [{ name: 42 }] };
+    const r = validateCourseSpec(bad);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain('roster');
+  });
+
+  it('measures the 64 KB cap in bytes, not UTF-16 code units', () => {
+    // ~30k CJK chars ≈ 30k UTF-16 units (< 64k) but ~90 KiB in UTF-8.
+    const mod = (valid().modules as unknown[])[0] as Record<string, unknown>;
+    const cjk = '音'.repeat(1900);
+    const fat = {
+      ...valid(),
+      modules: Array.from({ length: 16 }, (_, i) => ({
+        ...mod, title: `M${i}`, description: cjk, assignments: [],
+      })),
+    };
+    expect(JSON.stringify(fat).length).toBeLessThan(64 * 1024);
+    const r = validateCourseSpec(fat);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.toLowerCase()).toContain('too large');
+  });
+
+  it('rejects an over-2000-char course title', () => {
+    const r = validateCourseSpec({ ...valid(), title: 't'.repeat(2001) });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.error.toLowerCase()).toContain('too long');
+      expect(r.error).toContain('title');
+    }
+  });
+
+  it('includes the offending count in the roster cap error', () => {
+    const overRoster = { ...valid(), roster: Array.from({ length: 201 }, (_, i) => ({ name: `S${i}` })) };
+    const r = validateCourseSpec(overRoster);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain('201');
+  });
 });

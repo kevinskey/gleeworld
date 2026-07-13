@@ -90,11 +90,18 @@ export function countSessions(spec: CourseSpec): number {
 
 export function validateCourseSpec(raw: unknown): Ok | Err {
   if (!isObj(raw)) return { ok: false, error: 'spec must be a JSON object.' };
-  if (JSON.stringify(raw).length > MAX_SPEC_BYTES) {
+  if (new TextEncoder().encode(JSON.stringify(raw)).length > MAX_SPEC_BYTES) {
     return { ok: false, error: 'spec is too large (max 64 KB) — split into two smaller courses or trim module descriptions.' };
   }
   if (typeof raw.title !== 'string' || raw.title.trim().length === 0) {
     return { ok: false, error: 'title is required.' };
+  }
+  {
+    const e = tooLong('title', raw.title)
+      ?? tooLong('course_code', raw.course_code)
+      ?? tooLong('semester', raw.semester)
+      ?? tooLong('description', raw.description);
+    if (e) return { ok: false, error: e };
   }
   if (!isDateStr(raw.start_date)) return { ok: false, error: 'start_date must be YYYY-MM-DD.' };
   if (!isDateStr(raw.end_date)) return { ok: false, error: 'end_date must be YYYY-MM-DD.' };
@@ -129,8 +136,13 @@ export function validateCourseSpec(raw: unknown): Ok | Err {
     if (!isObj(m) || typeof m.title !== 'string' || m.title.trim().length === 0 || typeof m.week_number !== 'number') {
       return { ok: false, error: `module ${i + 1} needs a title and a numeric week_number.` };
     }
-    const err = tooLong(`module ${i + 1} description`, m.description);
+    const err = tooLong(`module ${i + 1} title`, m.title)
+      ?? tooLong(`module ${i + 1} description`, m.description);
     if (err) return { ok: false, error: err };
+    for (const [k, o] of (Array.isArray(m.learning_objectives) ? m.learning_objectives : []).entries()) {
+      const oe = tooLong(`module ${i + 1} learning objective ${k + 1}`, o);
+      if (oe) return { ok: false, error: oe };
+    }
     if (!Array.isArray(m.assignments)) return { ok: false, error: `module ${i + 1} needs an assignments array (may be empty).` };
     if (m.assignments.length > MAX_ASSIGNMENTS_PER_MODULE) {
       return { ok: false, error: `module ${i + 1} has ${m.assignments.length} assignments (max ${MAX_ASSIGNMENTS_PER_MODULE}).` };
@@ -140,7 +152,8 @@ export function validateCourseSpec(raw: unknown): Ok | Err {
         || typeof a.points !== 'number' || typeof a.due_at !== 'string' || Number.isNaN(Date.parse(a.due_at))) {
         return { ok: false, error: `assignment ${j + 1} in module ${i + 1} needs title, numeric points, and an ISO due_at.` };
       }
-      const e = tooLong(`assignment "${a.title}" instructions`, a.instructions)
+      const e = tooLong(`assignment ${j + 1} in module ${i + 1} title`, a.title)
+        ?? tooLong(`assignment "${a.title}" instructions`, a.instructions)
         ?? tooLong(`assignment "${a.title}" description`, a.description);
       if (e) return { ok: false, error: e };
     }
@@ -151,19 +164,48 @@ export function validateCourseSpec(raw: unknown): Ok | Err {
     if (!isObj(r) || typeof r.title !== 'string' || !Array.isArray(r.criteria)) {
       return { ok: false, error: 'rubric needs a title and a criteria array.' };
     }
-    if (r.criteria.length > MAX_CRITERIA) return { ok: false, error: `too many rubric criteria (max ${MAX_CRITERIA}).` };
-    for (const c of r.criteria) {
+    const re = tooLong('rubric title', r.title) ?? tooLong('rubric description', r.description);
+    if (re) return { ok: false, error: re };
+    if (r.criteria.length > MAX_CRITERIA) {
+      return { ok: false, error: `too many rubric criteria (${r.criteria.length}, max ${MAX_CRITERIA}).` };
+    }
+    for (const [i, c] of r.criteria.entries()) {
       if (!isObj(c) || typeof c.name !== 'string' || typeof c.max_points !== 'number' || typeof c.weight_percentage !== 'number') {
         return { ok: false, error: 'each rubric criterion needs name, max_points, weight_percentage.' };
       }
+      const ce = tooLong(`rubric criterion ${i + 1} name`, c.name)
+        ?? tooLong(`rubric criterion ${i + 1} description`, c.description);
+      if (ce) return { ok: false, error: ce };
     }
   }
 
-  if (Array.isArray(raw.roster) && raw.roster.length > MAX_ROSTER) {
-    return { ok: false, error: `roster too large (max ${MAX_ROSTER}).` };
+  if (raw.roster !== undefined) {
+    if (!Array.isArray(raw.roster)) return { ok: false, error: 'roster must be an array.' };
+    if (raw.roster.length > MAX_ROSTER) {
+      return { ok: false, error: `roster too large (${raw.roster.length} entries, max ${MAX_ROSTER}).` };
+    }
+    for (const [i, s] of raw.roster.entries()) {
+      if (!isObj(s) || typeof s.name !== 'string' || s.name.trim().length === 0
+        || (s.user_id !== undefined && typeof s.user_id !== 'string')) {
+        return { ok: false, error: `roster entry ${i + 1} needs a string name (and user_id, when present, must be a string).` };
+      }
+      const se = tooLong(`roster entry ${i + 1} name`, s.name);
+      if (se) return { ok: false, error: se };
+    }
   }
-  if (Array.isArray(raw.repertoire) && raw.repertoire.length > MAX_REPERTOIRE) {
-    return { ok: false, error: `repertoire too large (max ${MAX_REPERTOIRE}).` };
+  if (raw.repertoire !== undefined) {
+    if (!Array.isArray(raw.repertoire)) return { ok: false, error: 'repertoire must be an array.' };
+    if (raw.repertoire.length > MAX_REPERTOIRE) {
+      return { ok: false, error: `repertoire too large (${raw.repertoire.length} entries, max ${MAX_REPERTOIRE}).` };
+    }
+    for (const [i, w] of raw.repertoire.entries()) {
+      if (!isObj(w) || typeof w.title !== 'string' || w.title.trim().length === 0
+        || (w.library_item_id !== undefined && typeof w.library_item_id !== 'string')) {
+        return { ok: false, error: `repertoire item ${i + 1} needs a string title (and library_item_id, when present, must be a string).` };
+      }
+      const we = tooLong(`repertoire item ${i + 1} title`, w.title);
+      if (we) return { ok: false, error: we };
+    }
   }
 
   const spec = raw as unknown as CourseSpec;
