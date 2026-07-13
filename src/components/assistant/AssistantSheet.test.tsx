@@ -56,3 +56,11 @@ describe('AssistantSheet (phone)', () => {
     expect(dialog.className).toContain('bottom-0');
   });
 });
+
+describe('AssistantSheet (desktop)', () => {
+  it('spotlight dialog has a visible minimize control (Esc/backdrop are invisible exits)', () => {
+    setViewportWidth(1280);
+    renderSheet();
+    expect(document.querySelector('[aria-label="Minimize assistant"]')).not.toBeNull();
+  });
+});
