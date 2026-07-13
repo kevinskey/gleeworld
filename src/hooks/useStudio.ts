@@ -641,9 +641,15 @@ export function useStudioEngine(session: Session | null) {
         nativeRecordStop: async () => NativeStudio.recordStop(),
         // JS-side flag (see nativeRecordingActiveRef). The immediate
         // setState means capture handlers see the flip right away rather
-        // than waiting up to one ~30Hz native state tick.
+        // than waiting up to one ~30Hz native state tick. Also forwarded
+        // to the native engine so its end-of-grid auto-stop / play()
+        // auto-rewind stand down during MIDI-only takes (mic takes set
+        // the native flag themselves via recordStart/recordStop).
         setRecordingActive: (active: boolean) => {
           nativeRecordingActiveRef.current = active;
+          void NativeStudio.setRecordingActive({ active }).catch(() => {
+            /* method missing on an older binary — JS-side capture still works */
+          });
           setState((prev) => (prev ? { ...prev, recordingActive: active } : prev));
         },
         // Native per-track metering isn't bridged yet (B1 Task 6 ships

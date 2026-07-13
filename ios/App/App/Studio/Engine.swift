@@ -891,7 +891,14 @@ public final class StudioNativeEngine {
         let timer = Timer(timeInterval: 1.0 / 15.0, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.emit()
-            if let s = self.session, self.currentPositionSeconds() >= s.length_seconds {
+            // End-of-grid auto-stop stands down while a take is in
+            // flight (mirrors the web engine's recordingActive guard):
+            // stopTransport() parks pausedAt at 0, so firing mid-take
+            // snapped the playhead back to the start the moment a
+            // recording ran past session.length_seconds. Mic takes set
+            // recordingActive natively (recordStart/recordWithCountIn);
+            // MIDI-only takes set it over the bridge (setRecordingActive).
+            if !self.recordingActive, let s = self.session, self.currentPositionSeconds() >= s.length_seconds {
                 self.stopTransport()
             }
         }

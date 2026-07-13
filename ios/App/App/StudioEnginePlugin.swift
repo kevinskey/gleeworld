@@ -94,6 +94,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "recordStart", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordWithCountIn", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "recordStop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setRecordingActive", returnType: CAPPluginReturnPromise),
         // External-source coexistence record mode (Part Tracks). Additive,
         // fully separate from the Studio record path above — runs on a
         // DEDICATED AVAudioEngine so Studio's exclusive-focus design and
@@ -537,6 +538,16 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         guard let url = recorder.stop() else { call.reject("not recording"); return }
         // Return the local file path the JS layer reads + uploads.
         call.resolve(["localUrl": url.absoluteString, "filename": url.lastPathComponent])
+    }
+
+    // MIDI-only takes have no native recorder, but the engine's
+    // end-of-grid auto-stop (position tick) and play() auto-rewind must
+    // still stand down while one is in flight — the JS record flow flips
+    // this flag around the take, same as recordStart/recordStop do for
+    // mic takes.
+    @objc func setRecordingActive(_ call: CAPPluginCall) {
+        engine.recordingActive = call.getBool("active") ?? false
+        call.resolve()
     }
 
     // MARK: - External-source coexistence record mode (Part Tracks)

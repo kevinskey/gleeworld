@@ -36,7 +36,7 @@ import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
-  appendTakeNote, recordStartMode, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
+  appendTakeNote, recordStartMode, grownSessionLength, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
   type HeldPress, type CapturedCc,
 } from '@/lib/studio/midiRecord';
 import { MidiTimebase } from '@/lib/studio/midiTimebase';
@@ -1258,8 +1258,13 @@ function Editor({
     // park at the take's start like the audio path does.
     if (recording.midiOnly) {
       const midiElapsed = (performance.now() - recording.startWallMs) / 1000;
-      commitMidiPresses(midiHeld.flush(), state?.positionSeconds ?? recording.startSeconds);
+      const takeEndSec = state?.positionSeconds ?? recording.startSeconds;
+      commitMidiPresses(midiHeld.flush(), takeEndSec);
       commitTakeCc();
+      // Grow the grid to cover a take that ran past it, like the audio
+      // path does — otherwise playback stops at the old length_seconds
+      // and the take's tail never plays.
+      update((s) => ({ ...s, length_seconds: grownSessionLength(s.length_seconds, takeEndSec) }));
       setRecording(null);
       engineState.setRecordingActive?.(false);
       try { engineState.seek?.(recording.startSeconds); } catch { /* ignore */ }
@@ -1396,8 +1401,7 @@ function Editor({
         // grid) and the tail of the recording never plays back even though
         // the clip captured it.
         const clipEndSec = startSeconds + clipStartOffsetSec + buf.duration;
-        const nextLength = Math.max(s.length_seconds, Math.ceil(clipEndSec));
-        return { ...s, assets: nextAssets, tracks: nextTracks, length_seconds: nextLength };
+        return { ...s, assets: nextAssets, tracks: nextTracks, length_seconds: grownSessionLength(s.length_seconds, clipEndSec) };
       });
       toast.success(`Recorded ${elapsed.toFixed(1)}s`);
 

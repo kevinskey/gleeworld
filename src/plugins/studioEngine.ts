@@ -47,6 +47,10 @@ interface StudioEnginePluginShape {
   // clock. Resolves at grid start (recorder rolling, transport playing).
   recordWithCountIn(args: { countInBeats: number; secondsPerBeat: number; beatsPerBar: number }): Promise<{ gridStartedAtMs: number }>;
   recordStop(): Promise<{ localUrl: string; filename: string }>;
+  // MIDI-only takes: flip the engine's recordingActive flag so the
+  // end-of-grid auto-stop / play() auto-rewind stand down during a take
+  // that has no native recorder (mic takes set it via recordStart/Stop).
+  setRecordingActive(args: { active: boolean }): Promise<void>;
   // --- External-source coexistence record mode (Part Tracks, iOS) ---
   // Capture the mic OVER an external backing source (Apple Music / YouTube
   // / uploaded file) that keeps playing. Runs on a DEDICATED AVAudioEngine,

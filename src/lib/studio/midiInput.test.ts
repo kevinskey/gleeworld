@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { parseMidiMessage } from './midiMessage';
-import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode } from './midiRecord';
+import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode, grownSessionLength } from './midiRecord';
 import { HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY } from './midiRecord';
 import type { MidiClip } from './session';
 
@@ -200,5 +200,14 @@ describe('getMidiTrimMs', () => {
     localStorage.setItem(MIDI_TRIM_STORAGE_KEY, '-40');
     expect(getMidiTrimMs()).toBe(-40);
     localStorage.removeItem(MIDI_TRIM_STORAGE_KEY);
+  });
+});
+
+describe('grownSessionLength', () => {
+  it('grows the declared length to cover a take that ran past the grid', () => {
+    expect(grownSessionLength(60, 73.2)).toBe(74);
+  });
+  it('never shrinks the session', () => {
+    expect(grownSessionLength(120, 30)).toBe(120);
   });
 });
