@@ -8,7 +8,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { HomeNewsRail } from '@/components/dashboard/HomeNewsRail';
-import { AssistantLauncher } from '@/components/assistant/AssistantLauncher';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
@@ -154,7 +153,6 @@ export default function HouseHome() {
               {format(now, 'EEE · MMM d')}
             </p>
           </div>
-          <AssistantLauncher />
         </div>
 
         {/* Status cards sit in a left column; the News panel on the right
