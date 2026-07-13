@@ -66,7 +66,14 @@ const SheetContent = React.forwardRef<
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute right-3 top-3 z-50 flex items-center justify-center h-10 w-10 sm:h-8 sm:w-8 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+      {/* Full-height/top sheets reach under the transparent iOS status
+          bar (overlaysWebView), so their close button drops below the
+          notch; bottom sheets never touch the top edge and keep top-3.
+          env() is 0 outside the app, so desktop is unchanged. */}
+      <SheetPrimitive.Close className={cn(
+        "absolute right-3 z-50 flex items-center justify-center h-10 w-10 sm:h-8 sm:w-8 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary",
+        side === "bottom" ? "top-3" : "top-[calc(env(safe-area-inset-top,0px)+0.75rem)]",
+      )}>
         <X className="h-5 w-5 sm:h-4 sm:w-4" />
         <span className="sr-only">Close</span>
       </SheetPrimitive.Close>
