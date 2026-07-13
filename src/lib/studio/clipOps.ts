@@ -85,3 +85,23 @@ export function sliceClipChannels(
     return out;
   });
 }
+
+/** Copy a clip (audio or MIDI) under a new id — the pure half of
+ * option-drag duplication (Logic/GarageBand style: a copy stays at the
+ * original position while the drag moves the original to the drop
+ * point). Deep-copies `notes` and `cc` (MIDI clips) so mutating the
+ * copy — dragging a note, editing velocity — never aliases the
+ * original's arrays/objects. Other fields are scalars and safe to
+ * shallow-spread. */
+export function duplicateClip<T extends { id: string }>(clip: T, newId: string): T {
+  const copy: T = { ...clip, id: newId };
+  const withNotes = copy as unknown as { notes?: unknown[] };
+  if (Array.isArray(withNotes.notes)) {
+    withNotes.notes = withNotes.notes.map((n) => ({ ...(n as object) }));
+  }
+  const withCc = copy as unknown as { cc?: unknown[] };
+  if (Array.isArray(withCc.cc)) {
+    withCc.cc = withCc.cc.map((c) => ({ ...(c as object) }));
+  }
+  return copy;
+}

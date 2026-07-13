@@ -59,7 +59,7 @@ import { Capacitor } from '@capacitor/core';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
 import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
-import { splitAudioClips, sliceClipChannels } from '@/lib/studio/clipOps';
+import { splitAudioClips, sliceClipChannels, duplicateClip } from '@/lib/studio/clipOps';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
 import { exportSession, hasResumableExport, clearExportProgress, type ExportPreset } from '@/lib/studio/engine/exportRender';
 import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
@@ -2891,7 +2891,7 @@ function AudioImportIconButton({
 }
 
 function AudioClipBlock({
-  clip, session, trackColor, snapSeconds, selected, onSelect, onChange, onRemove,
+  clip, session, trackColor, snapSeconds, selected, onSelect, onChange, onRemove, onDuplicate,
 }: {
   clip: AudioClip; session: Session;
   trackColor: string;
@@ -2900,6 +2900,7 @@ function AudioClipBlock({
   onSelect: () => void;
   onChange: (patch: Partial<AudioClip>) => void;
   onRemove: () => void;
+  onDuplicate?: () => void;
 }) {
   const asset = session.assets.find((a) => a.id === clip.asset_id);
   return (
@@ -2926,12 +2927,13 @@ function AudioClipBlock({
         onChange(patch);
       }}
       onRemove={onRemove}
+      onDuplicate={onDuplicate}
     />
   );
 }
 
 function MidiClipBlock({
-  clip, trackColor, snapSeconds, selected, onSelect, onChange, onRemove,
+  clip, trackColor, snapSeconds, selected, onSelect, onChange, onRemove, onDuplicate,
 }: {
   clip: MidiClip; trackColor: string;
   snapSeconds: number;
@@ -2939,6 +2941,7 @@ function MidiClipBlock({
   onSelect: () => void;
   onChange: (patch: Partial<MidiClip>) => void;
   onRemove: () => void;
+  onDuplicate?: () => void;
 }) {
   return (
     <DraggableClip
@@ -2947,7 +2950,7 @@ function MidiClipBlock({
       duration={clip.duration_seconds}
       label=""
       preview={<MidiClipPreview notes={clip.notes} durationSeconds={clip.duration_seconds} />}
-      title={`${clip.notes.length} notes`}
+      title={`${clip.notes.length} notes — drag body to move · ⌥-drag to copy`}
       snapSeconds={snapSeconds}
       selected={selected}
       canTrimLeft={false}
@@ -2957,6 +2960,7 @@ function MidiClipBlock({
         duration_seconds: p.duration ?? clip.duration_seconds,
       })}
       onRemove={onRemove}
+      onDuplicate={onDuplicate}
     />
   );
 }
@@ -2964,7 +2968,7 @@ function MidiClipBlock({
 function DraggableClip({
   tint, start, duration, offset = 0, label, peaks, preview, assetDuration, snapSeconds, selected,
   fadeIn = 0, fadeOut = 0, canTrimLeft = true, title,
-  onSelect, onChange, onRemove,
+  onSelect, onChange, onRemove, onDuplicate,
 }: {
   tint: string;
   start: number; duration: number; offset?: number; label: string;
@@ -2996,6 +3000,12 @@ function DraggableClip({
     fadeOut?: number;
   }) => void;
   onRemove: () => void;
+  /** Option/Alt-drag duplication (Logic/GarageBand style): the parent
+   * inserts a clone at the clip's CURRENT (pre-drag) position; the body
+   * drag then proceeds as normal and moves the original clip to the
+   * drop point — net effect, a copy stays behind. Desktop pointers only
+   * (Alt key), audio + MIDI both wire this the same way. */
+  onDuplicate?: () => void;
 }) {
   const pxPerSecond = usePxPerSecond();
   const snap = (s: number) => snapSeconds > 0
@@ -3006,8 +3016,16 @@ function DraggableClip({
     if ((e.target as HTMLElement).dataset.handle) return;
     e.stopPropagation();
     onSelect();
+    // Option/Alt-drag duplicate (Logic/GarageBand style): leave a copy
+    // at the original position, then let the drag below move the
+    // clip we're holding as normal — net effect, a copy stays behind.
+    // Desktop pointers only (hardware Alt key, incl. iPad w/ keyboard).
+    const isAltDrag = e.altKey && !!onDuplicate;
+    if (isAltDrag) onDuplicate!();
     const el = e.currentTarget as HTMLElement;
     el.setPointerCapture(e.pointerId);
+    const prevCursor = el.style.cursor;
+    if (isAltDrag) el.style.cursor = 'copy';
     const startX = e.clientX;
     const startSec = start;
     const move = (ev: PointerEvent) => {
@@ -3017,6 +3035,7 @@ function DraggableClip({
     };
     const up = (ev: PointerEvent) => {
       el.releasePointerCapture(ev.pointerId);
+      el.style.cursor = prevCursor;
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
     };
@@ -3133,7 +3152,7 @@ function DraggableClip({
       }}
       onPointerDown={onDragBody}
       onDoubleClick={onRemove}
-      title={title ?? `${label} — click to select · drag body to move · L/R edges to trim · corners to fade · Delete to remove`}
+      title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete to remove`}
     >
       {peaks && peaks.length > 0 && (() => {
         // Slice the asset's peaks to just the visible window so that
@@ -4768,6 +4787,9 @@ function DarkTimeline({
           onRemove={() => onUpdate((t) => ({
             ...t, clips: (t as never as { clips: AudioClip[] }).clips.filter((x) => x.id !== c.id),
           } as Track))}
+          onDuplicate={() => onUpdate((t) => ({
+            ...t, clips: [...(t as never as { clips: AudioClip[] }).clips, duplicateClip(c, crypto.randomUUID())],
+          } as Track))}
         />
       ))}
       {isMidiTrack(track) && track.clips.map((c) => (
@@ -4782,6 +4804,9 @@ function DarkTimeline({
           } as Track))}
           onRemove={() => onUpdate((t) => ({
             ...t, clips: (t as never as { clips: MidiClip[] }).clips.filter((x) => x.id !== c.id),
+          } as Track))}
+          onDuplicate={() => onUpdate((t) => ({
+            ...t, clips: [...(t as never as { clips: MidiClip[] }).clips, duplicateClip(c, crypto.randomUUID())],
           } as Track))}
         />
       ))}
