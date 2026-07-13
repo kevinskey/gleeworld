@@ -167,7 +167,10 @@ export const AssistantSheet = ({ open, onOpenChange, listenRequest }: AssistantS
   if (isPhone) {
     return (
       <Sheet open={open} onOpenChange={handleOpenChange}>
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl flex flex-col p-0">
+        {/* max-h (not a fixed h) so the sheet hugs its content — a fresh
+            thread is just header + chips + input low on the screen, and the
+            sheet only approaches 85vh once the conversation fills it. */}
+        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-2xl flex flex-col p-0">
           <SheetHeader className="px-4 py-2.5 border-b flex-row items-center justify-between space-y-0">
             <SheetTitle className="text-sm font-semibold">GleeWorld Assistant</SheetTitle>
             <SheetDescription className="sr-only">{ASSISTANT_DESCRIPTION}</SheetDescription>
@@ -181,10 +184,10 @@ export const AssistantSheet = ({ open, onOpenChange, listenRequest }: AssistantS
             </button>
           </SheetHeader>
 
-          {/* justify-end keeps a short thread (or the empty-state chips)
-              anchored near the input instead of stranded at the top of a
-              mostly-empty column. */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col justify-end gap-3">
+          {/* min-h-0 lets this region shrink-and-scroll once the sheet hits
+              its max-h cap; justify-end keeps a short thread anchored near
+              the input instead of stranded at the top. */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col justify-end gap-3">
             {!hasMessages && (
               <AssistantSuggestions onPick={send} className="pb-1" />
             )}
