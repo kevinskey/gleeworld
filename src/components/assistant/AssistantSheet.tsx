@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mic, Send, Volume2, VolumeX, Loader2, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { threadReducer, INITIAL_THREAD } from '@/lib/assistant/threadReducer';
 import { executeClientAction } from '@/lib/assistant/clientActions';
 import { getSpeechInput, isMuted, setMuted, speak } from '@/lib/assistant/speech';
+import { ConfirmActionQueue } from '@/lib/assistant/confirmQueue';
 import type { AssistantAction } from '@/lib/assistant/types';
 import { JitsiMeetRoom } from '@/components/video/JitsiMeetRoom';
 
-interface AssistantSheetProps { open: boolean; onOpenChange: (open: boolean) => void; autoListen?: boolean }
+interface AssistantSheetProps { open: boolean; onOpenChange: (open: boolean) => void; listenRequest?: number }
 
-export const AssistantSheet = ({ open, onOpenChange, autoListen }: AssistantSheetProps) => {
+export const AssistantSheet = ({ open, onOpenChange, listenRequest }: AssistantSheetProps) => {
   const navigate = useNavigate();
   const { profile } = useUserRole();
   const [state, dispatch] = useReducer(threadReducer, INITIAL_THREAD);
@@ -21,8 +22,10 @@ export const AssistantSheet = ({ open, onOpenChange, autoListen }: AssistantShee
   const [listening, setListening] = useState(false);
   const [muted, setMutedState] = useState(isMuted());
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
+  const [executingId, setExecutingId] = useState<string | null>(null);
   const speechRef = useRef(getSpeechInput());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const confirmQueueRef = useRef(new ConfirmActionQueue());
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: 999999 }); }, [state.messages.length]);
 
@@ -49,14 +52,37 @@ export const AssistantSheet = ({ open, onOpenChange, autoListen }: AssistantShee
     onOpenChange(next);
   }, [videoRoom, onOpenChange]);
 
+  // Once the confirm action shown on `msgId` has been resolved (sent or
+  // cancelled), surface the next queued confirm action — if any — as its own
+  // new assistant message with its own pending card. This is what keeps a
+  // turn with multiple confirm-gated actions (e.g. "text Sarah and email the
+  // board") from silently dropping every action after the first: each one
+  // gets its own explicit Send/Cancel before it can run.
+  const advanceConfirmQueue = useCallback((msgId: string) => {
+    const nextId = crypto.randomUUID();
+    const nextAction = confirmQueueRef.current.next(msgId, nextId);
+    if (!nextAction) return;
+    dispatch({ type: 'reply', id: nextId, content: "There's one more to confirm:", pendingAction: nextAction });
+  }, []);
+
   const runAction = useCallback(async (msgId: string, action: AssistantAction) => {
     dispatch({ type: 'action-state', id: msgId, state: 'confirmed' });
     const outcome = await executeClientAction(action);
     dispatch({ type: 'action-state', id: msgId, state: outcome.ok ? 'done' : 'error' });
     if (outcome.openVideoRoom) setVideoRoom(outcome.openVideoRoom);
-    if (outcome.navigateTo) { onOpenChange(false); navigate(outcome.navigateTo); }
+    // Route through the guarded close path — a raw onOpenChange(false) here
+    // would bypass the videoRoom guard and unmount a live Jitsi call the
+    // instant an assistant-triggered navigation fires.
+    if (outcome.navigateTo) { handleOpenChange(false); navigate(outcome.navigateTo); }
     if (!outcome.ok) speak(outcome.message, { muted });
-  }, [muted, navigate, onOpenChange]);
+    // Only a confirm-gated action can have a queued follow-up waiting on it.
+    if (action.confirm) advanceConfirmQueue(msgId);
+  }, [muted, navigate, handleOpenChange, advanceConfirmQueue]);
+
+  const cancelAction = useCallback((msgId: string) => {
+    dispatch({ type: 'action-state', id: msgId, state: 'cancelled' });
+    advanceConfirmQueue(msgId);
+  }, [advanceConfirmQueue]);
 
   const send = useCallback(async (content: string) => {
     const text = content.trim();
@@ -65,27 +91,38 @@ export const AssistantSheet = ({ open, onOpenChange, autoListen }: AssistantShee
     const userId = crypto.randomUUID();
     dispatch({ type: 'send', id: userId, content: text });
     const history = [...state.messages.map((m) => ({ role: m.role, content: m.content })), { role: 'user' as const, content: text }];
-    const { data, error } = await supabase.functions.invoke('assistant-chat', {
-      body: {
-        messages: history,
-        context: {
-          firstName: profile?.full_name?.split(' ')[0] ?? 'there',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    try {
+      const { data, error } = await supabase.functions.invoke('assistant-chat', {
+        body: {
+          messages: history,
+          context: {
+            firstName: profile?.full_name?.split(' ')[0] ?? 'there',
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          },
         },
-      },
-    });
-    if (error || data?.error) {
-      dispatch({ type: 'fail', error: data?.error ?? "I couldn't reach the assistant right now." });
-      return;
-    }
-    const replyId = crypto.randomUUID();
-    const actions: AssistantAction[] = data.actions ?? [];
-    const confirmAction = actions.find((a) => a.confirm);
-    dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
-    speak(data.reply ?? '', { muted });
-    // Non-confirm actions run immediately, in order.
-    for (const action of actions.filter((a) => !a.confirm)) {
-      await runAction(replyId, action);
+      });
+      if (error || data?.error) {
+        dispatch({ type: 'fail', error: data?.error ?? "I couldn't reach the assistant right now." });
+        return;
+      }
+      // Malformed response: no reply text and no error to show — surface a
+      // failure instead of dispatching an empty-content assistant message
+      // and leaving busy stuck (or silently doing nothing).
+      if (!data || (data.reply == null && data.error == null)) {
+        dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
+        return;
+      }
+      const replyId = crypto.randomUUID();
+      const actions: AssistantAction[] = data.actions ?? [];
+      const { first: confirmAction, autoRun } = confirmQueueRef.current.register(replyId, actions);
+      dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
+      speak(data.reply ?? '', { muted });
+      // Non-confirm actions run immediately, in order.
+      for (const action of autoRun) {
+        await runAction(replyId, action);
+      }
+    } catch {
+      dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
     }
   }, [state.busy, state.messages, profile, muted, runAction]);
 
@@ -101,13 +138,23 @@ export const AssistantSheet = ({ open, onOpenChange, autoListen }: AssistantShee
     );
   }, [listening, send]);
 
-  useEffect(() => { if (open && autoListen && !listening && speechRef.current.available) toggleMic(); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Depends on `listenRequest` (an incrementing counter from the launcher),
+  // not a boolean — a boolean `autoListen` prop can't re-fire this effect
+  // when the sheet is already open, since its value doesn't change between
+  // two taps of the launcher's mic button. Each increment is a distinct
+  // value, so the effect re-runs every time regardless of open/close state.
+  useEffect(() => {
+    if (listenRequest && open && !listening && speechRef.current.available) toggleMic();
+  }, [listenRequest]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side="bottom" className="h-[85vh] sm:h-[70vh] sm:max-w-xl sm:mx-auto rounded-t-2xl flex flex-col p-0">
         <SheetHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0">
           <SheetTitle className="text-sm font-semibold">GleeWorld Assistant</SheetTitle>
+          <SheetDescription className="sr-only">
+            Chat with the GleeWorld Assistant by typing or voice. Some actions ask for confirmation before they run.
+          </SheetDescription>
           <button
             type="button"
             onClick={() => { const m = !muted; setMuted(m); setMutedState(m); }}
@@ -140,9 +187,22 @@ export const AssistantSheet = ({ open, onOpenChange, autoListen }: AssistantShee
                       {String(m.pendingAction.args.message ?? m.pendingAction.args.body ?? '')}
                     </p>
                     <div className="flex gap-2">
-                      <Button size="sm" className="h-7 text-xs" onClick={() => runAction(m.id, m.pendingAction!)}>Send</Button>
-                      <Button size="sm" variant="outline" className="h-7 text-xs"
-                        onClick={() => dispatch({ type: 'action-state', id: m.id, state: 'cancelled' })}>Cancel</Button>
+                      <Button size="sm" className="h-7 text-xs" disabled={executingId === m.id}
+                        onClick={() => {
+                          // Set synchronously, before the async runAction's first
+                          // dispatch — don't rely on render timing to keep a second
+                          // click (or a Cancel click) from racing this one.
+                          setExecutingId(m.id);
+                          runAction(m.id, m.pendingAction!).finally(
+                            () => setExecutingId((id) => (id === m.id ? null : id)),
+                          );
+                        }}>
+                        Send
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs" disabled={executingId === m.id}
+                        onClick={() => cancelAction(m.id)}>
+                        Cancel
+                      </Button>
                     </div>
                   </div>
                 )}

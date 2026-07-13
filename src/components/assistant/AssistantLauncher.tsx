@@ -6,7 +6,10 @@ import { getSpeechInput } from '@/lib/assistant/speech';
 /** Mic + "Ask" pill on the right side of the home greeting row. */
 export const AssistantLauncher = () => {
   const [open, setOpen] = useState(false);
-  const [autoListen, setAutoListen] = useState(false);
+  // An incrementing counter, not a boolean: AssistantSheet's autoListen effect
+  // fires when this value *changes*. A boolean would go true -> true on a
+  // second mic tap while the sheet is already open and never re-fire.
+  const [listenRequest, setListenRequest] = useState(0);
   const micAvailable = getSpeechInput().available;
 
   return (
@@ -14,7 +17,7 @@ export const AssistantLauncher = () => {
       {micAvailable && (
         <button
           type="button"
-          onClick={() => { setAutoListen(true); setOpen(true); }}
+          onClick={() => { setListenRequest((n) => n + 1); setOpen(true); }}
           className="h-9 w-9 rounded-full border bg-card flex items-center justify-center hover:bg-accent transition-colors"
           title="Ask by voice"
         >
@@ -23,13 +26,13 @@ export const AssistantLauncher = () => {
       )}
       <button
         type="button"
-        onClick={() => { setAutoListen(false); setOpen(true); }}
+        onClick={() => setOpen(true)}
         className="h-9 px-3 rounded-full border bg-card flex items-center gap-1.5 text-sm font-medium hover:bg-accent transition-colors"
       >
         <Sparkles className="w-4 h-4 text-muted-foreground" />
         Ask
       </button>
-      <AssistantSheet open={open} onOpenChange={setOpen} autoListen={autoListen} />
+      <AssistantSheet open={open} onOpenChange={setOpen} listenRequest={listenRequest} />
     </div>
   );
 };
