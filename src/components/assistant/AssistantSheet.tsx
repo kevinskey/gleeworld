@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Mic, Send, Volume2, VolumeX } from 'lucide-react';
+import { ChevronDown, Mic, Send, Volume2, VolumeX } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -159,6 +159,17 @@ export const AssistantSheet = () => {
               title={muted ? 'Unmute replies' : 'Mute replies'}
             >
               {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
+            </button>
+            {/* The desktop spotlight otherwise closes only via Esc/backdrop —
+                an invisible exit. Minimizing returns to the floating mic. */}
+            <button
+              type="button"
+              onClick={() => setSheetOpen(false)}
+              aria-label="Minimize assistant"
+              title="Minimize"
+              className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
+            >
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </button>
           </form>
 
