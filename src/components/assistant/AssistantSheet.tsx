@@ -1,30 +1,38 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, Send, Volume2, VolumeX, Loader2, X } from 'lucide-react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Mic, Send, Volume2, VolumeX } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useIsPhone } from '@/hooks/use-mobile';
 import { threadReducer, INITIAL_THREAD } from '@/lib/assistant/threadReducer';
 import { executeClientAction } from '@/lib/assistant/clientActions';
 import { getSpeechInput, isMuted, setMuted, speak } from '@/lib/assistant/speech';
 import { ConfirmActionQueue } from '@/lib/assistant/confirmQueue';
 import type { AssistantAction } from '@/lib/assistant/types';
-import { JitsiMeetRoom } from '@/components/video/JitsiMeetRoom';
+import { AssistantThread } from './AssistantThread';
+import { AssistantSuggestions } from './AssistantSuggestions';
+import { AssistantVideoOverlay } from './AssistantVideoOverlay';
 
 interface AssistantSheetProps { open: boolean; onOpenChange: (open: boolean) => void; listenRequest?: number }
+
+const ASSISTANT_DESCRIPTION = "Chat with the GleeWorld Assistant by typing or voice. Some actions ask for confirmation before they run.";
 
 export const AssistantSheet = ({ open, onOpenChange, listenRequest }: AssistantSheetProps) => {
   const navigate = useNavigate();
   const { profile } = useUserRole();
+  const isPhone = useIsPhone();
   const [state, dispatch] = useReducer(threadReducer, INITIAL_THREAD);
   const [input, setInput] = useState('');
   const [listening, setListening] = useState(false);
   const [muted, setMutedState] = useState(isMuted());
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
-  const [executingId, setExecutingId] = useState<string | null>(null);
   const speechRef = useRef(getSpeechInput());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const confirmQueueRef = useRef(new ConfirmActionQueue());
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: 999999 }); }, [state.messages.length]);
@@ -45,8 +53,8 @@ export const AssistantSheet = ({ open, onOpenChange, listenRequest }: AssistantS
   }, []);
 
   // Block backdrop/Esc/X close while a video call is live — that overlay is
-  // rendered inside SheetContent, so an ordinary close would unmount it and
-  // drop the call. The call's own close button clears videoRoom first.
+  // rendered inside the shell's content, so an ordinary close would unmount it
+  // and drop the call. The call's own close button clears videoRoom first.
   const handleOpenChange = useCallback((next: boolean) => {
     if (!next && videoRoom) return;
     onOpenChange(next);
@@ -147,118 +155,153 @@ export const AssistantSheet = ({ open, onOpenChange, listenRequest }: AssistantS
     if (listenRequest && open && !listening && speechRef.current.available) toggleMic();
   }, [listenRequest]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="bottom" className="h-[85vh] sm:h-[70vh] sm:max-w-xl sm:mx-auto rounded-t-2xl flex flex-col p-0">
-        <SheetHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0">
-          <SheetTitle className="text-sm font-semibold">GleeWorld Assistant</SheetTitle>
-          <SheetDescription className="sr-only">
-            Chat with the GleeWorld Assistant by typing or voice. Some actions ask for confirmation before they run.
-          </SheetDescription>
-          <button
-            type="button"
-            onClick={() => { const m = !muted; setMuted(m); setMutedState(m); }}
-            className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
-            title={muted ? 'Unmute replies' : 'Mute replies'}
+  const toggleMute = useCallback(() => {
+    const m = !muted;
+    setMuted(m);
+    setMutedState(m);
+  }, [muted]);
+
+  const micAvailable = speechRef.current.available;
+  const hasMessages = state.messages.length > 0;
+
+  if (isPhone) {
+    return (
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl flex flex-col p-0">
+          <SheetHeader className="px-4 py-2.5 border-b flex-row items-center justify-between space-y-0">
+            <SheetTitle className="text-sm font-semibold">GleeWorld Assistant</SheetTitle>
+            <SheetDescription className="sr-only">{ASSISTANT_DESCRIPTION}</SheetDescription>
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
+              title={muted ? 'Unmute replies' : 'Mute replies'}
+            >
+              {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
+            </button>
+          </SheetHeader>
+
+          {/* justify-end keeps a short thread (or the empty-state chips)
+              anchored near the input instead of stranded at the top of a
+              mostly-empty column. */}
+          <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col justify-end gap-3">
+            {!hasMessages && (
+              <AssistantSuggestions onPick={send} className="pb-1" />
+            )}
+            <AssistantThread
+              messages={state.messages}
+              busy={state.busy}
+              error={state.error}
+              runAction={runAction}
+              cancelAction={cancelAction}
+              scrollRef={scrollRef}
+              className="space-y-3"
+            />
+          </div>
+
+          <form
+            className="border-t px-3 py-2 flex items-center gap-2"
+            onSubmit={(e) => { e.preventDefault(); send(input); }}
           >
-            {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
-          </button>
-        </SheetHeader>
+            {micAvailable && (
+              <button type="button" onClick={toggleMic}
+                className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}
+                title={listening ? 'Stop listening' : 'Speak'}>
+                <Mic className="w-4 h-4" />
+              </button>
+            )}
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={listening ? 'Listening…' : 'Ask GleeWorld…'}
+              className="flex-1 h-9 rounded-full border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            <Button type="submit" size="sm" className="h-9 w-9 rounded-full p-0" disabled={state.busy || !input.trim()}>
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-          {state.messages.length === 0 && (
-            <p className="text-sm text-muted-foreground pt-6 text-center">
-              Ask me anything — "What's on my calendar tomorrow?", "Open Studio", "Make a note…"
-            </p>
-          )}
-          {state.messages.map((m) => (
-            <div key={m.id} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
-              <div className={m.role === 'user'
-                ? 'max-w-[85%] rounded-2xl rounded-br-md bg-primary text-primary-foreground px-3 py-2 text-sm'
-                : 'max-w-[85%] rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm text-foreground'}>
-                <p className="whitespace-pre-wrap">{m.content}</p>
-                {m.pendingAction && m.actionState === 'pending' && (
-                  <div className="mt-2 rounded-lg border bg-card p-2 space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      {m.pendingAction.tool === 'send_sms' ? 'Text' : 'Email'} to{' '}
-                      {(m.pendingAction.args.recipient_names as string[] | undefined)?.join(', ') ?? 'recipients'}:
-                    </p>
-                    {m.pendingAction.tool === 'send_email' && m.pendingAction.args.subject != null && (
-                      <p className="text-xs text-muted-foreground">
-                        Subject: {String(m.pendingAction.args.subject)}
-                      </p>
-                    )}
-                    <p className="text-xs font-medium">
-                      {String(m.pendingAction.args.message ?? m.pendingAction.args.body ?? '')}
-                    </p>
-                    <div className="flex gap-2">
-                      <Button size="sm" className="h-7 text-xs" disabled={executingId === m.id}
-                        onClick={() => {
-                          // Set synchronously, before the async runAction's first
-                          // dispatch — don't rely on render timing to keep a second
-                          // click (or a Cancel click) from racing this one.
-                          setExecutingId(m.id);
-                          runAction(m.id, m.pendingAction!).finally(
-                            () => setExecutingId((id) => (id === m.id ? null : id)),
-                          );
-                        }}>
-                        Send
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-7 text-xs" disabled={executingId === m.id}
-                        onClick={() => cancelAction(m.id)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                {m.actionState === 'done' && <p className="text-xs text-muted-foreground mt-1">✓ Done</p>}
-                {m.actionState === 'cancelled' && <p className="text-xs text-muted-foreground mt-1">Cancelled</p>}
-                {m.actionState === 'error' && <p className="text-xs text-destructive mt-1">That didn't work — see above.</p>}
-              </div>
-            </div>
-          ))}
-          {state.busy && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-          {state.error && <p className="text-xs text-destructive">{state.error}</p>}
-        </div>
-
-        <form
-          className="border-t px-3 py-2 flex items-center gap-2"
-          onSubmit={(e) => { e.preventDefault(); send(input); }}
-        >
-          {speechRef.current.available && (
-            <button type="button" onClick={toggleMic}
-              className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}
-              title={listening ? 'Stop listening' : 'Speak'}>
-              <Mic className="w-4 h-4" />
-            </button>
-          )}
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={listening ? 'Listening…' : 'Ask GleeWorld…'}
-            className="flex-1 h-9 rounded-full border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-          <Button type="submit" size="sm" className="h-9 w-9 rounded-full p-0" disabled={state.busy || !input.trim()}>
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
-
-        {videoRoom && (
-          <div className="fixed inset-0 z-[60] bg-background">
-            <button type="button" onClick={() => setVideoRoom(null)}
-              className="absolute top-3 right-3 z-[61] h-8 w-8 rounded-full bg-card border flex items-center justify-center">
-              <X className="w-4 h-4" />
-            </button>
-            <JitsiMeetRoom
+          {videoRoom && (
+            <AssistantVideoOverlay
               roomName={videoRoom}
               userName={profile?.full_name ?? 'Member'}
               userEmail={profile?.email}
               userId={profile?.user_id}
               onClose={() => setVideoRoom(null)}
             />
+          )}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          onOpenAutoFocus={(e) => { e.preventDefault(); inputRef.current?.focus(); }}
+          className="fixed left-1/2 top-[15%] z-50 w-full max-w-2xl -translate-x-1/2 rounded-2xl border bg-card shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+        >
+          <DialogTitle className="sr-only">GleeWorld Assistant</DialogTitle>
+          <DialogDescription className="sr-only">{ASSISTANT_DESCRIPTION}</DialogDescription>
+
+          {/* Row 1 — the spotlight bar itself: mic, borderless input, send, mute. */}
+          <form
+            className="flex items-center gap-2 px-4 py-3"
+            onSubmit={(e) => { e.preventDefault(); send(input); }}
+          >
+            {micAvailable && (
+              <button type="button" onClick={toggleMic}
+                className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}
+                title={listening ? 'Stop listening' : 'Speak'}>
+                <Mic className="w-4 h-4" />
+              </button>
+            )}
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={listening ? 'Listening…' : 'Ask GleeWorld…'}
+              className="flex-1 h-9 border-0 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground"
+            />
+            <Button type="submit" size="sm" className="h-9 w-9 shrink-0 rounded-full p-0" disabled={state.busy || !input.trim()}>
+              <Send className="w-4 h-4" />
+            </Button>
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
+              title={muted ? 'Unmute replies' : 'Mute replies'}
+            >
+              {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
+            </button>
+          </form>
+
+          <div className="border-t px-4 py-3">
+            {!hasMessages && <AssistantSuggestions onPick={send} />}
+            <AssistantThread
+              messages={state.messages}
+              busy={state.busy}
+              error={state.error}
+              runAction={runAction}
+              cancelAction={cancelAction}
+              scrollRef={scrollRef}
+              className={hasMessages ? 'max-h-[50vh] overflow-y-auto space-y-3' : undefined}
+            />
           </div>
-        )}
-      </SheetContent>
-    </Sheet>
+
+          {videoRoom && (
+            <AssistantVideoOverlay
+              roomName={videoRoom}
+              userName={profile?.full_name ?? 'Member'}
+              userEmail={profile?.email}
+              userId={profile?.user_id}
+              onClose={() => setVideoRoom(null)}
+            />
+          )}
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </Dialog>
   );
 };
