@@ -42,7 +42,11 @@ export interface ActionOutcome {
 }
 
 export interface ActionDeps {
-  supabase: { from: (table: string) => any; functions: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> } };
+  supabase: {
+    from: (table: string) => any;
+    functions: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> };
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: any }>;
+  };
   createNote: (partial: { title: string; content?: unknown }) => Promise<{ id: string; title: string }>;
   createTask: (input: { title: string; due_at?: string | null; scheduled_date?: string | null; priority?: string }) => Promise<unknown>;
   textToDoc: (text: string) => unknown;
@@ -206,6 +210,24 @@ export async function executeClientAction(
         }).select();
         if (error || !data?.length) return { ok: false, message: `Couldn't add the video${error ? `: ${error.message}` : ' (no row returned — check permissions)'}.` };
         return { ok: true, navigateTo: '/video', message: `Added "${title}" to Videos.` };
+      }
+      case 'create_course_draft': {
+        const spec = a.spec;
+        if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
+          return { ok: false, message: 'Missing the course spec.' };
+        }
+        const { data, error } = await deps.supabase.rpc('assistant_create_course', { spec });
+        if (error) return { ok: false, message: `Couldn't create the course: ${error.message ?? 'unknown error'}` };
+        // Silent-write guard: the RPC returns a summary object; anything else means no rows landed.
+        if (!data?.course_id) {
+          return { ok: false, message: "Couldn't create the course (no confirmation returned — check permissions)." };
+        }
+        const code = String(data.course_code ?? '').toLowerCase();
+        return {
+          ok: true,
+          navigateTo: code ? `/academy/c/${code}` : undefined,
+          message: `Draft "${String(data.title ?? '')}" created — ${data.module_count} modules, ${data.assignment_count} assignments, ${data.session_count} class sessions. Review it and publish when ready.`,
+        };
       }
       default:
         return { ok: false, message: `I can't perform "${action.tool}".` };

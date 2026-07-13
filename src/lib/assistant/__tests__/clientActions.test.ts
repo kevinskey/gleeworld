@@ -1,5 +1,21 @@
 import { describe, it, expect, vi } from 'vitest';
 import { executeClientAction, PAGE_ROUTES } from '../clientActions';
+import type { ActionDeps } from '../clientActions';
+
+// Shared stub-deps builder: mirrors the inline `{ supabase, ... } as any` object the
+// existing tests construct by hand, but lets callers override just the `rpc` (or `from`,
+// or any other ActionDeps field) without rebuilding the whole supabase stub.
+function makeDeps(overrides: Partial<ActionDeps> & { rpc?: any; from?: any } = {}): Partial<ActionDeps> {
+  const { rpc, from, ...rest } = overrides as Record<string, any>;
+  return {
+    supabase: {
+      from: from ?? (() => ({})),
+      functions: { invoke: vi.fn() },
+      rpc: rpc ?? vi.fn(),
+    },
+    ...rest,
+  } as Partial<ActionDeps>;
+}
 
 describe('PAGE_ROUTES', () => {
   it('maps every documented open_page key to a route', () => {
@@ -439,5 +455,55 @@ describe('executeClientAction', () => {
   it('unknown tools are rejected', async () => {
     const out = await executeClientAction({ tool: 'rm_rf', args: {}, confirm: false });
     expect(out.ok).toBe(false);
+  });
+});
+
+describe('create_course_draft', () => {
+  const spec = { title: 'Choral Conducting I' };
+
+  it('calls the RPC and navigates to the draft course page', async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: {
+        course_id: 'c-1', course_code: 'MUS-240', title: 'Choral Conducting I',
+        module_count: 4, assignment_count: 9, session_count: 28,
+      },
+      error: null,
+    });
+    const deps = makeDeps({ rpc });
+    const r = await executeClientAction(
+      { tool: 'create_course_draft', args: { spec }, confirm: true }, deps,
+    );
+    expect(rpc).toHaveBeenCalledWith('assistant_create_course', { spec });
+    expect(r.ok).toBe(true);
+    expect(r.navigateTo).toBe('/academy/c/mus-240');
+    expect(r.message).toContain('4 modules');
+    expect(r.message).toContain('9 assignments');
+  });
+
+  it('surfaces RPC errors', async () => {
+    const deps = makeDeps({ rpc: vi.fn().mockResolvedValue({ data: null, error: { message: 'boom' } }) });
+    const r = await executeClientAction(
+      { tool: 'create_course_draft', args: { spec }, confirm: true }, deps,
+    );
+    expect(r.ok).toBe(false);
+    expect(r.message).toContain('boom');
+  });
+
+  it('treats a null RPC result as failure (silent-write guard)', async () => {
+    const deps = makeDeps({ rpc: vi.fn().mockResolvedValue({ data: null, error: null }) });
+    const r = await executeClientAction(
+      { tool: 'create_course_draft', args: { spec }, confirm: true }, deps,
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  it('rejects a missing spec without calling the RPC', async () => {
+    const rpc = vi.fn();
+    const deps = makeDeps({ rpc });
+    const r = await executeClientAction(
+      { tool: 'create_course_draft', args: {}, confirm: true }, deps,
+    );
+    expect(r.ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
   });
 });
