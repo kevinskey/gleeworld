@@ -403,37 +403,47 @@ describe('executeClientAction', () => {
     expect(out.message).toContain('1 of 2 batches');
   });
 
-  it('add_video looks up a channel and inserts with channel_id + video_url (no channel_title column)', async () => {
+  it('add_video saves the video unattached (channel_id null) with a built video_url — no channel required', async () => {
     let insertedRow: any = null;
-    const channelChain: any = {
-      select: () => channelChain, order: () => channelChain,
-      limit: () => channelChain, maybeSingle: async () => ({ data: { id: 'chan1' }, error: null }),
-    };
+    let queriedChannels = false;
     const videoChain: any = {
       insert: (row: any) => { insertedRow = row; return videoChain; },
       select: async () => ({ data: [{ id: 'v1' }], error: null }),
     };
-    const supabase = { from: (t: string) => (t === 'youtube_channels' ? channelChain : videoChain) };
+    const supabase = {
+      from: (t: string) => {
+        if (t === 'youtube_channels') queriedChannels = true;
+        return videoChain;
+      },
+    };
     const out = await executeClientAction(
       { tool: 'add_video', args: { video_id: 'abc123', title: 'Concert Highlights', channel: 'GleeWorld', thumbnail_url: 'https://img/1.jpg' }, confirm: false },
       { supabase } as any,
     );
-    expect(insertedRow).toMatchObject({ video_id: 'abc123', title: 'Concert Highlights', channel_id: 'chan1', video_url: 'https://www.youtube.com/watch?v=abc123' });
-    expect(insertedRow).not.toHaveProperty('channel_title');
-    expect(out).toMatchObject({ ok: true, navigateTo: '/video' });
+    // The searched channel name is NOT persisted, and no channel lookup happens anymore.
+    expect(queriedChannels).toBe(false);
+    expect(insertedRow).toMatchObject({
+      video_id: 'abc123', title: 'Concert Highlights', channel_id: null,
+      thumbnail_url: 'https://img/1.jpg', video_url: 'https://www.youtube.com/watch?v=abc123',
+    });
+    expect(insertedRow.published_at).toBeTruthy();
+    expect(insertedRow).not.toHaveProperty('channel');
+    // youtube_videos show on /youtube, not the uploaded-file library at /video.
+    expect(out).toMatchObject({ ok: true, navigateTo: '/youtube' });
   });
 
-  it('add_video fails loudly when no channel is configured', async () => {
-    const channelChain: any = {
-      select: () => channelChain, order: () => channelChain,
-      limit: () => channelChain, maybeSingle: async () => ({ data: null, error: null }),
+  it('add_video surfaces a write failure loudly (no fake success)', async () => {
+    const videoChain: any = {
+      insert: () => videoChain,
+      select: async () => ({ data: null, error: { message: 'permission denied' } }),
     };
-    const supabase = { from: () => channelChain };
+    const supabase = { from: () => videoChain };
     const out = await executeClientAction(
       { tool: 'add_video', args: { video_id: 'abc123', title: 'X' }, confirm: false },
       { supabase } as any,
     );
     expect(out.ok).toBe(false);
+    expect(out.message).toContain('permission denied');
   });
 
   it('unknown tools are rejected', async () => {
