@@ -246,6 +246,40 @@ describe('executeClientAction', () => {
     expect(out.ok).toBe(true);
   });
 
+  it('send_email escapes HTML in the body instead of injecting raw markup', async () => {
+    let invokedBody: any = null;
+    const supabase = {
+      from: () => ({}),
+      functions: {
+        invoke: vi.fn(async (_name: string, opts: { body: unknown }) => {
+          invokedBody = opts.body;
+          return { data: { success: true, batches: 1, successfulBatches: 1, failedBatches: 0, message: 'ok' }, error: null };
+        }),
+      },
+    };
+    const out = await executeClientAction(
+      {
+        tool: 'send_email',
+        args: {
+          to: ['a@x.com'],
+          recipient_names: ['A'],
+          subject: 'Update',
+          body: 'Hello <img src=x onerror=alert(1)> & "friends"\n<b>line2</b>',
+        },
+        confirm: true,
+      },
+      { supabase } as any,
+    );
+    expect(out.ok).toBe(true);
+    expect(invokedBody.html).toContain('&lt;img');
+    expect(invokedBody.html).toContain('&amp;');
+    expect(invokedBody.html).toContain('&lt;b&gt;');
+    expect(invokedBody.html).not.toContain('<img');
+    expect(invokedBody.html).not.toContain('<b>');
+    // the wrapping <p> tags are ours and must remain literal
+    expect(invokedBody.html).toContain('<p>');
+  });
+
   it('send_email reports failure when the edge function 200s with zero successful batches', async () => {
     const supabase = {
       from: () => ({}),

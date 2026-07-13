@@ -1,5 +1,17 @@
 import type { AssistantAction } from './types';
 
+// Model-generated text (assistant tool args, possibly steered via indirect prompt
+// injection through tool results) must never be trusted as HTML. Escape before
+// interpolating into any HTML string we hand to an edge function or renderer.
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Route whitelist for open_page. Paths come from src/lib/navigation/navCatalog.ts —
 // keep keys in sync with the open_page tool description in toolCatalog.ts.
 export const PAGE_ROUTES: Record<string, string> = {
@@ -152,7 +164,7 @@ export async function executeClientAction(
       case 'send_email': {
         const to = Array.isArray(a.to) ? a.to.map(String) : [];
         if (!to.length || !a.subject || !a.body) return { ok: false, message: 'Missing recipients, subject, or body.' };
-        const html = String(a.body).split('\n').filter(Boolean).map((p) => `<p>${p}</p>`).join('');
+        const html = String(a.body).split('\n').filter(Boolean).map((p) => `<p>${escapeHtml(p)}</p>`).join('');
         const { data, error } = await deps.supabase.functions.invoke('send-branded-email', {
           body: { to, subject: String(a.subject), html },
         });
