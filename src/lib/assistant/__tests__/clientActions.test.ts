@@ -224,11 +224,17 @@ describe('executeClientAction', () => {
     expect(out.message).toBe('Text sent to 2 of 3 people.');
   });
 
-  it('send_email posts to send-branded-email with to/subject/html', async () => {
+  it('send_email resolves recipients from gw_profiles by id and posts to send-branded-email with the resolved addresses', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({
+        data: [{ user_id: 'u1', full_name: 'A', email: 'a@x.com' }],
+        error: null,
+      }),
+    };
     let invokedName = '';
     let invokedBody: any = null;
     const supabase = {
-      from: () => ({}),
+      from: () => profChain,
       functions: {
         invoke: vi.fn(async (name: string, opts: { body: unknown }) => {
           invokedName = name; invokedBody = opts.body;
@@ -237,7 +243,7 @@ describe('executeClientAction', () => {
       },
     };
     const out = await executeClientAction(
-      { tool: 'send_email', args: { to: ['a@x.com'], recipient_names: ['A'], subject: 'Update', body: 'Line one\nLine two' }, confirm: true },
+      { tool: 'send_email', args: { recipient_user_ids: ['u1'], recipient_names: ['A'], subject: 'Update', body: 'Line one\nLine two' }, confirm: true },
       { supabase } as any,
     );
     expect(invokedName).toBe('send-branded-email');
@@ -246,10 +252,76 @@ describe('executeClientAction', () => {
     expect(out.ok).toBe(true);
   });
 
-  it('send_email escapes HTML in the body instead of injecting raw markup', async () => {
+  it('send_email fails loudly when recipient ids are missing', async () => {
+    const out = await executeClientAction(
+      { tool: 'send_email', args: { recipient_user_ids: [], recipient_names: [], subject: 'Update', body: 'hi' }, confirm: true },
+      { supabase: { from: () => ({}), functions: { invoke: vi.fn() } } } as any,
+    );
+    expect(out.ok).toBe(false);
+  });
+
+  it('send_email fails loudly when none of the ids resolve to a profile', async () => {
+    const profChain: any = { select: () => profChain, in: async () => ({ data: [], error: null }) };
+    const out = await executeClientAction(
+      { tool: 'send_email', args: { recipient_user_ids: ['ghost'], recipient_names: ['Ghost'], subject: 'Update', body: 'hi' }, confirm: true },
+      { supabase: { from: () => profChain, functions: { invoke: vi.fn() } } } as any,
+    );
+    expect(out.ok).toBe(false);
+  });
+
+  it('send_email skips profiles with no email and fails loudly if that leaves zero recipients', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({
+        data: [{ user_id: 'u1', full_name: 'No Email', email: null }],
+        error: null,
+      }),
+    };
+    const out = await executeClientAction(
+      { tool: 'send_email', args: { recipient_user_ids: ['u1'], recipient_names: ['No Email'], subject: 'Update', body: 'hi' }, confirm: true },
+      { supabase: { from: () => profChain, functions: { invoke: vi.fn() } } } as any,
+    );
+    expect(out.ok).toBe(false);
+  });
+
+  it('send_email skips profiles with no email but still sends to the ones that resolve', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({
+        data: [
+          { user_id: 'u1', full_name: 'A', email: 'a@x.com' },
+          { user_id: 'u2', full_name: 'No Email', email: null },
+        ],
+        error: null,
+      }),
+    };
     let invokedBody: any = null;
     const supabase = {
-      from: () => ({}),
+      from: () => profChain,
+      functions: {
+        invoke: vi.fn(async (_name: string, opts: { body: unknown }) => {
+          invokedBody = opts.body;
+          return { data: { success: true, batches: 1, successfulBatches: 1, failedBatches: 0, message: 'ok' }, error: null };
+        }),
+      },
+    };
+    const out = await executeClientAction(
+      { tool: 'send_email', args: { recipient_user_ids: ['u1', 'u2'], recipient_names: ['A', 'No Email'], subject: 'Update', body: 'hi' }, confirm: true },
+      { supabase } as any,
+    );
+    expect(invokedBody.to).toEqual(['a@x.com']);
+    expect(out.ok).toBe(true);
+    expect(out.message).toContain('1');
+  });
+
+  it('send_email escapes HTML in the body instead of injecting raw markup', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({
+        data: [{ user_id: 'u1', full_name: 'A', email: 'a@x.com' }],
+        error: null,
+      }),
+    };
+    let invokedBody: any = null;
+    const supabase = {
+      from: () => profChain,
       functions: {
         invoke: vi.fn(async (_name: string, opts: { body: unknown }) => {
           invokedBody = opts.body;
@@ -261,7 +333,7 @@ describe('executeClientAction', () => {
       {
         tool: 'send_email',
         args: {
-          to: ['a@x.com'],
+          recipient_user_ids: ['u1'],
           recipient_names: ['A'],
           subject: 'Update',
           body: 'Hello <img src=x onerror=alert(1)> & "friends"\n<b>line2</b>',
@@ -281,8 +353,14 @@ describe('executeClientAction', () => {
   });
 
   it('send_email reports failure when the edge function 200s with zero successful batches', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({
+        data: [{ user_id: 'u1', full_name: 'A', email: 'a@x.com' }],
+        error: null,
+      }),
+    };
     const supabase = {
-      from: () => ({}),
+      from: () => profChain,
       functions: {
         invoke: vi.fn(async () => ({
           data: { success: true, batches: 1, successfulBatches: 0, failedBatches: 1, error: 'Resend error: invalid sender domain' },
@@ -291,7 +369,7 @@ describe('executeClientAction', () => {
       },
     };
     const out = await executeClientAction(
-      { tool: 'send_email', args: { to: ['a@x.com'], recipient_names: ['A'], subject: 'Update', body: 'hi' }, confirm: true },
+      { tool: 'send_email', args: { recipient_user_ids: ['u1'], recipient_names: ['A'], subject: 'Update', body: 'hi' }, confirm: true },
       { supabase } as any,
     );
     expect(out.ok).toBe(false);
@@ -299,8 +377,17 @@ describe('executeClientAction', () => {
   });
 
   it('send_email reports the real partial-delivery batch count', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({
+        data: [
+          { user_id: 'u1', full_name: 'A', email: 'a@x.com' },
+          { user_id: 'u2', full_name: 'B', email: 'b@x.com' },
+        ],
+        error: null,
+      }),
+    };
     const supabase = {
-      from: () => ({}),
+      from: () => profChain,
       functions: {
         invoke: vi.fn(async () => ({
           data: { success: true, batches: 2, successfulBatches: 1, failedBatches: 1, message: 'partial' },
@@ -309,7 +396,7 @@ describe('executeClientAction', () => {
       },
     };
     const out = await executeClientAction(
-      { tool: 'send_email', args: { to: ['a@x.com', 'b@x.com'], recipient_names: ['A', 'B'], subject: 'Update', body: 'hi' }, confirm: true },
+      { tool: 'send_email', args: { recipient_user_ids: ['u1', 'u2'], recipient_names: ['A', 'B'], subject: 'Update', body: 'hi' }, confirm: true },
       { supabase } as any,
     );
     expect(out.ok).toBe(true);

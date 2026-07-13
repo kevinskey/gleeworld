@@ -183,6 +183,11 @@ export const AssistantSheet = ({ open, onOpenChange, listenRequest }: AssistantS
                       {m.pendingAction.tool === 'send_sms' ? 'Text' : 'Email'} to{' '}
                       {(m.pendingAction.args.recipient_names as string[] | undefined)?.join(', ') ?? 'recipients'}:
                     </p>
+                    {m.pendingAction.tool === 'send_email' && m.pendingAction.args.subject != null && (
+                      <p className="text-xs text-muted-foreground">
+                        Subject: {String(m.pendingAction.args.subject)}
+                      </p>
+                    )}
                     <p className="text-xs font-medium">
                       {String(m.pendingAction.args.message ?? m.pendingAction.args.body ?? '')}
                     </p>

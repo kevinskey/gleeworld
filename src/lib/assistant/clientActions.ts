@@ -162,8 +162,13 @@ export async function executeClientAction(
         return { ok: true, message: `Text sent to ${smsSent} ${smsSent === 1 ? 'person' : 'people'}.` };
       }
       case 'send_email': {
-        const to = Array.isArray(a.to) ? a.to.map(String) : [];
-        if (!to.length || !a.subject || !a.body) return { ok: false, message: 'Missing recipients, subject, or body.' };
+        const ids = Array.isArray(a.recipient_user_ids) ? a.recipient_user_ids : [];
+        if (!ids.length || !a.subject || !a.body) return { ok: false, message: 'Missing recipients, subject, or body.' };
+        const { data: profiles, error: pErr } = await deps.supabase
+          .from('gw_profiles').select('user_id, full_name, email').in('user_id', ids);
+        if (pErr || !profiles?.length) return { ok: false, message: 'Could not resolve those recipients.' };
+        const to = profiles.map((p: any) => p.email).filter((e: unknown): e is string => typeof e === 'string' && e.length > 0);
+        if (!to.length) return { ok: false, message: 'None of those recipients have an email on file.' };
         const html = String(a.body).split('\n').filter(Boolean).map((p) => `<p>${escapeHtml(p)}</p>`).join('');
         const { data, error } = await deps.supabase.functions.invoke('send-branded-email', {
           body: { to, subject: String(a.subject), html },
@@ -178,9 +183,9 @@ export async function executeClientAction(
         }
         if (typeof failedBatches === 'number' && failedBatches > 0 && typeof successfulBatches === 'number') {
           const totalBatches = successfulBatches + failedBatches;
-          return { ok: true, message: `Email sent to ${to.length} ${to.length === 1 ? 'address' : 'addresses'} (${successfulBatches} of ${totalBatches} batches delivered).` };
+          return { ok: true, message: `Email sent to ${to.length} ${to.length === 1 ? 'person' : 'people'} (${successfulBatches} of ${totalBatches} batches delivered).` };
         }
-        return { ok: true, message: `Email sent to ${to.length} ${to.length === 1 ? 'address' : 'addresses'}.` };
+        return { ok: true, message: `Email sent to ${to.length} ${to.length === 1 ? 'person' : 'people'}.` };
       }
       case 'add_video': {
         const videoId = String(a.video_id ?? '');

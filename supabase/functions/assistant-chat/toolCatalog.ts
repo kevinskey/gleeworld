@@ -145,16 +145,16 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'send_email',
-    description: 'Email one or more members. Addresses from find_user. REQUIRES user confirmation before sending.',
+    description: 'Email one or more members. Addresses resolved server-side from recipient_user_ids (from find_user); the model never handles raw addresses. REQUIRES user confirmation before sending.',
     parameters: {
       type: 'object',
       properties: {
-        to: { type: 'array', items: { type: 'string' }, description: 'Email addresses' },
+        recipient_user_ids: { type: 'array', items: { type: 'string' }, description: 'gw_profiles user ids' },
         recipient_names: { type: 'array', items: { type: 'string' }, description: 'Display names, same order' },
         subject: str('Subject'),
         body: str('Plain-text body; will be sent as simple HTML paragraphs'),
       },
-      required: ['to', 'recipient_names', 'subject', 'body'],
+      required: ['recipient_user_ids', 'recipient_names', 'subject', 'body'],
     },
     minRole: 'admin', execution: 'client', confirm: true,
   },
