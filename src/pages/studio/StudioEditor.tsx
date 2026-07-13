@@ -34,6 +34,7 @@ import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { GW_INSTRUMENTS, toGwPresetId } from '@/lib/studio/gwInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
+import { applyStatusBarSurface } from '@/lib/statusBarStyle';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
   appendTakeNote, recordStartMode, grownSessionLength, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
@@ -334,6 +335,13 @@ export default function StudioEditor() {
     if (!hasSession) return;
     return retainUnsavedWork('studio-session');
   }, [hasSession]);
+
+  // The Studio is the app's dark room — flip the overlaid iOS status bar
+  // to white text while it's open, back to dark text on exit.
+  useEffect(() => {
+    applyStatusBarSurface('dark-room');
+    return () => applyStatusBarSurface('default');
+  }, []);
 
   if (sessionState.loading) return (
     <div className="flex items-center justify-center py-16 text-muted-foreground">
