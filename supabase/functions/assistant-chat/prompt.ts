@@ -1,4 +1,4 @@
-import type { AssistantRole } from './toolCatalog';
+import type { AssistantRole } from './toolCatalog.ts';
 
 export interface AssistantContext {
   firstName: string;
