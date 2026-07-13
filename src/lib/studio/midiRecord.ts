@@ -22,6 +22,13 @@ export function recordStartMode(opts: {
   return 'blocked';
 }
 
+// Declared session length after a take that may have run past the grid —
+// grow (never shrink) so the transport doesn't stop before the take's tail
+// on the next playback. Whole seconds, matching the audio-take path.
+export function grownSessionLength(currentSeconds: number, takeEndSeconds: number): number {
+  return Math.max(currentSeconds, Math.ceil(takeEndSeconds));
+}
+
 const MIN_NOTE_SECONDS = 0.05; // floor so a fast tap still has audible length
 
 // Turn a captured key press (absolute transport seconds for down/up) into a
