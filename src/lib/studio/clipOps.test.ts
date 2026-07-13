@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitAudioClips, sliceClipChannels } from './clipOps';
+import { splitAudioClips, sliceClipChannels, duplicateClip } from './clipOps';
 
 const mkClip = (over: Partial<Record<string, unknown>> = {}) => ({
   id: 'c1', kind: 'audio', asset_id: 'a1',
@@ -76,5 +76,42 @@ describe('sliceClipChannels', () => {
       fade_in_seconds: 0, fade_out_seconds: 0, reverse: false,
     });
     expect(out[0].length).toBe(50); // only 0.5s of audio exists past the offset
+  });
+});
+
+describe('duplicateClip', () => {
+  it('assigns the new id and keeps every other scalar field equal', () => {
+    const clip = mkClip();
+    const copy = duplicateClip(clip, 'new-id');
+    expect(copy.id).toBe('new-id');
+    expect(copy).not.toBe(clip);
+    const { id: _origId, ...origRest } = clip;
+    const { id: _copyId, ...copyRest } = copy;
+    expect(copyRest).toEqual(origRest);
+  });
+
+  it('audio clip copy is independent of the original (no shared object)', () => {
+    const clip = mkClip();
+    const copy = duplicateClip(clip, 'new-id') as typeof clip;
+    copy.gain_db = 99;
+    expect(clip.gain_db).toBe(0);
+  });
+
+  it('deep-copies a midi clip\'s notes and cc arrays so mutating the copy never aliases the original', () => {
+    const midiClip = {
+      id: 'm1', kind: 'midi' as const,
+      start_seconds: 0, duration_seconds: 4,
+      notes: [{ pitch: 60, velocity: 100, start_seconds: 0, duration_seconds: 1 }],
+      cc: [{ controller: 64, value: 127, time_seconds: 0 }],
+    };
+    const copy = duplicateClip(midiClip, 'm2');
+    expect(copy.id).toBe('m2');
+    expect(copy.notes).not.toBe(midiClip.notes);
+    expect(copy.notes[0]).not.toBe(midiClip.notes[0]);
+    expect(copy.cc).not.toBe(midiClip.cc);
+    expect(copy.cc![0]).not.toBe(midiClip.cc![0]);
+
+    copy.notes[0].pitch = 72;
+    expect(midiClip.notes[0].pitch).toBe(60);
   });
 });
