@@ -2604,7 +2604,6 @@ function Editor({
             trackId={selectedClip.trackId}
             clipId={selectedClip.clipId}
             positionSeconds={state?.positionSeconds ?? 0}
-            nativeEngine={!!engineState.native}
             update={update}
             pushHistory={() => pushHistory(session)}
             onSeek={(s) => engineState.seek?.(s)}

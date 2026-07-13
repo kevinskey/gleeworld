@@ -45,7 +45,6 @@ export interface PianoRollPanelProps {
   trackId: string;
   clipId: string;
   positionSeconds: number;
-  nativeEngine: boolean;
   update: (mut: (s: Session) => Session) => void;
   pushHistory: () => void;         // snapshot BEFORE the first mutation of a gesture
   onSeek: (seconds: number) => void;
@@ -124,11 +123,15 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     editClip((c) => ({ ...c, notes: transposeNotes(c.notes, selection, semitones) }));
   };
 
-  // ── Audition (web engine only) ─────────────────────────────────────
+  // ── Audition ─────────────────────────────────────────────────────────
+  // LiveVoices is web audio in the webview on every platform — on iOS it
+  // plays alongside the native engine through the shared audio session,
+  // same as the Studio live monitor (see the native-engine gate lift in
+  // docs/superpowers/specs/2026-07-12-ios-native-midi-input-design.md).
   const auditionRef = useRef<LiveVoices | null>(null);
   useEffect(() => () => { auditionRef.current?.dispose(); auditionRef.current = null; }, []);
   const audition = (pitch: number, velocity: number) => {
-    if (props.nativeEngine || !track || !isMidiTrack(track)) return;
+    if (!track || !isMidiTrack(track)) return;
     if (!auditionRef.current) auditionRef.current = new LiveVoices();
     auditionRef.current.setInstrument(track.instrument);
     auditionRef.current.setStrip({ volume_db: track.volume_db, pan: track.pan, mute: track.mute });
