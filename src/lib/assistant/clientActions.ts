@@ -64,8 +64,12 @@ export async function executeClientAction(
   try {
     switch (action.tool) {
       case 'open_page': {
-        const route = PAGE_ROUTES[String(a.key)];
-        if (!route) return { ok: false, message: `I don't know a page called "${a.key}".` };
+        const key = String(a.key);
+        // hasOwnProperty guard: PAGE_ROUTES[key] alone resolves inherited keys like
+        // 'constructor' / '__proto__' / 'hasOwnProperty' to truthy non-route values,
+        // which would bypass the whitelist rejection below.
+        const route = Object.prototype.hasOwnProperty.call(PAGE_ROUTES, key) ? PAGE_ROUTES[key] : undefined;
+        if (typeof route !== 'string') return { ok: false, message: `I don't know a page called "${a.key}".` };
         return { ok: true, navigateTo: route, message: `Opening ${a.key}.` };
       }
       case 'open_song': {
@@ -112,10 +116,12 @@ export async function executeClientAction(
       case 'send_sms': {
         const ids = Array.isArray(a.recipient_user_ids) ? a.recipient_user_ids : [];
         if (!ids.length || typeof a.message !== 'string') return { ok: false, message: 'Missing recipients or message.' };
+        // useCommunicationSystem (the proven caller of send-unified-communication) populates
+        // recipient phone from `phone_number`, not `phone` — select both and prefer phone_number.
         const { data: profiles, error: pErr } = await deps.supabase
-          .from('gw_profiles').select('user_id, full_name, email, phone').in('user_id', ids);
+          .from('gw_profiles').select('user_id, full_name, email, phone, phone_number').in('user_id', ids);
         if (pErr || !profiles?.length) return { ok: false, message: 'Could not resolve those recipients.' };
-        const { error } = await deps.supabase.functions.invoke('send-unified-communication', {
+        const { data, error } = await deps.supabase.functions.invoke('send-unified-communication', {
           body: {
             communicationId: crypto.randomUUID(),
             title: 'Assistant SMS',
@@ -123,22 +129,45 @@ export async function executeClientAction(
             senderName: 'GleeWorld Assistant',
             recipients: profiles.map((p: any) => ({
               id: p.user_id, type: 'individual', identifier: p.user_id,
-              name: p.full_name, email: p.email, phone: p.phone,
+              name: p.full_name, email: p.email, phone: p.phone_number ?? p.phone,
             })),
             channels: ['sms'],
           },
         });
         if (error) return { ok: false, message: `SMS failed: ${error.message ?? 'unknown error'}` };
-        return { ok: true, message: `Text sent to ${profiles.length} ${profiles.length === 1 ? 'person' : 'people'}.` };
+        // send-unified-communication returns HTTP 200 with a body even when zero/some SMS
+        // sends actually went through (Twilio failures land in results.errors, not `error`).
+        const results = data?.results;
+        const smsSent = typeof results?.smsSent === 'number' ? results.smsSent : profiles.length;
+        const totalRecipients = typeof results?.totalRecipients === 'number' ? results.totalRecipients : profiles.length;
+        if (smsSent === 0) {
+          const firstError = Array.isArray(results?.errors) ? results.errors[0] : undefined;
+          return { ok: false, message: `SMS failed to send${firstError ? `: ${firstError}` : ' to any recipient.'}` };
+        }
+        if (smsSent < totalRecipients) {
+          return { ok: true, message: `Text sent to ${smsSent} of ${totalRecipients} people.` };
+        }
+        return { ok: true, message: `Text sent to ${smsSent} ${smsSent === 1 ? 'person' : 'people'}.` };
       }
       case 'send_email': {
         const to = Array.isArray(a.to) ? a.to.map(String) : [];
         if (!to.length || !a.subject || !a.body) return { ok: false, message: 'Missing recipients, subject, or body.' };
         const html = String(a.body).split('\n').filter(Boolean).map((p) => `<p>${p}</p>`).join('');
-        const { error } = await deps.supabase.functions.invoke('send-branded-email', {
+        const { data, error } = await deps.supabase.functions.invoke('send-branded-email', {
           body: { to, subject: String(a.subject), html },
         });
         if (error) return { ok: false, message: `Email failed: ${error.message ?? 'unknown error'}` };
+        // send-branded-email returns HTTP 200 with successfulBatches/failedBatches even when
+        // some (or, defensively, all) batches failed to send via Resend.
+        const successfulBatches = typeof data?.successfulBatches === 'number' ? data.successfulBatches : undefined;
+        const failedBatches = typeof data?.failedBatches === 'number' ? data.failedBatches : undefined;
+        if (successfulBatches === 0) {
+          return { ok: false, message: `Email failed to send${data?.error ? `: ${data.error}` : '.'}` };
+        }
+        if (typeof failedBatches === 'number' && failedBatches > 0 && typeof successfulBatches === 'number') {
+          const totalBatches = successfulBatches + failedBatches;
+          return { ok: true, message: `Email sent to ${to.length} ${to.length === 1 ? 'address' : 'addresses'} (${successfulBatches} of ${totalBatches} batches delivered).` };
+        }
         return { ok: true, message: `Email sent to ${to.length} ${to.length === 1 ? 'address' : 'addresses'}.` };
       }
       case 'add_video': {

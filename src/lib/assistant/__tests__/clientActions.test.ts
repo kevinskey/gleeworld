@@ -19,6 +19,15 @@ describe('executeClientAction', () => {
     expect(bad.ok).toBe(false);
   });
 
+  it('open_page rejects prototype-chain keys instead of resolving inherited values', async () => {
+    const ctor = await executeClientAction({ tool: 'open_page', args: { key: 'constructor' }, confirm: false });
+    expect(ctor).toMatchObject({ ok: false });
+    const proto = await executeClientAction({ tool: 'open_page', args: { key: '__proto__' }, confirm: false });
+    expect(proto).toMatchObject({ ok: false });
+    const hasOwn = await executeClientAction({ tool: 'open_page', args: { key: 'hasOwnProperty' }, confirm: false });
+    expect(hasOwn).toMatchObject({ ok: false });
+  });
+
   it('open_song builds the viewer deep link', async () => {
     const out = await executeClientAction({ tool: 'open_song', args: { score_id: 'abc-123' }, confirm: false });
     expect(out.navigateTo).toBe('/dashboard/music-library?view=abc-123');
@@ -89,10 +98,10 @@ describe('executeClientAction', () => {
     expect(out).toMatchObject({ ok: true, navigateTo: '/dashboard/calendar' });
   });
 
-  it('send_sms resolves recipients and posts the unified-communication shape', async () => {
+  it('send_sms resolves recipients (phone_number preferred over phone) and posts the unified-communication shape', async () => {
     const profChain: any = {
       select: () => profChain, in: async () => ({
-        data: [{ user_id: 'u1', full_name: 'Sarah', email: 's@x.com', phone: '+15551234' }],
+        data: [{ user_id: 'u1', full_name: 'Sarah', email: 's@x.com', phone: '+15550000', phone_number: '+15551234' }],
         error: null,
       }),
     };
@@ -102,7 +111,7 @@ describe('executeClientAction', () => {
       functions: {
         invoke: vi.fn(async (_name: string, opts: { body: unknown }) => {
           invokedBody = opts.body;
-          return { data: {}, error: null };
+          return { data: { success: true, results: { totalRecipients: 1, emailsSent: 0, smsSent: 1, inAppCreated: 0, errors: [] } }, error: null };
         }),
       },
     };
@@ -116,7 +125,33 @@ describe('executeClientAction', () => {
       channels: ['sms'],
       senderName: expect.any(String),
     });
+    // phone_number is what the proven caller (useCommunicationSystem) populates recipient phone from;
+    // it must win over the legacy `phone` column.
     expect(invokedBody.recipients[0]).toMatchObject({ id: 'u1', type: 'individual', identifier: 'u1', phone: '+15551234' });
+  });
+
+  it('send_sms falls back to `phone` when `phone_number` is null', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({
+        data: [{ user_id: 'u1', full_name: 'Sarah', email: 's@x.com', phone: '+15550000', phone_number: null }],
+        error: null,
+      }),
+    };
+    let invokedBody: any = null;
+    const supabase = {
+      from: () => profChain,
+      functions: {
+        invoke: vi.fn(async (_name: string, opts: { body: unknown }) => {
+          invokedBody = opts.body;
+          return { data: { success: true, results: { totalRecipients: 1, emailsSent: 0, smsSent: 1, inAppCreated: 0, errors: [] } }, error: null };
+        }),
+      },
+    };
+    await executeClientAction(
+      { tool: 'send_sms', args: { recipient_user_ids: ['u1'], recipient_names: ['Sarah'], message: 'hi' }, confirm: true },
+      { supabase } as any,
+    );
+    expect(invokedBody.recipients[0]).toMatchObject({ phone: '+15550000' });
   });
 
   it('send_sms fails loudly when the edge function errors', async () => {
@@ -134,6 +169,61 @@ describe('executeClientAction', () => {
     expect(out.ok).toBe(false);
   });
 
+  it('send_sms reports failure when the edge function 200s with zero deliveries', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({ data: [{ user_id: 'u1', full_name: 'Sarah', email: 's@x.com', phone: '+1' }], error: null }),
+    };
+    const supabase = {
+      from: () => profChain,
+      functions: {
+        invoke: vi.fn(async () => ({
+          data: {
+            success: true,
+            results: { totalRecipients: 1, emailsSent: 0, smsSent: 0, inAppCreated: 0, errors: ['Twilio error: unverified number'] },
+          },
+          error: null,
+        })),
+      },
+    };
+    const out = await executeClientAction(
+      { tool: 'send_sms', args: { recipient_user_ids: ['u1'], recipient_names: ['Sarah'], message: 'hi' }, confirm: true },
+      { supabase } as any,
+    );
+    expect(out.ok).toBe(false);
+    expect(out.message).toContain('Twilio error: unverified number');
+  });
+
+  it('send_sms reports the real partial-delivery count when some recipients fail', async () => {
+    const profChain: any = {
+      select: () => profChain, in: async () => ({
+        data: [
+          { user_id: 'u1', full_name: 'Sarah', email: 's@x.com', phone: '+1' },
+          { user_id: 'u2', full_name: 'Ben', email: 'b@x.com', phone: '+2' },
+          { user_id: 'u3', full_name: 'Cass', email: 'c@x.com', phone: '+3' },
+        ],
+        error: null,
+      }),
+    };
+    const supabase = {
+      from: () => profChain,
+      functions: {
+        invoke: vi.fn(async () => ({
+          data: {
+            success: true,
+            results: { totalRecipients: 3, emailsSent: 0, smsSent: 2, inAppCreated: 0, errors: ['Twilio error: invalid number for Cass'] },
+          },
+          error: null,
+        })),
+      },
+    };
+    const out = await executeClientAction(
+      { tool: 'send_sms', args: { recipient_user_ids: ['u1', 'u2', 'u3'], recipient_names: ['Sarah', 'Ben', 'Cass'], message: 'hi' }, confirm: true },
+      { supabase } as any,
+    );
+    expect(out.ok).toBe(true);
+    expect(out.message).toBe('Text sent to 2 of 3 people.');
+  });
+
   it('send_email posts to send-branded-email with to/subject/html', async () => {
     let invokedName = '';
     let invokedBody: any = null;
@@ -142,7 +232,7 @@ describe('executeClientAction', () => {
       functions: {
         invoke: vi.fn(async (name: string, opts: { body: unknown }) => {
           invokedName = name; invokedBody = opts.body;
-          return { data: {}, error: null };
+          return { data: { success: true, batches: 1, successfulBatches: 1, failedBatches: 0, message: 'Email sent to 1 recipient(s) in 1 batch(es)' }, error: null };
         }),
       },
     };
@@ -154,6 +244,42 @@ describe('executeClientAction', () => {
     expect(invokedBody).toMatchObject({ to: ['a@x.com'], subject: 'Update' });
     expect(invokedBody.html).toContain('Line one');
     expect(out.ok).toBe(true);
+  });
+
+  it('send_email reports failure when the edge function 200s with zero successful batches', async () => {
+    const supabase = {
+      from: () => ({}),
+      functions: {
+        invoke: vi.fn(async () => ({
+          data: { success: true, batches: 1, successfulBatches: 0, failedBatches: 1, error: 'Resend error: invalid sender domain' },
+          error: null,
+        })),
+      },
+    };
+    const out = await executeClientAction(
+      { tool: 'send_email', args: { to: ['a@x.com'], recipient_names: ['A'], subject: 'Update', body: 'hi' }, confirm: true },
+      { supabase } as any,
+    );
+    expect(out.ok).toBe(false);
+    expect(out.message).toContain('Resend error: invalid sender domain');
+  });
+
+  it('send_email reports the real partial-delivery batch count', async () => {
+    const supabase = {
+      from: () => ({}),
+      functions: {
+        invoke: vi.fn(async () => ({
+          data: { success: true, batches: 2, successfulBatches: 1, failedBatches: 1, message: 'partial' },
+          error: null,
+        })),
+      },
+    };
+    const out = await executeClientAction(
+      { tool: 'send_email', args: { to: ['a@x.com', 'b@x.com'], recipient_names: ['A', 'B'], subject: 'Update', body: 'hi' }, confirm: true },
+      { supabase } as any,
+    );
+    expect(out.ok).toBe(true);
+    expect(out.message).toContain('1 of 2 batches');
   });
 
   it('add_video looks up a channel and inserts with channel_id + video_url (no channel_title column)', async () => {
