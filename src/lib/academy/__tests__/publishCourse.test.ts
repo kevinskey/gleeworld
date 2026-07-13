@@ -46,4 +46,16 @@ describe('publishCourse', () => {
     expect(upsert).not.toHaveBeenCalled();
     expect(r.unresolvedNames).toEqual([]);
   });
+
+  it('leaves the course a draft and reports failure if enrollment fails (never before the status flip)', async () => {
+    const { client, update } = makeSupabase({ upsertError: { message: 'permission denied' } });
+    const r = await publishCourse(client, {
+      id: 'c-1',
+      pending_enrollments: [{ user_id: 'u-1', name: 'Ada' }],
+    });
+    expect(r.ok).toBe(false);
+    // Status must NOT be flipped when enrollment fails — the roster stays intact for retry.
+    expect(update).not.toHaveBeenCalled();
+    expect(r.message).toContain('still a draft');
+  });
 });

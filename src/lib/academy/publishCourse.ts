@@ -22,15 +22,9 @@ export async function publishCourse(supabase: SupabaseLike, course: PublishableC
   const resolved = pending.filter((p): p is Required<PendingEnrollment> => typeof p.user_id === 'string' && p.user_id.length > 0);
   const unresolvedNames = pending.filter((p) => !p.user_id).map((p) => p.name);
 
-  const { data: updated, error: updateErr } = await supabase
-    .from('gw_courses')
-    .update({ status: 'published', pending_enrollments: unresolvedNames.length ? pending.filter((p) => !p.user_id) : null })
-    .eq('id', course.id)
-    .select();
-  if (updateErr || !updated?.length) {
-    return { ok: false, unresolvedNames, message: `Couldn't publish${updateErr ? `: ${updateErr.message}` : ' (no row updated — check permissions)'}.` };
-  }
-
+  // Enroll BEFORE flipping status. If the upsert fails, the course stays a
+  // draft with its full pending roster intact for a clean retry — we never
+  // strip the resolved entries until they're safely in gw_course_enrollments.
   if (resolved.length) {
     const rows = resolved.map((p) => ({
       course_id: course.id, user_id: p.user_id, role: 'student', enrollment_status: 'enrolled',
@@ -41,10 +35,21 @@ export async function publishCourse(supabase: SupabaseLike, course: PublishableC
       .select();
     if (enrollErr) {
       return {
-        ok: true, unresolvedNames,
-        message: `Published, but enrolling students failed: ${enrollErr.message}. Add them from the People tab.`,
+        ok: false, unresolvedNames,
+        message: `Couldn't enroll students, so the course is still a draft: ${enrollErr.message}. Try again.`,
       };
     }
+  }
+
+  const { data: updated, error: updateErr } = await supabase
+    .from('gw_courses')
+    .update({ status: 'published', pending_enrollments: unresolvedNames.length ? pending.filter((p) => !p.user_id) : null })
+    .eq('id', course.id)
+    .select();
+  if (updateErr || !updated?.length) {
+    // Enrollments may have landed; the course is still a draft. Report failure
+    // so the UI doesn't claim success — republishing is idempotent (upsert).
+    return { ok: false, unresolvedNames, message: `Couldn't publish${updateErr ? `: ${updateErr.message}` : ' (no row updated — check permissions)'}.` };
   }
 
   return {
