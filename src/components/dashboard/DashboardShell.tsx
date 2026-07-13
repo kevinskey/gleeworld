@@ -73,6 +73,9 @@ import {
 import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
 import { isDemoTenant } from '@/lib/demoTenant';
+import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
+import { AssistantFab } from '@/components/assistant/AssistantFab';
+import { AssistantSheet } from '@/components/assistant/AssistantSheet';
 import {
   resolveNav, entrySurfaces, NAV_SECTION_LABELS,
   type CatalogEntry, type NavContext, type NavSectionKey,
@@ -919,28 +922,34 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     try { localStorage.setItem('gw_sidebar_collapsed', v ? '1' : '0'); } catch { /* private mode */ }
   };
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
-      <div className="flex-1 flex flex-col min-w-0">
-        <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} />
-        {/* pt-3 gives every page a small breath of space below the
-            sticky topbar — pages that want more (CommandCenter, Viewer
-            landing) add their own larger top padding on top of this.
-            pb-20 sm:pb-0 reserves room for the MobileBottomNav strip
-            (only rendered on phones; sm+ has no bottom nav). */}
-        <main className={cn(
-          "flex-1 min-w-0 overflow-x-hidden",
-          isTourManager ? "pb-0" : "pb-20 sm:pb-0",
-          // Calendar and Tour Manager manage their own compact header
-          // spacing — no extra breathing room below the topbar.
-          isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",
-        )}>{children}</main>
+    <AssistantProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
+        <div className="flex-1 flex flex-col min-w-0">
+          <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} />
+          {/* pt-3 gives every page a small breath of space below the
+              sticky topbar — pages that want more (CommandCenter, Viewer
+              landing) add their own larger top padding on top of this.
+              pb-20 sm:pb-0 reserves room for the MobileBottomNav strip
+              (only rendered on phones; sm+ has no bottom nav). */}
+          <main className={cn(
+            "flex-1 min-w-0 overflow-x-hidden",
+            isTourManager ? "pb-0" : "pb-20 sm:pb-0",
+            // Calendar and Tour Manager manage their own compact header
+            // spacing — no extra breathing room below the topbar.
+            isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",
+          )}>{children}</main>
+        </div>
+        {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
+            so it returns null on tablet/desktop — safe to mount globally. */}
+        <MobileBottomNav />
+        {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
+        <ProductTour />
+        {/* Floating assistant mic + chat window (shared thread lives in
+            AssistantProvider so it survives navigation between pages). */}
+        <AssistantFab />
+        <AssistantSheet />
       </div>
-      {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
-          so it returns null on tablet/desktop — safe to mount globally. */}
-      <MobileBottomNav />
-      {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
-      <ProductTour />
-    </div>
+    </AssistantProvider>
   );
 }
