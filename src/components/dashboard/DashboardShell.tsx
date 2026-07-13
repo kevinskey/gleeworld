@@ -505,7 +505,10 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-4 h-[80px] border-b border-border">
+      {/* min-height includes the status-bar inset (same border-box rule
+          as the TopBar): a fixed h-[80px] + safe-area padding would
+          collapse and push the brand under the iOS clock. */}
+      <div className="flex items-center gap-3 px-4 pt-[env(safe-area-inset-top,0px)] min-h-[calc(80px+env(safe-area-inset-top,0px))] border-b border-border">
         <BrandLogo
           logoUrl={branding?.logo_url}
           fallbackInitial={tenantName.charAt(0).toUpperCase()}
