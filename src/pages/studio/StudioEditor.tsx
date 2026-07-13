@@ -1064,12 +1064,9 @@ function Editor({
       armedAudioCount: armedTrackIds.length,
       midiInputEnabled,
       hasMidiTarget: !!midiInputTrack,
-      nativeEngine: !!engineState.native,
     });
     if (mode === 'blocked') {
-      toast.error(engineState.native
-        ? 'Arm at least one audio track first (red R button on the strip).'
-        : 'Arm an audio track (red R) — or turn on the USB MIDI keyboard in Settings to record a MIDI take.');
+      toast.error('Arm an audio track (red R) — or turn on the MIDI keyboard in Settings to record a MIDI take.');
       return;
     }
     try {
@@ -1088,7 +1085,9 @@ function Editor({
       // put 100-300 ms of serial latency between the last count-in
       // click and grid beat 1 — the take's click grid always started
       // audibly late off the pulse. JS keeps only the visual countdown.
-      if (engineState.native && engineState.nativeRecordStart) {
+      // Audio takes only — a MIDI-only take has no mic to open, so it
+      // uses the shared JS count-in + transport path below on iOS too.
+      if (mode === 'audio' && engineState.native && engineState.nativeRecordStart) {
         const { NativeStudio } = await import('@/plugins/studioEngine');
         await NativeStudio.prepareRecordSession().catch(() => { /* recordWithCountIn will retry */ });
 
@@ -2605,7 +2604,6 @@ function Editor({
             trackId={selectedClip.trackId}
             clipId={selectedClip.clipId}
             positionSeconds={state?.positionSeconds ?? 0}
-            nativeEngine={!!engineState.native}
             update={update}
             pushHistory={() => pushHistory(session)}
             onSeek={(s) => engineState.seek?.(s)}

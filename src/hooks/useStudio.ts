@@ -226,6 +226,29 @@ function audioClipSig(c: { id: string; asset_id: string; start_seconds: number; 
   return `${c.id}:${c.asset_id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${c.offset_seconds.toFixed(3)}:${c.gain_db}:${c.pitch_semitones}:${c.time_stretch}:${c.reverse}`;
 }
 
+// Map a native bridge state payload onto the web engine's EngineState
+// shape. `recordingActive` is a JS-SIDE flag (the native engine has no
+// recorder-armed concept for MIDI takes) — StudioEditor flips it via
+// setRecordingActive around a take, and MIDI capture gates on it.
+// Exported for tests.
+export function mapNativeEngineState(s: NativeEngineState, recordingActive: boolean): EngineState {
+  return {
+    isReady: s.isReady, isPlaying: s.isPlaying,
+    positionSeconds: s.positionSeconds, tempoBpm: s.tempoBpm,
+    loopEnabled: false, loopStartSeconds: 0, loopEndSeconds: 0,
+    // Coerce to Boolean — some Capacitor bridges hand Bool
+    // values across as 0/1 NSNumber, which `??` would treat
+    // as defined but `state?.metronomeOn` would render falsy
+    // for `0`. Explicit `!!` removes ambiguity.
+    metronomeOn: !!s.metronomeOn, metronomeVolumeDb: 0,
+    peakDbL: -Infinity, peakDbR: -Infinity,
+    // AVAudioSession runs at 48k on modern devices; the value
+    // only feeds the Samples counter readout.
+    sampleRate: 48000,
+    recordingActive,
+  };
+}
+
 export function useStudioEngine(session: Session | null) {
   const native = isNativeStudioAvailable();
   const engineRef = useRef<StudioEngine | null>(null);
@@ -235,6 +258,10 @@ export function useStudioEngine(session: Session | null) {
   // teardown+rebuild leaves the track stopped ("adjusting gain stops the
   // track"). Updated from every native onState.
   const livePlayRef = useRef<{ playing: boolean; pos: number }>({ playing: false, pos: 0 });
+  // Native only: recording-armed flag lives JS-side (the bridge state has
+  // no such field). Read by every onState mapping; flipped by
+  // setRecordingActive so MIDI capture works on iOS takes.
+  const nativeRecordingActiveRef = useRef(false);
   const [state, setState] = useState<EngineState | null>(null);
   const [warming, setWarming] = useState(false);
   // Last skeleton signature we built the engine for. Stays constant
@@ -408,24 +435,7 @@ export function useStudioEngine(session: Session | null) {
               metOnType: typeof s.metronomeOn,
               pos: s.positionSeconds,
             }));
-            setState({
-              isReady: s.isReady, isPlaying: s.isPlaying,
-              positionSeconds: s.positionSeconds, tempoBpm: s.tempoBpm,
-              loopEnabled: false, loopStartSeconds: 0, loopEndSeconds: 0,
-              // Coerce to Boolean — some Capacitor bridges hand Bool
-              // values across as 0/1 NSNumber, which `??` would treat
-              // as defined but `state?.metronomeOn` would render falsy
-              // for `0`. Explicit `!!` removes ambiguity.
-              metronomeOn: !!s.metronomeOn, metronomeVolumeDb: 0,
-              peakDbL: -Infinity, peakDbR: -Infinity,
-              // AVAudioSession runs at 48k on modern devices; the value
-              // only feeds the Samples counter readout.
-              sampleRate: 48000,
-              // Mastering (and its loudness servo) is explicitly deferred
-              // on iOS — see reference_gleeworld_ios notes — so there's
-              // no recording-armed guard to mirror from the native side.
-              recordingActive: false,
-            });
+            setState(mapNativeEngineState(s, nativeRecordingActiveRef.current));
             livePlayRef.current = { playing: !!s.isPlaying, pos: s.positionSeconds ?? 0 };
             // Surface any engine-side error as a toast so device users
             // can report the failure without needing Mac + Safari console.
@@ -629,8 +639,13 @@ export function useStudioEngine(session: Session | null) {
          * unreliable web fallback inside WKWebView. */
         nativeRecordStart: async () => { await NativeStudio.recordStart(); },
         nativeRecordStop: async () => NativeStudio.recordStop(),
-        // Loop is unwired on native, so there is no wrap to guard.
-        setRecordingActive: (_active: boolean) => { /* no-op on native */ },
+        // JS-side flag (see nativeRecordingActiveRef). The immediate
+        // setState means capture handlers see the flip right away rather
+        // than waiting up to one ~30Hz native state tick.
+        setRecordingActive: (active: boolean) => {
+          nativeRecordingActiveRef.current = active;
+          setState((prev) => (prev ? { ...prev, recordingActive: active } : prev));
+        },
         // Native per-track metering isn't bridged yet (B1 Task 6 ships
         // the web meters first) — MixerView's PeakMeter renders its
         // empty/floor state on iOS until a follow-up wires this through

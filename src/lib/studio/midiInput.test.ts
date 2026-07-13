@@ -66,12 +66,11 @@ describe('findMidiClipAt', () => {
 });
 
 describe('recordStartMode', () => {
-  const base = { armedAudioCount: 0, midiInputEnabled: false, hasMidiTarget: false, nativeEngine: false };
+  const base = { armedAudioCount: 0, midiInputEnabled: false, hasMidiTarget: false };
 
   it('records audio whenever an audio track is armed (MIDI capture rides along)', () => {
     expect(recordStartMode({ ...base, armedAudioCount: 1 })).toBe('audio');
     expect(recordStartMode({ ...base, armedAudioCount: 2, midiInputEnabled: true, hasMidiTarget: true })).toBe('audio');
-    expect(recordStartMode({ ...base, armedAudioCount: 1, nativeEngine: true })).toBe('audio');
   });
 
   it('records a MIDI-only take when no audio is armed but MIDI input has a target', () => {
@@ -87,9 +86,6 @@ describe('recordStartMode', () => {
     expect(recordStartMode({ ...base, midiInputEnabled: true })).toBe('blocked');
   });
 
-  it('blocks a MIDI-only take on the native engine (web-only input path)', () => {
-    expect(recordStartMode({ ...base, midiInputEnabled: true, hasMidiTarget: true, nativeEngine: true })).toBe('blocked');
-  });
 });
 
 describe('appendTakeNote', () => {
