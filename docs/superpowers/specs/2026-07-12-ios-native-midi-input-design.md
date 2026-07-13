@@ -43,6 +43,22 @@ Affected surfaces (all three are in scope):
   the WKWebView's web audio alongside the native engine (shared
   playAndRecord + mixWithOthers session). Monitor feel on a real iPad is a
   device-QA gate. MIDI Clock output stays web-only, unchanged.
+- **Recording gate correction (2026-07-13, Kevin QA "iOS won't let me
+  record a MIDI track"):** the claim above that recording was already
+  engine-agnostic was wrong — three gates survived the lift:
+  `recordStartMode()` still returned `blocked` for MIDI-only takes on
+  `nativeEngine`; `startRecording`'s native mic branch ran before the
+  MIDI-only branch (so even unblocked it would have opened the mic); and
+  the native state mapping hardcoded `recordingActive: false` with a no-op
+  `setRecordingActive`, which silently disabled ALL MIDI capture on iOS —
+  including ride-along capture during audio takes. All three fixed: the
+  nativeEngine param is gone from `recordStartMode`, the native mic branch
+  is `mode === 'audio'`-gated, and `recordingActive` is a JS-side flag on
+  native (`mapNativeEngineState`, unit-tested). Same pass: added the
+  missing `NSBluetoothAlwaysUsageDescription` to Info.plist — without it
+  iOS kills the app the moment the CABTMIDICentralViewController pairing
+  sheet touches CoreBluetooth. Piano-roll audition stays native-gated
+  (separate follow-up).
 
 ## Components
 
