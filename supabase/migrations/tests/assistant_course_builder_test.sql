@@ -99,6 +99,19 @@ DO $$ DECLARE r jsonb; v_status text; BEGIN
   PERFORM set_config('test.course_id', r->>'course_id', true);
 END $$;
 
+-- Editors must NOT be able to mint template rows: list_course_templates() is
+-- SECURITY DEFINER and surfaces active templates cross-tenant, so the INSERT
+-- policy's is_template = false is load-bearing.
+DO $$ DECLARE rejected boolean := false; BEGIN
+  BEGIN
+    INSERT INTO gw_courses (title, is_template, created_by, tenant_id)
+    VALUES ('Sneaky Template', true, auth.uid(), current_tenant_id());
+  EXCEPTION WHEN others THEN
+    rejected := SQLERRM ILIKE '%row-level security%';
+  END;
+  ASSERT rejected, 'editor INSERT with is_template=true must be rejected by RLS';
+END $$;
+
 -- Missing start_date must raise (NULL-date bypass guard), still as instructor.
 DO $$ DECLARE raised boolean := false; BEGIN
   BEGIN
@@ -122,6 +135,47 @@ DO $$ BEGIN
   ASSERT (SELECT count(*) FROM gw_courses
           WHERE id = current_setting('test.course_id')::uuid) = 0,
     'draft course must be invisible to non-owner students';
+END $$;
+
+RESET ROLE;
+
+-- Publish lifecycle: the instructor (non-admin-flag editor) must be able to
+-- publish their own draft via the owner-scoped UPDATE policy...
+SET LOCAL "test.uid" = '00000000-0000-0000-0000-000000000002';
+SET LOCAL ROLE gw_test_authenticated;
+
+DO $$ DECLARE n int; v_status text; BEGIN
+  UPDATE gw_courses SET status = 'published'
+  WHERE id = current_setting('test.course_id')::uuid;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  ASSERT n = 1, 'editor must be able to publish their own draft';
+  SELECT status INTO v_status FROM gw_courses
+  WHERE id = current_setting('test.course_id')::uuid;
+  ASSERT v_status = 'published', 'published row must remain visible to its owner';
+END $$;
+
+-- ...but must NOT be able to flip their course into a cross-tenant template.
+DO $$ DECLARE rejected boolean := false; BEGIN
+  BEGIN
+    UPDATE gw_courses SET is_template = true
+    WHERE id = current_setting('test.course_id')::uuid;
+  EXCEPTION WHEN others THEN
+    rejected := SQLERRM ILIKE '%row-level security%';
+  END;
+  ASSERT rejected, 'editor UPDATE flipping is_template=true must be rejected by RLS';
+END $$;
+
+RESET ROLE;
+
+-- Once published, the course IS visible to the student identity — completes
+-- the draft → publish lifecycle proof.
+SET LOCAL "test.uid" = '00000000-0000-0000-0000-000000000003';
+SET LOCAL ROLE gw_test_authenticated;
+
+DO $$ BEGIN
+  ASSERT (SELECT count(*) FROM gw_courses
+          WHERE id = current_setting('test.course_id')::uuid) = 1,
+    'published course must be visible to students';
 END $$;
 
 RESET ROLE;

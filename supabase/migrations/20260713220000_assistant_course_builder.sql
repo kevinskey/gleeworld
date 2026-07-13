@@ -53,9 +53,22 @@ GRANT EXECUTE ON FUNCTION public.is_course_editor() TO authenticated;
 -- Draft-course creation is exactly the editor predicate's job, so give course
 -- editors an INSERT path (the draft-hiding SELECT policy already carves out
 -- created_by/instructor_id for them).
+-- is_template = false is load-bearing: the SECURITY DEFINER list_course_templates()
+-- RPC surfaces active templates cross-tenant to every client's Course Store, so a
+-- non-admin editor must not be able to mint template rows. No status constraint:
+-- NewCoursePage inserts rely on the default 'published', and admins keep their
+-- own flag-based policies.
 DROP POLICY IF EXISTS "Course editors can insert courses" ON public.gw_courses;
 CREATE POLICY "Course editors can insert courses" ON public.gw_courses
-  FOR INSERT WITH CHECK (public.is_course_editor());
+  FOR INSERT WITH CHECK (public.is_course_editor() AND is_template = false);
+
+-- Editors also need an UPDATE path (every pre-existing UPDATE policy is
+-- admin-flag-only), or a non-admin-flag editor could create a draft but never
+-- publish it. Owner-scoped: only their own courses, and never into templates.
+DROP POLICY IF EXISTS "Course editors can update their courses" ON public.gw_courses;
+CREATE POLICY "Course editors can update their courses" ON public.gw_courses
+  FOR UPDATE USING (public.is_course_editor() AND (created_by = auth.uid() OR instructor_id = auth.uid()))
+  WITH CHECK (public.is_course_editor() AND (created_by = auth.uid() OR instructor_id = auth.uid()) AND is_template = false);
 
 DROP POLICY IF EXISTS "Instructors can manage modules" ON public.gw_course_modules;
 CREATE POLICY "Instructors can manage modules" ON public.gw_course_modules
