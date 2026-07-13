@@ -11,7 +11,7 @@
  * existing component exists (gradebook, attendance grid, modules), we
  * wrap it. Where none does, we render a clean fresh implementation.
  */
-import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef, lazy, Suspense } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery as useQueryReactQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -129,8 +129,14 @@ export default function CourseShell() {
   const isInstructor = course?.instructor_id === user?.id;
   const canEdit = isAdmin || isInstructor;
 
+  // Guards against a late-resolving fetch from a previous `code` clobbering
+  // fresher state: this route (/academy/c/:code) has no key prop, so React
+  // reuses the CourseShell instance across code changes rather than remounting.
+  // A monotonic request id covers both the effect and the Publish-button paths.
+  const loadReqId = useRef(0);
   const loadCourse = useCallback(async () => {
     if (!code) return;
+    const reqId = ++loadReqId.current;
     setLoading(true);
     // Two encoding conventions exist in the wild:
     //   legacy: "MUS 101" stored, URL is "mus-101" (hyphen→space)
@@ -155,6 +161,7 @@ export default function CourseShell() {
     };
     let row = await tryFetch(asIs);
     if (!row && spaced !== asIs) row = await tryFetch(spaced);
+    if (loadReqId.current !== reqId) return; // a newer load superseded this one
     setCourse((row || null) as CourseRow | null);
     setLoading(false);
   }, [code]);

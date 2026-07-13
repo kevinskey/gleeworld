@@ -6,7 +6,6 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { useNavigate } from 'react-router-dom';
 import { AssignInstructorDialog } from './AssignInstructorDialog';
 import { CourseCard } from './CourseCard';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -132,24 +131,20 @@ export const CourseManagementTable: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCourses.map(course => (
-            <div key={course.id}>
-              {course.status === 'draft' && (
-                <Badge variant="outline" className="mb-1 ml-1">Draft</Badge>
-              )}
-              <CourseCard
-                id={course.id}
-                code={course.code}
-                title={course.title}
-                term={course.term}
-                instructorName={course.instructor_name || 'Unassigned'}
-                assignmentCount={course.assignment_count}
-                status={course.status}
-                onViewCourse={() => navigate(`/grading/instructor/course/${course.id}`)}
-                onOpenGradebook={() => navigate(`/grading/instructor/course/${course.id}/gradebook`)}
-                onManageStudents={() => navigate(`/grading/instructor/course/${course.id}/students`)}
-                onDelete={() => handleDeleteCourse(course.id)}
-              />
-            </div>
+            <CourseCard
+              key={course.id}
+              id={course.id}
+              code={course.code}
+              title={course.title}
+              term={course.term}
+              instructorName={course.instructor_name || 'Unassigned'}
+              assignmentCount={course.assignment_count}
+              status={course.status}
+              onViewCourse={() => navigate(`/grading/instructor/course/${course.id}`)}
+              onOpenGradebook={() => navigate(`/grading/instructor/course/${course.id}/gradebook`)}
+              onManageStudents={() => navigate(`/grading/instructor/course/${course.id}/students`)}
+              onDelete={() => handleDeleteCourse(course.id)}
+            />
           ))}
         </div>
 
