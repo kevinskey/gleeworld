@@ -677,17 +677,18 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
   const [becomeTenantOpen, setBecomeTenantOpen] = useState(false);
   const showBecomeTenantCta = isDemoTenant();
 
+  // min-height INCLUDES the safe-area inset: with border-box, a fixed
+  // h-14 + padding-top collapses the content region and the icons spill
+  // 40+px below the bar (the header/toolbar overlap on notched iPhones).
+  // Visible bar stays 56px (md: 80px, matching the sidebar's h-[80px]
+  // brand block); the inset grows the box above it. bg-background/80 +
+  // blur instead of opaque bg-card so the bar reads as the page surface
+  // continuing under the iOS clock rather than a white strip over the
+  // gray page.
   return (
     <header
-      className="border-b border-border bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 h-14 md:h-20"
+      className="border-b border-border/60 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(5rem+env(safe-area-inset-top,0px))]"
       style={{
-        // Height is class-based (h-14 / md:h-20) so phones get a
-        // slimmer 56px bar; md+ keeps the 80px that matches the
-        // sidebar's brand block (h-[80px]) so the two visually meet at
-        // the same baseline instead of the topbar overhanging the
-        // brand row. Safe-area inset is ADDED on top of the header
-        // height so iOS notches still clear without growing the
-        // visible header.
         paddingTop: 'env(safe-area-inset-top)',
         top: 'var(--gw-demo-bar-h, 0px)',
       }}
