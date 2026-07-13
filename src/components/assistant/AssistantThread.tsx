@@ -33,18 +33,31 @@ export const AssistantThread = ({ messages, busy, error, runAction, cancelAction
             <p className="whitespace-pre-wrap">{m.content}</p>
             {m.pendingAction && m.actionState === 'pending' && (
               <div className="mt-2 rounded-lg border bg-card p-2 space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  {m.pendingAction.tool === 'send_sms' ? 'Text' : 'Email'} to{' '}
-                  {(m.pendingAction.args.recipient_names as string[] | undefined)?.join(', ') ?? 'recipients'}:
-                </p>
-                {m.pendingAction.tool === 'send_email' && m.pendingAction.args.subject != null && (
-                  <p className="text-xs text-muted-foreground">
-                    Subject: {String(m.pendingAction.args.subject)}
-                  </p>
+                {m.pendingAction.tool === 'create_course_draft' ? (
+                  <>
+                    <p className="text-xs text-muted-foreground">Create draft course:</p>
+                    <p className="text-xs font-medium">
+                      “{String((m.pendingAction.args.spec as Record<string, unknown> | undefined)?.title ?? 'Untitled')}” —{' '}
+                      {(((m.pendingAction.args.spec as Record<string, unknown> | undefined)?.modules as unknown[]) ?? []).length} modules.
+                      Students can’t see drafts.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs text-muted-foreground">
+                      {m.pendingAction.tool === 'send_sms' ? 'Text' : 'Email'} to{' '}
+                      {(m.pendingAction.args.recipient_names as string[] | undefined)?.join(', ') ?? 'recipients'}:
+                    </p>
+                    {m.pendingAction.tool === 'send_email' && m.pendingAction.args.subject != null && (
+                      <p className="text-xs text-muted-foreground">
+                        Subject: {String(m.pendingAction.args.subject)}
+                      </p>
+                    )}
+                    <p className="text-xs font-medium">
+                      {String(m.pendingAction.args.message ?? m.pendingAction.args.body ?? '')}
+                    </p>
+                  </>
                 )}
-                <p className="text-xs font-medium">
-                  {String(m.pendingAction.args.message ?? m.pendingAction.args.body ?? '')}
-                </p>
                 <div className="flex gap-2">
                   <Button size="sm" className="h-9 text-xs" disabled={executingId === m.id}
                     onClick={() => {
@@ -56,7 +69,7 @@ export const AssistantThread = ({ messages, busy, error, runAction, cancelAction
                         () => setExecutingId((id) => (id === m.id ? null : id)),
                       );
                     }}>
-                    Send
+                    {m.pendingAction.tool === 'create_course_draft' ? 'Create' : 'Send'}
                   </Button>
                   <Button size="sm" variant="outline" className="h-9 text-xs" disabled={executingId === m.id}
                     onClick={() => cancelAction(m.id)}>
