@@ -20,8 +20,13 @@ const config: CapacitorConfig = {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
     StatusBar: {
-      overlaysWebView: false,
-      style: 'DEFAULT',
+      // Edge-to-edge: the webview draws under the clock/battery with a
+      // transparent background; headers already pad by
+      // env(safe-area-inset-top). Initial style LIGHT = dark text for
+      // the app's light theme; dark rooms flip it via
+      // src/lib/statusBarStyle.ts.
+      overlaysWebView: true,
+      style: 'LIGHT',
     },
   },
 };
