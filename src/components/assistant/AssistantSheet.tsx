@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { ChevronDown, Mic, Send, Volume2, VolumeX } from 'lucide-react';
+import { ChevronDown, Mic, Send, Square, Volume2, VolumeX } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ export const AssistantSheet = () => {
     sheetOpen, setSheetOpen,
     micAvailable, listening, transcript, toggleMic,
     muted, toggleMute,
+    speaking, stopSpeaking,
     videoRoom, setVideoRoom,
   } = useAssistant();
   const [input, setInput] = useState('');
@@ -87,6 +88,12 @@ export const AssistantSheet = () => {
             className="border-t px-3 py-2 flex items-center gap-2"
             onSubmit={(e) => { e.preventDefault(); submit(input); }}
           >
+            {speaking && (
+              <button type="button" onClick={stopSpeaking} aria-label="Stop talking" title="Stop talking"
+                className="h-9 w-9 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
+                <Square className="w-3.5 h-3.5 fill-current" />
+              </button>
+            )}
             {micAvailable && (
               <button type="button" onClick={toggleMic}
                 className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}
@@ -135,6 +142,12 @@ export const AssistantSheet = () => {
             className="flex items-center gap-2 px-4 py-3"
             onSubmit={(e) => { e.preventDefault(); submit(input); }}
           >
+            {speaking && (
+              <button type="button" onClick={stopSpeaking} aria-label="Stop talking" title="Stop talking"
+                className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
+                <Square className="w-3.5 h-3.5 fill-current" />
+              </button>
+            )}
             {micAvailable && (
               <button type="button" onClick={toggleMic}
                 className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}

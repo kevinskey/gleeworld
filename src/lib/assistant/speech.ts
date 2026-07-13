@@ -111,7 +111,10 @@ export function setMuted(muted: boolean, storage?: Storage): void {
   else s?.removeItem(MUTE_KEY);
 }
 
-export function speak(text: string, opts?: { muted?: boolean; synth?: SpeechSynthesis }): void {
+export function speak(
+  text: string,
+  opts?: { muted?: boolean; synth?: SpeechSynthesis; onStart?: () => void; onEnd?: () => void },
+): void {
   const muted = opts?.muted ?? isMuted();
   if (muted || !text.trim()) return;
   const synth = opts?.synth ?? (typeof speechSynthesis !== 'undefined' ? speechSynthesis : undefined);
@@ -119,5 +122,17 @@ export function speak(text: string, opts?: { muted?: boolean; synth?: SpeechSynt
   synth.cancel();
   const UtterCtor = (globalThis as any).SpeechSynthesisUtterance;
   const utterance = UtterCtor ? new UtterCtor(text) : ({ text } as any);
+  // onStart/onEnd let callers track whether the assistant is currently
+  // speaking so they can show (and drive) a Stop control. onerror also
+  // ends — a cancelled utterance fires onerror/onend, so `speaking` never
+  // gets stuck true.
+  if (opts?.onStart) utterance.onstart = opts.onStart;
+  if (opts?.onEnd) { utterance.onend = opts.onEnd; utterance.onerror = opts.onEnd; }
   synth.speak(utterance);
+}
+
+// Immediately silence any in-flight reply (barge-in / explicit Stop).
+export function stopSpeaking(synth?: SpeechSynthesis): void {
+  const s = synth ?? (typeof speechSynthesis !== 'undefined' ? speechSynthesis : undefined);
+  try { s?.cancel(); } catch { /* nothing playing */ }
 }
