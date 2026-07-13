@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { EventQRCode } from "../EventQRCode";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
 import { EditEventDialog } from "../EditEventDialog";
+import { isGoogleSyncedEvent } from "@/utils/googleCalendarEvents";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -37,6 +38,11 @@ export const EventPeekPopover = ({
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Personal Google Calendar overlay rows aren't gw_events — no edit,
+  // delete, QR, or attendance; they can only be changed in Google.
+  const isGoogleEvent = isGoogleSyncedEvent(event);
+  const showActions = canEdit && !isGoogleEvent;
 
   const timeRange = `${format(new Date(event.start_date), 'h:mm a')}${
     event.end_date ? ` – ${format(new Date(event.end_date), 'h:mm a')}` : ''
@@ -88,7 +94,7 @@ export const EventPeekPopover = ({
                 {event.title}
               </h3>
             </div>
-            {canEdit && (
+            {showActions && (
               <button
                 type="button"
                 data-compact
@@ -119,7 +125,13 @@ export const EventPeekPopover = ({
             )}
           </div>
 
-          {canEdit && (
+          {isGoogleEvent && (
+            <div className="mt-3 pl-5 text-xs text-muted-foreground">
+              Synced from Google Calendar — edit or delete it there.
+            </div>
+          )}
+
+          {showActions && (
             <div className="flex items-center gap-1.5 mt-3 pl-5">
               <EventQRCode
                 eventId={event.id}

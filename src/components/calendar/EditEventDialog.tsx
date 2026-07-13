@@ -32,6 +32,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { isGoogleSyncedEvent } from "@/utils/googleCalendarEvents";
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { 
   AlertDialog,
@@ -247,6 +248,15 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !event) return;
+    // Google-synced overlay rows aren't gw_events — writes would 400.
+    if (isGoogleSyncedEvent(event)) {
+      toast({
+        title: "Google Calendar event",
+        description: "This event syncs from Google Calendar — edit or delete it there.",
+      });
+      return;
+    }
+
 
     // Check if this is a recurring event - if so, show dialog to ask user
     const isRecurring = event.is_recurring || event.parent_event_id;
@@ -424,6 +434,15 @@ export const EditEventDialog = ({ event, open, onOpenChange, onEventUpdated }: E
 
   const handleDelete = async (deleteType: 'this_only' | 'all_occurrences' = 'this_only') => {
     if (!event) return;
+    // Google-synced overlay rows aren't gw_events — writes would 400.
+    if (isGoogleSyncedEvent(event)) {
+      toast({
+        title: "Google Calendar event",
+        description: "This event syncs from Google Calendar — edit or delete it there.",
+      });
+      return;
+    }
+
 
     setDeleteLoading(true);
     try {

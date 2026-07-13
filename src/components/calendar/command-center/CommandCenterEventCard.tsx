@@ -31,6 +31,7 @@ import { EditEventDialog } from "../EditEventDialog";
 import { EventDetailDialog } from "../EventDetailDialog";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
 import { EventPeekPopover } from "./EventPeekPopover";
+import { isGoogleSyncedEvent } from "@/utils/googleCalendarEvents";
 
 // Determine if text should be white or dark based on background color luminance
 const getContrastTextColor = (hexColor: string): string => {
@@ -113,7 +114,8 @@ export const CommandCenterEventCard = ({
   }, [user]);
 
   // Check if user can edit/delete this event
-  const canEdit = userPermissions && (
+  // Google-synced overlay rows aren't gw_events — read-only here.
+  const canEdit = !isGoogleSyncedEvent(event) && userPermissions && (
     userPermissions.isSuperAdmin || 
     userPermissions.isAdmin || 
     userPermissions.isExecBoard ||
