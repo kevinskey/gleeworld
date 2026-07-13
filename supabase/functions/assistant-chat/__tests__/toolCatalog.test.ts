@@ -22,7 +22,7 @@ describe('toolCatalog', () => {
 
   it('only send_sms and send_email require confirmation', () => {
     const confirmed = TOOL_CATALOG.filter((t) => t.confirm).map((t) => t.name).sort();
-    expect(confirmed).toEqual(['send_email', 'send_sms']);
+    expect(confirmed).toEqual(['create_course_draft', 'send_email', 'send_sms']);
   });
 
   it('server tools are exactly the read-only set', () => {
@@ -34,5 +34,14 @@ describe('toolCatalog', () => {
     const [first] = toOpenAiTools(toolsForRole('member'));
     expect(first).toMatchObject({ type: 'function', function: { name: expect.any(String) } });
     expect(first.function.parameters).toHaveProperty('type', 'object');
+  });
+
+  it('create_course_draft is admin-only, client-executed, confirm-gated', () => {
+    const def = TOOL_CATALOG.find((t) => t.name === 'create_course_draft');
+    expect(def).toBeDefined();
+    expect(def!.minRole).toBe('admin');
+    expect(def!.execution).toBe('client');
+    expect(def!.confirm).toBe(true);
+    expect(toolsForRole('member').map((t) => t.name)).not.toContain('create_course_draft');
   });
 });
