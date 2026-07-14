@@ -195,21 +195,47 @@ export async function executeClientAction(
         const videoId = String(a.video_id ?? '');
         const title = String(a.title ?? '');
         if (!videoId || !title) return { ok: false, message: 'Missing the video id or title.' };
-        // youtube_videos.channel_id is a required FK to youtube_channels.id (uuid) — there is
-        // no channel-name column on youtube_videos itself, so `a.channel` (a display name from
-        // search_youtube) can't be persisted here; resolve the configured channel row instead.
-        const { data: channelRow, error: channelErr } = await deps.supabase
-          .from('youtube_channels').select('id').order('created_at', { ascending: true }).limit(1).maybeSingle();
-        if (channelErr || !channelRow) return { ok: false, message: 'No YouTube channel is configured to add videos to.' };
+        // youtube_videos.channel_id is a NULLABLE FK to youtube_channels.id. A video found via
+        // search_youtube isn't necessarily from a channel the tenant follows, so we save it
+        // unattached (channel_id null) rather than demanding a youtube_channels row — the old
+        // code bailed with "No YouTube channel is configured" whenever the tenant had none, which
+        // is the normal case. tenant_id is filled by the table's BEFORE INSERT trigger; .select()
+        // so a silent RLS/tenant write failure surfaces as an error rather than a fake success.
+        // (a.channel — a display name from search_youtube — has no column on youtube_videos.)
         const { data, error } = await deps.supabase.from('youtube_videos').insert({
           video_id: videoId,
-          channel_id: channelRow.id,
+          channel_id: null,
           title,
           thumbnail_url: typeof a.thumbnail_url === 'string' ? a.thumbnail_url : null,
           video_url: `https://www.youtube.com/watch?v=${videoId}`,
+          // Stamp now so the row has a date to sort by on the YouTube page
+          // (it orders by published_at) instead of a null that floats oddly.
+          published_at: new Date().toISOString(),
         }).select();
         if (error || !data?.length) return { ok: false, message: `Couldn't add the video${error ? `: ${error.message}` : ' (no row returned — check permissions)'}.` };
-        return { ok: true, navigateTo: '/video', message: `Added "${title}" to Videos.` };
+        // Also surface it in the DASHBOARD YouTube section, a separate table
+        // (dashboard_youtube_videos) that feeds the home page's video widget —
+        // youtube_videos only shows on /youtube + the management module.
+        // `position` is a required varchar sort key; is_active/video_type/
+        // tenant_id all default (true / 'youtube' / current_tenant_id()).
+        // Best-effort: the primary save already succeeded, so a hiccup here
+        // must not fail the whole add.
+        const dash = await deps.supabase.from('dashboard_youtube_videos').insert({
+          video_id: videoId,
+          title,
+          video_url: `https://www.youtube.com/watch?v=${videoId}`,
+          position: String(Date.now()),
+        }).select();
+        const dashOk = !dash.error && !!dash.data?.length;
+        // Land on the dashboard, where the section now shows it; the video is
+        // also on /youtube and the YouTube management module.
+        return {
+          ok: true,
+          navigateTo: '/dashboard',
+          message: dashOk
+            ? `Added "${title}" to your videos.`
+            : `Added "${title}" to your YouTube videos (couldn't pin it to the dashboard section).`,
+        };
       }
       case 'create_course_draft': {
         const spec = a.spec;

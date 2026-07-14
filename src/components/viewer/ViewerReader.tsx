@@ -727,12 +727,13 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
         </div>
       )}
 
-      {/* Score surface — sits flush against the title bar bottom. The top
-          edge is calc(safe-area + title bar height) so we don't accumulate
-          two safe-area paddings the way separate top + paddingTop did. */}
+      {/* Score surface — fills the whole screen (top: 0). The title bar is
+          absolute z-[60] and floats ON TOP of the page when chrome is shown
+          rather than reserving a strip above it, so a fresh score opens
+          truly full-bleed with no wasted band under the status bar. */}
       <div
         className={cn(
-          'absolute right-0 bottom-0 z-0 overflow-hidden',
+          'absolute right-0 bottom-0 top-0 z-0 overflow-hidden',
           // Off-white empty-state surface. Was black previously to mirror
           // forScore's dark canvas convention, but the user prefers a
           // soft off-white background that blends with the rest of the
@@ -741,7 +742,6 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
           hasScore ? '' : 'bg-[#f7f5f0]',
           device.isIpadLike ? (sideNavCollapsed ? 'left-16' : 'left-72') : 'left-0',
         )}
-        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}
         onClick={toggleChrome}
       >
         <div ref={scoreSurfaceRef} className="w-full h-full relative overflow-hidden">

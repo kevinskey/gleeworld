@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AssistantSheet } from './AssistantSheet';
+import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 
 vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => ({ profile: { user_id: 'u1', full_name: 'Test User', email: 't@example.com', role: 'member' } }),
@@ -25,11 +26,13 @@ function setViewportWidth(width: number) {
 const renderSheet = () =>
   render(
     <MemoryRouter>
-      <AssistantSheet open onOpenChange={() => {}} />
+      <AssistantProvider initialSheetOpen>
+        <AssistantSheet />
+      </AssistantProvider>
     </MemoryRouter>,
   );
 
-beforeEach(() => setViewportWidth(390));
+beforeEach(() => { sessionStorage.clear(); setViewportWidth(390); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe('AssistantSheet (phone)', () => {
@@ -51,5 +54,13 @@ describe('AssistantSheet (phone)', () => {
     renderSheet();
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement;
     expect(dialog.className).toContain('bottom-0');
+  });
+});
+
+describe('AssistantSheet (desktop)', () => {
+  it('spotlight dialog has a visible minimize control (Esc/backdrop are invisible exits)', () => {
+    setViewportWidth(1280);
+    renderSheet();
+    expect(document.querySelector('[aria-label="Minimize assistant"]')).not.toBeNull();
   });
 });

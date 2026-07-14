@@ -246,6 +246,18 @@ const scrollModePluginInstance = scrollModePlugin();
   // width and forces horizontal scroll.
   const fitWidthScale = isInMobileViewer || chromeless || (typeof window !== 'undefined' && window.innerWidth < 768) ? 1 : 1.2;
   const [scale, setScale] = useState(fitWidthScale);
+  // Fill-the-height default zoom for the dedicated reader (chromeless).
+  // The canvas is sized width:scale*100%, so a scale that makes the page
+  // as tall as the viewport also makes it wider than the viewport on
+  // portrait screens — centered by mx-auto and pannable via the scroll
+  // container. This is the forScore-style "fill the screen" the Viewer
+  // reader wants instead of fit-to-width (which leaves a tall gap below a
+  // short page). Pinch / zoom buttons set userZoomedRef so auto-fit stops
+  // fighting the user until the next page turn; pageAspectRef caches the
+  // rendered page's width/height (scale-invariant).
+  const pageAspectRef = useRef<number | null>(null);
+  const userZoomedRef = useRef(false);
+  const [fitTick, setFitTick] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1); // Zoom level for annotation mode
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
   const [useGoogle, setUseGoogle] = useState(false);
@@ -480,16 +492,21 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   // Zoom controls for normal viewing mode (scale)
   const handleScaleZoomIn = useCallback(() => {
+    userZoomedRef.current = true;
     setScale(prev => Math.min(prev + 0.2, 3));
   }, []);
 
   const handleScaleZoomOut = useCallback(() => {
+    userZoomedRef.current = true;
     setScale(prev => Math.max(prev - 0.2, 0.5));
   }, []);
 
   const handleScaleReset = useCallback(() => {
+    // In the reader, "reset" means re-fill the height (recompute the fit);
+    // elsewhere it returns to the fit-to-width baseline.
+    if (chromeless) { userZoomedRef.current = false; setFitTick((t) => t + 1); return; }
     setScale(fitWidthScale);
-  }, [fitWidthScale]);
+  }, [chromeless, fitWidthScale]);
 
   // Desktop trackpad / mouse-wheel pinch. Browsers fire `wheel` events with
   // ctrlKey=true for pinch gestures on macOS trackpads and for Ctrl+wheel on
@@ -1322,6 +1339,14 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         ctx.drawImage(offscreen, 0, 0);
       }
 
+      // Cache this page's aspect ratio (scale-invariant) so the reader's
+      // fill-height effect can size the page to the viewport. Bump fitTick
+      // once when it first becomes known / changes so the effect re-runs.
+      if (!cancelled && chromeless && canvasRef.current && canvasRef.current.height > 0) {
+        const a = canvasRef.current.width / canvasRef.current.height;
+        if (pageAspectRef.current !== a) { pageAspectRef.current = a; setFitTick((t) => t + 1); }
+      }
+
       // Auto-trim PDF top whitespace in chromeless mode (Viewer reader).
       // Scan the rendered canvas for the first non-white row, then scroll
       // every scrollable ancestor so that row sits at most 100px from the
@@ -1412,6 +1437,32 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       cancelled = true;
     };
   }, [pdf, currentPage, scale, annotationMode, renderPageToOffscreen, totalPages]);
+
+  // Reader fill-height fit. Recompute on viewport resize (rotate / window
+  // resize) and re-fit each new page — but stop once the user has pinched
+  // or used the zoom buttons, until they turn the page.
+  useEffect(() => {
+    if (!chromeless) return;
+    const onResize = () => setFitTick((t) => t + 1);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [chromeless]);
+
+  useEffect(() => { if (chromeless) userZoomedRef.current = false; }, [currentPage, chromeless]);
+
+  useLayoutEffect(() => {
+    if (!chromeless || userZoomedRef.current) return;
+    const container = containerRef.current;
+    const aspect = pageAspectRef.current;
+    if (!container || !aspect) return;
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
+    if (cw <= 0 || ch <= 0) return;
+    // canvas width = fill * cw  ⟹  canvas height = (fill*cw)/aspect = ch.
+    const fill = (ch / cw) * aspect;
+    const next = Math.max(1, Math.min(3, fill));
+    setScale((s) => (Math.abs(s - next) > 0.01 ? next : s));
+  }, [chromeless, fitTick, currentPage]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
@@ -1883,6 +1934,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   const distance = Math.sqrt(dx * dx + dy * dy);
                   const scaleChange = distance / initialPinchDistance;
                   const newScale = Math.max(0.5, Math.min(3, initialZoom * scaleChange));
+                  userZoomedRef.current = true;
                   setScale(newScale);
                   return;
                 }
