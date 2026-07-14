@@ -403,33 +403,51 @@ describe('executeClientAction', () => {
     expect(out.message).toContain('1 of 2 batches');
   });
 
-  it('add_video saves the video unattached (channel_id null) with a built video_url — no channel required', async () => {
-    let insertedRow: any = null;
+  it('add_video saves to youtube_videos (null channel) AND the dashboard section, lands on /dashboard', async () => {
+    const inserted: Record<string, any> = {};
     let queriedChannels = false;
-    const videoChain: any = {
-      insert: (row: any) => { insertedRow = row; return videoChain; },
-      select: async () => ({ data: [{ id: 'v1' }], error: null }),
-    };
+    const chainFor = (t: string): any => ({
+      insert: (row: any) => { inserted[t] = row; return chainFor(t); },
+      select: async () => ({ data: [{ id: `${t}-1` }], error: null }),
+    });
     const supabase = {
-      from: (t: string) => {
-        if (t === 'youtube_channels') queriedChannels = true;
-        return videoChain;
-      },
+      from: (t: string) => { if (t === 'youtube_channels') queriedChannels = true; return chainFor(t); },
     };
     const out = await executeClientAction(
       { tool: 'add_video', args: { video_id: 'abc123', title: 'Concert Highlights', channel: 'GleeWorld', thumbnail_url: 'https://img/1.jpg' }, confirm: false },
       { supabase } as any,
     );
-    // The searched channel name is NOT persisted, and no channel lookup happens anymore.
+    // No channel lookup; searched channel name not persisted.
     expect(queriedChannels).toBe(false);
-    expect(insertedRow).toMatchObject({
+    expect(inserted['youtube_videos']).toMatchObject({
       video_id: 'abc123', title: 'Concert Highlights', channel_id: null,
       thumbnail_url: 'https://img/1.jpg', video_url: 'https://www.youtube.com/watch?v=abc123',
     });
-    expect(insertedRow.published_at).toBeTruthy();
-    expect(insertedRow).not.toHaveProperty('channel');
-    // youtube_videos show on /youtube, not the uploaded-file library at /video.
-    expect(out).toMatchObject({ ok: true, navigateTo: '/youtube' });
+    expect(inserted['youtube_videos'].published_at).toBeTruthy();
+    expect(inserted['youtube_videos']).not.toHaveProperty('channel');
+    // Also written to the dashboard section with a required position sort key.
+    expect(inserted['dashboard_youtube_videos']).toMatchObject({
+      video_id: 'abc123', title: 'Concert Highlights', video_url: 'https://www.youtube.com/watch?v=abc123',
+    });
+    expect(inserted['dashboard_youtube_videos'].position).toBeTruthy();
+    expect(out).toMatchObject({ ok: true, navigateTo: '/dashboard' });
+  });
+
+  it('add_video still succeeds if the dashboard-section write fails (best-effort)', async () => {
+    const chainFor = (t: string): any => ({
+      insert: () => chainFor(t),
+      select: async () => (t === 'dashboard_youtube_videos'
+        ? { data: null, error: { message: 'rls' } }
+        : { data: [{ id: 'v1' }], error: null }),
+    });
+    const supabase = { from: (t: string) => chainFor(t) };
+    const out = await executeClientAction(
+      { tool: 'add_video', args: { video_id: 'abc123', title: 'X' }, confirm: false },
+      { supabase } as any,
+    );
+    expect(out.ok).toBe(true);
+    expect(out.navigateTo).toBe('/dashboard');
+    expect(out.message).toContain("couldn't pin it to the dashboard");
   });
 
   it('add_video surfaces a write failure loudly (no fake success)', async () => {
