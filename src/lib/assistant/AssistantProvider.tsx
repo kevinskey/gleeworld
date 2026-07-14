@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { threadReducer, INITIAL_THREAD } from './threadReducer';
 import { executeClientAction } from './clientActions';
-import { getSpeechInput, isMuted, setMuted, speak } from './speech';
+import { getSpeechInput, isMuted, setMuted, speak, stopSpeaking } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
 import type { AssistantAction, ThreadState } from './types';
@@ -22,6 +22,8 @@ export interface AssistantContextValue {
   toggleMic: () => void;
   muted: boolean;
   toggleMute: () => void;
+  speaking: boolean;
+  stopSpeaking: () => void;
   videoRoom: string | null;
   setVideoRoom: (room: string | null) => void;
   captionReply: { id: string; text: string } | null;
@@ -56,6 +58,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [muted, setMutedState] = useState(isMuted());
+  const [speaking, setSpeaking] = useState(false);
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
   const [captionReply, setCaptionReply] = useState<{ id: string; text: string } | null>(null);
   const speechRef = useRef(getSpeechInput());
@@ -84,6 +87,17 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
   }, []);
 
+  // Speak a reply while tracking `speaking` so the UI can show a Stop
+  // control; stopSpeakingNow cuts her off immediately (barge-in / Stop tap).
+  const speakNow = useCallback((text: string) => {
+    speak(text, { muted, onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) });
+  }, [muted]);
+
+  const stopSpeakingNow = useCallback(() => {
+    stopSpeaking();
+    setSpeaking(false);
+  }, []);
+
   const advanceConfirmQueue = useCallback((msgId: string) => {
     const nextId = crypto.randomUUID();
     const nextAction = confirmQueueRef.current.next(msgId, nextId);
@@ -97,10 +111,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     dispatch({ type: 'action-state', id: msgId, state: outcome.ok ? 'done' : 'error' });
     if (outcome.openVideoRoom) setVideoRoom(outcome.openVideoRoom);
     if (outcome.navigateTo) { setSheetOpen(false); navigate(outcome.navigateTo); }
-    if (!outcome.ok) speak(outcome.message, { muted });
+    if (!outcome.ok) speakNow(outcome.message);
     // Only a confirm-gated action can have a queued follow-up waiting on it.
     if (action.confirm) advanceConfirmQueue(msgId);
-  }, [muted, navigate, setSheetOpen, advanceConfirmQueue]);
+  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow]);
 
   const cancelAction = useCallback((msgId: string) => {
     dispatch({ type: 'action-state', id: msgId, state: 'cancelled' });
@@ -137,7 +151,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       const actions: AssistantAction[] = data.actions ?? [];
       const { first: confirmAction, autoRun } = confirmQueueRef.current.register(replyId, actions);
       dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
-      speak(data.reply ?? '', { muted });
+      speakNow(data.reply ?? '');
       // Sheet closed = this turn came from the floating mic. Surface the
       // reply as a caption; and NEVER leave a confirm card invisible —
       // SMS/email sends must show their Send/Cancel, so open the sheet.
@@ -152,12 +166,14 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } catch {
       dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
     }
-  }, [state.busy, state.messages, profile, muted, runAction, setSheetOpen]);
+  }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen]);
 
   const toggleMic = useCallback(() => {
     const speech = speechRef.current;
     if (!speech.available) return;
     if (listening) { speech.stop(); setListening(false); return; }
+    // Barge-in: starting to talk cuts off whatever she's saying.
+    stopSpeakingNow();
     setListening(true);
     setTranscript('');
     setCaptionReply(null);
@@ -166,13 +182,15 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       (t, isFinal) => { setTranscript(t); if (isFinal) finalTranscript = t; },
       () => { setListening(false); if (finalTranscript.trim()) void send(finalTranscript); },
     );
-  }, [listening, send]);
+  }, [listening, send, stopSpeakingNow]);
 
   const toggleMute = useCallback(() => {
     const m = !muted;
     setMuted(m);
     setMutedState(m);
-  }, [muted]);
+    // Muting silences the current reply too, not just future ones.
+    if (m) stopSpeakingNow();
+  }, [muted, stopSpeakingNow]);
 
   return (
     <AssistantContext.Provider value={{
@@ -180,6 +198,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       sheetOpen, setSheetOpen,
       micAvailable: speechRef.current.available, listening, transcript, toggleMic,
       muted, toggleMute,
+      speaking, stopSpeaking: stopSpeakingNow,
       videoRoom, setVideoRoom,
       captionReply,
     }}>

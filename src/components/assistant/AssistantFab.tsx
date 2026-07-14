@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChevronUp, Mic, X } from 'lucide-react';
+import { ChevronUp, Mic, Square, X } from 'lucide-react';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
 import { sectionKeyFromPath, isFabCollapsed, setFabCollapsed } from '@/lib/assistant/fabPrefs';
@@ -33,7 +33,7 @@ export const AssistantFab = () => {
   }, [captionReply]);
 
   if (!assistant) return null;
-  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, videoRoom, state } = assistant;
+  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state } = assistant;
   if (sheetOpen || videoRoom) return null;
 
   // Immersive full-screen routes (Viewer reader, Studio session editor)
@@ -98,7 +98,20 @@ export const AssistantFab = () => {
         >
           <ChevronUp className="w-4 h-4" />
         </button>
-        {micAvailable && (
+        {/* While she's speaking, the primary button is a Stop — one tap
+            silences her (Kevin: "she won't stop talking"). Otherwise it's
+            the mic; tapping the mic also barges in (stops speech) via the
+            provider. */}
+        {speaking ? (
+          <button
+            type="button"
+            aria-label="Stop talking"
+            onClick={stopSpeaking}
+            className="h-9 w-9 rounded-full flex items-center justify-center bg-destructive/20 text-destructive hover:bg-destructive/30 transition-colors"
+          >
+            <Square className="w-3.5 h-3.5 fill-current" />
+          </button>
+        ) : micAvailable && (
           <button
             type="button"
             aria-label="Talk to the assistant"

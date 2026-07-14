@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getSpeechInput, createNativeSpeechInput, isMuted, setMuted, speak } from '../speech';
+import { getSpeechInput, createNativeSpeechInput, isMuted, setMuted, speak, stopSpeaking } from '../speech';
 import type { GWSpeechPluginShape, GWSpeechResultEvent } from '@/plugins/gwSpeech';
 
 // Minimal fake of the GWSpeech Capacitor plugin: captures listeners so
@@ -131,5 +131,25 @@ describe('speech facade', () => {
     expect((synth.speak as any)).not.toHaveBeenCalled();
     speak('hello', { muted: false, synth });
     expect((synth.speak as any)).toHaveBeenCalledTimes(1);
+  });
+
+  it('stopSpeaking cancels the given synth (barge-in / Stop)', () => {
+    const synth = { speak: vi.fn(), cancel: vi.fn() } as unknown as SpeechSynthesis;
+    stopSpeaking(synth);
+    expect((synth.cancel as any)).toHaveBeenCalledTimes(1);
+  });
+
+  it('speak wires onStart/onEnd onto the utterance so callers can track speaking', () => {
+    const utterances: any[] = [];
+    (globalThis as any).SpeechSynthesisUtterance = class { text: string; onstart: any; onend: any; onerror: any; constructor(t: string) { this.text = t; utterances.push(this); } };
+    const synth = { speak: vi.fn(), cancel: vi.fn() } as unknown as SpeechSynthesis;
+    const onStart = vi.fn(); const onEnd = vi.fn();
+    speak('hi', { muted: false, synth, onStart, onEnd });
+    const u = utterances[0];
+    expect(u.onstart).toBe(onStart);
+    // onEnd covers both natural end and a cancelled/errored utterance.
+    expect(u.onend).toBe(onEnd);
+    expect(u.onerror).toBe(onEnd);
+    delete (globalThis as any).SpeechSynthesisUtterance;
   });
 });
