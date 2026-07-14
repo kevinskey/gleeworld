@@ -209,9 +209,29 @@ export async function executeClientAction(
           published_at: new Date().toISOString(),
         }).select();
         if (error || !data?.length) return { ok: false, message: `Couldn't add the video${error ? `: ${error.message}` : ' (no row returned — check permissions)'}.` };
-        // youtube_videos surface on the YouTube page (/youtube), NOT the
-        // uploaded-file library at /video — send the user where it shows.
-        return { ok: true, navigateTo: '/youtube', message: `Added "${title}" to your YouTube videos.` };
+        // Also surface it in the DASHBOARD YouTube section, a separate table
+        // (dashboard_youtube_videos) that feeds the home page's video widget —
+        // youtube_videos only shows on /youtube + the management module.
+        // `position` is a required varchar sort key; is_active/video_type/
+        // tenant_id all default (true / 'youtube' / current_tenant_id()).
+        // Best-effort: the primary save already succeeded, so a hiccup here
+        // must not fail the whole add.
+        const dash = await deps.supabase.from('dashboard_youtube_videos').insert({
+          video_id: videoId,
+          title,
+          video_url: `https://www.youtube.com/watch?v=${videoId}`,
+          position: String(Date.now()),
+        }).select();
+        const dashOk = !dash.error && !!dash.data?.length;
+        // Land on the dashboard, where the section now shows it; the video is
+        // also on /youtube and the YouTube management module.
+        return {
+          ok: true,
+          navigateTo: '/dashboard',
+          message: dashOk
+            ? `Added "${title}" to your videos.`
+            : `Added "${title}" to your YouTube videos (couldn't pin it to the dashboard section).`,
+        };
       }
       default:
         return { ok: false, message: `I can't perform "${action.tool}".` };
