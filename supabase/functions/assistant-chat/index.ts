@@ -5,7 +5,7 @@ import { toolsForRole, toOpenAiTools, TOOL_CATALOG, type AssistantRole } from '.
 import { buildSystemPrompt } from './prompt.ts';
 import { buildChatRequest, callModel, type ChatMessage } from './provider.ts';
 import { executeServerTool } from './executors.ts';
-import { validateCourseSpec } from './courseSpec.ts';
+import { validateCourseSpec } from '../_shared/courseSpec.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
