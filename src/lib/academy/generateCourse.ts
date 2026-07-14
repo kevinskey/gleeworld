@@ -21,8 +21,19 @@ export type GenerateResult =
 
 export async function generateCourse(supabase: SupabaseLike, input: CourseFormInput): Promise<GenerateResult> {
   const { data, error } = await supabase.functions.invoke('generate-course-draft', { body: input });
-  if (error) return { ok: false, message: `Couldn't generate the course: ${error.message ?? 'unknown error'}` };
-  // Edge fn returns {error} in the body for handled 4xx (invoke surfaces those as data).
+  if (error) {
+    // supabase-js throws FunctionsHttpError on ANY non-2xx response and hands
+    // it back as { data: null, error } where error.message is the fixed generic
+    // "Edge Function returned a non-2xx status code". Our edge fn returns ALL
+    // failures (403/400/422/500/502) as non-2xx, so the real, human-friendly
+    // {error: "..."} body lives ONLY on error.context (the Response). Pull it.
+    let body: any = null;
+    try { body = await (error as any).context?.json?.(); } catch { /* no parseable body */ }
+    return { ok: false, message: body?.error
+      ? String(body.error)
+      : `Couldn't generate the course: ${error.message ?? 'unknown error'}` };
+  }
+  // Belt-and-suspenders: surface {error} on a hypothetical future 2xx-with-error body.
   if (data?.error) return { ok: false, message: String(data.error) };
   if (!data?.course_code) return { ok: false, message: "Couldn't generate the course (no confirmation returned)." };
   return {

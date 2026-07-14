@@ -19,16 +19,25 @@ describe('generateCourse', () => {
     if (r.ok) { expect(r.courseCode).toBe('MUS-240'); expect(r.message).toContain('4 modules'); }
   });
 
-  it('surfaces edge fn errors', async () => {
+  it('falls back to the generic message when the error has no parseable body', async () => {
     const r = await generateCourse(sb({ data: null, error: { message: 'boom' } }), input);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.message).toContain('boom');
   });
 
-  it('surfaces a returned {error} body (edge fn non-2xx)', async () => {
-    const r = await generateCourse(sb({ data: { error: 'Only a director or admin can create courses.' }, error: null }), input);
+  it('surfaces the real {error} body from a non-2xx FunctionsHttpError (error.context)', async () => {
+    // supabase-js wraps every non-2xx as a FunctionsHttpError: error.message is the
+    // fixed generic string; the real body is only on error.context (the Response).
+    const httpErr = {
+      message: 'Edge Function returned a non-2xx status code',
+      context: { json: () => Promise.resolve({ error: 'Only a director or admin can create courses.' }) },
+    };
+    const r = await generateCourse(sb({ data: null, error: httpErr }), input);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.message).toContain('director or admin');
+    if (!r.ok) {
+      expect(r.message).toContain('director or admin');
+      expect(r.message).not.toContain('non-2xx'); // the useless generic message must NOT leak through
+    }
   });
 
   it('treats a missing course_code as failure', async () => {
