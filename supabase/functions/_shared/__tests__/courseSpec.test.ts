@@ -35,6 +35,7 @@ const valid = (): Record<string, unknown> => ({
   },
   repertoire: [{ title: 'Lift Every Voice and Sing' }],
   roster: [{ name: 'Ada Lovelace' }],
+  quizzes: [],
 });
 
 describe('validateCourseSpec', () => {
@@ -161,5 +162,46 @@ describe('validateCourseSpec', () => {
     const r = validateCourseSpec(overRoster);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toContain('201');
+  });
+
+  it('accepts a valid quizzes block (MC + true/false)', () => {
+    const r = validateCourseSpec({ ...valid(), quizzes: [{
+      title: 'Quiz 1: Spirituals',
+      questions: [
+        { type: 'multiple_choice', prompt: 'Who arranged "My Soul\'s Been Anchored"?', choices: ['Moses Hogan', 'Hall Johnson', 'Jester Hairston'], correct_index: 0, points: 5 },
+        { type: 'true_false', prompt: 'Spirituals originated as oral tradition.', correct_answer: true, points: 5 },
+      ],
+    }] });
+    expect(r.ok).toBe(true);
+  });
+
+  it('rejects an unknown question type (short_answer/multi_select excluded)', () => {
+    const bad = { ...valid(), quizzes: [{ title: 'Q', questions: [{ type: 'short_answer', prompt: 'x', correct_answer: ['y'] }] }] };
+    expect(validateCourseSpec(bad).ok).toBe(false);
+  });
+
+  it('rejects a fractional (non-integer) MC correct_index', () => {
+    const frac = { ...valid(), quizzes: [{ title: 'Q', questions: [{ type: 'multiple_choice', prompt: 'p', choices: ['a', 'b', 'c'], correct_index: 1.5 }] }] };
+    expect(validateCourseSpec(frac).ok).toBe(false);
+  });
+
+  it('rejects MC with correct_index out of range or <2 choices', () => {
+    const oob = { ...valid(), quizzes: [{ title: 'Q', questions: [{ type: 'multiple_choice', prompt: 'p', choices: ['a', 'b'], correct_index: 5 }] }] };
+    expect(validateCourseSpec(oob).ok).toBe(false);
+    const few = { ...valid(), quizzes: [{ title: 'Q', questions: [{ type: 'multiple_choice', prompt: 'p', choices: ['a'], correct_index: 0 }] }] };
+    expect(validateCourseSpec(few).ok).toBe(false);
+  });
+
+  it('rejects true_false without a boolean correct_answer', () => {
+    const bad = { ...valid(), quizzes: [{ title: 'Q', questions: [{ type: 'true_false', prompt: 'p', correct_answer: 'yes' }] }] };
+    expect(validateCourseSpec(bad).ok).toBe(false);
+  });
+
+  it('enforces quiz caps (<=6 quizzes, <=8 questions each, quiz needs a title + >=1 question)', () => {
+    const q = { title: 'Q', questions: [{ type: 'true_false', prompt: 'p', correct_answer: true }] };
+    expect(validateCourseSpec({ ...valid(), quizzes: Array.from({ length: 7 }, () => ({ ...q })) }).ok).toBe(false);
+    const manyQ = { title: 'Q', questions: Array.from({ length: 9 }, () => ({ type: 'true_false', prompt: 'p', correct_answer: true })) };
+    expect(validateCourseSpec({ ...valid(), quizzes: [manyQ] }).ok).toBe(false);
+    expect(validateCourseSpec({ ...valid(), quizzes: [{ title: '', questions: [] }] }).ok).toBe(false);
   });
 });

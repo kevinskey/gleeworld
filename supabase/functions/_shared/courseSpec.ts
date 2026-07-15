@@ -39,6 +39,15 @@ export interface CourseSpec {
   };
   repertoire?: Array<{ library_item_id?: string; title: string }>;
   roster?: Array<{ user_id?: string; name: string }>;
+  quizzes?: Array<{
+    title: string;
+    description?: string;
+    module_week?: number;
+    questions: Array<
+      | { type: 'multiple_choice'; prompt: string; choices: string[]; correct_index: number; points?: number; explanation?: string }
+      | { type: 'true_false'; prompt: string; correct_answer: boolean; points?: number; explanation?: string }
+    >;
+  }>;
 }
 
 const MAX_TEXT = 2000;
@@ -47,6 +56,9 @@ const MAX_ASSIGNMENTS_PER_MODULE = 8;
 const MAX_CRITERIA = 12;
 const MAX_ROSTER = 200;
 const MAX_REPERTOIRE = 50;
+const MAX_QUIZZES = 6;
+const MAX_QUESTIONS_PER_QUIZ = 8;
+const MAX_CHOICES = 5;
 const MAX_SESSIONS = 120;
 const MAX_SPEC_BYTES = 64 * 1024;
 const MAX_TERM_DAYS = 366;
@@ -205,6 +217,51 @@ export function validateCourseSpec(raw: unknown): Ok | Err {
       }
       const we = tooLong(`repertoire item ${i + 1} title`, w.title);
       if (we) return { ok: false, error: we };
+    }
+  }
+
+  if (raw.quizzes !== undefined) {
+    if (!Array.isArray(raw.quizzes)) return { ok: false, error: 'quizzes must be an array.' };
+    if (raw.quizzes.length > MAX_QUIZZES) return { ok: false, error: `too many quizzes (${raw.quizzes.length}, max ${MAX_QUIZZES}).` };
+    for (const [qi, qz] of raw.quizzes.entries()) {
+      if (!isObj(qz) || typeof qz.title !== 'string' || qz.title.trim() === '') {
+        return { ok: false, error: `quiz ${qi + 1} needs a title.` };
+      }
+      const te = tooLong(`quiz ${qi + 1} title`, qz.title) ?? tooLong(`quiz ${qi + 1} description`, qz.description);
+      if (te) return { ok: false, error: te };
+      if (!Array.isArray(qz.questions) || qz.questions.length === 0) {
+        return { ok: false, error: `quiz ${qi + 1} needs at least one question.` };
+      }
+      if (qz.questions.length > MAX_QUESTIONS_PER_QUIZ) {
+        return { ok: false, error: `quiz ${qi + 1} has ${qz.questions.length} questions (max ${MAX_QUESTIONS_PER_QUIZ}).` };
+      }
+      for (const [xi, q] of qz.questions.entries()) {
+        const where = `quiz ${qi + 1} question ${xi + 1}`;
+        if (!isObj(q) || typeof q.prompt !== 'string' || q.prompt.trim() === '') {
+          return { ok: false, error: `${where} needs a prompt.` };
+        }
+        const pe = tooLong(`${where} prompt`, q.prompt);
+        if (pe) return { ok: false, error: pe };
+        if (q.type === 'multiple_choice') {
+          if (!Array.isArray(q.choices) || q.choices.length < 2 || q.choices.length > MAX_CHOICES
+            || !q.choices.every((c) => typeof c === 'string' && c.trim() !== '')) {
+            return { ok: false, error: `${where} needs 2-${MAX_CHOICES} non-empty choices.` };
+          }
+          if (typeof q.correct_index !== 'number' || !Number.isInteger(q.correct_index)
+            || q.correct_index < 0 || q.correct_index >= q.choices.length) {
+            return { ok: false, error: `${where} correct_index must be an integer in range.` };
+          }
+        } else if (q.type === 'true_false') {
+          if (typeof q.correct_answer !== 'boolean') {
+            return { ok: false, error: `${where} (true_false) needs a boolean correct_answer.` };
+          }
+        } else {
+          return { ok: false, error: `${where} has an unsupported type (only multiple_choice and true_false are allowed).` };
+        }
+        if (q.points !== undefined && (typeof q.points !== 'number' || q.points < 0)) {
+          return { ok: false, error: `${where} points must be a non-negative number.` };
+        }
+      }
     }
   }
 
