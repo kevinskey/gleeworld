@@ -33,7 +33,8 @@ export function buildGenerationMessages(
     '  "repertoire"?: [{ "library_item_id"?: string, "title": string }],',
     '  "roster"?: [{ "user_id"?: string, "name": string }]',
     '}',
-    'Rules: author real module descriptions and real assignment prompts (never stubs). Derive rubric criteria/weights from the grading approach. Copy meeting_patterns straight from the input. Pass repertoire and roster through unchanged. Keep each text field under 2000 characters and at most 16 modules, 8 assignments per module. Do NOT invent quiz questions.',
+    'Rules: author real module descriptions and real assignment prompts (never stubs). Derive rubric criteria/weights from the grading approach. Copy meeting_patterns straight from the input. Pass repertoire and roster through unchanged. Do NOT invent quiz questions.',
+    'Keep the whole course COMPACT so it fits in one response: at most 12 modules (roughly one per week of the term), 1-2 assignments per module, module descriptions 2-3 sentences, assignment instructions ~60-120 words, and 3-6 rubric criteria. Return the COMPLETE JSON object — never truncate it.',
     `Now: ${nowIso}.`,
   ].join('\n');
 

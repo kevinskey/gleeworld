@@ -51,13 +51,23 @@ async function generateSpec(messages: Array<{ role: string; content: string }>, 
   const res = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 4000, response_format: { type: 'json_object' } }),
+    body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 8000, response_format: { type: 'json_object' } }),
   });
-  if (!res.ok) throw new Error(`Model API ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const data = await res.json();
-  const content = data?.choices?.[0]?.message?.content;
-  if (typeof content !== 'string') throw new Error('Model returned no content');
-  return JSON.parse(content);
+  const raw = await res.text();
+  if (!res.ok) throw new Error(`Model API ${res.status}: ${raw.slice(0, 200)}`);
+  let data: any;
+  try { data = JSON.parse(raw); } catch { throw new Error(`Model API returned a non-JSON body: ${raw.slice(0, 150)}`); }
+  const choice = data?.choices?.[0];
+  const content = choice?.message?.content;
+  const finish = choice?.finish_reason ?? 'unknown';
+  if (typeof content !== 'string' || content.trim() === '') {
+    throw new Error(`Model returned empty content (finish_reason=${finish})`);
+  }
+  if (finish === 'length') {
+    throw new Error('The generated course was too long and got cut off — try fewer weeks or simpler goals.');
+  }
+  try { return JSON.parse(content); }
+  catch { throw new Error(`Model returned malformed JSON (finish_reason=${finish}, ${content.length} chars)`); }
 }
 
 serve(async (req) => {
