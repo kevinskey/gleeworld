@@ -180,6 +180,11 @@ describe('validateCourseSpec', () => {
     expect(validateCourseSpec(bad).ok).toBe(false);
   });
 
+  it('rejects a fractional (non-integer) MC correct_index', () => {
+    const frac = { ...valid(), quizzes: [{ title: 'Q', questions: [{ type: 'multiple_choice', prompt: 'p', choices: ['a', 'b', 'c'], correct_index: 1.5 }] }] };
+    expect(validateCourseSpec(frac).ok).toBe(false);
+  });
+
   it('rejects MC with correct_index out of range or <2 choices', () => {
     const oob = { ...valid(), quizzes: [{ title: 'Q', questions: [{ type: 'multiple_choice', prompt: 'p', choices: ['a', 'b'], correct_index: 5 }] }] };
     expect(validateCourseSpec(oob).ok).toBe(false);

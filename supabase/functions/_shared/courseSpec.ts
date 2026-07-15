@@ -247,8 +247,9 @@ export function validateCourseSpec(raw: unknown): Ok | Err {
             || !q.choices.every((c) => typeof c === 'string' && c.trim() !== '')) {
             return { ok: false, error: `${where} needs 2-${MAX_CHOICES} non-empty choices.` };
           }
-          if (typeof q.correct_index !== 'number' || q.correct_index < 0 || q.correct_index >= q.choices.length) {
-            return { ok: false, error: `${where} correct_index is out of range.` };
+          if (typeof q.correct_index !== 'number' || !Number.isInteger(q.correct_index)
+            || q.correct_index < 0 || q.correct_index >= q.choices.length) {
+            return { ok: false, error: `${where} correct_index must be an integer in range.` };
           }
         } else if (q.type === 'true_false') {
           if (typeof q.correct_answer !== 'boolean') {
