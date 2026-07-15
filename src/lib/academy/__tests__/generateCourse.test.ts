@@ -12,11 +12,11 @@ function sb(resp: { data?: unknown; error?: unknown }) {
 
 describe('generateCourse', () => {
   it('invokes the edge fn and returns the course code on success', async () => {
-    const supabase = sb({ data: { course_id: 'c1', course_code: 'MUS-240', module_count: 4, assignment_count: 9, session_count: 28 }, error: null });
+    const supabase = sb({ data: { course_id: 'c1', course_code: 'MUS-240', module_count: 4, assignment_count: 9, session_count: 28, quiz_count: 2 }, error: null });
     const r = await generateCourse(supabase, input);
     expect(supabase.functions.invoke).toHaveBeenCalledWith('generate-course-draft', { body: input });
     expect(r.ok).toBe(true);
-    if (r.ok) { expect(r.courseCode).toBe('MUS-240'); expect(r.message).toContain('4 modules'); }
+    if (r.ok) { expect(r.courseCode).toBe('MUS-240'); expect(r.message).toContain('4 modules'); expect(r.message).toContain('2 quizzes'); }
   });
 
   it('falls back to the generic message when the error has no parseable body', async () => {

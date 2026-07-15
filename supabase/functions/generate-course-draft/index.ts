@@ -43,6 +43,15 @@ function sanitizeSpecText(spec: CourseSpec): CourseSpec {
       if (c.description !== undefined) c.description = stripTags(c.description);
     }
   }
+  for (const qz of (spec as any).quizzes ?? []) {
+    if (qz.title !== undefined) qz.title = stripTags(qz.title);
+    if (qz.description !== undefined) qz.description = stripTags(qz.description);
+    for (const q of qz.questions ?? []) {
+      if (q.prompt !== undefined) q.prompt = stripTags(q.prompt);
+      if (q.explanation !== undefined) q.explanation = stripTags(q.explanation);
+      if (Array.isArray(q.choices)) q.choices = q.choices.map(stripTags);
+    }
+  }
   return spec;
 }
 

@@ -39,6 +39,6 @@ export async function generateCourse(supabase: SupabaseLike, input: CourseFormIn
   return {
     ok: true,
     courseCode: String(data.course_code),
-    message: `Draft "${String(data.title ?? '')}" created — ${data.module_count} modules, ${data.assignment_count} assignments, ${data.session_count} class sessions.`,
+    message: `Draft "${String(data.title ?? '')}" created — ${data.module_count} modules, ${data.assignment_count} assignments, ${data.session_count} class sessions${data.quiz_count ? `, ${data.quiz_count} quizzes` : ''}.`,
   };
 }
