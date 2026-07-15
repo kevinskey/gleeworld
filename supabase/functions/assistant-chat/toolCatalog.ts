@@ -173,6 +173,123 @@ export const TOOL_CATALOG: ToolDef[] = [
     },
     minRole: 'admin', execution: 'client', confirm: false,
   },
+  {
+    name: 'create_course_draft',
+    description: 'Create a complete DRAFT course in the Academy from your interview with the teacher: modules, assignments with prompts, a rubric, class sessions expanded from the meeting schedule, a repertoire playlist shell, and a pending roster. Students cannot see drafts. Interview first (see the course-builder rules in your instructions), summarize, get a verbal yes, then call ONCE with the full spec. REQUIRES user confirmation.',
+    parameters: {
+      type: 'object',
+      properties: {
+        spec: {
+          type: 'object',
+          description: 'The full CourseSpec',
+          properties: {
+            title: str('Course title'),
+            course_code: str('Short code like MUS-240 (suggest one if the teacher has none)'),
+            description: str('1-3 sentence course description'),
+            semester: str('e.g. FALL 2026'),
+            start_date: str('Term start, YYYY-MM-DD'),
+            end_date: str('Term end, YYYY-MM-DD'),
+            meeting_patterns: {
+              type: 'array',
+              description: 'Weekly meeting times',
+              items: {
+                type: 'object',
+                properties: {
+                  weekday: { type: 'number', description: '0=Sunday .. 6=Saturday' },
+                  start_time: str('HH:MM 24h'),
+                  end_time: str('HH:MM 24h'),
+                  location: str('Room (optional)'),
+                },
+                required: ['weekday', 'start_time', 'end_time'],
+              },
+            },
+            breaks: {
+              type: 'array',
+              description: 'Date ranges with no class',
+              items: {
+                type: 'object',
+                properties: { from: str('YYYY-MM-DD'), to: str('YYYY-MM-DD'), name: str('e.g. Fall break') },
+                required: ['from', 'to'],
+              },
+            },
+            modules: {
+              type: 'array',
+              description: 'Max 16. Each with full descriptions, not stubs.',
+              items: {
+                type: 'object',
+                properties: {
+                  title: str('Module title, e.g. "Week 3: Legato gesture"'),
+                  description: str('2-5 sentence module description'),
+                  week_number: { type: 'number', description: 'Week of term, 1-based' },
+                  learning_objectives: { type: 'array', items: { type: 'string' } },
+                  assignments: {
+                    type: 'array',
+                    description: 'Max 8 per module, with authored prompts',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        title: str('Assignment title'),
+                        description: str('Short summary'),
+                        instructions: str('Full authored prompt the student reads'),
+                        points: { type: 'number', description: 'Point value' },
+                        due_at: str('ISO datetime with timezone'),
+                        assignment_type: str('standard|performance|reflection (optional)'),
+                        category: str('Grading category (optional)'),
+                      },
+                      required: ['title', 'points', 'due_at'],
+                    },
+                  },
+                },
+                required: ['title', 'week_number', 'assignments'],
+              },
+            },
+            rubric: {
+              type: 'object',
+              properties: {
+                title: str('Rubric title'),
+                description: str('Optional'),
+                criteria: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: str('Criterion'),
+                      description: str('Optional'),
+                      max_points: { type: 'number', description: 'Max points' },
+                      weight_percentage: { type: 'number', description: 'Weight 0-100' },
+                    },
+                    required: ['name', 'max_points', 'weight_percentage'],
+                  },
+                },
+              },
+              required: ['title', 'criteria'],
+            },
+            repertoire: {
+              type: 'array',
+              description: 'Pieces for the course playlist. Resolve ids with search_music first; keep raw titles when unmatched.',
+              items: {
+                type: 'object',
+                properties: { library_item_id: str('gw_sheet_music id if resolved'), title: str('Piece title') },
+                required: ['title'],
+              },
+            },
+            roster: {
+              type: 'array',
+              description: 'Who to enroll AT PUBLISH (not at draft). Resolve user_id via find_user when possible.',
+              items: {
+                type: 'object',
+                properties: { user_id: str('gw_profiles user id if resolved'), name: str('Display name') },
+                required: ['name'],
+              },
+            },
+          },
+          required: ['title', 'start_date', 'end_date', 'meeting_patterns', 'modules'],
+        },
+      },
+      required: ['spec'],
+    },
+    minRole: 'admin', execution: 'client', confirm: true,
+  },
 ];
 
 export function toolsForRole(role: AssistantRole): ToolDef[] {

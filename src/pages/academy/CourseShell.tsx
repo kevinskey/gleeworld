@@ -11,7 +11,7 @@
  * existing component exists (gradebook, attendance grid, modules), we
  * wrap it. Where none does, we render a clean fresh implementation.
  */
-import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef, lazy, Suspense } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery as useQueryReactQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +36,7 @@ import { StudentDetailDialog } from "@/components/academy/StudentDetailDialog";
 import { CourseCohortsPanel } from "@/components/academy/CourseCohortsPanel";
 import { SimpleMarkdown } from "@/components/markdown/SimpleMarkdown";
 import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
+import { publishCourse } from "@/lib/academy/publishCourse";
 const PollsAddon = lazy(() => import("@/components/academy/addons/PollsAddon"));
 const QRAttendanceAddon = lazy(() => import("@/components/academy/addons/QRAttendanceAddon"));
 const TourAddon = lazy(() => import("@/components/academy/addons/TourAddon"));
@@ -82,6 +83,8 @@ interface CourseRow {
   instructor_id: string | null;
   instructor_name: string | null;
   semester: string | null;
+  status: string | null;
+  pending_enrollments: Array<{ user_id?: string; name: string }> | null;
 }
 
 type TabKey =
@@ -119,48 +122,53 @@ export default function CourseShell() {
 
   const [course, setCourse] = useState<CourseRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [publishing, setPublishing] = useState(false);
   const activeTab = (searchParams.get("tab") as TabKey) || "overview";
 
   const isAdmin = !!(profile?.is_super_admin || profile?.is_admin || profile?.role === "super-admin" || profile?.role === "admin");
   const isInstructor = course?.instructor_id === user?.id;
   const canEdit = isAdmin || isInstructor;
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      if (!code) return;
-      setLoading(true);
-      // Two encoding conventions exist in the wild:
-      //   legacy: "MUS 101" stored, URL is "mus-101" (hyphen→space)
-      //   templates / new: "TPL-CHOIR101" stored, URL is "tpl-choir101" (hyphen kept)
-      // Try both — exact match on the as-is uppercase first, then the
-      // hyphen-as-space variant. Don't use .or() with raw user input
-      // because spaces break PostgREST's filter parser.
-      const asIs = code.toUpperCase();
-      const spaced = code.replace(/-/g, " ").toUpperCase();
-      const select =
-        "id, course_code, title, description, instructor_id, instructor_name, semester";
-      const tryFetch = async (codeValue: string) => {
-        const { data, error } = await supabase
-          .from("gw_courses")
-          .select(select)
-          .eq("course_code", codeValue)
-          .eq("is_active", true)
-          .limit(1)
-          .maybeSingle();
-        if (error) return null;
-        return data;
-      };
-      let row = await tryFetch(asIs);
-      if (!row && spaced !== asIs) row = await tryFetch(spaced);
-      if (!cancelled) {
-        setCourse((row || null) as CourseRow | null);
-        setLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
+  // Guards against a late-resolving fetch from a previous `code` clobbering
+  // fresher state: this route (/academy/c/:code) has no key prop, so React
+  // reuses the CourseShell instance across code changes rather than remounting.
+  // A monotonic request id covers both the effect and the Publish-button paths.
+  const loadReqId = useRef(0);
+  const loadCourse = useCallback(async () => {
+    if (!code) return;
+    const reqId = ++loadReqId.current;
+    setLoading(true);
+    // Two encoding conventions exist in the wild:
+    //   legacy: "MUS 101" stored, URL is "mus-101" (hyphen→space)
+    //   templates / new: "TPL-CHOIR101" stored, URL is "tpl-choir101" (hyphen kept)
+    // Try both — exact match on the as-is uppercase first, then the
+    // hyphen-as-space variant. Don't use .or() with raw user input
+    // because spaces break PostgREST's filter parser.
+    const asIs = code.toUpperCase();
+    const spaced = code.replace(/-/g, " ").toUpperCase();
+    const select =
+      "id, course_code, title, description, instructor_id, instructor_name, semester, status, pending_enrollments";
+    const tryFetch = async (codeValue: string) => {
+      const { data, error } = await supabase
+        .from("gw_courses")
+        .select(select)
+        .eq("course_code", codeValue)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    };
+    let row = await tryFetch(asIs);
+    if (!row && spaced !== asIs) row = await tryFetch(spaced);
+    if (loadReqId.current !== reqId) return; // a newer load superseded this one
+    setCourse((row || null) as CourseRow | null);
+    setLoading(false);
   }, [code]);
+
+  useEffect(() => {
+    loadCourse();
+  }, [loadCourse]);
 
   function switchTab(t: TabKey) {
     const sp = new URLSearchParams(searchParams);
@@ -221,6 +229,39 @@ export default function CourseShell() {
           )}
         </div>
       </div>
+
+      {course.status === 'draft' && canEdit && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-300/60 bg-amber-50 p-3 dark:border-amber-500/40 dark:bg-amber-950/30">
+            <p className="text-sm text-amber-900 dark:text-amber-200">
+              Draft — review and publish. Students can’t see this course yet.
+            </p>
+            <Button
+              size="sm"
+              disabled={publishing}
+              onClick={async () => {
+                setPublishing(true);
+                try {
+                  const r = await publishCourse(supabase, {
+                    id: course.id,
+                    pending_enrollments: course.pending_enrollments ?? null,
+                  });
+                  if (r.ok) {
+                    toast.success(r.message);
+                    await loadCourse();
+                  } else {
+                    toast.error(r.message);
+                  }
+                } finally {
+                  setPublishing(false);
+                }
+              }}
+            >
+              {publishing ? 'Publishing…' : 'Publish'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-[14rem_1fr] gap-6">
         {/* Left rail */}

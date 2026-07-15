@@ -5,6 +5,7 @@ import { toolsForRole, toOpenAiTools, TOOL_CATALOG, type AssistantRole } from '.
 import { buildSystemPrompt } from './prompt.ts';
 import { buildChatRequest, callModel, type ChatMessage } from './provider.ts';
 import { executeServerTool } from './executors.ts';
+import { validateCourseSpec } from './courseSpec.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -84,6 +85,15 @@ serve(async (req) => {
           });
         } else {
           // Client-executed: queue it for the browser and tell the model it's underway.
+          if (def.name === 'create_course_draft') {
+            const v = validateCourseSpec(args.spec);
+            if (!v.ok) {
+              // Feed the structured error back so the model can fix the spec —
+              // never queue a confirm card for a spec the RPC would reject.
+              messages.push({ role: 'tool', content: JSON.stringify({ error: v.error }), tool_call_id: tc.id });
+              continue;
+            }
+          }
           actions.push({ tool: def.name, args, confirm: def.confirm });
           result = JSON.stringify(
             def.confirm

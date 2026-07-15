@@ -22,4 +22,16 @@ describe('buildSystemPrompt', () => {
     const p = buildSystemPrompt({ ...ctx, role: 'member' });
     expect(p.toLowerCase()).toContain('cannot send');
   });
+
+  it('admins get the course-builder interview section; members do not', () => {
+    const base = {
+      firstName: 'Kevin', tenantName: 'GleeWorld', activeModules: [],
+      nowIso: '2026-07-13T12:00:00Z', timezone: 'America/New_York',
+    };
+    const admin = buildSystemPrompt({ ...base, role: 'admin' as const });
+    const member = buildSystemPrompt({ ...base, role: 'member' as const });
+    expect(admin).toContain('create_course_draft');
+    expect(admin).toContain('draft course');
+    expect(member).not.toContain('create_course_draft');
+  });
 });
