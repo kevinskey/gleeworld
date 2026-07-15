@@ -3,7 +3,8 @@
 
 -- 1) Course editors (incl. instructors) can create tests via the RPC (existing
 -- "Admins can manage tests" is is_admin-flag-only; is_course_editor() is deployed).
--- gw_course_tests is a real prod table from 20260615000000_quiz_questions.sql and
+-- gw_course_tests is a real prod table from 20251215134319 (20260615000000 only
+-- adds the questions/attempts/answers tables) and
 -- predates this migrations-tests/ scratch harness, which builds it only as a
 -- stand-in inside its own test file (after this migration runs). Guard the DDL
 -- so it's a no-op there and takes effect wherever the table actually exists
@@ -163,11 +164,11 @@ BEGIN
     FOR q IN SELECT value AS quiz FROM jsonb_array_elements(spec->'quizzes')
     LOOP
       IF trim(coalesce(q.quiz->>'title','')) = '' THEN RAISE EXCEPTION 'quiz title missing'; END IF;
-      INSERT INTO gw_course_tests (course_id, title, description, test_type, total_points, is_published, created_by)
+      INSERT INTO gw_course_tests (course_id, title, description, test_type, total_points, is_published, created_by, tenant_id)
       VALUES (
         v_course_id, q.quiz->>'title', q.quiz->>'description', 'quiz',
         coalesce((SELECT sum(coalesce((qq->>'points')::int, 10)) FROM jsonb_array_elements(q.quiz->'questions') qq), 0),
-        false, auth.uid()
+        false, auth.uid(), current_tenant_id()
       ) RETURNING id INTO v_test_id;
       v_quiz_count := v_quiz_count + 1;
 
@@ -188,10 +189,10 @@ BEGIN
           RAISE EXCEPTION 'unsupported question type %', x.qn->>'type';
         END IF;
 
-        INSERT INTO gw_course_test_questions (test_id, position, question_type, prompt, options, correct_answer, explanation, points)
+        INSERT INTO gw_course_test_questions (test_id, position, question_type, prompt, options, correct_answer, explanation, points, tenant_id)
         VALUES (
           v_test_id, x.pos::int, x.qn->>'type', x.qn->>'prompt', v_opts, v_correct,
-          x.qn->>'explanation', coalesce((x.qn->>'points')::int, 10)
+          x.qn->>'explanation', coalesce((x.qn->>'points')::int, 10), current_tenant_id()
         );
       END LOOP;
     END LOOP;
