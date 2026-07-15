@@ -3,7 +3,7 @@
 // the teacher on the new course's deep page.
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, BookOpen, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AiCourseForm } from '@/components/academy/AiCourseForm';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -25,6 +26,8 @@ export default function NewCoursePage() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mode = searchParams.get('mode') === 'manual' ? 'manual' : 'ai';
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
@@ -92,87 +95,102 @@ export default function NewCoursePage() {
         </div>
       </div>
 
-      <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 inline-flex items-center justify-center">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <h2 className="font-semibold">Course details</h2>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Course code *</Label>
-              <Input
-                value={form.course_code}
-                onChange={(e) => update('course_code', e.target.value)}
-                placeholder="MUS-101"
-                className="font-mono"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Semester</Label>
-              <Input
-                value={form.semester}
-                onChange={(e) => update('semester', e.target.value)}
-                placeholder="Fall 2026"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">Title *</Label>
-            <Input
-              value={form.title}
-              onChange={(e) => update('title', e.target.value)}
-              placeholder="Introduction to Music Theory"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">Description</Label>
-            <Textarea
-              value={form.description}
-              onChange={(e) => update('description', e.target.value)}
-              rows={3}
-              placeholder="Brief overview of what students will learn."
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Default location</Label>
-              <Input
-                value={form.default_location}
-                onChange={(e) => update('default_location', e.target.value)}
-                placeholder="Music Hall 201"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Max enrollment</Label>
-              <Input
-                type="number"
-                value={form.max_enrollment}
-                onChange={(e) => update('max_enrollment', parseInt(e.target.value) || 30)}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2 border-t">
-            <Label className="text-sm">Free to enroll</Label>
-            <Switch checked={form.is_free} onCheckedChange={(c) => update('is_free', c)} />
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center justify-end gap-2">
-        <Button variant="outline" onClick={() => navigate('/academy')}>Cancel</Button>
-        <Button onClick={save} disabled={submitting}>
-          {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Check className="w-4 h-4 mr-1.5" />}
-          Create course
-        </Button>
+      <div className="mb-4 flex items-center gap-3 text-sm">
+        <span className="font-medium">New course</span>
+        <button type="button" className={mode === 'ai' ? 'underline font-medium' : 'text-muted-foreground'}
+          onClick={() => setSearchParams({ mode: 'ai' })}>Create with AI</button>
+        <span className="text-muted-foreground">·</span>
+        <button type="button" className={mode === 'manual' ? 'underline font-medium' : 'text-muted-foreground'}
+          onClick={() => setSearchParams({ mode: 'manual' })}>Empty course</button>
       </div>
+
+      {mode === 'ai' ? (
+        <AiCourseForm />
+      ) : (
+        <>
+          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 inline-flex items-center justify-center">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <h2 className="font-semibold">Course details</h2>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Course code *</Label>
+                  <Input
+                    value={form.course_code}
+                    onChange={(e) => update('course_code', e.target.value)}
+                    placeholder="MUS-101"
+                    className="font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Semester</Label>
+                  <Input
+                    value={form.semester}
+                    onChange={(e) => update('semester', e.target.value)}
+                    placeholder="Fall 2026"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Title *</Label>
+                <Input
+                  value={form.title}
+                  onChange={(e) => update('title', e.target.value)}
+                  placeholder="Introduction to Music Theory"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs">Description</Label>
+                <Textarea
+                  value={form.description}
+                  onChange={(e) => update('description', e.target.value)}
+                  rows={3}
+                  placeholder="Brief overview of what students will learn."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Default location</Label>
+                  <Input
+                    value={form.default_location}
+                    onChange={(e) => update('default_location', e.target.value)}
+                    placeholder="Music Hall 201"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Max enrollment</Label>
+                  <Input
+                    type="number"
+                    value={form.max_enrollment}
+                    onChange={(e) => update('max_enrollment', parseInt(e.target.value) || 30)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t">
+                <Label className="text-sm">Free to enroll</Label>
+                <Switch checked={form.is_free} onCheckedChange={(c) => update('is_free', c)} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" onClick={() => navigate('/academy')}>Cancel</Button>
+            <Button onClick={save} disabled={submitting}>
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Check className="w-4 h-4 mr-1.5" />}
+              Create course
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
