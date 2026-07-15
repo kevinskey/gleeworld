@@ -35,4 +35,13 @@ describe('buildGenerationMessages', () => {
     );
     expect(msgs[1].content).toContain('X');
   });
+
+  it('instructs quiz drafting with only multiple_choice and true_false', () => {
+    const msgs = buildGenerationMessages(input, '2026-07-14T12:00:00Z');
+    const all = msgs.map((m) => m.content).join('\n');
+    expect(all).toContain('quizzes');
+    expect(all).toContain('multiple_choice');
+    expect(all).toContain('true_false');
+    expect(all).toContain('correct_index');
+  });
 });
