@@ -10,16 +10,7 @@ import { Download, Printer } from "lucide-react";
 import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getOrgName } from '@/lib/orgName';
-
-const BRAND = {
-  name: getOrgName(),
-  address: "350 Concert Hall Drive, SW",
-  cityStateZip: "Atlanta, GA 30314",
-  taxId: "58-0566243",
-  taxNotice:
-    "Riverside Music Institute is a 501(c)(3) nonprofit organization. EIN: 58-0566243. No goods or services were provided in exchange for this contribution unless otherwise noted. This invoice serves as your receipt for tax purposes.",
-};
+import { getInvoiceOrgIdentity, buildTaxNotice } from '@/lib/invoiceOrg';
 
 interface InvoicePreviewProps {
   invoice: any;
@@ -30,6 +21,19 @@ interface InvoicePreviewProps {
 export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewProps) => {
   const printRef = useRef<HTMLDivElement>(null);
   const lineItems = invoice.line_items || [];
+
+  // Org "From" identity: prefer values carried on the invoice (live preview of
+  // unsaved edits), otherwise fall back to the tenant's saved identity. Nothing
+  // is hardcoded — blank fields simply render nothing.
+  const saved = getInvoiceOrgIdentity();
+  const org = {
+    name: invoice.org_name ?? saved.name,
+    address: invoice.org_address ?? saved.address,
+    cityStateZip: invoice.org_city_state_zip ?? saved.cityStateZip,
+    taxId: invoice.org_tax_id ?? saved.taxId,
+    taxStatus: invoice.org_tax_status ?? saved.taxStatus,
+  };
+  const taxNotice = buildTaxNotice(org);
 
   const handlePrint = () => {
     const content = printRef.current;
@@ -62,15 +66,13 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
     // Header
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text(BRAND.name, margin, y);
+    doc.text(org.name, margin, y);
     y += 7;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(BRAND.address, margin, y);
-    y += 5;
-    doc.text(BRAND.cityStateZip, margin, y);
-    y += 5;
-    doc.text(`EIN: ${BRAND.taxId}`, margin, y);
+    if (org.address) { doc.text(org.address, margin, y); y += 5; }
+    if (org.cityStateZip) { doc.text(org.cityStateZip, margin, y); y += 5; }
+    if (org.taxId) { doc.text(`EIN: ${org.taxId}`, margin, y); }
 
     // Invoice number + date (right side)
     doc.setFontSize(22);
@@ -91,9 +93,9 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
     doc.text("Prepared By:", margin, y);
     doc.setFont("helvetica", "normal");
     y += 5;
-    doc.text(invoice.director_name || "Dr. Kevin Phillip Johnson", margin, y);
+    doc.text(invoice.director_name || "", margin, y);
     y += 5;
-    doc.text(invoice.director_title || `Director, ${getOrgName()}`, margin, y);
+    doc.text(invoice.director_title || `Director, ${org.name}`, margin, y);
     y += 12;
 
     // Bill To
@@ -156,15 +158,17 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
       y += lines.length * 5 + 10;
     }
 
-    // Tax notice
-    doc.setFillColor(248, 248, 248);
-    doc.rect(margin, y, 170, 25, "F");
-    doc.setDrawColor(0, 54, 102);
-    doc.line(margin, y, margin, y + 25);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    const taxLines = doc.splitTextToSize(BRAND.taxNotice, 165);
-    doc.text(taxLines, margin + 3, y + 5);
+    // Tax notice — only when the org provided tax details.
+    if (taxNotice) {
+      doc.setFillColor(248, 248, 248);
+      doc.rect(margin, y, 170, 25, "F");
+      doc.setDrawColor(0, 54, 102);
+      doc.line(margin, y, margin, y + 25);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "italic");
+      const taxLines = doc.splitTextToSize(taxNotice, 165);
+      doc.text(taxLines, margin + 3, y + 5);
+    }
 
     // Save + optionally store in media library
     const pdfBlob = doc.output("blob");
@@ -245,10 +249,10 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h1 className="text-xl font-bold text-[#150d26]">{BRAND.name}</h1>
-              <p className="text-sm text-gray-600">{BRAND.address}</p>
-              <p className="text-sm text-gray-600">{BRAND.cityStateZip}</p>
-              <p className="text-sm text-gray-600 mt-1">EIN: {BRAND.taxId}</p>
+              <h1 className="text-xl font-bold text-[#150d26]">{org.name}</h1>
+              {org.address && <p className="text-sm text-gray-600">{org.address}</p>}
+              {org.cityStateZip && <p className="text-sm text-gray-600">{org.cityStateZip}</p>}
+              {org.taxId && <p className="text-sm text-gray-600 mt-1">EIN: {org.taxId}</p>}
             </div>
             <div className="text-right">
               <h2 className="text-3xl font-bold text-[#150d26]">INVOICE</h2>
@@ -327,10 +331,12 @@ export const InvoicePreview = ({ invoice, open, onOpenChange }: InvoicePreviewPr
             </div>
           )}
 
-          {/* Tax Notice */}
-          <div className="border-l-4 border-[#150d26] bg-gray-50 p-4 mt-8">
-            <p className="text-xs text-gray-600 italic">{BRAND.taxNotice}</p>
-          </div>
+          {/* Tax Notice — only when the org provided tax details */}
+          {taxNotice && (
+            <div className="border-l-4 border-[#150d26] bg-gray-50 p-4 mt-8">
+              <p className="text-xs text-gray-600 italic">{taxNotice}</p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
