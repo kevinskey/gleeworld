@@ -61,17 +61,14 @@ const DRUM_KIT_FOR: Record<string, 'timpani' | 'djembe' | 'drumset' | undefined>
   drum_drumset: 'drumset',
 };
 
-// On web the files are served from the same origin as the SPA. On native
-// (Capacitor iOS) the bundle doesn't ship the ~48MB of soundfont JS files,
-// so resolve to the platform domain where nginx serves them (with CORS
-// open for capacitor:// origin).
-const IS_NATIVE_RUNTIME =
-  typeof window !== 'undefined' &&
-  ((window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.() === true ||
-    window.location.protocol === 'capacitor:');
-const SOUNDFONT_BASE = IS_NATIVE_RUNTIME
-  ? 'https://gleeworld.org/soundfonts/'
-  : '/soundfonts/';
+// MIDI.js soundfonts (base64 mp3 samples) served from gleitz's public CDN,
+// which is allowlisted in the CSP connect-src. The former self-hosted
+// `/soundfonts/{instrument}-mp3.js` (and the native gleeworld.org mirror)
+// both 404'd — those ~48MB of files were never deployed — so smplr parsed
+// nginx's 404 HTML and every instrument voice was silent. The CDN hosts
+// the same FatBoy soundfont GM voices under identical filenames and works
+// on web and Capacitor alike.
+const SOUNDFONT_BASE = 'https://gleitz.github.io/midi-js-soundfonts/FatBoy/';
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
 const WHITE = new Set(['C', 'D', 'E', 'F', 'G', 'A', 'B']);
@@ -121,9 +118,15 @@ export function InstrumentPlayer({ className }: InstrumentPlayerProps) {
     let player: Soundfont | null = null;
     try {
       const ctx = Tone.getContext().rawContext as AudioContext;
+      // Route the voice straight to the context's speakers via the
+      // constructor `destination`. The old code connected `player.output`
+      // to Tone's master AFTER load, but smplr's player has no such
+      // AudioNode `.output` (`player.output.connect is not a function`),
+      // so the throw left the voice unconnected and silent.
       player = new Soundfont(ctx, {
         instrument: instrument,
         instrumentUrl: `${SOUNDFONT_BASE}${instrument}-mp3.js`,
+        destination: ctx.destination,
       });
       sampleRef.current = player;
     } catch (err) {
@@ -135,11 +138,6 @@ export function InstrumentPlayer({ className }: InstrumentPlayerProps) {
     player.load
       .then(() => {
         if (cancelled || !player) return;
-        try {
-          player.output.connect(Tone.getDestination().input as any);
-        } catch (err) {
-          console.warn('[InstrumentPlayer] connect failed', err);
-        }
         setLoading(false);
       })
       .catch((err) => {

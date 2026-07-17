@@ -29,7 +29,11 @@ interface DrumsPlayerProps {
   embedded?: boolean;
 }
 
-const SOUNDFONT_BASE = '/soundfonts/';
+// Same fix as InstrumentPlayer: the self-hosted /soundfonts/{name}-mp3.js
+// files were never deployed (404 → smplr parsed nginx's 404 HTML → silent).
+// Point at gleitz's public MIDI.js soundfont CDN (allowlisted in the CSP
+// connect-src); works on web and Capacitor.
+const SOUNDFONT_BASE = 'https://gleitz.github.io/midi-js-soundfonts/FatBoy/';
 const IMG_BASE = '/img/drums/';
 
 // Sample IDs prefixed with `__synth:` are NOT loaded from the soundfont
@@ -243,10 +247,13 @@ export function DrumsPlayer({ className, kit: kitProp, embedded = false }: Drums
         player = new Soundfont(ctx, {
           instrument: name,
           instrumentUrl: `${SOUNDFONT_BASE}${name}-mp3.js`,
+          // Route to speakers via the constructor; smplr's player has no
+          // `.output` AudioNode, so the old player.output.connect() threw
+          // and left the voice silent.
+          destination: ctx.destination,
         });
         samplersRef.current.set(name, player);
         await player.load;
-        player.output.connect(Tone.getDestination().input as any);
       } else {
         await player.load;
       }

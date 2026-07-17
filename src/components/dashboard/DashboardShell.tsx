@@ -930,11 +930,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer
               landing) add their own larger top padding on top of this.
-              pb-20 sm:pb-0 reserves room for the MobileBottomNav strip
-              (only rendered on phones; sm+ has no bottom nav). */}
+              The bottom padding reserves room for the docked MobileBottomNav
+              bar (phones only; sm+ has no bottom nav) so content ends ABOVE
+              it and never scrolls under. Bar = 56px tall + the bottom
+              safe-area inset, plus a small gap. */}
           <main className={cn(
             "flex-1 min-w-0 overflow-x-hidden",
-            isTourManager ? "pb-0" : "pb-20 sm:pb-0",
+            isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0",
             // Calendar and Tour Manager manage their own compact header
             // spacing — no extra breathing room below the topbar.
             isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",

@@ -34,7 +34,7 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { profile } = useUserRole();
+  const { profile, loading: roleLoading } = useUserRole();
   const isFaculty = isFacultyProfile(profile);
 
   // Single query (react-query dedupes/caches by key with any other
@@ -44,12 +44,21 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
   const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
   const flags: ModuleFlags = toModuleFlags(modules);
   const allTabs = getTabItems(isFaculty ? 'faculty' : 'student', flags);
-  // While modules are still loading, `flags` defaults every gated slot to
-  // `false` (via `modules = []`), so `allTabs` would render the flag-off
-  // fallback set (e.g. Roster/Attendance instead of Academy) and then swap
-  // identity once data lands. Render only the stable flagless-core tabs
-  // until loading resolves so tabs only ever append, never swap.
-  const tabs = modulesLoading ? allTabs.filter((t) => CORE_TAB_KEYS.has(t.key)) : allTabs;
+  // Two independent async sources feed the tab set, and BOTH must resolve
+  // before we render role/flag-dependent tabs:
+  //  1. Modules — while loading, `flags` defaults every gated slot to `false`
+  //     (via `modules = []`), so `allTabs` would render the flag-off fallback
+  //     set and then swap identity once data lands.
+  //  2. Role — while the profile is still loading, `isFacultyProfile(null)`
+  //     is `false`, so `allTabs` uses the STUDENT tab order (which includes
+  //     Studio at slot 3). A faculty user would then see Studio flash in and
+  //     get replaced by Music once the profile resolves to the faculty order.
+  // The core tabs (Home/Messages/Calendar) are identical across roles and
+  // flag states, so render only those until BOTH sources resolve — tabs then
+  // only ever append, never swap identity.
+  const tabs = (modulesLoading || roleLoading)
+    ? allTabs.filter((t) => CORE_TAB_KEYS.has(t.key))
+    : allTabs;
 
   // Portal to document.body so the bar is always anchored to the visual
   // viewport. If MobileBottomNav rendered inline inside DashboardShell,
@@ -58,20 +67,24 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
   // would silently become the containing block for `position: fixed`
   // and the bar would scroll up with content on swipe. The portal moves
   // it out of every page wrapper and into the body so the initial
-  // containing block (= viewport) wins. We also pin via the bottom
-  // safe-area inset rather than depending on the scroll position.
+  // containing block (= viewport) wins.
+  //
+  // Docked solid bar: full-width, flush to the very bottom, opaque — it is
+  // the lowest UI element and content never scrolls under it (the shells
+  // reserve matching bottom padding). The bottom safe-area inset is padding
+  // INSIDE the bar so the icons clear the home indicator while the bar's
+  // own background still reaches the physical bottom edge.
   return createPortal(
     <nav
       className={cn(
-        // iOS floating pill: inset from edges, glass, capsule.
-        "fixed left-4 right-4 z-30 rounded-full",
-        "backdrop-blur-xl bg-card/75 supports-[not(backdrop-filter:blur(0))]:bg-card",
-        "shadow-[0_8px_24px_rgba(0,0,0,0.12)] border border-border/40",
+        "fixed inset-x-0 bottom-0 z-30",
+        "bg-card border-t border-border/70",
+        "shadow-[0_-2px_12px_rgba(15,23,42,0.06)]",
         "pointer-events-auto",
         className
       )}
       style={{
-        bottom: 'max(16px, env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom)',
         // Promote to its own GPU layer so iOS WKWebView doesn't repaint
         // it against the document scroll position during momentum
         // scrolling — that's the visual glitch the user saw as
@@ -94,7 +107,7 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
               aria-label={t.label}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 min-h-[48px] first:rounded-l-full last:rounded-r-full',
+                'flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 min-h-[48px]',
                 active ? 'text-[var(--tint)] font-semibold' : 'text-muted-foreground',
               )}
             >

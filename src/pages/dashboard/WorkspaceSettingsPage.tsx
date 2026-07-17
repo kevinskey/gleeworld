@@ -60,13 +60,15 @@ export default function WorkspaceSettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 h-auto max-w-3xl">
-          <TabsTrigger value="plan"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
-          <TabsTrigger value="modules"><Plug className="w-3.5 h-3.5 mr-1.5" />Add-ons</TabsTrigger>
-          <TabsTrigger value="navigation"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
-          <TabsTrigger value="branding"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
-          <TabsTrigger value="billing"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
-          <TabsTrigger value="general"><Building2 className="w-3.5 h-3.5 mr-1.5" />General</TabsTrigger>
+        {/* Mobile: one swipeable scroll strip (no wrap) so 6 sections read as
+            a single row instead of a scattered 2-col grid. md+: 6-across grid. */}
+        <TabsList className="flex md:grid md:grid-cols-6 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto md:overflow-visible scrollbar-hide">
+          <TabsTrigger value="plan" className="shrink-0"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
+          <TabsTrigger value="modules" className="shrink-0"><Plug className="w-3.5 h-3.5 mr-1.5" />Add-ons</TabsTrigger>
+          <TabsTrigger value="navigation" className="shrink-0"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
+          <TabsTrigger value="branding" className="shrink-0"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
+          <TabsTrigger value="billing" className="shrink-0"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
+          <TabsTrigger value="general" className="shrink-0"><Building2 className="w-3.5 h-3.5 mr-1.5" />General</TabsTrigger>
         </TabsList>
 
         <TabsContent value="plan"><PlanTabPanel canManage={canManage} /></TabsContent>
@@ -137,7 +139,7 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
     <div className="space-y-4">
       {/* Current plan + usage */}
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5">
+        <CardContent className="p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <h2 className="text-lg font-semibold">Current plan</h2>
@@ -366,7 +368,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
         </div>
       )}
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5">
+        <CardContent className="p-4 sm:p-5">
           <h2 className="text-lg font-semibold mb-1">Add-ons</h2>
           <p className="text-sm text-muted-foreground mb-4">
             {isDemo
@@ -568,64 +570,68 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
   return (
     <div className="space-y-4">
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5">
+        <CardContent className="p-4 sm:p-5">
           <h2 className="text-lg font-semibold mb-1">Navigation</h2>
           <p className="text-sm text-muted-foreground mb-4">
             Choose which sidebar items each type of user in your tenant sees.
             You (as super-admin) always see everything.
           </p>
 
-          <div className="flex items-center gap-2 flex-wrap mb-3">
-            <span className="text-sm font-medium mr-1">Editing view for:</span>
-            {HIDEABLE_NAV_ROLES.map((r) => (
-              <button
-                key={r.value}
-                type="button"
-                data-compact
-                onClick={() => changeRole(r.value)}
-                className={cn(
-                  'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
-                  role === r.value
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
-                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
-                )}
-              >
-                {r.label}
-              </button>
-            ))}
+          <div className="mb-3">
+            <div className="text-sm font-medium mb-2">Editing view for:</div>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+              {HIDEABLE_NAV_ROLES.map((r) => (
+                <button
+                  key={r.value}
+                  type="button"
+                  data-compact
+                  onClick={() => changeRole(r.value)}
+                  className={cn(
+                    'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
+                    role === r.value
+                      ? 'bg-slate-900 text-white hover:bg-slate-800'
+                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                  )}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap mb-4 rounded-lg bg-slate-50 border px-3 py-2">
-            <span className="text-xs text-muted-foreground mr-1">Preview my sidebar as:</span>
-            <button
-              type="button"
-              data-compact
-              onClick={() => setPreviewRole(null)}
-              className={cn(
-                'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
-                !preview
-                  ? 'bg-slate-900 text-white hover:bg-slate-800'
-                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
-              )}
-            >
-              Super-admin (me)
-            </button>
-            {HIDEABLE_NAV_ROLES.map((r) => (
+          <div className="mb-4 rounded-lg bg-slate-50 border px-3 py-2">
+            <div className="text-xs text-muted-foreground mb-2">Preview my sidebar as:</div>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               <button
-                key={r.value}
                 type="button"
                 data-compact
-                onClick={() => togglePreview(r.value)}
+                onClick={() => setPreviewRole(null)}
                 className={cn(
-                  'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
-                  preview === r.value
+                  'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
+                  !preview
                     ? 'bg-slate-900 text-white hover:bg-slate-800'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
                 )}
               >
-                {r.label}
+                Super-admin (me)
               </button>
-            ))}
+              {HIDEABLE_NAV_ROLES.map((r) => (
+                <button
+                  key={r.value}
+                  type="button"
+                  data-compact
+                  onClick={() => togglePreview(r.value)}
+                  className={cn(
+                    'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
+                    preview === r.value
+                      ? 'bg-slate-900 text-white hover:bg-slate-800'
+                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                  )}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-6">
@@ -724,8 +730,8 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
 
   return (
     <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-      <CardContent className="p-5 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+      <CardContent className="p-4 sm:p-5 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Organization name</Label>
             <Input value={form.org_name} disabled={!canManage} onChange={(e) => setForm({ ...form, org_name: e.target.value })} />
@@ -735,7 +741,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
             <Input value={form.short_name} disabled={!canManage} onChange={(e) => setForm({ ...form, short_name: e.target.value })} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Primary color</Label>
             <div className="flex items-center gap-2">
@@ -794,7 +800,7 @@ function BillingTabPanel() {
   return (
     <div className="space-y-4">
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5">
+        <CardContent className="p-4 sm:p-5">
           <h2 className="text-lg font-semibold mb-1">Your subscription</h2>
           <p className="text-sm text-muted-foreground mb-4">Active add-ons and their monthly cost.</p>
           {active.length === 0 ? (
@@ -941,7 +947,7 @@ function GeneralTabPanel({ canManage }: { canManage: boolean }) {
   return (
     <div className="space-y-4">
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5 space-y-4">
+        <CardContent className="p-4 sm:p-5 space-y-4">
           <div>
             <h2 className="text-lg font-semibold mb-1">Workspace identity</h2>
             <p className="text-sm text-muted-foreground">Display-only. To change, use the Branding tab.</p>
@@ -960,7 +966,7 @@ function GeneralTabPanel({ canManage }: { canManage: boolean }) {
       </Card>
 
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5 space-y-4">
+        <CardContent className="p-4 sm:p-5 space-y-4">
           <div>
             <h2 className="text-lg font-semibold mb-1">Localization</h2>
             <p className="text-sm text-muted-foreground">
@@ -1025,7 +1031,7 @@ function GeneralTabPanel({ canManage }: { canManage: boolean }) {
       </Card>
 
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-5 space-y-3">
+        <CardContent className="p-4 sm:p-5 space-y-3">
           <div>
             <h2 className="text-lg font-semibold mb-1">Data export</h2>
             <p className="text-sm text-muted-foreground">

@@ -32,14 +32,12 @@ import {
 import { useInvoices, type InvoiceLineItem, type CreateInvoiceData } from "@/hooks/useInvoices";
 import { InvoicePreview } from "./InvoicePreview";
 import { getOrgName } from '@/lib/orgName';
-
-const BRAND_INFO = {
-  name: getOrgName(),
-  address: "350 Concert Hall Drive, SW",
-  cityStateZip: "Atlanta, GA 30314",
-  taxId: "58-0566243",
-  taxStatus: "501(c)(3) Nonprofit Organization — Riverside Music Institute",
-};
+import {
+  getInvoiceOrgIdentity,
+  saveInvoiceOrgIdentity,
+  buildTaxNotice,
+  type InvoiceOrgIdentity,
+} from '@/lib/invoiceOrg';
 
 // Local row type with a stable `_key` so React can match rows across
 // add/remove without reusing the wrong row's input DOM. `_key` is stripped
@@ -66,6 +64,11 @@ export const InvoiceMaker = () => {
   const [previewInvoice, setPreviewInvoice] = useState<any>(null);
   const [saving, setSaving] = useState(false);
 
+  // From / org identity — editable, remembered per tenant (no fabricated org).
+  const [org, setOrg] = useState<InvoiceOrgIdentity>(() => getInvoiceOrgIdentity());
+  const setOrgField = (field: keyof InvoiceOrgIdentity, value: string) =>
+    setOrg((prev) => ({ ...prev, [field]: value }));
+
   // Form state
   const [donorName, setDonorName] = useState("");
   const [donorOrg, setDonorOrg] = useState("");
@@ -75,7 +78,7 @@ export const InvoiceMaker = () => {
   const [donorZip, setDonorZip] = useState("");
   const [donorEmail, setDonorEmail] = useState("");
   const [donorPhone, setDonorPhone] = useState("");
-  const [directorName, setDirectorName] = useState("Dr. Kevin Phillip Johnson");
+  const [directorName, setDirectorName] = useState("");
   const [directorTitle, setDirectorTitle] = useState(`Director, ${getOrgName()}`);
   const [lineItems, setLineItems] = useState<LineItemRow[]>(() => [newLineItem()]);
   const [notes, setNotes] = useState("");
@@ -90,7 +93,7 @@ export const InvoiceMaker = () => {
     setDonorZip("");
     setDonorEmail("");
     setDonorPhone("");
-    setDirectorName("Dr. Kevin Phillip Johnson");
+    setDirectorName("");
     setDirectorTitle(`Director, ${getOrgName()}`);
     setLineItems([newLineItem()]);
     setNotes("");
@@ -116,6 +119,8 @@ export const InvoiceMaker = () => {
   const handleSubmit = async () => {
     if (!donorName.trim()) return;
     setSaving(true);
+    // Remember the org's own "From" details for next time (per tenant).
+    saveInvoiceOrgIdentity(org);
     try {
       const data: CreateInvoiceData = {
         donor_name: donorName.trim(),
@@ -147,6 +152,12 @@ export const InvoiceMaker = () => {
     return {
       invoice_number: "PREVIEW",
       invoice_date: new Date().toISOString().split("T")[0],
+      // Org "From" identity flows through so the preview reflects unsaved edits.
+      org_name: org.name,
+      org_address: org.address,
+      org_city_state_zip: org.cityStateZip,
+      org_tax_id: org.taxId,
+      org_tax_status: org.taxStatus,
       donor_name: donorName,
       donor_organization: donorOrg,
       donor_address: donorAddress,
@@ -277,15 +288,32 @@ export const InvoiceMaker = () => {
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* From - Brand Info (read-only) */}
+            {/* From - Org identity (editable, remembered per tenant) */}
             <Card className="bg-muted/50">
-              <CardContent className="pt-4 pb-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">From</p>
-                <p className="font-semibold">{BRAND_INFO.name}</p>
-                <p className="text-sm text-muted-foreground">{BRAND_INFO.address}</p>
-                <p className="text-sm text-muted-foreground">{BRAND_INFO.cityStateZip}</p>
-                <p className="text-sm text-muted-foreground mt-1">EIN: {BRAND_INFO.taxId}</p>
-                <p className="text-xs text-muted-foreground">{BRAND_INFO.taxStatus}</p>
+              <CardContent className="pt-4 pb-3 space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">From (your organization)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2">
+                    <Label>Organization Name</Label>
+                    <Input value={org.name} onChange={(e) => setOrgField("name", e.target.value)} placeholder="Your organization" />
+                  </div>
+                  <div>
+                    <Label>Address</Label>
+                    <Input value={org.address} onChange={(e) => setOrgField("address", e.target.value)} placeholder="123 Main St" />
+                  </div>
+                  <div>
+                    <Label>City, State ZIP</Label>
+                    <Input value={org.cityStateZip} onChange={(e) => setOrgField("cityStateZip", e.target.value)} placeholder="City, ST 00000" />
+                  </div>
+                  <div>
+                    <Label>EIN (optional)</Label>
+                    <Input value={org.taxId} onChange={(e) => setOrgField("taxId", e.target.value)} placeholder="00-0000000" />
+                  </div>
+                  <div>
+                    <Label>Tax Status (optional)</Label>
+                    <Input value={org.taxStatus} onChange={(e) => setOrgField("taxStatus", e.target.value)} placeholder="501(c)(3) Nonprofit Organization" />
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -293,7 +321,7 @@ export const InvoiceMaker = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Director Name</Label>
-                <Input value={directorName} onChange={(e) => setDirectorName(e.target.value)} />
+                <Input value={directorName} onChange={(e) => setDirectorName(e.target.value)} placeholder="Director's full name" />
               </div>
               <div>
                 <Label>Director Title</Label>
@@ -427,23 +455,23 @@ export const InvoiceMaker = () => {
               </div>
             </div>
 
-            {/* 501(c)(3) Notice */}
-            <Card className="bg-muted/30 border-dashed">
-              <CardContent className="py-3">
-                <p className="text-xs text-muted-foreground">
-                  <strong>Tax-Deductible Donation Notice:</strong> Riverside Music Institute is a 501(c)(3) nonprofit
-                  organization. EIN: {BRAND_INFO.taxId}. No goods or services were provided in exchange for
-                  this contribution unless otherwise noted above. This invoice may serve as your receipt for
-                  tax purposes.
-                </p>
-              </CardContent>
-            </Card>
+            {/* Tax-Deductible Donation Notice — only when the org has entered
+                tax details, built from their own EIN/status (never fabricated). */}
+            {buildTaxNotice(org) && (
+              <Card className="bg-muted/30 border-dashed">
+                <CardContent className="py-3">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Tax-Deductible Donation Notice:</strong> {buildTaxNotice(org)}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Actions */}
             <div className="flex justify-between">
               <Button
                 variant="outline"
-                onClick={() => setPreviewInvoice(buildPreviewData())}
+                onClick={() => { saveInvoiceOrgIdentity(org); setPreviewInvoice(buildPreviewData()); }}
               >
                 <Eye className="h-4 w-4 mr-2" /> Preview
               </Button>
