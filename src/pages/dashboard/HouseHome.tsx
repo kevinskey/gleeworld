@@ -29,7 +29,7 @@ interface FeedRow {
 }
 
 export default function HouseHome() {
-  const { profile, canEditMusicLibrary } = useUserRole();
+  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
   const isFaculty = isFacultyProfile(profile);
   const firstName = (profile?.full_name || 'there').split(' ')[0];
 
@@ -123,7 +123,11 @@ export default function HouseHome() {
   // (every gated flag false), which would surface a fallback tile set
   // that then swaps identity once real data lands. Render an empty grid
   // area during the load instead of a set of tiles that might disappear
-  // a moment later (mirrors the MobileBottomNav loading guard).
+  // a moment later (mirrors the MobileBottomNav loading guard). We also wait
+  // on the role (`roleLoading` below): until the profile resolves,
+  // `isFacultyProfile(null)` is `false`, so the student tile set would render
+  // and then swap to the faculty set — the same identity flash the tab bar
+  // guards against.
   const { data: modules = [], isLoading: modulesLoading } = useTenantModules();
   const flags: ModuleFlags = toModuleFlags(modules);
   const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
@@ -139,7 +143,7 @@ export default function HouseHome() {
     hiddenRoutes: hiddenNav,
   }), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav]);
   const { layout, layoutLoading, save: saveTileLayout } = useHomeTileLayout();
-  const { primary, overflow } = modulesLoading || layoutLoading
+  const { primary, overflow } = modulesLoading || layoutLoading || roleLoading
     ? { primary: [], overflow: [] }
     : getAppTiles(isFaculty ? 'faculty' : 'student', flags, nav, layout);
 
@@ -245,7 +249,7 @@ export default function HouseHome() {
         </div>
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
-        {!modulesLoading && !layoutLoading && (
+        {!modulesLoading && !layoutLoading && !roleLoading && (
           <HomeTileGrid primary={primary} overflow={overflow} onSave={saveTileLayout} />
         )}
       </div>

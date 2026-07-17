@@ -48,13 +48,15 @@ export const AppShell = ({
           : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />
       )}
       
-      {/* Main Content - padded by header height */}
-      <main 
+      {/* Main Content - padded by header height. When the docked mobile nav
+          bar is shown, reserve bottom room on phones (56px + safe-area) so
+          content ends above it; sm+ and no-nav keep pb-0. */}
+      <main
         className={`
-          w-full 
+          w-full
           flex-1
           pt-[var(--gw-header-h,4rem)]
-          pb-0
+          ${showMobileNav ? 'pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0' : 'pb-0'}
           bg-[hsl(40,10%,96%)]
           ${className}
         `.trim().replace(/\s+/g, ' ')}

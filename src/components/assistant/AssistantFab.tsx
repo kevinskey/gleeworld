@@ -38,16 +38,16 @@ export const AssistantFab = () => {
 
   // Immersive full-screen routes (Viewer reader, Studio session editor)
   // cover the MobileBottomNav, so the FAB drops to the very corner there
-  // instead of floating 76px up to clear a nav that isn't visible. On
-  // normal phone pages it still sits above the nav pill; desktop is the
-  // corner.
+  // instead of floating up to clear a nav that isn't visible. On normal
+  // phone pages it sits just above the docked nav bar (bar = 56px tall +
+  // bottom safe-area inset, + a small gap); desktop is the corner.
   const isImmersive =
     /^\/dashboard\/viewer\/[^/]+/.test(pathname) ||
     /^\/studio\/sessions\/[^/]+/.test(pathname);
   const bottom = isImmersive
     ? 'calc(env(safe-area-inset-bottom, 0px) + 12px)'
     : isPhone
-      ? 'calc(max(16px, env(safe-area-inset-bottom)) + 76px)'
+      ? 'calc(env(safe-area-inset-bottom, 0px) + 68px)'
       : '1.25rem';
 
   if (collapsed) {
