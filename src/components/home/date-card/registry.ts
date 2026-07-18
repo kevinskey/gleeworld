@@ -2,12 +2,17 @@
 // entry here. Card modules are registered in Tasks 3-5.
 import type { z } from 'zod';
 import type { DateCardModule } from './types';
+import { plainCard } from './cards/plain';
+import { customCard } from './cards/custom';
 
 export const DEFAULT_DATE_CARD_TYPE = 'plain';
 
-export const DATE_CARD_REGISTRY: Record<string, DateCardModule> = {};
+export const DATE_CARD_REGISTRY: Record<string, DateCardModule> = {
+  [plainCard.type]: plainCard,
+  [customCard.type]: customCard,
+};
 
-export const DATE_CARD_LIST: DateCardModule[] = [];
+export const DATE_CARD_LIST: DateCardModule[] = Array.from(new Set(Object.values(DATE_CARD_REGISTRY)));
 
 export function getDateCardModule(type: string): DateCardModule | undefined {
   return DATE_CARD_REGISTRY[type];
