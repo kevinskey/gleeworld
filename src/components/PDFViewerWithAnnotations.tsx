@@ -1194,16 +1194,28 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           ...(isNative ? { disableAutoFetch: true, disableStream: true, disableRange: true } : {}),
         });
 
+        // Supabase signed URLs behave like the DO Spaces signed URLs that broke
+        // native: pdfjs Range requests against them HANG rather than error, so
+        // the catch-and-fallback below never fires and the viewer spins forever.
+        // Take the whole-file path for them, exactly as native does.
+        const isSignedUrl = /\/object\/sign\/|[?&]token=/.test(signedUrl);
+
         let doc;
-        if (isNative) {
+        if (isNative || isSignedUrl) {
           const ab = await fetchAsArrayBuffer();
-          console.log('[PDFViewer] getDocument(data) start');
+          console.log('[PDFViewer] getDocument(data) start', isSignedUrl ? '(signed URL)' : '(native)');
           doc = await pdfjsLib.getDocument(buildOpts({ data: ab })).promise;
           console.log('[PDFViewer] getDocument(data) resolved — pages:', doc.numPages);
         } else {
           try {
             console.log('[PDFViewer] getDocument(url) start');
-            doc = await pdfjsLib.getDocument(buildOpts({ url: signedUrl })).promise;
+            // Race a timeout: the failure mode here is a silent hang, not a
+            // rejection, so without this the fallback below is unreachable.
+            doc = await Promise.race([
+              pdfjsLib.getDocument(buildOpts({ url: signedUrl })).promise,
+              new Promise((_, rej) =>
+                setTimeout(() => rej(new Error('pdfjs url load timed out')), 12000)),
+            ]) as Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>;
             console.log('[PDFViewer] getDocument(url) resolved — pages:', doc.numPages);
           } catch (primaryErr) {
             console.warn('[PDFViewer] getDocument(url) failed, falling back to ArrayBuffer', primaryErr);
