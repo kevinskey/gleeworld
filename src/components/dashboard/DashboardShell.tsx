@@ -60,7 +60,7 @@ import { getOrgName } from '@/lib/orgName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
-import { useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
+import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
 import { useMyTenants, tenantHomeUrl } from '@/hooks/useMyTenants';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -590,25 +590,14 @@ function ViewsSwitcher() {
   const { user } = useAuth();
   const preview = usePreviewRole();
 
-  // Is this user a tenant super-admin? The nav-prefs write policy
-  // uses the same table + column, so the answer here matches the
-  // one useTenantNavPrefs computes.
-  const { data: isTenantSuperAdmin = false } = useQuery({
-    queryKey: ['views-switcher-role', user?.id],
-    queryFn: async () => {
-      if (!user) return false;
-      const { data } = await supabase
-        .from('gw_tenant_members')
-        .select('role')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      return isTenantSuperAdminRole(data?.role as string | undefined);
-    },
-    enabled: !!user,
-    staleTime: 5 * 60_000,
-  });
+  // Is this user a tenant super-admin *of the tenant they're looking at*?
+  // Shares useMyTenantRole with useTenantNavPrefs rather than repeating the
+  // query — the duplicate copy here carried its own tenant-unscoped
+  // .maybeSingle(), which returned null for any multi-tenant user and hid
+  // the control from them.
+  const myTenantRole = useMyTenantRole();
 
-  if (!isTenantSuperAdmin) return null;
+  if (!isTenantSuperAdminRole(myTenantRole)) return null;
 
   const label = preview
     ? HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? 'Preview'
