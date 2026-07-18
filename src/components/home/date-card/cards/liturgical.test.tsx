@@ -37,8 +37,19 @@ describe('liturgical card', () => {
   });
 
   it('falls back to the weekday before the title resolves', () => {
-    const C = liturgicalCard.Render;
-    render(<C config={liturgicalCard.defaultConfig} ctx={ctx} />);
-    expect(screen.getByText('Saturday')).toBeInTheDocument();
+    // LiturgicalDayCard computes `today` via `new Date()` internally (it does not
+    // read ctx.now), so we pin the real clock to the fixture instant with fake
+    // timers rather than relying on the ambient calendar date lining up with
+    // 'Saturday'. Scoped to this test only — the sibling test above awaits a
+    // fetched promise via waitFor, which fake timers would otherwise stall.
+    vi.useFakeTimers();
+    vi.setSystemTime(ctx.now);
+    try {
+      const C = liturgicalCard.Render;
+      render(<C config={liturgicalCard.defaultConfig} ctx={ctx} />);
+      expect(screen.getByText('Saturday')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
