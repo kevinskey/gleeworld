@@ -143,13 +143,19 @@ export function resolveNav(ctx: NavContext): CatalogEntry[] {
 // /dashboard/tour and /dashboard/liturgy-planner never matched a real route,
 // so hiding Tour Manager / Liturgy Planner silently failed).
 
-export type NavRole = 'admin' | 'student' | 'fan' | 'graduate' | 'member';
+// Roles that actually render the Command Center sidebar. 'fan' and
+// 'graduate' were removed: those roles never reach DashboardShell at all —
+// useRoleBasedRedirect sends fans to /fan and graduates to /alumni, which are
+// public block-built pages with their own editors (Reach → Fan Page /
+// Graduates Page). Listing them here offered a preview of a sidebar they
+// never see, and let admins hide nav items for an audience that reads none
+// of it. Any gw_tenant_nav_prefs rows still keyed to those roles are simply
+// never read.
+export type NavRole = 'admin' | 'student' | 'member';
 
 export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
   { value: 'admin',    label: 'Tenant admins' },
   { value: 'student',  label: 'Students' },
-  { value: 'fan',      label: 'Fans' },
-  { value: 'graduate', label: 'Graduates' },
   { value: 'member',   label: 'Members' },
 ];
 
@@ -159,14 +165,12 @@ export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
 // Users, Settings and Tenants. That made the preview a lie for any tenant
 // that hadn't hand-hidden those rows. These flags close that gap.
 //
-// Only 'admin' carries privilege; student/fan/graduate/member are
-// unprivileged in the nav's eyes. canLibrarian is a per-user grant rather
-// than a role, but no non-admin role implies it, so false is correct.
+// Only 'admin' carries privilege; student and member are unprivileged in the
+// nav's eyes. canLibrarian is a per-user grant rather than a role, but no
+// non-admin role implies it, so false is correct.
 const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian'>> = {
   admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true  },
   student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
-  fan:      { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
-  graduate: { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
   member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
 };
 
@@ -185,7 +189,12 @@ const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isP
  */
 export function applyPreviewRole(ctx: NavContext, role: NavRole | null): NavContext {
   if (!role) return ctx;
-  return { ...ctx, ...PREVIEW_ROLE_CAPS[role] };
+  const caps = PREVIEW_ROLE_CAPS[role];
+  // A role with no caps entry (e.g. a value retired from NavRole that reached
+  // us anyway) must not spread `undefined` and silently leave full admin
+  // capabilities in place. Treat it as no preview.
+  if (!caps) return ctx;
+  return { ...ctx, ...caps };
 }
 
 /** Which HouseHome tile set a previewed role should get. */

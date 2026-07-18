@@ -4,6 +4,7 @@ import {
   previewRoleIsFaculty,
   resolveNav,
   NAV_CATALOG,
+  HIDEABLE_NAV_ROLES,
   type NavContext,
 } from '../navCatalog';
 
@@ -77,8 +78,25 @@ describe('applyPreviewRole', () => {
 
   it('maps only the admin role to the faculty tile set', () => {
     expect(previewRoleIsFaculty('admin')).toBe(true);
-    for (const r of ['student', 'fan', 'graduate', 'member'] as const) {
+    for (const r of ['student', 'member'] as const) {
       expect(previewRoleIsFaculty(r)).toBe(false);
     }
+  });
+
+  it('only offers roles that actually render the Command Center', () => {
+    // fans -> /fan and graduates -> /alumni via useRoleBasedRedirect; neither
+    // ever mounts DashboardShell, so previewing their sidebar was meaningless.
+    const offered = HIDEABLE_NAV_ROLES.map((r) => r.value);
+    expect(offered).toEqual(['admin', 'student', 'member']);
+    expect(offered).not.toContain('fan');
+    expect(offered).not.toContain('graduate');
+  });
+
+  it('ignores a retired role rather than leaving admin capabilities intact', () => {
+    // A super-admin mid-session may still have 'fan' in sessionStorage. If it
+    // slipped through, spreading an undefined caps entry would leave the full
+    // admin context untouched — a preview that silently shows everything.
+    const retired = applyPreviewRole(superAdminCtx, 'fan' as unknown as Parameters<typeof applyPreviewRole>[1]);
+    expect(retired).toBe(superAdminCtx);
   });
 });
