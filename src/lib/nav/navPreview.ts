@@ -8,7 +8,7 @@
 // broadcast via a change event so hooks re-render immediately.
 
 import { useSyncExternalStore } from 'react';
-import type { NavRole } from '@/lib/navigation/navCatalog';
+import { HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/navigation/navCatalog';
 
 const KEY = 'gw_nav_preview_role';
 const EVENT = 'gw:nav-preview-changed';
@@ -17,6 +17,15 @@ export function getPreviewRole(): NavRole | null {
   try {
     const raw = sessionStorage.getItem(KEY);
     if (!raw) return null;
+    // Validate rather than blind-cast. 'fan' and 'graduate' were removed from
+    // the previewable roles, so a super-admin who had one selected still has
+    // it in sessionStorage; casting it through would leave the preview stuck
+    // on a role with no capability entry, silently applying nothing. Drop the
+    // stale value so the next read is a clean "no preview".
+    if (!HIDEABLE_NAV_ROLES.some((r) => r.value === raw)) {
+      sessionStorage.removeItem(KEY);
+      return null;
+    }
     return raw as NavRole;
   } catch { return null; }
 }
