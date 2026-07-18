@@ -8,6 +8,7 @@ import type { DocNode } from './types';
 export const TEMPLATE_VARS = [
   'date', 'time', 'user_name', 'ensemble_name',
   'concert_title', 'concert_date', 'rehearsal_location', 'course_name',
+  'next_event', 'next_event_date',
 ] as const;
 export type TemplateVar = (typeof TEMPLATE_VARS)[number];
 
