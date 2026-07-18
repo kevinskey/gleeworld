@@ -44,7 +44,13 @@ function tenantUrl(t: TenantRow): string {
   // "gleeworld.org.gleeworld.org" — special-case it.
   if (t.slug === 'main') return 'https://gleeworld.org';
   if (t.custom_domain) return `https://${t.custom_domain}`;
-  return `https://${t.subdomain || t.slug}.gleeworld.org`;
+  // Some rows' `subdomain` column holds the FULL host already (e.g.
+  // "demo-choir.gleeworld.org") rather than a bare slug — appending
+  // ".gleeworld.org" again produced a dead double-domain link
+  // ("demo-choir.gleeworld.org.gleeworld.org"). Only append the suffix
+  // when subdomain looks like a bare slug (no dot in it).
+  const host = t.subdomain || t.slug;
+  return `https://${host.includes('.') ? host : `${host}.gleeworld.org`}`;
 }
 
 export default function PlatformTenantsPortal() {
