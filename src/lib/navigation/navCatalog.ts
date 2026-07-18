@@ -11,7 +11,7 @@ import {
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen,
+  PenLine, NotebookPen, Youtube,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -70,6 +70,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // Make
   { key: 'studio',      to: '/studio',                label: 'Studio',      icon: Disc3,  section: 'make', tone: 'bg-sky-50 text-sky-600',   tourId: 'nav-studio', gate: { module: 'studio' } },
   { key: 'video',       to: '/video',                 label: 'Video',       icon: Film,   section: 'make', tone: 'bg-pink-50 text-pink-600', tourId: 'nav-video' },
+  { key: 'youtube',     to: '/youtube',               label: 'YouTube',     icon: Youtube, section: 'make', tone: 'bg-red-50 text-red-600',   tourId: 'nav-youtube' },
   { key: 'music-tools', to: '/dashboard/music-tools', label: 'Music Tools', icon: Wrench, section: 'make', tone: 'bg-cyan-50 text-cyan-600', tourId: 'nav-music-tools' },
   { key: 'songwriting', to: '/songwriting', label: 'Songwriting', icon: PenLine, section: 'make', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-songwriting', gate: { module: 'songwriting' } },
   // Plan

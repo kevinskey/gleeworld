@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getYouTubeId } from './youtubeId';
+import { getYouTubeId, parseYouTubeInput } from './youtubeId';
 
 describe('getYouTubeId', () => {
   it('parses standard watch URLs', () => {
@@ -29,5 +29,22 @@ describe('getYouTubeId', () => {
     expect(getYouTubeId('not a url')).toBeNull();
     expect(getYouTubeId('')).toBeNull();
     expect(getYouTubeId('https://www.youtube.com/')).toBeNull();
+  });
+});
+
+describe('parseYouTubeInput', () => {
+  it('accepts a bare 11-char video id', () => {
+    expect(parseYouTubeInput('BV8KHvQPyGA')).toBe('BV8KHvQPyGA');
+    expect(parseYouTubeInput('  BV8KHvQPyGA  ')).toBe('BV8KHvQPyGA');
+  });
+  it('delegates URL shapes to getYouTubeId', () => {
+    expect(parseYouTubeInput('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+    expect(parseYouTubeInput('https://youtu.be/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+  });
+  it('rejects strings that are neither a valid id nor a valid YouTube URL', () => {
+    expect(parseYouTubeInput('not a url')).toBeNull();
+    expect(parseYouTubeInput('https://evil.com/watch?v=dQw4w9WgXcQ')).toBeNull();
+    expect(parseYouTubeInput('too-short')).toBeNull();
+    expect(parseYouTubeInput('')).toBeNull();
   });
 });

@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { YouTubeVideoPicker } from "@/components/youtube/YouTubeVideoPicker";
 import { CoursePlaylistManager } from "@/components/modules/CoursePlaylistManager";
 import { YouTubeVideoModal } from "@/components/youtube/YouTubeVideoModal";
+import { getYouTubeId } from "@/lib/youtubeId";
 import { 
   Youtube, 
   Plus, 
@@ -235,13 +236,10 @@ export const YouTubeManagement = () => {
     }
 
     try {
-      // Extract video ID from URL if provided
-      let videoId = manualVideo.youtube_id;
-      const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
-      const match = manualVideo.youtube_id.match(youtubeRegex);
-      if (match) {
-        videoId = match[1];
-      }
+      // Extract video ID from URL if provided; if it isn't a recognized
+      // YouTube URL, assume the field already holds a bare video id
+      // (matches the placeholder text: "URL or video ID").
+      const videoId = getYouTubeId(manualVideo.youtube_id) ?? manualVideo.youtube_id.trim();
 
       // Create video data
       const videoData = {
@@ -270,7 +268,10 @@ export const YouTubeManagement = () => {
           published_at: videoData.published_at,
           duration: '',
           is_featured: videoData.is_featured,
-          channel_id: 'manual-upload'
+          // channel_id is a UUID FK; this row isn't attached to a synced
+          // channel, so null (not the string 'manual-upload', which failed
+          // every insert against a uuid column).
+          channel_id: null
         }]);
 
       if (error) throw error;

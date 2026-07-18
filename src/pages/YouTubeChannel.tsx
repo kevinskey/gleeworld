@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { YouTubeVideoModal } from '@/components/youtube/YouTubeVideoModal';
+import { AddYouTubeVideoForm } from '@/components/youtube/AddYouTubeVideoForm';
 import { getOrgName } from '@/lib/orgName';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface YouTubeVideo {
   id: string;
@@ -35,6 +37,7 @@ const formatDate = (dateString: string): string => {
 
 export const YouTubeChannel: React.FC = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -146,6 +149,11 @@ export const YouTubeChannel: React.FC = () => {
 
       {/* Content */}
       <main className="container mx-auto px-4 py-8">
+        {isAdmin() && (
+          <div className="mb-6">
+            <AddYouTubeVideoForm onAdded={() => fetchVideos(0, false)} />
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-destructive" />

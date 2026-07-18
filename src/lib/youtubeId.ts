@@ -28,3 +28,13 @@ export function getYouTubeId(url: string): string | null {
   }
   return candidate && ID_RE.test(candidate) ? candidate : null;
 }
+
+// Accepts either a full YouTube URL (delegated to getYouTubeId) or a bare
+// 11-char video id, which is what someone pastes when they copy the id out
+// of a share sheet instead of the link. Reuses ID_RE rather than duplicating
+// the id-shape regex — keep any future format changes in one place.
+export function parseYouTubeInput(input: string): string | null {
+  const trimmed = input.trim();
+  if (ID_RE.test(trimmed)) return trimmed;
+  return getYouTubeId(trimmed);
+}
