@@ -21,6 +21,9 @@ import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useHomeTileLayout } from '@/hooks/useHomeTileLayout';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
+import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
+import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
+import type { DateCardContext } from '@/components/home/date-card/types';
 
 interface FeedRow {
   section: string; subtype: string | null; id: string; title: string;
@@ -117,6 +120,22 @@ export default function HouseHome() {
     [rows],
   );
   const glyphs = useMemo(() => ledgerGlyphs(myPracticeDates, now), [myPracticeDates]);
+  // profile has no ensemble_name field — the token is simply unavailable;
+  // dateCardTokenContext omits absent tokens rather than blanking them.
+  // Malformed event_at rows are dropped here: date-fns v4's format() throws
+  // on an unparseable date, and up_next/today are the first cards to see
+  // live v_command_center_feed rows rather than test fixtures.
+  const dateCardCtx: DateCardContext = useMemo(() => ({
+    now,
+    firstName,
+    ensembleName: '',
+    upNext: upNext && hasParsableEventAt(upNext.event_at)
+      ? { id: '', title: upNext.title, detail: upNext.detail, event_at: upNext.event_at }
+      : null,
+    todayRows: todayRows
+      .filter((r) => hasParsableEventAt(r.event_at))
+      .map((r) => ({ id: r.id, title: r.title, detail: r.detail, event_at: r.event_at })),
+  }), [now, firstName, upNext, todayRows]);
 
   // Module flags drive the app grid only — never the tab bar's flagless
   // core. While modules are still loading, `modules` defaults to `[]`
@@ -158,6 +177,8 @@ export default function HouseHome() {
             </p>
           </div>
         </div>
+
+        <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} />
 
         {/* Status cards sit in a left column; the News panel on the right
             spans their combined height (single column again below lg). */}
