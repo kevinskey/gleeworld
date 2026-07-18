@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { ReadingsModal } from '@/components/liturgy/ReadingsModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import {
@@ -704,105 +705,6 @@ interface ReadingsResp {
   liturgicalTitle: string | null;
   readings: ReadingBlock[];
   error?: string;
-}
-
-function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
-  open: boolean; onClose: () => void; isoDate: string; sourceUrl: string;
-}) {
-  const [data, setData] = useState<ReadingsResp | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setData(null);
-    (async () => {
-      const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
-        body: { date: isoDate },
-      });
-      if (cancelled) return;
-      if (fnErr) {
-        setError(fnErr.message || 'Could not fetch readings');
-      } else if (resp && (resp as ReadingsResp).readings) {
-        setData(resp as ReadingsResp);
-      } else {
-        setError('No readings returned');
-      }
-      setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [open, isoDate]);
-
-  return (
-    <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      {/* Bottom horizontal split — about a third of the viewport so
-       * the editor is still clearly the primary surface. Was 60vh
-       * which read as a takeover. */}
-      <SheetContent side="bottom" className="h-[40vh] sm:h-[45vh] flex flex-col p-0">
-        <SheetHeader className="px-6 pt-4 pb-2 border-b border-border shrink-0">
-          <SheetTitle className="font-extrabold tracking-tight text-lg sm:text-xl text-left">
-            {data?.liturgicalTitle || 'Daily Readings'}
-          </SheetTitle>
-          <p className="text-xs text-muted-foreground text-left">
-            {formatDate(isoDate)} · via{' '}
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Universalis</a>
-          </p>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-
-        {loading && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground py-12 justify-center">
-            <Loader2 className="w-4 h-4 animate-spin" /> Fetching readings…
-          </div>
-        )}
-
-        {error && (
-          <div className="text-sm py-6 text-center space-y-3">
-            <p className="text-destructive">{error}</p>
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-[hsl(var(--link))] hover:underline">
-              <ExternalLink className="w-3.5 h-3.5" /> Open on USCCB.org
-            </a>
-          </div>
-        )}
-
-        {data && !loading && !error && (
-          <div className="space-y-6 py-2">
-            {data.readings.map((r, i) => (
-              <section key={i} className="space-y-2">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-foreground/80">
-                  {r.heading}
-                </h3>
-                {r.citation && (
-                  <p className="text-xs text-muted-foreground italic">{r.citation}</p>
-                )}
-                {r.summary && (
-                  <p className="text-sm font-semibold italic">{r.summary}</p>
-                )}
-                <div
-                  className="prose prose-sm max-w-none text-foreground leading-relaxed [&_p]:my-2"
-                  // Body HTML is sanitized server-side: only p / br / em /
-                  // strong / i / b / u / blockquote / span survive, every
-                  // attribute is stripped. Safe to inject.
-                  dangerouslySetInnerHTML={{ __html: r.html }}
-                />
-              </section>
-            ))}
-            {data.readings.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                Couldn&apos;t parse readings from the page.{' '}
-                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">View original</a>.
-              </p>
-            )}
-          </div>
-        )}
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
 }
 
 // ── Hymnal autocomplete ──────────────────────────────────────────────

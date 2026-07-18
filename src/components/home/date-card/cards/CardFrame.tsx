@@ -19,7 +19,7 @@ export function CardFrame({ icon: Icon, eyebrow, title, subtitle, onClick }: Pro
       </div>
       <div className="min-w-0 flex-1">
         {eyebrow && (
-          <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground truncate">
+          <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground truncate">
             {eyebrow}
           </div>
         )}

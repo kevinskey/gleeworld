@@ -59,8 +59,14 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent side="bottom" className="h-[55vh] sm:h-[60vh] flex flex-col p-0">
-        <SheetHeader className="px-6 pt-4 pb-2 border-b border-border shrink-0">
+      {/* Vertical side panel, never wider than half the UI — readings are a
+          long single column, so a tall narrow drawer suits them better than a
+          wide bottom sheet. Full width only on phones, where half is unusable. */}
+      <SheetContent
+        side="right"
+        className="w-full sm:w-1/2 sm:max-w-[560px] h-[100dvh] flex flex-col p-0"
+      >
+        <SheetHeader className="px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-2 border-b border-border shrink-0">
           <SheetTitle className="font-extrabold tracking-tight text-lg sm:text-xl text-left">
             {data?.liturgicalTitle || 'Daily Readings'}
           </SheetTitle>

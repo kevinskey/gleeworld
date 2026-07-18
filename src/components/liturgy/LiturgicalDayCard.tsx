@@ -39,7 +39,7 @@ export function LiturgicalDayCard() {
           <Church className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Today&apos;s Liturgy
           </div>
           <div className="font-serif text-lg font-semibold leading-tight truncate">
