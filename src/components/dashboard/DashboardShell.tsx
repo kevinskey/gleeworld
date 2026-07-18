@@ -34,6 +34,8 @@ import {
   LogOut,
   Menu,
   User as UserIcon,
+  Building2,
+  Check,
   Sparkles,
   PanelLeft,
   PanelLeftClose,
@@ -58,6 +60,7 @@ import { getOrgName } from '@/lib/orgName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
+import { useMyTenants, tenantHomeUrl } from '@/hooks/useMyTenants';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -644,6 +647,12 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
   const [query, setQuery] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
 
+  // "Switch organization" — every tenant this user belongs to. Only surfaced
+  // when there's more than one, so single-tenant members stay in their world.
+  const { data: myTenants = [] } = useMyTenants();
+  const currentTenantSlug =
+    (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
+
   // Sidebar is suppressed on immersive full-window routes (Studio
   // session editor, Viewer reader). On those routes the tenant brand
   // block would otherwise disappear entirely, leaving a nameless
@@ -883,6 +892,32 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
               <Settings className="w-4 h-4" /> Settings
             </Link>
           </DropdownMenuItem>
+          {/* Switch organization — only for users who belong to more than one
+              tenant. Navigating crosses subdomains, so it's a full-page load.
+              Single-tenant members never see this and stay in their world. */}
+          {myTenants.length > 1 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                Switch organization
+              </DropdownMenuLabel>
+              {myTenants.map((t) => {
+                const isCurrent = t.slug === currentTenantSlug;
+                return (
+                  <DropdownMenuItem
+                    key={t.tenant_id}
+                    disabled={isCurrent}
+                    onClick={() => { if (!isCurrent) window.location.href = tenantHomeUrl(t.slug); }}
+                    className="flex items-center gap-2"
+                  >
+                    <Building2 className="w-4 h-4 shrink-0" />
+                    <span className="flex-1 truncate">{t.name || t.slug}</span>
+                    {isCurrent && <Check className="w-4 h-4 shrink-0 text-muted-foreground" />}
+                  </DropdownMenuItem>
+                );
+              })}
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => signOut()} className="text-destructive">
             <LogOut className="w-4 h-4 mr-2" /> Sign out
