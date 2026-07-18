@@ -538,7 +538,15 @@ function ScoreCard({
             <Music className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-base font-semibold leading-snug truncate">{row.title || 'Untitled'}</div>
+            {/* Titles are frequently raw upload filenames with no spaces, so
+                wrap on any character \u2014 truncating them to one line hid the
+                only part that distinguishes one score from another. */}
+            <div
+              className="text-base font-semibold leading-snug line-clamp-2 break-words"
+              title={row.title || 'Untitled'}
+            >
+              {row.title || 'Untitled'}
+            </div>
             {/* Always reserve the composer line so cards stay the same
                 height whether composer was provided or not. */}
             <div className="text-sm text-muted-foreground truncate mt-0.5">
@@ -568,21 +576,39 @@ function ScoreCard({
                   Audio
                 </Badge>
               )}
-              <Badge variant="outline" className="text-xs">
-                <LibraryIcon className="w-3 h-3 mr-1" />
-                {copies} {copies === 1 ? 'physical copy' : 'physical copies'}
-                {row.physical_location ? ` · ${row.physical_location}` : ''}
-              </Badge>
+              {/* Only worth a badge when copies actually exist — "0 physical
+                  copies" was on every card and crowded out the badges that
+                  carry information. */}
+              {copies > 0 && (
+                <Badge
+                  variant="outline"
+                  className="text-xs max-w-full"
+                  title={`${copies} ${copies === 1 ? 'physical copy' : 'physical copies'}${row.physical_location ? ` · ${row.physical_location}` : ''}`}
+                >
+                  <LibraryIcon className="w-3 h-3 mr-1 shrink-0" />
+                  <span className="truncate">
+                    {copies} {copies === 1 ? 'copy' : 'copies'}
+                    {row.physical_location ? ` · ${row.physical_location}` : ''}
+                  </span>
+                </Badge>
+              )}
             </div>
           </div>
         </div>
-        <div className="flex justify-end gap-2 mt-auto pt-3">
+        {/* Four labelled buttons cannot fit a one-third-column card, and flex
+            items default to min-width:auto, so the old non-wrapping row spilled
+            past the card edge. The secondary actions are now icon-only at every
+            width — labels live in aria-label/title — which keeps the whole row
+            on one line with Annotate, the only action worth a label, last. */}
+        <div className="flex flex-wrap items-center justify-end gap-1.5 mt-auto pt-3">
           {canEdit && (
             <Button
               variant="ghost"
               size="sm"
+              className="shrink-0"
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
               aria-label="Edit score details"
+              title="Edit score details"
             >
               <Pencil className="w-4 h-4" />
             </Button>
@@ -591,11 +617,12 @@ function ScoreCard({
             <Button
               variant={row.shared_with_members ? 'secondary' : 'outline'}
               size="sm"
-              className="text-xs"
+              className="shrink-0"
               onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
+              aria-label={row.shared_with_members ? 'Shared with members — tap to unshare' : 'Share with members'}
+              title={row.shared_with_members ? 'Shared with members' : 'Share with members'}
             >
-              <Share2 className="w-4 h-4 mr-1.5" />
-              {row.shared_with_members ? 'Shared' : 'Share'}
+              <Share2 className="w-4 h-4" />
             </Button>
           )}
           {hasPdf && (
@@ -604,15 +631,18 @@ function ScoreCard({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="shrink-0"
                   onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
+                  aria-label={hasAudio ? 'Replace attached audio' : 'Attach audio'}
+                  title={hasAudio ? 'Replace attached audio' : 'Attach audio'}
                 >
-                  <Headphones className="w-4 h-4 mr-1.5" />
-                  {hasAudio ? 'Audio' : 'Attach audio'}
+                  <Headphones className="w-4 h-4" />
                 </Button>
               )}
               <Button
                 variant="default"
                 size="sm"
+                className="shrink-0"
                 onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
               >
                 <PencilLine className="w-4 h-4 mr-1.5" />
