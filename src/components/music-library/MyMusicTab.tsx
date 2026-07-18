@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Music, Plus, Trash2, FileMusic } from 'lucide-react';
+import { Music, Plus, Trash2, FileMusic, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
 import { getSignedUrl } from '@/utils/storage';
@@ -26,12 +26,25 @@ export function MyMusicTab() {
   const [adding, setAdding] = useState(false);
   const [viewingUrl, setViewingUrl] = useState<string | null>(null);
   const [viewingTitle, setViewingTitle] = useState('');
+  const [openingId, setOpeningId] = useState<string | null>(null);
 
   const openScore = async (s: PersonalScore) => {
-    const url = await getSignedUrl(PERSONAL_SCORES_BUCKET, s.storage_path, 3600, true);
-    if (!url) { toast.error('Could not open that score. Try again.'); return; }
-    setViewingTitle(s.title);
-    setViewingUrl(url);
+    if (openingId) return; // one at a time — stacking clicks stacked requests
+    setOpeningId(s.id);
+    try {
+      // waitForReady=false: that retry loop exists to ride out the post-upload
+      // flatten window. Here the object has existed for a while, so a failure
+      // is a real failure — retrying just burned 30 silent seconds.
+      const url = await getSignedUrl(PERSONAL_SCORES_BUCKET, s.storage_path, 3600, false);
+      if (!url) {
+        toast.error(`Could not open "${s.title}". The file may be missing.`);
+        return;
+      }
+      setViewingTitle(s.title);
+      setViewingUrl(url);
+    } finally {
+      setOpeningId(null);
+    }
   };
 
   if (isLoading) {
@@ -60,10 +73,24 @@ export function MyMusicTab() {
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {scores.map((s) => (
-            <li key={s.id} className="group relative rounded-xl border border-border bg-card p-4 hover:shadow-md transition-shadow">
-              <button type="button" className="block w-full text-left" onClick={() => openScore(s)}>
+            <li
+              key={s.id}
+              className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-md focus-within:border-primary/50"
+            >
+              {/* Whole card opens the PDF. The trailing icon is the affordance —
+                  without it the card reads as an inert list row, since there is
+                  no thumbnail and the source badge looks like a status. */}
+              <button
+                type="button"
+                className="block w-full text-left cursor-pointer disabled:cursor-wait"
+                onClick={() => openScore(s)}
+                disabled={openingId === s.id}
+                aria-label={`Open ${s.title}`}
+              >
                 <div className="flex items-center gap-2">
-                  <FileMusic className="w-4 h-4 text-primary shrink-0" />
+                  {openingId === s.id
+                    ? <Loader2 className="w-4 h-4 text-primary shrink-0 animate-spin" />
+                    : <FileMusic className="w-4 h-4 text-primary shrink-0" />}
                   <span className="text-sm font-semibold leading-tight truncate">{s.title}</span>
                 </div>
                 {s.composer && (
@@ -72,6 +99,10 @@ export function MyMusicTab() {
                 <div className="mt-2 flex items-center gap-1.5">
                   <Badge variant="secondary" className="text-xs">{SOURCE_LABEL[s.source]}</Badge>
                   {s.voicing && <Badge variant="outline" className="text-xs">{s.voicing}</Badge>}
+                  <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground group-hover:text-primary transition-colors">
+                    {openingId === s.id ? 'Opening…' : 'Open'}
+                    <ExternalLink className="w-4 h-4" />
+                  </span>
                 </div>
               </button>
               <button

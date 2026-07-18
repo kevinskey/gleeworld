@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { MyMusicTab } from './MyMusicTab';
+import { getSignedUrl } from '@/utils/storage';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
 
 const state: {
@@ -51,5 +52,26 @@ describe('MyMusicTab', () => {
     state.scores = []; state.isLoading = true;
     render(<MyMusicTab />);
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  });
+
+  // A source badge is NOT an open affordance — without a visible "Open" cue the
+  // cards read as an inert list, which is exactly how this was misread in use.
+  it('gives every card a visible open affordance', () => {
+    state.scores = [score({ id: '1' }), score({ id: '2', title: 'Sicut Cervus' })];
+    state.isLoading = false;
+    render(<MyMusicTab />);
+    expect(screen.getAllByText('Open')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: /open ave maria/i })).toBeInTheDocument();
+  });
+
+  // Regression: openScore used waitForReady=true, so a missing object retried
+  // for 30 SILENT seconds before erroring. Existing scores must fail fast.
+  it('does not use the post-upload retry loop when opening a score', async () => {
+    state.scores = [score({ id: '1' })]; state.isLoading = false;
+    render(<MyMusicTab />);
+    fireEvent.click(screen.getByRole('button', { name: /open ave maria/i }));
+    await waitFor(() => expect(getSignedUrl).toHaveBeenCalled());
+    const [, , , waitForReady] = vi.mocked(getSignedUrl).mock.calls.at(-1)!;
+    expect(waitForReady).toBe(false);
   });
 });
