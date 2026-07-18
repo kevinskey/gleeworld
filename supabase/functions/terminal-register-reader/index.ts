@@ -33,10 +33,16 @@ serve(async (req) => {
     if (locations.data.length > 0) {
       locationId = locations.data[0].id;
     } else {
+      // One-time bootstrap: only runs if this Stripe account has zero
+      // Terminal locations yet (the shared sk_live_ key serves multiple
+      // businesses — see reference_stripe_account memory doc). This address
+      // was a leftover single-tenant default; if a real reader registration
+      // ever needs to create a fresh location, replace this placeholder
+      // with the actual business address for that registration.
       const location = await stripe.terminal.locations.create({
         display_name: LOCATION_LABEL,
         address: {
-          line1: "350 Spelman Lane SW",
+          line1: "TODO: set real business address before first use",
           city: "Atlanta",
           state: "GA",
           postal_code: "30314",

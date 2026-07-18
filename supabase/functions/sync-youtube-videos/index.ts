@@ -73,20 +73,11 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
       return channelInput
     }
     
-    // Known channel IDs - Spelman College Glee Club official channel
-    const SPELMAN_GLEE_CLUB_CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw'
-    
-    const knownChannels: { [key: string]: string } = {
-      'mkbhd': 'UCBJycsmduvYEL83R_U4JriQ',
-      '@mkbhd': 'UCBJycsmduvYEL83R_U4JriQ',
-      'spelmancollegegleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
-      '@spelmancollegegleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
-      'spelmangleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
-      '@spelmangleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
-      'spelman glee club': SPELMAN_GLEE_CLUB_CHANNEL_ID,
-      'spelman college glee club': SPELMAN_GLEE_CLUB_CHANNEL_ID,
-      // Note: GleeWorldRadio will be resolved via forHandle API - no hardcoded placeholder
-    }
+    // Known-channel shortcuts. Left tenant-neutral on purpose — no single
+    // customer's channel gets a hardcoded alias here; admins paste their own
+    // channel URL/handle instead. GleeWorldRadio resolves via the forHandle
+    // API, no hardcoded placeholder needed.
+    const knownChannels: { [key: string]: string } = {}
     
     // Extract handle from various input formats
     let handle = channelInput.toLowerCase()
@@ -199,14 +190,14 @@ async function handleMockDataSync() {
     const mockChannel = {
       id: 'UCMockChannelId123',
       snippet: {
-        title: 'Spelman College Glee Club (Mock)',
+        title: 'Sample Choir (Mock)',
         description: 'Mock channel data for testing - A prestigious collegiate choir known for excellence in choral music.',
         thumbnails: {
           default: { url: 'https://via.placeholder.com/88x88' },
           medium: { url: 'https://via.placeholder.com/240x240' },
           high: { url: 'https://via.placeholder.com/800x800' }
         },
-        customUrl: '@spelmancollegegleeclub'
+        customUrl: '@samplechoir'
       },
       statistics: {
         subscriberCount: '25000',
@@ -218,7 +209,7 @@ async function handleMockDataSync() {
       {
         id: 'mock_video_1',
         snippet: {
-          title: 'Amazing Grace - Spelman Glee Club Performance',
+          title: 'Amazing Grace - Sample Choir Performance',
           description: 'Mock video - Beautiful rendition of Amazing Grace',
           publishedAt: '2024-01-15T10:00:00Z',
           thumbnails: {

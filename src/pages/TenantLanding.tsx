@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Calendar, ArrowRight, LogIn, Facebook, Instagram, Youtube, Music, Twitter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
 import { PublicSiteView, type PublicSitePayload } from '@/components/public-site/PublicSiteView';
+import { DemoBackToGleeWorldBanner } from '@/components/demo/DemoBackToGleeWorldBanner';
 
 interface HeroSlide {
   id: string;
@@ -152,14 +153,25 @@ export default function TenantLanding() {
   const primaryHero = slides[0];
 
   if (siteLoading) {
-    return <div className="min-h-screen bg-background" />;
+    return (
+      <>
+        <DemoBackToGleeWorldBanner />
+        <div className="min-h-screen bg-background" />
+      </>
+    );
   }
   if (publicSite) {
-    return <PublicSiteView data={publicSite} slug={publicSite.slug} memberSignIn />;
+    return (
+      <>
+        <DemoBackToGleeWorldBanner />
+        <PublicSiteView data={publicSite} slug={publicSite.slug} memberSignIn />
+      </>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <DemoBackToGleeWorldBanner />
       {/* Header strip */}
       <header className="sticky top-0 z-50 bg-[hsl(var(--brand-navy))] text-white border-b border-white/10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
