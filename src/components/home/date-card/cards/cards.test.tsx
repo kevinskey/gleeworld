@@ -96,4 +96,21 @@ describe('custom card', () => {
     render(<C config={{ eyebrow: '', title: '   ', subtitle: '' }} ctx={ctx} />);
     expect(screen.getByText('Saturday')).toBeInTheDocument();
   });
+
+  it('renders no blank line for a whitespace-only eyebrow or subtitle', () => {
+    const C = customCard.Render;
+    const { container } = render(
+      <C config={{ eyebrow: '   ', title: 'Rehearsal', subtitle: '   ' }} ctx={ctx} />,
+    );
+    expect(screen.getByText('Rehearsal')).toBeInTheDocument();
+    // CardFrame renders eyebrow/subtitle in dedicated divs only when
+    // truthy; a whitespace string is truthy in JS, so without trimming
+    // first these render as a non-empty-but-blank line. (The icon wrapper
+    // div is legitimately empty, so we only flag divs with whitespace-only,
+    // non-zero-length content — not every empty div.)
+    const blankyDivs = Array.from(container.querySelectorAll('div'))
+      .map((d) => d.textContent ?? '')
+      .filter((t) => t.length > 0 && t.trim() === '');
+    expect(blankyDivs).toHaveLength(0);
+  });
 });

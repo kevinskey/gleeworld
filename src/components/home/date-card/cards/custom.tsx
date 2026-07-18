@@ -1,6 +1,10 @@
 // Tenant-authored card. Plain text with allowlisted {{tokens}}, rendered as
 // React text nodes. NEVER dangerouslySetInnerHTML — this text is tenant input
-// shown to every member, and the repo has no sanitizer.
+// shown to every member. The repo does have a sanitizer (src/lib/sanitizeHtml.ts,
+// used for third-party HTML like usccb-readings), but that's beside the
+// point here: this card's config fields are plain strings substituted into
+// plain text, never parsed or rendered as markup, so there is no HTML to
+// sanitize in the first place — React text nodes escape everything.
 import { z } from 'zod';
 import { Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
@@ -25,6 +29,12 @@ export const customCard: DateCardModule<typeof schema> = {
   Render: ({ config, ctx }) => {
     const tokens = dateCardTokenContext(ctx);
     const title = substituteText(config.title, tokens).trim();
+    // Trim eyebrow/subtitle too, consistent with title above — a
+    // whitespace-only value (e.g. a stray space, or a token that resolved
+    // to nothing surrounded by spaces) would otherwise pass CardFrame's
+    // truthiness check and render as a blank line.
+    const eyebrow = substituteText(config.eyebrow, tokens).trim();
+    const subtitle = substituteText(config.subtitle, tokens).trim();
     // A title that is only unresolved {{token}} placeholders (e.g. the
     // default '{{next_event}}' with nothing upcoming) has no real content —
     // fall back to the weekday rather than showing the literal braces.
@@ -33,9 +43,9 @@ export const customCard: DateCardModule<typeof schema> = {
     return (
       <CardFrame
         icon={Sparkles}
-        eyebrow={substituteText(config.eyebrow, tokens)}
+        eyebrow={eyebrow}
         title={hasRealTitleContent ? title : format(ctx.now, 'EEEE')}
-        subtitle={substituteText(config.subtitle, tokens) || undefined}
+        subtitle={subtitle || undefined}
       />
     );
   },

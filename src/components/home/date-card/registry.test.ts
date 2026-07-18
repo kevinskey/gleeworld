@@ -52,4 +52,17 @@ describe('getDateCardModule', () => {
   it('exposes plain as the default type', () => {
     expect(DEFAULT_DATE_CARD_TYPE).toBe('plain');
   });
+
+  // Regression: a bare `DATE_CARD_REGISTRY[type]` index falls through to
+  // Object.prototype for these keys, returning a truthy non-module value
+  // that parseDateCardSetting would then accept as "registered" — crashing
+  // DateCardSlot when it dereferences mod.configSchema.safeParse. Any
+  // tenant admin who can write the date_card JSONB column directly can
+  // reach this, white-screening the whole app for every member.
+  it.each(['__proto__', 'constructor', 'toString'])(
+    'returns undefined for the prototype-chain key %s',
+    (key) => {
+      expect(getDateCardModule(key)).toBeUndefined();
+    },
+  );
 });

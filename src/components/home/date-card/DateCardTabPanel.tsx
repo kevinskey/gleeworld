@@ -1,7 +1,7 @@
 // Workspace Settings > Date card. Type picker + live preview + per-type config.
 // Unavailable types render disabled rather than hidden so the add-on stays
 // discoverable.
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,23 +20,33 @@ import {
 import { DATE_CARD_TOKENS } from './tokens';
 import type { DateCardContext } from './types';
 
-const previewCtx: DateCardContext = {
-  now: new Date(),
-  firstName: 'Preview',
-  ensembleName: 'Your ensemble',
-  upNext: {
-    id: 'p',
-    title: 'Spring Concert',
-    detail: 'Main Hall',
-    event_at: new Date(Date.now() + 864e5).toISOString(),
-  },
-  todayRows: [{ id: 'p1', title: 'Rehearsal', detail: null, event_at: new Date().toISOString() }],
-};
+// Character caps mirrored from cards/custom.tsx's Zod schema (eyebrow<=60,
+// title/subtitle<=80). Kept here as a display-side belt-and-braces guard —
+// the actual limit is enforced by the schema at save time regardless of
+// what the input allows the user to type.
+const CUSTOM_FIELD_MAX: Record<string, number> = { eyebrow: 60, title: 80, subtitle: 80 };
 
 export function DateCardTabPanel({ canManage }: { canManage: boolean }) {
   const { setting, save } = useDateCardConfig();
   const { data: modules = [] } = useTenantModules();
   const activeAddons = modules.map((m) => m.module_id);
+
+  // Built inside the component (not at module scope) so `now` reflects the
+  // moment the panel renders rather than the moment the JS module was first
+  // loaded — a long-lived session that crosses midnight would otherwise
+  // preview yesterday for the rest of the browser tab's life.
+  const previewCtx: DateCardContext = useMemo(() => ({
+    now: new Date(),
+    firstName: 'Preview',
+    ensembleName: 'Your ensemble',
+    upNext: {
+      id: 'p',
+      title: 'Spring Concert',
+      detail: 'Main Hall',
+      event_at: new Date(Date.now() + 864e5).toISOString(),
+    },
+    todayRows: [{ id: 'p1', title: 'Rehearsal', detail: null, event_at: new Date().toISOString() }],
+  }), []);
 
   const [type, setType] = useState(setting.type);
   const [config, setConfig] = useState<Record<string, unknown>>(setting.config);
@@ -54,14 +64,44 @@ export function DateCardTabPanel({ canManage }: { canManage: boolean }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settingKey]);
 
-  const mod = getDateCardModule(type) ?? getDateCardModule(DEFAULT_DATE_CARD_TYPE)!;
-  const safeConfig = safeDateCardConfig(mod, config);
+  // Mirror DateCardSlot's availability fallback: if the currently-selected
+  // type's add-on has lapsed since it was saved (e.g. liturgy_planner was
+  // deactivated), the preview must degrade to the plain card exactly like
+  // production does. Without this, an admin previews — and the liturgical
+  // card fires a live usccb-readings edge-function call — a card real
+  // members never actually see.
+  const chosenMod = getDateCardModule(type);
+  const mod = chosenMod && isDateCardAvailable(chosenMod, activeAddons)
+    ? chosenMod
+    : getDateCardModule(DEFAULT_DATE_CARD_TYPE)!;
+  const safeConfig = mod === chosenMod ? safeDateCardConfig(mod, config) : mod.defaultConfig;
   const Preview = mod.Render as React.ComponentType<{ config: unknown; ctx: DateCardContext }>;
 
   const onSave = async () => {
+    // Validate against the SELECTED type's own schema — `chosenMod`, not the
+    // possibly-different `mod` the preview fell back to when its add-on is
+    // unavailable. Save always persists under `type`, so it must be checked
+    // against that type's schema regardless of whether it happens to be
+    // previewable right now.
+    //
+    // The inputs below cap length via maxLength, but that's a UX nicety, not
+    // a guarantee (paste, IME composition, programmatic value changes all
+    // bypass it) — this is the actual gate. Without it, an over-length field
+    // would save silently, then safeDateCardConfig's all-or-nothing
+    // safeParse would discard every field on the NEXT read and revert to
+    // defaults, while the user already saw "Date card updated."
+    const validationMod = chosenMod ?? getDateCardModule(DEFAULT_DATE_CARD_TYPE)!;
+    const parsed = validationMod.configSchema.safeParse(config);
+    if (!parsed.success) {
+      const issue = parsed.error.issues[0];
+      const field = issue?.path?.[0] ? String(issue.path[0]) : 'value';
+      const label = field.charAt(0).toUpperCase() + field.slice(1);
+      toast.error(`${label}: ${issue?.message ?? 'invalid value'}`);
+      return;
+    }
     setSaving(true);
     try {
-      await save({ v: 1, type, config });
+      await save({ v: 1, type, config: parsed.data });
       toast.success('Date card updated.');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not save the date card.');
@@ -130,6 +170,7 @@ export function DateCardTabPanel({ canManage }: { canManage: boolean }) {
                 <Input
                   id={`dc-${field}`}
                   disabled={!canManage}
+                  maxLength={CUSTOM_FIELD_MAX[field]}
                   value={String((config as Record<string, unknown>)[field] ?? '')}
                   onChange={(e) => setConfig({ ...config, [field]: e.target.value })}
                 />

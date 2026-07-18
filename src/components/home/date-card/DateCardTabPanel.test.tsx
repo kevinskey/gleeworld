@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { toast } from 'sonner';
 
 const save = vi.hoisted(() => vi.fn());
 const modules = vi.hoisted(() => ({ current: [] as { module_id: string }[] }));
@@ -30,6 +31,13 @@ vi.mock('@/hooks/useModuleAccess', () => ({
 }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { functions: { invoke: vi.fn(async () => ({ data: {} })) } },
+}));
+// The real LiturgicalDayCard fetches from usccb-readings and has no simple
+// text marker of its own; a unique stub lets the availability-fallback test
+// below tell "the liturgical card rendered" apart from "the plain card
+// rendered" without depending on the current real-world date.
+vi.mock('@/components/liturgy/LiturgicalDayCard', () => ({
+  LiturgicalDayCard: () => <div>LITURGICAL_MARKER</div>,
 }));
 
 import { DateCardTabPanel } from './DateCardTabPanel';
@@ -136,5 +144,57 @@ describe('DateCardTabPanel', () => {
 
     expect(screen.getByText('Date card')).toBeInTheDocument();
     expect(calls).toBeLessThanOrEqual(CALL_BUDGET);
+  });
+
+  // Regression: saving used to write the raw, unvalidated `config` straight
+  // through. The custom card's schema caps title at 80 chars; on the NEXT
+  // read, safeDateCardConfig's all-or-nothing safeParse would discard every
+  // field (not just the over-length one) and silently revert to defaults —
+  // while the admin had already seen "Date card updated." This must be
+  // caught and blocked before save() is ever called.
+  it('blocks save and reports the problem when a custom field exceeds its schema limit', () => {
+    const errorSpy = vi.spyOn(toast, 'error').mockImplementation(() => '');
+    render(<DateCardTabPanel canManage />);
+
+    fireEvent.click(screen.getByText('Custom'));
+    const titleInput = screen.getByLabelText('title') as HTMLInputElement;
+    // Bypass the maxLength attribute the way a paste or programmatic value
+    // change would, so this exercises the real validation gate rather than
+    // the browser's own input-time truncation.
+    fireEvent.change(titleInput, { target: { value: 'x'.repeat(85) } });
+
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    expect(save).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy.mock.calls[0][0]).toMatch(/title/i);
+
+    errorSpy.mockRestore();
+  });
+
+  it('caps the custom field inputs with maxLength matching the schema (eyebrow 60, title/subtitle 80)', () => {
+    render(<DateCardTabPanel canManage />);
+    fireEvent.click(screen.getByText('Custom'));
+
+    expect(screen.getByLabelText('eyebrow')).toHaveAttribute('maxlength', '60');
+    expect(screen.getByLabelText('title')).toHaveAttribute('maxlength', '80');
+    expect(screen.getByLabelText('subtitle')).toHaveAttribute('maxlength', '80');
+  });
+
+  // The slot degrades an unavailable/gated card to the plain default; the
+  // settings-page preview must do the same, or an admin previewing (and
+  // firing a live usccb-readings call for) a card real members never see.
+  it('falls back the preview to the plain card when the persisted type is gated and the add-on is inactive', () => {
+    mockSetting.current = { v: 1, type: 'liturgical', config: {} };
+    modules.current = [];
+    render(<DateCardTabPanel canManage />);
+    expect(screen.queryByText('LITURGICAL_MARKER')).not.toBeInTheDocument();
+  });
+
+  it('previews the liturgical card when its add-on is active', () => {
+    mockSetting.current = { v: 1, type: 'liturgical', config: {} };
+    modules.current = [{ module_id: 'liturgy_planner' }];
+    render(<DateCardTabPanel canManage />);
+    expect(screen.getByText('LITURGICAL_MARKER')).toBeInTheDocument();
   });
 });

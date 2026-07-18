@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations';
@@ -35,6 +36,7 @@ export default function HouseHome() {
   const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
   const isFaculty = isFacultyProfile(profile);
   const firstName = (profile?.full_name || 'there').split(' ')[0];
+  const { settings: brandingSettings } = useBrandingSettings();
 
   const { data: rows = [], isLoading } = useQuery<FeedRow[]>({
     queryKey: ['house-home-feed'],
@@ -120,22 +122,27 @@ export default function HouseHome() {
     [rows],
   );
   const glyphs = useMemo(() => ledgerGlyphs(myPracticeDates, now), [myPracticeDates]);
-  // profile has no ensemble_name field — the token is simply unavailable;
-  // dateCardTokenContext omits absent tokens rather than blanking them.
+  // ensembleName comes from gw_branding_settings.org_name (via
+  // useBrandingSettings, the same hook the tenant branding UI reads) rather
+  // than the profile — the profile has no ensemble_name field. When org_name
+  // is unset, ensembleName stays '' and dateCardTokenContext omits the
+  // {{ensemble_name}} token rather than blanking it, so an admin-authored
+  // custom card leaves the placeholder visible instead of silently dropping
+  // it — matching DateCardTabPanel's preview, which sets a non-empty value.
   // Malformed event_at rows are dropped here: date-fns v4's format() throws
   // on an unparseable date, and up_next/today are the first cards to see
   // live v_command_center_feed rows rather than test fixtures.
   const dateCardCtx: DateCardContext = useMemo(() => ({
     now,
     firstName,
-    ensembleName: '',
+    ensembleName: brandingSettings.org_name ?? '',
     upNext: upNext && hasParsableEventAt(upNext.event_at)
       ? { id: '', title: upNext.title, detail: upNext.detail, event_at: upNext.event_at }
       : null,
     todayRows: todayRows
       .filter((r) => hasParsableEventAt(r.event_at))
       .map((r) => ({ id: r.id, title: r.title, detail: r.detail, event_at: r.event_at })),
-  }), [now, firstName, upNext, todayRows]);
+  }), [now, firstName, brandingSettings.org_name, upNext, todayRows]);
 
   // Module flags drive the app grid only — never the tab bar's flagless
   // core. While modules are still loading, `modules` defaults to `[]`

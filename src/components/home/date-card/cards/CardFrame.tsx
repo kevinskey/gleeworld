@@ -30,7 +30,7 @@ export function CardFrame({ icon: Icon, eyebrow, title, subtitle, onClick }: Pro
     </>
   );
 
-  const cls = 'w-full bg-card border border-border p-4 flex items-center gap-3 text-left';
+  const cls = 'w-full bg-card border border-border rounded-2xl p-4 flex items-center gap-3 text-left';
   return onClick
     ? <button type="button" onClick={onClick} className={cls}>{body}</button>
     : <div className={cls}>{body}</div>;

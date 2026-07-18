@@ -21,6 +21,13 @@ export const DATE_CARD_REGISTRY: Record<string, DateCardModule> = {
 export const DATE_CARD_LIST: DateCardModule[] = Array.from(new Set(Object.values(DATE_CARD_REGISTRY)));
 
 export function getDateCardModule(type: string): DateCardModule | undefined {
+  // Bare index access into an object literal falls through to
+  // Object.prototype for keys like '__proto__', 'constructor', 'toString' —
+  // those resolve to a truthy, non-module value that downstream code (e.g.
+  // parseDateCardSetting) would accept as "registered", then crash on when
+  // it tries mod.configSchema.safeParse. An own-property check keeps the
+  // prototype chain out of the picture entirely.
+  if (!Object.prototype.hasOwnProperty.call(DATE_CARD_REGISTRY, type)) return undefined;
   return DATE_CARD_REGISTRY[type];
 }
 
