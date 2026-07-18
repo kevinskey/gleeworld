@@ -6,6 +6,7 @@ import { plainCard } from './cards/plain';
 import { customCard } from './cards/custom';
 import { upNextCard } from './cards/upNext';
 import { todayCard } from './cards/today';
+import { liturgicalCard } from './cards/liturgical';
 
 export const DEFAULT_DATE_CARD_TYPE = 'plain';
 
@@ -13,6 +14,7 @@ export const DATE_CARD_REGISTRY: Record<string, DateCardModule> = {
   [plainCard.type]: plainCard,
   [upNextCard.type]: upNextCard,
   [todayCard.type]: todayCard,
+  [liturgicalCard.type]: liturgicalCard,
   [customCard.type]: customCard,
 };
 
