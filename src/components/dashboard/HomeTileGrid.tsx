@@ -37,11 +37,15 @@ const LONG_PRESS_SLOP_PX = 10;
 // draftOverflow filter in the edit-mode More renderer.
 const MORE_SECTIONS: NavSectionKey[] = ['music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
 
-// Each tile's `tone` (e.g. "bg-cyan-50 text-cyan-600") is the same
-// per-app color already used for its sidebar icon — carried through by
-// getAppTiles() so the grid isn't a wall of identical white squares.
-// Icons render via currentColor, so setting the tone's text-* on the
-// wrapper colors the glyph too without repeating it on the icon.
+// A first pass painted each tile's full card in its `tone` — with every
+// app pulling an unrelated color (plus one nav entry using a solid
+// bg-primary "hero" tone meant for a single sidebar row, not a whole
+// grid tile) the grid read as an arbitrary wall of clashing color
+// instead of a considered palette. Dialed back: the card stays neutral
+// (matches every other card surface in the app) and color lives only in
+// a small icon chip — same "colored chip on a white card" pattern
+// already used elsewhere (e.g. music library ScoreCard). Still distinct
+// per app, still bigger than the original 20px icon, just calmer.
 const DEFAULT_TONE = 'bg-muted text-foreground';
 
 function KeycapFace({ tile, editing }: { tile: Destination; editing: boolean }) {
@@ -49,10 +53,12 @@ function KeycapFace({ tile, editing }: { tile: Destination; editing: boolean }) 
   return (
     <>
       <span className={
-        `w-full aspect-square ${tile.tone || DEFAULT_TONE} shadow-[0_2px_0_hsl(var(--border))] flex items-center justify-center`
+        'w-full aspect-square bg-card border border-border shadow-[0_2px_0_hsl(var(--border))] flex items-center justify-center'
         + (editing ? '' : ' transition-transform motion-reduce:transition-none group-active:translate-y-px group-active:shadow-none')
       }>
-        <Icon className="w-7 h-7" />
+        <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${tile.tone || DEFAULT_TONE}`}>
+          <Icon className="w-5 h-5" />
+        </span>
       </span>
       {tile.label}
     </>
@@ -277,8 +283,10 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
                 {overflow.map((t) => (
                   <Link key={t.key} to={t.to}
                     className="flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px]">
-                    <span className={`w-full aspect-square ${t.tone || DEFAULT_TONE} flex items-center justify-center`}>
-                      <t.icon className="w-7 h-7" />
+                    <span className="w-full aspect-square bg-card border border-border flex items-center justify-center">
+                      <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${t.tone || DEFAULT_TONE}`}>
+                        <t.icon className="w-5 h-5" />
+                      </span>
                     </span>
                     {t.label}
                   </Link>
