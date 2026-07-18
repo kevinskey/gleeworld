@@ -8,7 +8,7 @@
 // panel for open notes (inline on xl, sheet below).
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Info, Menu, Trash2 } from 'lucide-react';
+import { ArrowLeft, Info, Menu, Plus, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { periodKey, PERIOD_TYPES, type PeriodType } from '@/lib/planner/dateKeys';
-import { trashNote } from '@/lib/planner/notesApi';
+import { createNote, trashNote } from '@/lib/planner/notesApi';
 import { useNote, useSavedFilters } from './hooks';
 import ContextPanel from './components/ContextPanel';
 import KanbanView from './components/KanbanView';
@@ -76,13 +76,33 @@ export default function PlannerPage() {
     navigate(`/planner/${id}`);
   }, [navigate]);
 
+  // One-tap "New note", available from the always-visible chrome (sidebar on
+  // desktop, top-bar row on mobile) so starting a note never takes a trip
+  // through the menu. Files into the current folder when a folder view is
+  // open, else unfiled, then opens the editor.
+  const qc = useQueryClient();
+  const newNote = useMutation({
+    mutationFn: (folderId: string | null) => createNote({ folder_id: folderId }),
+    onSuccess: (note) => {
+      qc.invalidateQueries({ queryKey: ['planner'] });
+      openNote(note.id);
+    },
+    onError: () => toast.error('Could not create the note'),
+  });
+  const handleNewNote = useCallback(() => {
+    if (newNote.isPending) return;
+    newNote.mutate(view === 'notes' ? params.get('folder') ?? null : null);
+  }, [newNote, view, params]);
+
   const openPeriod = useCallback((type: PeriodType, key: string) => {
     const todayNow = periodKey(new Date(), 'daily');
     if (type === 'daily' && key === todayNow) return navigate('/planner');
     navigate(`/planner?view=calendar&ptype=${type}&pkey=${key}`);
   }, [navigate]);
 
-  const sidebar = <PlannerSidebar selection={selection} onSelect={select} />;
+  const sidebar = (
+    <PlannerSidebar selection={selection} onSelect={select} onNewNote={handleNewNote} creatingNote={newNote.isPending} />
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-7xl px-2 sm:px-4">
@@ -94,7 +114,8 @@ export default function PlannerPage() {
       </aside>
 
       <div className="min-w-0 flex-1 py-4 lg:px-6">
-        {/* Mobile / tablet top bar */}
+        {/* Mobile / tablet top bar — carries the primary "New note" action so
+            it's one tap from any planner view (visible on landing, no scroll). */}
         <div className="mb-3 flex items-center gap-2 lg:hidden">
           {/* Local dropdown anchored to the button — a full-screen sheet
               was heavy-handed for what is just the planner's section nav. */}
@@ -108,6 +129,9 @@ export default function PlannerPage() {
               {sidebar}
             </PopoverContent>
           </Popover>
+          <Button size="sm" className="ml-auto gap-1.5" onClick={handleNewNote} disabled={newNote.isPending}>
+            <Plus className="h-4 w-4" /> New note
+          </Button>
         </div>
 
         {noteId ? (
