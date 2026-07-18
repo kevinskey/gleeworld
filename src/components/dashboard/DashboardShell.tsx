@@ -61,6 +61,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
+import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
 import { useMyTenants, tenantHomeUrl } from '@/hooks/useMyTenants';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -601,7 +602,7 @@ function ViewsSwitcher() {
         .select('role')
         .eq('user_id', user.id)
         .maybeSingle();
-      return (data?.role as string | undefined) === 'super_admin';
+      return isTenantSuperAdminRole(data?.role as string | undefined);
     },
     enabled: !!user,
     staleTime: 5 * 60_000,
