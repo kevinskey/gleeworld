@@ -121,12 +121,12 @@ export default function VideoLibrary() {
                   </Link>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {v.duration_seconds !== null && (
-                      <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDuration(v.duration_seconds)}</span>
+                      <span className="inline-flex items-center gap-1"><Clock className="w-4 h-4" /> {formatDuration(v.duration_seconds)}</span>
                     )}
                     <span>· {formatBytes(v.size_bytes)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="text-[10px] text-muted-foreground">{formatDate(v.created_at)}</div>
+                    <div className="text-xs text-muted-foreground">{formatDate(v.created_at)}</div>
                     <Button size="sm" variant="ghost" className="h-6 w-6 p-0"
                       onClick={async () => {
                         if (!confirm(`Delete "${v.title}"?`)) return;
@@ -166,13 +166,13 @@ function Thumbnail({ video }: { video: { id: string; thumb_path: string | null; 
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'uploading') return (
-    <Badge variant="outline" className="bg-card"><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Uploading</Badge>
+    <Badge variant="outline" className="bg-card"><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Uploading</Badge>
   );
   if (status === 'processing') return (
-    <Badge variant="outline" className="bg-card"><Cog className="w-3 h-3 mr-1" /> Processing</Badge>
+    <Badge variant="outline" className="bg-card"><Cog className="w-4 h-4 mr-1" /> Processing</Badge>
   );
   if (status === 'error') return (
-    <Badge variant="outline" className="bg-card text-rose-700 border-rose-200"><AlertCircle className="w-3 h-3 mr-1" /> Error</Badge>
+    <Badge variant="outline" className="bg-card text-rose-700 border-rose-200"><AlertCircle className="w-4 h-4 mr-1" /> Error</Badge>
   );
   return null;
 }

@@ -62,8 +62,8 @@ export default function VideoPlayer() {
   return (
     <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto space-y-4">
       <div>
-        <Link to="/video" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-          <ArrowLeft className="w-3 h-3" /> All videos
+        <Link to="/video" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5">
+          <ArrowLeft className="w-4 h-4" /> All videos
         </Link>
       </div>
 
