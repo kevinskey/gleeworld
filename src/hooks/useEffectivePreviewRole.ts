@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreviewRole } from '@/lib/nav/navPreview';
 import type { NavRole } from '@/lib/navigation/navCatalog';
+import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
 
 /**
  * The caller's role from gw_tenant_members — the exact value the Navigation
@@ -41,11 +42,12 @@ export function useMyTenantRole(): string | null {
 /**
  * The preview role that should actually be applied, or null.
  *
- * Returns non-null ONLY for tenant super-admins. Everyone else gets null no
- * matter what sits in sessionStorage, so forging the key does nothing.
+ * Returns non-null ONLY for tenant super-admins (either spelling). Everyone
+ * else gets null no matter what sits in sessionStorage, so forging the key
+ * does nothing.
  */
 export function useEffectivePreviewRole(): NavRole | null {
   const previewRole = usePreviewRole();
   const myRole = useMyTenantRole();
-  return myRole === 'super_admin' ? previewRole : null;
+  return isTenantSuperAdminRole(myRole) ? previewRole : null;
 }

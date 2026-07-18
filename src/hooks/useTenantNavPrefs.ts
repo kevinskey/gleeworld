@@ -9,14 +9,16 @@
 // the same table, not from gw_profiles.role — those are different
 // role-spaces and mixing them silently kills the filter.
 //
-// Super-admins (gw_tenant_members.role = 'super_admin') always see
-// every nav item so they can reach settings to unhide things later.
+// Tenant super-admins always see every nav item so they can reach
+// settings to unhide things later. Both spellings count — see
+// isTenantSuperAdminRole; real tenants store 'super-admin'.
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyTenantRole, useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
+import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
 
 interface NavPrefRow {
   role: string;
@@ -53,7 +55,7 @@ export function useTenantNavPrefs(): Set<string> {
     // Tenant super-admin bypass. If we haven't resolved the role yet,
     // do NOT filter — otherwise the sidebar flashes empty during the
     // first render.
-    if (!effectiveRole || effectiveRole === 'super_admin') return new Set<string>();
+    if (!effectiveRole || isTenantSuperAdminRole(effectiveRole)) return new Set<string>();
     const row = rows.find((r) => r.role === effectiveRole);
     return new Set(row?.hidden_items ?? []);
   }, [effectiveRole, rows]);
