@@ -25,11 +25,16 @@ export const customCard: DateCardModule<typeof schema> = {
   Render: ({ config, ctx }) => {
     const tokens = dateCardTokenContext(ctx);
     const title = substituteText(config.title, tokens).trim();
+    // A title that is only unresolved {{token}} placeholders (e.g. the
+    // default '{{next_event}}' with nothing upcoming) has no real content —
+    // fall back to the weekday rather than showing the literal braces.
+    // Mixed content like 'Concert {{next_event}}' still renders as-is.
+    const hasRealTitleContent = title.replace(/\{\{\s*[a-z_]+\s*\}\}/g, '').trim().length > 0;
     return (
       <CardFrame
         icon={Sparkles}
         eyebrow={substituteText(config.eyebrow, tokens)}
-        title={title || format(ctx.now, 'EEEE')}
+        title={hasRealTitleContent ? title : format(ctx.now, 'EEEE')}
         subtitle={substituteText(config.subtitle, tokens) || undefined}
       />
     );

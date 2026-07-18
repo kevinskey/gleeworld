@@ -15,6 +15,11 @@ const ctx: DateCardContext = {
   todayRows: [],
 };
 
+const ctxNoUpNext: DateCardContext = {
+  ...ctx,
+  upNext: null,
+};
+
 afterEach(cleanup);
 
 describe('plain card', () => {
@@ -62,6 +67,33 @@ describe('custom card', () => {
   it('falls back to the weekday when the title is empty', () => {
     const C = customCard.Render;
     render(<C config={{ eyebrow: '', title: '', subtitle: '' }} ctx={ctx} />);
+    expect(screen.getByText('Saturday')).toBeInTheDocument();
+  });
+
+  it('falls back to the weekday when the title is an unresolved {{next_event}} placeholder and there is no upcoming event', () => {
+    const C = customCard.Render;
+    render(<C config={{ eyebrow: '', title: '{{next_event}}', subtitle: '' }} ctx={ctxNoUpNext} />);
+    expect(screen.getByText('Saturday')).toBeInTheDocument();
+    expect(screen.queryByText('{{next_event}}')).not.toBeInTheDocument();
+  });
+
+  it('renders the event title instead of falling back when upNext is present', () => {
+    const C = customCard.Render;
+    render(<C config={{ eyebrow: '', title: '{{next_event}}', subtitle: '' }} ctx={ctx} />);
+    expect(screen.getByText('Spring Concert')).toBeInTheDocument();
+    expect(screen.queryByText('Saturday')).not.toBeInTheDocument();
+  });
+
+  it('renders mixed content literally, including the unresolved placeholder, without falling back', () => {
+    const C = customCard.Render;
+    render(<C config={{ eyebrow: '', title: 'Concert {{next_event}}', subtitle: '' }} ctx={ctxNoUpNext} />);
+    expect(screen.getByText('Concert {{next_event}}')).toBeInTheDocument();
+    expect(screen.queryByText('Saturday')).not.toBeInTheDocument();
+  });
+
+  it('falls back to the weekday when the title is whitespace-only', () => {
+    const C = customCard.Render;
+    render(<C config={{ eyebrow: '', title: '   ', subtitle: '' }} ctx={ctx} />);
     expect(screen.getByText('Saturday')).toBeInTheDocument();
   });
 });
