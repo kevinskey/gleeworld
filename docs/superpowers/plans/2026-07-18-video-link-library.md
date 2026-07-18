@@ -19,7 +19,10 @@
 - **No CSP change.** Verified 2026-07-18: `index.html` `frame-src` already includes `https://www.youtube-nocookie.com`; `img-src` already allows `https:`. If you find yourself editing the CSP meta tag, you have gone off-plan.
 - **Tenant-neutral copy.** Never hardcode a tenant name (e.g. "Spelman") in user-visible strings.
 - **Light-theme tokens.** Use `bg-card` / `text-muted-foreground` etc. Never dark-navy cards. Studio chrome minimum: `text-xs`/`text-sm`, `w-4 h-4` icons.
-- **Test command:** `npx vitest run <path>`. Typecheck: `npx tsc --noEmit`.
+- **Test command:** `npx vitest run <path>`.
+- **Typecheck gate is `npx vite build` — NOT `tsc --noEmit`.** `tsconfig.json` sets `"files": []`, so `tsc --noEmit` type-checks nothing and always exits 0. It is a no-op that will report success on broken code.
+- **`git add -A` is FORBIDDEN** in this repo (it sweeps in macOS `" 2"` duplicate-file litter). Stage explicit paths only.
+- **The suite has ~37 pre-existing failures** in the `sightReading`/`notation` suites. They are not yours. Gate on your own test files plus `npx vite build`, not on a fully green `npx vitest run`.
 
 ---
 
@@ -784,8 +787,8 @@ export function useMoveLink() {
 
 - [ ] **Step 2: Typecheck**
 
-Run: `npx tsc --noEmit`
-Expected: no errors referencing `useVideoLinks.ts`.
+Run: `npx vite build`
+Expected: build succeeds. (Do not use `tsc --noEmit` — it is a no-op here.)
 
 - [ ] **Step 3: Commit**
 
@@ -1468,8 +1471,8 @@ export function LinksTab() {
 
 - [ ] **Step 2: Typecheck**
 
-Run: `npx tsc --noEmit`
-Expected: no errors referencing `video-links/`.
+Run: `npx vite build`
+Expected: build succeeds. (Do not use `tsc --noEmit` — it is a no-op here.)
 
 - [ ] **Step 3: Commit**
 
@@ -1523,10 +1526,10 @@ import { LinksTab } from '@/components/video-links/LinksTab';
 
 The "Upload video" button in `actions` should render only when `tab === 'uploads'`, so the header action matches the visible tab.
 
-- [ ] **Step 3: Typecheck and run the full suite**
+- [ ] **Step 3: Typecheck and run the feature suites**
 
-Run: `npx tsc --noEmit && npx vitest run`
-Expected: no new type errors; no previously-passing test now failing.
+Run: `npx vite build && npx vitest run src/lib/video src/components/video-links supabase/functions`
+Expected: build succeeds; all feature tests pass. The ~37 pre-existing `sightReading`/`notation` failures are out of scope — do not attempt to fix them.
 
 - [ ] **Step 4: Verify in the real app**
 
