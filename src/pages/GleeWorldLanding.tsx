@@ -540,12 +540,16 @@ function MarketingSite() {
       <div className="w-full w-full bg-white text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
         <AppleNav />
         <AppleHero />
-        <AppleVideo />
+        {/* Real, clickable proof right below the hero — replaces the old
+            "See it in action" video slot, which only ever showed an
+            unconfigured placeholder (LOOM_EMBED_URL was never set). Actual
+            live demo sites are a stronger, more concrete first proof point
+            than an empty video player. */}
+        <LiveExamplesSection />
         <AppleProductBig />
         <FounderSection />
         <ReplacementTable />
         <AppleAudienceGrid />
-        <LiveExamplesSection />
         {/* CPDL leads the feature stack — your single biggest content
             differentiator. Nobody else mirrors the public-domain library. */}
         <AppleFeatureRow
@@ -1625,70 +1629,6 @@ function AppleFinalCTA() {
           >
             Try the demo <ArrowRight className="h-4 w-4" />
           </a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ── Demo video ────────────────────────────────────────────────────────────
-// REPLACE this with your Loom embed URL when you record the walkthrough.
-// Get it from Loom → Share → "Embed code" → copy just the URL after src="...".
-// Until then we show a "Coming soon" placeholder.
-const LOOM_EMBED_URL: string | null = null; // e.g. "https://www.loom.com/embed/XXXXXXXXXXXX"
-
-function AppleVideo() {
-  return (
-    <section className="py-16 sm:py-24 md:py-32" style={{ backgroundColor: '#f5f5f7' }}>
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="text-center mb-10 sm:mb-14">
-          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>
-            See it in action
-          </p>
-          <h2
-            className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-slate-900"
-            style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
-          >
-            90 seconds. The whole product.
-          </h2>
-          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mt-4">
-            A real director walking through the dashboard, gradebook, attendance, and music library.
-            No sales pitch — just the software.
-          </p>
-        </div>
-
-        <div className="rounded-3xl overflow-hidden shadow-2xl bg-slate-900 aspect-video">
-          {LOOM_EMBED_URL ? (
-            <iframe
-              src={LOOM_EMBED_URL}
-              title="GleeWorld product walkthrough"
-              frameBorder="0"
-              allowFullScreen
-              className="w-full h-full"
-            />
-          ) : (
-            <a
-              href={TRY_DEMO_URL}
-              className="w-full h-full flex flex-col items-center justify-center text-center px-6 hover:bg-slate-800 transition-colors"
-            >
-              <div
-                className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}
-              >
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-              <div className="text-white text-xl sm:text-2xl font-bold mb-2" style={{ letterSpacing: '-0.015em' }}>
-                Walkthrough video coming soon
-              </div>
-              <div className="text-slate-300 text-sm sm:text-base max-w-md">
-                Want a live tour right now? Email us — we'll send you a private link
-                and a calendar invite within one business day.
-              </div>
-              <div className="mt-6 text-sky-300 text-sm font-semibold">Try the demo</div>
-            </a>
-          )}
         </div>
       </div>
     </section>
