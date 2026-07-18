@@ -113,7 +113,7 @@ export default function PlannerPage() {
         {sidebar}
       </aside>
 
-      <div className="min-w-0 flex-1 py-4 lg:px-6">
+      <div className="min-w-0 flex-1 px-4 py-4 lg:px-6">
         {/* Mobile / tablet top bar — carries the primary "New note" action so
             it's one tap from any planner view (visible on landing, no scroll). */}
         <div className="mb-3 flex items-center gap-2 lg:hidden">
