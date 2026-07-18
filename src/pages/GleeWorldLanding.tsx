@@ -545,6 +545,7 @@ function MarketingSite() {
         <FounderSection />
         <ReplacementTable />
         <AppleAudienceGrid />
+        <LiveExamplesSection />
         {/* CPDL leads the feature stack — your single biggest content
             differentiator. Nobody else mirrors the public-domain library. */}
         <AppleFeatureRow
@@ -634,6 +635,7 @@ function MarketingSite() {
 // render the same array, so they can't drift apart.
 const MARKETING_NAV_LINKS: { href: string; label: string }[] = [
   { href: '#product', label: 'Product' },
+  { href: '#examples', label: 'Examples' },
   { href: '#how', label: 'How it works' },
   { href: '#pricing', label: 'Pricing' },
   { href: TRY_DEMO_URL, label: 'Try the demo' },
@@ -1406,6 +1408,93 @@ function AppleAudienceGrid() {
                 <span className="text-xs sm:text-sm text-slate-600">{a.stat.label}</span>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Real, live tenant sites used as clickable proof — no login required, no
+// mock data. Each maps to one of the four demo tenants provisioned for
+// exactly this purpose (gw_tenants slugs demo-choir/demo-district/
+// demo-school/demo-songwriter). Update the url if a demo tenant's
+// subdomain ever changes.
+const EXAMPLE_SITES: Array<{
+  title: string; body: string; icon: typeof Church; pastel: string; url: string;
+}> = [
+  {
+    title: 'Choir & Church',
+    body: 'Sacred music ministry — service planning, choir roster, and a hymnal library, all in one place.',
+    icon: Church,
+    pastel: '#ede9fe',
+    url: 'https://demo-choir.gleeworld.org',
+  },
+  {
+    title: 'School District',
+    body: 'Every campus, every ensemble, one dashboard — built for a district-wide music program.',
+    icon: Building,
+    pastel: '#dbeafe',
+    url: 'https://demo-district.gleeworld.org',
+  },
+  {
+    title: 'School Program',
+    body: 'A single music classroom — gradebook, attendance, and the rehearsal calendar your students actually check.',
+    icon: School,
+    pastel: '#fef3c7',
+    url: 'https://demo-school.gleeworld.org',
+  },
+  {
+    title: 'Songwriter Studio',
+    body: 'For original music creators — lyrics, chord charts, and a private songwriting library.',
+    icon: PenSquare,
+    pastel: '#fce7f3',
+    url: 'https://demo-songwriter.gleeworld.org',
+  },
+];
+
+function LiveExamplesSection() {
+  return (
+    <section className="py-16 sm:py-24 md:py-32 bg-white" id="examples">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-12 sm:mb-16">
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>
+            See it live
+          </p>
+          <h2
+            className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-slate-900"
+            style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
+          >
+            Real sites. Running today.
+          </h2>
+          <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto mt-4">
+            Every program type below is a live GleeWorld site — click through and explore. No login required.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+          {EXAMPLE_SITES.map((s) => (
+            <a
+              key={s.title}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-3xl p-8 sm:p-10 min-h-[16rem] flex flex-col justify-between transition-transform hover:scale-[1.015]"
+              style={{ backgroundColor: s.pastel }}
+            >
+              <div>
+                <s.icon className="h-9 w-9 text-slate-900 mb-4" />
+                <h3
+                  className="text-2xl sm:text-3xl font-bold mb-2 text-slate-900"
+                  style={{ ...HEADING_STYLE, letterSpacing: '-0.02em' }}
+                >
+                  {s.title}
+                </h3>
+                <p className="text-sm sm:text-base text-slate-700 max-w-sm">{s.body}</p>
+              </div>
+              <div className="mt-6 inline-flex items-center gap-2 self-start text-sm font-semibold text-slate-900 group-hover:gap-3 transition-all">
+                View example site <ArrowRight className="h-4 w-4" />
+              </div>
+            </a>
           ))}
         </div>
       </div>
