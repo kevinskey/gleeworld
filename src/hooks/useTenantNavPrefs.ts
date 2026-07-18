@@ -16,7 +16,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePreviewRole } from '@/lib/nav/navPreview';
+import { useMyTenantRole, useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
 
 interface NavPrefRow {
   role: string;
@@ -25,25 +25,8 @@ interface NavPrefRow {
 
 export function useTenantNavPrefs(): Set<string> {
   const { user } = useAuth();
-  const previewRole = usePreviewRole();
-
-  // Current user's tenant-scoped role — the exact value the Nav tab
-  // wrote to gw_tenant_nav_prefs.role. RLS scopes this to the caller's
-  // own tenant, so no explicit tenant_id filter is required.
-  const { data: myRole } = useQuery<string | null>({
-    queryKey: ['tenant-nav-prefs-my-role', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data } = await supabase
-        .from('gw_tenant_members')
-        .select('role')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      return (data?.role as string | undefined) ?? null;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60_000,
-  });
+  const myRole = useMyTenantRole();
+  const previewRole = useEffectivePreviewRole();
 
   const { data: rows = [] } = useQuery<NavPrefRow[]>({
     queryKey: ['tenant-nav-prefs'],
@@ -58,12 +41,11 @@ export function useTenantNavPrefs(): Set<string> {
     staleTime: 60_000,
   });
 
-  // Preview override — a super-admin on the Navigation settings tab
-  // can turn on "Preview as <role>" to see the nav through that
-  // role's eyes without signing out. This ONLY takes effect for
-  // super-admins so a non-admin can't opt themselves out of a
-  // restriction their tenant admin set.
-  const effectiveRole = (myRole === 'super_admin' && previewRole) ? previewRole : myRole;
+  // Preview override — a super-admin can turn on "Preview as <role>" from
+  // the header's Views switcher to see the nav through that role's eyes
+  // without signing out. useEffectivePreviewRole already enforces that this
+  // is non-null only for super-admins.
+  const effectiveRole = previewRole ?? myRole;
 
   // Memoized so consumers can use the Set as a dependency — a fresh Set
   // every render made downstream useMemos (HouseHome's NavContext) inert.

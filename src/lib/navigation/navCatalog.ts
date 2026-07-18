@@ -147,6 +147,46 @@ export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
   { value: 'member',   label: 'Members' },
 ];
 
+// Capability flags each previewable role actually holds. Preview used to
+// swap only the hidden_items list, which left the capability gates reading
+// the real (super-admin) profile — so "preview as Students" still rendered
+// Users, Settings and Tenants. That made the preview a lie for any tenant
+// that hadn't hand-hidden those rows. These flags close that gap.
+//
+// Only 'admin' carries privilege; student/fan/graduate/member are
+// unprivileged in the nav's eyes. canLibrarian is a per-user grant rather
+// than a role, but no non-admin role implies it, so false is correct.
+const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian'>> = {
+  admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true  },
+  student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
+  fan:      { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
+  graduate: { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
+  member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
+};
+
+/**
+ * Narrow a NavContext to what `role` would see. Pass role=null (no preview
+ * active) to get `ctx` back unchanged.
+ *
+ * Module access is deliberately NOT overridden: modules are a tenant-level
+ * entitlement, not a role capability, so a previewed student still sees the
+ * same module set their tenant actually has.
+ *
+ * Callers must only pass a non-null role for users who are genuinely
+ * super-admins — this function does not re-check that. It can only ever
+ * remove capabilities relative to a real super-admin, so a forged
+ * sessionStorage value cannot escalate.
+ */
+export function applyPreviewRole(ctx: NavContext, role: NavRole | null): NavContext {
+  if (!role) return ctx;
+  return { ...ctx, ...PREVIEW_ROLE_CAPS[role] };
+}
+
+/** Which HouseHome tile set a previewed role should get. */
+export function previewRoleIsFaculty(role: NavRole): boolean {
+  return role === 'admin';
+}
+
 export interface HideableNavItem {
   /** Route path — the stable identity stored in hidden_items. */
   path: string;
