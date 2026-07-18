@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { HIDEABLE_NAV_ROLES, type NavRole } from '@/lib/navigation/navCatalog';
+import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole } from '@/lib/navigation/navCatalog';
 import {
   DndContext, PointerSensor, useDroppable, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
@@ -60,6 +60,7 @@ import { getOrgName } from '@/lib/orgName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
+import { useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
 import { useMyTenants, tenantHomeUrl } from '@/hooks/useMyTenants';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -284,6 +285,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     moduleAccess[key] = useModuleAccess(key).hasAccess;
   }
   const hiddenNav = useTenantNavPrefs();
+  const previewRole = useEffectivePreviewRole();
 
   // Verb-grouped nav (Today / Music / Teach / Make / Plan / Reach /
   // Money / People / Admin), built from the shared nav catalog so this
@@ -293,11 +295,14 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   // Concert Planner + Tour Manager + Auditions sit together as
   // scheduling tools, and so on. Empty sections (no module access)
   // collapse out of the column.
-  const navCtx: NavContext = {
+  // applyPreviewRole narrows the capability flags when a super-admin is
+  // previewing — without it the gates read the real profile and admin-only
+  // entries (Users, Settings, Tenants) leak into every previewed role.
+  const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
     hiddenRoutes: hiddenNav,
-  };
+  }, previewRole);
   const { navOrder, saveNavOrder } = useNavItemOrder();
   const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
   const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -508,16 +513,18 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     moduleAccess[key] = useModuleAccess(key).hasAccess;
   }
   const hiddenNav = useTenantNavPrefs();
+  const previewRole = useEffectivePreviewRole();
 
   // Verb-grouped to match the desktop sidebar (Today / Music / Teach /
   // Make / Plan / Reach / Money / People / Admin), built from the same
   // shared nav catalog. Empty sections drop out so a tenant without
   // box-office or finance modules doesn't see an empty "Money" header.
-  const navCtx: NavContext = {
+  // Preview narrowing applied identically to the desktop sidebar.
+  const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
     hiddenRoutes: hiddenNav,
-  };
+  }, previewRole);
   // same per-user ordering + section overrides as the desktop sidebar
   // (read-only here; reordering by drag is a desktop affordance)
   const { navOrder } = useNavItemOrder();

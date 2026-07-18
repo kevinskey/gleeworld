@@ -12,12 +12,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
+import { useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations';
 import { toModuleFlags, toModuleSet } from '@/lib/navigation/moduleFlags';
-import type { NavContext } from '@/lib/navigation/navCatalog';
+import { applyPreviewRole, previewRoleIsFaculty, type NavContext } from '@/lib/navigation/navCatalog';
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useHomeTileLayout } from '@/hooks/useHomeTileLayout';
@@ -158,8 +159,9 @@ export default function HouseHome() {
   const flags: ModuleFlags = toModuleFlags(modules);
   const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
   const hiddenNav = useTenantNavPrefs();
+  const previewRole = useEffectivePreviewRole();
   const moduleSet = useMemo(() => toModuleSet(modules), [modules]);
-  const nav: NavContext = useMemo(() => ({
+  const nav: NavContext = useMemo(() => applyPreviewRole({
     hasModule: (k) => moduleSet.has(k),
     isTenantAdmin: !!profile?.is_admin || !!profile?.is_super_admin,
     isPlatformAdmin: !!profile?.is_super_admin && tenantSlug === 'main',
@@ -167,11 +169,16 @@ export default function HouseHome() {
       ? canEditMusicLibrary()
       : !!(profile?.is_admin || profile?.is_super_admin),
     hiddenRoutes: hiddenNav,
-  }), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav]);
+  }, previewRole), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav, previewRole]);
   const { layout, layoutLoading, save: saveTileLayout } = useHomeTileLayout();
   const { primary, overflow } = modulesLoading || layoutLoading || roleLoading
     ? { primary: [], overflow: [] }
-    : getAppTiles(isFaculty ? 'faculty' : 'student', flags, nav, layout);
+    // Tile set follows the previewed role too — otherwise previewing as a
+    // student still renders the faculty grid.
+    : getAppTiles(
+        (previewRole ? previewRoleIsFaculty(previewRole) : isFaculty) ? 'faculty' : 'student',
+        flags, nav, layout,
+      );
 
   return (
     <DashboardShell>
