@@ -1,8 +1,9 @@
-// Platform owner's tenant portal. Visible only to super-admins on the main
-// tenant (the platform owner). Lists every tenant with one-click access to
-// their public site, admin Control Center, and page builder. Used by Kevin
-// to fix problems for individual tenants without having to remember each
-// subdomain.
+// Platform Home — the mother site's landing page. Visible only to
+// super-admins on the main tenant (the platform owner); this is where
+// pickDestination() sends kpj64110@gmail.com straight after login (see
+// useRoleBasedRedirect.ts). Lists every tenant ("world") with one-click
+// access to its public site, dashboard, and page builder, so Kevin can
+// fix problems for any tenant without having to remember each subdomain.
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -120,15 +121,15 @@ export default function PlatformTenantsPortal() {
         <Card>
           <CardHeader className="text-center">
             <Lock className="w-10 h-10 mx-auto mb-2 text-muted-foreground" />
-            <CardTitle>Platform admins only</CardTitle>
+            <CardTitle>Platform owners only</CardTitle>
             <CardDescription>
-              This portal is reserved for super-admins on the main tenant. You&apos;re signed in
-              as a tenant admin — your control center is what you&apos;re looking for.
+              This is the mother site — reserved for super-admins on the main tenant.
+              You&apos;re signed in as a tenant admin; your dashboard is what you&apos;re looking for.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
             <Button asChild>
-              <Link to="/control-center">Go to your Control Center</Link>
+              <Link to="/dashboard">Go to your Dashboard</Link>
             </Button>
           </CardContent>
         </Card>
@@ -150,9 +151,12 @@ export default function PlatformTenantsPortal() {
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-sans normal-case tracking-tight text-2xl font-bold">All tenants</h1>
+          <h1 className="font-sans normal-case tracking-tight text-2xl font-bold">
+            {userProfile?.full_name ? `Welcome back, ${userProfile.full_name.split(' ')[0]}` : 'Platform Home'}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Platform owner portal — jump into any tenant&apos;s site or admin to fix problems.
+            gleeworld.org is the mother site. Pick a world below to enter it and help out — everything
+            else stays exactly where you left it.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -234,11 +238,11 @@ export default function PlatformTenantsPortal() {
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
-                      onClick={() => void openTenantAdmin(t, '/control-center')}
-                      title="Open the tenant Control Center signed in as its admin"
+                      variant="default"
+                      onClick={() => void openTenantAdmin(t, '/dashboard')}
+                      title="Enter this tenant's dashboard signed in as its admin"
                     >
-                      <Settings className="w-3.5 h-3.5 mr-1" /> Admin
+                      <Settings className="w-3.5 h-3.5 mr-1" /> Enter
                     </Button>
                     <Button
                       size="sm"
