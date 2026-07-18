@@ -1432,28 +1432,28 @@ const EXAMPLE_SITES: Array<{
     body: 'Sacred music ministry — service planning, choir roster, and a hymnal library, all in one place.',
     icon: Church,
     pastel: '#ede9fe',
-    url: 'https://demo-choir.gleeworld.org',
+    url: 'https://demo-choir.gleeworld.org/try',
   },
   {
     title: 'School District',
     body: 'Every campus, every ensemble, one dashboard — built for a district-wide music program.',
     icon: Building,
     pastel: '#dbeafe',
-    url: 'https://demo-district.gleeworld.org',
+    url: 'https://demo-district.gleeworld.org/try',
   },
   {
     title: 'School Program',
     body: 'A single music classroom — gradebook, attendance, and the rehearsal calendar your students actually check.',
     icon: School,
     pastel: '#fef3c7',
-    url: 'https://demo-school.gleeworld.org',
+    url: 'https://demo-school.gleeworld.org/try',
   },
   {
     title: 'Songwriter Studio',
     body: 'For original music creators — lyrics, chord charts, and a private songwriting library.',
     icon: PenSquare,
     pastel: '#fce7f3',
-    url: 'https://demo-songwriter.gleeworld.org',
+    url: 'https://demo-songwriter.gleeworld.org/try',
   },
 ];
 

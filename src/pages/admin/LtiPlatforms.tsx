@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Loader2, Plus, Pencil, Trash2, Power } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface Platform {
   id: string;
@@ -81,14 +82,10 @@ export default function LtiPlatforms() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <header className="flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">LTI Platforms</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Registered Canvas (or other LMS) instances that can launch into GleeWorld.
-          </p>
-        </div>
+    <DashboardPageShell
+      title="LTI Platforms"
+      subtitle="Registered Canvas (or other LMS) instances that can launch into GleeWorld."
+      actions={
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-1" /> Add Canvas instance</Button>
@@ -104,8 +101,8 @@ export default function LtiPlatforms() {
             />
           </DialogContent>
         </Dialog>
-      </header>
-
+      }
+    >
       {loading ? (
         <div className="flex items-center text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading…</div>
       ) : platforms.length === 0 ? (
@@ -173,7 +170,7 @@ export default function LtiPlatforms() {
           </dl>
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageShell>
   );
 }
 
@@ -322,7 +319,7 @@ function PlatformForm({
           {tenants.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
       </div>
-      {field('display_name', 'Display name', 'e.g. Spelman Canvas')}
+      {field('display_name', 'Display name', 'e.g. Acme Canvas')}
       {field('issuer', 'Issuer URL')}
       {field('client_id', 'Client ID (from Canvas Developer Key)')}
       {field('deployment_id', 'Deployment ID (from Canvas Developer Key)')}

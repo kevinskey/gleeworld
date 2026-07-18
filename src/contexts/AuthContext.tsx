@@ -134,10 +134,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   // without bouncing back to gleeworld.org. Everyone else is
                   // signed out when their JWT's tenant doesn't match the
                   // subdomain they landed on.
+                  //
+                  // Demo-viewer accounts get the same bypass: the demo-login
+                  // edge function mints a session for one of 3 fixed accounts
+                  // whose JWT tenant_slug is fixed to their home tenant
+                  // ('demo'), but they're also gw_tenant_members of the other
+                  // showcase demo tenants (demo-choir/district/school/
+                  // songwriter) so /try works on all five subdomains. Safe to
+                  // bypass here for the same reason it's safe for the
+                  // platform owner: current_tenant_id() resolves the ACTUAL
+                  // subdomain's tenant from real membership (not the stale JWT
+                  // claim), and demo_viewer sessions are blanket-restricted to
+                  // read-only by RESTRICTIVE RLS regardless of which tenant
+                  // they're scoped to — there's no write/escalation surface
+                  // for a stale tenant_slug claim to exploit.
                   const isPlatformOwner =
                     claims.tenant_slug === 'main' &&
                     (claims.is_super_admin === true || claims.role === 'super-admin' || claims.role === 'super_admin');
-                  if (claims.tenant_slug && claims.tenant_slug !== expectedTenant && !isPlatformOwner) {
+                  const isDemoViewer = claims.demo_viewer === true;
+                  if (claims.tenant_slug && claims.tenant_slug !== expectedTenant && !isPlatformOwner && !isDemoViewer) {
                     console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Signing out.`);
                     await supabase.auth.signOut();
                     cleanupAuthState();
@@ -148,8 +163,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     window.location.href = `https://${correctHost}/auth`;
                     return;
                   }
-                  if (isPlatformOwner && claims.tenant_slug !== expectedTenant) {
-                    console.info(`[auth] platform owner on ${expectedTenant} (JWT tenant=${claims.tenant_slug}) — staying signed in`);
+                  if ((isPlatformOwner || isDemoViewer) && claims.tenant_slug !== expectedTenant) {
+                    console.info(`[auth] ${isPlatformOwner ? 'platform owner' : 'demo viewer'} on ${expectedTenant} (JWT tenant=${claims.tenant_slug}) — staying signed in`);
                   }
                 } catch (e) {
                   console.warn('[auth] could not decode JWT for tenant check', e);

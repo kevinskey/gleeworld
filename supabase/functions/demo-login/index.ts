@@ -1,10 +1,20 @@
-// demo-login — mint a session for one of the three public demo accounts.
+// demo-login — mint a session for one of the three demo accounts (director/
+// student/fan) belonging to the CURRENT showcase demo tenant.
 //
 // The prospect-facing demo is one-click: no credentials ever ship to the
 // client. This function holds the passwords (env secrets) and exchanges
-// them against GoTrue's password grant. All three accounts are flagged
+// them against GoTrue's password grant. Every account is flagged
 // is_demo_viewer, so the sessions it returns are read-only under RLS
 // regardless of what the client does with them.
+//
+// Five showcase tenants exist, each with its own dedicated set of 3
+// accounts (gw_profiles is one row per user — a single shared account
+// can't have a different tenant/role per subdomain, so each tenant gets
+// its own). Which tenant's accounts to use is read from the x-tenant-slug
+// header (the same header every client request already sends — see
+// src/integrations/supabase/client.ts), never trusted from the request
+// body, so a caller can't ask for a different tenant's accounts than the
+// subdomain they're actually on.
 //
 // Body: { role: 'director' | 'student' | 'fan' }
 // Returns: { access_token, refresh_token, expires_in }
@@ -13,15 +23,28 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-tenant-slug",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ACCOUNTS: Record<string, { email: string; passwordEnv: string }> = {
-  director: { email: "demo-director@gleeworld.org", passwordEnv: "DEMO_DIRECTOR_PASSWORD" },
-  student: { email: "demo-student@gleeworld.org", passwordEnv: "DEMO_STUDENT_PASSWORD" },
-  fan: { email: "demo-fan@gleeworld.org", passwordEnv: "DEMO_FAN_PASSWORD" },
-};
+// The original tenant ('demo') kept its original account emails/env names
+// for backward compatibility; the four newer showcase tenants follow a
+// `demo-{tenant}-{role}` / `DEMO_{TENANT}_{ROLE}_PASSWORD` convention.
+const SHOWCASE_TENANTS = ["demo", "choir", "district", "school", "songwriter"] as const;
+type ShowcaseTenant = typeof SHOWCASE_TENANTS[number];
+
+function accountFor(tenant: ShowcaseTenant, role: string): { email: string; passwordEnv: string } {
+  if (tenant === "demo") {
+    return {
+      email: `demo-${role}@gleeworld.org`,
+      passwordEnv: `DEMO_${role.toUpperCase()}_PASSWORD`,
+    };
+  }
+  return {
+    email: `demo-${tenant}-${role}@gleeworld.org`,
+    passwordEnv: `DEMO_${tenant.toUpperCase()}_${role.toUpperCase()}_PASSWORD`,
+  };
+}
 
 // Best-effort per-IP rate limit (per-instance memory — GoTrue's own limits
 // back this up). 10 mints/minute is plenty for a human clicking around.
@@ -64,8 +87,20 @@ serve(async (req: Request) => {
   } catch {
     return json(400, { error: "bad_json" });
   }
-  const account = ACCOUNTS[role];
-  if (!account) return json(400, { error: "bad_role" });
+  if (!["director", "student", "fan"].includes(role)) {
+    return json(400, { error: "bad_role" });
+  }
+
+  // x-tenant-slug is the real tenant slug (e.g. "demo-choir"); our internal
+  // per-tenant key drops the "demo-" prefix ("choir") to match the account
+  // naming convention. The bare 'demo' tenant (no prefix) stays 'demo'.
+  const rawSlug = req.headers.get("x-tenant-slug") || "demo";
+  const tenantKey = (rawSlug === "demo" ? "demo" : rawSlug.replace(/^demo-/, "")) as ShowcaseTenant;
+  if (!SHOWCASE_TENANTS.includes(tenantKey)) {
+    return json(400, { error: "not_a_demo_tenant" });
+  }
+
+  const account = accountFor(tenantKey, role);
 
   const password = Deno.env.get(account.passwordEnv);
   const supabaseUrl = Deno.env.get("SUPABASE_URL");

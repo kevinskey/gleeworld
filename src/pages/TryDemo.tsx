@@ -13,21 +13,27 @@ import {
   DEMO_WELCOME_PENDING_KEY,
 } from '@/lib/demoSession';
 import { supabase } from '@/integrations/supabase/client';
-import { isDemoTenant } from '@/lib/demoTenant';
+import { isShowcaseDemoTenant } from '@/lib/demoTenant';
 import { isNativeApp } from '@/lib/nativeTenant';
 
 export default function TryDemo() {
   const started = useRef(false);
   const [failed, setFailed] = useState(false);
+  const tenantOrg = typeof window !== 'undefined'
+    ? (window as any).__TENANT_CONFIG__?.org
+    : undefined;
 
   useEffect(() => {
     if (started.current) return; // StrictMode double-invoke guard
     started.current = true;
     (async () => {
       try {
-        // /try only makes sense on the demo subdomain — on any other origin
-        // (marketing site, customer tenants) bounce to the real demo.
-        if (!isDemoTenant() && !isNativeApp()) {
+        // /try only makes sense on one of the showcase demo subdomains — on
+        // any other origin (marketing site, customer tenants) bounce to the
+        // flagship demo. The demo-director/student/fan accounts are members
+        // of all five showcase tenants (gw_tenant_members), so current_
+        // tenant_id() resolves correctly to whichever one this request is on.
+        if (!isShowcaseDemoTenant() && !isNativeApp()) {
           window.location.replace('https://demo.gleeworld.org/try');
           return;
         }
@@ -71,7 +77,9 @@ export default function TryDemo() {
       ) : (
         <>
           <LoadingSpinner size="lg" />
-          <p className="text-white/90 text-sm font-medium">Opening the Harmony Hall Choir demo…</p>
+          <p className="text-white/90 text-sm font-medium">
+            Opening the {tenantOrg || 'GleeWorld'} demo…
+          </p>
         </>
       )}
     </div>
