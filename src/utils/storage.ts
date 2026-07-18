@@ -78,19 +78,40 @@ export const getSignedUrl = async (
 // readable in storage.buckets — listing it here would force an extra
 // createSignedUrl round-trip before pdfjs can start fetching, which was
 // noticeably delaying the in-library PDF viewer.
+// This list MUST stay in sync with storage.buckets.public = false. A private
+// bucket missing here gets a getPublicUrl(), which 400s — the nginx proxy only
+// serves /object/public/ for genuinely public buckets. That mismatch is what
+// made personal scores unopenable: "secure download" handed back a public URL.
 const PRIVATE_BUCKETS = new Set([
-  'w9-forms',
-  'receipts',
-  'contract-signatures',
-  'signed-contracts',
-  'contract-documents',
-  'performer-documents',
   'alumni-headshots',
-  'marked-scores',
   'budget-documents',
+  'class-journals',
+  'class-notes',
+  'contract-documents',
+  'contract-signatures',
+  'excuse-documents',
   'executive-board-files',
+  'hair-nail-photos',
+  'id-documents',
+  'karaoke-recordings',
+  'marked-scores',
   'media-audio',
   'media-docs',
+  'music-fundamentals',
+  'performer-documents',
+  'personal-scores',
+  'read-music-progress',
+  'receipts',
+  'recordings',
+  'sight-singing-recordings',
+  'signed-contracts',
+  'songwriting',
+  'studio',
+  'studio-video',
+  'tour-contracts',
+  'w9-forms',
+  // Public in storage.buckets, but kept here deliberately: existing callers
+  // rely on signed URLs for it and signing a public bucket still works.
   'user-files',
 ]);
 
