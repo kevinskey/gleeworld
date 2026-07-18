@@ -33,6 +33,7 @@ import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 import { RightsBadge } from '@/components/policies/RightsBadge';
 import { PublicDomainSearch } from '@/components/music-library/PublicDomainSearch';
 import { MyMusicTab } from '@/components/music-library/MyMusicTab';
+import { getSignedUrl } from '@/utils/storage';
 import { BookOpen as BookOpenIcon } from 'lucide-react';
 
 const SetlistBuilder = lazy(() =>
@@ -56,6 +57,8 @@ interface ScoreRow {
   voicing: string | null;
   difficulty_level: string | null;
   pdf_url: string | null;
+  storage_path: string | null;
+  storage_bucket: string | null;
   audio_url: string | null;
   audio_title: string | null;
   physical_copies_count: number | null;
@@ -99,6 +102,20 @@ export default function MusicLibraryPage() {
   // annotated PDF viewer so the user can mark up the score.
   const [viewing, setViewing] = useState<{ id: string; title: string; pdfUrl: string } | null>(null);
 
+  // A score is served either from a public pdf_url (legacy/tenant uploads) or
+  // from a PRIVATE storage object (personal scores published to this tenant —
+  // see 20260718140000_publish_private_scores.sql). Private rows must be signed
+  // per view; the signed link is short-lived by design.
+  const openScoreRow = async (r: { id: string; title: string; pdf_url: string | null; storage_path: string | null; storage_bucket: string | null }) => {
+    if (r.storage_path && r.storage_bucket) {
+      const url = await getSignedUrl(r.storage_bucket, r.storage_path, 3600, false);
+      if (!url) { toast.error(`Could not open "${r.title}". The file may be missing.`); return; }
+      setViewing({ id: r.id, title: r.title, pdfUrl: url });
+      return;
+    }
+    if (r.pdf_url) setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url });
+  };
+
   // Deep link: /dashboard/music-library?view=<scoreId> opens the score viewer
   // (the Glee Assistant's open-score action navigates here). Fetch by id
   // rather than searching `rows` — the list is scope-filtered and capped.
@@ -110,12 +127,13 @@ export default function MusicLibraryPage() {
     (async () => {
       const { data } = await supabase
         .from('gw_sheet_music')
-        .select('id, title, pdf_url')
+        .select('id, title, pdf_url, storage_path, storage_bucket')
         .eq('id', viewParam)
         .maybeSingle();
       if (cancelled) return;
-      if (data?.pdf_url) {
-        setViewing({ id: data.id, title: data.title, pdfUrl: data.pdf_url });
+      if (data?.pdf_url || data?.storage_path) {
+        // Same resolver as the grid — private rows get signed, public ones don't.
+        await openScoreRow(data as Parameters<typeof openScoreRow>[0]);
       } else {
         toast.error('Could not open that score — it may have been removed.');
       }
@@ -149,7 +167,7 @@ export default function MusicLibraryPage() {
     queryFn: async () => {
       let q = supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members')
         .eq('is_archived', false)
         .order('title')
         .limit(200);
@@ -305,7 +323,7 @@ export default function MusicLibraryPage() {
                   row={r}
                   courseCode={r.course_id ? courseCodeById[r.course_id] ?? null : null}
                   canEdit={canEdit}
-                  onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
+                  onAnnotate={() => { void openScoreRow(r); }}
                   onAttachAudio={() => setAttachingAudio(r)}
                   onEdit={() => setEditing(r)}
                   onToggleShare={() => handleToggleShare(r)}
@@ -321,7 +339,7 @@ export default function MusicLibraryPage() {
                     row={r}
                     courseCode={r.course_id ? courseCodeById[r.course_id] ?? null : null}
                     canEdit={canEdit}
-                    onAnnotate={() => r.pdf_url && setViewing({ id: r.id, title: r.title, pdfUrl: r.pdf_url })}
+                    onAnnotate={() => { void openScoreRow(r); }}
                     onAttachAudio={() => setAttachingAudio(r)}
                     onEdit={() => setEditing(r)}
                     onToggleShare={() => handleToggleShare(r)}
@@ -498,7 +516,7 @@ function ScoreCard({
   onEdit: () => void;
   onToggleShare: () => void;
 }) {
-  const hasPdf = !!row.pdf_url;
+  const hasPdf = !!row.pdf_url || !!row.storage_path;
   const hasAudio = !!row.audio_url;
   const copies = row.physical_copies_count ?? 0;
   return (
@@ -622,7 +640,7 @@ function ScoreListRow({
   onEdit: () => void;
   onToggleShare: () => void;
 }) {
-  const hasPdf = !!row.pdf_url;
+  const hasPdf = !!row.pdf_url || !!row.storage_path;
   const hasAudio = !!row.audio_url;
   const copies = row.physical_copies_count ?? 0;
   return (
