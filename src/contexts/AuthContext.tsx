@@ -163,16 +163,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     // Resolve the host while the session is still live.
                     const host = await resolveTenantHost(claims.tenant_slug);
                     const target = buildTenantHandoffUrl(host, { accessToken, refreshToken });
-                    // scope:'local' clears THIS origin's storage without
-                    // revoking the refresh token server-side. A default
-                    // (global) signOut revokes it, which would invalidate
-                    // the very tokens we're handing off and silently turn
-                    // the seamless redirect back into a forced re-login.
-                    try {
-                      await supabase.auth.signOut({ scope: 'local' });
-                    } catch (e) {
-                      console.warn('[auth] local signOut failed; clearing local state anyway', e);
-                    }
+                    // Deliberately NOT calling supabase.auth.signOut() here.
+                    //
+                    // Every scope hits the server: _signOut always calls
+                    // admin.signOut(accessToken, scope), and scope:'local'
+                    // only means "revoke this session" rather than "all of
+                    // the user's sessions" — it does NOT mean "don't tell
+                    // the server". Because GoTrue validates /user against
+                    // the sessions table, revoking the session kills the
+                    // access token too, so the tokens we hand off are dead
+                    // on arrival and the tenant site shows
+                    // "Auth session missing!". Verified by reproducing it.
+                    //
+                    // The session must stay alive: it's the same user
+                    // continuing to their own tenant with it. Clearing this
+                    // origin's storage is enough to prevent any cross-tenant
+                    // data display, and we navigate away immediately.
                     cleanupAuthState();
                     setSession(null);
                     setUser(null);
