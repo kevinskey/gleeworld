@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Loader2, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 // Daily Catholic readings viewer — proxies Universalis via the `usccb-readings`
 // edge function and renders the sanitized reading blocks in a bottom sheet.
@@ -95,8 +96,9 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
                   <div
                     className="prose prose-sm max-w-none text-foreground leading-relaxed [&_p]:my-2"
                     // Body HTML is sanitized server-side (only p/br/em/strong/i/b/u/
-                    // blockquote/span survive, attributes stripped). Safe to inject.
-                    dangerouslySetInnerHTML={{ __html: r.html }}
+                    // blockquote/span survive, attributes stripped) and again here
+                    // via DOMPurify before injection.
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(r.html) }}
                   />
                 </section>
               ))}
