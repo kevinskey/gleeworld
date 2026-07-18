@@ -229,7 +229,11 @@ export default function MusicLibraryPage() {
           Music Library is read-only for browsing/playback. */}
 
       {/* Top-level tabs: Scores | Setlists | Public Domain (CPDL search). */}
-      <div className="flex gap-2 border-b border-border">
+      {/* Four tabs exceed a 390px viewport, so the row scrolls rather than
+          clipping the last one. The negative margin lets the scroll area reach
+          the screen edges inside the shell's padding; body is overflow-x:clip,
+          so a wider-than-parent container would be cut off, not scrollable. */}
+      <div className="flex gap-2 border-b border-border overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {([
           { key: 'scores',        label: 'Scores',         Icon: Music },
           { key: 'my-music',      label: 'My Music',       Icon: FileMusic },
@@ -244,8 +248,8 @@ export default function MusicLibraryPage() {
               onClick={() => setTopTab(t.key)}
               className={
                 isActive
-                  ? 'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
-                  : 'inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors'
+                  ? 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
+                  : 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm text-muted-foreground hover:text-foreground transition-colors'
               }
             >
               <t.Icon className="w-4 h-4" />
@@ -1023,14 +1027,17 @@ function AttachAudioDialog({
           )}
         </div>
 
-        {addingTrack && <div className="flex gap-2 border-b border-border">
+        {/* Four source tabs are wider than the dialog's inner width on a phone.
+            DialogContent scrolls vertically but not horizontally, so this row
+            needs its own horizontal scroll or the last tab is unreachable. */}
+        {addingTrack && <div className="flex gap-2 border-b border-border overflow-x-auto -mx-4 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <button
             type="button"
             onClick={() => setTab('file')}
             className={
               tab === 'file'
-                ? 'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
-                : 'inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground'
+                ? 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
+                : 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm text-muted-foreground hover:text-foreground'
             }
           >
             <Upload className="w-4 h-4" /> Upload
@@ -1040,8 +1047,8 @@ function AttachAudioDialog({
             onClick={() => setTab('media')}
             className={
               tab === 'media'
-                ? 'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
-                : 'inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground'
+                ? 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
+                : 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm text-muted-foreground hover:text-foreground'
             }
           >
             <LibraryIcon className="w-4 h-4" /> Media Library
@@ -1051,8 +1058,8 @@ function AttachAudioDialog({
             onClick={() => setTab('youtube')}
             className={
               tab === 'youtube'
-                ? 'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
-                : 'inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground'
+                ? 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
+                : 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm text-muted-foreground hover:text-foreground'
             }
           >
             <Youtube className="w-4 h-4" /> YouTube
@@ -1062,8 +1069,8 @@ function AttachAudioDialog({
             onClick={() => setTab('apple')}
             className={
               tab === 'apple'
-                ? 'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
-                : 'inline-flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground'
+                ? 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm font-semibold border-b-2 border-primary text-primary -mb-px'
+                : 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm text-muted-foreground hover:text-foreground'
             }
           >
             <Music className="w-4 h-4" /> Apple Music

@@ -22,6 +22,21 @@
 
 /* Full-bleed utility - extends background colors edge-to-edge while keeping content padded */
 @layer utilities {
+  /* 44pt minimum hit area. This class was already applied in 15 components but
+     had never been defined anywhere, so every use was a silent no-op and the
+     controls carrying it were below the touch floor. Density is allowed from
+     lg up, matching the rule that md (iPad) is still a touch device. */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  @media (min-width: 1024px) {
+    .touch-target {
+      min-height: 0;
+      min-width: 0;
+    }
+  }
+
   /* Apple "Headline" — list/card item titles: body size, semibold. */
   .font-headline {
     font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px;

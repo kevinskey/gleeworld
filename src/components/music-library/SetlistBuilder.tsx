@@ -640,7 +640,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
           </div>
           <div className="pt-2 border-t">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Music className="h-3 w-3" />
+              <Music className="h-4 w-4" />
               <span>Sheet Music</span>
               {music.pdf_url ? (
                 <span className="text-green-600">• Available</span>
@@ -821,7 +821,10 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
       )}
 
       {/* Mac-style Setlist List */}
-      <div className="space-y-1 min-h-[calc(100vh-200px)] max-h-[calc(100vh-120px)] overflow-y-auto">
+      {/* A viewport-tall inner scroller nested inside the already-scrolling
+          page traps scroll on touch, and the docked mobile footer covers its
+          bottom edge. Let the page own scrolling below lg. */}
+      <div className="space-y-1 lg:min-h-[calc(100vh-200px)] lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto">
         {setlists.map((setlist) => (
           <div key={setlist.id}>
             {/* Setlist Row */}
@@ -853,7 +856,10 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                   e.stopPropagation();
                   handleEditSetlist(setlist);
                 }}
-                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                // Hover does not exist on touch, so this control was
+                // unreachable on phone and iPad — the only way to rename a
+                // setlist. Always visible below lg; hover-reveal at desktop.
+                className="h-11 w-11 min-w-[44px] p-0 opacity-100 lg:h-6 lg:w-6 lg:min-w-0 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
               >
                 <Edit className="h-3.5 w-3.5" />
               </Button>
@@ -876,23 +882,26 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                         <span className="text-xs truncate block" style={{ color: '#475569' }}>{item.sheet_music.composer}</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity">
+                    {/* Was sm:opacity-0 — that hid these behind hover from
+                        640px up, including iPad, which is a touch device.
+                        Density and hover-reveal start at lg. */}
+                    <div className="flex items-center gap-1 shrink-0 lg:opacity-0 lg:group-hover/item:opacity-100 focus-within:opacity-100 transition-opacity">
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={(e) => { e.stopPropagation(); handleViewPdf(item); }}
                         disabled={!item.sheet_music?.pdf_url}
-                        className="h-5 w-5 p-0"
+                        className="h-11 w-11 min-w-[44px] p-0 lg:h-5 lg:w-5 lg:min-w-0"
                       >
-                        <FileText className="h-3 w-3" />
+                        <FileText className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={(e) => { e.stopPropagation(); openSetlistPlayer(selectedSetlist.id); }}
-                        className="h-5 w-5 p-0"
+                        className="h-11 w-11 min-w-[44px] p-0 lg:h-5 lg:w-5 lg:min-w-0"
                       >
-                        <Play className="h-3 w-3" />
+                        <Play className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -900,7 +909,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                         onClick={(e) => { e.stopPropagation(); removeFromSetlist(item.id); }}
                         className="h-5 w-5 p-0 text-destructive"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
