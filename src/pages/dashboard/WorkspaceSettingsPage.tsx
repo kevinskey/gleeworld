@@ -19,19 +19,20 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
-  Plug, Save, Building2, Lock, Sparkles, Users, Menu,
+  Plug, Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
 } from 'lucide-react';
 import { hideableNavItems, HIDEABLE_NAV_ROLES, type NavRole, type HideableNavItem } from '@/lib/navigation/navCatalog';
 import { getPreviewRole, setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { DateCardTabPanel } from '@/components/home/date-card/DateCardTabPanel';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
 };
 
-const TAB_VALUES = new Set(['plan', 'modules', 'navigation', 'branding', 'billing', 'general']);
+const TAB_VALUES = new Set(['plan', 'modules', 'navigation', 'branding', 'datecard', 'billing', 'general']);
 
 export default function WorkspaceSettingsPage() {
   const { isSuperAdmin, isAdmin } = useUserRole();
@@ -60,13 +61,14 @@ export default function WorkspaceSettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        {/* Mobile: one swipeable scroll strip (no wrap) so 6 sections read as
-            a single row instead of a scattered 2-col grid. md+: 6-across grid. */}
-        <TabsList className="flex md:grid md:grid-cols-6 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto md:overflow-visible scrollbar-hide">
+        {/* Mobile: one swipeable scroll strip (no wrap) so 7 sections read as
+            a single row instead of a scattered 2-col grid. md+: 7-across grid. */}
+        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto md:overflow-visible scrollbar-hide">
           <TabsTrigger value="plan" className="shrink-0"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
           <TabsTrigger value="modules" className="shrink-0"><Plug className="w-3.5 h-3.5 mr-1.5" />Add-ons</TabsTrigger>
           <TabsTrigger value="navigation" className="shrink-0"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
           <TabsTrigger value="branding" className="shrink-0"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
+          <TabsTrigger value="datecard" className="shrink-0"><CalendarDays className="w-3.5 h-3.5 mr-1.5" />Date card</TabsTrigger>
           <TabsTrigger value="billing" className="shrink-0"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
           <TabsTrigger value="general" className="shrink-0"><Building2 className="w-3.5 h-3.5 mr-1.5" />General</TabsTrigger>
         </TabsList>
@@ -75,6 +77,7 @@ export default function WorkspaceSettingsPage() {
         <TabsContent value="modules"><ModulesTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="navigation"><NavigationTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="branding"><BrandingTabPanel canManage={canManage} /></TabsContent>
+        <TabsContent value="datecard"><DateCardTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="billing"><BillingTabPanel /></TabsContent>
         <TabsContent value="general"><GeneralTabPanel canManage={canManage} /></TabsContent>
       </Tabs>
