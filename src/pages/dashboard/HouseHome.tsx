@@ -185,10 +185,9 @@ export default function HouseHome() {
       <div className="px-4 sm:px-6 pt-3 pb-8 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
+            {/* No date line here — the DateCardSlot directly below already
+                leads with the full date and weekday. */}
             <h1 className="font-serif text-2xl font-semibold">{greetingFor(now.getHours(), firstName)}</h1>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">
-              {format(now, 'EEE · MMM d')}
-            </p>
           </div>
         </div>
 
