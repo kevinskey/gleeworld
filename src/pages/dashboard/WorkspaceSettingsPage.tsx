@@ -716,6 +716,13 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
 
   async function save() {
     setSaving(true);
+    // gw_branding_settings' PRIMARY KEY is the legacy singleton `id`
+    // (DEFAULT 1). A bare upsert lets PostgREST arbitrate on that PK, which
+    // always resolves to id=1 (the `main` tenant's row) and is invisible
+    // under RLS to every other tenant. Pin the conflict target to the real
+    // per-tenant UNIQUE constraint instead. Do NOT "simplify" this back to
+    // a bare upsert, and never add tenant_id/id to the payload — the column
+    // DEFAULT + trg_set_tenant_id trigger supply tenant_id server-side.
     const { error } = await supabase
       .from('gw_branding_settings')
       .upsert({
@@ -724,7 +731,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         primary_color: form.primary_color,
         logo_url: form.logo_url,
         updated_at: new Date().toISOString(),
-      });
+      }, { onConflict: 'tenant_id' });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Branding saved.');
@@ -924,6 +931,13 @@ function GeneralTabPanel({ canManage }: { canManage: boolean }) {
 
   const save = async () => {
     setSaving(true);
+    // gw_branding_settings' PRIMARY KEY is the legacy singleton `id`
+    // (DEFAULT 1). A bare upsert lets PostgREST arbitrate on that PK, which
+    // always resolves to id=1 (the `main` tenant's row) and is invisible
+    // under RLS to every other tenant. Pin the conflict target to the real
+    // per-tenant UNIQUE constraint instead. Do NOT "simplify" this back to
+    // a bare upsert, and never add tenant_id/id to the payload — the column
+    // DEFAULT + trg_set_tenant_id trigger supply tenant_id server-side.
     const { error } = await supabase
       .from('gw_branding_settings')
       .upsert({
@@ -932,7 +946,7 @@ function GeneralTabPanel({ canManage }: { canManage: boolean }) {
         contact_email: form.contact_email || null,
         week_start: form.week_start,
         updated_at: new Date().toISOString(),
-      });
+      }, { onConflict: 'tenant_id' });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success('General settings saved.');
