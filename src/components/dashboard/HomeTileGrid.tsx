@@ -37,15 +37,22 @@ const LONG_PRESS_SLOP_PX = 10;
 // draftOverflow filter in the edit-mode More renderer.
 const MORE_SECTIONS: NavSectionKey[] = ['music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
 
+// Each tile's `tone` (e.g. "bg-cyan-50 text-cyan-600") is the same
+// per-app color already used for its sidebar icon — carried through by
+// getAppTiles() so the grid isn't a wall of identical white squares.
+// Icons render via currentColor, so setting the tone's text-* on the
+// wrapper colors the glyph too without repeating it on the icon.
+const DEFAULT_TONE = 'bg-muted text-foreground';
+
 function KeycapFace({ tile, editing }: { tile: Destination; editing: boolean }) {
   const Icon = tile.icon;
   return (
     <>
       <span className={
-        'w-full aspect-square bg-card border border-border shadow-[0_2px_0_hsl(var(--border))] flex items-center justify-center'
+        `w-full aspect-square ${tile.tone || DEFAULT_TONE} shadow-[0_2px_0_hsl(var(--border))] flex items-center justify-center`
         + (editing ? '' : ' transition-transform motion-reduce:transition-none group-active:translate-y-px group-active:shadow-none')
       }>
-        <Icon className="w-5 h-5 text-foreground" />
+        <Icon className="w-7 h-7" />
       </span>
       {tile.label}
     </>
@@ -270,8 +277,8 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
                 {overflow.map((t) => (
                   <Link key={t.key} to={t.to}
                     className="flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px]">
-                    <span className="w-full aspect-square bg-card border border-border flex items-center justify-center">
-                      <t.icon className="w-5 h-5 text-foreground" />
+                    <span className={`w-full aspect-square ${t.tone || DEFAULT_TONE} flex items-center justify-center`}>
+                      <t.icon className="w-7 h-7" />
                     </span>
                     {t.label}
                   </Link>

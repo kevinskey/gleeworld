@@ -15,7 +15,7 @@ export interface ModuleFlags {
   hasSongwriting: boolean; hasPlanner: boolean;
 }
 
-export interface Destination { key: string; to: string; label: string; icon: LucideIcon; section?: NavSectionKey; }
+export interface Destination { key: string; to: string; label: string; icon: LucideIcon; section?: NavSectionKey; tone?: string; }
 
 const D = {
   home:     { key: 'home',     to: '/dashboard',            label: 'Home',     icon: Home } as Destination,
@@ -119,7 +119,7 @@ export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav
   // the grouped "More" UI relies on.
   const enabled: Destination[] = resolveNav(nav)
     .filter((e) => entrySurfaces(e).includes('grid') && !tabRoutes.has(e.to))
-    .map((e) => ({ key: e.key, to: e.to, label: e.gridLabel ?? e.label, icon: e.gridIcon ?? e.icon, section: e.section }));
+    .map((e) => ({ key: e.key, to: e.to, label: e.gridLabel ?? e.label, icon: e.gridIcon ?? e.icon, section: e.section, tone: e.tone }));
 
   if (!layout) {
     // Default grid frozen: first 8 enabled keys of DEFAULT_GRID_ORDER in
