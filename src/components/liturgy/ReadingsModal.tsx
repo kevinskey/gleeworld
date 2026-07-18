@@ -57,14 +57,22 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
     return () => { cancelled = true; };
   }, [open, isoDate]);
 
+  // modal={false}: no focus trap and no scroll lock, so the page behind stays
+  // usable while the readings sit open beside it.
   return (
-    <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      {/* Vertical side panel, never wider than half the UI — readings are a
-          long single column, so a tall narrow drawer suits them better than a
-          wide bottom sheet. Full width only on phones, where half is unusable. */}
+    <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }} modal={false}>
+      {/* Vertical companion panel, never wider than half the UI — readings are
+          a long single column, so a tall narrow drawer suits them better than a
+          wide bottom sheet. Full width only on phones, where half is unusable.
+          hideOverlay + shadow: the page stays legible, the panel reads as
+          floating above it rather than dimming it out. */}
       <SheetContent
         side="right"
-        className="w-full sm:w-1/2 sm:max-w-[560px] h-[100dvh] flex flex-col p-0"
+        hideOverlay
+        className="w-full sm:w-1/2 sm:max-w-[560px] h-[100dvh] flex flex-col p-0 shadow-2xl"
+        // Clicking the page behind should NOT dismiss the readings — the whole
+        // point is consulting them while you work. Close via X or Esc.
+        onInteractOutside={(e) => e.preventDefault()}
       >
         <SheetHeader className="px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-2 border-b border-border shrink-0">
           <SheetTitle className="font-extrabold tracking-tight text-lg sm:text-xl text-left">

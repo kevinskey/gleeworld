@@ -52,14 +52,20 @@ interface SheetContentProps
   VariantProps<typeof sheetVariants> {
   children?: React.ReactNode;
   className?: string;
+  /**
+   * Skip the dimming backdrop so the page behind stays legible. Pair with
+   * `modal={false}` on <Sheet> for a companion panel the user can work
+   * alongside. Defaults false — every existing sheet keeps its overlay.
+   */
+  hideOverlay?: boolean;
 }
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
+>(({ side = "right", className, children, hideOverlay = false, ...props }, ref) => (
   <SheetPortal>
-    <SheetOverlay />
+    {!hideOverlay && <SheetOverlay />}
     <SheetPrimitive.Content
       ref={ref}
       className={cn(sheetVariants({ side }), className)}
