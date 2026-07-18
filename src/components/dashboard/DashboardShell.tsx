@@ -86,6 +86,18 @@ import {
 
 const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
 
+// The platform ('main') tenant ships no branding.logo_url of its own, so
+// BrandLogo fell back to the monogram there. Use the GleeWorld platform logo
+// for main; every other tenant keeps its own logo (or monogram) so no platform
+// branding bleeds into tenants. Same asset the public marketing header uses.
+const GLEE_PLATFORM_LOGO = '/lovable-uploads/gleeworld-logo.png?v=6';
+function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
+  if (brandingLogoUrl) return brandingLogoUrl;
+  const slug = (typeof window !== 'undefined'
+    && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
+  return slug === 'main' ? GLEE_PLATFORM_LOGO : undefined;
+}
+
 // Groups resolved sidebar-surface entries into the render shape both nav
 // columns use. Sections with zero visible entries drop out (unchanged
 // behavior). label:'Today' historically rendered with its section label
@@ -348,7 +360,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
       <div className="flex items-center h-[80px] border-b border-border pr-2">
         <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-4 h-full">
           <BrandLogo
-            logoUrl={branding?.logo_url}
+            logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
             alt={tenantName}
             size="xl"
@@ -518,7 +530,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
           collapse and push the brand under the iOS clock. */}
       <div className="flex items-center gap-3 px-4 pt-[env(safe-area-inset-top,0px)] min-h-[calc(80px+env(safe-area-inset-top,0px))] border-b border-border">
         <BrandLogo
-          logoUrl={branding?.logo_url}
+          logoUrl={platformLogoFor(branding?.logo_url)}
           fallbackInitial={tenantName.charAt(0).toUpperCase()}
           alt={tenantName}
         />
@@ -750,7 +762,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           title={`Back to ${compactBrandName} dashboard`}
         >
           <BrandLogo
-            logoUrl={branding?.logo_url}
+            logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={compactBrandName.charAt(0).toUpperCase()}
             alt={compactBrandName}
           />

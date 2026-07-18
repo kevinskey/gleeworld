@@ -92,7 +92,7 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
     content: note.content,
     editorProps: {
       attributes: {
-        class: 'planner-editor prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[40vh] text-foreground',
+        class: 'planner-editor prose prose-base max-w-none focus:outline-none min-h-[40vh] text-foreground',
         'aria-label': 'Note body',
       },
     },

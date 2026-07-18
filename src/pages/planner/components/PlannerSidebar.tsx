@@ -51,7 +51,7 @@ function NavButton({ active, onClick, icon: Icon, label, badge }: {
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
-        active ? 'bg-accent font-medium text-foreground' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+        active ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
       }`}
     >
       <Icon className="h-4 w-4 shrink-0" aria-hidden />
