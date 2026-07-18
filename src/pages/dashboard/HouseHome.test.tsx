@@ -24,6 +24,13 @@ vi.mock('@/hooks/useUserRole', () => ({
 vi.mock('@/hooks/useModuleAccess', () => ({
   useTenantModules: () => ({ data: [], isLoading: false }),
 }));
+// PR #189 gave HouseHome a preview-role hook that reaches useAuth(). This test
+// renders the component bare (no AuthProvider), so stub the hook rather than
+// wrapping — the preview role is irrelevant to the ensembleName wiring here.
+vi.mock('@/hooks/useEffectivePreviewRole', () => ({
+  useEffectivePreviewRole: () => null,
+  useMyTenantRole: () => ({ data: null, isLoading: false }),
+}));
 vi.mock('@/hooks/useTenantNavPrefs', () => ({
   useTenantNavPrefs: () => new Set<string>(),
 }));
