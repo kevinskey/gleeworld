@@ -50,9 +50,22 @@ export function useDateCardConfig() {
   });
 
   const save = useCallback(async (next: DateCardSetting) => {
+    // gw_branding_settings' PRIMARY KEY is the legacy singleton `id`
+    // (DEFAULT 1). A bare upsert (no payload id) lets PostgREST arbitrate
+    // on that PK, which always resolves to id=1 — the `main` tenant's row.
+    // For every other tenant that row is invisible under RLS, so the
+    // "upsert" silently fails to touch their own row (id=2, 3, ...).
+    // The real per-tenant identity is the `tenant_id` UNIQUE constraint
+    // (gw_branding_settings_one_per_tenant), so the conflict target must
+    // be pinned there explicitly. Do NOT "simplify" this back to a bare
+    // upsert — and never add tenant_id/id to the payload; the column
+    // DEFAULT + trg_set_tenant_id trigger supply tenant_id server-side.
     const { error } = await supabase
       .from('gw_branding_settings')
-      .upsert({ date_card: next, updated_at: new Date().toISOString() });
+      .upsert(
+        { date_card: next, updated_at: new Date().toISOString() },
+        { onConflict: 'tenant_id' }
+      );
     if (error) throw error;
     await qc.invalidateQueries({ queryKey: ['date-card-setting'] });
   }, [qc]);
