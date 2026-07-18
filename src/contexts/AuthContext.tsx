@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, ReactNode } fro
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { isNativeApp, syncNativeTenant } from "@/lib/nativeTenant";
+import { resolveTenantHost, buildTenantHandoffUrl } from "@/lib/auth/tenantRedirect";
 
 interface AuthContextType {
   user: User | null;
@@ -153,14 +154,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     (claims.is_super_admin === true || claims.role === 'super-admin' || claims.role === 'super_admin');
                   const isDemoViewer = claims.demo_viewer === true;
                   if (claims.tenant_slug && claims.tenant_slug !== expectedTenant && !isPlatformOwner && !isDemoViewer) {
-                    console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Signing out.`);
-                    await supabase.auth.signOut();
+                    console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Redirecting to their tenant.`);
+                    // Capture the tokens BEFORE tearing the session down —
+                    // they're what lets the user land signed in instead of
+                    // facing a second login form on their own site.
+                    const accessToken = session.access_token;
+                    const refreshToken = session.refresh_token;
+                    // Resolve the host while the session is still live.
+                    const host = await resolveTenantHost(claims.tenant_slug);
+                    const target = buildTenantHandoffUrl(host, { accessToken, refreshToken });
+                    // Deliberately NOT calling supabase.auth.signOut() here.
+                    //
+                    // Every scope hits the server: _signOut always calls
+                    // admin.signOut(accessToken, scope), and scope:'local'
+                    // only means "revoke this session" rather than "all of
+                    // the user's sessions" — it does NOT mean "don't tell
+                    // the server". Because GoTrue validates /user against
+                    // the sessions table, revoking the session kills the
+                    // access token too, so the tokens we hand off are dead
+                    // on arrival and the tenant site shows
+                    // "Auth session missing!". Verified by reproducing it.
+                    //
+                    // The session must stay alive: it's the same user
+                    // continuing to their own tenant with it. Clearing this
+                    // origin's storage is enough to prevent any cross-tenant
+                    // data display, and we navigate away immediately.
                     cleanupAuthState();
                     setSession(null);
                     setUser(null);
-                    alert(`This account belongs to a different organization (${claims.tenant_slug}). Please sign in on the correct site.`);
-                    const correctHost = claims.tenant_slug === 'main' ? 'gleeworld.org' : `${claims.tenant_slug}.gleeworld.org`;
-                    window.location.href = `https://${correctHost}/auth`;
+                    // replace() so Back doesn't return to the wrong tenant's
+                    // login page with a half-torn-down session.
+                    window.location.replace(target);
                     return;
                   }
                   if ((isPlatformOwner || isDemoViewer) && claims.tenant_slug !== expectedTenant) {
