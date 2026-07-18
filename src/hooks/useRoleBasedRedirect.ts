@@ -15,7 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
  *   member      → /dashboard      — Command Center
  *   instructor  → /dashboard      — Command Center (same view; role-aware data)
  *   admin       → /dashboard      — Command Center (extra admin modules)
- *   super-admin → /control-center — site-owner / super-admin tooling
+ *   super-admin → /admin/tenants  — platform owner's "mother site" (main
+ *                                   tenant only; tenant super-admins land
+ *                                   on the ordinary Command Center instead)
  *
  * Two ways the user lands here:
  *   1. Fresh login — `redirectAfterAuth` is set in sessionStorage, OR they
@@ -105,7 +107,7 @@ export function pickDestination(profile: {
   tenant_slug?: string | null;
 }): string | null {
   // Canonical role hierarchy (highest → lowest privilege):
-  //   platform super-admin (super-admin on the 'main' tenant) → /control-center
+  //   platform super-admin (super-admin on the 'main' tenant) → /admin/tenants
   //   tenant super-admin   (super-admin on any other tenant)  → /dashboard
   //   admin       → /dashboard        (Command Center — daily triage feed)
   //   instructor  → /dashboard        (Command Center — same operational view)
@@ -116,10 +118,11 @@ export function pickDestination(profile: {
   //   vip / fan   → /fan              (signed-up supporters; vip = fan with extra privileges)
   const isSuper = profile.is_super_admin || profile.role === 'super-admin';
   if (isSuper) {
-    // Only the platform owner (super-admin on the main tenant) gets the
-    // site-wide /control-center surface. Tenant super-admins manage their
-    // own tenant from the standard Command Center.
-    return profile.tenant_slug === 'main' ? '/control-center' : '/dashboard';
+    // Only the platform owner (super-admin on the main tenant) lands on
+    // the mother site — the all-tenants portal at /admin/tenants, where
+    // they pick a world to enter. Tenant super-admins manage their own
+    // tenant from the standard Command Center.
+    return profile.tenant_slug === 'main' ? '/admin/tenants' : '/dashboard';
   }
   if (profile.is_admin || profile.role === 'admin') return '/dashboard';
   if (profile.role === 'instructor') return '/dashboard';

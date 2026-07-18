@@ -33,6 +33,7 @@ import { MessengerProvider } from "@/contexts/MessengerContext";
 import { ActiveMeetingProvider } from "@/contexts/ActiveMeetingContext";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
+import { ControlCenterRedirect } from "@/components/routing/ControlCenterRedirect";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
 
 // Heavy dashboard-only globals — gated behind useAuth() so public landing
@@ -998,12 +999,18 @@ const App = () => {
               {/* Legacy booking page — now redirects into the dashboard shell so
                   every link / bookmark in the wild lands on the redesigned UI. */}
               <Route path="/book-appointment" element={<Navigate to="/dashboard/office-hours" replace />} />
-              {/* Control Center retired — every tenant uses the Command
-                  Center at /dashboard now. Redirect preserves bookmarks
-                  and any in-app links the cleanup hasn't reached yet. */}
+              {/* Control Center retired for tenants — every tenant uses the
+                  Command Center at /dashboard now. But the platform owner's
+                  old /control-center bookmarks should land on the mother
+                  site (/admin/tenants), not an ordinary tenant dashboard —
+                  ControlCenterRedirect branches on role. */}
               <Route
                 path="/control-center"
-                element={<Navigate to="/dashboard" replace />}
+                element={
+                  <ProtectedRoute>
+                    <ControlCenterRedirect />
+                  </ProtectedRoute>
+                }
               />
               {/* Read Music — practice studio (add-on module) */}
               <Route
@@ -1041,13 +1048,20 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              {/* Platform owner's all-tenants portal */}
+              {/* Platform Home — the mother site's landing page (pickDestination()
+                  sends the platform owner here straight after login). Force
+                  DashboardShell explicitly: UniversalLayout only auto-renders it
+                  for tenant subdomains, and on the main tenant this route would
+                  otherwise fall back to the public marketing chrome instead of
+                  the app sidebar/nav Kevin expects on "his dash". */}
               <Route
                 path="/admin/tenants"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout>
-                      <PlatformTenantsPortal />
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell>
+                        <PlatformTenantsPortal />
+                      </DashboardShell>
                     </UniversalLayout>
                   </ProtectedRoute>
                 }
