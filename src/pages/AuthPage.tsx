@@ -232,11 +232,11 @@ export default function AuthPage() {
         Back to Home
       </Button>
 
-      {/* Card sits left-of-center on wide screens so the artwork's focal
-          point (right-of-center in the desktop crop) stays visible.
+      {/* Card sits right-of-center on wide screens, leaving the artwork's
+          left side (the singers) unobstructed.
           lg: only — tablets and phones keep the centered layout, where a
           fixed shift would push the card off-viewport. */}
-      <div className="w-full max-w-md relative z-10 lg:-translate-x-[22vw]">
+      <div className="w-full max-w-md relative z-10 lg:translate-x-[22vw]">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
