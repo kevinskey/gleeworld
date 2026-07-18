@@ -6,6 +6,10 @@ import { X } from 'lucide-react';
 const PROMO_GRADIENT = 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)';
 
 export function DemoWelcomeOverlay({ onDismiss }: { onDismiss: () => void }) {
+  const tenantOrg = typeof window !== 'undefined'
+    ? (window as any).__TENANT_CONFIG__?.org
+    : undefined;
+
   return (
     <div
       className="fixed inset-0 z-[95] flex items-center justify-center p-4"
@@ -30,12 +34,12 @@ export function DemoWelcomeOverlay({ onDismiss }: { onDismiss: () => void }) {
             Welcome to the demo
           </div>
           <h2 className="text-2xl font-bold leading-tight" style={{ letterSpacing: '-0.02em' }}>
-            Meet the Harmony Hall Choir.
+            {tenantOrg ? `Meet ${tenantOrg}.` : 'Welcome to the demo.'}
           </h2>
         </div>
         <div className="bg-card px-7 py-6">
           <p className="text-sm text-foreground leading-relaxed">
-            Harmony Hall is a fictional program running on GleeWorld — real screens, real
+            {tenantOrg ? `${tenantOrg} is a` : 'This is a'} fictional program running on GleeWorld — real screens, real
             sample data. Look around freely: <strong>nothing you click can break anything</strong>.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed mt-3">
