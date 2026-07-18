@@ -155,7 +155,7 @@ function BrandLogo({
   logoUrl: string | null | undefined;
   fallbackInitial: string;
   alt: string;
-  size?: 'md' | 'lg';
+  size?: 'md' | 'lg' | 'xl';
 }) {
   // No global fallback to the GleeWorld marketing globe — that bled
   // platform branding into every tenant that hadn't uploaded a logo
@@ -167,7 +167,8 @@ function BrandLogo({
   useEffect(() => {
     setSrc(logoUrl ?? null);
   }, [logoUrl]);
-  const dim = size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
+  // xl is the desktop left-nav brand: w-12 (48px) grown ~40% → 67px.
+  const dim = size === 'xl' ? 'w-[67px] h-[67px]' : size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
   if (src) {
     return (
       <img
@@ -347,6 +348,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
             logoUrl={branding?.logo_url}
             fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
             alt={tenantName}
+            size="xl"
           />
           <div className="min-w-0 flex-1">
             <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
