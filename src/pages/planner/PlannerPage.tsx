@@ -6,9 +6,9 @@
 //   /planner/:noteId             → a specific note
 // Three panels: sidebar (sheet on mobile), main view, and a context
 // panel for open notes (inline on xl, sheet below).
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Info, Menu, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Info, Menu, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { periodKey, PERIOD_TYPES, type PeriodType } from '@/lib/planner/dateKeys';
-import { createNote, trashNote } from '@/lib/planner/notesApi';
+import { trashNote } from '@/lib/planner/notesApi';
 import { useNote, useSavedFilters } from './hooks';
 import ContextPanel from './components/ContextPanel';
 import KanbanView from './components/KanbanView';
@@ -76,48 +76,13 @@ export default function PlannerPage() {
     navigate(`/planner/${id}`);
   }, [navigate]);
 
-  // The always-available primary action: create a note and drop straight into
-  // the editor. Files it into the current folder when a folder view is open,
-  // otherwise unfiled. Reachable in one click from the sidebar (desktop) and
-  // the sticky top bar (mobile), plus the `n` shortcut below.
-  const qc = useQueryClient();
-  const newNote = useMutation({
-    mutationFn: (folderId: string | null) => createNote({ folder_id: folderId }),
-    onSuccess: (note) => {
-      qc.invalidateQueries({ queryKey: ['planner'] });
-      openNote(note.id);
-    },
-    onError: () => toast.error('Could not create the note'),
-  });
-  const handleNewNote = useCallback(() => {
-    if (newNote.isPending) return;
-    const folderId = view === 'notes' ? params.get('folder') : null;
-    newNote.mutate(folderId ?? null);
-  }, [newNote, view, params]);
-
-  // `n` creates a note from anywhere in the planner (Gmail/Linear convention).
-  // Ignored while typing so it never hijacks the note title/body or search.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'n' || e.metaKey || e.ctrlKey || e.altKey) return;
-      const el = document.activeElement as HTMLElement | null;
-      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
-      e.preventDefault();
-      handleNewNote();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [handleNewNote]);
-
   const openPeriod = useCallback((type: PeriodType, key: string) => {
     const todayNow = periodKey(new Date(), 'daily');
     if (type === 'daily' && key === todayNow) return navigate('/planner');
     navigate(`/planner?view=calendar&ptype=${type}&pkey=${key}`);
   }, [navigate]);
 
-  const sidebar = (
-    <PlannerSidebar selection={selection} onSelect={select} onNewNote={handleNewNote} creatingNote={newNote.isPending} />
-  );
+  const sidebar = <PlannerSidebar selection={selection} onSelect={select} />;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl px-2 sm:px-4">
@@ -129,10 +94,8 @@ export default function PlannerPage() {
       </aside>
 
       <div className="min-w-0 flex-1 py-4 lg:px-6">
-        {/* Mobile / tablet top bar. Sticky under the app header and carries the
-            primary "New note" action so it's one tap from any planner view
-            without scrolling. */}
-        <div className="sticky top-[var(--gw-header-h,64px)] z-10 -mx-2 mb-3 flex items-center gap-2 bg-background/90 px-2 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:-mx-4 sm:px-4 lg:hidden">
+        {/* Mobile / tablet top bar */}
+        <div className="mb-3 flex items-center gap-2 lg:hidden">
           {/* Local dropdown anchored to the button — a full-screen sheet
               was heavy-handed for what is just the planner's section nav. */}
           <Popover open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -145,14 +108,6 @@ export default function PlannerPage() {
               {sidebar}
             </PopoverContent>
           </Popover>
-          <Button
-            size="sm"
-            className="ml-auto gap-1.5"
-            onClick={handleNewNote}
-            disabled={newNote.isPending}
-          >
-            <Plus className="h-4 w-4" /> New note
-          </Button>
         </div>
 
         {noteId ? (
