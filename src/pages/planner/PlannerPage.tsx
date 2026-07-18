@@ -8,7 +8,7 @@
 // panel for open notes (inline on xl, sheet below).
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Info, Menu, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Info, Menu, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -114,8 +114,9 @@ export default function PlannerPage() {
       </aside>
 
       <div className="min-w-0 flex-1 px-4 py-4 lg:px-6">
-        {/* Mobile / tablet top bar — carries the primary "New note" action so
-            it's one tap from any planner view (visible on landing, no scroll). */}
+        {/* Mobile / tablet top bar — nav only. The New note action lives in
+            each view's own header (and in the Menu popover's sidebar), so the
+            bar no longer carries a duplicate "New note" button here. */}
         <div className="mb-3 flex items-center gap-2 lg:hidden">
           {/* Local dropdown anchored to the button — a full-screen sheet
               was heavy-handed for what is just the planner's section nav. */}
@@ -129,9 +130,6 @@ export default function PlannerPage() {
               {sidebar}
             </PopoverContent>
           </Popover>
-          <Button size="sm" className="ml-auto gap-1.5" onClick={handleNewNote} disabled={newNote.isPending}>
-            <Plus className="h-4 w-4" /> New note
-          </Button>
         </div>
 
         {noteId ? (
