@@ -514,7 +514,10 @@ const HEADING_STYLE = { fontFamily: SANS, textTransform: 'none' as const };
 
 const MAILTO_BUY =
   'mailto:kevin@gleeworld.org?subject=GleeWorld%20for%20my%20group&body=Hi%20Kevin%2C%0A%0AI%27d%20like%20to%20set%20up%20GleeWorld%20for%20my%20group.%0A%0AName%20of%20organization%3A%20%0ASize%20%28approx%20students%29%3A%20%0APreferred%20subdomain%3A%20%0AHow%20did%20you%20find%20us%3F%20%0A%0AThanks%21';
-const TRY_DEMO_URL = 'https://demo.gleeworld.org/try';
+// "Try the demo" scrolls to the persona picker below so visitors pick their
+// use case (Choir & Church, School District, School Program, Songwriter)
+// before landing in a demo tenant that matches — not a generic one.
+const TRY_DEMO_URL = '#examples';
 
 // "Get started" buttons across the marketing site open a single shared
 // inquiry dialog (rather than mailto:) so we capture submissions server-side.
@@ -812,8 +815,6 @@ function AppleHero() {
           </button>
           <a
             href={TRY_DEMO_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold transition-colors backdrop-blur-sm"
             style={{ color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.10)' }}
           >
