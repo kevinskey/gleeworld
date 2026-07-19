@@ -42,7 +42,7 @@ export const AccessibilitySettings = () => {
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <Label htmlFor="tooltip-toggle" className="text-base font-medium">
+              <Label htmlFor="tooltip-toggle" className="text-sm font-medium">
                 Enable Tooltips
               </Label>
               <HelpCircle className="h-4 w-4 text-muted-foreground" />
@@ -62,7 +62,7 @@ export const AccessibilitySettings = () => {
         {enabled && (
           <div className="space-y-4">
             <div className="space-y-0.5">
-              <Label className="text-base font-medium">
+              <Label className="text-sm font-medium">
                 Tooltip Delay: {delay}ms
               </Label>
               <p className="text-sm text-muted-foreground">

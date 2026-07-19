@@ -54,7 +54,7 @@ export default function WorkspaceSettingsPage() {
     >
       {!canManage && (
         <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
-          <Lock className="w-3 h-3 mr-1" /> Read-only — only workspace admins can change settings
+          <Lock className="w-4 h-4 mr-1" /> Read-only — only workspace admins can change settings
         </Badge>
       )}
 
@@ -220,7 +220,7 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                 </Button>
               )}
               {!priceId && (
-                <p className="text-[10px] text-muted-foreground mt-2">Stripe price not yet configured for this plan.</p>
+                <p className="text-xs text-muted-foreground mt-2">Stripe price not yet configured for this plan.</p>
               )}
             </div>
           );
@@ -388,7 +388,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                       <div className="font-semibold text-base">{m.name}</div>
                       {isActive && (
                         <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-                          <CheckCircle2 className="w-3 h-3 mr-1" /> Active
+                          <CheckCircle2 className="w-4 h-4 mr-1" /> Active
                         </Badge>
                       )}
                     </div>
@@ -419,7 +419,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                         // even regardless of tenant type.
                         const pill =
                           'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium ' +
-                          'bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors ' +
+                          'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors ' +
                           'disabled:opacity-60 disabled:cursor-not-allowed';
                         if (isDemo) {
                           return (
@@ -430,7 +430,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                               onClick={() => sandboxToggle.mutate({ moduleId: m.id, active: !isActive })}
                               disabled={sandboxPending}
                             >
-                              {sandboxPending ? <Loader2 className="w-3 h-3 animate-spin" /> : isActive ? 'Turn off' : 'Turn on'}
+                              {sandboxPending ? <Loader2 className="w-4 h-4 animate-spin" /> : isActive ? 'Turn off' : 'Turn on'}
                             </button>
                           );
                         }
@@ -443,7 +443,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                               onClick={() => checkout.mutate(m.id)}
                               disabled={checkoutPending}
                             >
-                              {checkoutPending ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Activate'}
+                              {checkoutPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Activate'}
                             </button>
                           );
                         }
@@ -455,7 +455,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
                             onClick={() => directToggle.mutate({ moduleId: m.id, active: !isActive })}
                             disabled={directPending}
                           >
-                            {directPending ? <Loader2 className="w-3 h-3 animate-spin" /> : isActive ? 'Deactivate' : 'Activate'}
+                            {directPending ? <Loader2 className="w-4 h-4 animate-spin" /> : isActive ? 'Deactivate' : 'Activate'}
                           </button>
                         );
                       })()}
@@ -655,7 +655,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                           <div className="font-semibold text-base">{item.label}</div>
                           {!isHidden && (
                             <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3 mr-1" /> Visible
+                              <CheckCircle2 className="w-4 h-4 mr-1" /> Visible
                             </Badge>
                           )}
                         </div>
@@ -672,7 +672,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                               onClick={() => toggleItem(item.path, isHidden)}
                               disabled={pending}
                             >
-                              {pending ? <Loader2 className="w-3 h-3 animate-spin" /> : isHidden ? 'Show' : 'Hide'}
+                              {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : isHidden ? 'Show' : 'Hide'}
                             </button>
                           )}
                         </div>
