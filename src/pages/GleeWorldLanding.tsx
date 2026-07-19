@@ -1482,7 +1482,7 @@ function LiveExamplesSection() {
             Real apps. Running today.
           </h2>
           <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto mt-4">
-            Every program type below is a live GleeWorld site — click through and explore. No login required.
+            Every program type below is a live GleeWorld sample site — click through and explore. No login required.
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
