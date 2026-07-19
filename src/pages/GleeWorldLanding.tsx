@@ -645,7 +645,6 @@ const MARKETING_NAV_LINKS: { href: string; label: string }[] = [
   { href: '#examples', label: 'Examples' },
   { href: '#how', label: 'How it works' },
   { href: '#pricing', label: 'Pricing' },
-  { href: TRY_DEMO_URL, label: 'Try the demo' },
 ];
 
 function AppleNav() {
