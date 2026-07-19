@@ -1427,19 +1427,22 @@ function AppleAudienceGrid() {
 const EXAMPLE_SITES: Array<{
   title: string; body: string; icon: typeof Church; pastel: string; url: string;
 }> = [
+  // Card order maps directly to the 2×2 grid on desktop:
+  //   top-left  = Private Studio      top-right    = Choir & Church
+  //   bot-left  = School Program      bottom-right = Enterprise
+  {
+    title: 'Private Studio',
+    body: 'For private teachers and independent musicians — one place where all your music lives together.',
+    icon: PenSquare,
+    pastel: '#fce7f3',
+    url: 'https://demo-songwriter.gleeworld.org/try',
+  },
   {
     title: 'Choir & Church',
     body: 'Sacred music ministry — service planning, choir roster, and a hymnal library, all in one place.',
     icon: Church,
     pastel: '#ede9fe',
     url: 'https://demo-choir.gleeworld.org/try',
-  },
-  {
-    title: 'School District',
-    body: 'Every campus, every ensemble, one dashboard — built for a district-wide music program.',
-    icon: Building,
-    pastel: '#dbeafe',
-    url: 'https://demo-district.gleeworld.org/try',
   },
   {
     title: 'School Program',
@@ -1449,11 +1452,11 @@ const EXAMPLE_SITES: Array<{
     url: 'https://demo-school.gleeworld.org/try',
   },
   {
-    title: 'Private Studio',
-    body: 'For private teachers and independent musicians — one place where all your music lives together.',
-    icon: PenSquare,
-    pastel: '#fce7f3',
-    url: 'https://demo-songwriter.gleeworld.org/try',
+    title: 'Enterprise',
+    body: 'Every campus, every ensemble, one dashboard — for districts, universities, and multi-site music programs.',
+    icon: Building,
+    pastel: '#dbeafe',
+    url: 'https://demo-district.gleeworld.org/try',
   },
 ];
 
