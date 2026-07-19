@@ -586,14 +586,10 @@ function MarketingSite() {
           pastel="#d1fae5"
           imageLeft={true}
         />
-        <AppleFeatureRow
-          eyebrow="Glee Academy"
-          title="The LMS built for music."
-          body="Run classes the way you actually teach them. Roster, syllabus, attendance, assignments, gradebook — under one roof."
-          mockup={<GradebookMockup />}
-          pastel="#fef3c7"
-          imageLeft={false}
-        />
+        {/* Academy gets a dedicated showcase — it's the LMS, one of the
+            platform's two biggest pillars (with the Music Library), and
+            deserves visual weight beyond a single AppleFeatureRow. */}
+        <GleeAcademyShowcase />
         <AppleFeatureRow
           eyebrow="Attendance"
           title="Rehearsals on autopilot."
@@ -1605,6 +1601,100 @@ function AppleFeatureRow({
               {title}
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-slate-700 leading-relaxed max-w-lg">{body}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Glee Academy Showcase ───────────────────────────────────────────────
+// The Academy is GleeWorld's LMS — comparable in scope to a Canvas or
+// Google Classroom, tuned for music programs. Elevated above the
+// standard AppleFeatureRow so it can carry all the sub-features (course
+// builder, gradebook, attendance, parent portal, resource center, etc.)
+// without cramming them into a two-line body.
+function GleeAcademyShowcase() {
+  const clusters: { title: string; items: string[] }[] = [
+    {
+      title: 'Build the course',
+      items: [
+        'AI-assisted course builder (interview)',
+        'Syllabus + outcomes',
+        'Content modules',
+        'Audio + video library',
+      ],
+    },
+    {
+      title: 'Teach and assess',
+      items: [
+        'Assignments',
+        'Quizzes, tests, polls',
+        'Manual + auto grading',
+        'Full gradebook',
+      ],
+    },
+    {
+      title: 'Run the class',
+      items: [
+        'QR-check-in attendance',
+        'Class messaging',
+        'Instructor Console',
+        'Rosters + section groups',
+      ],
+    },
+    {
+      title: 'Family + community',
+      items: [
+        'Parent Portal (K–12)',
+        'Teacher Resource Center',
+        'Course sharing between teachers',
+      ],
+    },
+  ];
+  return (
+    <section id="academy" className="py-20 sm:py-28 md:py-36" style={{ backgroundColor: '#fef3c7' }}>
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-12 sm:mb-16">
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>
+            Glee Academy
+          </p>
+          <h2
+            className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-slate-900 mb-5"
+            style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
+          >
+            The full LMS, built for music.
+          </h2>
+          <p className="text-base sm:text-lg md:text-xl text-slate-700 max-w-2xl mx-auto leading-relaxed">
+            Course tools you'd expect from a Canvas or Google Classroom —
+            plus the pieces music programs actually need. From private
+            studios to K–12 to college, every part of the class lives in
+            one place.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center mb-12">
+          <div className="rounded-2xl overflow-hidden shadow-2xl border border-slate-200/60 bg-white order-2 md:order-1">
+            <GradebookMockup />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4 order-1 md:order-2">
+            {clusters.map((c) => (
+              <div key={c.title} className="rounded-2xl bg-white/80 backdrop-blur border border-white p-5">
+                <h3
+                  className="font-bold text-slate-900 mb-3 text-base"
+                  style={{ ...HEADING_STYLE, letterSpacing: '-0.01em' }}
+                >
+                  {c.title}
+                </h3>
+                <ul className="space-y-2 text-sm text-slate-700">
+                  {c.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#10b981' }} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </div>
