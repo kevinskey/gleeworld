@@ -37,17 +37,21 @@ export default function BoxOfficePage() {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  // When Stripe redirects the user back to us after onboarding, refresh
-  // the status query so the page reflects the new charges_enabled state
-  // even though the Connect webhook is what actually flipped the DB row.
-  if (searchParams.get('stripe') === 'return') {
+  // On Stripe's return from OAuth (?stripe=connected), poll the status
+  // query — the callback edge fn has already persisted the account id and
+  // an initial snapshot of charges_enabled, but the account.updated webhook
+  // may still be catching up if Stripe re-verifies right after linking.
+  const stripeParam = searchParams.get('stripe');
+  if (stripeParam === 'connected' || stripeParam === 'return') {
     queryClient.invalidateQueries({ queryKey: ['tenant_stripe_status'] });
   }
 
   const startConnect = async () => {
     try {
       setConnecting(true);
-      const { data, error } = await supabase.functions.invoke('box-office-connect-onboarding');
+      const { data, error } = await supabase.functions.invoke('stripe-oauth-start', {
+        body: { return_path: '/dashboard/box-office' },
+      });
       if (error) throw new Error(error.message || 'failed');
       if (data?.error) throw new Error(data.error);
       if (!data?.url) throw new Error('No onboarding URL returned');
@@ -222,14 +226,15 @@ export default function BoxOfficePage() {
             <div className="flex items-start gap-2 text-muted-foreground">
               <AlertTriangle className="w-5 h-5 mt-0.5 text-amber-600" />
               <div>
-                <div className="font-semibold text-foreground">Connect your Stripe account</div>
+                <div className="font-semibold text-foreground">Connect with Stripe</div>
                 <div className="text-sm">
-                  Box Office uses Stripe Connect (Standard) so ticket revenue goes
-                  directly to you. Setup takes a few minutes.
+                  You'll be sent to Stripe to create a new Stripe account or sign
+                  in to yours. Ticket revenue goes directly to your Stripe —
+                  GleeWorld never holds the funds.
                 </div>
                 <Button size="sm" className="mt-2" onClick={startConnect} disabled={connecting}>
                   {connecting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
-                  Connect Stripe
+                  Connect with Stripe
                 </Button>
               </div>
             </div>

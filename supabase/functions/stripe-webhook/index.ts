@@ -175,6 +175,16 @@ serve(async (req) => {
         break;
       }
 
+      case 'account.updated': {
+        // Connect: a tenant's Stripe account changed state — charges/payouts
+        // enabled, KYC re-verification, etc. Keep gw_tenants in sync so the
+        // UI's "Connect Stripe" banner reflects reality without the tenant
+        // having to click a refresh button.
+        const account = event.data.object as Stripe.Account;
+        await handleConnectedAccountUpdated(supabase, account);
+        break;
+      }
+
       default:
         logStep("Unhandled event type", { type: event.type });
     }
@@ -703,4 +713,29 @@ async function handleDisputeClosed(supabase: any, dispute: Stripe.Dispute) {
     .eq('stripe_dispute_id', dispute.id);
 
   logStep("Dispute closed", { disputeId: dispute.id, finalStatus: dispute.status });
+}
+
+async function handleConnectedAccountUpdated(supabase: any, account: Stripe.Account) {
+  // Fires whenever a Connect account changes state — charges enabled,
+  // KYC re-verification, payouts paused, etc. We keep gw_tenants in sync
+  // so the "Connect Stripe" banner reflects reality (no manual refresh).
+  logStep("Processing account.updated", {
+    accountId: account.id,
+    chargesEnabled: account.charges_enabled,
+    payoutsEnabled: account.payouts_enabled,
+  });
+
+  const { error } = await supabase
+    .from('gw_tenants')
+    .update({
+      stripe_charges_enabled: !!account.charges_enabled,
+      stripe_payouts_enabled: !!account.payouts_enabled,
+    })
+    .eq('stripe_account_id', account.id);
+
+  if (error) {
+    // Not fatal — a stray account.updated for an account we haven't
+    // linked yet just no-ops on the update.
+    console.warn('[handleConnectedAccountUpdated] update failed', error);
+  }
 }
