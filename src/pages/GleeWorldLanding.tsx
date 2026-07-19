@@ -1987,17 +1987,17 @@ function AppleFinalCTA() {
 // ── Stripe Payment Links ──────────────────────────────────────────────────
 // Create these in Stripe Dashboard → Payment Links, one per PlanTierId, once
 // the tier restructure (see docs/superpowers/plans/2026-07-04-tiers-billing.md)
-// reaches its launch gate. Each link should wrap the tier's monthly lookup_key
-// price and collect: customer email (required), custom field "org_name"
-// (text, required), custom field "subdomain" (text, optional).
-// Every value here is intentionally null for now — the old ensemble/studio/
-// conservatory/university links referenced retired tier ids and pricing, and
-// real replacements aren't created until the launch gate in the runbook
-// above. Until then every "Talk to us" CTA below falls back to MAILTO_BUY.
+// reaches its launch gate. Each link wraps the tier's monthly lookup_key
+// price. Tenant tiers also collect two Stripe custom fields — "org_name"
+// (required) and "subdomain" (optional) — so the provisioning webhook
+// has what it needs. Institution stays null (quote-only, MAILTO_BUY
+// fallback intentional).
+// Payment Links created 2026-07-19; carry metadata[gleeworld_tier] = the
+// canonical PlanTierId so the webhook can route on it directly.
 const PLAN_CHECKOUT_LINKS: Record<PlanTierId, string | null> = {
-  personal: null,
-  director_60: null,
-  director_150: null,
+  personal: 'https://buy.stripe.com/5kQ8wOccIbir0F2a5V4Vy04',
+  director_60: 'https://buy.stripe.com/28E9ASekQ0DN87ua5V4Vy05',
+  director_150: 'https://buy.stripe.com/aFa9AS2C84U3afCfqf4Vy06',
   institution: null,
 };
 
