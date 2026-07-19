@@ -1323,7 +1323,7 @@ function ReplacementTable() {
     { uses: 'Google Drive, Dropbox',                  replaces: 'Music Library with rights tagging' },
     { uses: 'Google Calendar, Calendly',              replaces: 'Calendar with rehearsal recurrence' },
     { uses: 'Canvas, Google Classroom',               replaces: 'Academy + Grading + Assignments' },
-    { uses: 'Excel, Google Sheets',                   replaces: 'Attendance & Rosters' },
+    { uses: 'Excel, Google Sheets',                   replaces: 'QR Attendance & Rosters' },
     { uses: 'Mailchimp, Constant Contact',            replaces: 'Announcements & section broadcasts' },
     { uses: 'Eventbrite, TicketTailor',               replaces: 'Box Office (add-on)' },
     { uses: 'Audacity, GarageBand',                   replaces: 'Practice Studio with auto-mix' },
