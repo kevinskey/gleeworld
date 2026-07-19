@@ -13,6 +13,7 @@ import {
   useThumbnailUrl,
 } from '@/hooks/useStudioVideo';
 import { toast } from 'sonner';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 function formatBytes(n: number | null): string {
   if (!n) return '—';
@@ -57,9 +58,7 @@ export default function VideoLibrary() {
     <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Film className="w-7 h-7 text-primary" /> Video
-          </h1>
+          <PageTitle icon={Film}>Video</PageTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Rehearsal recordings, lesson videos, performance archives.
           </p>
