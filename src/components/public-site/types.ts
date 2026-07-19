@@ -6,13 +6,65 @@ export const themeSchema = z.object({
   primaryColor: z.string().default('#0f172a'),
   accentColor: z.string().default('#9333ea'),
   // Free-form string keyed against FONT_OPTIONS below. Legacy values 'sans'
-  // and 'serif' are still honored.
+  // and 'serif' are still honored. This is the BODY font; headings can opt
+  // to a different family via headingFontFamily.
   fontFamily: z.string().default('sans'),
+  /** Optional heading font. When unset, headings inherit fontFamily. */
+  headingFontFamily: z.string().optional(),
   // Letter-spacing in em units. Applied to the root site wrapper; individual
   // block text inherits unless it explicitly overrides.
   letterSpacing: z.number().min(-0.05).max(0.3).default(0),
+  /**
+   * Which template package this site was seeded from. Purely informational
+   * for the editor's "You're using the {X} look" state; the actual visual
+   * behavior comes from the token values below. `custom` = user tweaked
+   * theme after seeding.
+   */
+  package: z.enum(['modern', 'institutional', 'minimalist', 'custom']).default('custom'),
+  /**
+   * Corner radius scale for cards, images, buttons. Maps to CSS via
+   * --site-radius. Modern = round, Institutional = sharp, Minimalist = sharp.
+   */
+  radiusScale: z.enum(['sharp', 'soft', 'round']).default('soft'),
+  /**
+   * Vertical padding scale for content sections. Maps to CSS via
+   * --site-section-py. Institutional = tight, Modern = generous,
+   * Minimalist = spacious.
+   */
+  sectionPaddingScale: z.enum(['tight', 'normal', 'generous', 'spacious']).default('normal'),
+  /**
+   * Divider treatment between sections. Institutional draws a hairline
+   * rule; Modern/Minimalist rely on whitespace alone.
+   */
+  dividerStyle: z.enum(['none', 'rule']).default('none'),
 });
 export type SiteTheme = z.infer<typeof themeSchema>;
+
+/** CSS variable values keyed by theme token, emitted on the site root. */
+export const RADIUS_PX: Record<SiteTheme['radiusScale'], string> = {
+  sharp: '0px',
+  soft: '12px',
+  round: '20px',
+};
+export const SECTION_PY_REM: Record<SiteTheme['sectionPaddingScale'], string> = {
+  tight: '1.25rem',
+  normal: '1.5rem',
+  generous: '3rem',
+  spacious: '4.5rem',
+};
+
+/** Return the CSS custom properties a package/theme wants on the site root. */
+export function themeCssVars(theme: SiteTheme): Record<string, string> {
+  return {
+    '--site-primary': theme.primaryColor,
+    '--site-accent': theme.accentColor,
+    '--site-radius': RADIUS_PX[theme.radiusScale],
+    '--site-section-py': SECTION_PY_REM[theme.sectionPaddingScale],
+    '--site-heading-font': theme.headingFontFamily
+      ? fontStack(theme.headingFontFamily)
+      : fontStack(theme.fontFamily),
+  };
+}
 
 /** Curated font list for the public site builder. Each entry maps a stored
  *  key to a CSS font-family stack. New keys can be added freely; old ones

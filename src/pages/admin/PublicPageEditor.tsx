@@ -35,6 +35,7 @@ import {
   ExternalLink,
   Monitor,
   Smartphone,
+  Sparkles,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -56,7 +57,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BLOCK_LIST, getBlockModule, isBlockAvailable } from '@/components/public-site/registry';
 import { AutoForm } from '@/components/public-site/AutoForm';
-import { fontStack, safeConfig, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
+import { fontStack, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
+import { PACKAGE_LIST, type TemplatePackage } from '@/components/public-site/packages';
 
 interface SiteRow {
   id: string;
@@ -157,6 +159,8 @@ export default function PublicPageEditor() {
   const [publishing, setPublishing] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [packagePickerOpen, setPackagePickerOpen] = useState(false);
+  const [applyingPackage, setApplyingPackage] = useState<string | null>(null);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const sensors = useSensors(
@@ -416,6 +420,78 @@ export default function PublicPageEditor() {
     toast({ title: 'Unpublished', description: 'Your page is no longer publicly visible.' });
   };
 
+  // Swaps the site to a template package: wipes the current block list,
+  // reseeds from the package's block list, and merges the package's theme
+  // tokens over the current theme (preserving tenant-picked colors so the
+  // brand identity survives). Client-side rather than an RPC so package
+  // definitions stay in TypeScript alongside the block modules they refer
+  // to. RLS scopes the delete + insert to the current tenant.
+  const applyPackage = async (pkg: TemplatePackage) => {
+    if (!site) return;
+    if (pkg.comingSoon) return;
+    setApplyingPackage(pkg.id);
+    try {
+      const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
+      if (del.error) throw del.error;
+
+      // Package theme merges OVER the current theme, but tenant colors are
+      // preserved on top — packages are about typography / rhythm / shape,
+      // not about repainting the tenant's brand palette.
+      const nextTheme: SiteTheme = {
+        ...theme,
+        ...pkg.theme,
+        primaryColor: theme.primaryColor,
+        accentColor: theme.accentColor,
+      };
+      const themeUpd = await supabase
+        .from('gw_public_sites')
+        .update({ theme: nextTheme })
+        .eq('id', site.id);
+      if (themeUpd.error) throw themeUpd.error;
+
+      // Header always seeds from tenant branding — not part of the package
+      // schema. Keeps every package's nav consistent with what the block
+      // anchors expect.
+      const headerConfig = {
+        siteName: branding.org_name || site.slug,
+        logoUrl: branding.logo_url || '',
+        navLinks: [
+          { label: 'Events', url: '#events' },
+          { label: 'About', url: '#about' },
+          { label: 'Listen', url: '#music' },
+          { label: 'Watch', url: '#watch' },
+          { label: 'Contact', url: '#contact' },
+        ],
+        logoHeight: 36,
+      };
+
+      const rows = [
+        { block_type: 'header', position: 0, config: headerConfig, is_visible: true },
+        ...pkg.blocks.map((b, i) => {
+          const mod = getBlockModule(b.type);
+          return {
+            block_type: b.type,
+            position: i + 1,
+            config: { ...(mod?.defaultConfig ?? {}), ...(b.config ?? {}) },
+            is_visible: true,
+          };
+        }),
+      ];
+      const ins = await supabase.from('gw_site_blocks').insert(rows);
+      if (ins.error) throw ins.error;
+
+      setSelectedId(null);
+      await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+      await queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+      setPackagePickerOpen(false);
+      toast({ title: `${pkg.name} applied`, description: 'Your site now uses this look.' });
+    } catch (e: any) {
+      toast({ title: 'Could not apply look', description: e.message, variant: 'destructive' });
+    } finally {
+      setApplyingPackage(null);
+    }
+  };
+
   // Wipes the current block list and asks gw_activate_public_site() to reseed
   // the 7-block starter template. RLS scopes the delete to the current tenant.
   const resetToTemplate = async () => {
@@ -484,6 +560,60 @@ export default function PublicPageEditor() {
           <Badge variant={site.is_published ? 'default' : 'secondary'}>
             {site.is_published ? 'Published' : 'Draft'}
           </Badge>
+          <Dialog open={packagePickerOpen} onOpenChange={setPackagePickerOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" title="Try a different look for your whole site">
+                <Sparkles className="w-4 h-4 mr-1.5" /> Change look
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Pick a look</DialogTitle>
+                <DialogDescription>
+                  Each package is a curated set of fonts, spacing, and starter blocks that fit together.
+                  Your brand colors and any uploaded media stay the same — only the layout and rhythm change.
+                  Applying a package replaces your current blocks.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid sm:grid-cols-3 gap-3 pt-2">
+                {PACKAGE_LIST.map((pkg) => {
+                  const active = theme.package === pkg.id;
+                  const busy = applyingPackage === pkg.id;
+                  return (
+                    <button
+                      key={pkg.id}
+                      type="button"
+                      onClick={() => !pkg.comingSoon && applyPackage(pkg)}
+                      disabled={pkg.comingSoon || busy}
+                      className={`text-left rounded-xl border p-4 space-y-2 transition-colors ${
+                        active
+                          ? 'border-primary ring-2 ring-primary/40 bg-primary/5'
+                          : pkg.comingSoon
+                            ? 'border-border/60 opacity-70 cursor-not-allowed'
+                            : 'border-border/60 hover:border-primary hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-sm">{pkg.name}</span>
+                        {pkg.comingSoon && (
+                          <Badge variant="secondary" className="gap-1">
+                            <Lock className="w-3 h-3" /> Soon
+                          </Badge>
+                        )}
+                        {active && !pkg.comingSoon && (
+                          <Badge variant="default" className="gap-1">
+                            <Check className="w-3 h-3" /> Applied
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-snug">{pkg.description}</p>
+                      {busy && <p className="text-xs text-primary">Applying…</p>}
+                    </button>
+                  );
+                })}
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog open={resetOpen} onOpenChange={setResetOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" title="Replace all blocks with the default layout">
@@ -729,19 +859,25 @@ export default function PublicPageEditor() {
             className="bg-slate-100 max-h-[70dvh] overflow-y-auto overscroll-contain relative"
           >
             <div
-              className="bg-white mx-auto"
+              className="gw-site bg-white mx-auto"
               style={{
                 width: deviceWidth,
                 // `zoom` participates in layout (transform: scale does not),
                 // so the outer scrollbar reflects the scaled height and any
                 // nested `position: sticky` still pins to previewOuterRef.
                 zoom: previewScale,
-                ['--site-primary' as string]: theme.primaryColor,
-                ['--site-accent' as string]: theme.accentColor,
+                ...themeCssVars(theme),
                 fontFamily: fontStack(theme.fontFamily),
                 letterSpacing: `${theme.letterSpacing ?? 0}em`,
               } as React.CSSProperties}
             >
+              {/* Same package tokens the /sites/:slug renderer applies, so
+                  what you see in the preview matches what visitors get. */}
+              <style>{`
+                .gw-site h1, .gw-site h2, .gw-site h3, .gw-site h4 { font-family: var(--site-heading-font); }
+                .gw-site > section:not(#top),
+                .gw-site > footer { padding-top: var(--site-section-py); padding-bottom: var(--site-section-py); }
+              `}</style>
               {blocks.map((block) => {
                 const mod = getBlockModule(block.block_type);
                 if (!mod || !block.is_visible) return null;

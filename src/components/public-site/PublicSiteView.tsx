@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BLOCK_REGISTRY, isBlockAvailable } from './registry';
-import { fontStack, safeConfig, themeSchema, type SiteBlock, type SiteRenderContext } from './types';
+import { fontStack, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext } from './types';
 import { StoreOrderConfirmation } from './StoreOrderConfirmation';
 
 export interface PublicSitePayload {
@@ -110,14 +110,23 @@ export function PublicSiteView({
 
   return (
     <div
-      className="min-h-screen bg-white text-slate-900"
+      className="gw-site min-h-screen bg-white text-slate-900"
       style={{
-        ['--site-primary' as string]: theme.primaryColor,
-        ['--site-accent' as string]: theme.accentColor,
+        ...themeCssVars(theme),
         fontFamily: fontStack(theme.fontFamily),
         letterSpacing: `${theme.letterSpacing ?? 0}em`,
-      }}
+      } as React.CSSProperties}
     >
+      {/* Package tokens applied globally under .gw-site. Headings inherit
+          the package's heading font (which is often distinct from the body
+          font in Institutional / Modern); every non-hero section picks up
+          the package's vertical rhythm so switching packages feels like a
+          real shape change and not just a color swap. */}
+      <style>{`
+        .gw-site h1, .gw-site h2, .gw-site h3, .gw-site h4 { font-family: var(--site-heading-font); }
+        .gw-site > section:not(#top),
+        .gw-site > footer { padding-top: var(--site-section-py); padding-bottom: var(--site-section-py); }
+      `}</style>
       {orderId && orderToken && <StoreOrderConfirmation order={orderId} token={orderToken} />}
       {blocks.map((block) => {
         const mod = BLOCK_REGISTRY[block.block_type];
