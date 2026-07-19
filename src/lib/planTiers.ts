@@ -25,6 +25,9 @@ export interface PlanTier {
   annualCents: number;
   studentCap: number | null;
   storageGb: number;
+  /** Max active Academy courses; null = unlimited. Enforcement is a separate
+   * workstream — the client currently only displays this. */
+  courseCap: number | null;
   lookupKeyMonthly: string;
   lookupKeyAnnual: string;
   features: string[];
@@ -41,12 +44,14 @@ export const PLAN_TIERS: PlanTier[] = [
     annualCents: 7900,
     studentCap: 1,
     storageGb: 25,
+    courseCap: 1,
     lookupKeyMonthly: 'gw_personal_monthly',
     lookupKeyAnnual: 'gw_personal_annual',
     features: [
-      'Practice studio',
       'Your own score library',
       'Personal calendar + Tonight mode',
+      '1 course (Academy)',
+      'Custom domain ($25 setup + $15/yr)',
       '25 GB',
     ],
   },
@@ -59,14 +64,17 @@ export const PLAN_TIERS: PlanTier[] = [
     annualCents: 39000,
     studentCap: 60,
     storageGb: 50,
+    courseCap: 5,
     lookupKeyMonthly: 'gw_director60_monthly',
     lookupKeyAnnual: 'gw_director60_annual',
     features: [
       'Up to 60 students',
+      'Up to 5 Academy courses',
       'Roster, attendance, scheduling',
-      'Scores + part tracks + Studio',
+      'Scores + part tracks',
       'Tonight mode + stage viewer',
       'Branded login (your logo & colors)',
+      'Custom domain ($25 setup + $15/yr)',
       '50 GB',
     ],
   },
@@ -79,11 +87,14 @@ export const PLAN_TIERS: PlanTier[] = [
     annualCents: 69000,
     studentCap: 150,
     storageGb: 150,
+    courseCap: 25,
     lookupKeyMonthly: 'gw_director150_monthly',
     lookupKeyAnnual: 'gw_director150_annual',
     features: [
       'Up to 150 students',
+      'Up to 25 Academy courses',
       'Everything in Director',
+      'Custom domain ($25 setup + $15/yr)',
       '150 GB',
     ],
   },
@@ -96,14 +107,17 @@ export const PLAN_TIERS: PlanTier[] = [
     annualCents: 199000,
     studentCap: null,
     storageGb: 1024,
+    courseCap: null,
     lookupKeyMonthly: 'gw_institution_monthly',
     lookupKeyAnnual: 'gw_institution_annual',
     features: [
       'Unlimited students',
+      'Unlimited Academy courses',
       'Multi-ensemble + SSO + Canvas',
       'Broadcast texts included',
       'Box Office included',
       'Custom app icon',
+      'Custom domain ($25 setup + $15/yr)',
       'Dedicated app (talk to us)',
       '1 TB pooled',
     ],
