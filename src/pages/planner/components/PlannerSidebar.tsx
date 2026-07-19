@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import {
   CheckSquare, FileStack, FileText, FolderIcon, FolderPlus,
-  KanbanSquare, Pencil, Plus, Search, Star, Sun, Tag, Trash2,
+  KanbanSquare, Pencil, Search, Star, Sun, Tag, Trash2,
 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -34,9 +34,6 @@ export type PlannerSelection =
 export interface PlannerSidebarProps {
   selection: PlannerSelection;
   onSelect: (sel: PlannerSelection) => void;
-  /** Create a new note and open it — the always-visible primary action. */
-  onNewNote: () => void;
-  creatingNote?: boolean;
 }
 
 function NavButton({ active, onClick, icon: Icon, label, badge }: {
@@ -61,7 +58,7 @@ function NavButton({ active, onClick, icon: Icon, label, badge }: {
   );
 }
 
-export default function PlannerSidebar({ selection, onSelect, onNewNote, creatingNote }: PlannerSidebarProps) {
+export default function PlannerSidebar({ selection, onSelect }: PlannerSidebarProps) {
   const { data: folders } = useFolders();
   const { data: filters } = useSavedFilters();
   const { data: tags } = useAllTags();
@@ -135,13 +132,11 @@ export default function PlannerSidebar({ selection, onSelect, onNewNote, creatin
     ));
 
   return (
-    <nav aria-label="Planner" className="flex flex-col gap-4 p-3">
-      {/* Primary action, always at the top of the always-visible rail: one
-          click to a new note from any planner view (no menu, no scroll). */}
-      <Button className="w-full justify-start gap-2" size="sm" onClick={onNewNote} disabled={creatingNote}>
-        <Plus className="h-4 w-4" /> New note
-      </Button>
-
+    // p-4 matches the content column's py-4 so the sidebar's first row
+    // (Today) sits on the same baseline as the period-tabs row in
+    // PeriodView. Primary "New note" moved to the day header (PeriodView);
+    // the mobile top bar in PlannerPage still exposes it.
+    <nav aria-label="Planner" className="flex flex-col gap-4 p-4">
       <div className="flex flex-col gap-0.5">
         <NavButton active={selection.view === 'today'} onClick={() => onSelect({ view: 'today' })} icon={Sun} label="Today" badge={counts?.today} />
         <NavButton active={selection.view === 'tasks'} onClick={() => onSelect({ view: 'tasks' })} icon={CheckSquare} label="Tasks" badge={counts?.overdue} />

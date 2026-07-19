@@ -8,7 +8,7 @@ import {
   type DragEndEvent, type DragStartEvent,
 } from '@dnd-kit/core';
 import { format, parseISO } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight, FileStack, MapPin, ZoomOut } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, FileStack, MapPin, Plus, ZoomOut } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -44,9 +44,15 @@ export interface PeriodViewProps {
   dateKey: string;
   onNavigate: (type: PeriodType, dateKey: string) => void;
   onOpenNote: (noteId: string) => void;
+  /** Primary "New note" action — surfaced on the date title row (moved off
+   *  the sidebar so the sidebar stays a nav rail). */
+  onNewNote?: () => void;
+  creatingNote?: boolean;
 }
 
-export default function PeriodView({ type, dateKey, onNavigate, onOpenNote }: PeriodViewProps) {
+export default function PeriodView({
+  type, dateKey, onNavigate, onOpenNote, onNewNote, creatingNote,
+}: PeriodViewProps) {
   const { data: note, isLoading, isError } = usePeriodNote(type, dateKey);
   const { data: events } = usePeriodEvents(type, dateKey);
   const isDaily = type === 'daily';
@@ -136,16 +142,23 @@ export default function PeriodView({ type, dateKey, onNavigate, onOpenNote }: Pe
         </div>
       </div>
 
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-foreground">{keyTitle(dateKey, type)}</h1>
-        {parent && (
-          <button
-            onClick={() => onNavigate(parent.type, parent.key)}
-            className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
-          >
-            <ZoomOut className="h-3.5 w-3.5" aria-hidden /> {keyTitle(parent.key, parent.type)}
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {parent && (
+            <button
+              onClick={() => onNavigate(parent.type, parent.key)}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
+            >
+              <ZoomOut className="h-3.5 w-3.5" aria-hidden /> {keyTitle(parent.key, parent.type)}
+            </button>
+          )}
+          {onNewNote && (
+            <Button size="sm" className="gap-1.5" onClick={onNewNote} disabled={creatingNote}>
+              <Plus className="h-4 w-4" /> New note
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* drill-down: this period's children (week→days, month→weeks, …) */}

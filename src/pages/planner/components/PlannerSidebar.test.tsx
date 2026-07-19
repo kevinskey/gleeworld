@@ -16,30 +16,27 @@ vi.mock('../hooks', () => ({
 
 afterEach(cleanup);
 
-function renderSidebar(onNewNote = vi.fn()) {
+function renderSidebar(onSelect = vi.fn()) {
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <PlannerSidebar selection={{ view: 'today' }} onSelect={vi.fn()} onNewNote={onNewNote} />
+      <PlannerSidebar selection={{ view: 'today' }} onSelect={onSelect} />
     </QueryClientProvider>,
   );
-  return onNewNote;
+  return onSelect;
 }
 
 describe('PlannerSidebar', () => {
-  it('renders the always-visible New note button and fires onNewNote', () => {
-    const onNewNote = renderSidebar();
-    const btn = screen.getByRole('button', { name: /new note/i });
-    expect(btn).toBeInTheDocument();
-    fireEvent.click(btn);
-    expect(onNewNote).toHaveBeenCalledTimes(1);
+  it('renders the always-visible core nav (Today / Tasks / Board / All notes)', () => {
+    renderSidebar();
+    expect(screen.getByRole('button', { name: /^today$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^tasks$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^board$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^all notes$/i })).toBeInTheDocument();
   });
 
-  it('disables the New note button while a create is pending', () => {
-    render(
-      <QueryClientProvider client={new QueryClient()}>
-        <PlannerSidebar selection={{ view: 'today' }} onSelect={vi.fn()} onNewNote={vi.fn()} creatingNote />
-      </QueryClientProvider>,
-    );
-    expect(screen.getByRole('button', { name: /new note/i })).toBeDisabled();
+  it('fires onSelect with the requested view when a nav row is clicked', () => {
+    const onSelect = renderSidebar();
+    fireEvent.click(screen.getByRole('button', { name: /^tasks$/i }));
+    expect(onSelect).toHaveBeenCalledWith({ view: 'tasks' });
   });
 });

@@ -8,7 +8,7 @@
 // panel for open notes (inline on xl, sheet below).
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Info, Menu, Trash2 } from 'lucide-react';
+import { ArrowLeft, Info, Menu, Plus, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -101,7 +101,7 @@ export default function PlannerPage() {
   }, [navigate]);
 
   const sidebar = (
-    <PlannerSidebar selection={selection} onSelect={select} onNewNote={handleNewNote} creatingNote={newNote.isPending} />
+    <PlannerSidebar selection={selection} onSelect={select} />
   );
 
   return (
@@ -114,12 +114,11 @@ export default function PlannerPage() {
       </aside>
 
       <div className="min-w-0 flex-1 px-4 py-4 lg:px-6">
-        {/* Mobile / tablet top bar — nav only. The New note action lives in
-            each view's own header (and in the Menu popover's sidebar), so the
-            bar no longer carries a duplicate "New note" button here. */}
+        {/* Mobile / tablet / narrow-desktop top bar — Menu opens the sidebar
+            popover; the primary "New note" action sits alongside so it's
+            reachable without going through Menu. Hidden at lg+ where the
+            persistent sidebar carries both. */}
         <div className="mb-3 flex items-center gap-2 lg:hidden">
-          {/* Local dropdown anchored to the button — a full-screen sheet
-              was heavy-handed for what is just the planner's section nav. */}
           <Popover open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5" aria-label="Open planner menu">
@@ -130,6 +129,14 @@ export default function PlannerPage() {
               {sidebar}
             </PopoverContent>
           </Popover>
+          <Button
+            size="sm"
+            className="gap-1.5"
+            disabled={newNote.isPending}
+            onClick={handleNewNote}
+          >
+            <Plus className="h-4 w-4" /> New note
+          </Button>
         </div>
 
         {noteId ? (
@@ -155,7 +162,14 @@ export default function PlannerPage() {
             onOpenNote={openNote}
           />
         ) : (
-          <PeriodView type={view === 'calendar' ? ptype : 'daily'} dateKey={view === 'calendar' ? pkey : periodKey(new Date(), 'daily')} onNavigate={openPeriod} onOpenNote={openNote} />
+          <PeriodView
+            type={view === 'calendar' ? ptype : 'daily'}
+            dateKey={view === 'calendar' ? pkey : periodKey(new Date(), 'daily')}
+            onNavigate={openPeriod}
+            onOpenNote={openNote}
+            onNewNote={handleNewNote}
+            creatingNote={newNote.isPending}
+          />
         )}
       </div>
     </div>
@@ -259,7 +273,7 @@ function NoteView({ noteId, onOpenNote, onBack }: {
       </div>
 
       {/* Inline context panel on wide screens */}
-      <aside className="sticky top-[calc(var(--gw-header-h,64px)+1rem)] hidden w-72 shrink-0 self-start xl:block">
+      <aside className="sticky top-[calc(var(--gw-header-h,64px)+1rem)] hidden w-56 shrink-0 self-start xl:block">
         <ContextPanel note={note} onOpenNote={onOpenNote} />
       </aside>
     </div>
