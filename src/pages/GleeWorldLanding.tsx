@@ -1238,7 +1238,7 @@ function AppleProductBig() {
         >
           Everything your group needs.
           <br />
-          <span className="text-slate-400">Nothing it doesn't.</span>
+          <span className="text-slate-400">Every feature earns its place.</span>
         </h2>
         <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
           A 33,000-work public-domain library, print-ready concert programs, student
