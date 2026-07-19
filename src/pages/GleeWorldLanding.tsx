@@ -1236,9 +1236,9 @@ function AppleProductBig() {
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] text-slate-900 mb-6"
           style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
         >
-          Everything your group needs.
+          Everything you need.
           <br />
-          <span className="text-slate-400">Every feature earns its place.</span>
+          <span className="text-slate-400">All in one place.</span>
         </h2>
         <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
           Your music library, your calendar, your roster, your recordings — all on
