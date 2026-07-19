@@ -179,26 +179,137 @@ CREATE POLICY video_links_owner ON public.gw_video_links
   WITH CHECK (user_id = auth.uid());
 ```
 
-- [ ] **Step 2: Verify the SQL parses**
+- [ ] **Step 2: Write the RLS test script**
 
-Run: `npx supabase db lint --file supabase/migrations/20260718120000_video_link_library.sql` — if the CLI is unavailable, skip; Task 1 Step 3 is the real gate.
+The spec requires these three tests **against a real database**, not mocks. A local
+scratch DB proves them without touching prod. Precedent:
+`supabase/migrations/tests/assistant_course_builder_bootstrap.sql`.
 
-- [ ] **Step 3: Apply to the live database — STOP AND ASK KEVIN**
+Create `supabase/migrations/tests/video_link_library_test.sql`:
 
-The harness blocks Claude from writing to the prod DB. Present this to Kevin to run himself with a leading `!`:
+```sql
+-- Scratch-DB proof of the RLS and trigger contract. Run against a throwaway
+-- database, never prod. Stubs the two platform functions the migration depends on.
+\set ON_ERROR_STOP on
 
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE TABLE IF NOT EXISTS public._t (tenant uuid, usr uuid);
+TRUNCATE public._t;
+INSERT INTO public._t VALUES (NULL, NULL);
+
+CREATE OR REPLACE FUNCTION public.current_tenant_id() RETURNS uuid
+  LANGUAGE sql STABLE AS $$ SELECT tenant FROM public._t LIMIT 1 $$;
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
+  LANGUAGE sql STABLE AS $$ SELECT usr FROM public._t LIMIT 1 $$;
+
+CREATE ROLE authenticated;
+
+\i supabase/migrations/20260718120000_video_link_library.sql
+
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT ALL ON public.gw_video_collections, public.gw_video_links TO authenticated;
+GRANT ALL ON public._t TO authenticated;
+
+\set tenantA '''11111111-1111-1111-1111-111111111111'''
+\set tenantB '''22222222-2222-2222-2222-222222222222'''
+\set userA   '''aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'''
+\set userB   '''bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'''
+
+-- Become member A of tenant A.
+UPDATE public._t SET tenant = :tenantA, usr = :userA;
+SET ROLE authenticated;
+
+INSERT INTO public.gw_video_collections (name) VALUES ('Warm-ups');
+
+-- TEST 1 (trigger): an explicit tenant_id: null — exactly what PostgREST sends
+-- from a client payload — must still land with the correct tenant.
+INSERT INTO public.gw_video_links (tenant_id, collection_id, video_id, url, title)
+SELECT NULL, id, 'dQw4w9WgXcQ', 'https://youtu.be/dQw4w9WgXcQ', 'A''s video'
+FROM public.gw_video_collections WHERE name = 'Warm-ups';
+
+DO $$
+DECLARE t uuid;
+BEGIN
+  SELECT tenant_id INTO t FROM public.gw_video_links WHERE video_id = 'dQw4w9WgXcQ';
+  IF t IS DISTINCT FROM '11111111-1111-1111-1111-111111111111'::uuid THEN
+    RAISE EXCEPTION 'TEST 1 FAILED: explicit NULL tenant_id landed as %', t;
+  END IF;
+  RAISE NOTICE 'TEST 1 PASSED: trigger filled tenant_id';
+END $$;
+
+-- TEST 2: naming another tenant's id is rejected by the restrictive policy.
+DO $$
+BEGIN
+  INSERT INTO public.gw_video_links (tenant_id, collection_id, video_id, url, title)
+  SELECT '22222222-2222-2222-2222-222222222222'::uuid, id, 'aaaaaaaaaaa',
+         'https://youtu.be/aaaaaaaaaaa', 'cross-tenant'
+  FROM public.gw_video_collections WHERE name = 'Warm-ups';
+  RAISE EXCEPTION 'TEST 2 FAILED: cross-tenant insert was allowed';
+EXCEPTION WHEN insufficient_privilege THEN
+  RAISE NOTICE 'TEST 2 PASSED: cross-tenant insert rejected';
+END $$;
+
+-- TEST 3: member B, same tenant, cannot see / update / delete A's row.
+RESET ROLE;
+UPDATE public._t SET usr = :userB;
+SET ROLE authenticated;
+
+DO $$
+DECLARE n integer;
+BEGIN
+  SELECT count(*) INTO n FROM public.gw_video_links WHERE video_id = 'dQw4w9WgXcQ';
+  IF n <> 0 THEN RAISE EXCEPTION 'TEST 3a FAILED: B can see A''s link'; END IF;
+
+  UPDATE public.gw_video_links SET title = 'hijacked' WHERE video_id = 'dQw4w9WgXcQ';
+  GET DIAGNOSTICS n = ROW_COUNT;
+  IF n <> 0 THEN RAISE EXCEPTION 'TEST 3b FAILED: B updated A''s link'; END IF;
+
+  DELETE FROM public.gw_video_links WHERE video_id = 'dQw4w9WgXcQ';
+  GET DIAGNOSTICS n = ROW_COUNT;
+  IF n <> 0 THEN RAISE EXCEPTION 'TEST 3c FAILED: B deleted A''s link'; END IF;
+
+  RAISE NOTICE 'TEST 3 PASSED: B cannot read, update or delete A''s link';
+END $$;
+
+-- TEST 4: the duplicate constraint the UI relies on (error code 23505).
+RESET ROLE;
+UPDATE public._t SET usr = :userA;
+SET ROLE authenticated;
+
+DO $$
+BEGIN
+  INSERT INTO public.gw_video_links (collection_id, video_id, url, title)
+  SELECT id, 'dQw4w9WgXcQ', 'https://youtu.be/dQw4w9WgXcQ', 'dup'
+  FROM public.gw_video_collections WHERE name = 'Warm-ups';
+  RAISE EXCEPTION 'TEST 4 FAILED: duplicate in same tab was allowed';
+EXCEPTION WHEN unique_violation THEN
+  RAISE NOTICE 'TEST 4 PASSED: duplicate rejected with unique_violation (23505)';
+END $$;
+
+RESET ROLE;
 ```
-! PGPASSWORD=... psql -h supabase.gleeworld.org -U postgres -d postgres -f supabase/migrations/20260718120000_video_link_library.sql
+
+- [ ] **Step 3: Run it on a scratch database**
+
+```bash
+export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+dropdb --if-exists gw_video_links_test && createdb gw_video_links_test
+psql -q -d gw_video_links_test -v ON_ERROR_STOP=1 -f supabase/migrations/tests/video_link_library_test.sql
 ```
 
-Do not proceed to Task 2 until he confirms it applied.
+Expected: four `TEST n PASSED` notices, exit code 0. Any `TEST n FAILED` means the
+migration is wrong — fix the migration, not the test.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add supabase/migrations/20260718120000_video_link_library.sql
+git add supabase/migrations/20260718120000_video_link_library.sql supabase/migrations/tests/video_link_library_test.sql
 git commit -m "feat(video): add gw_video_collections + gw_video_links tables"
 ```
+
+**Applying to prod is deferred to the deploy step at the end of this plan** — the
+harness blocks Claude from writing to the prod database, and Tasks 2-8 are fully
+mocked, so nothing downstream is blocked by waiting.
 
 ---
 
@@ -435,9 +546,7 @@ git add supabase/functions/youtube-oembed/
 git commit -m "feat(video): add SSRF-safe youtube-oembed edge function"
 ```
 
-- [ ] **Step 6: Deploy the function — STOP AND ASK KEVIN**
-
-Real path is `/opt/supabase/volumes/functions/` on the droplet; Deno requires the `.ts` extension on relative imports (already used above). Both `_shared/youtubeId.ts` and `youtube-oembed/index.ts` must be copied. Present the scp/restart commands for Kevin to run with a leading `!`, then wait for confirmation.
+**Deploying the function is deferred to the deploy step at the end of this plan.** Real path is `/opt/supabase/volumes/functions/` on the droplet; Deno requires the `.ts` extension on relative imports (already used above); both `_shared/youtubeId.ts` and `youtube-oembed/index.ts` must be copied. Tasks 4-8 mock the function, so nothing downstream is blocked by deferring.
 
 ---
 
