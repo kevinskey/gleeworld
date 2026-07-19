@@ -37,6 +37,7 @@ import {
   Building,
   Globe,
   ShieldCheck,
+  Mic,
   Menu,
   X,
 } from "lucide-react";
@@ -553,6 +554,16 @@ function MarketingSite() {
         <LiveExamplesSection />
         <AppleProductBig />
         <FounderSection />
+        {/* Assistant sits right after the founder card — Kevin explicitly
+            wants this showcased next, before the consolidation table. */}
+        <AppleFeatureRow
+          eyebrow="GleeWorld Assistant"
+          title="The AI that already knows your program."
+          body="Move a rehearsal, message a section, add a piece to your library, draft a syllabus — by voice or text. The Assistant is scoped to your workspace, so it can act on your calendar, roster, and library the moment you ask. On every page, in the browser and in the native apps."
+          mockup={<AssistantMockup />}
+          pastel="#ede9fe"
+          imageLeft={false}
+        />
         <ReplacementTable />
         <AppleAudienceGrid />
         {/* Music Library sources leads the feature stack — public-domain
@@ -1027,6 +1038,51 @@ function CalendarMockup() {
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function AssistantMockup() {
+  return (
+    <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}>
+            <Sparkles className="w-3 h-3 text-white" />
+          </div>
+          <div className="font-bold text-slate-900">GleeWorld Assistant</div>
+        </div>
+        <div className="text-[10px] sm:text-xs text-emerald-700 font-semibold px-2 py-0.5 rounded-full bg-emerald-50">Listening…</div>
+      </div>
+      <div className="space-y-3">
+        <div className="flex justify-end">
+          <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-slate-100 px-3 py-2 text-slate-900">
+            "Move Friday's rehearsal to 6:30 and let the tenors know."
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+            style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}>
+            <Sparkles className="w-3 h-3 text-white" />
+          </div>
+          <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-violet-50 border border-violet-100 px-3 py-2 text-slate-700">
+            Done. Rehearsal Friday moved to <span className="font-semibold text-slate-900">6:30 PM</span>. Drafted an announcement to the tenors — preview it?
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 rounded-full bg-slate-50 border border-slate-100 flex items-center gap-2 px-3 py-2">
+        <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}>
+          <Mic className="w-3 h-3 text-white" />
+        </div>
+        <div className="flex gap-0.5 items-center flex-1 h-4">
+          {[3, 6, 10, 7, 4, 8, 5, 9, 6, 3].map((h, i) => (
+            <div key={i} className="w-0.5 rounded-full bg-violet-300" style={{ height: `${h * 1.5}px` }} />
+          ))}
+        </div>
+        <span className="text-[10px] sm:text-xs text-slate-500">Tap to talk</span>
       </div>
     </div>
   );
