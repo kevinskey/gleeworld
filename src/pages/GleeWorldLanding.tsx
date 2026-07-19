@@ -1328,7 +1328,7 @@ function ReplacementTable() {
     { uses: 'Eventbrite, TicketTailor',               replaces: 'Box Office (add-on)' },
     { uses: 'Audacity, GarageBand',                   replaces: 'Practice Studio with auto-mix' },
     { uses: 'Word, InDesign, PageMaker',              replaces: 'Concert Planner (print-ready programs)' },
-    { uses: 'Browsing CPDL by hand',                  replaces: 'Public-Domain Catalog (33k works)' },
+    { uses: 'Browsing CPDL by hand',                  replaces: 'Public-Domain Catalog (57k works)' },
   ];
   return (
     <section id="replaces" className="py-16 sm:py-24 md:py-32 bg-slate-50">
@@ -1341,7 +1341,7 @@ function ReplacementTable() {
             className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-slate-900"
             style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
           >
-            What GleeWorld replaces.
+            What GleeWorld improves.
           </h2>
           <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mt-4">
             Most directors duct-tape ten apps together. GleeWorld is one app
@@ -1352,14 +1352,14 @@ function ReplacementTable() {
           <div className="grid grid-cols-[1fr,auto,1fr] sm:grid-cols-[1fr,auto,1fr] text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-200">
             <div className="px-4 sm:px-6 py-3">What you use today</div>
             <div className="px-2 py-3" aria-hidden="true" />
-            <div className="px-4 sm:px-6 py-3">GleeWorld replaces it with</div>
+            <div className="px-4 sm:px-6 py-3">How GleeWorld does it</div>
           </div>
           {rows.map((r, i) => (
             <div
               key={r.uses}
               className={`grid grid-cols-[1fr,auto,1fr] sm:grid-cols-[1fr,auto,1fr] items-center text-sm sm:text-base ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
             >
-              <div className="px-4 sm:px-6 py-3 sm:py-4 text-slate-700 line-through decoration-slate-300">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 text-slate-500">
                 {r.uses}
               </div>
               <div className="px-2 text-slate-400" aria-hidden="true">→</div>
@@ -1370,7 +1370,7 @@ function ReplacementTable() {
           ))}
         </div>
         <p className="text-center text-sm text-slate-500 mt-8 max-w-2xl mx-auto">
-          Cancel the others. Add the modules you need. Pay for one platform
+          Simplify the stack. Add the modules you need. Pay for one platform
           built specifically for the way music programs run.
         </p>
       </div>
