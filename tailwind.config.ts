@@ -6,6 +6,14 @@ const config: Config = {
   theme: {
     container: { center: true, padding: '2rem', screens: { '2xl': '1400px' } },
     extend: {
+      fontFamily: {
+        // Route `font-serif` through a token so the serif voice (the House
+        // greeting, People) can follow tenant branding. It previously
+        // resolved to Tailwind's built-in Georgia stack, which is a
+        // hardcoded font literal — a tenant that picks a display face in
+        // Theme Studio still got Georgia here.
+        serif: ['var(--font-serif)'],
+      },
       fontSize: {
         // Apple HIG Dynamic Type (Large) — px on purpose: rem would ride
         // the 17px body and break the 4px spacing grid.

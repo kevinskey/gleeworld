@@ -26,6 +26,7 @@ import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
 import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
 import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
 import type { DateCardContext } from '@/components/home/date-card/types';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 interface FeedRow {
   section: string; subtype: string | null; id: string; title: string;
@@ -187,7 +188,7 @@ export default function HouseHome() {
           <div>
             {/* No date line here — the DateCardSlot directly below already
                 leads with the full date and weekday. */}
-            <h1 className="font-serif text-2xl font-semibold">{greetingFor(now.getHours(), firstName)}</h1>
+            <PageTitle serif>{greetingFor(now.getHours(), firstName)}</PageTitle>
           </div>
         </div>
 

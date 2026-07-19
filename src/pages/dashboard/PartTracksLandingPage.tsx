@@ -19,6 +19,7 @@ import { format, parseISO } from 'date-fns';
 import { createPartTracksProject, deletePartTracksProject, type PartTracksProject, VOICING_TEMPLATES } from '@/hooks/usePartTracksProject';
 import { PartTracksStudio } from '@/components/partTracks/PartTracksStudio';
 import { AccompanimentPicker } from '@/components/partTracks/AccompanimentPicker';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 interface ScoreOption {
   id: string;
@@ -79,7 +80,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Disc3 className="w-7 h-7 text-amber-500" />
-            <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Part Tracks Studio</h1>
+            <PageTitle>Part Tracks Studio</PageTitle>
           </div>
           <p className="text-sm text-muted-foreground">
             Build accompaniment and voice-part recordings. Link a score from your Music Library if you want one.

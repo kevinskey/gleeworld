@@ -32,6 +32,7 @@ import {
   liturgicalDayFor, usccbReadingsUrl, type SundayCycle, type LiturgicalSeason,
 } from '@/lib/liturgy/calendar';
 import { searchAppleMusic, type AppleMusicSongHit } from '@/lib/musicKit';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 interface MassRow {
   id: string;
@@ -116,7 +117,7 @@ function LiturgyList() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-2 sm:pt-3 pb-10 space-y-6">
       <div className="flex items-end justify-between gap-4 flex-wrap">
-        <h1 className="font-extrabold tracking-tight">Liturgy Planner</h1>
+        <PageTitle>Liturgy Planner</PageTitle>
         <Button onClick={newMass} disabled={creating} className="rounded-full">
           {creating ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Plus className="w-4 h-4 mr-1.5" />}
           Plan a Mass

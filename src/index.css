@@ -147,6 +147,11 @@
   :root {
     --font-ui: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI",
       Roboto, "Helvetica Neue", sans-serif;
+    /* Serif voice — the House greeting and People title. Tailwind's
+       `font-serif` resolves to this (see tailwind.config.ts) rather than
+       its built-in Georgia stack, so a tenant can retheme it from one
+       place instead of it being a hardcoded literal in the utility. */
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   }
   html {
     font-family: var(--font-ui);
