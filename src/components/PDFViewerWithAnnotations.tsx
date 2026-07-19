@@ -24,6 +24,7 @@ import {
   Loader2,
   Palette,
   AlertCircle,
+  FileQuestion,
   ExternalLink,
   ChevronLeft,
   ChevronRight,
@@ -181,6 +182,13 @@ const scrollModePluginInstance = scrollModePlugin();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Set when the PDF's URL returns 404. Rendered as a friendlier
+   * "score file isn't available" card instead of the red destructive
+   * "Failed to load PDF" — the row still has metadata, only the file is
+   * missing (source moved / deleted / never uploaded).
+   */
+  const [isMissing, setIsMissing] = useState(false);
   const [paths, setPaths] = useState<any[]>([]);
   const [currentPath, setCurrentPath] = useState<any>(null);
   const [hasAnnotations, setHasAnnotations] = useState(false);
@@ -1173,12 +1181,20 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     const loadPdfDoc = async () => {
       try {
         setIsLoading(true);
+        setIsMissing(false);
+        setError(null);
         console.log('[PDFViewer] loadPdfDoc start — signedUrl:', signedUrl, 'isNative:', isNative);
 
         const fetchAsArrayBuffer = async () => {
           console.log('[PDFViewer] fetchAsArrayBuffer start');
           const resp = await fetch(signedUrl, { signal: abortController.signal });
-          if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
+          if (!resp.ok) {
+            const err = new Error(`Fetch failed: ${resp.status}`);
+            // Tag 404s so the outer catch can distinguish "file gone" from
+            // "network flake" and render the friendly missing-file card.
+            if (resp.status === 404) (err as { fileMissing?: boolean }).fileMissing = true;
+            throw err;
+          }
           const ab = await resp.arrayBuffer();
           console.log('[PDFViewer] fetchAsArrayBuffer ok — bytes:', ab.byteLength);
           return ab;
@@ -1218,6 +1234,16 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             ]) as Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>;
             console.log('[PDFViewer] getDocument(url) resolved — pages:', doc.numPages);
           } catch (primaryErr) {
+            // pdfjs surfaces a ResponseException on 404 with status 404.
+            // The ArrayBuffer fallback also fetches the same URL, so it will
+            // 404 too — skip it entirely and let the outer catch tag this
+            // as a missing file. This also stops the noisy stack-trace spam
+            // that used to fire before the second, redundant fetch.
+            const status = (primaryErr as { status?: number } | null)?.status;
+            if (status === 404) {
+              (primaryErr as { fileMissing?: boolean }).fileMissing = true;
+              throw primaryErr;
+            }
             console.warn('[PDFViewer] getDocument(url) failed, falling back to ArrayBuffer', primaryErr);
             const ab = await fetchAsArrayBuffer();
             console.log('[PDFViewer] getDocument(data) start (fallback)');
@@ -1232,6 +1258,17 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         setError(null);
       } catch (err) {
         if (cancelled) return;
+        // Missing-file (404) is a known, benign failure mode for scores
+        // whose source moved or was never uploaded. Route those to the
+        // friendly card without a red toast or a scary stack trace in the
+        // console — the row still has metadata, only the file is gone.
+        const fileMissing = !!(err as { fileMissing?: boolean; status?: number } | null)?.fileMissing
+          || (err as { status?: number } | null)?.status === 404;
+        if (fileMissing) {
+          console.info('[PDFViewer] file missing (404):', signedUrl);
+          setIsMissing(true);
+          return;
+        }
         const msg = err instanceof Error ? err.message : String(err);
         console.error('PDFViewerWithAnnotations: load failed', err);
         toast.error('Failed to load PDF');
@@ -1520,6 +1557,25 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Try Direct Link
               </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isMissing && !annotationMode) {
+    return (
+      <Card className={cn("w-full max-w-4xl mx-auto", className)}>
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <FileQuestion className="h-12 w-12 text-muted-foreground" />
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">This score's file isn't available</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-md">
+                The PDF was moved or deleted from storage. The title and other details are still saved —
+                ask your librarian to re-upload the file, or attach a new one from the library.
+              </p>
             </div>
           </div>
         </CardContent>
