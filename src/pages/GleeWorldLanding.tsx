@@ -1242,7 +1242,8 @@ function AppleProductBig() {
         </h2>
         <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
           Your music library, your calendar, your roster, your recordings — all on
-          your own site, in a native iOS and Android app your people actually open.
+          your own site, the full app in the browser and in native iOS and Android
+          apps your people actually open.
         </p>
       </div>
       <div className="max-w-6xl mx-auto px-6 mt-12 sm:mt-16">
