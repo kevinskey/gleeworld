@@ -2010,14 +2010,17 @@ const TIER_PASTELS: Record<PlanTierId, string> = {
   institution: '#fef3c7',
 };
 
+// Canonical add-on list per Kevin: everything NOT here is in a base tier.
+// Prices marked TBD are placeholders — confirm with Kevin before launch.
 const ADDON_MODULES: { name: string; price: string; tagline: string }[] = [
+  { name: 'Studio',          price: '$29', tagline: 'Multitrack recording with a real audio engine.' },
+  { name: 'Office Hours',    price: '$15', tagline: 'Bookable teacher time your students can grab.' },
+  { name: 'Liturgy Planner', price: '$19', tagline: 'Weekly service planning with readings and orders of worship.' },
   { name: 'Concert Planner', price: '$19', tagline: 'Print-ready programs with editor credits.' },
-  { name: 'Part Tracks', price: '$29', tagline: 'Multitrack rehearsal aids per voice.' },
-  { name: 'Practice Studio', price: '$29', tagline: 'Student takes with built-in audio engine.' },
-  { name: 'Sight Reading', price: '$15', tagline: 'Daily exercises with progress tracking.' },
-  { name: 'Tour Manager', price: '$25', tagline: 'Routes, hotels, weather, manifests.' },
-  { name: 'Box Office', price: '$39', tagline: 'Ticketing — you keep 100% of ticket sales.' },
-  { name: 'Contracts & Finance', price: '$25', tagline: 'E-signed contracts and invoicing.' },
+  { name: 'Tour Manager',    price: '$25', tagline: 'Routes, hotels, weather, manifests.' },
+  { name: 'PR Hub',          price: '$25', tagline: 'Press releases, media kits, and outreach.' },
+  { name: 'Finances',        price: '$25', tagline: 'Contracts, invoicing, and cash-flow tracking.' },
+  { name: 'Box Office',      price: '$39', tagline: 'Ticketing — you keep 100% of ticket sales.' },
 ];
 
 function ApplePricing() {
@@ -2140,7 +2143,7 @@ function ApplePricing() {
               Add specialized modules — only what you need.
             </h3>
             <p className="text-base text-slate-600 max-w-2xl mx-auto mt-3">
-              Every base tier includes the 9 core features. Plug in the modules below at any time. Same price at every tier.
+              Plug in specialized modules at any time. Same price at every tier — Institution bundles all of them in.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-5xl mx-auto">
@@ -2158,7 +2161,7 @@ function ApplePricing() {
                 <span className="font-bold text-slate-900">All-Access Bundle</span>
                 <span className="text-2xl font-bold text-indigo-700" style={{ ...HEADING_STYLE }}>$129<span className="text-sm font-normal text-slate-500">/mo</span></span>
               </div>
-              <p className="text-sm text-slate-700">All 7 add-on modules. Saves ~$52/mo vs à la carte.</p>
+              <p className="text-sm text-slate-700">All 8 add-on modules. Saves ~$67/mo vs à la carte.</p>
             </div>
           </div>
         </div>
