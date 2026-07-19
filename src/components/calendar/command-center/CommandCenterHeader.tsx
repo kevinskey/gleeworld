@@ -102,9 +102,15 @@ export const CommandCenterHeader = ({
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <div className="min-w-[88px] text-center">
-                <h2 className="font-sans normal-case font-bold tracking-tight leading-none text-base">
+                {/* The mobile/tablet branch is mutually exclusive with the
+                    desktop one below, so this is the page's only heading when
+                    it renders — it has to be the h1 too. Deliberately keeps
+                    the compact size rather than PageTitle's: here the title
+                    sits between two nav arrows in a toolbar, and 32px would
+                    break that row. */}
+                <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-base">
                   {title}
-                </h2>
+                </h1>
               </div>
               <button 
                 onClick={() => onNavigateMonth('next')} 
