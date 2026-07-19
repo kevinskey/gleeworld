@@ -1241,9 +1241,8 @@ function AppleProductBig() {
           <span className="text-slate-400">Every feature earns its place.</span>
         </h2>
         <p className="text-base sm:text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-          A 33,000-work public-domain library, print-ready concert programs, student
-          practice recordings, attendance, gradebook, and a native iOS + Android app —
-          all under one sign-in.
+          Your music library, your calendar, your roster, your recordings — all on
+          your own site, in a native iOS and Android app your people actually open.
         </p>
       </div>
       <div className="max-w-6xl mx-auto px-6 mt-12 sm:mt-16">
