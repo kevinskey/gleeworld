@@ -295,9 +295,16 @@ export const CommandCenterHeader = ({
             </div>
           </div>
 
-          {/* Row 2: big title + navigation cluster */}
+          {/* Row 2: big title + navigation cluster.
+              This is the page's title, so it is the h1 — the Calendar
+              previously had no h1 at all and its largest heading was this
+              h2, leaving screen readers without a page-level landmark. */}
           <div className="flex items-end justify-between gap-3">
-            <h2 className="font-sans normal-case tracking-tight leading-none text-2xl lg:text-3xl">
+            {/* Same !text-[…] override PageTitle uses, so the Calendar title
+                matches every other top-level page instead of inheriting the
+                global h1 size. Can't use <PageTitle> directly — the month and
+                year carry different weights inside the heading. */}
+            <h1 className="font-sans normal-case tracking-tight leading-none !text-[1.4rem] sm:!text-[2rem]">
               {viewMode === 'year' ? (
                 <span className="font-bold">{title}</span>
               ) : (
@@ -306,7 +313,7 @@ export const CommandCenterHeader = ({
                   <span className="font-normal">{format(currentDate, 'yyyy')}</span>
                 </>
               )}
-            </h2>
+            </h1>
             <div className="flex items-center gap-0.5 flex-shrink-0">
               <button
                 onClick={() => onNavigateMonth('prev')}

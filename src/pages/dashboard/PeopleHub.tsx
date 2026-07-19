@@ -17,6 +17,7 @@ import { PersonCard } from '@/components/people/PersonCard';
 import { displayName, initials, sectionLabel } from '@/lib/people/contactActions';
 import { isFacultyProfile } from '@/lib/roles';
 import { cn } from '@/lib/utils';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 const FACULTY_GROUP_LABEL = 'Directors & staff';
 const OTHER_GROUP_LABEL = 'Other';
@@ -271,7 +272,7 @@ export default function PeopleHub() {
     <DashboardShell>
       <div className="max-w-3xl mx-auto px-4 pt-3 pb-24 sm:pb-8 space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="font-serif text-2xl font-semibold">People</h1>
+          <PageTitle serif>People</PageTitle>
           {isFaculty && (
             <Button asChild variant="outline" size="sm" className="min-h-[44px]">
               <Link to="/attendance">

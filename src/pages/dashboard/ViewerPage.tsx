@@ -29,6 +29,7 @@ import { useViewerRecentOpens } from '@/hooks/useViewerRecentOpens';
 import { useAllBookmarks } from '@/hooks/useAllBookmarks';
 import { useViewerSetlists, useSetlistScores, type ViewerSetlist } from '@/hooks/useViewerSetlists';
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 const ViewerReader = lazy(() =>
   import('@/components/viewer/ViewerReader').then((m) => ({ default: m.ViewerReader })),
@@ -165,7 +166,7 @@ function ViewerLanding({
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-24 sm:pb-6 space-y-4">
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Viewer</h1>
+          <PageTitle>Viewer</PageTitle>
           <p className="text-sm text-muted-foreground mt-1">
             Performance reader for your sheet music. Tap a score to open the full-screen view.
           </p>

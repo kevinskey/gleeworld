@@ -22,6 +22,7 @@ import { useTenantStripeStatus } from '@/hooks/useTenantStripeStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { listBoxOfficeEvents, createBoxOfficeEvent, slugify, type BoxOfficeEvent } from '@/lib/boxOffice/api';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 export default function BoxOfficePage() {
   const { hasAccess, isLoading: moduleLoading } = useModuleAccess('box_office');
@@ -125,7 +126,7 @@ export default function BoxOfficePage() {
               Add-on
             </span>
           </div>
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Box Office</h1>
+          <PageTitle>Box Office</PageTitle>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
             Sell general-admission tickets to your concerts. Buyers pay through your own
             Stripe account. We never custody the funds and take no cut of ticket revenue.
