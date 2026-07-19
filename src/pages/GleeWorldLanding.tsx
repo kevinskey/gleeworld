@@ -1449,8 +1449,8 @@ const EXAMPLE_SITES: Array<{
     url: 'https://demo-school.gleeworld.org/try',
   },
   {
-    title: 'Songwriter Studio',
-    body: 'For original music creators — lyrics, chord charts, and a private songwriting library.',
+    title: 'Private Studio',
+    body: 'For private teachers and independent musicians — one place where all your music lives together.',
     icon: PenSquare,
     pastel: '#fce7f3',
     url: 'https://demo-songwriter.gleeworld.org/try',
