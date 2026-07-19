@@ -12,6 +12,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { isValidIr } from '@/lib/sightReading/irValidate';
 import { toast } from 'sonner';
+import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 interface LibraryRow {
   id: string;
@@ -173,7 +174,7 @@ export default function SightReadingStudio() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold">Sight Reading</h1>
+        <PageTitle>Sight Reading</PageTitle>
         <p className="text-sm text-slate-600">
           Sing a line, get instant feedback. No grades — just practice.
         </p>

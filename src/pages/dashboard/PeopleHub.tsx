@@ -272,7 +272,7 @@ export default function PeopleHub() {
     <DashboardShell>
       <div className="max-w-3xl mx-auto px-4 pt-3 pb-24 sm:pb-8 space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <PageTitle serif>People</PageTitle>
+          <PageTitle>People</PageTitle>
           {isFaculty && (
             <Button asChild variant="outline" size="sm" className="min-h-[44px]">
               <Link to="/attendance">

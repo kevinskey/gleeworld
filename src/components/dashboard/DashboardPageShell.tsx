@@ -19,23 +19,20 @@ interface PageTitleProps {
   children: ReactNode;
   icon?: LucideIcon;
   className?: string;
-  /**
-   * Serif voice, for pages that address the user rather than name a
-   * destination — the House greeting ("Evening, Kevin") and People. Keeps
-   * the shared size and tracking so these titles still line up with every
-   * other page; only the family and weight differ.
-   */
-  serif?: boolean;
 }
 
+// One face, one size, one weight for every page title. A `serif` variant
+// existed briefly for the House greeting; it was removed because a title
+// that reads differently from every other title just looks like a mistake,
+// however deliberate it was.
+//
 // The explicit !text-[…] sizes override the global `h1 { clamp(…) }` reset in
 // index.css, which otherwise pushes page titles to 40px+ on wide monitors.
-export function PageTitle({ children, icon: Icon, className, serif }: PageTitleProps) {
+export function PageTitle({ children, icon: Icon, className }: PageTitleProps) {
   return (
     <h1
       className={cn(
-        '!text-[1.4rem] sm:!text-[2rem] tracking-tight',
-        serif ? 'font-serif font-semibold' : 'font-bold',
+        '!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight',
         Icon && 'flex items-center gap-2',
         className,
       )}
