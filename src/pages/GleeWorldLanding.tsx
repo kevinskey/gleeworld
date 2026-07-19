@@ -1300,10 +1300,10 @@ function FounderSection() {
               in one place — and to treat music programs like music programs,
               not generic offices.
             </p>
-            <p className="text-base sm:text-lg text-slate-900 font-semibold">
+            <p className="text-xl sm:text-2xl text-slate-900 font-bold">
               Dr. Kevin Johnson
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-base text-slate-600 mt-1">
               Conductor · Composer · Educator · Church Musician
             </p>
           </div>
