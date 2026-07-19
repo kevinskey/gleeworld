@@ -2921,15 +2921,9 @@ const App = () => {
                                  </ProtectedRoute>
                                } 
                              />
-                             <Route 
-                               path="/member/settings" 
-                               element={
-                                 <ProtectedRoute>
-                                   <UniversalLayout>
-                                     <SystemSettings />
-                                  </UniversalLayout>
-                                </ProtectedRoute>
-                              } 
+                             <Route
+                               path="/member/settings"
+                               element={<Navigate to="/settings" replace />}
                             />
                             <Route 
                               path="/member/profile" 

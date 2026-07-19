@@ -334,7 +334,7 @@ export default function CourseSettingsPage() {
 
       {/* Save */}
       {canManage && (
-        <div className="flex items-center justify-end gap-2 sticky bottom-4">
+        <div className="flex items-center justify-end gap-2 sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4">
           <Button onClick={() => save.mutate()} disabled={save.isPending} size="lg" className="font-semibold shadow-lg">
             {save.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
             Save changes

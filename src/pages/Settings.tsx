@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -57,9 +57,29 @@ const settingsSchema = z.object({
 
 type SettingsFormData = z.infer<typeof settingsSchema>;
 
+const LOCAL_PREF_KEYS = [
+  "language",
+  "timezone",
+  "email_notifications",
+  "push_notifications",
+  "event_reminders",
+  "message_notifications",
+  "rehearsal_reminders",
+  "profile_visibility",
+  "show_email",
+  "show_phone",
+  "allow_messages",
+  "theme",
+  "compact_mode",
+  "animations",
+] as const satisfies readonly (keyof SettingsFormData)[];
+
+const storageKeyFor = (userId: string | undefined) =>
+  userId ? `gw:user-settings:${userId}` : null;
+
 export default function Settings() {
   const { user } = useAuth();
-  const { userProfile } = useUserProfile(user);
+  const { userProfile, updateProfile } = useUserProfile(user);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -70,6 +90,7 @@ export default function Settings() {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors, isDirty }
   } = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
@@ -92,24 +113,63 @@ export default function Settings() {
     }
   });
 
+  // Hydrate display_name from the loaded profile.
+  useEffect(() => {
+    if (userProfile?.full_name) {
+      setValue("display_name", userProfile.full_name);
+    }
+  }, [userProfile?.full_name, setValue]);
+
+  // Hydrate the rest from localStorage once we know the user.
+  useEffect(() => {
+    const key = storageKeyFor(user?.id);
+    if (!key) return;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<SettingsFormData>;
+      for (const field of LOCAL_PREF_KEYS) {
+        if (parsed[field] !== undefined) {
+          setValue(field, parsed[field] as never, { shouldDirty: false });
+        }
+      }
+    } catch {
+      // Corrupt JSON — ignore and let defaults stand.
+    }
+  }, [user?.id, setValue]);
+
   const onSubmit = async (data: SettingsFormData) => {
     setLoading(true);
     try {
-      // Here you would save the settings to your backend
-      console.log("Saving settings:", data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Persist display_name to the profile (real backend).
+      if (userProfile && data.display_name !== userProfile.full_name) {
+        const { error } = await updateProfile({ full_name: data.display_name });
+        if (error) throw new Error(error);
+      }
+
+      // Persist client-scoped prefs to localStorage (no dedicated table yet).
+      const key = storageKeyFor(user?.id);
+      if (key) {
+        const clientPrefs = LOCAL_PREF_KEYS.reduce<Partial<SettingsFormData>>(
+          (acc, field) => {
+            acc[field] = data[field] as never;
+            return acc;
+          },
+          {}
+        );
+        localStorage.setItem(key, JSON.stringify(clientPrefs));
+      }
+
+      reset(data);
       toast({
         title: "Settings saved",
-        description: "Your preferences have been updated successfully.",
+        description: "Your preferences have been updated.",
       });
     } catch (error) {
       console.error("Failed to save settings:", error);
       toast({
         title: "Error",
-        description: "Failed to save your settings. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save your settings. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -245,7 +305,7 @@ export default function Settings() {
                     {/* Email Notifications */}
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div className="space-y-0.5">
-                        <Label className="text-base flex items-center gap-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
                           <Bell className="h-4 w-4" />
                           Email Notifications
                         </Label>
@@ -262,7 +322,7 @@ export default function Settings() {
                     {/* Push Notifications */}
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div className="space-y-0.5">
-                        <Label className="text-base flex items-center gap-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
                           <Bell className="h-4 w-4" />
                           Push Notifications
                         </Label>
@@ -279,10 +339,10 @@ export default function Settings() {
                     {/* SMS Notifications - Automatic if phone number exists */}
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border-2 border-primary/20">
                       <div className="space-y-0.5 flex-1">
-                        <Label className="text-base flex items-center gap-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
                           <Bell className="h-4 w-4" />
                           SMS Notifications
-                          <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">Auto-enabled</span>
+                          <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">Auto-enabled</span>
                         </Label>
                         <p className="text-sm text-muted-foreground">
                           Automatically enabled if you have a phone number in your profile
@@ -301,7 +361,7 @@ export default function Settings() {
                     
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Event Reminders</Label>
+                        <Label className="text-sm font-medium">Event Reminders</Label>
                         <p className="text-sm text-muted-foreground">
                           Get reminders for upcoming events
                         </p>
@@ -316,7 +376,7 @@ export default function Settings() {
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Message Notifications</Label>
+                        <Label className="text-sm font-medium">Message Notifications</Label>
                         <p className="text-sm text-muted-foreground">
                           Get notified when you receive messages
                         </p>
@@ -331,7 +391,7 @@ export default function Settings() {
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Rehearsal Reminders</Label>
+                        <Label className="text-sm font-medium">Rehearsal Reminders</Label>
                         <p className="text-sm text-muted-foreground">
                           Get reminders for rehearsals and sectionals
                         </p>
@@ -381,7 +441,7 @@ export default function Settings() {
                           <SelectItem value="members-only">
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4" />
-                              Members Only - Only Glee Club members
+                              Members Only - Only workspace members
                             </div>
                           </SelectItem>
                           <SelectItem value="private">
@@ -398,7 +458,7 @@ export default function Settings() {
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Show Email Address</Label>
+                        <Label className="text-sm font-medium">Show Email Address</Label>
                         <p className="text-sm text-muted-foreground">
                           Allow others to see your email address
                         </p>
@@ -413,7 +473,7 @@ export default function Settings() {
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Show Phone Number</Label>
+                        <Label className="text-sm font-medium">Show Phone Number</Label>
                         <p className="text-sm text-muted-foreground">
                           Allow others to see your phone number
                         </p>
@@ -428,7 +488,7 @@ export default function Settings() {
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Allow Messages</Label>
+                        <Label className="text-sm font-medium">Allow Messages</Label>
                         <p className="text-sm text-muted-foreground">
                           Allow other members to send you messages
                         </p>
@@ -458,7 +518,7 @@ export default function Settings() {
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-base">Email Address</Label>
+                      <Label className="text-sm font-medium">Email Address</Label>
                       <p className="text-sm text-muted-foreground mb-2">
                         Your current email address
                       </p>
@@ -472,7 +532,7 @@ export default function Settings() {
                     <Separator />
 
                     <div>
-                      <Label className="text-base">Change Password</Label>
+                      <Label className="text-sm font-medium">Change Password</Label>
                       <p className="text-sm text-muted-foreground mb-2">
                         Update your account password
                       </p>
@@ -488,7 +548,7 @@ export default function Settings() {
                     <Separator />
 
                     <div>
-                      <Label className="text-base">Two-Factor Authentication</Label>
+                      <Label className="text-sm font-medium">Two-Factor Authentication</Label>
                       <p className="text-sm text-muted-foreground mb-2">
                         Add an extra layer of security to your account
                       </p>
@@ -500,7 +560,7 @@ export default function Settings() {
                     <Separator />
 
                     <div>
-                      <Label className="text-base text-destructive">Danger Zone</Label>
+                      <Label className="text-sm font-medium text-destructive">Danger Zone</Label>
                       <p className="text-sm text-muted-foreground mb-2">
                         These actions cannot be undone
                       </p>
@@ -511,10 +571,7 @@ export default function Settings() {
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            {/* Announcement Style */}
-            <TabsContent value="account" className="space-y-6">
               <AnnouncementStyleSelector />
             </TabsContent>
           </Tabs>
