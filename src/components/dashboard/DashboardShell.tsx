@@ -713,7 +713,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
   // gray page.
   return (
     <header
-      className="border-b border-border/60 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(5rem+env(safe-area-inset-top,0px))]"
+      className="border-b border-border/60 bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(5rem+env(safe-area-inset-top,0px))]"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         top: 'var(--gw-demo-bar-h, 0px)',

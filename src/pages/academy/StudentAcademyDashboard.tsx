@@ -141,7 +141,7 @@ export default function StudentAcademyDashboard() {
             icon={CalendarClock}
             iconBg="bg-purple-50"
             iconFg="text-purple-600"
-            title="Office Hours"
+            title="Studio Hours"
             subtitle="Book a 1-on-1 with your instructor."
             actionLabel="Open"
             onAction={() => navigate('/dashboard/office-hours')}

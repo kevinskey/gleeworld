@@ -2014,7 +2014,7 @@ const TIER_PASTELS: Record<PlanTierId, string> = {
 // Prices marked TBD are placeholders — confirm with Kevin before launch.
 const ADDON_MODULES: { name: string; price: string; tagline: string }[] = [
   { name: 'Studio',          price: '$29', tagline: 'Multitrack recording with a real audio engine.' },
-  { name: 'Office Hours',    price: '$15', tagline: 'Bookable teacher time your students can grab.' },
+  { name: 'Studio Hours',    price: '$15', tagline: 'Bookable teacher time your students can grab.' },
   { name: 'Liturgy Planner', price: '$19', tagline: 'Weekly service planning with readings and orders of worship.' },
   { name: 'Concert Planner', price: '$19', tagline: 'Print-ready programs with editor credits.' },
   { name: 'Tour Manager',    price: '$25', tagline: 'Routes, hotels, weather, manifests.' },

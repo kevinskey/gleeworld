@@ -122,7 +122,7 @@ export const OfficeHoursWidget = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-white" />
-            <CardTitle className="text-sm font-bold text-white">Office Hours</CardTitle>
+            <CardTitle className="text-sm font-bold text-white">Studio Hours</CardTitle>
             {pendingCount > 0 && (
               <Badge className="bg-amber-500 text-white text-xs px-1.5 animate-pulse">
                 {pendingCount} pending

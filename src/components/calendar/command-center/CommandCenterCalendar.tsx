@@ -397,7 +397,7 @@ export const CommandCenterCalendar = () => {
 
       {/* Office hours — left popout. Students book; admins get the full
           office-hours management surface. */}
-      <CalendarPopout open={showOfficeHours} onOpenChange={setShowOfficeHours} title="Office Hours" headerBorder>
+      <CalendarPopout open={showOfficeHours} onOpenChange={setShowOfficeHours} title="Studio Hours" headerBorder>
         <div className="flex-1 overflow-y-auto p-4">
           {showOfficeHours && (
             <Suspense fallback={
