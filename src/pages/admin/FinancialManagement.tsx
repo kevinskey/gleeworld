@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { DollarSign, CreditCard, TrendingUp, FileText } from "lucide-react";
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 // Spreadsheet-style finance dashboard. Stats sit in compact rows of a
 // dense table — easier to scan when the numbers are what matter, and
@@ -22,18 +23,16 @@ const STAT_ROWS: Array<{
 
 const FinancialManagement = () => {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-4">
-      <header className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Financial Management</h1>
-          <p className="text-sm text-muted-foreground mt-1.5">Payments, stipends, dues, and budgets.</p>
-        </div>
+    <DashboardPageShell
+      title="Financial Management"
+      subtitle="Payments, stipends, dues, and budgets."
+      actions={
         <Button>
           <DollarSign className="mr-1.5 h-5 w-5" />
           New Transaction
         </Button>
-      </header>
-
+      }
+    >
       {/* Stat table */}
       <div className="border border-border rounded-lg bg-card overflow-x-auto">
         <table className="w-full text-sm">
@@ -82,7 +81,7 @@ const FinancialManagement = () => {
           <Button variant="outline" size="sm">Generate</Button>
         </div>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 };
 

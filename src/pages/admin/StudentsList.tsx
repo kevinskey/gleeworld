@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Users, ChevronRight, Loader2 } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 export default function StudentsList() {
   const navigate = useNavigate();
@@ -31,17 +32,12 @@ export default function StudentsList() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" /> Students
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Roster, parent contacts, notes, uniforms, instruments, permission slips.</p>
-        </div>
-        <Button onClick={() => navigate('/admin/students/onboard')}>Onboard students</Button>
-      </div>
-
+    <DashboardPageShell
+      title="Students"
+      icon={Users}
+      subtitle="Roster, parent contacts, notes, uniforms, instruments, permission slips."
+      actions={<Button onClick={() => navigate('/admin/students/onboard')}>Onboard students</Button>}
+    >
       <Input
         value={q}
         onChange={(e) => setQ(e.target.value)}
@@ -70,6 +66,6 @@ export default function StudentsList() {
           ))}
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageShell>
   );
 }

@@ -3,21 +3,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VocalHealthLog } from '@/modules/wellness/vocal-health/VocalHealthLog';
 import { UniformTracker } from '@/modules/logistics/uniforms/UniformTracker';
 import { RehearsalFeedback } from '@/modules/rehearsals/feedback/RehearsalFeedback';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const WellnessSuite = () => {
   const [activeTab, setActiveTab] = useState('wellness');
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Wellness & Development Suite</h1>
-          <p className="text-muted-foreground">
-            Track vocal health, manage gear, and monitor performance development
-          </p>
-        </div>
-      </div>
-
+    <DashboardPageShell
+      title="Wellness & Development Suite"
+      subtitle="Track vocal health, manage gear, and monitor performance development"
+    >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto">
           <TabsTrigger value="wellness">Vocal Health</TabsTrigger>
@@ -37,7 +32,7 @@ const WellnessSuite = () => {
           <RehearsalFeedback />
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 };
 

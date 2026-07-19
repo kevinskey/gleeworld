@@ -3,26 +3,20 @@ import { BackNavigation } from '@/components/shared/BackNavigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, AlertTriangle, BookOpen, Users, Calendar } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const AttendancePolicyPage = () => {
   console.log('AttendancePolicyPage: Component rendering');
-  
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <DashboardPageShell
+      maxWidth="4xl"
+      title="Attendance Policy"
+      subtitle="Official attendance requirements and guidelines for Glee Club members"
+      icon={BookOpen}
+    >
         {/* Back Navigation */}
         <BackNavigation />
-        
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="rounded-lg p-3 bg-purple-100 text-purple-600">
-            <BookOpen className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Attendance Policy</h1>
-            <p className="text-muted-foreground">Official attendance requirements and guidelines for Glee Club members</p>
-          </div>
-        </div>
 
         {/* Policy Content */}
         <div className="space-y-6">
@@ -202,8 +196,7 @@ const AttendancePolicyPage = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+    </DashboardPageShell>
   );
 };
 

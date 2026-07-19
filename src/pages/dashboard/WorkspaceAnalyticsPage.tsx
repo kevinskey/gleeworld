@@ -11,6 +11,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Badge } from '@/components/ui/badge';
 import {
   Users, GraduationCap, BookOpen, ClipboardCheck, Award, CalendarCheck,
@@ -113,17 +114,11 @@ export default function WorkspaceAnalyticsPage() {
   const isLoading = profiles.length === 0 && courses.length === 0;
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
-      <div>
-        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          Workspace Analytics
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Tenant-wide rollups across users, courses, grading, and attendance.
-        </p>
-      </div>
-
+    <DashboardPageShell
+      title="Workspace Analytics"
+      icon={TrendingUp}
+      subtitle="Tenant-wide rollups across users, courses, grading, and attendance."
+    >
       {isLoading ? (
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
           <CardContent className="p-10 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></CardContent>
@@ -184,7 +179,7 @@ export default function WorkspaceAnalyticsPage() {
           </Section>
         </>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }
 

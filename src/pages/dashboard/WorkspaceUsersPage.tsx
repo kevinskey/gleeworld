@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -117,22 +118,17 @@ export default function WorkspaceUsersPage() {
   }, [people]);
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
-      {/* Header */}
-      <div className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">People</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Everyone in this workspace — teachers, students, fans.
-          </p>
-        </div>
-        {canManage && (
+    <DashboardPageShell
+      title="People"
+      subtitle="Everyone in this workspace — teachers, students, fans."
+      actions={
+        canManage && (
           <Button size="sm" onClick={() => setInviteOpen(true)}>
             <UserPlus className="w-4 h-4 mr-1.5" /> Invite
           </Button>
-        )}
-      </div>
-
+        )
+      }
+    >
       {/* Stat strip */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <StatPill label="All"         value={counts.total}     active={filter === 'all'}        onClick={() => setFilter('all')} />
@@ -193,7 +189,7 @@ export default function WorkspaceUsersPage() {
           qc.invalidateQueries({ queryKey: ['workspace-users'] });
         }}
       />
-    </div>
+    </DashboardPageShell>
   );
 }
 

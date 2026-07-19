@@ -2,21 +2,20 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Database, HardDrive, Download, Upload } from "lucide-react";
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const DatabaseAdmin = () => {
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Database Administration</h1>
-          <p className="text-muted-foreground">Advanced database operations and backups</p>
-        </div>
+    <DashboardPageShell
+      title="Database Administration"
+      subtitle="Advanced database operations and backups"
+      actions={
         <Button>
           <Database className="mr-2 h-4 w-4" />
           Backup Now
         </Button>
-      </div>
-
+      }
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
@@ -87,7 +86,7 @@ const DatabaseAdmin = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 };
 

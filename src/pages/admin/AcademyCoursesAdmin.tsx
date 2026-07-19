@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Plus, Pencil, Trash2, GraduationCap, Save, Music, BookOpen, Mic, Eye, Award, Users, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface AcademyCourse {
   id: string;
@@ -230,25 +231,20 @@ export default function AcademyCoursesAdmin() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-        <div className="flex min-w-0 items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/glee-academy')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <GraduationCap className="h-6 w-6" />
-              Glee Academy Courses
-            </h1>
-            <p className="text-muted-foreground text-sm">Manage course cards displayed on the dashboard</p>
-          </div>
-        </div>
+    <DashboardPageShell
+      title="Glee Academy Courses"
+      icon={GraduationCap}
+      subtitle="Manage course cards displayed on the dashboard"
+      actions={
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
           Add Course
         </Button>
-      </div>
+      }
+    >
+      <Button variant="ghost" size="sm" onClick={() => navigate('/glee-academy')}>
+        <ArrowLeft className="h-4 w-4 mr-2" /> Back
+      </Button>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -489,6 +485,6 @@ export default function AcademyCoursesAdmin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardPageShell>
   );
 }

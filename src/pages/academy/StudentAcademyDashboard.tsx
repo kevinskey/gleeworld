@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -90,18 +91,10 @@ export default function StudentAcademyDashboard() {
   const greeting = greetingFor(new Date());
 
   return (
-    <div className="min-h-screen bg-[var(--gw-cream,#fbf9f5)] px-4 sm:px-6 py-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            {greeting}, {firstName}! <span className="text-2xl">👋</span>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Here are your classes and what's coming up.
-          </p>
-        </div>
-
+    <DashboardPageShell
+      title={`${greeting}, ${firstName}! 👋`}
+      subtitle="Here are your classes and what's coming up."
+    >
         {/* Classes */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -259,8 +252,7 @@ export default function StudentAcademyDashboard() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+    </DashboardPageShell>
   );
 }
 

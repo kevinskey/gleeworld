@@ -21,6 +21,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store, ExternalLink, Plane } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 // Feature flag for subscriptions
 const FEATURE_SUBSCRIPTIONS_ENABLED = false;
@@ -121,33 +122,22 @@ export const ProductManagement = () => {
     );
   }
 
-  return <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <div className="bg-card border-b border-border">
-        <div className="container mx-auto px-6 py-6 max-w-7xl">
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                <Store className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Merch Store Management</h1>
-                <p className="text-sm text-muted-foreground pt-[15px]">Manage products, orders, and customers</p>
-              </div>
-            </div>
-            <Button asChild variant="secondary" size="sm" className="shrink-0">
-              {/* Same-tab router navigation — target="_blank" is a no-op
-                  inside the iOS app's webview. ?from=admin tells Shop to
-                  render a "Back to Store admin" pill for the way back. */}
-              <Link to="/shop?from=admin">
-                View public store <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      <div className="container mx-auto px-6 py-8 max-w-7xl">
+  return <DashboardPageShell
+      title="Merch Store Management"
+      subtitle="Manage products, orders, and customers"
+      icon={Store}
+      maxWidth="7xl"
+      actions={
+        // Same-tab router navigation — target="_blank" is a no-op
+        // inside the iOS app's webview. ?from=admin tells Shop to
+        // render a "Back to Store admin" pill for the way back.
+        <Button asChild variant="secondary" size="sm" className="shrink-0">
+          <Link to="/shop?from=admin">
+            View public store <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+          </Link>
+        </Button>
+      }
+    >
         <StoreConnectPrompt />
         <Tabs defaultValue="products" className="space-y-6">
           {/* Scrollable Tab Navigation */}
@@ -235,9 +225,8 @@ export const ProductManagement = () => {
               </TabsContent>}
           </div>
         </Tabs>
-      </div>
 
       {/* Order Detail Drawer */}
       <OrderDetailDrawer orderId={selectedOrderId} isOpen={isOrderDrawerOpen} onClose={handleCloseOrderDrawer} />
-    </div>;
+    </DashboardPageShell>;
 };

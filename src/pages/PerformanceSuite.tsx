@@ -17,6 +17,7 @@ import { SetlistBuilder } from '@/modules/performance/setlists/SetlistBuilder';
 import { TourManager } from '@/modules/performance/tour/TourManager';
 import { LicensingTracker } from '@/modules/performance/licensing/LicensingTracker';
 import { useAuth } from '@/contexts/AuthContext';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const PerformanceSuite = () => {
   const { user } = useAuth();
@@ -63,23 +64,16 @@ const PerformanceSuite = () => {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Performance Suite</h1>
-          <p className="text-muted-foreground">
-            Manage setlists, tours, and licensing for performances
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            Performance Manager
-          </Badge>
-        </div>
-      </div>
-
+    <DashboardPageShell
+      title="Performance Suite"
+      subtitle="Manage setlists, tours, and licensing for performances"
+      actions={
+        <Badge variant="outline" className="flex items-center gap-1">
+          <Users className="h-3 w-3" />
+          Performance Manager
+        </Badge>
+      }
+    >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -266,7 +260,7 @@ const PerformanceSuite = () => {
           <LicensingTracker />
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 };
 

@@ -3,21 +3,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Settings, Globe, Lock, Database } from "lucide-react";
 import { CountdownManager } from "@/components/admin/countdown/CountdownManager";
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SystemSettings = () => {
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">System Settings</h1>
-          <p className="text-muted-foreground">Platform configuration and preferences</p>
-        </div>
+    <DashboardPageShell
+      title="System Settings"
+      subtitle="Platform configuration and preferences"
+      actions={
         <Button>
           <Settings className="mr-2 h-4 w-4" />
           Update Settings
         </Button>
-      </div>
-
+      }
+    >
       {/* Countdown Manager - Full Width */}
       <CountdownManager />
 
@@ -106,7 +105,7 @@ const SystemSettings = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 };
 

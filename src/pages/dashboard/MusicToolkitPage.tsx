@@ -4,6 +4,7 @@
 // shared with the rest of the redesigns.
 
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Timer, AudioLines, Gauge, Play, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -24,17 +25,11 @@ const TOP_CARD_HEIGHT = 260;
 
 export default function MusicToolkitPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
-      {/* Header */}
-      <div>
-        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-sans normal-case font-bold tracking-tight leading-tight">
-          Music Toolkit
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Metronome, pitch pipe, tuner, and a full keyboard — everything on one screen.
-        </p>
-      </div>
-
+    <DashboardPageShell
+      title="Music Toolkit"
+      maxWidth="7xl"
+      subtitle="Metronome, pitch pipe, tuner, and a full keyboard — everything on one screen."
+    >
       {/* Top row — three small tools */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <ToolCard title="Metronome" icon={Timer} iconBg="bg-sky-50" iconFg="text-sky-600">
@@ -62,7 +57,7 @@ export default function MusicToolkitPage() {
           <VirtualPiano />
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageShell>
   );
 }
 

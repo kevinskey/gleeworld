@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Music2, Trash2 } from 'lucide-react';
 import { listMySongs, listSharedSongs, createSong, deleteSong } from '@/lib/songwriting/songsApi';
 import type { SongSummary } from '@/lib/songwriting/types';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 function songMeta(s: SongSummary) {
   return `${s.section_count} section${s.section_count !== 1 ? 's' : ''} · updated ${new Date(s.updated_at).toLocaleDateString()}`;
@@ -83,14 +84,14 @@ export default function SongwritingLibraryPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-8">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Your songs</h1>
+    <DashboardPageShell
+      title="Your songs"
+      actions={
         <Button onClick={newSong} disabled={creating}>
           <Plus className="w-4 h-4 mr-1" /> {creating ? 'Creating…' : 'New song'}
         </Button>
-      </div>
-
+      }
+    >
       {loading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : songs.length === 0 ? (
@@ -144,6 +145,6 @@ export default function SongwritingLibraryPage() {
           )}
         </div>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }

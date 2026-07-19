@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { UNIFIED_MODULES } from "@/config/unified-modules";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 
 // Simple SEO helper (local to this page)
 const useSEO = (title: string, description: string, canonical?: string) => {
@@ -132,28 +133,25 @@ export const SearchPage: React.FC = () => {
   }, [q]);
 
   return (
-    <div>
-      <header className="w-full border-b border-border bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold tracking-tight">Search GleeWorld</h1>
-          <p className="text-muted-foreground mt-2 max-w-2xl">Find content you have access to across events, media, PDFs, music, and modules.</p>
-          <div className="mt-4 max-w-xl">
-            <Input
-              value={q}
-              onChange={(e) => {
-                const val = e.target.value;
-                setQ(val);
-                const sp = new URLSearchParams(searchParams);
-                if (val) sp.set('q', val); else sp.delete('q');
-                setSearchParams(sp, { replace: true });
-              }}
-              placeholder="Search the website..."
-            />
-          </div>
-        </div>
-      </header>
+    <DashboardPageShell
+      title="Search GleeWorld"
+      subtitle="Find content you have access to across events, media, PDFs, music, and modules."
+    >
+      <div className="max-w-xl">
+        <Input
+          value={q}
+          onChange={(e) => {
+            const val = e.target.value;
+            setQ(val);
+            const sp = new URLSearchParams(searchParams);
+            if (val) sp.set('q', val); else sp.delete('q');
+            setSearchParams(sp, { replace: true });
+          }}
+          placeholder="Search the website..."
+        />
+      </div>
 
-      <main className="container mx-auto px-4 py-8 space-y-10">
+      <div className="space-y-10">
         {/* Modules */}
         <section>
           <SectionHeader title="Modules" count={moduleResults.length} />
@@ -256,8 +254,8 @@ export const SearchPage: React.FC = () => {
             </div>
           )}
         </section>
-      </main>
-    </div>
+      </div>
+    </DashboardPageShell>
   );
 };
 

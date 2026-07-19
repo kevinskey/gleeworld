@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Award, Loader2, BookOpen, ChevronRight } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -63,14 +64,11 @@ export default function StudentGradesPage() {
   }, [rows]);
 
   return (
-    <div className="px-6 py-6 max-w-4xl mx-auto space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">My Grades</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Every graded assignment, grouped by class.
-        </p>
-      </div>
-
+    <DashboardPageShell
+      maxWidth="4xl"
+      title="My Grades"
+      subtitle="Every graded assignment, grouped by class."
+    >
       {isLoading ? (
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
           <CardContent className="p-10 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></CardContent>
@@ -87,7 +85,7 @@ export default function StudentGradesPage() {
           <CourseGradesCard key={course.id} course={course} rows={cRows} onClick={() => navigate(`/academy/c/${(course.course_code || '').toLowerCase()}`)} />
         ))
       )}
-    </div>
+    </DashboardPageShell>
   );
 }
 

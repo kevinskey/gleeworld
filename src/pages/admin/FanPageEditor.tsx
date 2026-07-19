@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/dialog';
 import { useBlockPageEditor } from '@/hooks/useBlockPageEditor';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { BLOCK_LIST, getBlockModule, isBlockAvailable } from '@/components/public-site/registry';
 import { AutoForm } from '@/components/public-site/AutoForm';
 import { fontStack, safeConfig, type SiteBlock, type SiteRenderContext } from '@/components/public-site/types';
@@ -78,7 +79,7 @@ function SortableBlockRow({
       className={isDragging ? 'opacity-60' : ''}
     >
       <div
-        className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2.5 ${
+        className={`flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5 ${
           selected ? 'border-primary ring-1 ring-primary' : 'border-border'
         } ${isDragging ? 'shadow-lg' : ''}`}
       >
@@ -193,58 +194,57 @@ export default function FanPageEditor() {
   const existingBlockTypes = new Set(editor.blocks.map((b) => b.block_type));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[200px]">
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-sans normal-case tracking-tight font-bold">Fan page</h1>
-          <p className="text-sm text-muted-foreground">
-            {editor.page.is_published
-              ? 'Published — signed-in fans see the latest version at /fan.'
-              : 'Not published yet — only you can see this.'}
-          </p>
-        </div>
-        <Badge variant={editor.page.is_published ? 'default' : 'secondary'}>
-          {editor.page.is_published ? 'Published' : 'Draft'}
-        </Badge>
-        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" title="Replace all blocks with the default fan layout">
-              <Rocket className="w-4 h-4 mr-1.5" /> Reset to template
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reset to the starter template?</DialogTitle>
-              <DialogDescription>
-                Replaces every block on your fan page with the default 6-block layout:
-                Header, Hero, Events, Music Player, Videos, and Support. Theme + media kept.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleReset} disabled={editor.resetting}>
-                {editor.resetting ? 'Resetting…' : 'Yes, reset blocks'}
+    <DashboardPageShell
+      title="Fan page"
+      maxWidth="7xl"
+      subtitle={editor.page.is_published
+        ? 'Published — signed-in fans see the latest version at /fan.'
+        : 'Not published yet — only you can see this.'}
+      actions={
+        <>
+          <Badge variant={editor.page.is_published ? 'default' : 'secondary'}>
+            {editor.page.is_published ? 'Published' : 'Draft'}
+          </Badge>
+          <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" title="Replace all blocks with the default fan layout">
+                <Rocket className="w-4 h-4 mr-1.5" /> Reset to template
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-        {editor.page.is_published && (
-          <Button
-            variant="outline"
-            onClick={() => window.open(`${window.location.origin}/fan?_=${Date.now()}`, '_blank', 'noopener,noreferrer')}
-            title="Open your fan page in a new tab"
-          >
-            <ExternalLink className="w-4 h-4 mr-1.5" /> View page
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reset to the starter template?</DialogTitle>
+                <DialogDescription>
+                  Replaces every block on your fan page with the default 6-block layout:
+                  Header, Hero, Events, Music Player, Videos, and Support. Theme + media kept.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={handleReset} disabled={editor.resetting}>
+                  {editor.resetting ? 'Resetting…' : 'Yes, reset blocks'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          {editor.page.is_published && (
+            <Button
+              variant="outline"
+              onClick={() => window.open(`${window.location.origin}/fan?_=${Date.now()}`, '_blank', 'noopener,noreferrer')}
+              title="Open your fan page in a new tab"
+            >
+              <ExternalLink className="w-4 h-4 mr-1.5" /> View page
+            </Button>
+          )}
+          {editor.page.is_published && (
+            <Button variant="outline" onClick={editor.unpublish}>Unpublish</Button>
+          )}
+          <Button onClick={editor.publish} disabled={editor.publishing}>
+            {editor.publishing ? 'Publishing…' : editor.page.is_published ? 'Republish changes' : 'Publish'}
           </Button>
-        )}
-        {editor.page.is_published && (
-          <Button variant="outline" onClick={editor.unpublish}>Unpublish</Button>
-        )}
-        <Button onClick={editor.publish} disabled={editor.publishing}>
-          {editor.publishing ? 'Publishing…' : editor.page.is_published ? 'Republish changes' : 'Publish'}
-        </Button>
-      </div>
-
+        </>
+      }
+    >
       <div className="grid lg:grid-cols-[340px_1fr] gap-6 items-start">
         <Card>
           <CardHeader className="pb-3">
@@ -384,6 +384,6 @@ export default function FanPageEditor() {
           </div>
         </Card>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

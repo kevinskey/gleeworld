@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,22 +47,16 @@ const Announcements = () => {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Announcements</h1>
-              <p className="text-muted-foreground">Manage and view club announcements</p>
-            </div>
-            <Button onClick={() => navigate('/admin/announcements/new')} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create Announcement
-            </Button>
-          </div>
-        </div>
-
-        {/* Content */}
+      <DashboardPageShell
+        title="Announcements"
+        subtitle="Manage and view club announcements"
+        actions={
+          <Button onClick={() => navigate('/admin/announcements/new')} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Create Announcement
+          </Button>
+        }
+      >
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner size="lg" text="Loading announcements..." />
@@ -172,7 +167,7 @@ const Announcements = () => {
             ))}
           </div>
         )}
-      </div>
+      </DashboardPageShell>
     </UniversalLayout>
   );
 };

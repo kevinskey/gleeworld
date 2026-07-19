@@ -15,6 +15,7 @@ import {
 import { Loader2, ArrowLeft, AlertCircle, Plus, Trash2, Target } from 'lucide-react';
 import { useCanvasOutcomes, useCreateOutcome, useOutcomeRollups } from '@/hooks/useCanvasAcademy';
 import { toast } from 'sonner';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface RatingDraft { description: string; points: number }
 
@@ -31,16 +32,13 @@ export default function CanvasOutcomes() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
-      <div>
-        <Link to={`/academy/canvas/courses/${courseId}`} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-          <ArrowLeft className="w-3 h-3" /> Back to course
-        </Link>
-        <div className="flex items-end justify-between gap-3 flex-wrap mt-1">
-          <h1 className="text-2xl font-bold tracking-tight">Outcomes & Mastery</h1>
-          <Button onClick={() => setOpen(true)}><Plus className="w-4 h-4 mr-1" /> New outcome</Button>
-        </div>
-      </div>
+    <DashboardPageShell
+      title="Outcomes & Mastery"
+      actions={<Button onClick={() => setOpen(true)}><Plus className="w-4 h-4 mr-1" /> New outcome</Button>}
+    >
+      <Link to={`/academy/canvas/courses/${courseId}`} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+        <ArrowLeft className="w-3 h-3" /> Back to course
+      </Link>
 
       {courseId && <NewOutcomeDialog open={open} onOpenChange={setOpen} courseId={courseId} />}
 
@@ -56,7 +54,7 @@ export default function CanvasOutcomes() {
           {courseId && <MasteryGrid courseId={courseId} />}
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 }
 

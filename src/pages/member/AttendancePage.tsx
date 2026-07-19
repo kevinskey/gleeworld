@@ -14,6 +14,7 @@ import { ActionGrid } from '@/components/actions/ActionGrid';
 import { ExcuseGenerator } from '@/components/attendance/ExcuseGenerator';
 import { AttendancePolicyModal } from '@/components/attendance/AttendancePolicyModal';
 import { AttendanceDashboard } from '@/components/attendance/AttendanceDashboard';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
@@ -46,21 +47,13 @@ const AttendancePage = () => {
   const stats = getAttendanceStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <DashboardPageShell
+      title="Attendance"
+      subtitle="Track your attendance and submit excuses"
+      icon={ClipboardCheck}
+    >
         {/* Back Navigation */}
         <BackNavigation />
-        
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="rounded-lg p-3 bg-orange-100 text-orange-600">
-            <ClipboardCheck className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Attendance</h1>
-            <p className="text-muted-foreground">Track your attendance and submit excuses</p>
-          </div>
-        </div>
 
         {/* Attendance Overview */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -263,14 +256,13 @@ const AttendancePage = () => {
             <UpcomingEventsWidget limit={3} compact={true} />
           </div>
         </div>
-      </div>
 
       {/* Attendance Policy Modal */}
-      <AttendancePolicyModal 
-        isOpen={isPolicyModalOpen} 
-        onClose={() => setIsPolicyModalOpen(false)} 
+      <AttendancePolicyModal
+        isOpen={isPolicyModalOpen}
+        onClose={() => setIsPolicyModalOpen(false)}
       />
-    </div>
+    </DashboardPageShell>
   );
 };
 

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Timer, Flame, Trash2 } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 export default function PracticeLog() {
   const { user } = useAuth();
@@ -69,13 +70,7 @@ export default function PracticeLog() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-          <Timer className="w-6 h-6 text-primary" /> Practice Log
-        </h1>
-      </div>
-
+    <DashboardPageShell title="Practice Log" icon={Timer} maxWidth="4xl">
       <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardContent className="p-4">
@@ -130,7 +125,7 @@ export default function PracticeLog() {
           ))}
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageShell>
   );
 }
 

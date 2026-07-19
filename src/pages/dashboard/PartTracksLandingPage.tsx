@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Badge } from '@/components/ui/badge';
 import { Disc3, Plus, Music, Search, Loader2, Sparkles, Trash2, Upload, Youtube, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,7 +20,6 @@ import { format, parseISO } from 'date-fns';
 import { createPartTracksProject, deletePartTracksProject, type PartTracksProject, VOICING_TEMPLATES } from '@/hooks/usePartTracksProject';
 import { PartTracksStudio } from '@/components/partTracks/PartTracksStudio';
 import { AccompanimentPicker } from '@/components/partTracks/AccompanimentPicker';
-import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 interface ScoreOption {
   id: string;
@@ -75,22 +75,16 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
   }, [projects, search]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 pb-6 space-y-4">
-      <header className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Disc3 className="w-7 h-7 text-amber-500" />
-            <PageTitle>Part Tracks Studio</PageTitle>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Build accompaniment and voice-part recordings. Link a score from your Music Library if you want one.
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Part Tracks Studio"
+      icon={Disc3}
+      subtitle="Build accompaniment and voice-part recordings. Link a score from your Music Library if you want one."
+      actions={
         <Button onClick={() => setCreating(true)}>
           <Plus className="w-5 h-5 mr-1.5" /> New Project
         </Button>
-      </header>
-
+      }
+    >
       <div className="relative max-w-md">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -184,7 +178,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
         userId={user?.id ?? null}
         onCreated={(id) => { setCreating(false); refetch(); onOpen(id); }}
       />
-    </div>
+    </DashboardPageShell>
   );
 }
 

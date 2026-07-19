@@ -10,6 +10,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface BusCompany {
   id: string;
@@ -77,23 +78,16 @@ const BusInformation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <div className="container mx-auto px-6 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard?module=tour-management')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Bus className="h-6 w-6 text-primary" />
-              Bus Information
-            </h1>
-            <p className="text-muted-foreground">Search for charter bus companies for tour transportation</p>
-          </div>
-        </div>
+    <DashboardPageShell
+      title="Bus Information"
+      subtitle="Search for charter bus companies for tour transportation"
+      icon={Bus}
+    >
+      <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard?module=tour-management')}>
+        <ArrowLeft className="h-5 w-5" />
+      </Button>
 
-        {/* Search Section */}
+      {/* Search Section */}
         <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -242,8 +236,7 @@ const BusInformation = () => {
             </CardContent>
           </Card>
         )}
-      </div>
-    </div>
+    </DashboardPageShell>
   );
 };
 

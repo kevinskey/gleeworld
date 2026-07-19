@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -162,19 +163,11 @@ export default function FeedControl() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Rss className="w-6 h-6 text-primary" /> Feed Control
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pick what shows up in the News and Scholarship widgets on your dashboard.
-          Until you turn on a source of your own, your site uses the GleeWorld
-          default news mix (Google News choral &amp; music education, NPR Music);
-          once you add any source here, only your list is used.
-        </p>
-      </div>
-
+    <DashboardPageShell
+      title="Feed Control"
+      icon={Rss}
+      subtitle="Pick what shows up in the News and Scholarship widgets on your dashboard. Until you turn on a source of your own, your site uses the GleeWorld default news mix (Google News choral & music education, NPR Music); once you add any source here, only your list is used."
+    >
       <Tabs value={tab} onValueChange={(v) => setTab(v as FeedType)}>
         <TabsList>
           <TabsTrigger value="news" className="gap-2"><Newspaper className="w-4 h-4" /> News</TabsTrigger>
@@ -276,6 +269,6 @@ export default function FeedControl() {
           )}
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 }

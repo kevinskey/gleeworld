@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 // Simple SEO helper
 const useSEO = (title: string, description: string, canonical?: string) => {
@@ -95,42 +96,36 @@ export const ModulesDirectory: React.FC = () => {
   }, [query]);
 
   return (
-    <div>
-      <header className="w-full border-b border-border bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="min-w-0">
-              <h1 className="text-3xl font-bold tracking-tight">Modules Directory</h1>
-              <p className="text-muted-foreground mt-2 max-w-2xl">Explore all functional modules in GleeWorld. Open any module or propose cleanup of redundant modules. No deletions will occur without your approval.</p>
-            </div>
-            {/* Activation lives in Workspace Settings, not here. Deep-link
-                so the admin doesn't have to hunt for it. */}
-            <Button
-              variant="outline"
-              onClick={() => navigate('/dashboard/workspace?tab=modules')}
-              className="shrink-0"
-            >
-              Manage subscriptions →
-            </Button>
-          </div>
-          <div className="mt-4 max-w-md">
-            <Input
-              value={query}
-              onChange={(e) => {
-                const val = e.target.value;
-                setQuery(val);
-                const sp = new URLSearchParams(searchParams);
-                if (val) sp.set('q', val); else sp.delete('q');
-                setSearchParams(sp, { replace: true });
-              }}
-              placeholder="Search modules by name, category, or description"
-            />
-          </div>
-        </div>
-      </header>
+    <DashboardPageShell
+      title="Modules Directory"
+      subtitle="Explore all functional modules in GleeWorld. Open any module or propose cleanup of redundant modules. No deletions will occur without your approval."
+      actions={
+        // Activation lives in Workspace Settings, not here. Deep-link
+        // so the admin doesn't have to hunt for it.
+        <Button
+          variant="outline"
+          onClick={() => navigate('/dashboard/workspace?tab=modules')}
+          className="shrink-0"
+        >
+          Manage subscriptions →
+        </Button>
+      }
+    >
+      <div className="max-w-md">
+        <Input
+          value={query}
+          onChange={(e) => {
+            const val = e.target.value;
+            setQuery(val);
+            const sp = new URLSearchParams(searchParams);
+            if (val) sp.set('q', val); else sp.delete('q');
+            setSearchParams(sp, { replace: true });
+          }}
+          placeholder="Search modules by name, category, or description"
+        />
+      </div>
 
-      <main className="container mx-auto px-4 py-8">
-        {filteredCategories.map(cat => (
+      {filteredCategories.map(cat => (
           <section key={cat.id} className="mb-10">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -190,8 +185,7 @@ export const ModulesDirectory: React.FC = () => {
             </div>
           </section>
         ))}
-      </main>
-    </div>
+    </DashboardPageShell>
   );
 };
 

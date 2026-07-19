@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import type { Ensemble } from '@/types/programHealth';
 import { EnsembleDrawer } from '@/components/admin/ensembles/EnsembleDrawer';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface EnsembleRow extends Ensemble {
   member_count: number;
@@ -93,15 +94,10 @@ export default function EnsemblesPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Ensembles</h1>
-          <p className="text-muted-foreground">
-            Choirs and groups in this program. Each ensemble has its own roster, directors,
-            section targets, and (soon) stability score.
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Ensembles"
+      subtitle="Choirs and groups in this program. Each ensemble has its own roster, directors, section targets, and (soon) stability score."
+      actions={
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -111,8 +107,8 @@ export default function EnsemblesPage() {
           </DialogTrigger>
           <CreateEnsembleDialog onClose={() => setCreateOpen(false)} />
         </Dialog>
-      </div>
-
+      }
+    >
       {isLoading ? (
         <div className="text-muted-foreground">Loading ensembles…</div>
       ) : ensembles.length === 0 ? (
@@ -180,7 +176,7 @@ export default function EnsemblesPage() {
         ensembleId={drawerEnsembleId}
         onClose={() => setDrawerEnsembleId(null)}
       />
-    </div>
+    </DashboardPageShell>
   );
 }
 

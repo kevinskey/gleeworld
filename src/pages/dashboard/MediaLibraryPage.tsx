@@ -10,6 +10,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +29,6 @@ import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
 import { ScopeFilterChips } from '@/components/library/ScopeFilterChips';
-import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -136,20 +136,15 @@ export default function MediaLibraryPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <PageTitle>Media Library</PageTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Audio, video, MusicXML, documents, images — everything that isn't sheet music.
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Media Library"
+      subtitle="Audio, video, MusicXML, documents, images — everything that isn't sheet music."
+      actions={
         <Button onClick={() => setUploadOpen(true)}>
           <Upload className="w-4 h-4 mr-1.5" /> Upload
         </Button>
-      </div>
-
+      }
+    >
       {/* Scope + kind tabs + search */}
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
         <CardContent className="p-5 space-y-4">
@@ -284,7 +279,7 @@ export default function MediaLibraryPage() {
         ownerId={user?.id ?? null}
         onOpenChange={(v) => { if (!v) setShareFolder(null); }}
       />
-    </div>
+    </DashboardPageShell>
   );
 }
 

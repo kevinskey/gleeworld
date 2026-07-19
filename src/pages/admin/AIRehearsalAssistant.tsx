@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Sparkles, Copy, Loader2 } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 type Mode = 'plan' | 'warmup' | 'notes' | 'letter';
 
@@ -92,16 +93,12 @@ export default function AIRehearsalAssistant() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-primary" /> AI Rehearsal Assistant
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pick a task, fill in a couple of fields, and get a draft you can copy or edit.
-        </p>
-      </div>
-
+    <DashboardPageShell
+      maxWidth="4xl"
+      title="AI Rehearsal Assistant"
+      icon={Sparkles}
+      subtitle="Pick a task, fill in a couple of fields, and get a draft you can copy or edit."
+    >
       <Tabs value={mode} onValueChange={(v) => switchMode(v as Mode)}>
         <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
           <TabsTrigger value="plan">Rehearsal Plan</TabsTrigger>
@@ -183,7 +180,7 @@ export default function AIRehearsalAssistant() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }
 

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -155,19 +156,12 @@ export default function QuizAttemptDetailPage() {
     ? Math.round((attempt.score / attempt.max_score) * 100) : null;
 
   return (
-    <div className="px-6 py-6 max-w-3xl mx-auto space-y-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}/test/${testId}/attempts`)}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs text-muted-foreground">Reviewing attempt</div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {student?.full_name || student?.email || 'Student'}
-          </h1>
-          {attempt.attempt_number > 1 && <div className="text-xs text-muted-foreground">Attempt #{attempt.attempt_number}</div>}
-        </div>
-        {pct !== null && (
+    <DashboardPageShell
+      maxWidth="4xl"
+      title={student?.full_name || student?.email || 'Student'}
+      subtitle={attempt.attempt_number > 1 ? `Attempt #${attempt.attempt_number}` : undefined}
+      actions={
+        pct !== null ? (
           <div className={cn(
             'text-right',
             pct >= 80 ? 'text-emerald-600' : pct >= 60 ? 'text-amber-600' : 'text-rose-600',
@@ -175,7 +169,14 @@ export default function QuizAttemptDetailPage() {
             <div className="text-2xl font-bold">{pct}%</div>
             <div className="text-xs text-muted-foreground">{attempt.score}/{attempt.max_score}</div>
           </div>
-        )}
+        ) : undefined
+      }
+    >
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}/test/${testId}/attempts`)}>
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div className="text-xs text-muted-foreground">Reviewing attempt</div>
       </div>
 
       {questions.map((q: any, idx: number) => {
@@ -206,7 +207,7 @@ export default function QuizAttemptDetailPage() {
           Save final score
         </Button>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }
 

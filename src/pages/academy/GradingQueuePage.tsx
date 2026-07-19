@@ -20,6 +20,7 @@ import {
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -86,14 +87,10 @@ export default function GradingQueuePage() {
   }, [initialSubmissionId, submissions, openSubmission]);
 
   return (
-    <div className="px-6 py-6 max-w-5xl mx-auto space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Grading Queue</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Submissions waiting on you, oldest first. Click a row to grade.
-        </p>
-      </div>
-
+    <DashboardPageShell
+      title="Grading Queue"
+      subtitle="Submissions waiting on you, oldest first. Click a row to grade."
+    >
       {/* Filter pills */}
       <div className="flex items-center gap-2">
         <Filter className="w-4 h-4 text-muted-foreground" />
@@ -186,7 +183,7 @@ export default function GradingQueuePage() {
           qc.invalidateQueries({ queryKey: ['teacher-grading-queue'] });
         }}
       />
-    </div>
+    </DashboardPageShell>
   );
 }
 

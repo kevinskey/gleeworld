@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 import { DeleteAccountDialog } from "@/components/auth/DeleteAccountDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -132,17 +133,12 @@ export default function Settings() {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <SettingsIcon className="h-8 w-8" />
-            Settings
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your account preferences and privacy settings
-          </p>
-        </div>
-
+      <DashboardPageShell
+        title="Settings"
+        icon={SettingsIcon}
+        subtitle="Manage your account preferences and privacy settings"
+        maxWidth="4xl"
+      >
         <form onSubmit={handleSubmit(onSubmit)}>
           <Tabs defaultValue="personal" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
@@ -542,7 +538,7 @@ export default function Settings() {
         />
 
         <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
-      </div>
+      </DashboardPageShell>
     </UniversalLayout>
   );
 }

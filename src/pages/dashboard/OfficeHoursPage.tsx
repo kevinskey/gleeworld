@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { usePreviewRole } from '@/lib/nav/navPreview';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const InstructorWorkshop = lazy(() => import('@/components/officehours/InstructorWorkshop'));
 const StudentBooking = lazy(() => import('@/components/officehours/StudentBooking'));
@@ -26,21 +27,15 @@ export default function OfficeHoursPage() {
     : realIsInstructor;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-6 space-y-5">
-      <div>
-        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight leading-tight">
-          Office Hours
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1.5">
-          {isInstructor
-            ? 'Configure your services, set the times students can book, and review what\'s on the calendar.'
-            : 'Pick a service, choose an open time, and we\'ll sync it to your calendar.'}
-        </p>
-      </div>
-
+    <DashboardPageShell
+      title="Office Hours"
+      subtitle={isInstructor
+        ? 'Configure your services, set the times students can book, and review what\'s on the calendar.'
+        : 'Pick a service, choose an open time, and we\'ll sync it to your calendar.'}
+    >
       <Suspense fallback={<div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div>}>
         {isInstructor ? <InstructorWorkshop /> : <StudentBooking />}
       </Suspense>
-    </div>
+    </DashboardPageShell>
   );
 }

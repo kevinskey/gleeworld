@@ -15,6 +15,7 @@ import {
   BarChart3, BookOpen, Users, ClipboardCheck, AlertTriangle, ChevronRight, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -92,14 +93,10 @@ export default function ReportsPage() {
   const loading = cLoading;
 
   return (
-    <div className="px-6 py-6 max-w-5xl mx-auto space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          A snapshot of each course — class size, grade average, what's pending, who needs help.
-        </p>
-      </div>
-
+    <DashboardPageShell
+      title="Reports"
+      subtitle="A snapshot of each course — class size, grade average, what's pending, who needs help."
+    >
       {loading ? (
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
           <CardContent className="p-10 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></CardContent>
@@ -153,7 +150,7 @@ export default function ReportsPage() {
           ))}
         </div>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }
 

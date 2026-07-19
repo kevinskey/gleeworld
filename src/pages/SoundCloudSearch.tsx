@@ -7,6 +7,7 @@ import { ExternalLink, Music, Search, Link as LinkIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 
 interface Track {
   id: number;
@@ -168,17 +169,12 @@ export default function SoundCloudSearch() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <Music className="h-8 w-8 text-primary" />
-          SoundCloud Search
-        </h1>
-        <p className="text-muted-foreground">
-          Search for tracks on SoundCloud to discover music and audio content
-        </p>
-      </div>
-
+    <DashboardPageShell
+      title="SoundCloud Search"
+      subtitle="Search for tracks on SoundCloud to discover music and audio content"
+      icon={Music}
+      maxWidth="4xl"
+    >
       {!isConnected && !isChecking && (
         <Alert className="mb-6">
           <LinkIcon className="h-4 w-4" />
@@ -264,6 +260,6 @@ export default function SoundCloudSearch() {
           </div>
         </>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }

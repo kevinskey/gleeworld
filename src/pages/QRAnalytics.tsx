@@ -10,14 +10,15 @@ import {
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import { 
-  QrCode, 
-  TrendingUp, 
-  Users, 
+  QrCode,
+  TrendingUp,
+  Users,
   Calendar,
   CheckCircle,
   XCircle,
   AlertTriangle
 } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface ScanStats {
   total_scans: number;
@@ -208,12 +209,7 @@ export default function QRAnalytics() {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <QrCode className="h-6 w-6" />
-        <h1 className="text-3xl font-bold">QR Code Analytics</h1>
-      </div>
-
+    <DashboardPageShell title="QR Code Analytics" icon={QrCode}>
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -339,6 +335,6 @@ export default function QRAnalytics() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageShell>
   );
 }

@@ -271,7 +271,7 @@ const CourseOnboarding = () => {
                           You're signed in. Enroll now to access all course materials.
                         </p>
                         <Button 
-                          className="w-full bg-[#150d26] hover:bg-[#002244] text-sm h-9 sm:h-10 md:h-11"
+                          className="w-full bg-[hsl(var(--brand-navy))] hover:bg-[hsl(var(--brand-navy-hover))] text-sm h-9 sm:h-10 md:h-11"
                           onClick={handleEnrollClick}
                           disabled={enrolling}
                         >
@@ -294,7 +294,7 @@ const CourseOnboarding = () => {
                           Sign in to enroll in this course and access all materials.
                         </p>
                         <Button 
-                          className="w-full bg-[#150d26] hover:bg-[#002244] text-sm h-9 sm:h-10 md:h-11"
+                          className="w-full bg-[hsl(var(--brand-navy))] hover:bg-[hsl(var(--brand-navy-hover))] text-sm h-9 sm:h-10 md:h-11"
                           onClick={handleLoginClick}
                         >
                           <LogIn className="h-4 w-4 mr-2" />
