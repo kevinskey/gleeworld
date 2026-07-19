@@ -562,7 +562,7 @@ function MarketingSite() {
         <AppleFeatureRow
           eyebrow="Music Library sources"
           title="Three sources of music, one search."
-          body="57,000 public-domain works from the Choral Public Domain Library — cached on first add, editor credit preserved, and tagged so they bypass the rights gate. Your own PDFs in a private library only you see. And the GleeWorld Music Store, where independent composers list their scores directly."
+          body="57,000 public-domain works from the Choral Public Domain Library, all legal to share. Your own PDFs in a private library only you see. And the GleeWorld Music Store, where independent composers list their scores directly."
           mockup={<CPDLCatalogMockup />}
           pastel="#fef3c7"
           imageLeft={false}
