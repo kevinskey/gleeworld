@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
 import { RequestChangeDialog } from "@/components/profile/RequestChangeDialog";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 
 const profileSchema = z.object({
@@ -577,38 +578,30 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
   }
 
   return (
-    <div className="min-h-screen bg-background">
-        {/* Header */}
-        <div className="bg-card border-b border-border px-4 py-4 md:px-6">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                My Profile
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">Manage your personal information and preferences</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-foreground hidden sm:inline">{displayName}</span>
-              <Button
-                onClick={() => setIsEditing(!isEditing)}
-                variant={isEditing ? "outline" : "default"}
-                size="sm"
-              >
-                {isEditing ? (
-                  "Cancel"
-                ) : (
-                  <>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
+    <DashboardPageShell
+      title="My Profile"
+      subtitle="Manage your personal information and preferences"
+      maxWidth="7xl"
+      actions={
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-foreground hidden sm:inline">{displayName}</span>
+          <Button
+            onClick={() => setIsEditing(!isEditing)}
+            variant={isEditing ? "outline" : "default"}
+            size="sm"
+          >
+            {isEditing ? (
+              "Cancel"
+            ) : (
+              <>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Profile
+              </>
+            )}
+          </Button>
         </div>
-
-        {/* Dashboard Content */}
-        <div className="max-w-7xl mx-auto px-4 py-6 md:px-6">
+      }
+    >
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               
@@ -1004,25 +997,24 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
               </div>
             )}
           </form>
-        </div>
-        
-        {/* Avatar Crop Dialog */}
-        <AvatarCropDialog
-          isOpen={isCropDialogOpen}
-          onClose={handleCropDialogClose}
-          imageSrc={selectedImageForCrop}
-          onCropComplete={handleCroppedImageUpload}
-          isUploading={isAvatarUploading}
-        />
 
-        <RequestChangeDialog
-          open={requestDialogOpen}
-          onOpenChange={setRequestDialogOpen}
-          fieldLabel={requestField?.label || "Profile field"}
-          currentValue={requestField?.currentValue ?? ""}
-          userEmail={user?.email || ""}
-        />
-      </div>
+      {/* Avatar Crop Dialog */}
+      <AvatarCropDialog
+        isOpen={isCropDialogOpen}
+        onClose={handleCropDialogClose}
+        imageSrc={selectedImageForCrop}
+        onCropComplete={handleCroppedImageUpload}
+        isUploading={isAvatarUploading}
+      />
+
+      <RequestChangeDialog
+        open={requestDialogOpen}
+        onOpenChange={setRequestDialogOpen}
+        fieldLabel={requestField?.label || "Profile field"}
+        currentValue={requestField?.currentValue ?? ""}
+        userEmail={user?.email || ""}
+      />
+    </DashboardPageShell>
   );
 };
 

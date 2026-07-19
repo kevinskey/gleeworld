@@ -10,6 +10,7 @@ import { Search, Download, Database, User, FileText, Calendar, ArrowLeft } from 
 import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 
 const ActivityLogs = () => {
   const { logs, loading, error, refetch } = useActivityLogs();
@@ -61,7 +62,7 @@ const ActivityLogs = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+      <div className="p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -73,7 +74,7 @@ const ActivityLogs = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+      <div className="p-8">
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="pt-6">
@@ -91,25 +92,21 @@ const ActivityLogs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/')}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back to Dashboard</span>
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Activity Logs</h1>
-              <p className="text-gray-600">Track all user activities related to contracts and templates</p>
-            </div>
-          </div>
-        </div>
-
+    <DashboardPageShell
+      title="Activity Logs"
+      subtitle="Track all user activities related to contracts and templates"
+      maxWidth="7xl"
+      actions={
+        <Button
+          variant="outline"
+          onClick={() => navigate('/')}
+          className="flex items-center space-x-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Dashboard</span>
+        </Button>
+      }
+    >
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -119,7 +116,7 @@ const ActivityLogs = () => {
               </div>
               <div className="flex space-x-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search users, actions..."
                     value={searchTerm}
@@ -163,8 +160,8 @@ const ActivityLogs = () => {
           <CardContent>
             {filteredLogs.length === 0 ? (
               <div className="text-center py-8">
-                <Database className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">
+                <Database className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">
                   {logs.length === 0 ? "No activity logs yet" : "No matching activities found"}
                 </p>
               </div>
@@ -185,18 +182,18 @@ const ActivityLogs = () => {
                     <TableRow key={log.id}>
                       <TableCell className="font-mono text-sm">
                         <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-gray-400" />
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
                           <span>{format(new Date(log.created_at), 'MMM dd, yyyy HH:mm:ss')}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-gray-400" />
+                          <User className="h-4 w-4 text-muted-foreground" />
                           <div>
                             <div className="font-medium">
                               {log.user_profile?.full_name || 'Unknown User'}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-muted-foreground">
                               {log.user_profile?.email}
                             </div>
                           </div>
@@ -214,11 +211,11 @@ const ActivityLogs = () => {
                         </div>
                       </TableCell>
                       <TableCell className="max-w-xs">
-                        <div className="text-sm text-gray-600 truncate">
+                        <div className="text-sm text-muted-foreground truncate">
                           {log.details && Object.keys(log.details).length > 0 ? (
                             <span>{JSON.stringify(log.details)}</span>
                           ) : (
-                            <span className="text-gray-400">No details</span>
+                            <span className="text-muted-foreground">No details</span>
                           )}
                         </div>
                       </TableCell>
@@ -232,8 +229,7 @@ const ActivityLogs = () => {
             )}
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </DashboardPageShell>
   );
 };
 

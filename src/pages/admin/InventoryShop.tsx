@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ProductManager } from "@/components/admin/ProductManager";
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface OrderStats {
   totalProducts: number;
@@ -209,18 +210,16 @@ const InventoryShop = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Inventory & Shop</h1>
-          <p className="text-muted-foreground">Merchandise, orders, and shipping management</p>
-        </div>
+    <DashboardPageShell
+      title="Inventory & Shop"
+      subtitle="Merchandise, orders, and shipping management"
+      actions={
         <Button onClick={() => { fetchStats(); fetchOrders(); }}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-      </div>
-
+      }
+    >
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -396,7 +395,7 @@ const InventoryShop = () => {
           <ProductManager />
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 };
 

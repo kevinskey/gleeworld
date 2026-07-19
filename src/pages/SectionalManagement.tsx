@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { useNavigate } from "react-router-dom";
 import { useSectionalPlans } from "@/hooks/useSectionalPlans";
 import { useHomePath } from '@/hooks/useHomePath';
@@ -29,28 +30,21 @@ export const SectionalManagement = () => {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate(homePath)}
-              className="flex items-center gap-2"
-            >
-              <Home className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <UserCheck className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Sectional Management</h1>
-              <p className="text-muted-foreground">Review and manage section leader plans and activities</p>
-            </div>
-          </div>
-        </div>
-
+      <DashboardPageShell
+        title="Sectional Management"
+        icon={UserCheck}
+        subtitle="Review and manage section leader plans and activities"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => navigate(homePath)}
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        }
+      >
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -101,7 +95,7 @@ export const SectionalManagement = () => {
             )}
           </CardContent>
         </Card>
-      </div>
+      </DashboardPageShell>
     </UniversalLayout>
   );
 };

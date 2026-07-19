@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { 
   Radio, 
   Plus, 
@@ -287,13 +288,10 @@ export const ShoutcastManagement = () => {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Shoutcast Management</h1>
-            <p className="text-muted-foreground">Manage your Shoutcast streaming infrastructure</p>
-          </div>
-          
+      <DashboardPageShell
+        title="Shoutcast Management"
+        subtitle="Manage your Shoutcast streaming infrastructure"
+        actions={
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
@@ -306,7 +304,7 @@ export const ShoutcastManagement = () => {
                 <DialogTitle>Create New Shoutcast Stream</DialogTitle>
                 <DialogDescription>Configure a new Shoutcast streaming server</DialogDescription>
               </DialogHeader>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Stream Name</Label>
@@ -317,7 +315,7 @@ export const ShoutcastManagement = () => {
                     placeholder="Glee World Radio"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="genre">Genre</Label>
                   <Input
@@ -327,7 +325,7 @@ export const ShoutcastManagement = () => {
                     placeholder="Classical, Gospel, etc."
                   />
                 </div>
-                
+
                 <div className="col-span-2 space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
@@ -337,7 +335,7 @@ export const ShoutcastManagement = () => {
                     placeholder="Description of the stream"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="stream_url">Stream URL</Label>
                   <Input
@@ -347,7 +345,7 @@ export const ShoutcastManagement = () => {
                     placeholder="http://your-server.com"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="mount_point">Mount Point</Label>
                   <Input
@@ -357,7 +355,7 @@ export const ShoutcastManagement = () => {
                     placeholder="/stream"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="port">Port</Label>
                   <Input
@@ -367,7 +365,7 @@ export const ShoutcastManagement = () => {
                     onChange={(e) => setFormData({...formData, port: parseInt(e.target.value)})}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="max_listeners">Max Listeners</Label>
                   <Input
@@ -377,7 +375,7 @@ export const ShoutcastManagement = () => {
                     onChange={(e) => setFormData({...formData, max_listeners: parseInt(e.target.value)})}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="admin_password">Admin Password</Label>
                   <Input
@@ -387,7 +385,7 @@ export const ShoutcastManagement = () => {
                     onChange={(e) => setFormData({...formData, admin_password: e.target.value})}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="source_password">Source Password</Label>
                   <Input
@@ -397,7 +395,7 @@ export const ShoutcastManagement = () => {
                     onChange={(e) => setFormData({...formData, source_password: e.target.value})}
                   />
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="is_active"
@@ -406,7 +404,7 @@ export const ShoutcastManagement = () => {
                   />
                   <Label htmlFor="is_active">Active</Label>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="is_public"
@@ -416,7 +414,7 @@ export const ShoutcastManagement = () => {
                   <Label htmlFor="is_public">Public</Label>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
@@ -427,8 +425,8 @@ export const ShoutcastManagement = () => {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
-
+        }
+      >
         <Tabs defaultValue="streams" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="streams" className="flex items-center gap-2">
@@ -702,7 +700,7 @@ export const ShoutcastManagement = () => {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
+      </DashboardPageShell>
     </UniversalLayout>
   );
 };

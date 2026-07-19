@@ -12,6 +12,7 @@ import {
   Store, GraduationCap, Loader2, Plus, Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -74,19 +75,15 @@ export default function CourseStorePage() {
   });
 
   return (
-    <div className="px-6 py-6 max-w-5xl mx-auto space-y-4">
-      <div className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Course Store</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Adopt a pre-built course into your tenant. You can edit everything after.
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Course Store"
+      subtitle="Adopt a pre-built course into your tenant. You can edit everything after."
+      actions={
         <Button size="sm" onClick={() => navigate('/academy/new')}>
           <Plus className="w-4 h-4 mr-1.5" /> Build from scratch
         </Button>
-      </div>
-
+      }
+    >
       {isLoading ? (
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
           <CardContent className="p-10 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></CardContent>
@@ -131,6 +128,6 @@ export default function CourseStorePage() {
           ))}
         </div>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }

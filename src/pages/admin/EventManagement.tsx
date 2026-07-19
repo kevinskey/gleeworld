@@ -2,21 +2,20 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, Users } from "lucide-react";
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const EventManagement = () => {
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Event & Calendar Management</h1>
-          <p className="text-muted-foreground">Manage performances, rehearsals, and tours</p>
-        </div>
+    <DashboardPageShell
+      title="Event & Calendar Management"
+      subtitle="Manage performances, rehearsals, and tours"
+      actions={
         <Button>
           <Calendar className="mr-2 h-4 w-4" />
           Create Event
         </Button>
-      </div>
-
+      }
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
@@ -66,7 +65,7 @@ const EventManagement = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 };
 

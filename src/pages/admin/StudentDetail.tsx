@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Trash2, Pin, Loader2 } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 export default function StudentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -47,17 +48,14 @@ export default function StudentDetail() {
   if (!id) return null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <DashboardPageShell
+      maxWidth="4xl"
+      title={profile?.full_name || profile?.email || 'Student'}
+      subtitle={[profile?.email, profile?.voice_part, profile?.phone].filter(Boolean).join(' · ')}
+    >
       <Button variant="ghost" size="sm" onClick={() => navigate('/admin/students')}>
         <ArrowLeft className="w-4 h-4 mr-2" /> All students
       </Button>
-
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">{profile?.full_name || profile?.email || 'Student'}</h1>
-        <p className="text-sm text-muted-foreground">
-          {[profile?.email, profile?.voice_part, profile?.phone].filter(Boolean).join(' · ')}
-        </p>
-      </div>
 
       <Tabs defaultValue="overview">
         <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full">
@@ -97,7 +95,7 @@ export default function StudentDetail() {
           <PermissionsTab studentId={id} />
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 }
 

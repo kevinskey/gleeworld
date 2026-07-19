@@ -37,6 +37,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -105,7 +106,7 @@ function SortableBlockRow({
       className={isDragging ? 'opacity-60' : ''}
     >
       <div
-        className={`flex items-center gap-2 rounded-lg border bg-white px-3 py-2.5 ${
+        className={`flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5 ${
           selected ? 'border-primary ring-1 ring-primary' : 'border-border'
         } ${isDragging ? 'shadow-lg' : ''}`}
       >
@@ -439,66 +440,65 @@ export default function PublicPageEditor() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[200px]">
-          <h1 className="font-sans normal-case tracking-tight text-2xl font-bold">Public page</h1>
-          <p className="text-sm text-muted-foreground">
-            {site.is_published
-              ? 'Published — visitors see the latest version on your site.'
-              : 'Not published yet — only you can see this.'}
-          </p>
-        </div>
-        <Badge variant={site.is_published ? 'default' : 'secondary'}>
-          {site.is_published ? 'Published' : 'Draft'}
-        </Badge>
-        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" title="Replace all blocks with the default layout">
-              <Rocket className="w-4 h-4 mr-1.5" /> Reset to template
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reset to the starter template?</DialogTitle>
-              <DialogDescription>
-                This deletes every block currently on the page and replaces them with the
-                default 7-block layout: Header, Hero, Events, About, Music Player, Videos,
-                and Contact &amp; Footer. Your theme, brand colors, and uploaded media are kept.
-                This cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={resetToTemplate} disabled={resetting}>
-                {resetting ? 'Resetting…' : 'Yes, reset blocks'}
+    <DashboardPageShell
+      title="Public page"
+      maxWidth="7xl"
+      subtitle={site.is_published
+        ? 'Published — visitors see the latest version on your site.'
+        : 'Not published yet — only you can see this.'}
+      actions={
+        <>
+          <Badge variant={site.is_published ? 'default' : 'secondary'}>
+            {site.is_published ? 'Published' : 'Draft'}
+          </Badge>
+          <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" title="Replace all blocks with the default layout">
+                <Rocket className="w-4 h-4 mr-1.5" /> Reset to template
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-        {site.is_published && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              // Open the canonical public view (/sites/<slug>) in a fresh tab.
-              // The tenant root (/) redirects logged-in admins to the control
-              // center, so we deliberately use the public-only route here.
-              const url = `${window.location.origin}/sites/${site.slug}?_=${Date.now()}`;
-              window.open(url, '_blank', 'noopener,noreferrer');
-            }}
-            title="Open your live site in a new tab"
-          >
-            <ExternalLink className="w-4 h-4 mr-1.5" /> View site
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reset to the starter template?</DialogTitle>
+                <DialogDescription>
+                  This deletes every block currently on the page and replaces them with the
+                  default 7-block layout: Header, Hero, Events, About, Music Player, Videos,
+                  and Contact &amp; Footer. Your theme, brand colors, and uploaded media are kept.
+                  This cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setResetOpen(false)}>Cancel</Button>
+                <Button variant="destructive" onClick={resetToTemplate} disabled={resetting}>
+                  {resetting ? 'Resetting…' : 'Yes, reset blocks'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          {site.is_published && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Open the canonical public view (/sites/<slug>) in a fresh tab.
+                // The tenant root (/) redirects logged-in admins to the control
+                // center, so we deliberately use the public-only route here.
+                const url = `${window.location.origin}/sites/${site.slug}?_=${Date.now()}`;
+                window.open(url, '_blank', 'noopener,noreferrer');
+              }}
+              title="Open your live site in a new tab"
+            >
+              <ExternalLink className="w-4 h-4 mr-1.5" /> View site
+            </Button>
+          )}
+          {site.is_published && (
+            <Button variant="outline" onClick={unpublish}>Unpublish</Button>
+          )}
+          <Button onClick={publish} disabled={publishing}>
+            {publishing ? 'Publishing…' : site.is_published ? 'Republish changes' : 'Publish'}
           </Button>
-        )}
-        {site.is_published && (
-          <Button variant="outline" onClick={unpublish}>Unpublish</Button>
-        )}
-        <Button onClick={publish} disabled={publishing}>
-          {publishing ? 'Publishing…' : site.is_published ? 'Republish changes' : 'Publish'}
-        </Button>
-      </div>
-
+        </>
+      }
+    >
       <div className="grid lg:grid-cols-[340px_1fr] gap-6 items-start">
         <div className="space-y-4">
           <Card>
@@ -695,6 +695,6 @@ export default function PublicPageEditor() {
           </div>
         </Card>
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

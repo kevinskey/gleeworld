@@ -43,6 +43,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { RECIPIENT_GROUPS, RecipientGroup } from '@/types/communication';
 import { getOrgName } from '@/lib/orgName';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const EmailComposerPage = () => {
   const navigate = useNavigate();
@@ -387,24 +388,17 @@ const EmailComposerPage = () => {
 
   return (
     <UniversalLayout>
-      <div className="min-h-screen bg-background py-4 sm:py-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <Mail className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">GleeWorld Messenger</h1>
-              <p className="text-sm text-muted-foreground">Send branded emails and SMS to members or anyone</p>
-            </div>
-          </div>
-        </div>
-        
+      <DashboardPageShell
+        title="GleeWorld Messenger"
+        subtitle="Send branded emails and SMS to members or anyone"
+        icon={Mail}
+        maxWidth="full"
+      >
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Composer */}
           <div className="lg:col-span-2 space-y-4">
@@ -875,7 +869,7 @@ const EmailComposerPage = () => {
             </Card>
           </div>
         </div>
-      </div>
+      </DashboardPageShell>
     </UniversalLayout>
   );
 };

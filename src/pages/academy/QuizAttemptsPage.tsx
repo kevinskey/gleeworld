@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -83,18 +84,16 @@ export default function QuizAttemptsPage() {
   });
 
   return (
-    <div className="px-6 py-6 max-w-4xl mx-auto space-y-4">
+    <DashboardPageShell
+      maxWidth="4xl"
+      title={test?.title ?? 'Quiz'}
+      subtitle={`${attempts.length} attempt${attempts.length === 1 ? '' : 's'}`}
+    >
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=quizzes`)}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs text-muted-foreground">Attempts</div>
-          <h1 className="text-2xl font-bold tracking-tight">{test?.title ?? 'Quiz'}</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            {attempts.length} attempt{attempts.length === 1 ? '' : 's'}
-          </p>
-        </div>
+        <div className="text-xs text-muted-foreground">Attempts</div>
       </div>
 
       {isLoading ? (
@@ -156,6 +155,6 @@ export default function QuizAttemptsPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }

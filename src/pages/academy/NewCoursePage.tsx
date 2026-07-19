@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, BookOpen, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AiCourseForm } from '@/components/academy/AiCourseForm';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -82,18 +83,14 @@ export default function NewCoursePage() {
   }
 
   return (
-    <div className="px-6 py-6 max-w-2xl mx-auto space-y-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/academy')}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Course</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Spin up a fresh course. You can build out modules, assignments, and tests after.
-          </p>
-        </div>
-      </div>
+    <DashboardPageShell
+      maxWidth="4xl"
+      title="New Course"
+      subtitle="Spin up a fresh course. You can build out modules, assignments, and tests after."
+    >
+      <Button variant="ghost" size="icon" onClick={() => navigate('/academy')}>
+        <ArrowLeft className="w-5 h-5" />
+      </Button>
 
       <div className="mb-4 flex items-center gap-3 text-sm">
         <span className="font-medium">New course</span>
@@ -191,6 +188,6 @@ export default function NewCoursePage() {
           </div>
         </>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }

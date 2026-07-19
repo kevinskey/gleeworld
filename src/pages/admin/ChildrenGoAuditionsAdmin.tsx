@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { format } from "date-fns";
 import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface Audition {
   id: string;
@@ -121,14 +122,10 @@ export default function ChildrenGoAuditionsAdmin() {
 
   return (
     <AdminOnlyRoute>
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Children Go Auditions</h1>
-          <p className="text-muted-foreground">
-            Review and manage "Children, Go Where I Send Thee" rap auditions
-          </p>
-        </div>
-
+      <DashboardPageShell
+        title="Children Go Auditions"
+        subtitle='Review and manage "Children, Go Where I Send Thee" rap auditions'
+      >
         <div className="grid gap-4">
           {auditions.length === 0 ? (
             <Card>
@@ -212,7 +209,7 @@ export default function ChildrenGoAuditionsAdmin() {
             ))
           )}
         </div>
-      </div>
+      </DashboardPageShell>
     </AdminOnlyRoute>
   );
 }

@@ -13,7 +13,7 @@ import {
   useThumbnailUrl,
 } from '@/hooks/useStudioVideo';
 import { toast } from 'sonner';
-import { PageTitle } from '@/components/dashboard/DashboardPageShell';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 function formatBytes(n: number | null): string {
   if (!n) return '—';
@@ -55,14 +55,11 @@ export default function VideoLibrary() {
   };
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
-      <header className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <PageTitle icon={Film}>Video</PageTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Rehearsal recordings, lesson videos, performance archives.
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Video"
+      icon={Film}
+      subtitle="Rehearsal recordings, lesson videos, performance archives."
+      actions={
         <div className="flex items-center gap-2">
           <input
             ref={fileInput} type="file" accept="video/*" className="hidden"
@@ -75,8 +72,8 @@ export default function VideoLibrary() {
               : 'Upload video'}
           </Button>
         </div>
-      </header>
-
+      }
+    >
       {upload.isPending && upload.progress && (
         <Card>
           <CardContent className="p-4">
@@ -141,7 +138,7 @@ export default function VideoLibrary() {
           ))}
         </ul>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }
 

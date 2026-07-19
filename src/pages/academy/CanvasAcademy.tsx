@@ -18,6 +18,7 @@ import { Loader2, GraduationCap, BookOpen, AlertCircle, Plug, Plus, Inbox, Calen
 import { useCanvasCourses, useBootstrapCanvas, useCreateCourse } from '@/hooks/useCanvasAcademy';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 export default function CanvasAcademy() {
   const { data, isLoading, error, refetch } = useCanvasCourses();
@@ -32,16 +33,12 @@ export default function CanvasAcademy() {
   const courses = data && 'ok' in data ? data.courses : [];
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
-      <header className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Academy</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {canTeach
-              ? 'Your courses — teach or learn.'
-              : 'Your courses, assignments, and grades.'}
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Academy"
+      subtitle={canTeach
+        ? 'Your courses — teach or learn.'
+        : 'Your courses, assignments, and grades.'}
+      actions={
         <div className="flex items-center gap-2">
           {!notBound && (
             <>
@@ -59,8 +56,8 @@ export default function CanvasAcademy() {
             </Button>
           )}
         </div>
-      </header>
-
+      }
+    >
       <CreateCourseDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={() => refetch()} />
 
       {notBound && (
@@ -168,7 +165,7 @@ export default function CanvasAcademy() {
       <footer className="text-xs text-muted-foreground border-t border-border pt-4">
         Academy data is stored in your organization's private workspace.
       </footer>
-    </div>
+    </DashboardPageShell>
   );
 }
 

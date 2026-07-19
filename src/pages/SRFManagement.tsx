@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { useNavigate } from "react-router-dom";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
 import { useHomePath } from '@/hooks/useHomePath';
@@ -22,28 +23,21 @@ export const SRFManagement = () => {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate(homePath)}
-              className="flex items-center gap-2"
-            >
-              <Home className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <BookOpen className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">SRF Management</h1>
-              <p className="text-muted-foreground">Manage sight-reading assignments and student progress</p>
-            </div>
-          </div>
-        </div>
-
+      <DashboardPageShell
+        title="SRF Management"
+        icon={BookOpen}
+        subtitle="Manage sight-reading assignments and student progress"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => navigate(homePath)}
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        }
+      >
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -112,7 +106,7 @@ export const SRFManagement = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </DashboardPageShell>
     </UniversalLayout>
   );
 };

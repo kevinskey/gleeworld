@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   UserPlus, Upload, Hash, Loader2, Mail, FileText, Copy, RefreshCw, CheckCircle2,
 } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 type Course = { id: string; course_code: string | null; title: string | null; join_code: string | null };
 
@@ -40,16 +41,12 @@ export default function StudentOnboarding() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <header>
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-          <UserPlus className="w-6 h-6 text-primary" /> Onboard students
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pick the method that fits how your students will arrive.
-        </p>
-      </header>
-
+    <DashboardPageShell
+      maxWidth="4xl"
+      title="Onboard students"
+      icon={UserPlus}
+      subtitle="Pick the method that fits how your students will arrive."
+    >
       <Tabs defaultValue="single">
         <TabsList className="grid grid-cols-1 sm:grid-cols-3 h-auto w-full">
           <TabsTrigger value="single" className="gap-2"><Mail className="w-4 h-4" /> Single invite</TabsTrigger>
@@ -67,7 +64,7 @@ export default function StudentOnboarding() {
           <JoinCodes courses={courses} />
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 }
 

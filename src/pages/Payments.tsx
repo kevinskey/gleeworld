@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 
 interface Payment {
   id: string;
@@ -100,12 +101,10 @@ export default function Payments() {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment History</h1>
-          <p className="text-gray-600">View and manage your payment transactions</p>
-        </div>
-
+      <DashboardPageShell
+        title="Payment History"
+        subtitle="View and manage your payment transactions"
+      >
         {/* Payment Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
@@ -115,7 +114,7 @@ export default function Payments() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{formatAmount(totalPaid)}</div>
-              <p className="text-xs text-gray-600">Completed payments</p>
+              <p className="text-xs text-muted-foreground">Completed payments</p>
             </CardContent>
           </Card>
 
@@ -126,7 +125,7 @@ export default function Payments() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">{formatAmount(pendingAmount)}</div>
-              <p className="text-xs text-gray-600">Awaiting processing</p>
+              <p className="text-xs text-muted-foreground">Awaiting processing</p>
             </CardContent>
           </Card>
 
@@ -137,7 +136,7 @@ export default function Payments() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{payments.length}</div>
-              <p className="text-xs text-gray-600">All time</p>
+              <p className="text-xs text-muted-foreground">All time</p>
             </CardContent>
           </Card>
         </div>
@@ -151,9 +150,9 @@ export default function Payments() {
           <CardContent>
             {payments.length === 0 ? (
               <div className="text-center py-8">
-                <DollarSign className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No payments found</h3>
-                <p className="text-gray-600">You haven't made any payments yet.</p>
+                <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No payments found</h3>
+                <p className="text-muted-foreground">You haven't made any payments yet.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -162,20 +161,20 @@ export default function Payments() {
                     <div className="flex items-center space-x-4">
                       {getStatusIcon('completed')}
                       <div>
-                        <h4 className="font-medium text-gray-900">
-                          {payment.contract_id 
+                        <h4 className="font-medium text-foreground">
+                          {payment.contract_id
                             ? `Payment - Contract ${payment.contract_id.slice(0, 8)}`
                             : 'Manual Payment'
                           }
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {format(new Date(payment.payment_date), 'MMM dd, yyyy')}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           Via {payment.payment_method} • Paid by {payment.paid_by}
                         </p>
                         {payment.notes && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             Note: {payment.notes}
                           </p>
                         )}
@@ -183,7 +182,7 @@ export default function Payments() {
                     </div>
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-foreground">
                           {formatAmount(payment.amount)}
                         </div>
                         <Badge 
@@ -208,7 +207,7 @@ export default function Payments() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </DashboardPageShell>
     </UniversalLayout>
   );
 }

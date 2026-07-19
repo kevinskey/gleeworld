@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ClipboardList, Plus, Trash2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 export default function RehearsalPlans() {
   const qc = useQueryClient();
@@ -78,19 +79,17 @@ export default function RehearsalPlans() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-            <ClipboardList className="w-6 h-6 text-primary" /> Rehearsal Plans
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Save and reuse plans across the year.</p>
-        </div>
+    <DashboardPageShell
+      maxWidth="4xl"
+      title="Rehearsal Plans"
+      icon={ClipboardList}
+      subtitle="Save and reuse plans across the year."
+      actions={
         <Button variant="outline" onClick={() => navigate('/admin/ai-rehearsal')}>
           <Sparkles className="w-4 h-4 mr-2" /> Generate with AI
         </Button>
-      </div>
-
+      }
+    >
       <Card>
         <CardHeader><CardTitle>{editing ? 'Edit plan' : 'New plan'}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
@@ -144,6 +143,6 @@ export default function RehearsalPlans() {
           ))}
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageShell>
   );
 }

@@ -7,9 +7,9 @@ const fmtDate = (ts: number) =>
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex-1 rounded-2xl bg-white p-4 text-center shadow-sm">
-      <p className="text-2xl font-bold text-slate-900">{value}</p>
-      <p className="mt-0.5 text-xs text-slate-500">{label}</p>
+    <div className="flex-1 rounded-2xl bg-card p-4 text-center shadow-sm">
+      <p className="text-2xl font-bold text-foreground">{value}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -43,8 +43,8 @@ export function ProgressTab({
 
   if (takes.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
-        <p className="text-sm text-slate-600">
+      <div className="rounded-2xl bg-card p-6 text-center shadow-sm">
+        <p className="text-sm text-muted-foreground">
           No takes yet. Sing your first line and your progress shows up here.
         </p>
       </div>
@@ -62,22 +62,22 @@ export function ProgressTab({
         <Stat label="Average" value={String(avg)} />
       </div>
 
-      <ul className="divide-y divide-slate-100 rounded-2xl bg-white shadow-sm">
+      <ul className="divide-y divide-border rounded-2xl bg-card shadow-sm">
         {takes.map((t, i) => (
           <li key={`${t.ts}-${i}`} className="flex items-center justify-between gap-2 px-4 py-3">
             <div className="min-w-0">
-              <p className="truncate text-sm text-slate-900">
+              <p className="truncate text-sm text-foreground">
                 {t.musicKey ?? 'Practice'}
                 {t.level != null ? ` · Level ${t.level}` : ''}
               </p>
-              <p className="text-xs text-slate-500">{fmtDate(t.ts)}</p>
+              <p className="text-xs text-muted-foreground">{fmtDate(t.ts)}</p>
             </div>
             <span className={`text-lg font-bold ${band(t.overall)}`}>{t.overall}</span>
           </li>
         ))}
       </ul>
 
-      <p className="px-1 text-xs text-slate-400">
+      <p className="px-1 text-sm text-muted-foreground">
         {synced ? 'Synced to your account.' : 'Saved on this device.'}
       </p>
     </div>

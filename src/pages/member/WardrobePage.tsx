@@ -9,6 +9,7 @@ import { BackNavigation } from '@/components/shared/BackNavigation';
 import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDialog';
 import { HairNailSubmission } from '@/components/wardrobe/HairNailSubmission';
 import { DressCodeModal } from '@/components/wardrobe/DressCodeModal';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 const WardrobePage = () => {
   const {
     wardrobeItems,
@@ -31,21 +32,13 @@ const WardrobePage = () => {
   const formalCount = wardrobeItems.filter(item => item.category === 'formal').length;
   const costumeCount = wardrobeItems.filter(item => item.category === 'costume').length;
   const needsFittingCount = wardrobeItems.filter(item => item.status === 'needs_fitting').length;
-  return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      {/* Mobile-first responsive container */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
-        
-        {/* Responsive Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-          <div className="rounded-xl p-3 sm:p-4 bg-gradient-to-br from-pink-100 to-pink-50 text-pink-600 shadow-sm">
-            <Shirt className="h-5 w-5 sm:h-6 sm:w-6" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Wardrobe</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your costumes and uniform fittings</p>
-          </div>
-        </div>
-
+  return (
+    <DashboardPageShell
+      maxWidth="7xl"
+      title="Wardrobe"
+      subtitle="Manage your costumes and uniform fittings"
+      icon={Shirt}
+    >
         {/* Responsive Quick Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
           <Card className="border-0 shadow-sm bg-gradient-to-br from-background to-muted/30">
@@ -317,11 +310,11 @@ const WardrobePage = () => {
       }} wardrobeItemId={selectedFittingItem?.id} wardrobeItemName={selectedFittingItem?.name} />
 
         {/* Dress Code Modal */}
-        <DressCodeModal 
+        <DressCodeModal
           isOpen={isDressCodeModalOpen}
           onClose={() => setIsDressCodeModalOpen(false)}
         />
-      </div>
-    </div>;
+    </DashboardPageShell>
+  );
 };
 export default WardrobePage;

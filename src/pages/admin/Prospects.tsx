@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Trash2 } from 'lucide-react';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const STATUSES = ['new', 'contacted', 'auditioned', 'enrolled', 'declined'] as const;
 
@@ -75,14 +76,11 @@ export default function Prospects() {
   }));
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-          <UserPlus className="w-6 h-6 text-primary" /> Prospective Students
-        </h1>
-        <p className="text-sm text-muted-foreground">Recruitment pipeline — track inquiries from first contact to enrollment.</p>
-      </div>
-
+    <DashboardPageShell
+      title="Prospective Students"
+      icon={UserPlus}
+      subtitle="Recruitment pipeline — track inquiries from first contact to enrollment."
+    >
       <Card>
         <CardHeader><CardTitle>Add prospect</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -127,7 +125,7 @@ export default function Prospects() {
           </CardContent>
         </Card>
       ))}
-    </div>
+    </DashboardPageShell>
   );
 }
 

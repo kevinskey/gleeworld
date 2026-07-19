@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -83,15 +84,10 @@ export default function TeacherAcademyDashboard() {
   });
 
   return (
-    <div className="px-6 py-6 space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-end justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Teaching Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Everything that needs your attention, across every class.
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Teaching Dashboard"
+      subtitle="Everything that needs your attention, across every class."
+      actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate('/academy/store')}>
             <Store className="w-4 h-4 mr-1.5" /> Course Store
@@ -100,8 +96,8 @@ export default function TeacherAcademyDashboard() {
             <Plus className="w-4 h-4 mr-1.5" /> New Course
           </Button>
         </div>
-      </div>
-
+      }
+    >
       {/* Top row — three triage widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Grading queue */}
@@ -261,7 +257,7 @@ export default function TeacherAcademyDashboard() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </DashboardPageShell>
   );
 }
 

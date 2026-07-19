@@ -21,6 +21,7 @@ import {
 import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -119,18 +120,16 @@ export default function QuizQuestionsPage() {
   const totalPoints = questions.reduce((s, q) => s + (q.points || 0), 0);
 
   return (
-    <div className="px-6 py-6 max-w-3xl mx-auto space-y-4">
+    <DashboardPageShell
+      maxWidth="4xl"
+      title={test?.title ?? 'Quiz'}
+      subtitle={`${questions.length} question${questions.length === 1 ? '' : 's'} · ${totalPoints} pts total`}
+    >
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=quizzes`)}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs text-muted-foreground">Question builder</div>
-          <h1 className="text-2xl font-bold tracking-tight">{test?.title ?? 'Quiz'}</h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            {questions.length} question{questions.length === 1 ? '' : 's'} · {totalPoints} pts total
-          </p>
-        </div>
+        <div className="text-xs text-muted-foreground">Question builder</div>
       </div>
 
       {isLoading ? (
@@ -173,7 +172,7 @@ export default function QuizQuestionsPage() {
           </Card>
         </>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }
 

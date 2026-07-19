@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Badge } from '@/components/ui/badge';
 import {
   ChevronRight, Users, ClipboardCheck, FileText, Image as ImageIcon,
@@ -160,20 +161,16 @@ export default function InstructorConsole() {
   }, [courses]);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Instructor Console</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isPrivileged
-              ? 'Every class in your workspace. Open one to manage it, or jump to combined media below.'
-              : 'Every class you teach in one place. Click a class to open its full view.'}
-          </p>
-        </div>
-        {/* Adding classes is an admin action — directors who only teach
-            don't see this. Some users are admin AND instructor; the gate
-            handles both. */}
-        {isPrivileged && (
+    <DashboardPageShell
+      title="Instructor Console"
+      subtitle={isPrivileged
+        ? 'Every class in your workspace. Open one to manage it, or jump to combined media below.'
+        : 'Every class you teach in one place. Click a class to open its full view.'}
+      actions={
+        // Adding classes is an admin action — directors who only teach
+        // don't see this. Some users are admin AND instructor; the gate
+        // handles both.
+        isPrivileged && (
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
               <Link to="/academy/store">
@@ -188,9 +185,9 @@ export default function InstructorConsole() {
               </Link>
             </Button>
           </div>
-        )}
-      </div>
-
+        )
+      }
+    >
       {isLoading ? (
         <div className="text-center py-12">
           <Loader2 className="w-6 h-6 animate-spin inline text-muted-foreground" />
@@ -305,7 +302,7 @@ export default function InstructorConsole() {
           </div>
         </>
       )}
-    </div>
+    </DashboardPageShell>
   );
 }
 

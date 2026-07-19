@@ -12,6 +12,7 @@ import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,18 +48,15 @@ export default function WorkspaceSettingsPage() {
   };
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
-      <div>
-        <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Workspace Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Configure your workspace — branding, modules, billing, integrations.
-        </p>
-        {!canManage && (
-          <Badge variant="outline" className="mt-2 text-xs bg-amber-50 text-amber-700 border-amber-200">
-            <Lock className="w-3 h-3 mr-1" /> Read-only — only workspace admins can change settings
-          </Badge>
-        )}
-      </div>
+    <DashboardPageShell
+      title="Workspace Settings"
+      subtitle="Configure your workspace — branding, modules, billing, integrations."
+    >
+      {!canManage && (
+        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+          <Lock className="w-3 h-3 mr-1" /> Read-only — only workspace admins can change settings
+        </Badge>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         {/* Mobile: one swipeable scroll strip (no wrap) so 7 sections read as
@@ -81,7 +79,7 @@ export default function WorkspaceSettingsPage() {
         <TabsContent value="billing"><BillingTabPanel /></TabsContent>
         <TabsContent value="general"><GeneralTabPanel canManage={canManage} /></TabsContent>
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 }
 

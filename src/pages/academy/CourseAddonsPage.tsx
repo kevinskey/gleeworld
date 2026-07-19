@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -129,18 +130,16 @@ export default function CourseAddonsPage() {
   const enabledCount = addons.filter((a: any) => a.is_enabled).length;
 
   return (
-    <div className="px-6 py-6 max-w-4xl mx-auto space-y-4">
+    <DashboardPageShell
+      maxWidth="4xl"
+      title={`Add-ons for ${course.title}`}
+      subtitle={`Toggle features specific to this class. ${enabledCount} active.`}
+    >
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}`)}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-mono text-muted-foreground">{course.course_code}</div>
-          <h1 className="text-2xl font-bold tracking-tight">Add-ons for {course.title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Toggle features specific to this class. {enabledCount} active.
-          </p>
-        </div>
+        <div className="text-xs font-mono text-muted-foreground">{course.course_code}</div>
       </div>
 
       {!canManage && (
@@ -175,6 +174,6 @@ export default function CourseAddonsPage() {
           );
         })}
       </div>
-    </div>
+    </DashboardPageShell>
   );
 }

@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Mic, Save, User as UserIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -91,30 +92,25 @@ export default function PracticeRecordingsReview() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-      <header className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight flex items-center gap-2">
-            <Mic className="w-7 h-7 text-primary" />
-            Practice recordings
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Every student practice take with the metronome from the <strong>Student Practice</strong> course.
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Share the join link with your students:{' '}
-            <code className="px-1.5 py-0.5 rounded bg-muted font-mono">
-              {typeof window !== 'undefined' ? `${window.location.origin}/join/STUDENT-PRACTICE` : '/join/STUDENT-PRACTICE'}
-            </code>
-          </p>
-        </div>
+    <DashboardPageShell
+      title="Practice recordings"
+      icon={Mic}
+      subtitle={<>Every student practice take with the metronome from the <strong>Student Practice</strong> course.</>}
+      actions={
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by student, title, notes…"
           className="w-full max-w-sm"
         />
-      </header>
+      }
+    >
+      <p className="text-xs text-muted-foreground -mt-4">
+        Share the join link with your students:{' '}
+        <code className="px-1.5 py-0.5 rounded bg-muted font-mono">
+          {typeof window !== 'undefined' ? `${window.location.origin}/join/STUDENT-PRACTICE` : '/join/STUDENT-PRACTICE'}
+        </code>
+      </p>
 
       {isLoading && (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
@@ -146,7 +142,7 @@ export default function PracticeRecordingsReview() {
           />
         ))}
       </ul>
-    </div>
+    </DashboardPageShell>
   );
 }
 
