@@ -555,12 +555,14 @@ function MarketingSite() {
         <FounderSection />
         <ReplacementTable />
         <AppleAudienceGrid />
-        {/* CPDL leads the feature stack — your single biggest content
-            differentiator. Nobody else mirrors the public-domain library. */}
+        {/* Music Library sources leads the feature stack — public-domain
+            (CPDL, our biggest content differentiator) plus the user's
+            private uploads and the GleeWorld Music Store where indie
+            composers list scores directly. Three sources, one search. */}
         <AppleFeatureRow
-          eyebrow="Public-Domain Catalog"
-          title="33,000 works. Already legal to share."
-          body="Search the Choral Public Domain Library from inside GleeWorld. We cache the PDF on first add, preserve the editor's credit, and tag every score as public-domain so it bypasses the rights gate automatically."
+          eyebrow="Music Library sources"
+          title="Three sources of music, one search."
+          body="57,000 public-domain works from the Choral Public Domain Library — cached on first add, editor credit preserved, and tagged so they bypass the rights gate. Your own PDFs in a private library only you see. And the GleeWorld Music Store, where independent composers list their scores directly."
           mockup={<CPDLCatalogMockup />}
           pastel="#fef3c7"
           imageLeft={false}
@@ -1101,7 +1103,7 @@ function CPDLCatalogMockup() {
     <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
       <div className="flex items-center justify-between mb-3">
         <div className="font-bold text-slate-900">Public-Domain Catalog</div>
-        <div className="text-[10px] sm:text-xs text-emerald-700 font-semibold px-2 py-0.5 rounded-full bg-emerald-50">CPDL · 33,000 works</div>
+        <div className="text-[10px] sm:text-xs text-emerald-700 font-semibold px-2 py-0.5 rounded-full bg-emerald-50">CPDL · 57,000 works</div>
       </div>
       <div className="bg-slate-50 rounded-md px-3 py-1.5 mb-3 text-slate-500 text-xs">Search title or composer…</div>
       <div className="space-y-1.5">
