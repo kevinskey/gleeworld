@@ -1428,6 +1428,7 @@ function AppleAudienceGrid() {
 // subdomain ever changes.
 const EXAMPLE_SITES: Array<{
   title: string; body: string; icon: typeof Church; pastel: string; url: string;
+  badge?: string;
 }> = [
   // Card order maps directly to the 2×2 grid on desktop:
   //   top-left  = Private Studio      top-right    = Choir & Church
@@ -1436,7 +1437,10 @@ const EXAMPLE_SITES: Array<{
     title: 'Private Studio',
     body: 'For private teachers and independent musicians — one place where all your music lives together.',
     icon: PenSquare,
-    pastel: '#fce7f3',
+    // Warm sand instead of pink — reads more grown-up/premium for a
+    // studio professionals charge by the hour out of, without losing
+    // the personal warmth pink gave it.
+    pastel: '#fef2e2',
     url: 'https://demo-songwriter.gleeworld.org/try',
   },
   {
@@ -1459,6 +1463,7 @@ const EXAMPLE_SITES: Array<{
     icon: Building,
     pastel: '#dbeafe',
     url: 'https://demo-district.gleeworld.org/try',
+    badge: 'Most sites pick this',
   },
 ];
 
@@ -1487,9 +1492,17 @@ function LiveExamplesSection() {
               href={s.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group rounded-3xl p-8 sm:p-10 min-h-[16rem] flex flex-col justify-between transition-transform hover:scale-[1.015]"
+              className="group relative rounded-3xl p-8 sm:p-10 min-h-[16rem] flex flex-col justify-between transition-transform hover:scale-[1.015]"
               style={{ backgroundColor: s.pastel }}
             >
+              {s.badge && (
+                <span
+                  className="absolute top-5 right-5 inline-flex items-center rounded-full px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-800"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)' }}
+                >
+                  {s.badge}
+                </span>
+              )}
               <div>
                 <s.icon className="h-9 w-9 text-slate-900 mb-4" />
                 <h3
