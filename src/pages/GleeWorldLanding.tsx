@@ -2035,8 +2035,15 @@ function ApplePricing() {
             Simple, honest pricing.
           </h2>
           <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mt-4">
-            Month-to-month. No setup fees. Cancel any time and we send you a full data export.
+            Month-to-month. Cancel any time and we send you a full data export.
           </p>
+          {/* Launch promo: free setup through the end of the calendar year.
+              When the promo ends, remove this block (or flip the copy). */}
+          <div className="mt-6 flex justify-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-800 px-4 py-1.5 text-sm font-semibold border border-emerald-200">
+              Free setup through Dec 31, 2026 — $0 to get your workspace live.
+            </span>
+          </div>
         </div>
 
         {/* items-stretch (default) keeps every card in a row the same height,
