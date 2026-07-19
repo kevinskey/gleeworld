@@ -590,6 +590,11 @@ function MarketingSite() {
             platform's two biggest pillars (with the Music Library), and
             deserves visual weight beyond a single AppleFeatureRow. */}
         <GleeAcademyShowcase />
+        {/* Ensembles showcase — the flip side of Academy: the operational
+            life of a choir/band/orchestra (recruit → rehearse → perform →
+            stay in touch). Also gets its own dedicated section rather
+            than a single row, per Kevin. */}
+        <EnsemblesShowcase />
         <AppleFeatureRow
           eyebrow="Attendance"
           title="Rehearsals on autopilot."
@@ -1032,6 +1037,48 @@ function CalendarMockup() {
               <div className="text-xs sm:text-xs text-slate-500">{e.day} · {e.t}</div>
             </div>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EnsembleRosterMockup() {
+  const members: { name: string; part: string; section: string; status: 'present' | 'late' | 'excused' }[] = [
+    { name: 'Aaliyah J.',  part: 'Soprano I',  section: 'S1', status: 'present' },
+    { name: 'Brandon K.',  part: 'Tenor II',   section: 'T2', status: 'present' },
+    { name: 'Cynthia L.',  part: 'Alto I',     section: 'A1', status: 'excused' },
+    { name: 'Devon M.',    part: 'Bass I',     section: 'B1', status: 'present' },
+    { name: 'Elena P.',    part: 'Soprano II', section: 'S2', status: 'present' },
+    { name: 'Franklin R.', part: 'Tenor I',    section: 'T1', status: 'late' },
+  ];
+  return (
+    <div className="bg-white p-5 sm:p-6 text-xs sm:text-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <div className="font-bold text-slate-900">Concert Choir</div>
+          <div className="text-xs text-slate-500">Fall 2026 · 6 of 48 shown</div>
+        </div>
+        <div className="text-[10px] sm:text-xs text-emerald-700 font-semibold px-2 py-0.5 rounded-full bg-emerald-50">SATB</div>
+      </div>
+      <div className="space-y-1">
+        {members.map((m, i) => (
+          <div key={i} className="flex items-center gap-3 p-2 rounded hover:bg-slate-50">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-violet-100 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-violet-700">
+              {m.section}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-slate-900 truncate">{m.name}</div>
+              <div className="text-xs text-slate-500 truncate">{m.part}</div>
+            </div>
+            <div className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+              m.status === 'present' ? 'bg-emerald-50 text-emerald-700' :
+              m.status === 'late'    ? 'bg-amber-50 text-amber-700' :
+                                       'bg-slate-100 text-slate-600'
+            }`}>
+              {m.status}
+            </div>
           </div>
         ))}
       </div>
@@ -1695,6 +1742,97 @@ function GleeAcademyShowcase() {
                 </ul>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Ensembles Showcase ──────────────────────────────────────────────────
+// The operational life of a choir/band/orchestra — recruit, rehearse,
+// perform, stay in touch after they've graduated. Elevated to the same
+// scale as GleeAcademyShowcase since Kevin flagged it as the other half
+// of the platform's story alongside the LMS.
+function EnsemblesShowcase() {
+  const clusters: { title: string; items: string[] }[] = [
+    {
+      title: 'Recruit + roster',
+      items: [
+        'Audition tracking + recruitment',
+        'Student profiles',
+        'Wardrobe management',
+        'Newsletters (current + graduates)',
+      ],
+    },
+    {
+      title: 'Rehearsal ops',
+      items: [
+        'Multiple attendance methods',
+        'Seating chart builder',
+        'Sectionals + section groups',
+        'In-app video conferencing',
+      ],
+    },
+    {
+      title: 'Music + performance',
+      items: [
+        'Part tracks (voice + instrument)',
+        'Music viewer + annotation',
+        'iPad-first music library',
+        'Sight Reading Studio',
+      ],
+    },
+    {
+      title: 'Extras',
+      items: [
+        'Template course add-ons',
+        'Rehearsal plans',
+      ],
+    },
+  ];
+  return (
+    <section id="ensembles" className="py-20 sm:py-28 md:py-36" style={{ backgroundColor: '#dcfce7' }}>
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-12 sm:mb-16">
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>
+            Ensembles
+          </p>
+          <h2
+            className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-slate-900 mb-5"
+            style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
+          >
+            Everything from auditions<br className="hidden sm:block" /> to graduate newsletters.
+          </h2>
+          <p className="text-base sm:text-lg md:text-xl text-slate-700 max-w-2xl mx-auto leading-relaxed">
+            The full life of a choir, band, or orchestra in one place —
+            recruit them, rehearse them, perform, and stay in touch after
+            they've graduated.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-10 md:gap-14 items-center mb-12">
+          <div className="grid sm:grid-cols-2 gap-4 order-2 md:order-1">
+            {clusters.map((c) => (
+              <div key={c.title} className="rounded-2xl bg-white/80 backdrop-blur border border-white p-5">
+                <h3
+                  className="font-bold text-slate-900 mb-3 text-base"
+                  style={{ ...HEADING_STYLE, letterSpacing: '-0.01em' }}
+                >
+                  {c.title}
+                </h3>
+                <ul className="space-y-2 text-sm text-slate-700">
+                  {c.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#10b981' }} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-2xl border border-slate-200/60 bg-white order-1 md:order-2">
+            <EnsembleRosterMockup />
           </div>
         </div>
       </div>
