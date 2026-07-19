@@ -27,7 +27,7 @@ import {
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
 import { useSheetMusicTracks } from '@/hooks/useSheetMusicTracks';
-import { ScopeFilterChips } from '@/components/library/ScopeFilterChips';
+import { ScopeFilterSelect } from '@/components/library/ScopeFilterSelect';
 import { useUserRole } from '@/hooks/useUserRole';
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 import { RightsBadge } from '@/components/policies/RightsBadge';
@@ -262,22 +262,29 @@ export default function MusicLibraryPage() {
       {topTab === 'scores' && (
         <>
           <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-            <CardContent className="p-5 space-y-4">
-              <div>
-                <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">Scope</div>
-                <ScopeFilterChips active={scope} options={options} onChange={setScope} />
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative max-w-md flex-1">
+            {/* One row instead of three. The scope chips were a per-class list
+                that wrapped to 3-4 lines once a director was in more than a
+                couple of classes, and the "SCOPE" caps label cost another row
+                to say what the control already says. Desktop reads
+                scope | search | layout; phone stacks search underneath. */}
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <ScopeFilterSelect
+                  active={scope}
+                  options={options}
+                  onChange={setScope}
+                  className="flex-1 min-w-0 sm:flex-none sm:w-52"
+                />
+                <div className="relative w-full order-last sm:order-none sm:flex-1 sm:min-w-0">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by title, composer, voicing…"
-                    className="pl-9 h-9"
+                    className="pl-9"
                   />
                 </div>
-                <div className="ml-auto flex items-center gap-0.5 rounded-lg border border-border p-0.5" role="group" aria-label="Layout">
+                <div className="shrink-0 flex items-center gap-0.5 rounded-lg border border-border p-0.5" role="group" aria-label="Layout">
                   <Button
                     variant={scoresView === 'cards' ? 'secondary' : 'ghost'}
                     size="sm"
