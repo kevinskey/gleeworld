@@ -168,7 +168,7 @@ case 'test-builder':
         return <TheLabModule />;
       case 'appointments':
       case 'assignable-appointments':
-        return <div className="p-4 text-muted-foreground">Use /book-appointment for Office Hours booking.</div>;
+        return <div className="p-4 text-muted-foreground">Use /book-appointment for Studio Hours booking.</div>;
       case 'messenger-admin':
         return <MessengerAdminModule />;
       case 'feed-control':

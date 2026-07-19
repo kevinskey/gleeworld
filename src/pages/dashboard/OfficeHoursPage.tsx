@@ -1,4 +1,4 @@
-// Office Hours — Calendly-style workshop for instructors, clean booking
+// Studio Hours — Calendly-style workshop for instructors, clean booking
 // surface for students. The instructor "workshop" lets teachers configure
 // services, set availability (which works with their Google Calendar busy
 // data), and review bookings. Students see only available services and times.
@@ -28,7 +28,7 @@ export default function OfficeHoursPage() {
 
   return (
     <DashboardPageShell
-      title="Office Hours"
+      title="Studio Hours"
       subtitle={isInstructor
         ? 'Configure your services, set the times students can book, and review what\'s on the calendar.'
         : 'Pick a service, choose an open time, and we\'ll sync it to your calendar.'}

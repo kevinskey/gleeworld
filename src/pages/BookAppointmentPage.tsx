@@ -32,7 +32,7 @@ import { AmazonProductSlider } from '@/components/shared/AmazonProductSlider';
 import { AdminOfficeHoursDashboard } from '@/components/appointments/AdminOfficeHoursDashboard';
 
 const appointmentTypes = [
-  { id: 'office-hours', name: 'Office Hours', duration: 15 },
+  { id: 'office-hours', name: 'Studio Hours', duration: 15 },
   { id: 'voice-lesson', name: 'Voice Lesson', duration: 30 },
   { id: 'tutoring', name: 'Tutoring', duration: 30 },
   { id: 'solo-audition', name: 'Solo Audition', duration: 15 },
