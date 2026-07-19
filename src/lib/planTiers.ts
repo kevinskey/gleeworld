@@ -48,6 +48,7 @@ export const PLAN_TIERS: PlanTier[] = [
     lookupKeyMonthly: 'gw_personal_monthly',
     lookupKeyAnnual: 'gw_personal_annual',
     features: [
+      'Studio (practice recording) — included',
       'Your own score library',
       'Personal calendar + Tonight mode',
       '1 course (Academy)',
