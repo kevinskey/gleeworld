@@ -1,7 +1,7 @@
 // Tenant public landing page builder (/admin/public-page). Blocks live in
 // gw_site_blocks (draft); Publish snapshots them into gw_public_sites.published_blocks,
 // which is the only thing anonymous visitors can read via get_public_site().
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -33,6 +33,8 @@ import {
   X,
   ChevronDown,
   ExternalLink,
+  Monitor,
+  Smartphone,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -205,6 +207,37 @@ export default function PublicPageEditor() {
 
   const [pendingTheme, setPendingTheme] = useState<SiteTheme | null>(null);
   const themeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Preview device + auto-fit scaling. The published site can be many
+  // logical viewport widths (a hero at 1280px, an events grid at 3 cols)
+  // that don't fit the editor's preview column — especially on a phone
+  // where the whole column is ~360px. We render the blocks at a fixed
+  // "device" width (1280 desktop / 390 phone) inside a CSS `zoom` box so
+  // the layout stays authentic and the outer container clips + scrolls
+  // the scaled result. zoom (unlike `transform: scale`) also updates the
+  // parent's layout height, so the outer scrollbar tracks visible content
+  // and the site's `sticky` header still pins to the outer viewport.
+  const [device, setDevice] = useState<'desktop' | 'mobile'>(() => {
+    if (typeof window === 'undefined') return 'desktop';
+    return window.matchMedia('(max-width: 768px)').matches ? 'mobile' : 'desktop';
+  });
+  const previewOuterRef = useRef<HTMLDivElement | null>(null);
+  const [previewOuterWidth, setPreviewOuterWidth] = useState(0);
+  useLayoutEffect(() => {
+    const el = previewOuterRef.current;
+    if (!el) return;
+    setPreviewOuterWidth(el.getBoundingClientRect().width);
+    const ro = new ResizeObserver(([entry]) => setPreviewOuterWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const deviceWidth = device === 'desktop' ? 1280 : 390;
+  // Only scale down — if the outer column happens to be wider than the
+  // device width (rare, e.g. desktop preview on a huge monitor), we
+  // center the unscaled preview rather than blow it up.
+  const previewScale = previewOuterWidth > 0
+    ? Math.min(1, previewOuterWidth / deviceWidth)
+    : 1;
 
   const theme: SiteTheme = useMemo(() => {
     if (pendingTheme) return pendingTheme;
@@ -654,44 +687,80 @@ export default function PublicPageEditor() {
         </div>
 
         <Card className="overflow-hidden">
-          <CardHeader className="py-3 border-b">
+          <CardHeader className="py-3 border-b flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm text-muted-foreground font-normal">Preview</CardTitle>
+            <div className="inline-flex rounded-full border border-border/60 p-0.5 bg-slate-50">
+              <button
+                type="button"
+                onClick={() => setDevice('desktop')}
+                aria-pressed={device === 'desktop'}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
+                  device === 'desktop'
+                    ? 'bg-white shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Desktop</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDevice('mobile')}
+                aria-pressed={device === 'mobile'}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
+                  device === 'mobile'
+                    ? 'bg-white shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Phone</span>
+              </button>
+            </div>
           </CardHeader>
-          {/* The preview is its own scroll viewport, not part of the page flow.
-              Rendering every block inline made the editor as tall as the whole
-              published site — scrolling the editor meant scrolling the entire
-              site with no end in sight and no way to reach the footer. Bounding
-              it also gives the site's `sticky` header a scrolling ancestor, so
-              it pins inside the preview (as it does when published) instead of
-              following you down the editor page. overscroll-contain stops the
-              page from scrolling on once the preview hits its end. */}
+          {/* Outer scroll viewport (not the page). Bounding the preview keeps
+              the editor a fixed height and gives the site's `sticky` header a
+              scrolling ancestor so it pins inside the preview as it will when
+              published. overscroll-contain stops the page from scrolling once
+              the preview hits its end. Slate wash makes the device frame
+              visible when the scaled site is narrower than the column. */}
           <div
-            className="bg-white max-h-[70dvh] overflow-y-auto overscroll-contain relative"
-            style={{
-              ['--site-primary' as string]: theme.primaryColor,
-              ['--site-accent' as string]: theme.accentColor,
-              fontFamily: fontStack(theme.fontFamily),
-              letterSpacing: `${theme.letterSpacing ?? 0}em`,
-            }}
+            ref={previewOuterRef}
+            className="bg-slate-100 max-h-[70dvh] overflow-y-auto overscroll-contain relative"
           >
-            {blocks.map((block) => {
-              const mod = getBlockModule(block.block_type);
-              if (!mod || !block.is_visible) return null;
-              if (!isBlockAvailable(mod, activeAddons)) return null;
-              const Render = mod.Render;
-              const cfg = safeConfig(mod, block.config);
-              return (
-                <Render
-                  key={block.id}
-                  config={cfg}
-                  ctx={ctx}
-                  onConfigChange={(patch) => updateConfig(block.id, { ...cfg, ...patch } as Record<string, unknown>)}
-                />
-              );
-            })}
-            {blocks.length === 0 && (
-              <div className="p-16 text-center text-muted-foreground">Add blocks to see a preview.</div>
-            )}
+            <div
+              className="bg-white mx-auto"
+              style={{
+                width: deviceWidth,
+                // `zoom` participates in layout (transform: scale does not),
+                // so the outer scrollbar reflects the scaled height and any
+                // nested `position: sticky` still pins to previewOuterRef.
+                zoom: previewScale,
+                ['--site-primary' as string]: theme.primaryColor,
+                ['--site-accent' as string]: theme.accentColor,
+                fontFamily: fontStack(theme.fontFamily),
+                letterSpacing: `${theme.letterSpacing ?? 0}em`,
+              } as React.CSSProperties}
+            >
+              {blocks.map((block) => {
+                const mod = getBlockModule(block.block_type);
+                if (!mod || !block.is_visible) return null;
+                if (!isBlockAvailable(mod, activeAddons)) return null;
+                const Render = mod.Render;
+                const cfg = safeConfig(mod, block.config);
+                return (
+                  <Render
+                    key={block.id}
+                    config={cfg}
+                    ctx={ctx}
+                    onConfigChange={(patch) => updateConfig(block.id, { ...cfg, ...patch } as Record<string, unknown>)}
+                  />
+                );
+              })}
+              {blocks.length === 0 && (
+                <div className="p-16 text-center text-muted-foreground">Add blocks to see a preview.</div>
+              )}
+            </div>
           </div>
         </Card>
       </div>
