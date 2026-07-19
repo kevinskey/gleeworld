@@ -35,6 +35,8 @@ import {
   School,
   Church,
   Building,
+  Globe,
+  ShieldCheck,
   Menu,
   X,
 } from "lucide-react";
@@ -1540,10 +1542,44 @@ function AppleFeatureRow({
 }
 
 function AppleHowItWorks() {
-  const steps = [
-    { num: '01', title: 'Tell us about your group.', body: 'One short email — name, size, your preferred subdomain.' },
-    { num: '02', title: 'We set up your site.', body: 'Ten minutes from request to live. You get a login link.' },
-    { num: '03', title: 'Invite your students.', body: 'Bulk-import a roster or invite people one by one.' },
+  const pillars: {
+    Icon: typeof Globe; title: string; body: React.ReactNode;
+  }[] = [
+    {
+      Icon: Globe,
+      title: 'Your own workspace, your own address.',
+      body: (
+        <>
+          Every organization runs on its own GleeWorld — its own subdomain
+          (<code className="rounded bg-slate-100 px-1.5 py-0.5 text-[0.85em] font-mono text-slate-700">yourorg.gleeworld.org</code>),
+          its own users, its own music library, its own branding. Point a
+          custom domain any time.
+        </>
+      ),
+    },
+    {
+      Icon: ShieldCheck,
+      title: 'Isolated by the database, not just the app.',
+      body: (
+        <>
+          Every row and every file is tagged with your organization's ID;
+          the database itself rejects any read or write from another
+          tenant, even if the app has a bug. No admin outside your org
+          ever sees a byte of your data.
+        </>
+      ),
+    },
+    {
+      Icon: Zap,
+      title: 'Live in ten minutes, set up personally.',
+      body: (
+        <>
+          One short email — name, size, preferred subdomain — and we
+          provision your workspace by hand. You get a login link, invite
+          your people, and start. No self-serve maze, no long sales cycle.
+        </>
+      ),
+    },
   ];
   return (
     <section id="how" className="py-16 sm:py-24 md:py-32" style={{ backgroundColor: '#fafafa' }}>
@@ -1553,25 +1589,36 @@ function AppleHowItWorks() {
             className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-slate-900"
             style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
           >
-            From email to live in ten minutes.
+            Built for shared use.<br className="hidden sm:block" /> Without shared data.
           </h2>
+          <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto mt-5 leading-relaxed">
+            Every organization runs on its own GleeWorld — separate address,
+            separate database, separate everything — set up personally in
+            ten minutes.
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {steps.map((s) => (
-            <div key={s.num} className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-slate-100">
+          {pillars.map((p) => (
+            <div key={p.title} className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-slate-100">
               <div
-                className="text-5xl sm:text-6xl font-bold mb-4"
-                style={{ background: 'linear-gradient(135deg, #0071e3, #4f46e5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
               >
-                {s.num}
+                <p.Icon className="w-7 h-7 text-white" strokeWidth={2.2} />
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2" style={{ ...HEADING_STYLE, letterSpacing: '-0.015em' }}>
-                {s.title}
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3" style={{ ...HEADING_STYLE, letterSpacing: '-0.015em' }}>
+                {p.title}
               </h3>
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">{s.body}</p>
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">{p.body}</p>
             </div>
           ))}
         </div>
+        <p className="text-center text-sm text-slate-500 mt-10">
+          Digging deeper on security or a school DPA? See our{' '}
+          <a href="/security" className="text-slate-700 font-semibold underline underline-offset-4 hover:text-slate-900">Trust Center</a>
+          {' '}or{' '}
+          <a href="/dpa" className="text-slate-700 font-semibold underline underline-offset-4 hover:text-slate-900">DPA for schools</a>.
+        </p>
       </div>
     </section>
   );
