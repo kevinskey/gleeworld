@@ -1472,7 +1472,7 @@ function LiveExamplesSection() {
             className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-slate-900"
             style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}
           >
-            Real sites. Running today.
+            Real apps. Running today.
           </h2>
           <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto mt-4">
             Every program type below is a live GleeWorld site — click through and explore. No login required.
