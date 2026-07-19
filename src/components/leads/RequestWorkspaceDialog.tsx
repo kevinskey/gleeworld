@@ -16,12 +16,11 @@ interface RequestWorkspaceDialogProps {
   onClose: () => void;
 }
 
-// Blue-dominant gradient (Stripe/Linear family) — universally
-// best-liked color per cross-country preference research. Replaces
-// the previous blue→purple→lavender drift, which read as creative
-// but skewed more polarizing than pure blue.
+// GleeWorld brand gradient (blue → violet → lavender) — same three stops as
+// the "Get started" CTA on the marketing site and the app's logomark, so the
+// dialog reads as part of the same brand world.
 const PROMO_GRADIENT =
-  "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%)";
+  "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)";
 const SANS = "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif";
 
 // Most-requested modules surfaced as checkboxes. Keep short — full module
@@ -41,11 +40,16 @@ const MODULE_OPTIONS: { id: string; label: string }[] = [
 export function RequestWorkspaceDialog({ open, onClose }: RequestWorkspaceDialogProps) {
   const [orgName, setOrgName] = useState("");
   const [contactName, setContactName] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState("Director");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [expectedStudents, setExpectedStudents] = useState("");
-  const [modules, setModules] = useState<Set<string>>(new Set());
+  const [expectedStudents, setExpectedStudents] = useState("30");
+  // Pre-check the modules every music program takes as table stakes so the
+  // form doesn't look empty on open and prospects understand these are
+  // included by default; they can uncheck any they don't want.
+  const [modules, setModules] = useState<Set<string>>(
+    () => new Set(["music-library", "pdf-viewer", "messaging", "google-calendar", "studio"]),
+  );
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -261,7 +265,7 @@ export function RequestWorkspaceDialog({ open, onClose }: RequestWorkspaceDialog
                 {submitting ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
                 ) : (
-                  <>Send to Kevin <ArrowRight className="w-4 h-4" /></>
+                  <>Send to GleeWorld <ArrowRight className="w-4 h-4" /></>
                 )}
               </button>
 
