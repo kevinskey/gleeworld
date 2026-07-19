@@ -657,8 +657,16 @@ export default function PublicPageEditor() {
           <CardHeader className="py-3 border-b">
             <CardTitle className="text-sm text-muted-foreground font-normal">Preview</CardTitle>
           </CardHeader>
+          {/* The preview is its own scroll viewport, not part of the page flow.
+              Rendering every block inline made the editor as tall as the whole
+              published site — scrolling the editor meant scrolling the entire
+              site with no end in sight and no way to reach the footer. Bounding
+              it also gives the site's `sticky` header a scrolling ancestor, so
+              it pins inside the preview (as it does when published) instead of
+              following you down the editor page. overscroll-contain stops the
+              page from scrolling on once the preview hits its end. */}
           <div
-            className="bg-white"
+            className="bg-white max-h-[70dvh] overflow-y-auto overscroll-contain relative"
             style={{
               ['--site-primary' as string]: theme.primaryColor,
               ['--site-accent' as string]: theme.accentColor,
