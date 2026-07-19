@@ -11,6 +11,18 @@ import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../typ
 
 const schema = z.object({
   variant: z.enum(['image', 'slideshow', 'video']).default('image'),
+  // How the hero renders its background image:
+  //   'fill' — 16:9 aspect ratio, object-cover; portrait photos get
+  //            center-cropped. Reliable default for tenants uploading
+  //            arbitrary shots.
+  //   'fit'  — natural aspect (w-full h-auto); the section grows to
+  //            whatever height the image dictates. Preserved for tenants
+  //            who baked headline/crest into a specific graphic and
+  //            need every pixel visible.
+  // Default here is 'fit' so pre-existing blocks (no imageFit field
+  // stored) keep their current rendering. New heroes seeded via the
+  // block picker get 'fill' from the module's defaultConfig.
+  imageFit: z.enum(['fill', 'fit']).default('fit'),
   headline: z.string().default(''),
   subheadline: z.string().default(''),
   ctaLabel: z.string().default(''),
@@ -174,15 +186,23 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           section's height comes from the image, never from the text overlay,
           so toggling text on/off can't crop the graphic. */}
       {hasImage && (
-        // Natural aspect on every size — the section's height comes from
-        // the image, so a wide banner shows in full (no crop) and stays
-        // short on phones. Tenants that bake headline/crest into the
-        // graphic keep all of it visible; DOM text overlays still position
-        // over the image because it defines the section height.
+        // Two shapes depending on config.imageFit:
+        //   fill → 16:9 crop, center-covered. A portrait photo can't
+        //          take over the page; the section height stays sane on
+        //          desktop and phones alike.
+        //   fit  → natural aspect (w-full h-auto). Preserves tenants who
+        //          baked headline/crest into a specific graphic and need
+        //          the whole image visible.
+        // Text overlays position off the section, which in fill mode is
+        // the 16:9 box and in fit mode is the image's natural rect.
         <img
           src={bgImage}
           alt=""
-          className="block w-full h-auto"
+          className={
+            config.imageFit === 'fill'
+              ? 'block w-full aspect-video object-cover object-center'
+              : 'block w-full h-auto'
+          }
           loading="eager"
           onError={() => setImgFailed(true)}
         />
@@ -529,6 +549,24 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
         />
       )}
       {(config.variant === 'image' || config.variant === 'slideshow') && (
+        <div className="space-y-1.5">
+          <Label>Image shape</Label>
+          <Select
+            value={config.imageFit ?? 'fit'}
+            onValueChange={(v) => set({ imageFit: v as Config['imageFit'] })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fill">Fill (16:9 — recommended)</SelectItem>
+              <SelectItem value="fit">Fit whole image</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-slate-500">
+            Fill crops portrait photos to a widescreen banner. Fit shows the full image at any height.
+          </p>
+        </div>
+      )}
+      {(config.variant === 'image' || config.variant === 'slideshow') && (
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
@@ -684,7 +722,7 @@ export const heroBlock: BlockModule<typeof schema> = {
   poweredBy: 'Hero Manager',
   configSchema: schema,
   defaultConfig: {
-    variant: 'image', headline: '', subheadline: '',
+    variant: 'image', imageFit: 'fill', headline: '', subheadline: '',
     ctaLabel: '', ctaUrl: '', imageUrl: '', images: [], videoUrl: '',
     showTextOverlay: true,
     showHeadline: true, showSubheadline: true, showCta: true, showUnderlay: true,
