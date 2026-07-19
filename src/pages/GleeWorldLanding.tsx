@@ -1752,7 +1752,10 @@ function ApplePricing() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 items-start">
+        {/* items-stretch (default) keeps every card in a row the same height,
+            regardless of feature-list length — the CTA sits at the bottom of
+            each card thanks to the flex-grow on the <ul> below. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
           {PLAN_TIERS.map((tier) => {
             // Personal is billed to an individual musician, not a tenant — it
             // renders as a smaller, less prominent card ahead of the tenant
