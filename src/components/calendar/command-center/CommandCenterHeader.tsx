@@ -101,14 +101,16 @@ export const CommandCenterHeader = ({
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
-              <div className="min-w-[88px] text-center">
+              <div className="px-1 text-center">
                 {/* The mobile/tablet branch is mutually exclusive with the
                     desktop one below, so this is the page's only heading when
-                    it renders — it has to be the h1 too. Deliberately keeps
-                    the compact size rather than PageTitle's: here the title
-                    sits between two nav arrows in a toolbar, and 32px would
-                    break that row. */}
-                <h1 className="font-sans normal-case font-bold tracking-tight leading-none text-base">
+                    it renders — it is the h1, and it carries the same
+                    !text-[…] scale PageTitle uses so the Calendar title
+                    matches every other page at every width. The fixed
+                    min-w-[88px] that used to sit here was sized for a 16px
+                    title and clipped the larger one; the surrounding row
+                    already wraps, so the action cluster reflows instead. */}
+                <h1 className="font-sans normal-case font-bold tracking-tight leading-none !text-[1.4rem] sm:!text-[2rem] whitespace-nowrap">
                   {title}
                 </h1>
               </div>
