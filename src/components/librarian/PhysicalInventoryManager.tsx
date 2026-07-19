@@ -393,13 +393,16 @@ export const PhysicalInventoryManager = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  {/* Eight columns are unreadable on a phone. Secondary columns
+                      drop out progressively so a 390px screen shows the three
+                      that matter — what it is, how many, and how to edit it. */}
                   <TableHead>Title</TableHead>
-                  <TableHead>Composer</TableHead>
-                  <TableHead>Voicing</TableHead>
+                  <TableHead className="hidden md:table-cell">Composer</TableHead>
+                  <TableHead className="hidden lg:table-cell">Voicing</TableHead>
                   <TableHead className="text-center">Copies</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Condition</TableHead>
-                  <TableHead>Last Check</TableHead>
+                  <TableHead className="hidden sm:table-cell">Location</TableHead>
+                  <TableHead className="hidden xl:table-cell">Condition</TableHead>
+                  <TableHead className="hidden lg:table-cell">Last Check</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -408,13 +411,13 @@ export const PhysicalInventoryManager = () => {
                   const inventoryStatus = getInventoryStatus(score.last_inventory_date);
                   return (
                     <TableRow key={score.id}>
-                      <TableCell className="font-medium">{score.title}</TableCell>
-                      <TableCell>{score.composer || '-'}</TableCell>
-                      <TableCell>{score.voicing || '-'}</TableCell>
+                      <TableCell className="font-medium max-w-[22ch] truncate" title={score.title}>{score.title}</TableCell>
+                      <TableCell className="hidden md:table-cell">{score.composer || '-'}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{score.voicing || '-'}</TableCell>
                       <TableCell className="text-center">
                         <Badge variant="outline">{score.physical_copies_count}</Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {score.physical_location ? (
                           <div className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
@@ -427,8 +430,12 @@ export const PhysicalInventoryManager = () => {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>{score.condition_notes || '-'}</TableCell>
-                      <TableCell>
+                      {/* Free-text notes: capped, or one verbose entry stretches
+                          the table to thousands of px. Full text on hover. */}
+                      <TableCell className="hidden xl:table-cell max-w-[28ch] truncate" title={score.condition_notes || undefined}>
+                        {score.condition_notes || '-'}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Badge variant={inventoryStatus.variant}>
                           {inventoryStatus.label}
                         </Badge>
@@ -439,9 +446,11 @@ export const PhysicalInventoryManager = () => {
                             <Button
                               size="sm"
                               variant="outline"
+                              className="touch-target"
                               onClick={() => handleEditClick(score)}
+                              aria-label={`Update inventory for ${score.title}`}
                             >
-                              <Edit className="h-3 w-3" />
+                              <Edit className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent>

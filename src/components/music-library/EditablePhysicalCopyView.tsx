@@ -269,7 +269,9 @@ export const EditablePhysicalCopyView = ({ sheetMusic, onRefresh }: EditablePhys
                 size="sm"
                 variant="outline"
                 onClick={() => startEditing(item)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                // Hover-reveal made this unreachable on touch, and it is the
+                // only entry point for editing a physical-copy record.
+                className="shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
               >
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
