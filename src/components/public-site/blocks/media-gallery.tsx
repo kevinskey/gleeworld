@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { z } from 'zod';
-import { ImagePlus, Plus, Trash2, GripVertical } from 'lucide-react';
+import { ImagePlus, Plus, Trash2, GripVertical, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,13 +22,146 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
+// Full-viewport image viewer with prev/next + keyboard nav. Rendered inline
+// (no portal) so it inherits the site's theme wrapper; the fixed backdrop
+// still covers the viewport because of `position: fixed`. Body-scroll lock
+// avoids the underlying page scrolling behind the overlay on mobile.
+function Lightbox({
+  items, index, onClose, onIndex,
+}: {
+  items: { url: string; caption: string }[];
+  index: number;
+  onClose: () => void;
+  onIndex: (next: number) => void;
+}) {
+  const total = items.length;
+  const prev = useCallback(() => onIndex((index - 1 + total) % total), [index, total, onIndex]);
+  const next = useCallback(() => onIndex((index + 1) % total), [index, total, onIndex]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowLeft') prev();
+      else if (e.key === 'ArrowRight') next();
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose, prev, next]);
+
+  const active = items[index];
+  if (!active) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={active.caption || 'Photo'}
+    >
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        className="absolute top-4 right-4 text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+        aria-label="Close"
+      >
+        <X className="w-6 h-6" />
+      </button>
+      {total > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); prev(); }}
+            className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+            aria-label="Previous photo"
+          >
+            <ChevronLeft className="w-8 h-8" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); next(); }}
+            className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 text-white/80 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+            aria-label="Next photo"
+          >
+            <ChevronRight className="w-8 h-8" />
+          </button>
+        </>
+      )}
+      <figure
+        className="max-w-6xl w-full max-h-full flex flex-col items-center gap-3"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img
+          src={active.url}
+          alt={active.caption}
+          className="max-w-full max-h-[85vh] object-contain rounded"
+        />
+        {active.caption && (
+          <figcaption className="text-sm text-white/80 text-center px-4">{active.caption}</figcaption>
+        )}
+        {total > 1 && (
+          <div className="text-xs text-white/50 tabular-nums">{index + 1} / {total}</div>
+        )}
+      </figure>
+    </div>
+  );
+}
+
 function Render({ config }: BlockRenderProps<Config>) {
   const items = config.items.filter((i) => i.url);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   if (items.length === 0) return null;
+
+  const openAt = (i: number) => setOpenIndex(i);
+  // Common button classes for the click-to-open thumbnails. Rendering the
+  // wrapper as <button> gives keyboard focusability + Enter/Space activation
+  // for free, and the focus ring matches the site's accent.
+  const thumbBtn =
+    'block w-full h-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-lg';
 
   if (config.layout === 'featured') {
     const [first, ...rest] = items;
     return (
+      <>
+        <section id="gallery" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+          {config.heading && (
+            <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
+              <ImagePlus className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
+              {config.heading}
+            </h2>
+          )}
+          <div className="grid lg:grid-cols-3 gap-4">
+            <figure className="lg:col-span-2 rounded-xl overflow-hidden bg-muted">
+              <button type="button" onClick={() => openAt(0)} className={thumbBtn} aria-label={first.caption || 'Open photo'}>
+                <img src={first.url} alt={first.caption} className="w-full h-full object-cover aspect-video cursor-zoom-in" />
+              </button>
+              {first.caption && <figcaption className="text-sm text-muted-foreground mt-2">{first.caption}</figcaption>}
+            </figure>
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+              {rest.slice(0, 4).map((it, i) => (
+                <figure key={i} className="rounded-xl overflow-hidden bg-muted">
+                  <button type="button" onClick={() => openAt(i + 1)} className={thumbBtn} aria-label={it.caption || 'Open photo'}>
+                    <img src={it.url} alt={it.caption} className="w-full aspect-square object-cover cursor-zoom-in" />
+                  </button>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+        {openIndex !== null && (
+          <Lightbox items={items} index={openIndex} onIndex={setOpenIndex} onClose={() => setOpenIndex(null)} />
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
       <section id="gallery" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
         {config.heading && (
           <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
@@ -36,51 +169,35 @@ function Render({ config }: BlockRenderProps<Config>) {
             {config.heading}
           </h2>
         )}
-        <div className="grid lg:grid-cols-3 gap-4">
-          <figure className="lg:col-span-2 rounded-xl overflow-hidden bg-muted">
-            <img src={first.url} alt={first.caption} className="w-full h-full object-cover aspect-video" />
-            {first.caption && <figcaption className="text-sm text-muted-foreground mt-2">{first.caption}</figcaption>}
-          </figure>
-          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
-            {rest.slice(0, 4).map((it, i) => (
-              <figure key={i} className="rounded-xl overflow-hidden bg-muted">
-                <img src={it.url} alt={it.caption} className="w-full aspect-square object-cover" />
-              </figure>
-            ))}
-          </div>
+        <div className={
+          config.layout === 'masonry'
+            ? 'columns-2 sm:columns-3 lg:columns-4 gap-3 [&>*]:mb-3 [&>*]:break-inside-avoid'
+            : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3'
+        }>
+          {items.map((it, i) => (
+            <figure key={i} className="rounded-lg overflow-hidden bg-muted">
+              <button type="button" onClick={() => openAt(i)} className={thumbBtn} aria-label={it.caption || 'Open photo'}>
+                <img
+                  src={it.url}
+                  alt={it.caption}
+                  className={
+                    (config.layout === 'masonry' ? 'w-full h-auto' : 'w-full aspect-square object-cover')
+                    + ' cursor-zoom-in'
+                  }
+                  loading="lazy"
+                />
+              </button>
+              {it.caption && (
+                <figcaption className="text-xs text-muted-foreground p-2 truncate">{it.caption}</figcaption>
+              )}
+            </figure>
+          ))}
         </div>
       </section>
-    );
-  }
-
-  return (
-    <section id="gallery" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
-      {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
-          <ImagePlus className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
-          {config.heading}
-        </h2>
+      {openIndex !== null && (
+        <Lightbox items={items} index={openIndex} onIndex={setOpenIndex} onClose={() => setOpenIndex(null)} />
       )}
-      <div className={
-        config.layout === 'masonry'
-          ? 'columns-2 sm:columns-3 lg:columns-4 gap-3 [&>*]:mb-3 [&>*]:break-inside-avoid'
-          : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3'
-      }>
-        {items.map((it, i) => (
-          <figure key={i} className="rounded-lg overflow-hidden bg-muted">
-            <img
-              src={it.url}
-              alt={it.caption}
-              className={config.layout === 'masonry' ? 'w-full h-auto' : 'w-full aspect-square object-cover'}
-              loading="lazy"
-            />
-            {it.caption && (
-              <figcaption className="text-xs text-muted-foreground p-2 truncate">{it.caption}</figcaption>
-            )}
-          </figure>
-        ))}
-      </div>
-    </section>
+    </>
   );
 }
 
