@@ -177,7 +177,7 @@ export function RequestWorkspaceDialog({ open, onClose }: RequestWorkspaceDialog
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" />
-                  <span>Personal setup by Kevin within 2 business days</span>
+                  <span>Site setup — same day</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" />
