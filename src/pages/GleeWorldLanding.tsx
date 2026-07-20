@@ -13,7 +13,7 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { HeroSlider } from "@/components/hero/HeroSlider";
 import { useUniversalHeroSlides } from "@/hooks/useUniversalSlider";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { PLAN_TIERS, formatPrice, type PlanTierId } from "@/lib/planTiers";
+import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, type PlanTierId } from "@/lib/planTiers";
 import {
   Calendar,
   MapPin,
@@ -2001,15 +2001,6 @@ const PLAN_CHECKOUT_LINKS: Record<PlanTierId, string | null> = {
   institution: null,
 };
 
-// Card background per tier — purely presentational, keyed to PlanTierId so it
-// can't drift out of sync with PLAN_TIERS.
-const TIER_PASTELS: Record<PlanTierId, string> = {
-  personal: '#f0f9ff',
-  director_60: 'linear-gradient(180deg, #ede9fe 0%, #fce7f3 100%)',
-  director_150: '#fce7f3',
-  institution: '#fef3c7',
-};
-
 // Canonical add-on list per Kevin: everything NOT here is in a base tier.
 // Prices marked TBD are placeholders — confirm with Kevin before launch.
 const ADDON_MODULES: { name: string; price: string; tagline: string }[] = [
@@ -2061,11 +2052,7 @@ function ApplePricing() {
             const featured = tier.id === 'director_60';
             const checkoutLink = PLAN_CHECKOUT_LINKS[tier.id];
             const priceLabel = tier.quote ? `From ${formatPrice(tier.monthlyCents)}` : formatPrice(tier.monthlyCents);
-            // Per-tier annual savings — the old copy claimed a blanket "2
-            // months free" for every tier, which is false for Personal
-            // (899×12=10788 vs 7900 ≈ 3.2 months, not 2). Compute it per
-            // tier instead so the number is always accurate.
-            const monthsFree = Math.round(12 - tier.annualCents / tier.monthlyCents);
+            const monthsFree = monthsFreeFor(tier);
 
             return (
               <div
@@ -2114,19 +2101,12 @@ function ApplePricing() {
                     ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
                     : { backgroundColor: '#0f172a' }}
                 >
-                  {/* PLAN_CHECKOUT_LINKS is all null until the launch gate (see
-                      docs/superpowers/plans/2026-07-04-tiers-billing.md) creates
-                      real Stripe Payment Links per PlanTierId. Institution is
-                      always quote-based. Until real links exist, non-quote
-                      tiers show an honest "Coming soon" label (self-serve
-                      checkout doesn't exist yet); the quote tier keeps its
-                      normal "Talk to us" since that's the real, permanent CTA
-                      for institutions regardless of launch gate. */}
-                  {checkoutLink && !tier.quote
-                    ? `Start with ${tier.label}`
-                    : tier.quote
-                      ? 'Talk to us'
-                      : 'Coming soon — talk to us'}
+                  {/* Every tier is "Choose Plan" per Kevin — self-serve checkout
+                      isn't wired yet (PLAN_CHECKOUT_LINKS is all null until the
+                      launch gate in docs/superpowers/plans/2026-07-04-tiers-billing.md),
+                      so until then the href falls through to MAILTO_BUY for
+                      all tiers. */}
+                  Choose Plan
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
