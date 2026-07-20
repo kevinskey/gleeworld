@@ -302,6 +302,8 @@ const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
 const DashboardShell = lazy(() => import("./components/dashboard/DashboardShell").then(m => ({ default: m.DashboardShell })));
 import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
+const TrialExpiredPage = lazy(() => import("./pages/TrialExpiredPage"));
+import { TrialGuard } from "@/components/routes/TrialGuard";
 const MobileScoring = lazy(() => import("./pages/MobileScoring"));
 const MemberDirectory = lazy(() => import("./pages/MemberDirectory"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
@@ -450,10 +452,10 @@ const ProtectedRoute = ({ children, skipProfileCheck = false }: { children: Reac
 
     // Skip profile check for specific pages
     if (skipProfileCheck) {
-      return <>{children}</>;
+      return <TrialGuard>{children}</TrialGuard>;
     }
 
-    return <ProfileCompletionGuard>{children}</ProfileCompletionGuard>;
+    return <ProfileCompletionGuard><TrialGuard>{children}</TrialGuard></ProfileCompletionGuard>;
   } catch (error) {
     console.error('ProtectedRoute error:', error);
     return <Navigate to="/auth" replace />;
@@ -576,6 +578,13 @@ const App = () => {
                   </PublicRoute>
                 }
               />
+              {/* Paywall — reached when TrialGuard redirects an expired
+                  tenant. Registered publicly (no ProtectedRoute) so the guard
+                  can't loop back through itself. The page itself checks
+                  useAuth to decide whether to show a sign-out or sign-in
+                  link, and bounces back home if the trial is not actually
+                  expired (stale link, superadmin fixed it, etc). */}
+              <Route path="/paywall" element={<TrialExpiredPage />} />
               {/* Sandbox: animated cursor + spotlight tour over a mock Command Center.
                   Gated by ?key=preview inside the component itself. */}
               <Route path="/tour-sandbox" element={<TourSandbox />} />
