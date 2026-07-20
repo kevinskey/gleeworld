@@ -2,11 +2,16 @@ import { ReactNode, useEffect, useState } from 'react';
 import { isNativeApp, syncNativeTenant, decodeTenantSlug } from '@/lib/nativeTenant';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { startDemoSession, DEMO_WELCOME_PENDING_KEY } from '@/lib/demoSession';
 
 const KEY = 'gw_native_tenant';
 
-const DEMO_SLUG = 'demo';
+// The GleeWorld iOS app is for real tenant members — the demo lives at
+// demo.gleeworld.org in the browser. If a previous build stashed
+// tenant='demo' in localStorage (from the retired "Try the demo choir"
+// button), the app used to boot straight into the demo experience even
+// for users who wanted to sign in. Clearing it here reverts them to the
+// sign-in gate on the next open.
+const RETIRED_DEMO_SLUGS = new Set(['demo', 'demo-choir', 'demo-district', 'demo-school', 'demo-songwriter']);
 
 interface TenantOption {
   slug: string;
@@ -30,6 +35,19 @@ function selectTenant(t: TenantOption) {
 // Users who don't know their sign-in (or want to browse/sign up) can fall back
 // to picking their organization, which opens that tenant's branded login.
 export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
+  // Sticky-demo cleanup: users who previously tapped the retired "Try the
+  // demo choir" button on native had tenant='demo' persisted, so every
+  // subsequent app open dropped them into the demo experience instead of
+  // the sign-in screen. Clear it once here, then re-evaluate needsPick.
+  const cachedTenant = typeof window !== 'undefined'
+    ? (window as unknown as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant
+    : undefined;
+  const shouldClearDemo = isNativeApp() && cachedTenant && RETIRED_DEMO_SLUGS.has(cachedTenant);
+  if (shouldClearDemo && typeof window !== 'undefined') {
+    try { localStorage.removeItem(KEY); } catch { /* private mode */ }
+    delete (window as unknown as { __TENANT_CONFIG__?: unknown }).__TENANT_CONFIG__;
+  }
+
   const needsPick =
     isNativeApp() && !(window as unknown as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant;
 
@@ -43,14 +61,11 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
 
   // Org-picker fallback state
   const [tenants, setTenants] = useState<TenantOption[] | null>(null);
-  const [demo, setDemo] = useState<TenantOption | null>(null);
   const [error, setError] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(false);
-  const [demoError, setDemoError] = useState(false);
 
-  // Load the org list once — used both for the "Try the demo choir" button and
-  // the "Choose your organization" fallback list. Loading it upfront (not only
-  // when the fallback opens) keeps the demo button available immediately.
+  // Load the org list once — used by the "Choose your organization" fallback
+  // list. Loading it upfront (not only when the fallback opens) keeps it
+  // responsive on first tap.
   useEffect(() => {
     if (!needsPick) return;
     supabase
@@ -63,9 +78,9 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
           setError(true);
           return;
         }
-        const demoTenant = data.find(t => t.slug === DEMO_SLUG) ?? null;
-        const orgs = data.filter(t => t.slug !== DEMO_SLUG);
-        setDemo(demoTenant);
+        // Retired demo slugs stay OFF the native picker — demo access lives
+        // at demo.gleeworld.org in the browser now.
+        const orgs = data.filter(t => !RETIRED_DEMO_SLUGS.has(t.slug));
         setTenants(orgs);
       });
   }, [needsPick]);
@@ -111,22 +126,6 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
       console.error('[native-login] sign-in failed', err);
       setSignInError('Something went wrong. Check your connection and try again.');
       setSigningIn(false);
-    }
-  };
-
-  const tryDemo = async () => {
-    if (!demo || demoLoading) return;
-    setDemoLoading(true);
-    setDemoError(false);
-    try {
-      // Server-minted read-only Director session — no credentials in the bundle.
-      await startDemoSession('director');
-      sessionStorage.setItem(DEMO_WELCOME_PENDING_KEY, '1');
-      selectTenant(demo); // persists tenant choice, then reloads
-    } catch (e) {
-      console.error('[native-demo] demo-login failed', e);
-      setDemoLoading(false);
-      setDemoError(true);
     }
   };
 
@@ -207,27 +206,6 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
                 Don't know your sign-in? Choose your organization
               </button>
             </div>
-
-            {demo && (
-              <div className="pt-2 text-center border-t border-white/10">
-                <p className="text-sm text-white/70 mb-2 mt-4">Just exploring?</p>
-                <button
-                  onClick={tryDemo}
-                  disabled={demoLoading}
-                  className="w-full px-5 py-3.5 rounded-xl bg-white/10 text-white font-semibold disabled:opacity-60 border border-white/20"
-                >
-                  {demoLoading ? 'Opening the demo…' : 'Try the demo choir'}
-                </button>
-                <p className="text-xs text-white/60 mt-2">
-                  Explore GleeWorld with sample data — no account needed.
-                </p>
-                {demoError && (
-                  <p className="text-xs text-amber-300 mt-2">
-                    Couldn't open the demo — check your connection and try again.
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         ) : error ? (
           <div className="text-center">
