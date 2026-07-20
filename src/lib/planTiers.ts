@@ -48,13 +48,13 @@ export const PLAN_TIERS: PlanTier[] = [
     lookupKeyMonthly: 'gw_personal_monthly',
     lookupKeyAnnual: 'gw_personal_annual',
     features: [
-      'Studio (practice recording) — included',
+      'Up to 15 students',
+      '1 Academy course',
       'Your own score library',
       'Personal calendar + Tonight mode',
-      'Up to 15 students',
-      '1 course (Academy)',
       'Custom domain ($25 setup + $15/yr)',
       '25 GB',
+      'Add-ons included: Studio, Studio Hours, Concert Planner, Finances',
     ],
   },
   {
@@ -78,6 +78,7 @@ export const PLAN_TIERS: PlanTier[] = [
       'Branded login (your logo & colors)',
       'Custom domain ($25 setup + $15/yr)',
       '50 GB',
+      'Everything in Personal + Tour Manager, PR Hub',
     ],
   },
   {
@@ -95,9 +96,9 @@ export const PLAN_TIERS: PlanTier[] = [
     features: [
       'Up to 150 students',
       'Up to 50 Academy courses',
-      'Everything in Director',
       'Custom domain ($25 setup + $15/yr)',
       '150 GB',
+      'Everything in Director + Box Office, Liturgy Planner',
     ],
   },
   {
@@ -117,11 +118,11 @@ export const PLAN_TIERS: PlanTier[] = [
       'Unlimited Academy courses',
       'Multi-ensemble + SSO + Canvas',
       'Broadcast texts included',
-      'Box Office included',
       'Custom app icon',
       'Custom domain ($25 setup + $15/yr)',
       'Dedicated app (talk to us)',
       '1 TB pooled',
+      'All add-ons included',
     ],
     quote: true,
   },

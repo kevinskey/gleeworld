@@ -2006,18 +2006,27 @@ const PLAN_CHECKOUT_LINKS: Record<PlanTierId, string | null> = {
   institution: null,
 };
 
-// Canonical add-on list per Kevin: everything NOT here is in a base tier.
-// Prices marked TBD are placeholders — confirm with Kevin before launch.
-const ADDON_MODULES: { name: string; price: string; tagline: string }[] = [
-  { name: 'Studio',          price: '$29', tagline: 'Multitrack recording with a real audio engine.' },
-  { name: 'Studio Hours',    price: '$15', tagline: 'Bookable teacher time your students can grab.' },
-  { name: 'Liturgy Planner', price: '$19', tagline: 'Weekly service planning with readings and orders of worship.' },
-  { name: 'Concert Planner', price: '$19', tagline: 'Print-ready programs with editor credits.' },
-  { name: 'Tour Manager',    price: '$25', tagline: 'Routes, hotels, weather, manifests.' },
-  { name: 'PR Hub',          price: '$25', tagline: 'Press releases, media kits, and outreach.' },
-  { name: 'Finances',        price: '$25', tagline: 'Contracts, invoicing, and cash-flow tracking.' },
-  { name: 'Box Office',      price: '$39', tagline: 'Ticketing — you keep 100% of ticket sales.' },
+// Canonical add-on list per Kevin — no à-la-carte pricing. Each add-on is
+// included starting at the tier listed here (and every tier above). Kept as
+// a compact reference on the landing so prospects can see WHAT they get,
+// not a shopping list. Order roughly matches Personal-first inclusion.
+const ADDON_MODULES: { name: string; includedFrom: PlanTierId; tagline: string }[] = [
+  { name: 'Studio',          includedFrom: 'personal',     tagline: 'Multitrack recording with a real audio engine.' },
+  { name: 'Studio Hours',    includedFrom: 'personal',     tagline: 'Bookable teacher time your students can grab.' },
+  { name: 'Concert Planner', includedFrom: 'personal',     tagline: 'Print-ready programs with editor credits.' },
+  { name: 'Finances',        includedFrom: 'personal',     tagline: 'Contracts, invoicing, and cash-flow tracking.' },
+  { name: 'Tour Manager',    includedFrom: 'director_60',  tagline: 'Routes, hotels, weather, manifests.' },
+  { name: 'PR Hub',          includedFrom: 'director_60',  tagline: 'Press releases, media kits, and outreach.' },
+  { name: 'Box Office',      includedFrom: 'director_150', tagline: 'Ticketing — you keep 100% of ticket sales.' },
+  { name: 'Liturgy Planner', includedFrom: 'director_150', tagline: 'Weekly service planning with readings and orders of worship.' },
 ];
+
+const TIER_LABEL_SHORT: Record<PlanTierId, string> = {
+  personal: 'Personal',
+  director_60: 'Director',
+  director_150: 'Director+',
+  institution: 'Institution',
+};
 
 function ApplePricing() {
   return (
@@ -2127,36 +2136,34 @@ function ApplePricing() {
           automatic backups, and ongoing platform updates.
         </p>
 
-        {/* Add-on modules — same price at every tier. */}
+        {/* Add-ons — no à-la-carte pricing. Each module is included
+            starting at the tier listed on its card, and every tier above.
+            Landing keeps the list visible so prospects can see the
+            functionality shape of each tier at a glance. */}
         <div className="mt-20 sm:mt-24 border-t border-slate-200 pt-12 sm:pt-16">
           <div className="text-center mb-10">
             <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>
               Add-ons
             </p>
             <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-slate-900" style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}>
-              Add specialized modules — only what you need.
+              Included with every plan.
             </h3>
             <p className="text-base text-slate-600 max-w-2xl mx-auto mt-3">
-              Plug in specialized modules at any time. Same price at every tier — Institution bundles all of them in.
+              No add-on à la carte. Every module is included at the tier below and every tier above — Institution gets them all.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-5xl mx-auto">
             {ADDON_MODULES.map((m) => (
               <div key={m.name} className="rounded-2xl border border-slate-200 bg-white p-5">
-                <div className="flex items-baseline justify-between mb-1">
+                <div className="flex items-baseline justify-between mb-1 gap-3">
                   <span className="font-bold text-slate-900">{m.name}</span>
-                  <span className="text-2xl font-bold text-slate-900" style={{ ...HEADING_STYLE }}>{m.price}<span className="text-sm font-normal text-slate-500">/mo</span></span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-full whitespace-nowrap">
+                    Included in {TIER_LABEL_SHORT[m.includedFrom]}+
+                  </span>
                 </div>
                 <p className="text-sm text-slate-600">{m.tagline}</p>
               </div>
             ))}
-            <div className="rounded-2xl border-2 border-indigo-300 bg-gradient-to-br from-indigo-50 to-pink-50 p-5">
-              <div className="flex items-baseline justify-between mb-1">
-                <span className="font-bold text-slate-900">All-Access Bundle</span>
-                <span className="text-2xl font-bold text-indigo-700" style={{ ...HEADING_STYLE }}>$129<span className="text-sm font-normal text-slate-500">/mo</span></span>
-              </div>
-              <p className="text-sm text-slate-700">All 8 add-on modules. Saves ~$67/mo vs à la carte.</p>
-            </div>
           </div>
         </div>
       </div>
