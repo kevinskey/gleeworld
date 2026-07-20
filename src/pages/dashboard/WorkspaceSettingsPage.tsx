@@ -21,6 +21,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FONT_OPTIONS } from '@/components/public-site/types';
 import { ImageUploadField } from '@/components/public-site/ImageUploadField';
+import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, type PlanTier } from '@/lib/planTiers';
+import { ArrowRight } from 'lucide-react';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
   Plug, Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
@@ -91,22 +93,11 @@ export default function WorkspaceSettingsPage() {
 function PlanTabPanel({ canManage }: { canManage: boolean }) {
   const [cycle, setCycle] = useState<'monthly' | 'annual'>('monthly');
 
-  const { data: plans = [] } = useQuery({
-    queryKey: ['workspace-plan-catalog'],
-    queryFn: async () => {
-      // scope='tenant' hides the Personal tier (user-scoped, lives in
-      // gw_user_plans — no business appearing on a tenant workspace-plan
-      // surface). Matches the constraint on TENANT_PLAN_TIERS in planTiers.ts.
-      const { data } = await supabase
-        .from('gw_billing_plans')
-        .select('id, name, tagline, student_cap, storage_gb, monthly_price_cents, annual_price_cents, features, sort_order, stripe_price_id_monthly, stripe_price_id_annual')
-        .eq('is_active', true)
-        .eq('scope', 'tenant')
-        .order('sort_order');
-      return data ?? [];
-    },
-  });
-
+  // Plan catalog comes from PLAN_TIERS (single source of truth, shared with
+  // the marketing landing) rather than gw_billing_plans, so the two surfaces
+  // can never drift on labels/prices/features. gw_billing_plans is still the
+  // authoritative table for stripe lookup keys + gw_tenant_plans.plan_id FK
+  // targets, but nothing here needs to read it.
   const { data: current } = useQuery({
     queryKey: ['workspace-current-plan'],
     queryFn: async () => {
@@ -140,8 +131,9 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
     onError: (e: any) => toast.error(e?.message || 'Plan checkout failed.'),
   });
 
-  const fmtPrice = (cents: number | null | undefined) =>
-    cents ? `$${(cents / 100).toFixed(0)}` : '—';
+  const currentTierLabel = current
+    ? (PLAN_TIERS.find((t) => t.id === current.plan_id)?.label ?? current.plan_id)
+    : null;
 
   return (
     <div className="space-y-4">
@@ -153,7 +145,7 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
               <h2 className="text-lg font-semibold">Current plan</h2>
               {current ? (
                 <div className="mt-1 flex items-center gap-2 flex-wrap">
-                  <span className="text-base font-bold">{plans.find((p: any) => p.id === current.plan_id)?.name ?? current.plan_id}</span>
+                  <span className="text-base font-bold">{currentTierLabel}</span>
                   <Badge variant="outline" className="text-xs">{current.status}</Badge>
                   <Badge variant="outline" className="text-xs">{current.billing_cycle}</Badge>
                 </div>
@@ -186,50 +178,83 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
         <Button variant={cycle === 'annual' ? 'default' : 'outline'} size="sm" onClick={() => setCycle('annual')}>Annual <span className="text-xs ml-1 opacity-70">(save 2 months)</span></Button>
       </div>
 
-      {/* Plan grid — three tenant tiers (Director / Director+ / Institution),
-          so three columns on wide screens (Personal is user-scoped and filtered
-          out of the query). */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {plans.map((p: any) => {
-          const isCurrent = current?.plan_id === p.id && current?.billing_cycle === cycle;
-          const priceCents = cycle === 'annual' ? p.annual_price_cents : p.monthly_price_cents;
-          const priceId = cycle === 'annual' ? p.stripe_price_id_annual : p.stripe_price_id_monthly;
+      {/* Plan grid — the same 4 tiers the marketing landing shows, in the
+          same pastel treatment so a tenant sees the identical catalog whether
+          they land on gleeworld.org or here. Director carries the featured
+          treatment (matches the landing's MOST POPULAR chip). */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {PLAN_TIERS.map((tier: PlanTier) => {
+          const isCurrent = current?.plan_id === tier.id && current?.billing_cycle === cycle;
+          const featured = tier.id === 'director_60';
+          const isPersonal = tier.id === 'personal';
+          const priceLabel = tier.quote ? `From ${formatPrice(tier.monthlyCents)}` : formatPrice(tier.monthlyCents);
+          const monthsFree = monthsFreeFor(tier);
           return (
-            <div key={p.id} className={cn(
-              'rounded-2xl border bg-card p-5 flex flex-col',
-              isCurrent ? 'ring-2 ring-primary' : '',
-            )}>
-              <div className="flex items-center justify-between mb-1">
-                <div className="font-bold text-base">{p.name}</div>
-                {isCurrent && <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">Current</Badge>}
+            <div
+              key={tier.id}
+              className={cn(
+                'relative rounded-3xl flex flex-col p-5 sm:p-6',
+                featured ? 'shadow-2xl ring-2 ring-violet-500' : 'shadow-sm border border-slate-200',
+                isCurrent ? 'ring-2 ring-primary' : '',
+              )}
+              style={{ background: TIER_PASTELS[tier.id] }}
+            >
+              {featured && !isCurrent && (
+                <div
+                  className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold px-3 py-1 rounded-full text-white tracking-wider"
+                  style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
+                >
+                  MOST POPULAR
+                </div>
+              )}
+              {isCurrent && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold px-3 py-1 rounded-full text-white tracking-wider bg-emerald-600">
+                  CURRENT
+                </div>
+              )}
+              <h3 className={cn('font-bold text-slate-900 mb-1', isPersonal ? 'text-lg' : 'text-xl')}>{tier.label}</h3>
+              <p className="text-sm text-slate-600 mb-4">{tier.tagline}</p>
+              <div className="mb-2">
+                <span className={cn('font-bold text-slate-900', isPersonal ? 'text-3xl' : 'text-4xl')}>{priceLabel}</span>
+                <span className="text-sm text-slate-600">/mo</span>
               </div>
-              <p className="text-xs text-muted-foreground mb-3">{p.tagline}</p>
-              <div className="mb-3">
-                <span className="text-3xl font-bold">{fmtPrice(priceCents)}</span>
-                <span className="text-xs text-muted-foreground">/{cycle === 'annual' ? 'yr' : 'mo'}</span>
-              </div>
-              <div className="text-xs text-muted-foreground mb-3">
-                {p.student_cap ? `Up to ${p.student_cap} students` : 'Unlimited students'}
-              </div>
-              <ul className="text-xs space-y-1 mb-4 flex-1">
-                {(p.features || []).map((f: string) => (
-                  <li key={f} className="flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
+              {monthsFree >= 1 && (
+                <p className="text-xs text-slate-500 mb-4">
+                  Annual {formatPrice(tier.annualCents)} · {monthsFree} month{monthsFree === 1 ? '' : 's'} free
+                </p>
+              )}
+              <ul className="space-y-2 mb-6 flex-1">
+                {tier.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
+                    <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-600" />
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
               {canManage && !isCurrent && (
-                <Button
-                  size="sm"
-                  disabled={checkout.isPending || !priceId}
-                  onClick={() => checkout.mutate(p.id)}
+                // create-plan-checkout doesn't yet support the new tier ids
+                // + lookup-key resolution — clicking today surfaces the fn
+                // error via the mutation's onError toast. Button label stays
+                // "Choose Plan" per Kevin; wiring self-serve checkout is a
+                // separate billing workstream.
+                <button
+                  type="button"
+                  disabled={checkout.isPending}
+                  onClick={() => checkout.mutate(tier.id)}
+                  className={cn(
+                    'inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed',
+                  )}
+                  style={featured
+                    ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
+                    : { backgroundColor: '#0f172a' }}
                 >
-                  {checkout.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : current ? 'Switch to this plan' : 'Choose plan'}
-                </Button>
-              )}
-              {!priceId && (
-                <p className="text-xs text-muted-foreground mt-2">Stripe price not yet configured for this plan.</p>
+                  {checkout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                    <>
+                      Choose Plan
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
               )}
             </div>
           );

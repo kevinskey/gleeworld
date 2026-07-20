@@ -143,3 +143,21 @@ export function formatPrice(cents: number): string {
     maximumFractionDigits: 2,
   })}`;
 }
+
+// Per-tier annual savings, computed against the monthly price so the number
+// stays honest per-tier (Personal has ~3 months free; the tenant tiers have
+// 2). Both the landing pricing section and the workspace-settings Plan tab
+// pull this so the label can't drift between surfaces.
+export function monthsFreeFor(tier: PlanTier): number {
+  return Math.round(12 - tier.annualCents / tier.monthlyCents);
+}
+
+// Card background per tier — purely presentational, keyed to PlanTierId so
+// it can't drift out of sync with PLAN_TIERS. Both the marketing landing
+// and Workspace Settings → Plan render with the same palette.
+export const TIER_PASTELS: Record<PlanTierId, string> = {
+  personal: '#f0f9ff',
+  director_60: 'linear-gradient(180deg, #ede9fe 0%, #fce7f3 100%)',
+  director_150: '#fce7f3',
+  institution: '#fef3c7',
+};
