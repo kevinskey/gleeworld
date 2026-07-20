@@ -18,6 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FONT_OPTIONS } from '@/components/public-site/types';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
   Plug, Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
@@ -697,6 +699,9 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
     org_name: '',
     short_name: '',
     primary_color: '#7c3aed',
+    accent_color: '#9333ea',
+    font_family: 'sans',
+    letter_spacing: 0,
     logo_url: '',
   });
   const [saving, setSaving] = useState(false);
@@ -707,6 +712,9 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         org_name: (settings as any).org_name || '',
         short_name: (settings as any).short_name || '',
         primary_color: (settings as any).primary_color || '#7c3aed',
+        accent_color: (settings as any).accent_color || '#9333ea',
+        font_family: (settings as any).font_family || 'sans',
+        letter_spacing: Number((settings as any).letter_spacing ?? 0),
         logo_url: (settings as any).logo_url || '',
       });
     }
@@ -727,6 +735,9 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         org_name: form.org_name,
         short_name: form.short_name,
         primary_color: form.primary_color,
+        accent_color: form.accent_color,
+        font_family: form.font_family,
+        letter_spacing: form.letter_spacing,
         logo_url: form.logo_url,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' });
@@ -764,9 +775,67 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Logo URL</Label>
-            <Input value={form.logo_url} disabled={!canManage} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://…" />
+            <Label className="text-xs">Accent color</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={form.accent_color}
+                disabled={!canManage}
+                onChange={(e) => setForm({ ...form, accent_color: e.target.value })}
+                className="w-12 h-10 rounded cursor-pointer border"
+              />
+              <Input value={form.accent_color} disabled={!canManage} onChange={(e) => setForm({ ...form, accent_color: e.target.value })} />
+            </div>
           </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Font</Label>
+            <Select
+              value={form.font_family}
+              onValueChange={(v) => setForm({ ...form, font_family: v })}
+              disabled={!canManage}
+            >
+              <SelectTrigger className="h-10"><SelectValue placeholder="Choose a font" /></SelectTrigger>
+              <SelectContent>
+                {FONT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <span style={{ fontFamily: opt.css }}>{opt.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Letter spacing</Label>
+              <span className="text-xs text-muted-foreground tabular-nums">{form.letter_spacing.toFixed(2)}em</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={-0.05}
+                max={0.3}
+                step={0.005}
+                value={form.letter_spacing}
+                disabled={!canManage}
+                onChange={(e) => setForm({ ...form, letter_spacing: Number(e.target.value) })}
+                className="flex-1 accent-primary cursor-pointer"
+              />
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, letter_spacing: 0 })}
+                disabled={!canManage}
+                className="text-xs text-primary hover:underline disabled:opacity-50"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Logo URL</Label>
+          <Input value={form.logo_url} disabled={!canManage} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://…" />
         </div>
         {form.logo_url && (
           <div className="mt-2 rounded-xl border bg-muted/30 p-3 inline-flex items-center gap-3">

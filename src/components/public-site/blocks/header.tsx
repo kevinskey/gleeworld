@@ -6,9 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
-import { ImageUploadField } from '../ImageUploadField';
 import { SignInDialog } from '@/components/auth/SignInDialog';
-import { FONT_OPTIONS, type BlockModule, type BlockEditorFormProps, type BlockRenderProps, type SiteTheme } from '../types';
+import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 // Friendly names for the on-page anchor targets that ship as built-in blocks.
 // Choosing one of these hops to the matching section on the same page.
@@ -22,9 +21,12 @@ const ON_PAGE_TARGETS: { value: string; label: string }[] = [
 ];
 const CUSTOM_URL = '__custom__';
 
+// Site name, logo size, and menu links. Logo image + theme colors/font moved
+// to Workspace Settings → Branding (single source of truth); a stale
+// `logoUrl` field on prior configs is accepted but ignored on render.
 const schema = z.object({
   siteName: z.string().default(''),
-  logoUrl: z.string().default(''),
+  logoUrl: z.string().default('').optional(),
   navLinks: z.array(z.object({ label: z.string(), url: z.string() })).default([]),
   navLinkColor: z.string().default('#ffffff'),
   // Logo height in pixels; width auto-scales to maintain aspect.
@@ -47,7 +49,7 @@ function readableForeground(hex: string): string {
 
 function Render({ config, ctx }: BlockRenderProps<Config>) {
   const name = config.siteName || ctx.orgName;
-  const logo = config.logoUrl || ctx.logoUrl;
+  const logo = ctx.logoUrl;
   const linkColor = readableForeground(ctx.theme?.primaryColor || '#0f172a');
   const logoHeight = config.logoHeight || 36;
   // Header bar height = logo + 16px breathing room each side, with a sensible floor.
@@ -168,7 +170,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   );
 }
 
-function EditorForm({ config, onChange, theme, onThemeChange }: BlockEditorFormProps<Config>) {
+function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
   const set = (patch: Partial<Config>) => onChange({ ...config, ...patch });
   const setLink = (i: number, patch: Partial<{ label: string; url: string }>) => {
     const navLinks = config.navLinks.map((l, j) => (j === i ? { ...l, ...patch } : l));
@@ -180,14 +182,6 @@ function EditorForm({ config, onChange, theme, onThemeChange }: BlockEditorFormP
         <Label>Site name</Label>
         <Input value={config.siteName} onChange={(e) => set({ siteName: e.target.value })} placeholder="Your organization" />
       </div>
-      <ImageUploadField
-        label="Logo"
-        prefix="logo"
-        thumbClass="w-16 h-16"
-        value={config.logoUrl}
-        onChange={(url) => set({ logoUrl: url })}
-        buttonColor={theme?.primaryColor}
-      />
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <Label className="text-sm">Logo size</Label>
@@ -202,73 +196,10 @@ function EditorForm({ config, onChange, theme, onThemeChange }: BlockEditorFormP
           onChange={(e) => set({ logoHeight: Number(e.target.value) })}
           className="w-full accent-sky-600"
         />
+        <p className="text-xs text-slate-500">
+          Logo image, brand colors, and font live in <strong>Workspace Settings → Branding</strong>.
+        </p>
       </div>
-      {theme && onThemeChange && (
-        <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/50 p-3">
-          <div className="text-xs uppercase tracking-wide text-slate-500 font-semibold">Brand colors</div>
-          <div className="flex items-center justify-between">
-            <Label className="text-sm">Primary color</Label>
-            <input
-              type="color"
-              value={theme.primaryColor}
-              onChange={(e) => onThemeChange({ primaryColor: e.target.value })}
-              className="h-8 w-12 rounded border cursor-pointer"
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label className="text-sm">Accent color</Label>
-            <input
-              type="color"
-              value={theme.accentColor}
-              onChange={(e) => onThemeChange({ accentColor: e.target.value })}
-              className="h-8 w-12 rounded border cursor-pointer"
-            />
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <Label className="text-sm">Font</Label>
-            <Select
-              value={theme.fontFamily}
-              onValueChange={(v) => onThemeChange({ fontFamily: v as SiteTheme['fontFamily'] })}
-            >
-              <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FONT_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    <span style={{ fontFamily: opt.css }}>{opt.label}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Letter spacing</Label>
-              <span className="text-xs text-slate-500 tabular-nums">
-                {(theme.letterSpacing ?? 0).toFixed(2)}em
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min={-0.05}
-                max={0.3}
-                step="any"
-                value={theme.letterSpacing ?? 0}
-                onChange={(e) => onThemeChange({ letterSpacing: Number(e.target.value) })}
-                className="flex-1 accent-sky-600 cursor-pointer"
-              />
-              <button
-                type="button"
-                onClick={() => onThemeChange({ letterSpacing: 0 })}
-                className="text-xs text-sky-600 hover:underline"
-                title="Reset to normal"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="space-y-2">
         <Label>Menu links</Label>
         <p className="text-sm text-slate-500">
@@ -343,7 +274,7 @@ export const headerBlock: BlockModule<typeof schema> = {
   group: 'core',
   locked: true,
   configSchema: schema,
-  defaultConfig: { siteName: '', logoUrl: '', navLinks: [], navLinkColor: '#ffffff', logoHeight: 36 },
+  defaultConfig: { siteName: '', navLinks: [], navLinkColor: '#ffffff', logoHeight: 36 },
   EditorForm,
   Render,
 };

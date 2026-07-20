@@ -869,7 +869,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-muted transition">
-            <Avatar className="w-9 h-9 border border-border">
+            <Avatar className="w-14 h-14 border border-border">
               <AvatarImage
                 src={avatarSrc}
                 alt={displayName}
@@ -877,7 +877,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                 referrerPolicy="no-referrer"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
-              <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-sm font-bold">
+              <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-base font-bold">
                 {initials}
               </AvatarFallback>
             </Avatar>

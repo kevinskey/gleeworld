@@ -14,6 +14,12 @@ export interface PublicSitePayload {
   org_name: string | null;
   logo_url: string | null;
   tagline: string | null;
+  /** Branding-owned theme fields. Overlay these on top of `theme` so branding
+   *  wins for the palette + font, while `theme` keeps package/radius/etc. */
+  primary_color: string | null;
+  accent_color: string | null;
+  font_family: string | null;
+  letter_spacing: number | null;
   active_addons: string[];
 }
 
@@ -66,8 +72,18 @@ export function PublicSiteView({
 }) {
   const theme = useMemo(() => {
     const parsed = themeSchema.safeParse(data.theme ?? {});
-    return parsed.success ? parsed.data : themeSchema.parse({});
-  }, [data.theme]);
+    const base = parsed.success ? parsed.data : themeSchema.parse({});
+    // Branding owns palette + font; page theme still owns package/radius/etc.
+    // Empty-string values in branding fall through to the stored theme (which
+    // itself defaults from the schema).
+    return {
+      ...base,
+      primaryColor: data.primary_color || base.primaryColor,
+      accentColor: data.accent_color || base.accentColor,
+      fontFamily: data.font_family || base.fontFamily,
+      letterSpacing: data.letter_spacing ?? base.letterSpacing,
+    };
+  }, [data.theme, data.primary_color, data.accent_color, data.font_family, data.letter_spacing]);
 
   const ctx: SiteRenderContext = useMemo(
     () => ({
@@ -89,12 +105,10 @@ export function PublicSiteView({
     const hero = (data.blocks ?? []).find((b) => b.block_type === 'hero');
     const ogImage = (hero?.config?.imageUrl as string) || data.logo_url;
     if (ogImage) setMeta('og:image', ogImage, true);
-    // Tab favicon follows the tenant's logo. Header block.config.logoUrl wins
-    // when set (lets a tenant pick a different mark for the tab), otherwise we
-    // fall back to gw_branding_settings.logo_url. Falls through to the
-    // platform default if neither is present.
-    const headerBlock = (data.blocks ?? []).find((b) => b.block_type === 'header');
-    const faviconUrl = (headerBlock?.config?.logoUrl as string | undefined) || data.logo_url;
+    // Tab favicon follows the tenant's branding logo. (Header block used to
+    // carry its own logoUrl override; that was moved to Branding so branding
+    // is the single source of truth for the mark.)
+    const faviconUrl = data.logo_url;
     const restore = faviconUrl ? setFavicon(faviconUrl) : null;
     return () => { restore?.(); };
   }, [data, slug]);
