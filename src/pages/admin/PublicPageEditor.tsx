@@ -244,10 +244,21 @@ export default function PublicPageEditor() {
     : 1;
 
   const theme: SiteTheme = useMemo(() => {
-    if (pendingTheme) return pendingTheme;
-    const parsed = themeSchema.safeParse(site?.theme ?? {});
-    return parsed.success ? parsed.data : themeSchema.parse({});
-  }, [site?.theme, pendingTheme]);
+    // Palette + font come from Workspace Settings → Branding (single source
+    // of truth); page theme keeps package / radius / section-padding / divider
+    // knobs. Empty-string branding values fall through to schema defaults.
+    const base = pendingTheme ?? (() => {
+      const parsed = themeSchema.safeParse(site?.theme ?? {});
+      return parsed.success ? parsed.data : themeSchema.parse({});
+    })();
+    return {
+      ...base,
+      primaryColor: (branding as { primary_color?: string }).primary_color || base.primaryColor,
+      accentColor: (branding as { accent_color?: string | null }).accent_color || base.accentColor,
+      fontFamily: (branding as { font_family?: string | null }).font_family || base.fontFamily,
+      letterSpacing: (branding as { letter_spacing?: number | null }).letter_spacing ?? base.letterSpacing,
+    };
+  }, [site?.theme, pendingTheme, branding]);
 
   const ctx: SiteRenderContext = useMemo(
     () => ({
@@ -451,10 +462,9 @@ export default function PublicPageEditor() {
 
       // Header always seeds from tenant branding — not part of the package
       // schema. Keeps every package's nav consistent with what the block
-      // anchors expect.
+      // anchors expect. (Logo image comes from Branding at render time.)
       const headerConfig = {
         siteName: branding.org_name || site.slug,
-        logoUrl: branding.logo_url || '',
         navLinks: [
           { label: 'Events', url: '#events' },
           { label: 'About', url: '#about' },

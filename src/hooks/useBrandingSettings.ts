@@ -12,6 +12,10 @@ export interface BrandingSettings {
   /** Optional portrait variant used on portrait viewports; falls back to auth_background_url. */
   auth_background_mobile_url: string | null;
   primary_color: string;
+  /** Site theme fields moved off the Header block so branding owns the palette. */
+  accent_color: string;
+  font_family: string;
+  letter_spacing: number;
   setup_completed: boolean;
 }
 
@@ -28,6 +32,9 @@ function fallback(): BrandingSettings {
     auth_background_url: null,
     auth_background_mobile_url: null,
     primary_color: '#150d26',
+    accent_color: '#9333ea',
+    font_family: 'sans',
+    letter_spacing: 0,
     setup_completed: false,
   };
 }
