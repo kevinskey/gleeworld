@@ -81,6 +81,7 @@ import { isDemoTenant } from '@/lib/demoTenant';
 import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 import { AssistantFab } from '@/components/assistant/AssistantFab';
 import { AssistantSheet } from '@/components/assistant/AssistantSheet';
+import { TrialBanner } from '@/components/dashboard/TrialBanner';
 import {
   resolveNav, entrySurfaces, NAV_SECTION_LABELS,
   type CatalogEntry, type NavContext, type NavSectionKey,
@@ -972,6 +973,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen w-full bg-background">
         {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
         <div className="flex-1 flex flex-col min-w-0">
+          {/* Trial countdown — self-gates on trial state so it renders null
+              for grandfathered / paid / loading / no-tenant. */}
+          <TrialBanner />
           <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} />
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer
