@@ -186,7 +186,6 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
         {PLAN_TIERS.map((tier: PlanTier) => {
           const isCurrent = current?.plan_id === tier.id && current?.billing_cycle === cycle;
           const featured = tier.id === 'director_60';
-          const isPersonal = tier.id === 'personal';
           const priceLabel = tier.quote ? `From ${formatPrice(tier.monthlyCents)}` : formatPrice(tier.monthlyCents);
           const monthsFree = monthsFreeFor(tier);
           return (
@@ -212,10 +211,10 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                   CURRENT
                 </div>
               )}
-              <h3 className={cn('font-bold text-slate-900 mb-1', isPersonal ? 'text-lg' : 'text-xl')}>{tier.label}</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-1">{tier.label}</h3>
               <p className="text-sm text-slate-600 mb-4">{tier.tagline}</p>
               <div className="mb-2">
-                <span className={cn('font-bold text-slate-900', isPersonal ? 'text-3xl' : 'text-4xl')}>{priceLabel}</span>
+                <span className="text-4xl font-bold text-slate-900">{priceLabel}</span>
                 <span className="text-sm text-slate-600">/mo</span>
               </div>
               {monthsFree >= 1 && (

@@ -2042,13 +2042,11 @@ function ApplePricing() {
             each card thanks to the flex-grow on the <ul> below. */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
           {PLAN_TIERS.map((tier) => {
-            // Personal is billed to an individual musician, not a tenant — it
-            // renders as a smaller, less prominent card ahead of the tenant
-            // tiers rather than competing with them visually.
-            const isPersonal = tier.id === 'personal';
             // Director (director_60) is the default tenant tier (see
-            // DEFAULT_PLAN_TIER in planTiers.ts) and keeps the "most popular"
-            // treatment the old Studio tier had.
+            // DEFAULT_PLAN_TIER in planTiers.ts) and carries the "most
+            // popular" treatment. All tiers (including Personal) render at
+            // the same size — Personal used to be visually shrunk, but Kevin
+            // wants uniform card typography.
             const featured = tier.id === 'director_60';
             const checkoutLink = PLAN_CHECKOUT_LINKS[tier.id];
             const priceLabel = tier.quote ? `From ${formatPrice(tier.monthlyCents)}` : formatPrice(tier.monthlyCents);
@@ -2057,9 +2055,9 @@ function ApplePricing() {
             return (
               <div
                 key={tier.id}
-                className={`relative rounded-3xl flex flex-col ${
-                  isPersonal ? 'p-5 sm:p-6' : 'p-6 sm:p-8'
-                } ${featured ? 'shadow-2xl ring-2' : 'shadow-sm border border-slate-200'}`}
+                className={`relative rounded-3xl flex flex-col p-6 sm:p-8 ${
+                  featured ? 'shadow-2xl ring-2' : 'shadow-sm border border-slate-200'
+                }`}
                 style={{
                   background: TIER_PASTELS[tier.id],
                   ...(featured ? { ['--tw-ring-color' as any]: '#8b5cf6' } : {}),
@@ -2071,12 +2069,12 @@ function ApplePricing() {
                     MOST POPULAR
                   </div>
                 )}
-                <h3 className={`font-bold text-slate-900 mb-1 ${isPersonal ? 'text-lg' : 'text-xl'}`} style={{ ...HEADING_STYLE, letterSpacing: '-0.015em' }}>
+                <h3 className="text-xl font-bold text-slate-900 mb-1" style={{ ...HEADING_STYLE, letterSpacing: '-0.015em' }}>
                   {tier.label}
                 </h3>
                 <p className="text-sm text-slate-600 mb-5">{tier.tagline}</p>
                 <div className="mb-5">
-                  <span className={`font-bold text-slate-900 ${isPersonal ? 'text-3xl' : 'text-5xl'}`} style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}>
+                  <span className="text-5xl font-bold text-slate-900" style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}>
                     {priceLabel}
                   </span>
                   <span className="text-base text-slate-600">/mo</span>
