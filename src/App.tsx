@@ -1026,13 +1026,15 @@ const App = () => {
               {/* Legacy site-setup route: the page builder is now the single
                   source of truth for branding + theme + blocks. */}
               <Route path="/admin/site-setup" element={<Navigate to="/admin/public-page" replace />} />
-              {/* Public landing page builder for tenants */}
+              {/* Public landing page builder for tenants — inside the dashboard
+                  shell so the sidebar + topbar (and the way back to Command
+                  Center) render alongside the editor. */}
               <Route
                 path="/admin/public-page"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout>
-                      <PublicPageEditor />
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><PublicPageEditor /></DashboardShell>
                     </UniversalLayout>
                   </ProtectedRoute>
                 }
@@ -1042,8 +1044,8 @@ const App = () => {
                 path="/admin/fan-page"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout>
-                      <FanPageEditor />
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><FanPageEditor /></DashboardShell>
                     </UniversalLayout>
                   </ProtectedRoute>
                 }

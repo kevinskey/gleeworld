@@ -70,12 +70,36 @@ export function useMyTenantRole(): string | null {
 /**
  * The preview role that should actually be applied, or null.
  *
- * Returns non-null ONLY for tenant super-admins (either spelling). Everyone
- * else gets null no matter what sits in sessionStorage, so forging the key
- * does nothing.
+ * Returns non-null for tenant super-admins (either spelling) OR the platform
+ * owner (gw_profiles.is_super_admin), so a platform owner impersonating a
+ * tenant can still preview the sidebar as a lower role. Anyone else gets
+ * null no matter what sits in sessionStorage, so forging the key does
+ * nothing.
  */
 export function useEffectivePreviewRole(): NavRole | null {
+  const { user } = useAuth();
   const previewRole = usePreviewRole();
   const myRole = useMyTenantRole();
-  return isTenantSuperAdminRole(myRole) ? previewRole : null;
+
+  // Platform-super-admin gate: an is_super_admin on gw_profiles is enough,
+  // even when this user has no gw_tenant_members row on the current tenant
+  // (platform owner impersonating a tenant subdomain). Kept as its own tiny
+  // query so useMyTenantRole stays a single-purpose lookup.
+  const { data: isPlatform } = useQuery<boolean>({
+    queryKey: ['is-platform-super-admin', user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('is_super_admin')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return !!(data as { is_super_admin?: boolean } | null)?.is_super_admin;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+
+  const allowed = isTenantSuperAdminRole(myRole) || !!isPlatform;
+  return allowed ? previewRole : null;
 }
