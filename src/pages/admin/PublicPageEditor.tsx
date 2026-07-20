@@ -648,19 +648,15 @@ export default function PublicPageEditor() {
               </div>
             </DialogContent>
           </Dialog>
-          {site.is_published && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Open the canonical public view (/sites/<slug>) in a fresh tab.
-                // The tenant root (/) redirects logged-in admins to the control
-                // center, so we deliberately use the public-only route here.
-                const url = `${window.location.origin}/sites/${site.slug}?_=${Date.now()}`;
-                window.open(url, '_blank', 'noopener,noreferrer');
-              }}
-              title="Open your live site in a new tab"
-            >
-              <ExternalLink className="w-4 h-4 mr-1.5" /> View site
+          {site.is_published && site.slug && (
+            // Real anchor (not window.open) so popup blockers can't swallow it
+            // and Cmd/Ctrl+click keeps its usual meaning. /sites/<slug> is the
+            // canonical public-only route (the tenant root redirects logged-in
+            // admins to control center, which isn't what "view site" means).
+            <Button variant="outline" asChild title="Open your live site in a new tab">
+              <a href={`/sites/${site.slug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4 mr-1.5" /> View site
+              </a>
             </Button>
           )}
           {site.is_published && (
