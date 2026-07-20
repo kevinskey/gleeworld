@@ -2152,16 +2152,21 @@ function ApplePricing() {
               No add-on à la carte. Every module is included at the tier below and every tier above — Institution gets them all.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-5xl mx-auto">
+          {/* Card layout stacks name + chip vertically so the module name
+              can breathe at text-xl without competing with a wide chip on
+              the same baseline. "Included from {Tier}" avoids the
+              "Director++" bug that happens when the tier label already
+              ends in + and we appended another +. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
             {ADDON_MODULES.map((m) => (
-              <div key={m.name} className="rounded-2xl border border-slate-200 bg-white p-5">
-                <div className="flex items-baseline justify-between mb-1 gap-3">
-                  <span className="font-bold text-slate-900">{m.name}</span>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-full whitespace-nowrap">
-                    Included in {TIER_LABEL_SHORT[m.includedFrom]}+
+              <div key={m.name} className="rounded-2xl border border-slate-200 bg-white p-6">
+                <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                  <span className="font-bold text-slate-900 text-xl" style={{ ...HEADING_STYLE }}>{m.name}</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full whitespace-nowrap">
+                    Included from {TIER_LABEL_SHORT[m.includedFrom]}
                   </span>
                 </div>
-                <p className="text-sm text-slate-600">{m.tagline}</p>
+                <p className="text-base text-slate-600 leading-relaxed">{m.tagline}</p>
               </div>
             ))}
           </div>
