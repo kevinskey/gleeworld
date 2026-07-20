@@ -40,7 +40,20 @@ const MODULE_OPTIONS: { id: string; label: string }[] = [
   { id: "google-calendar", label: "Google Calendar" },
 ];
 
+const PROGRAM_TYPES = ["Person", "Choir", "Church", "Enterprise"] as const;
+type ProgramType = typeof PROGRAM_TYPES[number];
+
+// Placeholder swaps by type so the Organization field reads right for a
+// solo musician vs. a big institution.
+const ORG_PLACEHOLDER: Record<ProgramType, string> = {
+  Person: "Your name or studio",
+  Choir: "Lincoln HS Chorus",
+  Church: "St. Andrew Parish",
+  Enterprise: "Georgia Music Educators Assn.",
+};
+
 export function RequestWorkspaceDialog({ open, onClose }: RequestWorkspaceDialogProps) {
+  const [programType, setProgramType] = useState<ProgramType>("Choir");
   const [orgName, setOrgName] = useState("");
   const [contactName, setContactName] = useState("");
   const [role, setRole] = useState("Director");
@@ -99,7 +112,11 @@ export function RequestWorkspaceDialog({ open, onClose }: RequestWorkspaceDialog
           .__TENANT_CONFIG__?.tenant ?? "demo";
       const trimmedRole = role.trim();
       const trimmedNotes = notes.trim();
+      // Program type + role fold into notes so Kevin sees the shape of the
+      // lead without a schema change on gw_tenant_leads. First line wins in
+      // his inbox summary.
       const combinedNotes = [
+        `Type: ${programType}`,
         trimmedRole ? `Role: ${trimmedRole}` : null,
         trimmedNotes || null,
       ].filter(Boolean).join("\n\n") || undefined;
@@ -217,10 +234,35 @@ export function RequestWorkspaceDialog({ open, onClose }: RequestWorkspaceDialog
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
+              <div>
+                <span className="block text-sm font-semibold text-slate-700 mb-2 uppercase tracking-wider">
+                  Type
+                </span>
+                <div className="grid grid-cols-4 gap-2">
+                  {PROGRAM_TYPES.map((t) => {
+                    const active = programType === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setProgramType(t)}
+                        className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                          active
+                            ? "border-violet-500 bg-violet-50 text-slate-900 shadow-sm"
+                            : "border-slate-200 hover:border-slate-300 text-slate-700 bg-white"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <Field label="Organization *" htmlFor="bt-org">
                 <input id="bt-org" type="text" required value={orgName}
                   onChange={(e) => setOrgName(e.target.value)} className={inputClass}
-                  placeholder="Lincoln HS Chorus" />
+                  placeholder={ORG_PLACEHOLDER[programType]} />
               </Field>
 
               <div className="grid sm:grid-cols-2 gap-4">
