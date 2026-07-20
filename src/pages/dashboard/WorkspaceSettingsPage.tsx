@@ -212,7 +212,7 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                 </div>
               )}
               <h3 className="text-xl font-bold text-slate-900 mb-1">{tier.label}</h3>
-              <p className="text-sm text-slate-600 mb-4">{tier.tagline}</p>
+              <p className="text-sm text-slate-600 mb-4 line-clamp-2 min-h-[2.5rem]" title={tier.tagline}>{tier.tagline}</p>
               <div className="mb-2">
                 <span className="text-4xl font-bold text-slate-900">{priceLabel}</span>
                 <span className="text-sm text-slate-600">/mo</span>
