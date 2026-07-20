@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FONT_OPTIONS } from '@/components/public-site/types';
+import { ImageUploadField } from '@/components/public-site/ImageUploadField';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
   Plug, Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
@@ -721,6 +722,14 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
   }, [settings]);
 
   async function save() {
+    // ImageUploadField hands us a `blob:` URL during the upload window and
+    // swaps it for the real public URL once storage has the file. Persisting
+    // a blob: URL would 404 on the next load — hard-stop the save until the
+    // upload settles rather than write garbage.
+    if (form.logo_url.startsWith('blob:')) {
+      toast.error('Logo is still uploading — wait a moment and try again.');
+      return;
+    }
     setSaving(true);
     // gw_branding_settings' PRIMARY KEY is the legacy singleton `id`
     // (DEFAULT 1). A bare upsert lets PostgREST arbitrate on that PK, which
@@ -834,15 +843,29 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Logo URL</Label>
-          <Input value={form.logo_url} disabled={!canManage} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://…" />
+          {canManage ? (
+            <ImageUploadField
+              label="Logo"
+              prefix="logo"
+              thumbClass="w-16 h-16"
+              value={form.logo_url}
+              onChange={(url) => setForm({ ...form, logo_url: url })}
+              buttonColor={form.primary_color}
+            />
+          ) : (
+            <>
+              <Label className="text-xs">Logo</Label>
+              {form.logo_url ? (
+                <div className="rounded-xl border bg-muted/30 p-3 inline-flex items-center gap-3">
+                  <img src={form.logo_url} alt="Logo" className="w-12 h-12 object-contain" />
+                  <div className="text-xs text-muted-foreground truncate max-w-[240px]">{form.logo_url}</div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">No logo uploaded.</p>
+              )}
+            </>
+          )}
         </div>
-        {form.logo_url && (
-          <div className="mt-2 rounded-xl border bg-muted/30 p-3 inline-flex items-center gap-3">
-            <img src={form.logo_url} alt="Logo preview" className="w-12 h-12 object-contain" />
-            <div className="text-xs text-muted-foreground">Preview</div>
-          </div>
-        )}
         {canManage && (
           <div className="flex justify-end pt-2">
             <Button onClick={save} disabled={saving}>
