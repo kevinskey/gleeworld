@@ -893,17 +893,22 @@ function DashboardMockup() {
         ))}
       </div>
 
-      {/* Module tiles */}
+      {/* Module tiles — the eight surfaces most choir/church tenants live
+          in daily. Order roughly matches the sidebar priority; colors are
+          just for visual variety (the real app tiles use the tenant's
+          brand color). Kept to eight for a clean 2x4 grid — Notation,
+          Sight Reading, Liturgy Planner, Tour Manager and the rest are
+          add-ons discussed at signup, not front-of-house tiles here. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Academy', color: '#6366f1' },
+          { label: 'Music Library', color: '#10b981' },
           { label: 'Calendar', color: '#ec4899' },
           { label: 'Roster', color: '#f59e0b' },
-          { label: 'Music', color: '#10b981' },
           { label: 'Messages', color: '#0ea5e9' },
-          { label: 'Gradebook', color: '#8b5cf6' },
-          { label: 'Shop', color: '#f97316' },
-          { label: 'Press Kit', color: '#64748b' },
+          { label: 'Studio', color: '#6366f1' },
+          { label: 'Academy', color: '#8b5cf6' },
+          { label: 'Concert Planner', color: '#f97316' },
+          { label: 'Box Office', color: '#64748b' },
         ].map((m) => (
           <div key={m.label} className="bg-slate-800 rounded-xl p-3">
             <div className="w-5 h-5 rounded mb-2" style={{ backgroundColor: m.color }} />
