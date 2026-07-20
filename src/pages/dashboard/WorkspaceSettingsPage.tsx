@@ -94,10 +94,14 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
   const { data: plans = [] } = useQuery({
     queryKey: ['workspace-plan-catalog'],
     queryFn: async () => {
+      // scope='tenant' hides the Personal tier (user-scoped, lives in
+      // gw_user_plans — no business appearing on a tenant workspace-plan
+      // surface). Matches the constraint on TENANT_PLAN_TIERS in planTiers.ts.
       const { data } = await supabase
         .from('gw_billing_plans')
-        .select('id, name, tagline, student_cap, monthly_price_cents, annual_price_cents, features, sort_order, stripe_price_id_monthly, stripe_price_id_annual')
+        .select('id, name, tagline, student_cap, storage_gb, monthly_price_cents, annual_price_cents, features, sort_order, stripe_price_id_monthly, stripe_price_id_annual')
         .eq('is_active', true)
+        .eq('scope', 'tenant')
         .order('sort_order');
       return data ?? [];
     },
@@ -182,8 +186,10 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
         <Button variant={cycle === 'annual' ? 'default' : 'outline'} size="sm" onClick={() => setCycle('annual')}>Annual <span className="text-xs ml-1 opacity-70">(save 2 months)</span></Button>
       </div>
 
-      {/* Plan grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+      {/* Plan grid — three tenant tiers (Director / Director+ / Institution),
+          so three columns on wide screens (Personal is user-scoped and filtered
+          out of the query). */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {plans.map((p: any) => {
           const isCurrent = current?.plan_id === p.id && current?.billing_cycle === cycle;
           const priceCents = cycle === 'annual' ? p.annual_price_cents : p.monthly_price_cents;
