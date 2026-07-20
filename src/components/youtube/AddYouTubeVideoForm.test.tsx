@@ -25,6 +25,9 @@ import { AddYouTubeVideoForm } from './AddYouTubeVideoForm';
 
 const openForm = () => {
   fireEvent.click(screen.getByRole('button', { name: /add video/i }));
+  // The dialog opens in Search mode by default; switch to Paste URL so the
+  // URL/ID input is present. Search flow is exercised separately.
+  fireEvent.click(screen.getByRole('button', { name: /paste url/i }));
 };
 
 const fillUrl = (value: string) => {
