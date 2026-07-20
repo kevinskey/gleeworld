@@ -14,3 +14,12 @@ UPDATE public.gw_billing_plans SET monthly_price_cents = 1299,  annual_price_cen
 UPDATE public.gw_billing_plans SET monthly_price_cents = 4999,  annual_price_cents = 49900  WHERE id = 'director_60';
 UPDATE public.gw_billing_plans SET monthly_price_cents = 6999,  annual_price_cents = 69900  WHERE id = 'director_150';
 UPDATE public.gw_billing_plans SET monthly_price_cents = 25999, annual_price_cents = 259900 WHERE id = 'institution';
+
+-- Personal repositions: not literally solo — a private-studio teacher with
+-- up to 15 students. Bumps student_cap 1 -> 15 and refreshes tagline +
+-- feature bullets to match planTiers.ts.
+UPDATE public.gw_billing_plans
+SET tagline = 'For one musician in their private studio. Max 15 students.',
+    student_cap = 15,
+    features = '["Studio (practice recording) — included","Your own score library","Personal calendar + Tonight mode","Up to 15 students","1 course (Academy)","Custom domain ($25 setup + $15/yr)","25 GB"]'::jsonb
+WHERE id = 'personal';
