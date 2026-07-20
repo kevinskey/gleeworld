@@ -2072,7 +2072,11 @@ function ApplePricing() {
                 <h3 className="text-xl font-bold text-slate-900 mb-1" style={{ ...HEADING_STYLE, letterSpacing: '-0.015em' }}>
                   {tier.label}
                 </h3>
-                <p className="text-sm text-slate-600 mb-5">{tier.tagline}</p>
+                {/* line-clamp-2 keeps every card's tagline block at a
+                    consistent 2-line height regardless of length, so the
+                    price line below never sits at a different vertical
+                    position across cards. */}
+                <p className="text-sm text-slate-600 mb-5 line-clamp-2 min-h-[2.5rem]" title={tier.tagline}>{tier.tagline}</p>
                 <div className="mb-5">
                   <span className="text-5xl font-bold text-slate-900" style={{ ...HEADING_STYLE, letterSpacing: '-0.03em' }}>
                     {priceLabel}
