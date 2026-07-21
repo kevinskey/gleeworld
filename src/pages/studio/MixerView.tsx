@@ -36,12 +36,13 @@ import type { MeterBlock } from '@/lib/studio/engine/masterChain';
 import {
   isAudioTrack, withMasteringDefaults, MASTER_BUS_ID, MAX_BUSES, MAX_SENDS_PER_TRACK,
   type Session, type Track, type TrackEqBand, type MasteringParams,
-  type Bus, type Send, type FxNode,
+  type Bus, type Send, type FxNode, type Automation, type AutomationParam,
 } from '@/lib/studio/session';
 import { newBus } from '@/lib/studio/defaults';
 import { wouldEditCycle, formatCycle, type RoutingEdge } from '@/lib/studio/routingGraph';
 import { toast } from 'sonner';
 import { InsertRack } from './InsertRack';
+import { AutomationPanel } from './AutomationPanel';
 import { faderPosToDb, dbToFaderPos } from '@/lib/studio/dsp/faderTaper';
 import { ppmDecay, servoStep } from './mixerMath';
 
@@ -140,6 +141,8 @@ export function MixerView({
   // Phase 5: inserts panel — one open at a time. Discriminated union
   // so the panel can host any strip's fx array.
   const [fxTarget, setFxTarget] = useState<{ kind: 'track' | 'bus'; id: string } | null>(null);
+  // Phase 8b: automation panel target.
+  const [autoTarget, setAutoTarget] = useState<{ kind: 'track' | 'bus'; id: string } | null>(null);
 
   // ── Meter rAF loop — polls engineState.getTrackPeakDb per track + the
   // existing master peakDbL/R off `state`, applies PPM release
@@ -345,6 +348,13 @@ export function MixerView({
     }));
   }, [update]);
 
+  // Phase 8b: replace the whole session.automation array. AutomationPanel
+  // owns per-envelope mutations and hands us a fresh array back —
+  // engine.applyAutomation() re-schedules on every play().
+  const setAutomation = useCallback((next: Automation[]) => {
+    update((s) => ({ ...s, automation: next }));
+  }, [update]);
+
   const removeSend = useCallback((trackId: string, sendId: string) => {
     update((s) => ({
       ...s,
@@ -387,6 +397,11 @@ export function MixerView({
             onToggleFx={() => setFxTarget(
               fxTarget?.kind === 'track' && fxTarget.id === t.id ? null : { kind: 'track', id: t.id }
             )}
+            autoOpen={autoTarget?.kind === 'track' && autoTarget.id === t.id}
+            onToggleAuto={() => setAutoTarget(
+              autoTarget?.kind === 'track' && autoTarget.id === t.id ? null : { kind: 'track', id: t.id }
+            )}
+            automation={session.automation ?? []}
             isPhone={isPhone}
             onTapPhone={() => setActivePhoneTrackId(t.id)}
           />
@@ -411,6 +426,11 @@ export function MixerView({
             onToggleFx={() => setFxTarget(
               fxTarget?.kind === 'bus' && fxTarget.id === b.id ? null : { kind: 'bus', id: b.id }
             )}
+            autoOpen={autoTarget?.kind === 'bus' && autoTarget.id === b.id}
+            onToggleAuto={() => setAutoTarget(
+              autoTarget?.kind === 'bus' && autoTarget.id === b.id ? null : { kind: 'bus', id: b.id }
+            )}
+            automation={session.automation ?? []}
           />
         ))}
         <AddBusTile
@@ -468,6 +488,31 @@ export function MixerView({
           />
         );
       })()}
+      {(() => {
+        if (!autoTarget) return null;
+        const label = autoTarget.kind === 'track'
+          ? session.tracks.find((x) => x.id === autoTarget.id)?.name
+          : (session.buses ?? []).find((x) => x.id === autoTarget.id)?.name;
+        if (!label) return null;
+        return (
+          <AutomationPanel
+            ownerId={autoTarget.id}
+            ownerKind={autoTarget.kind}
+            ownerLabel={label}
+            automation={session.automation ?? []}
+            playheadSeconds={state?.positionSeconds ?? 0}
+            currentStripValue={(param: AutomationParam) => {
+              const strip = autoTarget.kind === 'track'
+                ? session.tracks.find((x) => x.id === autoTarget.id)
+                : (session.buses ?? []).find((x) => x.id === autoTarget.id);
+              if (!strip) return 0;
+              return param === 'volume_db' ? strip.volume_db : strip.pan;
+            }}
+            onChange={setAutomation}
+            onClose={() => setAutoTarget(null)}
+          />
+        );
+      })()}
       {isPhone && activePhoneTrack && (
         <MiniFader
           track={activePhoneTrack}
@@ -509,7 +554,7 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
 // ═══════════════════════════════════════════════════════════════════
 
 function ChannelStrip({
-  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, sendsOpen, onToggleSends, fxOpen, onToggleFx, isPhone, onTapPhone,
+  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, sendsOpen, onToggleSends, fxOpen, onToggleFx, autoOpen, onToggleAuto, automation, isPhone, onTapPhone,
 }: {
   index: number;
   track: Track;
@@ -529,6 +574,12 @@ function ChannelStrip({
   /** Phase 5 — insert rack panel state. */
   fxOpen: boolean;
   onToggleFx: () => void;
+  /** Phase 8b — automation panel state. */
+  autoOpen: boolean;
+  onToggleAuto: () => void;
+  /** Session automation array — used to count read-mode envelopes for
+   *  the chip badge. */
+  automation: Automation[];
   isPhone: boolean;
   onTapPhone: () => void;
 }) {
@@ -536,6 +587,9 @@ function ChannelStrip({
   const outputBusId = track.output?.bus_id ?? MASTER_BUS_ID;
   const enabledSendCount = (track.sends ?? []).filter((s) => s.enabled).length;
   const enabledFxCount = track.fx.filter((f) => f.enabled).length;
+  const activeAutoCount = automation.filter(
+    (a) => a.target_id === track.id && a.target_kind === 'track' && a.mode === 'read' && a.points.length > 0,
+  ).length;
 
   return (
     <div className="shrink-0 w-24 sm:w-28 bg-card border border-border rounded-md flex flex-col items-center gap-1.5 p-1.5">
@@ -575,6 +629,20 @@ function ChannelStrip({
         FX
         {enabledFxCount > 0 && (
           <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledFxCount}</span>
+        )}
+      </button>
+
+      {/* Phase 8b — Automation chip. Opens the docked AutomationPanel. */}
+      <button
+        type="button"
+        onClick={onToggleAuto}
+        className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+          autoOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
+        title="Automation"
+      >
+        Auto
+        {activeAutoCount > 0 && (
+          <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{activeAutoCount}</span>
         )}
       </button>
 
@@ -1176,7 +1244,7 @@ function OutputSelector({
  *  the corner triggers session removal + retargets any track pointing
  *  here back to master (see removeBusHandler in MixerView). */
 function BusStrip({
-  bus, downstreamBuses, meter, onResetHold, onStripChange, onOutputChange, onRemove, fxOpen, onToggleFx,
+  bus, downstreamBuses, meter, onResetHold, onStripChange, onOutputChange, onRemove, fxOpen, onToggleFx, autoOpen, onToggleAuto, automation,
 }: {
   bus: Bus;
   /** v2.0.0 (Phase 4c) — user buses this bus can route to. Master
@@ -1195,8 +1263,15 @@ function BusStrip({
   /** Phase 5 — insert rack panel state. */
   fxOpen: boolean;
   onToggleFx: () => void;
+  /** Phase 8b — automation panel state. */
+  autoOpen: boolean;
+  onToggleAuto: () => void;
+  automation: Automation[];
 }) {
   const enabledFxCount = bus.fx.filter((f) => f.enabled).length;
+  const activeAutoCount = automation.filter(
+    (a) => a.target_id === bus.id && a.target_kind === 'bus' && a.mode === 'read' && a.points.length > 0,
+  ).length;
   return (
     <div className="shrink-0 w-24 sm:w-28 bg-muted/30 border border-border rounded-md flex flex-col items-center gap-1.5 p-1.5 relative">
       <button
@@ -1236,6 +1311,20 @@ function BusStrip({
         FX
         {enabledFxCount > 0 && (
           <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledFxCount}</span>
+        )}
+      </button>
+
+      {/* Phase 8b — Automation chip. */}
+      <button
+        type="button"
+        onClick={onToggleAuto}
+        className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+          autoOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
+        title="Bus automation"
+      >
+        Auto
+        {activeAutoCount > 0 && (
+          <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{activeAutoCount}</span>
         )}
       </button>
       <PanKnob pan={bus.pan} onChange={(pan) => onStripChange({ pan })} />
