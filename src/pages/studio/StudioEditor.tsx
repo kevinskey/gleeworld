@@ -130,7 +130,20 @@ function useScrollSyncProvider(): ScrollSync {
     requestAnimationFrame(() => { isSyncingRef.current = false; });
   }, []);
   const register = useCallback((el: HTMLDivElement | null) => {
-    if (!el) return;
+    // React calls the ref with null when the element it was attached to
+    // unmounts. Take that as our cue to sweep any registered elements
+    // that are no longer in the DOM — otherwise the Set retains dead
+    // HTMLDivElement references (plus their scroll listeners) for the
+    // rest of the ScrollSyncProvider's lifetime.
+    if (!el) {
+      for (const stored of Array.from(elementsRef.current)) {
+        if (!stored.isConnected) {
+          stored.removeEventListener('scroll', onScroll);
+          elementsRef.current.delete(stored);
+        }
+      }
+      return;
+    }
     if (elementsRef.current.has(el)) return;
     elementsRef.current.add(el);
     el.addEventListener('scroll', onScroll, { passive: true });
@@ -1257,6 +1270,11 @@ function Editor({
       toast.success('Recording — click ● again to stop');
       startWaveTick(recorder, startedAt);
     } catch (e) {
+      // If we set recordingActive=true but bailed before setRecording(),
+      // the loop watchdog + preGain servo would stay stood down for the
+      // rest of the session. Reset defensively — it's a no-op when we
+      // never armed in the first place.
+      engineState.setRecordingActive?.(false);
       toast.error('Could not start recording', { description: e instanceof Error ? e.message : String(e) });
     }
   };

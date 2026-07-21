@@ -60,4 +60,48 @@ describe('MidiTimebase', () => {
     expect(tb.toTransportSeconds(5000, 3)).toBe(3); // fresh anchor, not mapped from old one
     expect(tb.toTransportSeconds(5250, 3.4)).toBeCloseTo(3.25, 6);
   });
+
+  it('holds a stable anchor across a 60-second take even with a wobbling snapshot', () => {
+    // Regression: user reported "when im recording midi the beat seems
+    // to be unstable" — verify a long take never re-anchors mid-flight
+    // as long as the snapshot stays within the drift limit.
+    const tb = new MidiTimebase();
+    tb.toTransportSeconds(1, 0); // anchor: 1ms ↔ 0s (1 > 0 so it anchors)
+    // Simulate 240 notes at 4 per second for a minute, snapshot wobbles
+    // ±100 ms which is well inside MIDI_TIMEBASE_DRIFT_LIMIT_SEC (0.35).
+    for (let i = 1; i <= 240; i++) {
+      const ts = 1 + i * 250;            // exact hardware clock, offset by anchor
+      const wobble = (i % 7 - 3) * 0.03; // ±90 ms wander
+      const mapped = tb.toTransportSeconds(ts, i * 0.25 + wobble);
+      // Hardware delta must win, snapshot wobble ignored.
+      expect(mapped).toBeCloseTo(i * 0.25, 6);
+    }
+  });
+
+  it('re-anchors when drift crosses the limit', () => {
+    // If we ever loosen MIDI_TIMEBASE_DRIFT_LIMIT_SEC, this documents the
+    // "strictly greater than triggers re-anchor" boundary with fp headroom.
+    const tb = new MidiTimebase();
+    tb.toTransportSeconds(1, 0); // anchor: 1ms ↔ 0s
+    const belowLimit = MIDI_TIMEBASE_DRIFT_LIMIT_SEC - 0.001;
+    // Snapshot 1 + belowLimit vs mapped 1.0 → |Δ| < limit → map wins.
+    expect(tb.toTransportSeconds(1001, 1 + belowLimit)).toBeCloseTo(1, 6);
+    // Snapshot 2 + (limit + 0.01) vs mapped 2.0 → |Δ| > limit → re-anchor
+    // → returns the snapshot itself.
+    const overshoot = MIDI_TIMEBASE_DRIFT_LIMIT_SEC + 0.01;
+    expect(tb.toTransportSeconds(2001, 2 + overshoot)).toBeCloseTo(2 + overshoot, 6);
+  });
+
+  it('two takes in a row anchor independently after reset', () => {
+    const tb = new MidiTimebase();
+    // Take 1: three notes at 120 bpm.
+    tb.toTransportSeconds(1000, 5);
+    expect(tb.toTransportSeconds(1250, 5.25)).toBeCloseTo(5.25, 6);
+    expect(tb.toTransportSeconds(1500, 5.5)).toBeCloseTo(5.5, 6);
+    // Stop → new take starts at a different transport position.
+    tb.reset();
+    tb.toTransportSeconds(9000, 12);
+    // Delta from take-2 anchor, NOT from take-1 anchor.
+    expect(tb.toTransportSeconds(9500, 12.5)).toBeCloseTo(12.5, 6);
+  });
 });
