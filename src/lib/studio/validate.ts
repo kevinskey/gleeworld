@@ -121,8 +121,66 @@ export function validateSession(raw: unknown): ValidateResult {
     });
   }
 
+  // v2.0.0 (Phase 8) — automation. Optional, so tolerate absence.
+  if (s.automation !== undefined) {
+    if (!Array.isArray(s.automation)) errors.push('automation must be an array');
+    else {
+      const trackIds = new Set((s.tracks ?? []).map((t: { id?: string }) => t.id).filter(Boolean));
+      s.automation.forEach((a, i) => validateAutomation(a, i, errors, trackIds, busIds));
+    }
+  }
+
   if (errors.length) return { ok: false, errors };
   return { ok: true, session: s as Session };
+}
+
+const VALID_AUTOMATION_PARAM = new Set(['volume_db', 'pan']);
+const VALID_AUTOMATION_CURVE = new Set(['hold', 'linear', 'exponential']);
+const VALID_AUTOMATION_MODE = new Set(['off', 'read']);
+const VALID_AUTOMATION_KIND = new Set(['track', 'bus']);
+
+function validateAutomation(
+  a: unknown, i: number, errors: string[], trackIds: Set<string>, busIds: Set<string>,
+) {
+  const at = (...p: (string | number)[]) => ['automation', i, ...p].join('.');
+  if (!a || typeof a !== 'object') { errors.push(at() + ' is not an object'); return; }
+  const auto = a as {
+    target_id?: string; target_kind?: string; param?: string; mode?: string;
+    points?: Array<{ time_seconds?: unknown; value?: unknown; curve?: unknown }>;
+  };
+  if (typeof auto.target_id !== 'string' || !auto.target_id) {
+    errors.push(at('target_id') + ' must be a non-empty string');
+  } else if (auto.target_kind === 'track' && !trackIds.has(auto.target_id)) {
+    errors.push(at('target_id') + ` references unknown track "${auto.target_id}"`);
+  } else if (auto.target_kind === 'bus' && !busIds.has(auto.target_id)) {
+    errors.push(at('target_id') + ` references unknown bus "${auto.target_id}"`);
+  }
+  if (!auto.target_kind || !VALID_AUTOMATION_KIND.has(auto.target_kind)) {
+    errors.push(at('target_kind') + ' must be "track" or "bus"');
+  }
+  if (!auto.param || !VALID_AUTOMATION_PARAM.has(auto.param)) {
+    errors.push(at('param') + ' must be "volume_db" or "pan"');
+  }
+  if (!auto.mode || !VALID_AUTOMATION_MODE.has(auto.mode)) {
+    errors.push(at('mode') + ' must be "off" or "read"');
+  }
+  if (!Array.isArray(auto.points)) {
+    errors.push(at('points') + ' must be an array');
+  } else {
+    auto.points.forEach((p, k) => {
+      const pAt = (f: string) => at('points', k, f);
+      if (!p || typeof p !== 'object') { errors.push(pAt('') + ' is not an object'); return; }
+      if (typeof p.time_seconds !== 'number' || !Number.isFinite(p.time_seconds) || p.time_seconds < 0) {
+        errors.push(pAt('time_seconds') + ' must be a finite number >= 0');
+      }
+      if (typeof p.value !== 'number' || !Number.isFinite(p.value)) {
+        errors.push(pAt('value') + ' must be a finite number');
+      }
+      if (typeof p.curve !== 'string' || !VALID_AUTOMATION_CURVE.has(p.curve)) {
+        errors.push(pAt('curve') + ' must be "hold", "linear", or "exponential"');
+      }
+    });
+  }
 }
 
 function validateBus(b: unknown, i: number, errors: string[], busIds: Set<string>) {

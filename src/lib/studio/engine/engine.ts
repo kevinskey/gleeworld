@@ -20,6 +20,7 @@ import { buildFxChain, type EngineFxChain } from './fx';
 import { buildTrack, type EngineTrack } from './tracks';
 import { buildBus, type EngineBus } from './buses';
 import { buildSend, type EngineSend } from './sends';
+import { scheduleAutomation, type AutomatableParam } from './automation';
 import { setAssetUrl } from './assetUrlCache';
 import { shouldLoopWrap } from '../transport';
 import { buildMasterChain, type MasterChainHandle } from './masterChain';
@@ -183,6 +184,10 @@ export class StudioEngine {
   // finds the right Gain node without walking the tree. Rebuilt at
   // loadSession from session.tracks[].sends alongside track routing.
   private trackSends = new Map<string, Map<string, EngineSend>>();
+  // Phase 8 — active automation cancellers. One per session.automation
+  // entry armed at play(). Cleared on pause/stop/seek/loadSession so
+  // subsequent playbacks re-schedule fresh against the new start time.
+  private automationCancellers: Array<() => void> = [];
   // Per-track PPM peak meters (B1 Task 6) — one Tone.Meter tapped in
   // PARALLEL off each track's post-EQ output (does not affect the
   // signal path to masterIn). Rebuilt alongside `tracks` in
@@ -467,6 +472,7 @@ export class StudioEngine {
     }
     this.chainSync.dispose();
     this.state.masterChain = undefined;
+    this.cancelAutomation();
     for (const sends of this.trackSends.values()) {
       for (const s of sends.values()) s.dispose();
     }
@@ -994,6 +1000,7 @@ export class StudioEngine {
       this.repositionAndPlay(this.state.loopStartSeconds);
       if (this.state.metronomeOn) this.startMetronomeInterval();
       this.startLoopInterval();
+      this.applyAutomation(this.state.loopStartSeconds);
       this.emit();
       this.startPositionLoop();
       return;
@@ -1014,6 +1021,7 @@ export class StudioEngine {
       this.state.isPlaying = true;
       this.repositionAndPlay(0);
       if (this.state.metronomeOn) this.startMetronomeInterval();
+      this.applyAutomation(0);
       this.emit();
       this.startPositionLoop();
       return;
@@ -1029,8 +1037,37 @@ export class StudioEngine {
     }
     this.state.isPlaying = true;
     if (this.state.metronomeOn) this.startMetronomeInterval();
+    this.applyAutomation(pos);
     this.emit();
     this.startPositionLoop();
+  }
+
+  /** Phase 8 — arm any read-mode automation in the session against the
+   *  transport clock. Schedules ramps starting from `fromSeconds` (the
+   *  current transport position); previously-scheduled cancellers are
+   *  cleared first so we never stack multiple concurrent schedules. */
+  private applyAutomation(fromSeconds: number): void {
+    this.cancelAutomation();
+    if (!this.session) return;
+    const entries = this.session.automation ?? [];
+    for (const auto of entries) {
+      if (auto.mode !== 'read' || auto.points.length === 0) continue;
+      const panvol = auto.target_kind === 'track'
+        ? this.tracks.get(auto.target_id)?.panvol
+        : this.buses.get(auto.target_id)?.panvol;
+      if (!panvol) continue; // target not built (unknown or bypassed)
+      const param: AutomatableParam = auto.param === 'volume_db' ? panvol.volume : panvol.pan;
+      this.automationCancellers.push(scheduleAutomation(param, auto.points, fromSeconds));
+    }
+  }
+
+  /** Clear every scheduled automation ramp — called on pause / stop /
+   *  loadSession / dispose so the next play() re-schedules fresh. */
+  private cancelAutomation(): void {
+    for (const cancel of this.automationCancellers) {
+      try { cancel(); } catch { /* best-effort */ }
+    }
+    this.automationCancellers = [];
   }
 
   /** Recording guard — StudioEditor flips this around every take so the
@@ -1110,6 +1147,7 @@ export class StudioEngine {
     this.state.isPlaying = false;
     this.stopMetronomeInterval();
     this.stopLoopInterval();
+    this.cancelAutomation();
     this.emit();
     this.stopPositionLoop();
   }
@@ -1132,6 +1170,7 @@ export class StudioEngine {
     this.state.positionSeconds = wherePaused;
     this.stopMetronomeInterval();
     this.stopLoopInterval();
+    this.cancelAutomation();
     this.emit();
     this.stopPositionLoop();
   }
