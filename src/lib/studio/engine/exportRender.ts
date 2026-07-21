@@ -42,11 +42,14 @@
 
 import * as Tone from 'tone';
 import type { Session, Track } from '../session';
-import { withMasteringDefaults, DEFAULT_MASTERING, type MasteringParams } from '../session';
+import { withMasteringDefaults, DEFAULT_MASTERING, MASTER_BUS_ID, type MasteringParams } from '../session';
 import { buildFxChain } from './fx';
 import { buildTrack } from './tracks';
+import { buildBus } from './buses';
+import { buildSend } from './sends';
 import { dbToGain } from './engine';
 import { buildMasterChain } from './masterChain';
+import { findRoutingCycle, formatCycle, type RoutingEdge } from '../routingGraph';
 import { audioBufferToWavBlob } from './mixdown';
 import { preloadGwSession } from './layeredSampler';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
@@ -265,10 +268,69 @@ async function renderWindow(
       masterFx.output.toDestination();
     }
 
+    // Phase 7: mirror the live engine's bus/send graph in offline
+    // render. Build buses BEFORE tracks so track routing has a real
+    // input node to connect to. Cycle-check the declared bus edges
+    // upfront — on a cyclic manifest, bypass all bus routing and
+    // route everything to master (same fallback loadSession uses).
+    const busInputs = new Map<string, Tone.Gain | Tone.ToneAudioNode>();
+    const cycleEdges: RoutingEdge[] = (session.buses ?? []).map((b) => ({
+      from: b.id, to: b.output.bus_id,
+    }));
+    const cycleCheck = findRoutingCycle(cycleEdges);
+    const busGraphOk = cycleCheck.ok;
+    if (!busGraphOk) {
+      // eslint-disable-next-line no-console
+      console.error(`[studio] export: bus routing cycle detected — bypassing bus routing: ${formatCycle(cycleCheck.cycle)}`);
+    }
+    const engineBuses = new Map<string, ReturnType<typeof buildBus>>();
+    if (busGraphOk) {
+      for (const b of session.buses ?? []) {
+        const bus = buildBus(b);
+        engineBuses.set(b.id, bus);
+        busInputs.set(b.id, bus.input);
+        disposers.push(() => bus.dispose());
+      }
+    }
+    const resolveTarget = (busId: string): Tone.ToneAudioNode => {
+      if (busId === MASTER_BUS_ID) return masterIn;
+      const node = busInputs.get(busId);
+      return node ?? masterIn; // fallback: cycle-bypassed / unknown → master
+    };
+    // Wire bus tails to their downstream targets now that inputs exist.
+    if (busGraphOk) {
+      for (const b of session.buses ?? []) {
+        const eng = engineBuses.get(b.id);
+        if (!eng) continue;
+        eng.output.connect(resolveTarget(b.output.bus_id));
+      }
+    }
+
+    // Tracks: route each to its declared output (bus or master).
+    const engineTracks = new Map<string, ReturnType<typeof buildTrack>>();
     for (const tr of session.tracks) {
       const eng = buildTrack(tr, session.assets);
-      eng.output.connect(masterIn);
+      const targetBusId = tr.output?.bus_id ?? MASTER_BUS_ID;
+      eng.output.connect(resolveTarget(targetBusId));
+      engineTracks.set(tr.id, eng);
       disposers.push(() => eng.dispose());
+    }
+
+    // Sends: fan out from each track's pre/post tap into the target
+    // bus input. Sends whose target isn't built (unknown bus id) are
+    // skipped silently — validate.ts rejects that at load time.
+    for (const tr of session.tracks) {
+      const trackEng = engineTracks.get(tr.id);
+      if (!trackEng || !tr.sends || tr.sends.length === 0) continue;
+      for (const snd of tr.sends) {
+        const targetInput = snd.target_bus_id === MASTER_BUS_ID
+          ? masterIn
+          : busInputs.get(snd.target_bus_id);
+        if (!targetInput) continue;
+        const source = snd.pre_fader ? trackEng.preFaderTap : trackEng.postFaderTap;
+        const built = buildSend(snd, source, targetInput);
+        disposers.push(() => built.dispose());
+      }
     }
 
     // transport.start(when, offset): start the offline clock immediately
