@@ -189,6 +189,10 @@ export class StudioEngine {
   // loadSession(); read by getTrackPeakDb(), which the MixerView's
   // meter rAF loop polls once per frame per visible strip.
   private trackMeters = new Map<string, Tone.Meter>();
+  // Per-bus PPM peak meters (Phase 6) — parallel tap on each bus's
+  // output, same pattern as trackMeters. Rebuilt alongside `buses` in
+  // loadSession(); read by getBusPeakDb().
+  private busMeters = new Map<string, Tone.Meter>();
   private session: Session | null = null;
   // Tone.Transport one-shot schedules registered during play() — kept
   // so stop() can clear ONLY them and leave nothing else dangling.
@@ -473,6 +477,8 @@ export class StudioEngine {
     this.buses.clear();
     for (const m of this.trackMeters.values()) m.dispose();
     this.trackMeters.clear();
+    for (const m of this.busMeters.values()) m.dispose();
+    this.busMeters.clear();
     this.metronome.dispose();
     this.metronomeAccent.dispose();
     this.masterMeter.dispose();
@@ -541,6 +547,8 @@ export class StudioEngine {
     this.tracks.clear();
     for (const m of this.trackMeters.values()) m.dispose();
     this.trackMeters.clear();
+    for (const m of this.busMeters.values()) m.dispose();
+    this.busMeters.clear();
     // Sends dispose FIRST — they hold edges into the buses that are
     // about to be rebuilt.
     for (const sends of this.trackSends.values()) {
@@ -569,7 +577,9 @@ export class StudioEngine {
     }
 
     // Wire each bus's tail to its own downstream target (another bus,
-    // or master). Same fallback as tracks.
+    // or master). Same fallback as tracks. Also tap a parallel meter
+    // off the bus output — same pattern as tracks, so MixerView's rAF
+    // loop can render a bus meter without any signal-path effect.
     if (busGraphOk) {
       for (const b of sessionBuses) {
         const bus = this.buses.get(b.id);
@@ -577,6 +587,9 @@ export class StudioEngine {
         const target = this.resolveRoutingTarget(b.output.bus_id);
         bus.output.connect(target);
         this.busOutputTargets.set(b.id, target);
+        const meter = new Tone.Meter({ channelCount: 1, smoothing: 0.7 });
+        bus.output.connect(meter);
+        this.busMeters.set(b.id, meter);
       }
     }
 
@@ -752,6 +765,15 @@ export class StudioEngine {
    *  or not-yet-built track. */
   getTrackPeakDb(trackId: string): number {
     const m = this.trackMeters.get(trackId);
+    if (!m) return -Infinity;
+    const v = m.getValue();
+    return Array.isArray(v) ? (v[0] ?? -Infinity) : v;
+  }
+
+  /** Per-bus PPM peak read (Phase 6). Same signature and semantics as
+   *  getTrackPeakDb. -Infinity for an unknown or not-yet-built bus. */
+  getBusPeakDb(busId: string): number {
+    const m = this.busMeters.get(busId);
     if (!m) return -Infinity;
     const v = m.getValue();
     return Array.isArray(v) ? (v[0] ?? -Infinity) : v;
