@@ -15,6 +15,7 @@ import {
 } from './session';
 import { newId, newSession } from './defaults';
 import { validateSession } from './validate';
+import { migrateSession } from './migrations';
 
 const BUCKET = 'studio';
 
@@ -100,7 +101,12 @@ export async function loadSession(sessionId: string): Promise<Session> {
   if (!result.ok) {
     throw new Error('Session manifest invalid:\n' + result.errors.join('\n'));
   }
-  return result.session;
+  // Run the migration chain so downstream code sees a session with
+  // every v2 field populated regardless of the stamped schema_version.
+  // The stamp isn't touched here — save-time re-derives it from
+  // requiredSchemaVersion(), which keeps behavior-preserving migrations
+  // round-tripping back to their original version.
+  return migrateSession(result.session);
 }
 
 // ── Save a session (manifest + index row) ────────────────────────────

@@ -11,17 +11,36 @@
 //   <bucket>/studio/<tenant_id>/sessions/<session_id>/audio/<asset_id>.<ext>
 //
 // Times are in seconds (floats) on the master timeline. Beats are derived
-// from tempo_bpm. Phase 1 keeps routing simple: every track lands on the
-// master bus. Sends/buses are deferred to Phase 2.
+// from tempo_bpm.
+//
+// Routing (v2.0.0): every track has an `output` (defaults to the built-in
+// `master` bus) and up to four `sends` to other buses. `session.buses` is
+// the list of user-defined submixes; the implicit `master` bus needs no
+// entry. v1.0.0/1.1.0 sessions predate this — the load-time migration
+// (migrations/v1_to_v2.ts) fills in the defaults so runtime code can rely
+// on them.
 //
 // Mirror this file faithfully in ios/App/App/StudioModel.swift.
 
-export const STUDIO_SCHEMA_VERSIONS = ['1.0.0', '1.1.0'] as const;
+export const STUDIO_SCHEMA_VERSIONS = ['1.0.0', '1.1.0', '2.0.0'] as const;
 export type StudioSchemaVersion = typeof STUDIO_SCHEMA_VERSIONS[number];
-/** Baseline version for sessions that use no 1.1.0 features. Kept at
- * 1.0.0 so manifests stay openable by the shipped iOS app (its decoder
- * hard-rejects unknown versions). Writers stamp requiredSchemaVersion(). */
+/** Baseline version for sessions that use no 1.1.0 / 2.0.0 features.
+ * Kept at 1.0.0 so manifests stay openable by the shipped iOS app (its
+ * decoder hard-rejects unknown versions). Writers stamp
+ * requiredSchemaVersion(), which bumps only when v2 features are used. */
 export const STUDIO_SCHEMA_VERSION: StudioSchemaVersion = '1.0.0';
+
+/** Well-known bus id for the always-present master bus. Track `output`
+ * defaults here; sends can target any bus INCLUDING master (though the
+ * master is already the terminal sink). */
+export const MASTER_BUS_ID = 'master';
+
+/** V1 mixer caps — enforced by validation. Increasing later is safe;
+ * decreasing would break in-flight sessions, so leave these alone. */
+export const MAX_TRACKS = 16;
+export const MAX_BUSES = 8;
+export const MAX_SENDS_PER_TRACK = 4;
+export const MAX_INSERTS_PER_STRIP = 4;
 
 // ── Time + transport ─────────────────────────────────────────────────
 
@@ -134,6 +153,31 @@ export interface TrackEqBand {
   enabled: boolean;
 }
 
+/** Where a track's post-fader signal terminates. v2.0.0. */
+export interface TrackOutput {
+  /** Bus id — either MASTER_BUS_ID or a Bus.id in session.buses. Runtime
+   * validation rejects sends/outputs pointing at a bus that doesn't exist. */
+  bus_id: string;
+}
+
+/** A single send from a track to a bus. v2.0.0. Cap of 4 per track
+ * (MAX_SENDS_PER_TRACK). Pre-fader sends read the signal BEFORE the
+ * track's volume/pan; post-fader reads AFTER. */
+export interface Send {
+  id: string;
+  target_bus_id: string;   // must resolve to MASTER_BUS_ID or a Bus.id
+  level_db: number;        // -inf to +6, 0 default
+  enabled: boolean;
+  /** true = tap before the track fader (send doesn't follow volume);
+   *  false = tap after (send scales with the fader). Default false (post). */
+  pre_fader: boolean;
+}
+
+/** Live-input monitoring mode. v2.0.0. Only meaningful during a take —
+ *  the engine reads this when the track is armed. Default 'auto' (monitor
+ *  while armed, mute at other times). */
+export type InputMonitorMode = 'off' | 'auto' | 'on';
+
 interface TrackBase {
   id: string;
   kind: TrackKind;
@@ -144,8 +188,12 @@ interface TrackBase {
   mute: boolean;
   solo: boolean;
   arm: boolean;        // recording armed
-  fx: FxNode[];
+  fx: FxNode[];        // v2 terminology: inserts. Capped at MAX_INSERTS_PER_STRIP.
   eq?: TrackEqBand[];  // optional — absent on sessions written before Mixer/Mastering (B1)
+  // ── v2.0.0 additions (optional — v1 sessions default via migration) ──
+  output?: TrackOutput;      // defaults to { bus_id: MASTER_BUS_ID }
+  sends?: Send[];            // defaults to []
+  input_monitor?: InputMonitorMode; // defaults to 'auto'
 }
 
 export interface AudioTrack extends TrackBase {
@@ -193,8 +241,24 @@ export const DEFAULT_MASTERING: MasteringParams = {
 export interface MasterBus {
   volume_db: number;   // 0 default
   pan: number;         // 0 default
-  fx: FxNode[];        // applied to the final mix
+  fx: FxNode[];        // applied to the final mix (v2: inserts on the master strip)
   mastering?: MasteringParams; // optional — absent on sessions written before Mixer/Mastering (B1)
+}
+
+/** A user-defined stereo submix. v2.0.0. Tracks and other buses route
+ * into it via `output` or `sends`; its own `output` names the downstream
+ * target (default MASTER_BUS_ID). Routing cycles are rejected at load
+ * time (see routingGraph.ts, Phase 4). */
+export interface Bus {
+  id: string;
+  name: string;
+  color: string;       // hex e.g. '#8a8f9c'
+  volume_db: number;   // 0 default
+  pan: number;         // 0 default
+  mute: boolean;
+  solo: boolean;
+  fx: FxNode[];        // bus inserts, capped at MAX_INSERTS_PER_STRIP
+  output: TrackOutput; // where this bus terminates — default { bus_id: MASTER_BUS_ID }
 }
 
 // ── Audio assets ─────────────────────────────────────────────────────
@@ -235,6 +299,7 @@ export interface Session {
   // Mix
   master: MasterBus;
   tracks: Track[];
+  buses?: Bus[];        // v2.0.0 — absent on v1 sessions; migration fills [].
   assets: AudioAsset[];
 
   // Ownership + lineage
@@ -290,19 +355,43 @@ export function sanitizeCc(cc: unknown): MidiCcEvent[] {
   });
 }
 
-/** The minimum schema version that can represent this session: 1.1.0
- * when some MIDI clip actually uses cc events OR a track uses a premium
- * 'gw:' instrument (a 1.0.0-only client would render those as the basic
- * synth kit — garbled noise — so it must refuse the manifest instead),
- * else 1.0.0. A corrupt/non-array `cc` (truthy but not a real array)
- * must NOT stamp 1.1.0 — it's not a real cc feature, it's garbage that
- * sanitizeCc() will reduce to [] on load, so schema stays at the 1.0.0
- * baseline. */
+/** The minimum schema version that can represent this session:
+ *
+ *   2.0.0 — some track has a non-master output, a non-empty sends list,
+ *           or the session declares any user buses. A 1.x-only client
+ *           would silently drop the routing and mix everything into the
+ *           master, which is wrong, so the manifest must refuse to load
+ *           there instead of playing back a broken mix.
+ *   1.1.0 — some MIDI clip actually uses cc events OR a track uses a
+ *           premium 'gw:' instrument (a 1.0.0-only client would render
+ *           those as the basic synth kit — garbled noise — so it must
+ *           refuse the manifest instead).
+ *   1.0.0 — baseline (openable by the shipped iOS app).
+ *
+ * A corrupt/non-array `cc` (truthy but not a real array) must NOT stamp
+ * 1.1.0 — it's not a real cc feature, it's garbage that sanitizeCc()
+ * will reduce to [] on load, so schema stays at the 1.0.0 baseline.
+ * Same story for v2: an EMPTY buses array + all tracks pointing at
+ * master + no sends is behaviorally identical to a v1 session — no bump. */
 export function requiredSchemaVersion(session: Session): StudioSchemaVersion {
+  // Highest-first so we return as soon as any v2 feature is found.
+  if (usesV2Routing(session)) return '2.0.0';
   for (const t of session.tracks) {
     if (t.kind !== 'midi') continue;
     if (t.instrument?.preset_id?.startsWith('gw:')) return '1.1.0';
     for (const c of t.clips) if (sanitizeCc(c.cc).length > 0) return '1.1.0';
   }
   return '1.0.0';
+}
+
+/** True when the session's routing goes beyond "every track → master".
+ * Extracted so the version stamp and the v1→v2 migration idempotency
+ * check read from the same source of truth. */
+function usesV2Routing(session: Session): boolean {
+  if (Array.isArray(session.buses) && session.buses.length > 0) return true;
+  for (const t of session.tracks) {
+    if (t.output && t.output.bus_id !== MASTER_BUS_ID) return true;
+    if (Array.isArray(t.sends) && t.sends.length > 0) return true;
+  }
+  return false;
 }

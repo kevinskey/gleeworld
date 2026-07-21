@@ -40,12 +40,12 @@ describe('schema versions', () => {
     expect(requiredSchemaVersion(s)).toBe('1.1.0');
   });
 
-  it('validate accepts both known versions and rejects others', () => {
+  it('validate accepts every known version and rejects others', () => {
     for (const v of STUDIO_SCHEMA_VERSIONS) {
       const s = { ...base(), schema_version: v };
       expect(errorsOf(s).filter((e) => e.includes('schema_version'))).toEqual([]);
     }
-    const bad = { ...base(), schema_version: '2.0.0' } as unknown as Session;
+    const bad = { ...base(), schema_version: '3.0.0' } as unknown as Session;
     expect(errorsOf(bad).some((e) => e.includes('schema_version'))).toBe(true);
   });
 
