@@ -677,6 +677,9 @@ export function useStudioEngine(session: Session | null) {
         // empty/floor state on iOS until a follow-up wires this through
         // NativeStudio.
         getTrackPeakDb: (_trackId: string) => -Infinity,
+        // Native per-bus metering — same story as track metering, not
+        // wired yet. Web engine ships per-bus meters in Phase 6.
+        getBusPeakDb: (_busId: string) => -Infinity,
         // Bus strip live-edit isn't in the native plugin yet — v2.0.0
         // bus edits on iOS take effect on the next full engine reload
         // triggered by the skeleton-diff path.
@@ -716,6 +719,7 @@ export function useStudioEngine(session: Session | null) {
       nativeRecordStop: null as null | (() => Promise<{ localUrl: string; filename: string }>),
       setRecordingActive: (active: boolean) => engineRef.current?.setRecordingActive(active),
       getTrackPeakDb: (id: string) => engineRef.current?.getTrackPeakDb(id) ?? -Infinity,
+      getBusPeakDb: (id: string) => engineRef.current?.getBusPeakDb(id) ?? -Infinity,
     };
   }, [native]);
 

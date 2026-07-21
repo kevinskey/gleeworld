@@ -107,8 +107,9 @@ function useTapTracker(delayMs = 300) {
 interface MeterEntry {
   db: number;      // current displayed (post-ballistics) level
   holdDb: number;  // peak-hold — only moves up; resets on tap
+  clip: boolean;   // latches true once peak crosses 0 dBFS; resets on tap
 }
-const EMPTY_METER: MeterEntry = { db: -Infinity, holdDb: -Infinity };
+const EMPTY_METER: MeterEntry = { db: -Infinity, holdDb: -Infinity, clip: false };
 
 // ═══════════════════════════════════════════════════════════════════
 // MixerView
@@ -163,7 +164,18 @@ export function MixerView({
             const decayed = ppmDecay(prevEntry.db, dtSeconds);
             const db = Math.max(raw, decayed);
             const holdDb = db > prevEntry.holdDb ? db : prevEntry.holdDb;
-            next[t.id] = { db, holdDb };
+            const clip = prevEntry.clip || raw > 0;
+            next[t.id] = { db, holdDb, clip };
+          }
+          // Phase 6: same read path for user buses.
+          for (const b of session.buses ?? []) {
+            const raw = engineState.getBusPeakDb?.(b.id) ?? -Infinity;
+            const prevEntry = prev[b.id] ?? EMPTY_METER;
+            const decayed = ppmDecay(prevEntry.db, dtSeconds);
+            const db = Math.max(raw, decayed);
+            const holdDb = db > prevEntry.holdDb ? db : prevEntry.holdDb;
+            const clip = prevEntry.clip || raw > 0;
+            next[b.id] = { db, holdDb, clip };
           }
           // Master bus reuses the transport bar's existing peakDbL/R —
           // average L/R into a single displayed number for the strip.
@@ -171,7 +183,11 @@ export function MixerView({
           const prevMaster = prev.master ?? EMPTY_METER;
           const masterDecayed = ppmDecay(prevMaster.db, dtSeconds);
           const masterDb = Math.max(masterRaw, masterDecayed);
-          next.master = { db: masterDb, holdDb: masterDb > prevMaster.holdDb ? masterDb : prevMaster.holdDb };
+          next.master = {
+            db: masterDb,
+            holdDb: masterDb > prevMaster.holdDb ? masterDb : prevMaster.holdDb,
+            clip: prevMaster.clip || masterRaw > 0,
+          };
           return next;
         });
       }
@@ -180,10 +196,10 @@ export function MixerView({
     rafId = requestAnimationFrame(tick);
     return () => { if (rafId !== null) cancelAnimationFrame(rafId); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.tracks, engineState, state?.peakDbL, state?.peakDbR]);
+  }, [session.tracks, session.buses, engineState, state?.peakDbL, state?.peakDbR]);
 
   const resetHold = useCallback((id: string) => {
-    setMeters((prev) => ({ ...prev, [id]: { db: prev[id]?.db ?? -Infinity, holdDb: -Infinity } }));
+    setMeters((prev) => ({ ...prev, [id]: { db: prev[id]?.db ?? -Infinity, holdDb: -Infinity, clip: false } }));
   }, []);
 
   const setStrip = useCallback((trackId: string, patch: StripPatch) => {
@@ -386,6 +402,8 @@ export function MixerView({
              *  the cycle check would reject that anyway; the dropdown
              *  filters it out for clarity. */
             downstreamBuses={(session.buses ?? []).filter((other) => other.id !== b.id)}
+            meter={meters[b.id] ?? EMPTY_METER}
+            onResetHold={() => resetHold(b.id)}
             onStripChange={(p) => setBusStrip(b.id, p)}
             onOutputChange={(targetBusId) => setBusOutput(b.id, targetBusId)}
             onRemove={() => removeBusHandler(b.id)}
@@ -596,14 +614,14 @@ function ChannelStrip({
           <PanKnob pan={track.pan} onChange={(pan) => onStripChange({ pan })} />
           <div className="flex items-end gap-1.5 flex-1">
             <Fader volumeDb={track.volume_db} muted={track.mute} onChange={(db) => onStripChange({ volume_db: db })} />
-            <PeakMeter db={meter.db} holdDb={meter.holdDb} onReset={onResetHold} />
+            <PeakMeter db={meter.db} holdDb={meter.holdDb} clip={meter.clip} onReset={onResetHold} />
           </div>
         </>
       )}
       {isPhone && (
         <div className="w-full flex items-center gap-1.5">
           <div className="flex-1 text-xs tabular-nums text-center text-muted-foreground">{formatDb(track.volume_db)}</div>
-          <PeakMeter db={meter.db} holdDb={meter.holdDb} onReset={onResetHold} height={48} />
+          <PeakMeter db={meter.db} holdDb={meter.holdDb} clip={meter.clip} onReset={onResetHold} height={48} />
         </div>
       )}
 
@@ -864,8 +882,8 @@ function Fader({ volumeDb, muted, onChange }: { volumeDb: number; muted: boolean
 // PeakMeter — PPM bar + numeric peak-hold, tap resets
 // ═══════════════════════════════════════════════════════════════════
 
-function PeakMeter({ db, holdDb, onReset, height = FADER_TRACK_HEIGHT }: {
-  db: number; holdDb: number; onReset: () => void; height?: number;
+function PeakMeter({ db, holdDb, clip = false, onReset, height = FADER_TRACK_HEIGHT }: {
+  db: number; holdDb: number; clip?: boolean; onReset: () => void; height?: number;
 }) {
   const pct = clamp(((db === -Infinity ? -60 : db) + 60) / 60 * 100, 0, 100);
   const hot = db > -3;
@@ -874,10 +892,16 @@ function PeakMeter({ db, holdDb, onReset, height = FADER_TRACK_HEIGHT }: {
     <button
       type="button"
       onClick={onReset}
-      title="Tap to reset peak hold"
+      title={clip ? 'Clipped — tap to reset' : 'Tap to reset peak hold'}
       className="flex flex-col items-center gap-0.5 justify-end px-2 py-1 min-w-11 min-h-11"
     >
-      <span className="text-xs tabular-nums text-muted-foreground leading-none">
+      {/* Phase 6 — persistent clip indicator. Latches red once peak
+       *  ever crosses 0 dBFS; clears on the same reset tap as peak-hold. */}
+      <span
+        className={`w-2 h-1 rounded-sm ${clip ? 'bg-rose-500' : 'bg-transparent'}`}
+        aria-label={clip ? 'Clipping' : undefined}
+      />
+      <span className={`text-xs tabular-nums leading-none ${clip ? 'text-rose-400' : 'text-muted-foreground'}`}>
         {holdDb === -Infinity ? '—' : holdDb.toFixed(0)}
       </span>
       <div className="w-2 bg-muted rounded-sm overflow-hidden flex flex-col justify-end" style={{ height }}>
@@ -1088,7 +1112,7 @@ function MasterStrip({
 
       <div className="flex items-center justify-center gap-3">
         <span className="text-xs text-muted-foreground">Peak {block ? `${block.peakDb.toFixed(1)}dB` : '—'}</span>
-        <PeakMeter db={meter.db} holdDb={meter.holdDb} onReset={onResetHold} height={64} />
+        <PeakMeter db={meter.db} holdDb={meter.holdDb} clip={meter.clip} onReset={onResetHold} height={64} />
       </div>
 
       <button
@@ -1152,13 +1176,17 @@ function OutputSelector({
  *  the corner triggers session removal + retargets any track pointing
  *  here back to master (see removeBusHandler in MixerView). */
 function BusStrip({
-  bus, downstreamBuses, onStripChange, onOutputChange, onRemove, fxOpen, onToggleFx,
+  bus, downstreamBuses, meter, onResetHold, onStripChange, onOutputChange, onRemove, fxOpen, onToggleFx,
 }: {
   bus: Bus;
   /** v2.0.0 (Phase 4c) — user buses this bus can route to. Master
    *  is always available as a target; the caller filters this bus
    *  out to keep users from clicking themselves. */
   downstreamBuses: Bus[];
+  /** Phase 6 — parallel-tap meter reading from the engine's per-bus
+   *  Tone.Meter. */
+  meter: MeterEntry;
+  onResetHold: () => void;
   onStripChange: (p: StripPatch) => void;
   /** Called with the new target bus id. The caller runs the cycle
    *  check and toasts on rejection — this button just requests. */
@@ -1213,6 +1241,7 @@ function BusStrip({
       <PanKnob pan={bus.pan} onChange={(pan) => onStripChange({ pan })} />
       <div className="flex items-end gap-1.5 flex-1">
         <Fader volumeDb={bus.volume_db} muted={bus.mute} onChange={(db) => onStripChange({ volume_db: db })} />
+        <PeakMeter db={meter.db} holdDb={meter.holdDb} clip={meter.clip} onReset={onResetHold} />
       </div>
       <div className="flex items-center gap-1">
         <button
