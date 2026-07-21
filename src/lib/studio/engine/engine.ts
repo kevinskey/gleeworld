@@ -19,6 +19,7 @@ import { MASTER_BUS_ID } from '../session';
 import { buildFxChain, type EngineFxChain } from './fx';
 import { buildTrack, type EngineTrack } from './tracks';
 import { buildBus, type EngineBus } from './buses';
+import { buildSend, type EngineSend } from './sends';
 import { setAssetUrl } from './assetUrlCache';
 import { shouldLoopWrap } from '../transport';
 import { buildMasterChain, type MasterChainHandle } from './masterChain';
@@ -178,6 +179,10 @@ export class StudioEngine {
   // to the NEW without touching parallel taps like the meter fan-out.
   private trackOutputTargets = new Map<string, Tone.ToneAudioNode>();
   private busOutputTargets = new Map<string, Tone.ToneAudioNode>();
+  // Live sends per track. Keyed by (trackId, sendId) so a level edit
+  // finds the right Gain node without walking the tree. Rebuilt at
+  // loadSession from session.tracks[].sends alongside track routing.
+  private trackSends = new Map<string, Map<string, EngineSend>>();
   // Per-track PPM peak meters (B1 Task 6) — one Tone.Meter tapped in
   // PARALLEL off each track's post-EQ output (does not affect the
   // signal path to masterIn). Rebuilt alongside `tracks` in
@@ -458,6 +463,10 @@ export class StudioEngine {
     }
     this.chainSync.dispose();
     this.state.masterChain = undefined;
+    for (const sends of this.trackSends.values()) {
+      for (const s of sends.values()) s.dispose();
+    }
+    this.trackSends.clear();
     for (const t of this.tracks.values()) t.dispose();
     this.tracks.clear();
     for (const b of this.buses.values()) b.dispose();
@@ -532,6 +541,12 @@ export class StudioEngine {
     this.tracks.clear();
     for (const m of this.trackMeters.values()) m.dispose();
     this.trackMeters.clear();
+    // Sends dispose FIRST — they hold edges into the buses that are
+    // about to be rebuilt.
+    for (const sends of this.trackSends.values()) {
+      for (const s of sends.values()) s.dispose();
+    }
+    this.trackSends.clear();
     for (const tr of session.tracks) {
       const eng = buildTrack(tr, session.assets);
       eng.userMute = tr.mute;
@@ -563,6 +578,26 @@ export class StudioEngine {
         bus.output.connect(target);
         this.busOutputTargets.set(b.id, target);
       }
+    }
+
+    // v2.0.0: sends. Built AFTER tracks + buses so both endpoints
+    // exist. Each send fans out from the source track's pre- or
+    // post-fader tap into the target bus's input. A send whose
+    // target bus doesn't exist is silently skipped (validation
+    // rejects that shape at load, so this is belt-and-suspenders).
+    for (const tr of session.tracks) {
+      const trackEng = this.tracks.get(tr.id);
+      if (!trackEng || !tr.sends || tr.sends.length === 0) continue;
+      const built = new Map<string, EngineSend>();
+      for (const snd of tr.sends) {
+        const targetBus = snd.target_bus_id === MASTER_BUS_ID
+          ? this.masterIn
+          : this.buses.get(snd.target_bus_id)?.input;
+        if (!targetBus) continue;
+        const source = snd.pre_fader ? trackEng.preFaderTap : trackEng.postFaderTap;
+        built.set(snd.id, buildSend(snd, source, targetBus));
+      }
+      if (built.size > 0) this.trackSends.set(tr.id, built);
     }
 
     this.recomputeSolo();
@@ -810,6 +845,21 @@ export class StudioEngine {
     return Array.from(this.buses.values()).map((b) => ({
       id: b.busId, userMute: b.userMute, userSolo: b.userSolo,
     }));
+  }
+
+  /** Live send-level ramp (30 ms). Structural send changes (add /
+   *  remove / target-bus / pre-fader toggle / enabled toggle) go
+   *  through the skeleton-diff full reload so the graph is rebuilt
+   *  consistently — only per-send level is a live edit. Returns false
+   *  when the track or send isn't built (caller can decide to fall
+   *  back to a reload). */
+  updateSendLevel(trackId: string, sendId: string, levelDb: number): boolean {
+    const sends = this.trackSends.get(trackId);
+    if (!sends) return false;
+    const send = sends.get(sendId);
+    if (!send) return false;
+    send.updateLevel(levelDb);
+    return true;
   }
 
   // ── Runtime-hook aliases ──────────────────────────────────────────

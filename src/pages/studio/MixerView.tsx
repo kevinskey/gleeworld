@@ -34,9 +34,9 @@ import type { useStudioEngine } from '@/hooks/useStudio';
 import type { EngineState } from '@/lib/studio/engine/engine';
 import type { MeterBlock } from '@/lib/studio/engine/masterChain';
 import {
-  isAudioTrack, withMasteringDefaults, MASTER_BUS_ID, MAX_BUSES,
+  isAudioTrack, withMasteringDefaults, MASTER_BUS_ID, MAX_BUSES, MAX_SENDS_PER_TRACK,
   type Session, type Track, type TrackEqBand, type MasteringParams,
-  type Bus,
+  type Bus, type Send,
 } from '@/lib/studio/session';
 import { newBus } from '@/lib/studio/defaults';
 import { faderPosToDb, dbToFaderPos } from '@/lib/studio/dsp/faderTaper';
@@ -131,6 +131,8 @@ export function MixerView({
   // (rendered LIGHT) and modally dimmed the whole app; Kevin: "should
   // open in studio, not full screen".
   const [eqTrackId, setEqTrackId] = useState<string | null>(null);
+  // v2.0.0: sends panel docked the same way — one open at a time.
+  const [sendsTrackId, setSendsTrackId] = useState<string | null>(null);
 
   // ── Meter rAF loop — polls engineState.getTrackPeakDb per track + the
   // existing master peakDbL/R off `state`, applies PPM release
@@ -232,6 +234,63 @@ export function MixerView({
     }));
   }, [update]);
 
+  // v2.0.0 sends. Structural changes (add/remove/target/pre-post/enabled)
+  // fall through the skeleton-diff reload. Level drags stay live via
+  // engineState.updateSendLevel.
+  const setSendLevel = useCallback((trackId: string, sendId: string, levelDb: number) => {
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => {
+        if (t.id !== trackId) return t;
+        const sends = (t.sends ?? []).map((snd) => snd.id === sendId ? { ...snd, level_db: levelDb } : snd);
+        return { ...t, sends } as Track;
+      }),
+    }));
+    engineState.updateSendLevel?.(trackId, sendId, levelDb);
+  }, [update, engineState]);
+
+  const setSendField = useCallback((trackId: string, sendId: string, patch: Partial<Send>) => {
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => {
+        if (t.id !== trackId) return t;
+        const sends = (t.sends ?? []).map((snd) => snd.id === sendId ? { ...snd, ...patch } : snd);
+        return { ...t, sends } as Track;
+      }),
+    }));
+  }, [update]);
+
+  const addSend = useCallback((trackId: string, targetBusId: string) => {
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => {
+        if (t.id !== trackId) return t;
+        const current = t.sends ?? [];
+        if (current.length >= MAX_SENDS_PER_TRACK) return t;
+        const send: Send = {
+          id: (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
+            ? crypto.randomUUID()
+            : `snd-${Math.random().toString(36).slice(2)}`,
+          target_bus_id: targetBusId,
+          level_db: -6,
+          enabled: true,
+          pre_fader: false,
+        };
+        return { ...t, sends: [...current, send] } as Track;
+      }),
+    }));
+  }, [update]);
+
+  const removeSend = useCallback((trackId: string, sendId: string) => {
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => {
+        if (t.id !== trackId) return t;
+        return { ...t, sends: (t.sends ?? []).filter((snd) => snd.id !== sendId) } as Track;
+      }),
+    }));
+  }, [update]);
+
   const activePhoneTrack = activePhoneTrackId
     ? session.tracks.find((t) => t.id === activePhoneTrackId) ?? null
     : null;
@@ -258,6 +317,8 @@ export function MixerView({
             onOutputChange={(busId) => setTrackOutput(t.id, busId)}
             eqOpen={eqTrackId === t.id}
             onToggleEq={() => setEqTrackId(eqTrackId === t.id ? null : t.id)}
+            sendsOpen={sendsTrackId === t.id}
+            onToggleSends={() => setSendsTrackId(sendsTrackId === t.id ? null : t.id)}
             isPhone={isPhone}
             onTapPhone={() => setActivePhoneTrackId(t.id)}
           />
@@ -285,6 +346,20 @@ export function MixerView({
             track={eqTrack}
             onChange={(eq) => setTrackEq(eqTrack.id, eq)}
             onClose={() => setEqTrackId(null)}
+          />
+        );
+      })()}
+      {(() => {
+        const sendsTrack = sendsTrackId ? session.tracks.find((t) => t.id === sendsTrackId) ?? null : null;
+        return sendsTrack && (
+          <SendsPanel
+            track={sendsTrack}
+            buses={session.buses ?? []}
+            onAdd={(targetBusId) => addSend(sendsTrack.id, targetBusId)}
+            onRemove={(sendId) => removeSend(sendsTrack.id, sendId)}
+            onLevelChange={(sendId, db) => setSendLevel(sendsTrack.id, sendId, db)}
+            onFieldChange={(sendId, patch) => setSendField(sendsTrack.id, sendId, patch)}
+            onClose={() => setSendsTrackId(null)}
           />
         );
       })()}
@@ -329,7 +404,7 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
 // ═══════════════════════════════════════════════════════════════════
 
 function ChannelStrip({
-  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, isPhone, onTapPhone,
+  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, sendsOpen, onToggleSends, isPhone, onTapPhone,
 }: {
   index: number;
   track: Track;
@@ -343,11 +418,15 @@ function ChannelStrip({
   /** Whether this strip's EQ panel is the one docked open below. */
   eqOpen: boolean;
   onToggleEq: () => void;
+  /** Whether this strip's Sends panel is the one docked open below. */
+  sendsOpen: boolean;
+  onToggleSends: () => void;
   isPhone: boolean;
   onTapPhone: () => void;
 }) {
   const hasEnabledBand = (track.eq ?? []).some((b) => b.enabled);
   const outputBusId = track.output?.bus_id ?? MASTER_BUS_ID;
+  const enabledSendCount = (track.sends ?? []).filter((s) => s.enabled).length;
 
   return (
     <div className="shrink-0 w-24 sm:w-28 bg-card border border-border rounded-md flex flex-col items-center gap-1.5 p-1.5">
@@ -386,6 +465,24 @@ function ChannelStrip({
           value={outputBusId}
           onChange={onOutputChange}
         />
+      )}
+
+      {/* v2.0.0 — Sends chip, opens the docked SendsPanel. Only shown
+       *  when the session has at least one bus to send TO (otherwise
+       *  the panel would just be an empty Add-send button). */}
+      {buses.length > 0 && (
+        <button
+          type="button"
+          onClick={onToggleSends}
+          className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+            sendsOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
+          title="Sends"
+        >
+          Sends
+          {enabledSendCount > 0 && (
+            <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledSendCount}</span>
+          )}
+        </button>
       )}
 
       {!isPhone && (
@@ -988,6 +1085,130 @@ function BusStrip({
           className={`text-sm font-bold px-1.5 py-0.5 rounded border ${bus.solo ? 'bg-yellow-400 border-yellow-400 text-yellow-950' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
         >S</button>
       </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SendsPanel — v2.0.0
+// ═══════════════════════════════════════════════════════════════════
+//
+// Docked below the strip row (same pattern as TrackEqPanel) so the
+// mixer stays visible while a user is editing a track's sends. Each
+// row shows: target bus dropdown, pre/post toggle, level slider, dB
+// readout, enable toggle, remove button.
+
+function SendsPanel({
+  track, buses, onAdd, onRemove, onLevelChange, onFieldChange, onClose,
+}: {
+  track: Track;
+  buses: Bus[];
+  onAdd: (targetBusId: string) => void;
+  onRemove: (sendId: string) => void;
+  onLevelChange: (sendId: string, levelDb: number) => void;
+  onFieldChange: (sendId: string, patch: Partial<Send>) => void;
+  onClose: () => void;
+}) {
+  const sends = track.sends ?? [];
+  const atCap = sends.length >= MAX_SENDS_PER_TRACK;
+  return (
+    <div className="bg-card border border-border rounded-md p-3 flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-semibold">
+          <span className="text-muted-foreground">Sends —</span> {track.name}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="h-7 w-7 rounded hover:bg-muted inline-flex items-center justify-center text-muted-foreground"
+          title="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      {sends.length === 0 && (
+        <div className="text-xs text-muted-foreground">
+          No sends yet. Add one to route a copy of this track into a bus.
+        </div>
+      )}
+      {sends.map((snd) => {
+        const bus = buses.find((b) => b.id === snd.target_bus_id);
+        return (
+          <div key={snd.id} className="grid grid-cols-[10rem_5rem_1fr_3.5rem_5rem_2rem] items-center gap-2">
+            <Select value={snd.target_bus_id} onValueChange={(v) => onFieldChange(snd.id, { target_bus_id: v })}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={MASTER_BUS_ID}>Master</SelectItem>
+                {buses.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <button
+              type="button"
+              onClick={() => onFieldChange(snd.id, { pre_fader: !snd.pre_fader })}
+              className={`h-8 rounded border text-[11px] font-semibold ${
+                snd.pre_fader ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted text-muted-foreground hover:bg-muted/70'
+              }`}
+              title={snd.pre_fader ? 'Pre-fader (independent of track fader)' : 'Post-fader (follows track fader)'}
+            >
+              {snd.pre_fader ? 'Pre' : 'Post'}
+            </button>
+            <Slider
+              value={[snd.level_db]}
+              min={-60} max={6} step={0.1}
+              onValueChange={(v) => onLevelChange(snd.id, v[0])}
+              className="flex-1"
+              disabled={!snd.enabled}
+            />
+            <span className={`text-xs tabular-nums text-right ${snd.enabled ? '' : 'text-muted-foreground'}`}>{formatDb(snd.level_db)} dB</span>
+            <Switch
+              checked={snd.enabled}
+              onCheckedChange={(v) => onFieldChange(snd.id, { enabled: v })}
+              aria-label={snd.enabled ? 'Disable send' : 'Enable send'}
+            />
+            <button
+              type="button"
+              onClick={() => onRemove(snd.id)}
+              className="h-8 w-8 rounded hover:bg-destructive/20 hover:text-destructive text-muted-foreground inline-flex items-center justify-center"
+              title={`Remove send${bus ? ' to ' + bus.name : ''}`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      })}
+      <AddSendControl buses={buses} disabled={atCap} onAdd={onAdd} />
+    </div>
+  );
+}
+
+/** Inline "+ Send" control — dropdown of target buses. Master is always
+ *  selectable; the user's buses follow. Disabled when the track already
+ *  has MAX_SENDS_PER_TRACK. */
+function AddSendControl({ buses, disabled, onAdd }: { buses: Bus[]; disabled: boolean; onAdd: (busId: string) => void }) {
+  const [pending, setPending] = useState<string>('');
+  return (
+    <div className="flex items-center gap-2 pt-1 border-t border-border">
+      <Select value={pending} onValueChange={setPending}>
+        <SelectTrigger className="h-8 w-40 text-xs" disabled={disabled}>
+          <SelectValue placeholder={disabled ? `Send cap reached (${MAX_SENDS_PER_TRACK})` : 'Add send to…'} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={MASTER_BUS_ID}>Master</SelectItem>
+          {buses.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <button
+        type="button"
+        disabled={!pending || disabled}
+        onClick={() => { onAdd(pending); setPending(''); }}
+        className={`h-8 px-3 rounded border text-xs font-semibold ${
+          !pending || disabled
+            ? 'border-border/50 bg-muted/30 text-muted-foreground/40 cursor-not-allowed'
+            : 'border-border bg-muted hover:bg-muted/70'
+        }`}
+      >
+        Add
+      </button>
     </div>
   );
 }

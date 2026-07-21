@@ -192,6 +192,13 @@ function buildSkeletonSig(session: Session | null, fxFn: (f: { id: string; type:
     // an incremental setTrackOutput bridge from useStudio; the engine
     // has one, but wiring it through the hook is Phase 4b).
     parts.push(`out:${t.output?.bus_id ?? 'master'}`);
+    // v2.0.0 sends: structural fields only. Level is DELIBERATELY
+    // EXCLUDED so a send-slider drag stays live via engine.updateSendLevel.
+    // Adding/removing a send, retargeting it, flipping pre↔post, or
+    // toggling enabled rebuilds via the skeleton-diff reload.
+    for (const snd of t.sends ?? []) {
+      parts.push(`snd:${snd.id}:${snd.target_bus_id}:${snd.pre_fader ? 'pre' : 'post'}:${snd.enabled ? 1 : 0}`);
+    }
     if (t.kind === 'midi') {
       // MIDI tracks still need full rebuild for clip / note edits — the
       // incremental path here only covers audio clips. Hash midi note/cc
@@ -674,6 +681,9 @@ export function useStudioEngine(session: Session | null) {
         // bus edits on iOS take effect on the next full engine reload
         // triggered by the skeleton-diff path.
         updateBusStrip: async (_busId: string, _p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => { /* not wired on native yet */ },
+        // v2.0.0 sends — same story: level edits on iOS take effect
+        // on the next reload until the native plugin gets a bridge.
+        updateSendLevel: async (_trackId: string, _sendId: string, _levelDb: number) => { /* not wired on native yet */ },
       };
     }
     return {
@@ -689,6 +699,8 @@ export function useStudioEngine(session: Session | null) {
         engineRef.current?.updateMasterStrip(p),
       updateBusStrip: (id: string, p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) =>
         engineRef.current?.updateBusStrip(id, p),
+      updateSendLevel: (trackId: string, sendId: string, levelDb: number) =>
+        engineRef.current?.updateSendLevel(trackId, sendId, levelDb),
       updateTempo: (bpm: number) => engineRef.current?.updateTransport({ tempo: bpm }),
       updateTimeSignature: (n: number, d: number) =>
         engineRef.current?.updateTransport({ timeSignature: [n, d] }),

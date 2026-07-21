@@ -35,6 +35,13 @@ export interface ClipPlayback {
 export interface EngineTrack {
   trackId: string;
   output: Tone.ToneAudioNode;
+  /** Pre-fader tap — signal BEFORE panvol. Pre-fader sends read here
+   *  so a fader drag doesn't scale the send level. v2.0.0. */
+  preFaderTap: Tone.ToneAudioNode;
+  /** Post-fader tap — signal AFTER volume+pan+mute, BEFORE track FX.
+   *  Post-fader sends read here. Muting the track silences post-fader
+   *  sends too, which matches the DAW convention. v2.0.0. */
+  postFaderTap: Tone.ToneAudioNode;
   /** User-facing mute flag (persisted to session). Engine layer
    * uses this when computing solo overrides. */
   userMute: boolean;
@@ -52,12 +59,17 @@ export interface EngineTrack {
 }
 
 export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
-  // Tone.PanVol's second constructor argument is volume in dB, NOT a
-  // linear gain. Passing dbToGain() here was silently boosting tracks by
-  // +1 dB and would have been the wrong value for any non-zero volume.
+  // v2.0.0 signal path:
+  //   source → preTap (unity Gain) → panvol → muteGate → fx → eq → output
+  // preTap exists so pre-fader sends can read the raw source without
+  // the fader/pan/mute applied. It's a passthrough (gain=1) on the
+  // main signal path; only sends fan out from it. Pre-existing behavior
+  // is preserved — no signal change vs. Phase 4a.
+  const preTap = new Tone.Gain(1);
   const panvol = new Tone.PanVol(track.pan, track.volume_db);
   const muteGate = new Tone.Gain(track.mute ? 0 : 1);
   const fx = buildFxChain(track.fx);
+  preTap.connect(panvol);
   panvol.connect(muteGate);
   muteGate.connect(fx.input);
   // Belt-and-suspenders: explicitly set the gain again after construction.
@@ -85,6 +97,7 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
   }
 
   const disposers: Array<() => void> = [
+    () => preTap.dispose(),
     () => panvol.dispose(),
     () => muteGate.dispose(),
     () => fx.dispose(),
@@ -92,16 +105,19 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
   ];
   const playbacks: ClipPlayback[] = [];
 
+  // Sources now feed preTap instead of panvol so pre-fader sends see
+  // the raw signal. Main path still flows preTap → panvol → ... as
+  // before, so audible output is identical.
   if (isAudioTrack(track)) {
     const assetMap = new Map(assets.map((a) => [a.id, a]));
     for (const clip of track.clips) {
       const asset = assetMap.get(clip.asset_id);
       if (!asset) continue;
-      scheduleAudioClip(clip, asset, panvol, disposers, playbacks);
+      scheduleAudioClip(clip, asset, preTap, disposers, playbacks);
     }
   } else if (isMidiTrack(track)) {
     const inst = buildInstrument(track.instrument);
-    inst.output.connect(panvol);
+    inst.output.connect(preTap);
     disposers.push(() => inst.dispose());
     for (const clip of track.clips) {
       scheduleMidiClip(clip, inst, disposers);
@@ -113,6 +129,8 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
     // Track output = the last enabled EQ band, or fx.output when the
     // track has no enabled EQ (eqTail starts life as fx.output).
     output: eqTail,
+    preFaderTap: preTap,
+    postFaderTap: muteGate,
     userMute: track.mute,
     userSolo: track.solo,
     playbacks,
