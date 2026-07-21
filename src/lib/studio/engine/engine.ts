@@ -14,7 +14,7 @@
 //     for Tone version quirks we've hit before. Looks redundant, isn't.
 
 import * as Tone from 'tone';
-import type { Session, AudioAsset, AudioClip, MasteringParams } from '../session';
+import type { Session, AudioAsset, AudioClip, MasteringParams, Bus } from '../session';
 import { MASTER_BUS_ID } from '../session';
 import { buildFxChain, type EngineFxChain } from './fx';
 import { buildTrack, type EngineTrack } from './tracks';
@@ -173,6 +173,11 @@ export class StudioEngine {
   // v1 sessions — the migration fills session.buses = [] at load, so
   // this map is just empty for legacy sessions.
   private buses = new Map<string, EngineBus>();
+  // Current downstream target node per source (track or bus). Used to
+  // route incremental edits — disconnect from the OLD target and connect
+  // to the NEW without touching parallel taps like the meter fan-out.
+  private trackOutputTargets = new Map<string, Tone.ToneAudioNode>();
+  private busOutputTargets = new Map<string, Tone.ToneAudioNode>();
   // Per-track PPM peak meters (B1 Task 6) — one Tone.Meter tapped in
   // PARALLEL off each track's post-EQ output (does not affect the
   // signal path to masterIn). Rebuilt alongside `tracks` in
@@ -513,6 +518,8 @@ export class StudioEngine {
       // eslint-disable-next-line no-console
       console.error(`[studio] bus routing cycle detected — bypassing all bus routing this load: ${formatCycle(cycleCheck.cycle)}`);
     }
+    this.trackOutputTargets.clear();
+    this.busOutputTargets.clear();
     if (busGraphOk) {
       for (const b of sessionBuses) {
         const bus = buildBus(b);
@@ -537,6 +544,7 @@ export class StudioEngine {
       const targetBusId = tr.output?.bus_id ?? MASTER_BUS_ID;
       const target = this.resolveRoutingTarget(targetBusId);
       eng.output.connect(target);
+      this.trackOutputTargets.set(tr.id, target);
       // Parallel meter tap — a second `.connect()` off the same output
       // fans the signal out without removing the destination connection.
       const meter = new Tone.Meter({ channelCount: 1, smoothing: 0.7 });
@@ -553,6 +561,7 @@ export class StudioEngine {
         if (!bus) continue;
         const target = this.resolveRoutingTarget(b.output.bus_id);
         bus.output.connect(target);
+        this.busOutputTargets.set(b.id, target);
       }
     }
 
@@ -711,6 +720,96 @@ export class StudioEngine {
     if (!m) return -Infinity;
     const v = m.getValue();
     return Array.isArray(v) ? (v[0] ?? -Infinity) : v;
+  }
+
+  // ── v2.0.0: bus lifecycle + routing ───────────────────────────────
+
+  hasBus(busId: string): boolean {
+    return this.buses.has(busId);
+  }
+
+  /** Incremental bus add — no full engine rebuild. New bus routes to
+   *  master by default (the Bus schema defaults `output.bus_id` to
+   *  MASTER_BUS_ID, and this method reads it), so it's audible the
+   *  moment a track's output is retargeted onto it. Idempotent for a
+   *  bus id that's already built. */
+  addBus(bus: Bus): void {
+    if (this.buses.has(bus.id)) return;
+    const built = buildBus(bus);
+    const target = this.resolveRoutingTarget(bus.output.bus_id);
+    built.output.connect(target);
+    this.buses.set(bus.id, built);
+    this.busOutputTargets.set(bus.id, target);
+  }
+
+  /** Incremental bus remove — retargets every source that was routed
+   *  into this bus back to master BEFORE dispose so no orphaned edges
+   *  are left. The caller is responsible for updating the session
+   *  document so track.output.bus_id / bus.output.bus_id match.
+   *  No-op if the bus isn't built. */
+  removeBus(busId: string): void {
+    const bus = this.buses.get(busId);
+    if (!bus) return;
+    // Any track pointing at this bus → master.
+    for (const [tId, target] of this.trackOutputTargets) {
+      if (target !== bus.input) continue;
+      const trk = this.tracks.get(tId);
+      if (!trk) continue;
+      try { trk.output.disconnect(bus.input); } catch { /* already gone */ }
+      trk.output.connect(this.masterIn);
+      this.trackOutputTargets.set(tId, this.masterIn);
+    }
+    // Any bus pointing at this bus → master.
+    for (const [bId, target] of this.busOutputTargets) {
+      if (bId === busId || target !== bus.input) continue;
+      const b = this.buses.get(bId);
+      if (!b) continue;
+      try { b.output.disconnect(bus.input); } catch { /* already gone */ }
+      b.output.connect(this.masterIn);
+      this.busOutputTargets.set(bId, this.masterIn);
+    }
+    bus.dispose();
+    this.buses.delete(busId);
+    this.busOutputTargets.delete(busId);
+  }
+
+  /** Live bus strip ramp — mirror of updateTrackStrip. Volume/pan/mute
+   *  updates go through 30 ms linear ramps so a fader drag is click-free. */
+  updateBusStrip(busId: string, patch: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }): void {
+    const b = this.buses.get(busId);
+    if (!b) return;
+    if (patch.mute !== undefined) b.userMute = patch.mute;
+    if (patch.solo !== undefined) b.userSolo = patch.solo;
+    b.updateStrip({ volume_db: patch.volume_db, pan: patch.pan });
+    // Solo re-eval: a bus solo silences non-soloed tracks/buses.
+    // Phase 4a keeps the existing track-level recomputeSolo — bus
+    // solo is a UI state until Phase 6 wires the extended solo logic.
+    this.recomputeSolo();
+  }
+
+  /** Incremental track routing — disconnect from the current downstream
+   *  target and connect to the new one, leaving the parallel meter tap
+   *  untouched. Returns `false` when the track or target isn't known
+   *  (caller falls back to a full reload). */
+  setTrackOutput(trackId: string, targetBusId: string): boolean {
+    const t = this.tracks.get(trackId);
+    if (!t) return false;
+    if (targetBusId !== MASTER_BUS_ID && !this.buses.has(targetBusId)) return false;
+    const newTarget = this.resolveRoutingTarget(targetBusId);
+    const oldTarget = this.trackOutputTargets.get(trackId) ?? this.masterIn;
+    if (oldTarget === newTarget) return true;
+    try { t.output.disconnect(oldTarget); } catch { /* already gone */ }
+    t.output.connect(newTarget);
+    this.trackOutputTargets.set(trackId, newTarget);
+    return true;
+  }
+
+  /** Iterate over built buses (id → EngineBus). Read-only view — used
+   *  by MixerView to enumerate BusStrips without exposing the map. */
+  listBuses(): { id: string; userMute: boolean; userSolo: boolean }[] {
+    return Array.from(this.buses.values()).map((b) => ({
+      id: b.busId, userMute: b.userMute, userSolo: b.userSolo,
+    }));
   }
 
   // ── Runtime-hook aliases ──────────────────────────────────────────

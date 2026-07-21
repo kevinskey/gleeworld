@@ -187,6 +187,11 @@ function buildSkeletonSig(session: Session | null, fxFn: (f: { id: string; type:
     // Per-track EQ bands are baked into buildTrack's graph exactly like
     // FX nodes, so EQ edits ride the same full-rebuild path (B1 task 5).
     parts.push(trackEqSig(t.eq));
+    // v2.0.0: track routing target is part of the skeleton so a routing
+    // change forces a rebuild via loadSession (Phase 4a does not have
+    // an incremental setTrackOutput bridge from useStudio; the engine
+    // has one, but wiring it through the hook is Phase 4b).
+    parts.push(`out:${t.output?.bus_id ?? 'master'}`);
     if (t.kind === 'midi') {
       // MIDI tracks still need full rebuild for clip / note edits — the
       // incremental path here only covers audio clips. Hash midi note/cc
@@ -197,6 +202,14 @@ function buildSkeletonSig(session: Session | null, fxFn: (f: { id: string; type:
         parts.push(`${c.id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${midiContentSig(c)}`);
       }
     }
+  }
+  // v2.0.0: buses. Include id, output target, and FX so add/remove/
+  // routing/insert changes rebuild. Strip fields (volume/pan/mute)
+  // are DELIBERATELY EXCLUDED so a fader drag stays live via
+  // engine.updateBusStrip. Matches how track strip fields work today.
+  for (const b of session.buses ?? []) {
+    parts.push(`bus:${b.id}:${b.output.bus_id}`);
+    parts.push(b.fx.map(fxFn).join(','));
   }
   return parts.join('|');
 }
@@ -657,6 +670,10 @@ export function useStudioEngine(session: Session | null) {
         // empty/floor state on iOS until a follow-up wires this through
         // NativeStudio.
         getTrackPeakDb: (_trackId: string) => -Infinity,
+        // Bus strip live-edit isn't in the native plugin yet — v2.0.0
+        // bus edits on iOS take effect on the next full engine reload
+        // triggered by the skeleton-diff path.
+        updateBusStrip: async (_busId: string, _p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => { /* not wired on native yet */ },
       };
     }
     return {
@@ -670,6 +687,8 @@ export function useStudioEngine(session: Session | null) {
         engineRef.current?.updateTrackStrip(id, p),
       updateMasterStrip: (p: { volume_db?: number; pan?: number }) =>
         engineRef.current?.updateMasterStrip(p),
+      updateBusStrip: (id: string, p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) =>
+        engineRef.current?.updateBusStrip(id, p),
       updateTempo: (bpm: number) => engineRef.current?.updateTransport({ tempo: bpm }),
       updateTimeSignature: (n: number, d: number) =>
         engineRef.current?.updateTransport({ timeSignature: [n, d] }),

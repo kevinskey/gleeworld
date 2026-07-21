@@ -28,15 +28,17 @@ import { Slider } from '@/components/ui/slider';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { X, Plus, Trash2, Download, Mic, Drum } from 'lucide-react';
+import { X, Plus, Trash2, Download, Mic, Drum, Route } from 'lucide-react';
 import { useIsPhone } from '@/hooks/use-mobile';
 import type { useStudioEngine } from '@/hooks/useStudio';
 import type { EngineState } from '@/lib/studio/engine/engine';
 import type { MeterBlock } from '@/lib/studio/engine/masterChain';
 import {
-  isAudioTrack, withMasteringDefaults,
+  isAudioTrack, withMasteringDefaults, MASTER_BUS_ID, MAX_BUSES,
   type Session, type Track, type TrackEqBand, type MasteringParams,
+  type Bus,
 } from '@/lib/studio/session';
+import { newBus } from '@/lib/studio/defaults';
 import { faderPosToDb, dbToFaderPos } from '@/lib/studio/dsp/faderTaper';
 import { ppmDecay, servoStep } from './mixerMath';
 
@@ -191,6 +193,45 @@ export function MixerView({
     }));
   }, [update]);
 
+  // v2.0.0: bus lifecycle + routing edits.
+  const setBusStrip = useCallback((busId: string, patch: StripPatch) => {
+    update((s) => ({
+      ...s,
+      buses: (s.buses ?? []).map((b) => b.id === busId ? { ...b, ...patch } as Bus : b),
+    }));
+    // Live engine ramp — bus strip fields are deliberately excluded
+    // from the skeleton so a fader drag doesn't trigger a full reload.
+    engineState.updateBusStrip?.(busId, patch);
+  }, [update, engineState]);
+
+  const addBusHandler = useCallback((name?: string) => {
+    const list = session.buses ?? [];
+    if (list.length >= MAX_BUSES) return; // cap enforced by validate too
+    const bus = newBus(name ?? `Bus ${list.length + 1}`);
+    update((s) => ({ ...s, buses: [...(s.buses ?? []), bus] }));
+  }, [session.buses, update]);
+
+  const removeBusHandler = useCallback((busId: string) => {
+    update((s) => ({
+      ...s,
+      buses: (s.buses ?? []).filter((b) => b.id !== busId),
+      // Retarget any track routed to this bus back to master so the
+      // reload path leaves them audible.
+      tracks: s.tracks.map((t) =>
+        t.output?.bus_id === busId
+          ? ({ ...t, output: { bus_id: MASTER_BUS_ID } } as Track)
+          : t),
+    }));
+  }, [update]);
+
+  const setTrackOutput = useCallback((trackId: string, busId: string) => {
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) =>
+        t.id === trackId ? ({ ...t, output: { bus_id: busId } } as Track) : t),
+    }));
+  }, [update]);
+
   const activePhoneTrack = activePhoneTrackId
     ? session.tracks.find((t) => t.id === activePhoneTrackId) ?? null
     : null;
@@ -210,15 +251,31 @@ export function MixerView({
             key={t.id}
             index={i + 1}
             track={t}
+            buses={session.buses ?? []}
             meter={meters[t.id] ?? EMPTY_METER}
             onResetHold={() => resetHold(t.id)}
             onStripChange={(p) => setStrip(t.id, p)}
+            onOutputChange={(busId) => setTrackOutput(t.id, busId)}
             eqOpen={eqTrackId === t.id}
             onToggleEq={() => setEqTrackId(eqTrackId === t.id ? null : t.id)}
             isPhone={isPhone}
             onTapPhone={() => setActivePhoneTrackId(t.id)}
           />
         ))}
+        {/* v2.0.0 — user buses. Sit between the last track and master
+         *  so the signal flow reads left→right (source → bus → master). */}
+        {(session.buses ?? []).map((b) => (
+          <BusStrip
+            key={b.id}
+            bus={b}
+            onStripChange={(p) => setBusStrip(b.id, p)}
+            onRemove={() => removeBusHandler(b.id)}
+          />
+        ))}
+        <AddBusTile
+          disabled={(session.buses ?? []).length >= MAX_BUSES}
+          onClick={() => addBusHandler()}
+        />
         <MasterStrip session={session} update={update} state={state} meter={meters.master ?? EMPTY_METER} onResetHold={() => resetHold('master')} onExport={onOpenExport} />
       </div>
       {(() => {
@@ -272,13 +329,17 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
 // ═══════════════════════════════════════════════════════════════════
 
 function ChannelStrip({
-  index, track, meter, onResetHold, onStripChange, eqOpen, onToggleEq, isPhone, onTapPhone,
+  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, isPhone, onTapPhone,
 }: {
   index: number;
   track: Track;
+  /** v2.0.0 — user buses the track can output to (master is always
+   *  available as an option even when this array is empty). */
+  buses: Bus[];
   meter: MeterEntry;
   onResetHold: () => void;
   onStripChange: (p: StripPatch) => void;
+  onOutputChange: (busId: string) => void;
   /** Whether this strip's EQ panel is the one docked open below. */
   eqOpen: boolean;
   onToggleEq: () => void;
@@ -286,6 +347,7 @@ function ChannelStrip({
   onTapPhone: () => void;
 }) {
   const hasEnabledBand = (track.eq ?? []).some((b) => b.enabled);
+  const outputBusId = track.output?.bus_id ?? MASTER_BUS_ID;
 
   return (
     <div className="shrink-0 w-24 sm:w-28 bg-card border border-border rounded-md flex flex-col items-center gap-1.5 p-1.5">
@@ -313,6 +375,18 @@ function ChannelStrip({
         EQ
         {hasEnabledBand && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
       </button>
+
+      {/* v2.0.0 — output bus selector. Compact select; shows "→ Master"
+       *  by default. Only rendered when there's at least one user bus to
+       *  route to, otherwise it's clutter for the common single-master
+       *  case. */}
+      {buses.length > 0 && (
+        <OutputSelector
+          buses={buses}
+          value={outputBusId}
+          onChange={onOutputChange}
+        />
+      )}
 
       {!isPhone && (
         <>
@@ -836,5 +910,106 @@ function LabeledSlider({ label, value, min, max, step, unit, onChange }: {
       <Slider value={[value]} min={min} max={max} step={step} onValueChange={(v) => onChange(v[0])} className="flex-1" />
       <span className="text-xs tabular-nums w-12 text-right shrink-0">{value.toFixed(1)}{unit}</span>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// v2.0.0 mixer additions — output selector, bus strip, add-bus tile
+// ═══════════════════════════════════════════════════════════════════
+
+/** Compact dropdown that lets a track/bus pick where its output goes.
+ *  MASTER_BUS_ID is always the first entry; the session's user buses
+ *  follow. Rendered as a small routing badge (arrow icon + name) so it
+ *  reads at a glance on a narrow strip. */
+function OutputSelector({
+  buses, value, onChange,
+}: {
+  buses: Bus[];
+  value: string;
+  onChange: (busId: string) => void;
+}) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full h-7 px-1.5 py-0 text-[11px] gap-1 [&>svg]:opacity-60">
+        <Route className="w-3 h-3 shrink-0 opacity-70" />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={MASTER_BUS_ID}>Master</SelectItem>
+        {buses.map((b) => (
+          <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+/** BusStrip — user bus (v2.0.0). Same fader/pan/M/S/meter geometry as
+ *  ChannelStrip but no EQ button, no arm, no input source. Bus tint
+ *  distinguishes it from track strips at a glance. Delete button in
+ *  the corner triggers session removal + retargets any track pointing
+ *  here back to master (see removeBusHandler in MixerView). */
+function BusStrip({
+  bus, onStripChange, onRemove,
+}: {
+  bus: Bus;
+  onStripChange: (p: StripPatch) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="shrink-0 w-24 sm:w-28 bg-muted/30 border border-border rounded-md flex flex-col items-center gap-1.5 p-1.5 relative">
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1 right-1 h-5 w-5 rounded hover:bg-destructive/20 inline-flex items-center justify-center text-muted-foreground hover:text-destructive"
+        title={`Remove ${bus.name}`}
+      >
+        <X className="w-3 h-3" />
+      </button>
+      <div className="w-full flex items-center gap-1 min-h-11 sm:min-h-0 pr-5">
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{ backgroundColor: bus.color }}
+        />
+        <span className="text-xs font-semibold truncate flex-1 min-w-0" title={bus.name}>{bus.name}</span>
+      </div>
+      <div className="w-full text-[10px] uppercase tracking-wide text-muted-foreground text-center">Bus</div>
+      <PanKnob pan={bus.pan} onChange={(pan) => onStripChange({ pan })} />
+      <div className="flex items-end gap-1.5 flex-1">
+        <Fader volumeDb={bus.volume_db} muted={bus.mute} onChange={(db) => onStripChange({ volume_db: db })} />
+      </div>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onStripChange({ mute: !bus.mute })}
+          className={`text-sm font-bold px-1.5 py-0.5 rounded border ${bus.mute ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+        >M</button>
+        <button
+          onClick={() => onStripChange({ solo: !bus.solo })}
+          className={`text-sm font-bold px-1.5 py-0.5 rounded border ${bus.solo ? 'bg-yellow-400 border-yellow-400 text-yellow-950' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+        >S</button>
+      </div>
+    </div>
+  );
+}
+
+/** Compact "+ Bus" tile at the end of the strip row. Disabled when the
+ *  session already has MAX_BUSES; the disabled state renders greyed to
+ *  match the cap even before the user tries to click. */
+function AddBusTile({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`shrink-0 w-14 self-stretch border border-dashed rounded-md flex flex-col items-center justify-center gap-1 text-[11px] ${
+        disabled
+          ? 'border-border/50 text-muted-foreground/40 cursor-not-allowed'
+          : 'border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+      }`}
+      title={disabled ? `Bus cap reached (${MAX_BUSES})` : 'Add a bus'}
+    >
+      <Plus className="w-4 h-4" />
+      Bus
+    </button>
   );
 }
