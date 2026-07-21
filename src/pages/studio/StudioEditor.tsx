@@ -33,6 +33,7 @@ import {
 import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
 import { GW_INSTRUMENTS, toGwPresetId } from '@/lib/studio/gwInstruments';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
+import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
 import { applyStatusBarSurface } from '@/lib/statusBarStyle';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
@@ -527,6 +528,21 @@ function Editor({
       mute: midiInputTrack.mute,
     });
   }, [midiInputEnabled, midiInputTrack?.volume_db, midiInputTrack?.pan, midiInputTrack?.mute]);
+
+  // Live monitor honors the armed track's EQ. Rebuilds the biquad chain on
+  // any band change so the player hears the same EQ that playback applies.
+  useEffect(() => {
+    liveVoicesRef.current?.setEq(midiInputTrack?.eq);
+    // eqSig is embedded in the dep so band edits invalidate the memo without
+    // us watching every band field by field.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [midiInputEnabled, midiInputTrack?.id, midiInputTrack ? trackEqSig(midiInputTrack.eq) : '']);
+
+  // Live monitor rides the session's master out so the Master Out sliders
+  // affect keyboard playing the same way they affect playback.
+  useEffect(() => {
+    liveVoicesRef.current?.setMaster(session.master.volume_db);
+  }, [midiInputEnabled, session.master.volume_db]);
 
   // When arming goes away mid-press, drop held-key tracking so a later
   // re-arm doesn't inherit a stuck press and commit bogus durations.

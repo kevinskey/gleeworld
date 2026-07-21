@@ -1,28 +1,36 @@
 import * as Tone from 'tone';
-import type { Instrument } from '../session';
+import type { Instrument, TrackEqBand } from '../session';
 import { buildInstrument, type EngineInstrument } from './instruments';
+import { dbToGain } from './engine';
+import { enabledEqBands, eqBandToBiquadOptions, trackEqSig } from './trackEq';
 
 // Plays a MIDI keyboard live through a track's instrument, independent of the
 // scheduled-playback engine. Builds one EngineInstrument from the given spec
-// and routes it through a strip mirror (PanVol + mute gate, kept in sync with
-// the target track via setStrip) so live playing obeys the same volume/pan/
-// mute as playback — track FX are still NOT in this monitoring path. Rebuild
-// via setInstrument() when the armed track's instrument changes; dispose()
-// when input turns off.
+// and routes it through the strip + EQ + master mirror kept in sync with the
+// target track and the session's master strip, so live playing hears the same
+// volume / pan / mute / EQ / master out that playback does. Track FX are
+// still NOT in this monitoring path (would require rebuilding the fx chain
+// on every edit). Rebuild via setInstrument() when the armed track's
+// instrument changes; dispose() when input turns off.
 export class LiveVoices {
   private inst: EngineInstrument | null = null;
   private specKey = '';
+  private eqNodes: Tone.BiquadFilter[] = [];
+  private eqSig = '';
   private held = new Set<number>();
   private pedalDown = false;
   private sustained = new Set<number>(); // key up, damper holding the voice
   private panvol: Tone.PanVol;
   private muteGate: Tone.Gain;
+  private masterGain: Tone.Gain;
 
   constructor() {
     this.panvol = new Tone.PanVol(0, 0);
     this.muteGate = new Tone.Gain(1);
+    this.masterGain = new Tone.Gain(1);
     this.panvol.connect(this.muteGate);
-    this.muteGate.connect(Tone.getDestination());
+    this.muteGate.connect(this.masterGain);
+    this.masterGain.connect(Tone.getDestination());
   }
 
   setInstrument(spec: Instrument | null): void {
@@ -41,6 +49,36 @@ export class LiveVoices {
     this.panvol.volume.value = strip.volume_db;
     this.panvol.pan.value = strip.pan;
     this.muteGate.gain.value = strip.mute ? 0 : 1;
+  }
+
+  /** Mirror the target track's EQ into the monitor path. Rebuilds the chain
+   * on any band change (params, order, enabled, add/remove) — matches the
+   * skeleton-diff full-rebuild policy the playback engine uses. */
+  setEq(bands: TrackEqBand[] | undefined): void {
+    const sig = trackEqSig(bands);
+    if (sig === this.eqSig) return;
+    this.eqSig = sig;
+    // Tear down the current EQ segment. muteGate.disconnect() drops the
+    // link into either the old first band (if any) or masterGain, so we
+    // can rewire cleanly below.
+    try { this.muteGate.disconnect(); } catch { /* nothing wired */ }
+    for (const n of this.eqNodes) { try { n.dispose(); } catch { /* already gone */ } }
+    this.eqNodes = enabledEqBands(bands).map((band) => {
+      const o = eqBandToBiquadOptions(band);
+      return new Tone.BiquadFilter({ type: o.type, frequency: o.frequency, gain: o.gain, Q: o.Q });
+    });
+    let tail: Tone.ToneAudioNode = this.muteGate;
+    for (const node of this.eqNodes) {
+      tail.connect(node);
+      tail = node;
+    }
+    tail.connect(this.masterGain);
+  }
+
+  /** Mirror the session's master out so the Master Out sliders control the
+   * live monitor the same way they control playback. */
+  setMaster(volume_db: number): void {
+    this.masterGain.gain.value = dbToGain(volume_db);
   }
 
   noteOn(pitch: number, velocity01: number): void {
@@ -80,7 +118,10 @@ export class LiveVoices {
     this.held.clear();
     this.pedalDown = false;
     this.specKey = '';
-    try { this.panvol.dispose(); this.muteGate.dispose(); } catch { /* already gone */ }
+    for (const n of this.eqNodes) { try { n.dispose(); } catch { /* already gone */ } }
+    this.eqNodes = [];
+    this.eqSig = '';
+    try { this.panvol.dispose(); this.muteGate.dispose(); this.masterGain.dispose(); } catch { /* already gone */ }
   }
 
   private disposeInst(): void {
