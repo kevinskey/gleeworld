@@ -19,6 +19,9 @@ export interface EngineBus {
   /** The tail of the strip — connect this to a downstream target
    *  (another bus's input, or the engine's masterIn). */
   output: Tone.ToneAudioNode;
+  /** Strip's PanVol node — exposed so automation (Phase 8) can drive
+   *  .volume / .pan directly. Not for signal-graph reconnection. */
+  panvol: Tone.PanVol;
   userMute: boolean;
   userSolo: boolean;
   updateStrip: (patch: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => void;
@@ -43,6 +46,7 @@ export function buildBus(bus: Bus): EngineBus {
     busId: bus.id,
     input: panvol,
     output: fx.output,
+    panvol,
     userMute: bus.mute,
     userSolo: bus.solo,
     updateStrip: (patch) => {

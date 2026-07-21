@@ -42,6 +42,10 @@ export interface EngineTrack {
    *  Post-fader sends read here. Muting the track silences post-fader
    *  sends too, which matches the DAW convention. v2.0.0. */
   postFaderTap: Tone.ToneAudioNode;
+  /** Strip's PanVol node — exposed so automation (Phase 8) can drive
+   *  .volume / .pan directly. Not for signal-graph reconnection;
+   *  updateStrip is the only supported strip mutator. */
+  panvol: Tone.PanVol;
   /** User-facing mute flag (persisted to session). Engine layer
    * uses this when computing solo overrides. */
   userMute: boolean;
@@ -131,6 +135,7 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
     output: eqTail,
     preFaderTap: preTap,
     postFaderTap: muteGate,
+    panvol,
     userMute: track.mute,
     userSolo: track.solo,
     playbacks,

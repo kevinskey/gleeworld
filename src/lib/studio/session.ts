@@ -261,6 +261,35 @@ export interface Bus {
   output: TrackOutput; // where this bus terminates — default { bus_id: MASTER_BUS_ID }
 }
 
+// ── Automation (v2.0.0, Phase 8) ─────────────────────────────────────
+//
+// Breakpoint automation for a single strip parameter. Read-only for now
+// (mode: 'read' | 'off'); write / touch / latch modes ship with the
+// automation UI in a later phase. Interpolation math lives in
+// automation.ts; the engine schedules Tone AudioParam ramps against the
+// transport clock when play() starts (engine/automation.ts).
+
+export type AutomationParam = 'volume_db' | 'pan';
+export type AutomationCurve = 'hold' | 'linear' | 'exponential';
+export type AutomationMode = 'off' | 'read';
+
+export interface AutomationPoint {
+  time_seconds: number;   // transport position; >= 0
+  value: number;
+  /** How the ramp INTO this point interpolates from the previous one.
+   *  The first point's curve is unused (nothing to interpolate from). */
+  curve: AutomationCurve;
+}
+
+export interface Automation {
+  /** id of a Track OR a Bus this envelope automates. */
+  target_id: string;
+  target_kind: 'track' | 'bus';
+  param: AutomationParam;
+  mode: AutomationMode;
+  points: AutomationPoint[];
+}
+
 // ── Audio assets ─────────────────────────────────────────────────────
 //
 // Inline in the session manifest (no separate DB table). Multiple clips
@@ -300,6 +329,7 @@ export interface Session {
   master: MasterBus;
   tracks: Track[];
   buses?: Bus[];        // v2.0.0 — absent on v1 sessions; migration fills [].
+  automation?: Automation[];  // v2.0.0 (Phase 8) — read-mode breakpoint envelopes.
   assets: AudioAsset[];
 
   // Ownership + lineage
@@ -389,6 +419,7 @@ export function requiredSchemaVersion(session: Session): StudioSchemaVersion {
  * check read from the same source of truth. */
 function usesV2Routing(session: Session): boolean {
   if (Array.isArray(session.buses) && session.buses.length > 0) return true;
+  if (Array.isArray(session.automation) && session.automation.length > 0) return true;
   for (const t of session.tracks) {
     if (t.output && t.output.bus_id !== MASTER_BUS_ID) return true;
     if (Array.isArray(t.sends) && t.sends.length > 0) return true;
