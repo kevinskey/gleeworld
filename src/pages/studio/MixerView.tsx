@@ -36,11 +36,12 @@ import type { MeterBlock } from '@/lib/studio/engine/masterChain';
 import {
   isAudioTrack, withMasteringDefaults, MASTER_BUS_ID, MAX_BUSES, MAX_SENDS_PER_TRACK,
   type Session, type Track, type TrackEqBand, type MasteringParams,
-  type Bus, type Send,
+  type Bus, type Send, type FxNode,
 } from '@/lib/studio/session';
 import { newBus } from '@/lib/studio/defaults';
 import { wouldEditCycle, formatCycle, type RoutingEdge } from '@/lib/studio/routingGraph';
 import { toast } from 'sonner';
+import { InsertRack } from './InsertRack';
 import { faderPosToDb, dbToFaderPos } from '@/lib/studio/dsp/faderTaper';
 import { ppmDecay, servoStep } from './mixerMath';
 
@@ -135,6 +136,9 @@ export function MixerView({
   const [eqTrackId, setEqTrackId] = useState<string | null>(null);
   // v2.0.0: sends panel docked the same way — one open at a time.
   const [sendsTrackId, setSendsTrackId] = useState<string | null>(null);
+  // Phase 5: inserts panel — one open at a time. Discriminated union
+  // so the panel can host any strip's fx array.
+  const [fxTarget, setFxTarget] = useState<{ kind: 'track' | 'bus'; id: string } | null>(null);
 
   // ── Meter rAF loop — polls engineState.getTrackPeakDb per track + the
   // existing master peakDbL/R off `state`, applies PPM release
@@ -306,6 +310,25 @@ export function MixerView({
     }));
   }, [update]);
 
+  // Phase 5: full fx array replace — the InsertRack component owns
+  // add/remove/reorder/enable/param mutations and hands us a fresh
+  // array. Skeleton includes fx so the reload path rebuilds the
+  // chain; live param updates go through the same reload today
+  // (bypass-live is Phase 5b).
+  const setTrackFx = useCallback((trackId: string, fx: FxNode[]) => {
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => t.id === trackId ? ({ ...t, fx } as Track) : t),
+    }));
+  }, [update]);
+
+  const setBusFx = useCallback((busId: string, fx: FxNode[]) => {
+    update((s) => ({
+      ...s,
+      buses: (s.buses ?? []).map((b) => b.id === busId ? ({ ...b, fx } as Bus) : b),
+    }));
+  }, [update]);
+
   const removeSend = useCallback((trackId: string, sendId: string) => {
     update((s) => ({
       ...s,
@@ -344,6 +367,10 @@ export function MixerView({
             onToggleEq={() => setEqTrackId(eqTrackId === t.id ? null : t.id)}
             sendsOpen={sendsTrackId === t.id}
             onToggleSends={() => setSendsTrackId(sendsTrackId === t.id ? null : t.id)}
+            fxOpen={fxTarget?.kind === 'track' && fxTarget.id === t.id}
+            onToggleFx={() => setFxTarget(
+              fxTarget?.kind === 'track' && fxTarget.id === t.id ? null : { kind: 'track', id: t.id }
+            )}
             isPhone={isPhone}
             onTapPhone={() => setActivePhoneTrackId(t.id)}
           />
@@ -362,6 +389,10 @@ export function MixerView({
             onStripChange={(p) => setBusStrip(b.id, p)}
             onOutputChange={(targetBusId) => setBusOutput(b.id, targetBusId)}
             onRemove={() => removeBusHandler(b.id)}
+            fxOpen={fxTarget?.kind === 'bus' && fxTarget.id === b.id}
+            onToggleFx={() => setFxTarget(
+              fxTarget?.kind === 'bus' && fxTarget.id === b.id ? null : { kind: 'bus', id: b.id }
+            )}
           />
         ))}
         <AddBusTile
@@ -391,6 +422,31 @@ export function MixerView({
             onLevelChange={(sendId, db) => setSendLevel(sendsTrack.id, sendId, db)}
             onFieldChange={(sendId, patch) => setSendField(sendsTrack.id, sendId, patch)}
             onClose={() => setSendsTrackId(null)}
+          />
+        );
+      })()}
+      {(() => {
+        if (!fxTarget) return null;
+        if (fxTarget.kind === 'track') {
+          const t = session.tracks.find((x) => x.id === fxTarget.id);
+          if (!t) return null;
+          return (
+            <InsertRack
+              fx={t.fx}
+              ownerLabel={t.name}
+              onChange={(fx) => setTrackFx(t.id, fx)}
+              onClose={() => setFxTarget(null)}
+            />
+          );
+        }
+        const b = (session.buses ?? []).find((x) => x.id === fxTarget.id);
+        if (!b) return null;
+        return (
+          <InsertRack
+            fx={b.fx}
+            ownerLabel={b.name}
+            onChange={(fx) => setBusFx(b.id, fx)}
+            onClose={() => setFxTarget(null)}
           />
         );
       })()}
@@ -435,7 +491,7 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
 // ═══════════════════════════════════════════════════════════════════
 
 function ChannelStrip({
-  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, sendsOpen, onToggleSends, isPhone, onTapPhone,
+  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, sendsOpen, onToggleSends, fxOpen, onToggleFx, isPhone, onTapPhone,
 }: {
   index: number;
   track: Track;
@@ -452,12 +508,16 @@ function ChannelStrip({
   /** Whether this strip's Sends panel is the one docked open below. */
   sendsOpen: boolean;
   onToggleSends: () => void;
+  /** Phase 5 — insert rack panel state. */
+  fxOpen: boolean;
+  onToggleFx: () => void;
   isPhone: boolean;
   onTapPhone: () => void;
 }) {
   const hasEnabledBand = (track.eq ?? []).some((b) => b.enabled);
   const outputBusId = track.output?.bus_id ?? MASTER_BUS_ID;
   const enabledSendCount = (track.sends ?? []).filter((s) => s.enabled).length;
+  const enabledFxCount = track.fx.filter((f) => f.enabled).length;
 
   return (
     <div className="shrink-0 w-24 sm:w-28 bg-card border border-border rounded-md flex flex-col items-center gap-1.5 p-1.5">
@@ -484,6 +544,20 @@ function ChannelStrip({
       >
         EQ
         {hasEnabledBand && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+      </button>
+
+      {/* Phase 5 — Inserts (FX) chip. Opens the docked InsertRack. */}
+      <button
+        type="button"
+        onClick={onToggleFx}
+        className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+          fxOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
+        title="Inserts (FX)"
+      >
+        FX
+        {enabledFxCount > 0 && (
+          <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledFxCount}</span>
+        )}
       </button>
 
       {/* v2.0.0 — output bus selector. Compact select; shows "→ Master"
@@ -1078,7 +1152,7 @@ function OutputSelector({
  *  the corner triggers session removal + retargets any track pointing
  *  here back to master (see removeBusHandler in MixerView). */
 function BusStrip({
-  bus, downstreamBuses, onStripChange, onOutputChange, onRemove,
+  bus, downstreamBuses, onStripChange, onOutputChange, onRemove, fxOpen, onToggleFx,
 }: {
   bus: Bus;
   /** v2.0.0 (Phase 4c) — user buses this bus can route to. Master
@@ -1090,7 +1164,11 @@ function BusStrip({
    *  check and toasts on rejection — this button just requests. */
   onOutputChange: (targetBusId: string) => void;
   onRemove: () => void;
+  /** Phase 5 — insert rack panel state. */
+  fxOpen: boolean;
+  onToggleFx: () => void;
 }) {
+  const enabledFxCount = bus.fx.filter((f) => f.enabled).length;
   return (
     <div className="shrink-0 w-24 sm:w-28 bg-muted/30 border border-border rounded-md flex flex-col items-center gap-1.5 p-1.5 relative">
       <button
@@ -1119,6 +1197,19 @@ function BusStrip({
           onChange={onOutputChange}
         />
       )}
+      {/* Phase 5 — Inserts (FX) chip. */}
+      <button
+        type="button"
+        onClick={onToggleFx}
+        className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+          fxOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
+        title="Bus inserts (FX)"
+      >
+        FX
+        {enabledFxCount > 0 && (
+          <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledFxCount}</span>
+        )}
+      </button>
       <PanKnob pan={bus.pan} onChange={(pan) => onStripChange({ pan })} />
       <div className="flex items-end gap-1.5 flex-1">
         <Fader volumeDb={bus.volume_db} muted={bus.mute} onChange={(db) => onStripChange({ volume_db: db })} />
