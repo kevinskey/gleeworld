@@ -39,6 +39,8 @@ import {
   type Bus, type Send,
 } from '@/lib/studio/session';
 import { newBus } from '@/lib/studio/defaults';
+import { wouldEditCycle, formatCycle, type RoutingEdge } from '@/lib/studio/routingGraph';
+import { toast } from 'sonner';
 import { faderPosToDb, dbToFaderPos } from '@/lib/studio/dsp/faderTaper';
 import { ppmDecay, servoStep } from './mixerMath';
 
@@ -234,6 +236,29 @@ export function MixerView({
     }));
   }, [update]);
 
+  // v2.0.0 bus routing (Phase 4c) — with cycle validation. Rejects the
+  // edit (with a toast) if it would introduce bus1 → bus2 → bus1 or
+  // similar; otherwise updates session state, which triggers the
+  // skeleton-diff reload that rewires the graph.
+  const setBusOutput = useCallback((busId: string, targetBusId: string) => {
+    const edges: RoutingEdge[] = (session.buses ?? []).map((b) => ({
+      from: b.id, to: b.output.bus_id,
+    }));
+    const check = wouldEditCycle(edges, { from: busId, to: targetBusId });
+    if (!check.ok) {
+      toast.error('Cannot route: would create a cycle', {
+        description: formatCycle(check.cycle),
+      });
+      return;
+    }
+    update((s) => ({
+      ...s,
+      buses: (s.buses ?? []).map((b) => b.id === busId
+        ? ({ ...b, output: { bus_id: targetBusId } } as Bus)
+        : b),
+    }));
+  }, [session.buses, update]);
+
   // v2.0.0 sends. Structural changes (add/remove/target/pre-post/enabled)
   // fall through the skeleton-diff reload. Level drags stay live via
   // engineState.updateSendLevel.
@@ -329,7 +354,13 @@ export function MixerView({
           <BusStrip
             key={b.id}
             bus={b}
+            /** Every OTHER user bus is a valid downstream target (plus
+             *  master, which is always). Bus can't route to itself —
+             *  the cycle check would reject that anyway; the dropdown
+             *  filters it out for clarity. */
+            downstreamBuses={(session.buses ?? []).filter((other) => other.id !== b.id)}
             onStripChange={(p) => setBusStrip(b.id, p)}
+            onOutputChange={(targetBusId) => setBusOutput(b.id, targetBusId)}
             onRemove={() => removeBusHandler(b.id)}
           />
         ))}
@@ -1047,10 +1078,17 @@ function OutputSelector({
  *  the corner triggers session removal + retargets any track pointing
  *  here back to master (see removeBusHandler in MixerView). */
 function BusStrip({
-  bus, onStripChange, onRemove,
+  bus, downstreamBuses, onStripChange, onOutputChange, onRemove,
 }: {
   bus: Bus;
+  /** v2.0.0 (Phase 4c) — user buses this bus can route to. Master
+   *  is always available as a target; the caller filters this bus
+   *  out to keep users from clicking themselves. */
+  downstreamBuses: Bus[];
   onStripChange: (p: StripPatch) => void;
+  /** Called with the new target bus id. The caller runs the cycle
+   *  check and toasts on rejection — this button just requests. */
+  onOutputChange: (targetBusId: string) => void;
   onRemove: () => void;
 }) {
   return (
@@ -1071,6 +1109,16 @@ function BusStrip({
         <span className="text-xs font-semibold truncate flex-1 min-w-0" title={bus.name}>{bus.name}</span>
       </div>
       <div className="w-full text-[10px] uppercase tracking-wide text-muted-foreground text-center">Bus</div>
+      {/* Output selector — only rendered when there's somewhere other
+       *  than master to route to. Keeps the strip clean for the common
+       *  single-bus case where every bus routes to master. */}
+      {downstreamBuses.length > 0 && (
+        <OutputSelector
+          buses={downstreamBuses}
+          value={bus.output.bus_id}
+          onChange={onOutputChange}
+        />
+      )}
       <PanKnob pan={bus.pan} onChange={(pan) => onStripChange({ pan })} />
       <div className="flex items-end gap-1.5 flex-1">
         <Fader volumeDb={bus.volume_db} muted={bus.mute} onChange={(db) => onStripChange({ volume_db: db })} />

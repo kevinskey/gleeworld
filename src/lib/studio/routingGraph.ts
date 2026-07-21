@@ -91,3 +91,23 @@ export function findRoutingCycle(edges: RoutingEdge[]): CycleResult {
 export function formatCycle(cycle: string[]): string {
   return cycle.join(' → ');
 }
+
+/** Session-agnostic (avoids a circular import): given the existing
+ *  edges and a proposed replacement outgoing edge for one node, check
+ *  whether applying that edit would introduce a cycle. Substitutes the
+ *  edit — the source's OLD outbound edge is dropped and the new one
+ *  added — before running the cycle check.
+ *
+ *  Callers that want to check a NEW outbound edge (source had no prior
+ *  edge) can call this with any `existingEdges` — the substitution
+ *  logic is a no-op when the source has no prior edge.
+ */
+export function wouldEditCycle(
+  existingEdges: RoutingEdge[],
+  edit: RoutingEdge,
+): CycleResult {
+  const merged: RoutingEdge[] = existingEdges
+    .filter((e) => e.from !== edit.from)
+    .concat(edit);
+  return findRoutingCycle(merged);
+}
