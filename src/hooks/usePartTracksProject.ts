@@ -35,6 +35,11 @@ export interface PartTracksProject {
   accompaniment_url: string | null;
   accompaniment_title: string | null;
   created_at: string;
+  /** Owner (created_by). Only the owner can write; other tenant members see
+   *  the project only when is_shared = true. Enforced by RLS on
+   *  gw_part_tracks_projects (see 20260720170000_part_tracks_private.sql). */
+  created_by: string | null;
+  is_shared: boolean;
 }
 
 // Voicing → default voice parts. Drives the "Create project" template
