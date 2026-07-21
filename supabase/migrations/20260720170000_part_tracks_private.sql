@@ -90,25 +90,30 @@ CREATE POLICY part_tracks_tracks_write ON public.gw_part_tracks_tracks
 
 -- gw_part_tracks_recordings (the vocal takes). Owner of the recording is
 -- the singer; but write access rides on the parent project's owner-check
--- to keep the model simple. If teachers need to hear/comment on a take,
--- share the project.
+-- to keep the model simple. Recordings reach the project via
+-- track_id → gw_part_tracks_tracks.project_id (there is no direct
+-- project_id column on this table). If teachers need to hear/comment on
+-- a take, share the parent project.
 DROP POLICY IF EXISTS part_tracks_recordings_rw ON public.gw_part_tracks_recordings;
 CREATE POLICY part_tracks_recordings_read ON public.gw_part_tracks_recordings
   FOR SELECT TO authenticated
   USING (EXISTS (
-    SELECT 1 FROM public.gw_part_tracks_projects p
-    WHERE p.id = gw_part_tracks_recordings.project_id
+    SELECT 1 FROM public.gw_part_tracks_tracks t
+    JOIN public.gw_part_tracks_projects p ON p.id = t.project_id
+    WHERE t.id = gw_part_tracks_recordings.track_id
       AND (p.created_by = auth.uid() OR p.is_shared = true)
   ));
 CREATE POLICY part_tracks_recordings_write ON public.gw_part_tracks_recordings
   FOR ALL TO authenticated
   USING (EXISTS (
-    SELECT 1 FROM public.gw_part_tracks_projects p
-    WHERE p.id = gw_part_tracks_recordings.project_id
+    SELECT 1 FROM public.gw_part_tracks_tracks t
+    JOIN public.gw_part_tracks_projects p ON p.id = t.project_id
+    WHERE t.id = gw_part_tracks_recordings.track_id
       AND p.created_by = auth.uid()
   ))
   WITH CHECK (EXISTS (
-    SELECT 1 FROM public.gw_part_tracks_projects p
-    WHERE p.id = gw_part_tracks_recordings.project_id
+    SELECT 1 FROM public.gw_part_tracks_tracks t
+    JOIN public.gw_part_tracks_projects p ON p.id = t.project_id
+    WHERE t.id = gw_part_tracks_recordings.track_id
       AND p.created_by = auth.uid()
   ));
