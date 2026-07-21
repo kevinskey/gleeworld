@@ -505,13 +505,17 @@ function Editor({
   // Build/tear down the live-audition voice manager with the input toggle.
   // The audition voices always run in the webview, on every platform; on
   // iOS they play alongside the native engine through the shared audio
-  // session (playAndRecord + mixWithOthers).
+  // session (playAndRecord + mixWithOthers). Terminate at the engine's
+  // masterIn when it's available so live playing goes through the same
+  // master pan / master FX / mastering / master out that playback does;
+  // fall back to the destination while the engine warms up.
+  const monitorOut = engineState.engine?.getMasterIn();
   useEffect(() => {
     if (!midiInputEnabled) return;
-    const lv = new LiveVoices();
+    const lv = new LiveVoices(monitorOut);
     liveVoicesRef.current = lv;
     return () => { lv.dispose(); liveVoicesRef.current = null; midiHeld.flush(); };
-  }, [midiInputEnabled]);
+  }, [midiInputEnabled, monitorOut]);
 
   // Keep the audition instrument matched to the target track's instrument.
   useEffect(() => {
@@ -537,12 +541,6 @@ function Editor({
     // us watching every band field by field.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [midiInputEnabled, midiInputTrack?.id, midiInputTrack ? trackEqSig(midiInputTrack.eq) : '']);
-
-  // Live monitor rides the session's master out so the Master Out sliders
-  // affect keyboard playing the same way they affect playback.
-  useEffect(() => {
-    liveVoicesRef.current?.setMaster(session.master.volume_db);
-  }, [midiInputEnabled, session.master.volume_db]);
 
   // When arming goes away mid-press, drop held-key tracking so a later
   // re-arm doesn't inherit a stuck press and commit bogus durations.

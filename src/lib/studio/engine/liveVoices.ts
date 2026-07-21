@@ -1,17 +1,19 @@
 import * as Tone from 'tone';
 import type { Instrument, TrackEqBand } from '../session';
 import { buildInstrument, type EngineInstrument } from './instruments';
-import { dbToGain } from './engine';
 import { enabledEqBands, eqBandToBiquadOptions, trackEqSig } from './trackEq';
 
 // Plays a MIDI keyboard live through a track's instrument, independent of the
 // scheduled-playback engine. Builds one EngineInstrument from the given spec
-// and routes it through the strip + EQ + master mirror kept in sync with the
-// target track and the session's master strip, so live playing hears the same
-// volume / pan / mute / EQ / master out that playback does. Track FX are
-// still NOT in this monitoring path (would require rebuilding the fx chain
-// on every edit). Rebuild via setInstrument() when the armed track's
-// instrument changes; dispose() when input turns off.
+// and routes it through the strip + EQ mirror kept in sync with the target
+// track, terminating at an OUTPUT NODE the caller passes — normally the
+// StudioEngine's masterIn, so live playing inherits master pan, master FX,
+// mastering (HPF / Air / comp / ceiling / target LUFS), and Master Out from
+// the same downstream chain playback uses. Callers that don't yet have the
+// engine (e.g. warming, tests) can pass Tone.getDestination() as a fallback.
+// Track FX are still NOT in this monitoring path (would require rebuilding
+// the fx chain per edit). Rebuild via setInstrument() when the armed
+// track's instrument changes; dispose() when input turns off.
 export class LiveVoices {
   private inst: EngineInstrument | null = null;
   private specKey = '';
@@ -22,15 +24,15 @@ export class LiveVoices {
   private sustained = new Set<number>(); // key up, damper holding the voice
   private panvol: Tone.PanVol;
   private muteGate: Tone.Gain;
-  private masterGain: Tone.Gain;
+  private output: Tone.ToneAudioNode | AudioNode;
 
-  constructor() {
+  constructor(output: Tone.ToneAudioNode | AudioNode = Tone.getDestination()) {
     this.panvol = new Tone.PanVol(0, 0);
     this.muteGate = new Tone.Gain(1);
-    this.masterGain = new Tone.Gain(1);
+    this.output = output;
     this.panvol.connect(this.muteGate);
-    this.muteGate.connect(this.masterGain);
-    this.masterGain.connect(Tone.getDestination());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.muteGate.connect(this.output as any);
   }
 
   setInstrument(spec: Instrument | null): void {
@@ -59,8 +61,8 @@ export class LiveVoices {
     if (sig === this.eqSig) return;
     this.eqSig = sig;
     // Tear down the current EQ segment. muteGate.disconnect() drops the
-    // link into either the old first band (if any) or masterGain, so we
-    // can rewire cleanly below.
+    // link into either the old first band (if any) or the output node, so
+    // we can rewire cleanly below.
     try { this.muteGate.disconnect(); } catch { /* nothing wired */ }
     for (const n of this.eqNodes) { try { n.dispose(); } catch { /* already gone */ } }
     this.eqNodes = enabledEqBands(bands).map((band) => {
@@ -72,13 +74,8 @@ export class LiveVoices {
       tail.connect(node);
       tail = node;
     }
-    tail.connect(this.masterGain);
-  }
-
-  /** Mirror the session's master out so the Master Out sliders control the
-   * live monitor the same way they control playback. */
-  setMaster(volume_db: number): void {
-    this.masterGain.gain.value = dbToGain(volume_db);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tail.connect(this.output as any);
   }
 
   noteOn(pitch: number, velocity01: number): void {
@@ -121,7 +118,7 @@ export class LiveVoices {
     for (const n of this.eqNodes) { try { n.dispose(); } catch { /* already gone */ } }
     this.eqNodes = [];
     this.eqSig = '';
-    try { this.panvol.dispose(); this.muteGate.dispose(); this.masterGain.dispose(); } catch { /* already gone */ }
+    try { this.panvol.dispose(); this.muteGate.dispose(); } catch { /* already gone */ }
   }
 
   private disposeInst(): void {
