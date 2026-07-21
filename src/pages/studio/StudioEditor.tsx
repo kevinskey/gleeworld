@@ -465,12 +465,13 @@ function Editor({
     localStorage.getItem('studio.midiInputDeviceId') || '');
   useEffect(() => { localStorage.setItem('studio.midiInputDeviceId', midiInputDeviceId); }, [midiInputDeviceId]);
 
-  // The MIDI track that receives keyboard input: the armed one (red R), else the
-  // first MIDI track. Arming picks the target when there is more than one.
-  const midiInputTrack = useMemo(() => {
-    const midi = session.tracks.filter(isMidiTrack);
-    return midi.find((t) => t.arm) ?? midi[0];
-  }, [session.tracks]);
+  // The MIDI track that receives keyboard input: the armed one (red R). No
+  // fallback — pressing keys with nothing armed must produce silence, so the
+  // player doesn't accidentally audition through the first MIDI track.
+  const midiInputTrack = useMemo(
+    () => session.tracks.filter(isMidiTrack).find((t) => t.arm),
+    [session.tracks],
+  );
 
   const liveVoicesRef = useRef<LiveVoices | null>(null);
   // Physically-held keys for the current take. Since schema 1.1.0 the
@@ -527,6 +528,14 @@ function Editor({
     });
   }, [midiInputEnabled, midiInputTrack?.volume_db, midiInputTrack?.pan, midiInputTrack?.mute]);
 
+  // When arming goes away mid-press, drop held-key tracking so a later
+  // re-arm doesn't inherit a stuck press and commit bogus durations.
+  useEffect(() => {
+    if (midiInputTrack) return;
+    midiHeld.flush();
+    midiPedalRef.current = false;
+  }, [midiInputTrack, midiHeld]);
+
   // Write finished presses into the take clip (one session update per event —
   // a pedal-up can commit a whole chord at once).
   const commitMidiPresses = (presses: HeldPress[], upAbs: number) => {
@@ -553,20 +562,23 @@ function Editor({
   };
 
   const handleMidiNoteOn = (pitch: number, velocity: number, timeStampMs?: number) => {
+    if (!midiInputTrack) return; // no armed MIDI track → keyboard is silent
     liveVoicesRef.current?.noteOn(pitch, velocity / 127);
-    if (state?.recordingActive && midiInputTrack) {
+    if (state?.recordingActive) {
       const at = compAt(timeStampMs);
       const stale = midiHeld.keyDown(pitch, velocity, at);
       if (stale) commitMidiPresses([stale], at); // missed note-off
     }
   };
   const handleMidiNoteOff = (pitch: number, timeStampMs?: number) => {
+    if (!midiInputTrack) return;
     liveVoicesRef.current?.noteOff(pitch);
     const press = midiHeld.keyUp(pitch);
     if (!press) return;
     commitMidiPresses([press], compAt(timeStampMs));
   };
   const handleMidiSustain = (down: boolean, timeStampMs?: number) => {
+    if (!midiInputTrack) return;
     liveVoicesRef.current?.sustain(down); // monitoring feel unchanged
     if (state?.recordingActive && down !== midiPedalRef.current) {
       midiPedalRef.current = down;
@@ -575,7 +587,7 @@ function Editor({
     if (!state?.recordingActive) midiPedalRef.current = down;
   };
   const handleMidiCc = (controller: number, value: number, timeStampMs?: number) => {
-    if (!state?.recordingActive) return;
+    if (!midiInputTrack || !state?.recordingActive) return;
     const prev = midiCcRef.current[midiCcRef.current.length - 1];
     if (prev && prev.controller === controller && prev.value === value) return; // coalesce dupes
     midiCcRef.current.push({ controller, value, timeAbsSeconds: compAt(timeStampMs) });
