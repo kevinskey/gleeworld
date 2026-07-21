@@ -40,7 +40,7 @@ import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePartTracksProject, type PartTrack, type TrackKind } from '@/hooks/usePartTracksProject';
+import { usePartTracksProject, type PartTrack, type PartTracksProject, type TrackKind } from '@/hooks/usePartTracksProject';
 import { Waveform } from './Waveform';
 import {
   unlockAudio, loadTrack, loadTrackFromBlob, unloadTrack, setTrackVolume, setTrackPan,
@@ -1674,54 +1674,68 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     }
   };
 
-  const pickAppleMusic = async (input: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => {
+  // Wraps a backing-track save so RLS failures (or any other silent write
+  // rejection) surface as an error toast instead of leaving the user
+  // wondering why nothing happened. The "backing track doesn't save on
+  // re-login" bug used to swallow the mutation error because pickAppleMusic
+  // et al didn't catch anything and the parent didn't either — see PR that
+  // introduced this wrapper.
+  const persistBackingTrack = async (patch: Record<string, unknown>, successMsg: string) => {
     if (!project) return;
-    await updateProject.mutateAsync({
+    try {
+      await updateProject.mutateAsync(patch as any);
+      const accTrack = tracks.find((t) => t.kind === 'accompaniment');
+      if (accTrack) await updateTrack.mutateAsync({ id: accTrack.id, patch: { audio_url: null } });
+      toast.success(successMsg);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Could not save the backing track.';
+      console.error('[PartTracks] backing-track save failed', e);
+      // RLS-style rejections read as "new row violates row-level security"
+      // or come back as empty errors — dress them up so the user understands
+      // it's a permission issue and not their file.
+      const friendly = /row-level security|permission denied/i.test(msg)
+        ? 'You can only edit projects you created. Ask the owner to share this project, or make your own copy.'
+        : msg;
+      toast.error(friendly);
+    }
+  };
+
+  const pickAppleMusic = async (input: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => {
+    await persistBackingTrack({
       accompaniment_url: null,
       accompaniment_title: `${input.title} · ${input.artist}`,
-      accompaniment_kind: 'apple_music' as any,
+      accompaniment_kind: 'apple_music',
       accompaniment_apple_music_id: input.id,
       accompaniment_apple_music_storefront: input.storefront,
       accompaniment_apple_music_artist: input.artist,
       accompaniment_apple_music_artwork_url: input.artworkUrl,
       accompaniment_youtube_url: null,
-    } as any);
-    const accTrack = tracks.find((t) => t.kind === 'accompaniment');
-    if (accTrack) await updateTrack.mutateAsync({ id: accTrack.id, patch: { audio_url: null } });
-    toast.success('Apple Music backing track set — sign in once when you press play.');
+    }, 'Apple Music backing track set — sign in once when you press play.');
   };
 
   const pickAppleMusicAlbum = async (input: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => {
-    if (!project) return;
-    await updateProject.mutateAsync({
+    await persistBackingTrack({
       accompaniment_url: null,
       accompaniment_title: `${input.title} · ${input.artist} (album)`,
       // 'apple_music_album' is a distinct kind so playback uses
       // setQueue({ album: id }) instead of { song: id }.
-      accompaniment_kind: 'apple_music_album' as any,
+      accompaniment_kind: 'apple_music_album',
       accompaniment_apple_music_id: input.id,
       accompaniment_apple_music_storefront: input.storefront,
       accompaniment_apple_music_artist: input.artist,
       accompaniment_apple_music_artwork_url: input.artworkUrl,
       accompaniment_youtube_url: null,
-    } as any);
-    const accTrack = tracks.find((t) => t.kind === 'accompaniment');
-    if (accTrack) await updateTrack.mutateAsync({ id: accTrack.id, patch: { audio_url: null } });
-    toast.success('Apple Music album set — sign in once when you press play.');
+    }, 'Apple Music album set — sign in once when you press play.');
   };
 
   const pickYouTube = async (url: string) => {
-    if (!project) return;
-    await updateProject.mutateAsync({
+    await persistBackingTrack({
       accompaniment_url: null,
       accompaniment_title: 'YouTube backing track',
-      accompaniment_kind: 'youtube' as any,
+      accompaniment_kind: 'youtube',
       accompaniment_apple_music_id: null,
       accompaniment_youtube_url: url,
-    } as any);
-    const accTrack = tracks.find((t) => t.kind === 'accompaniment');
-    if (accTrack) await updateTrack.mutateAsync({ id: accTrack.id, patch: { audio_url: null } });
-    toast.success('YouTube backing track set.');
+    }, 'YouTube backing track set.');
   };
 
   const fmtTime = (s: number) => {
@@ -1774,6 +1788,34 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
               </div>
             )}
           </div>
+          {/* Share toggle — only the project owner sees it. Projects are
+              private by default; flipping this makes the project (and its
+              tracks) visible to the rest of the tenant, matching what the
+              old "everyone can see everyone" behavior gave for free. */}
+          {user?.id && project.created_by === user.id && (
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await updateProject.mutateAsync({ is_shared: !project.is_shared } as Partial<PartTracksProject>);
+                  toast.success(project.is_shared ? 'Project is now private.' : 'Project shared with your ensemble.');
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Could not update sharing.');
+                }
+              }}
+              className={
+                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ' +
+                (project.is_shared
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                  : 'bg-muted border-border text-muted-foreground hover:bg-accent')
+              }
+              title={project.is_shared
+                ? 'Anyone in your tenant can see this project. Tap to make it private.'
+                : 'Only you can see this project. Tap to share with your tenant.'}
+            >
+              {project.is_shared ? 'Shared' : 'Private'}
+            </button>
+          )}
           {score?.pdf_url && (
             <Button
               variant="outline"
