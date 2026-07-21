@@ -15,12 +15,15 @@
 
 import * as Tone from 'tone';
 import type { Session, AudioAsset, AudioClip, MasteringParams } from '../session';
+import { MASTER_BUS_ID } from '../session';
 import { buildFxChain, type EngineFxChain } from './fx';
 import { buildTrack, type EngineTrack } from './tracks';
+import { buildBus, type EngineBus } from './buses';
 import { setAssetUrl } from './assetUrlCache';
 import { shouldLoopWrap } from '../transport';
 import { buildMasterChain, type MasterChainHandle } from './masterChain';
 import { MasterChainSync } from './masterChainSync';
+import { findRoutingCycle, formatCycle, type RoutingEdge } from '../routingGraph';
 
 export interface EngineState {
   isReady: boolean;
@@ -165,6 +168,11 @@ export class StudioEngine {
   private masteringDegradedFired = false;
   // Tracks (audio + MIDI), built from the loaded Session.
   private tracks = new Map<string, EngineTrack>();
+  // User buses (v2.0.0). Built from session.buses; each track/bus is
+  // routed to its declared output (defaults to masterIn). Absent on
+  // v1 sessions — the migration fills session.buses = [] at load, so
+  // this map is just empty for legacy sessions.
+  private buses = new Map<string, EngineBus>();
   // Per-track PPM peak meters (B1 Task 6) — one Tone.Meter tapped in
   // PARALLEL off each track's post-EQ output (does not affect the
   // signal path to masterIn). Rebuilt alongside `tracks` in
@@ -447,6 +455,8 @@ export class StudioEngine {
     this.state.masterChain = undefined;
     for (const t of this.tracks.values()) t.dispose();
     this.tracks.clear();
+    for (const b of this.buses.values()) b.dispose();
+    this.buses.clear();
     for (const m of this.trackMeters.values()) m.dispose();
     this.trackMeters.clear();
     this.metronome.dispose();
@@ -486,6 +496,30 @@ export class StudioEngine {
     // even when the chain itself is unchanged.
     this.syncMasterChain(session.master.mastering, true);
 
+    // Rebuild buses (v2.0.0) FIRST so tracks have somewhere to route
+    // into. Cycle-check the declared bus→bus edges before building any
+    // node — an invalid graph must be rejected wholesale, never
+    // half-committed. A cycle here is a load-time error rather than a
+    // runtime edit rejection: the manifest itself is malformed, and
+    // the engine falls back to master routing for every strip so
+    // playback still works.
+    for (const b of this.buses.values()) b.dispose();
+    this.buses.clear();
+    const sessionBuses = session.buses ?? [];
+    const cycleEdges: RoutingEdge[] = sessionBuses.map((b) => ({ from: b.id, to: b.output.bus_id }));
+    const cycleCheck = findRoutingCycle(cycleEdges);
+    const busGraphOk = cycleCheck.ok;
+    if (!busGraphOk) {
+      // eslint-disable-next-line no-console
+      console.error(`[studio] bus routing cycle detected — bypassing all bus routing this load: ${formatCycle(cycleCheck.cycle)}`);
+    }
+    if (busGraphOk) {
+      for (const b of sessionBuses) {
+        const bus = buildBus(b);
+        this.buses.set(b.id, bus);
+      }
+    }
+
     // Rebuild tracks.
     for (const t of this.tracks.values()) t.dispose();
     this.tracks.clear();
@@ -495,18 +529,49 @@ export class StudioEngine {
       const eng = buildTrack(tr, session.assets);
       eng.userMute = tr.mute;
       eng.userSolo = tr.solo;
-      eng.output.connect(this.masterIn);
+      // Route to the track's declared output bus. Falls back to
+      // masterIn if the target bus isn't built (missing session.buses
+      // entry, or the whole bus graph got bypassed due to a cycle).
+      // Session validation catches "unknown bus_id" at load — this is
+      // belt-and-suspenders for a graph that got past validation.
+      const targetBusId = tr.output?.bus_id ?? MASTER_BUS_ID;
+      const target = this.resolveRoutingTarget(targetBusId);
+      eng.output.connect(target);
       // Parallel meter tap — a second `.connect()` off the same output
-      // fans the signal out without removing the masterIn connection.
+      // fans the signal out without removing the destination connection.
       const meter = new Tone.Meter({ channelCount: 1, smoothing: 0.7 });
       eng.output.connect(meter);
       this.trackMeters.set(tr.id, meter);
       this.tracks.set(tr.id, eng);
     }
+
+    // Wire each bus's tail to its own downstream target (another bus,
+    // or master). Same fallback as tracks.
+    if (busGraphOk) {
+      for (const b of sessionBuses) {
+        const bus = this.buses.get(b.id);
+        if (!bus) continue;
+        const target = this.resolveRoutingTarget(b.output.bus_id);
+        bus.output.connect(target);
+      }
+    }
+
     this.recomputeSolo();
 
     this.state.tempoBpm = session.tempo_bpm;
     this.emit();
+  }
+
+  /** Resolve a session-declared bus_id to the actual audio node that
+   * should receive the signal. MASTER_BUS_ID → masterIn; user bus →
+   * its input node; unknown id → masterIn (defensive fallback). */
+  private resolveRoutingTarget(busId: string): Tone.ToneAudioNode {
+    if (busId === MASTER_BUS_ID) return this.masterIn;
+    const bus = this.buses.get(busId);
+    if (bus) return bus.input;
+    // eslint-disable-next-line no-console
+    console.warn(`[studio] unknown bus_id "${busId}" — routing to master`);
+    return this.masterIn;
   }
 
   updateTransport(args: {

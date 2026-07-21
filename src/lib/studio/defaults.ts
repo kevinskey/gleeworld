@@ -2,8 +2,9 @@
 // All ids are generated as uuids; transports default to 4/4 at 120 bpm.
 
 import {
-  STUDIO_SCHEMA_VERSION, type Session, type AudioTrack, type MidiTrack,
-  type FxNode, type FxType, type MasterBus, type Instrument,
+  STUDIO_SCHEMA_VERSION, MASTER_BUS_ID,
+  type Session, type AudioTrack, type MidiTrack,
+  type FxNode, type FxType, type MasterBus, type Bus, type Instrument,
 } from './session';
 
 const uid = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
@@ -35,6 +36,21 @@ export function newSession(args: {
 
 export function newMasterBus(): MasterBus {
   return { volume_db: 0, pan: 0, fx: [] };
+}
+
+/** v2.0.0 factory — a fresh user bus routed to master. */
+export function newBus(name = 'Bus'): Bus {
+  return {
+    id: uid(),
+    name,
+    color: '#8a8f9c',
+    volume_db: 0,
+    pan: 0,
+    mute: false,
+    solo: false,
+    fx: [],
+    output: { bus_id: MASTER_BUS_ID },
+  };
 }
 
 export function newAudioTrack(name = 'Audio'): AudioTrack {
