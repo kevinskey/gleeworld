@@ -6,11 +6,14 @@
 // listing every problem found (no early bailout — easier to fix).
 
 import {
-  STUDIO_SCHEMA_VERSIONS, type Session, type FxNode, type Track,
+  STUDIO_SCHEMA_VERSIONS, type Session, type FxNode, type Track, type Bus,
+  MAX_TRACKS, MAX_BUSES, MAX_SENDS_PER_TRACK, MAX_INSERTS_PER_STRIP,
+  MASTER_BUS_ID,
   isAudioClip, isAudioTrack, isMidiClip, isMidiTrack,
 } from './session';
 
 const VALID_FX_TYPES = new Set(['gain', 'eq3', 'compressor', 'reverb', 'delay', 'filter']);
+const VALID_INPUT_MONITOR = new Set(['off', 'auto', 'on']);
 
 export type ValidateResult =
   | { ok: true; session: Session }
@@ -27,7 +30,7 @@ export function validateSession(raw: unknown): ValidateResult {
   const s = raw as Partial<Session>;
 
   if (!s.schema_version || !STUDIO_SCHEMA_VERSIONS.includes(s.schema_version)) {
-    errors.push(`schema_version mismatch: got "${s.schema_version}", expected one of "1.0.0", "1.1.0"`);
+    errors.push(`schema_version mismatch: got "${s.schema_version}", expected one of ${STUDIO_SCHEMA_VERSIONS.map((v) => `"${v}"`).join(', ')}`);
   }
   must(typeof s.id === 'string', 'id must be a string');
   must(typeof s.title === 'string', 'title must be a string');
@@ -77,10 +80,73 @@ export function validateSession(raw: unknown): ValidateResult {
   });
 
   if (!Array.isArray(s.tracks)) errors.push('tracks must be an array');
-  else s.tracks.forEach((t, i) => validateTrack(t, i, assetIds, errors));
+  else {
+    if (s.tracks.length > MAX_TRACKS) errors.push(`tracks: ${s.tracks.length} exceeds MAX_TRACKS (${MAX_TRACKS})`);
+    s.tracks.forEach((t, i) => validateTrack(t, i, assetIds, errors));
+  }
+
+  // Buses are optional (absent on v1 sessions before the migration
+  // has run). The load path always migrates first, but validate is
+  // also called directly by save-time re-check, so tolerate absence.
+  const busIds = new Set<string>([MASTER_BUS_ID]);
+  if (s.buses !== undefined) {
+    if (!Array.isArray(s.buses)) errors.push('buses must be an array');
+    else {
+      if (s.buses.length > MAX_BUSES) errors.push(`buses: ${s.buses.length} exceeds MAX_BUSES (${MAX_BUSES})`);
+      s.buses.forEach((b, i) => validateBus(b, i, errors, busIds));
+    }
+  }
+
+  // Cross-reference: track outputs and sends must resolve to a known bus.
+  if (Array.isArray(s.tracks)) {
+    s.tracks.forEach((t, i) => {
+      if (t?.output && !busIds.has(t.output.bus_id)) {
+        errors.push(at('tracks', i, 'output.bus_id') + ` references unknown bus "${t.output.bus_id}"`);
+      }
+      if (Array.isArray(t?.sends)) {
+        t.sends.forEach((snd, j) => {
+          if (snd && !busIds.has(snd.target_bus_id)) {
+            errors.push(at('tracks', i, 'sends', j, 'target_bus_id') + ` references unknown bus "${snd.target_bus_id}"`);
+          }
+        });
+      }
+    });
+  }
+  // Same for bus outputs.
+  if (Array.isArray(s.buses)) {
+    s.buses.forEach((b, i) => {
+      if (b?.output && !busIds.has(b.output.bus_id)) {
+        errors.push(at('buses', i, 'output.bus_id') + ` references unknown bus "${b.output.bus_id}"`);
+      }
+    });
+  }
 
   if (errors.length) return { ok: false, errors };
   return { ok: true, session: s as Session };
+}
+
+function validateBus(b: unknown, i: number, errors: string[], busIds: Set<string>) {
+  const at = (...p: (string | number)[]) => ['buses', i, ...p].join('.');
+  if (!b || typeof b !== 'object') { errors.push(at() + ' is not an object'); return; }
+  const bus = b as Partial<Bus>;
+  if (typeof bus.id !== 'string' || !bus.id) errors.push(at('id') + ' must be a non-empty string');
+  else if (bus.id === MASTER_BUS_ID) errors.push(at('id') + ` reserved (use a different id; "${MASTER_BUS_ID}" names the built-in master)`);
+  else if (busIds.has(bus.id)) errors.push(at('id') + ` duplicate id "${bus.id}"`);
+  else busIds.add(bus.id);
+  if (typeof bus.name !== 'string') errors.push(at('name') + ' must be a string');
+  if (typeof bus.volume_db !== 'number') errors.push(at('volume_db') + ' must be a number');
+  if (typeof bus.pan !== 'number' || bus.pan < -1 || bus.pan > 1) errors.push(at('pan') + ' must be in -1..1');
+  if (typeof bus.mute !== 'boolean') errors.push(at('mute') + ' must be a boolean');
+  if (typeof bus.solo !== 'boolean') errors.push(at('solo') + ' must be a boolean');
+  if (Array.isArray(bus.fx)) {
+    if (bus.fx.length > MAX_INSERTS_PER_STRIP) errors.push(at('fx') + ` exceeds MAX_INSERTS_PER_STRIP (${MAX_INSERTS_PER_STRIP})`);
+    validateFxList(bus.fx, at('fx'), errors);
+  } else {
+    errors.push(at('fx') + ' must be an array');
+  }
+  if (!bus.output || typeof bus.output !== 'object' || typeof bus.output.bus_id !== 'string') {
+    errors.push(at('output.bus_id') + ' must be a string');
+  }
 }
 
 function validateTrack(t: unknown, i: number, assetIds: Set<string>, errors: string[]) {
@@ -94,6 +160,37 @@ function validateTrack(t: unknown, i: number, assetIds: Set<string>, errors: str
   if (typeof tr.pan !== 'number' || tr.pan < -1 || tr.pan > 1) errors.push(at('pan') + ' must be in -1..1');
 
   validateFxList(tr.fx ?? [], at('fx'), errors);
+
+  // v2.0.0 optional fields — validated only when present. The load-time
+  // migration fills defaults for v1 sessions before this runs on the
+  // way IN, so at that point every track should have output+sends. But
+  // save-time re-validates the raw session first (pre-migration shape),
+  // so tolerate absence here.
+  if (tr.output !== undefined) {
+    if (!tr.output || typeof tr.output !== 'object' || typeof tr.output.bus_id !== 'string' || !tr.output.bus_id) {
+      errors.push(at('output.bus_id') + ' must be a non-empty string');
+    }
+  }
+  if (tr.sends !== undefined) {
+    if (!Array.isArray(tr.sends)) errors.push(at('sends') + ' must be an array');
+    else {
+      if (tr.sends.length > MAX_SENDS_PER_TRACK) {
+        errors.push(at('sends') + ` exceeds MAX_SENDS_PER_TRACK (${MAX_SENDS_PER_TRACK})`);
+      }
+      tr.sends.forEach((snd, k) => {
+        const sAt = (p: string) => at('sends', k, p);
+        if (!snd || typeof snd !== 'object') { errors.push(sAt('') + ' not an object'); return; }
+        if (typeof snd.id !== 'string' || !snd.id) errors.push(sAt('id') + ' must be a non-empty string');
+        if (typeof snd.target_bus_id !== 'string' || !snd.target_bus_id) errors.push(sAt('target_bus_id') + ' must be a non-empty string');
+        if (typeof snd.level_db !== 'number') errors.push(sAt('level_db') + ' must be a number');
+        if (typeof snd.enabled !== 'boolean') errors.push(sAt('enabled') + ' must be a boolean');
+        if (typeof snd.pre_fader !== 'boolean') errors.push(sAt('pre_fader') + ' must be a boolean');
+      });
+    }
+  }
+  if (tr.input_monitor !== undefined && !VALID_INPUT_MONITOR.has(tr.input_monitor)) {
+    errors.push(at('input_monitor') + ` invalid: "${tr.input_monitor}" (expected off | auto | on)`);
+  }
 
   if (isAudioTrack(tr)) {
     if (!Array.isArray(tr.clips)) { errors.push(at('clips') + ' must be an array'); return; }
