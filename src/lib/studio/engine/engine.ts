@@ -24,7 +24,7 @@ import { setAssetUrl } from './assetUrlCache';
 import { shouldLoopWrap } from '../transport';
 import { buildMasterChain, type MasterChainHandle } from './masterChain';
 import { MasterChainSync } from './masterChainSync';
-import { findRoutingCycle, formatCycle, type RoutingEdge } from '../routingGraph';
+import { findRoutingCycle, formatCycle, wouldEditCycle, type RoutingEdge } from '../routingGraph';
 
 export interface EngineState {
   isReady: boolean;
@@ -837,6 +837,43 @@ export class StudioEngine {
     t.output.connect(newTarget);
     this.trackOutputTargets.set(trackId, newTarget);
     return true;
+  }
+
+  /** Incremental bus routing — same shape as setTrackOutput, plus a
+   *  cycle check. Returns a discriminated result so the caller can
+   *  surface the offending path to the user verbatim. Never mutates the
+   *  graph on a rejected edit. */
+  setBusOutput(busId: string, targetBusId: string): { ok: true } | { ok: false; cycle: string[] } | { ok: false; error: 'unknown_bus' | 'unknown_target' } {
+    const bus = this.buses.get(busId);
+    if (!bus) return { ok: false, error: 'unknown_bus' };
+    if (targetBusId !== MASTER_BUS_ID && !this.buses.has(targetBusId)) {
+      return { ok: false, error: 'unknown_target' };
+    }
+    // Cycle check against the CURRENT engine bus-output map with the
+    // proposed edit substituted in. Uses the pure routingGraph helper
+    // so the check matches load-time and UI-side validation exactly.
+    const currentEdges: RoutingEdge[] = Array.from(this.busOutputTargets.entries()).map(([from, target]) => ({
+      from,
+      to: this.reverseResolveTarget(target),
+    }));
+    const check = wouldEditCycle(currentEdges, { from: busId, to: targetBusId });
+    if (!check.ok) return { ok: false, cycle: check.cycle };
+    const newTarget = this.resolveRoutingTarget(targetBusId);
+    const oldTarget = this.busOutputTargets.get(busId) ?? this.masterIn;
+    if (oldTarget === newTarget) return { ok: true };
+    try { bus.output.disconnect(oldTarget); } catch { /* already gone */ }
+    bus.output.connect(newTarget);
+    this.busOutputTargets.set(busId, newTarget);
+    return { ok: true };
+  }
+
+  /** Reverse of resolveRoutingTarget — maps an engine node back to
+   *  its declared bus_id, for the cycle check. Buses that we can't
+   *  identify (e.g. masterIn) map to MASTER_BUS_ID. */
+  private reverseResolveTarget(node: Tone.ToneAudioNode): string {
+    if (node === this.masterIn) return MASTER_BUS_ID;
+    for (const [id, b] of this.buses) if (b.input === node) return id;
+    return MASTER_BUS_ID;
   }
 
   /** Iterate over built buses (id → EngineBus). Read-only view — used

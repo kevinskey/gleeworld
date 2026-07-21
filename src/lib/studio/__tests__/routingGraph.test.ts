@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findRoutingCycle, formatCycle } from '../routingGraph';
+import { findRoutingCycle, formatCycle, wouldEditCycle } from '../routingGraph';
 import { MASTER_BUS_ID } from '../session';
 
 describe('findRoutingCycle', () => {
@@ -91,5 +91,50 @@ describe('findRoutingCycle', () => {
 
   it('formatCycle renders the arrow-joined path a UI can show verbatim', () => {
     expect(formatCycle(['bus1', 'bus2', 'bus1'])).toBe('bus1 → bus2 → bus1');
+  });
+});
+
+describe('wouldEditCycle', () => {
+  it('replaces the source outbound edge and returns ok when the result is acyclic', () => {
+    const edges = [
+      { from: 'bus1', to: MASTER_BUS_ID },
+      { from: 'bus2', to: 'bus1' },
+    ];
+    // Retarget bus1 from master → bus3 (which points at master); still a DAG.
+    const r = wouldEditCycle(
+      [...edges, { from: 'bus3', to: MASTER_BUS_ID }],
+      { from: 'bus1', to: 'bus3' },
+    );
+    expect(r).toEqual({ ok: true });
+  });
+
+  it('rejects an edit that closes a two-node cycle', () => {
+    // Existing: bus2 → bus1. Editing bus1 → bus2 closes the loop.
+    // Cycle starting node depends on DFS order; assert the set of
+    // participants + that the reported path closes on itself.
+    const r = wouldEditCycle(
+      [{ from: 'bus2', to: 'bus1' }],
+      { from: 'bus1', to: 'bus2' },
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.cycle[0]).toBe(r.cycle[r.cycle.length - 1]);
+      expect(new Set(r.cycle)).toEqual(new Set(['bus1', 'bus2']));
+    }
+  });
+
+  it('rejects a direct self-loop edit', () => {
+    const r = wouldEditCycle([], { from: 'bus1', to: 'bus1' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.cycle).toEqual(['bus1', 'bus1']);
+  });
+
+  it('allows the edit even when the CURRENT graph is cyclic, so long as the edit breaks it', () => {
+    // Current graph is a1 → a2 → a1 (bad). Editing a1 → master fixes it.
+    const r = wouldEditCycle(
+      [{ from: 'a1', to: 'a2' }, { from: 'a2', to: 'a1' }],
+      { from: 'a1', to: MASTER_BUS_ID },
+    );
+    expect(r).toEqual({ ok: true });
   });
 });
