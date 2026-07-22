@@ -7,6 +7,7 @@ import { getOrgName } from '@/lib/orgName';
 import { useUserRole } from '@/hooks/useUserRole';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { parseVideoSource } from '@/lib/videoSources';
 
 interface YouTubeVideo {
   id: string;
@@ -14,6 +15,7 @@ interface YouTubeVideo {
   title: string;
   description: string;
   thumbnail_url: string;
+  video_url: string;
   duration: string;
   view_count: number;
   published_at: string;
@@ -64,7 +66,7 @@ export const YouTubeChannel: React.FC = () => {
 
       const { data, error } = await supabase
         .from('youtube_videos')
-        .select('id, video_id, title, description, thumbnail_url, duration, view_count, published_at')
+        .select('id, video_id, title, description, thumbnail_url, video_url, duration, view_count, published_at')
         .order('published_at', { ascending: false })
         .range(offset, offset + VIDEOS_PER_PAGE - 1);
 
@@ -152,18 +154,30 @@ export const YouTubeChannel: React.FC = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {videos.map((video) => (
+              {videos.map((video) => {
+                const parsed = video.video_url ? parseVideoSource(video.video_url) : null;
+                const isYouTube = !parsed || parsed.provider === 'youtube';
+                const fallbackThumb = isYouTube
+                  ? `https://img.youtube.com/vi/${video.video_id}/hqdefault.jpg`
+                  : parsed?.thumbnailUrl || '';
+                return (
                 <div
                   key={video.id}
                   className="group cursor-pointer rounded-xl overflow-hidden bg-card border border-border hover:border-destructive/50 transition-all hover:shadow-lg"
                   onClick={() => setSelectedVideo(video)}
                 >
-                  <div className="aspect-video relative">
-                    <img
-                      src={video.thumbnail_url || `https://img.youtube.com/vi/${video.video_id}/hqdefault.jpg`}
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="aspect-video relative bg-muted">
+                    {video.thumbnail_url || fallbackThumb ? (
+                      <img
+                        src={video.thumbnail_url || fallbackThumb}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/60">
+                        <Play className="h-10 w-10 text-muted-foreground/40" />
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="w-14 h-14 rounded-full bg-destructive flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                         <Play className="h-6 w-6 text-white fill-white ml-1" />
@@ -190,7 +204,8 @@ export const YouTubeChannel: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Infinite scroll trigger */}
@@ -212,6 +227,7 @@ export const YouTubeChannel: React.FC = () => {
         onClose={() => setSelectedVideo(null)}
         videoId={selectedVideo?.video_id || ''}
         title={selectedVideo?.title}
+        url={selectedVideo?.video_url}
       />
       </DashboardShell>
     </UniversalLayout>

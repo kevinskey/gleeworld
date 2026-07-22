@@ -3,31 +3,39 @@ import { X, ExternalLink, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { useState } from 'react';
-import { 
-  extractYouTubePlaylistId, 
-  isYouTubePlaylistUrl, 
+import {
+  extractYouTubePlaylistId,
   getYouTubePlaylistEmbedUrl,
-  getYouTubeWatchUrl 
+  getYouTubeWatchUrl
 } from '@/utils/youtubeUtils';
+import { parseVideoSource, providerLabel } from '@/lib/videoSources';
 
 interface YouTubeVideoModalProps {
   isOpen: boolean;
   onClose: () => void;
   videoId: string;
   title?: string;
-  url?: string; // Original URL for playlist detection
+  url?: string; // Original URL for playlist detection or non-YouTube playback
   playlistId?: string; // Direct playlist ID
 }
 
 export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playlistId: directPlaylistId }: YouTubeVideoModalProps) => {
   const [hasError, setHasError] = useState(false);
-  
+
+  // Multi-provider routing: if `url` is a non-YouTube provider we know
+  // how to embed, play it here instead of pretending it's YouTube. Falls
+  // through to the original YouTube branch when `url` is a YT link or
+  // absent (older callers only pass videoId).
+  const parsed = url ? parseVideoSource(url) : null;
+  const isNonYouTube = parsed && parsed.provider !== 'youtube';
+
   // Check if this is a playlist - use direct playlistId or extract from URL
   const playlistId = directPlaylistId || (url ? extractYouTubePlaylistId(url) : null);
   const isPlaylist = !!playlistId;
-  
+
   // Determine embed URL
   const getEmbedSrc = () => {
+    if (isNonYouTube && parsed?.embedUrl) return parsed.embedUrl;
     if (isPlaylist && playlistId && !videoId) {
       return getYouTubePlaylistEmbedUrl(playlistId, true);
     }
@@ -41,13 +49,21 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
     }
     return null;
   };
-  
-  const embedSrc = getEmbedSrc();
-  const watchUrl = videoId 
-    ? getYouTubeWatchUrl(videoId) + (playlistId ? `&list=${playlistId}` : '')
-    : url || `https://www.youtube.com/playlist?list=${playlistId}`;
 
-  if (!videoId && !playlistId) return null;
+  const embedSrc = getEmbedSrc();
+  const watchUrl = isNonYouTube
+    ? parsed!.canonicalUrl
+    : videoId
+      ? getYouTubeWatchUrl(videoId) + (playlistId ? `&list=${playlistId}` : '')
+      : url || `https://www.youtube.com/playlist?list=${playlistId}`;
+  const openLabel = isNonYouTube ? `Open on ${providerLabel(parsed!.provider)}` : 'Open on YouTube';
+
+  // For direct file URLs we render a real <video> element instead of an
+  // iframe — no third-party host to embed, and the browser handles seek
+  // / play controls natively.
+  const isDirect = parsed?.provider === 'direct' && !!parsed.embedUrl;
+
+  if (!videoId && !playlistId && !parsed) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) { onClose(); setHasError(false); } }}>
@@ -78,29 +94,39 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
             </div>
           )}
           
-          {/* Error state with fallback to YouTube */}
+          {/* Error state with fallback link out */}
           {hasError ? (
             <div className="aspect-video w-full flex flex-col items-center justify-center bg-gray-900 p-6 text-center">
               <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
               <h3 className="text-white text-lg font-medium mb-2">Video Cannot Be Embedded</h3>
               <p className="text-gray-400 mb-4 max-w-md">
-                This video has embedding restrictions. Click below to watch directly on YouTube.
+                This video has embedding restrictions. Click below to watch it directly.
               </p>
               <Button
                 onClick={() => window.open(watchUrl, '_blank')}
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                Watch on YouTube
+                {openLabel}
               </Button>
             </div>
           ) : (
             /* Responsive video container */
             <div className="aspect-video w-full">
-              {embedSrc ? (
+              {isDirect ? (
+                <video
+                  src={parsed!.embedUrl!}
+                  title={title || 'Video'}
+                  controls
+                  playsInline
+                  autoPlay
+                  className="w-full h-full bg-black"
+                  onError={() => setHasError(true)}
+                />
+              ) : embedSrc ? (
                 <iframe
                   src={embedSrc}
-                  title={title || 'YouTube Video'}
+                  title={title || 'Video'}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                   className="w-full h-full"
@@ -116,13 +142,13 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
                     className="bg-red-600 hover:bg-red-700 text-white"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Open on YouTube
+                    {openLabel}
                   </Button>
                 </div>
               )}
             </div>
           )}
-          
+
           {/* Bottom bar with external link option */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3 flex items-center justify-between">
             <p className="text-white/60 text-xs sm:hidden">Tap X to close</p>
@@ -133,7 +159,7 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
               onClick={() => window.open(watchUrl, '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Open on YouTube</span>
+              <span className="hidden sm:inline">{openLabel}</span>
             </Button>
           </div>
         </div>
