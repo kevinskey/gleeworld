@@ -84,6 +84,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateStrip", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateBusStrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setFxParam", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "bypassEffect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateTempo", returnType: CAPPluginReturnPromise),
@@ -315,6 +316,22 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         guard let trackId = call.getString("trackId") else { call.reject("missing trackId"); return }
         engine.updateTrackStrip(
             id: trackId,
+            volumeDb: call.getDouble("volumeDb"),
+            pan: call.getDouble("pan"),
+            mute: call.getBool("mute"),
+            solo: call.getBool("solo"))
+        call.resolve()
+    }
+
+    // v2.0.0 (Phase 4a mirror) — live bus strip update. JS calls this
+    // via NativeStudio.updateBusStrip({ busId, volumeDb?, pan?, mute?, solo? }).
+    // Falls silently on unknown busId (matches the web engine's
+    // hasBus-gated no-op).
+    @objc func updateBusStrip(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let busId = call.getString("busId") else { call.reject("missing busId"); return }
+        engine.updateBusStrip(
+            id: busId,
             volumeDb: call.getDouble("volumeDb"),
             pan: call.getDouble("pan"),
             mute: call.getBool("mute"),

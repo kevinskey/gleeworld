@@ -682,10 +682,16 @@ export function useStudioEngine(session: Session | null) {
         // wired yet. Web engine ships per-bus meters in Phase 6.
         getBusPeakDb: (_busId: string) => -Infinity,
         getBusPeakDbStereo: (_busId: string) => ({ L: -Infinity, R: -Infinity }),
-        // Bus strip live-edit isn't in the native plugin yet — v2.0.0
-        // bus edits on iOS take effect on the next full engine reload
-        // triggered by the skeleton-diff path.
-        updateBusStrip: async (_busId: string, _p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => { /* not wired on native yet */ },
+        // v2.0.0 bus strip live-edit — mirrors updateTrackStrip above.
+        // Structural bus edits (add/remove/setOutput) still route
+        // through the skeleton-diff full reload; only strip fader
+        // moves take this incremental path.
+        updateBusStrip: async (busId: string, p: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => {
+          await NativeStudio.updateBusStrip({
+            busId,
+            volumeDb: p.volume_db, pan: p.pan, mute: p.mute, solo: p.solo,
+          });
+        },
         // v2.0.0 sends — same story: level edits on iOS take effect
         // on the next reload until the native plugin gets a bridge.
         updateSendLevel: async (_trackId: string, _sendId: string, _levelDb: number) => { /* not wired on native yet */ },

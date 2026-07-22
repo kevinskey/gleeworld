@@ -25,6 +25,9 @@ interface StudioEnginePluginShape {
   stop(): Promise<void>;
   seek(args: { seconds: number }): Promise<void>;
   updateStrip(args: { trackId: string; volumeDb?: number; pan?: number; mute?: boolean; solo?: boolean }): Promise<void>;
+  // v2.0.0 (Phase 4a mirror) — live bus strip update, same shape as
+  // updateStrip but keyed by busId. Falls silently on unknown busId.
+  updateBusStrip(args: { busId: string; volumeDb?: number; pan?: number; mute?: boolean; solo?: boolean }): Promise<void>;
   // Live FX-parameter update — apply a changed effect's params without a
   // full engine rebuild. Omit trackId to target the master bus. `fx` is the
   // full updated FxNode.
