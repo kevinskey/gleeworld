@@ -1,12 +1,22 @@
 // GleeWorld Studio — Swift mirror of the session schema.
 //
-// This is the iOS side of the Phase 1 shared contract defined in
+// This is the iOS side of the shared contract defined in
 // src/lib/studio/session.ts. The native engine (AVAudioEngine) loads
 // the same manifest.json the web produces, and writes back a manifest
 // the web can read. Field names + enum cases match the TypeScript
 // version exactly — if you rename anything here, rename it there too.
 //
-// Phase 1 is types only. The audio engine lands in Phase 3.
+// Schema history:
+//   1.0.0 — baseline (audio + midi tracks, master bus).
+//   1.1.0 — MIDI clips gain optional cc events (native playback still
+//           ignores cc; web plays them).
+//   2.0.0 — v2 mixer routing (Bus, Send, TrackOutput) + automation.
+//           Every v2 field on Track / Session is OPTIONAL so v1
+//           manifests decode without change; the audio-engine layer
+//           treats missing fields as their v1 defaults.
+//           Native engine hookup for v2 buses / sends / automation is
+//           still a follow-up — this file is types only for now, so
+//           the manifest at least round-trips through iOS unchanged.
 
 import Foundation
 
@@ -17,8 +27,17 @@ public enum Studio {
     public static let schemaVersion = "1.0.0"
     /// Manifests at any of these versions can be decoded. 1.1.0 adds
     /// optional MidiClip.cc — this decoder tolerates it (and simply
-    /// ignores it, since native playback doesn't consume cc yet).
-    public static let acceptedSchemaVersions: Set<String> = ["1.0.0", "1.1.0"]
+    /// ignores it, since native playback doesn't consume cc yet). 2.0.0
+    /// adds v2 mixer routing + automation — same tolerance policy: we
+    /// decode the fields, ignore what the native engine doesn't yet
+    /// consume, and preserve them on save so a round-trip through the
+    /// iOS app doesn't lose data.
+    public static let acceptedSchemaVersions: Set<String> = ["1.0.0", "1.1.0", "2.0.0"]
+
+    /// Well-known bus id for the always-present master bus (v2.0.0).
+    /// Track / Bus `output.bus_id` defaults here; sends can target any
+    /// bus id including master.
+    public static let masterBusId = "master"
 
     // MARK: - Transport
 
@@ -128,6 +147,30 @@ public enum Studio {
         case audio, midi
     }
 
+    // MARK: - v2.0.0 routing types
+
+    /// Where a track's post-fader signal terminates (v2.0.0). Defaults
+    /// to the built-in master bus for v1 manifests via the optional
+    /// `output` field on Track.
+    public struct TrackOutput: Codable, Equatable, Sendable {
+        public var bus_id: String
+    }
+
+    /// A single send from a track to a bus (v2.0.0). Pre-fader sends
+    /// read the signal BEFORE the track fader; post-fader reads AFTER.
+    public struct Send: Codable, Equatable, Sendable, Identifiable {
+        public var id: String
+        public var target_bus_id: String
+        public var level_db: Double
+        public var enabled: Bool
+        public var pre_fader: Bool
+    }
+
+    /// Live-input monitoring mode (v2.0.0).
+    public enum InputMonitorMode: String, Codable, Sendable {
+        case off, auto, on
+    }
+
     public struct AudioTrack: Codable, Equatable, Sendable, Identifiable {
         public var id: String
         public var kind: TrackKind = .audio
@@ -140,6 +183,10 @@ public enum Studio {
         public var arm: Bool
         public var fx: [FxNode]
         public var clips: [AudioClip]
+        // v2.0.0 — optional, so v1 manifests decode unchanged.
+        public var output: TrackOutput?
+        public var sends: [Send]?
+        public var input_monitor: InputMonitorMode?
     }
 
     public struct MidiTrack: Codable, Equatable, Sendable, Identifiable {
@@ -155,6 +202,10 @@ public enum Studio {
         public var fx: [FxNode]
         public var clips: [MidiClip]
         public var instrument: Instrument
+        // v2.0.0 — optional, matches AudioTrack.
+        public var output: TrackOutput?
+        public var sends: [Send]?
+        public var input_monitor: InputMonitorMode?
     }
 
     /// Union of audio + MIDI tracks, dispatched on the `kind` discriminator.
@@ -196,6 +247,60 @@ public enum Studio {
         public var fx: [FxNode]
     }
 
+    // MARK: - v2.0.0 user buses
+
+    /// A user-defined stereo submix (v2.0.0). Tracks + other buses
+    /// route into it via `output` / `sends`; its `output` names its
+    /// own downstream target (default: master).
+    public struct Bus: Codable, Equatable, Sendable, Identifiable {
+        public var id: String
+        public var name: String
+        public var color: String
+        public var volume_db: Double
+        public var pan: Double
+        public var mute: Bool
+        public var solo: Bool
+        public var fx: [FxNode]
+        public var output: TrackOutput
+    }
+
+    // MARK: - v2.0.0 automation
+
+    public enum AutomationParam: String, Codable, Sendable {
+        case volume_db
+        case pan
+    }
+
+    public enum AutomationCurve: String, Codable, Sendable {
+        case hold, linear, exponential
+    }
+
+    public enum AutomationMode: String, Codable, Sendable {
+        case off, read
+    }
+
+    public enum AutomationTargetKind: String, Codable, Sendable {
+        case track, bus
+    }
+
+    /// One point in a breakpoint envelope. `curve` describes the ramp
+    /// INTO this point from the previous one — the first point's
+    /// curve is unused.
+    public struct AutomationPoint: Codable, Equatable, Sendable {
+        public var time_seconds: Double
+        public var value: Double
+        public var curve: AutomationCurve
+    }
+
+    /// Breakpoint automation envelope for one strip parameter (v2.0.0).
+    public struct Automation: Codable, Equatable, Sendable {
+        public var target_id: String
+        public var target_kind: AutomationTargetKind
+        public var param: AutomationParam
+        public var mode: AutomationMode
+        public var points: [AutomationPoint]
+    }
+
     // MARK: - Audio assets
 
     public enum AudioFormat: String, Codable, Sendable {
@@ -227,6 +332,11 @@ public enum Studio {
 
         public var master: MasterBus
         public var tracks: [Track]
+        // v2.0.0 — optional so v1 manifests decode unchanged. Absent
+        // == empty; the audio engine treats missing buses as "every
+        // track routes to master" (the v1 behavior).
+        public var buses: [Bus]?
+        public var automation: [Automation]?
         public var assets: [AudioAsset]
 
         public var owner_user_id: String
