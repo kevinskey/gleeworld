@@ -58,6 +58,13 @@ public final class StudioNativeEngine {
     /// the engine's `mainMixerNode`, which is connected to the output.
     private var masterFxChain: FxChain?
     private var tracks: [String: TrackBinding] = [:]
+    /// v2.0.0 (Phase 4a mirror) — user buses. Built from
+    /// session.buses in loadSession. Empty for v1 sessions or when
+    /// bus routing bypasses due to a detected cycle. The bus's
+    /// internal chain (strip → muteGate → fx) is attached to the
+    /// engine here; the tail output → downstream target link is
+    /// wired by loadSession after every bus has an input node.
+    private var buses: [String: BusBinding] = [:]
 
     /// Session currently bound. Read-only after loadSession; structural
     /// edits require a fresh loadSession.
@@ -330,10 +337,40 @@ public final class StudioNativeEngine {
         positionTimer?.invalidate(); positionTimer = nil
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
+        for (_, b) in buses { b.dispose() }
+        buses.removeAll()
         masterFxChain?.dispose()
         masterFxChain = nil
         if engine.isRunning { engine.stop() }
         try? AVAudioSession.sharedInstance().setActive(false)
+    }
+
+    // MARK: - v2.0.0 bus routing
+
+    /// Resolve a track's declared output to the mixer node it should
+    /// feed. Unknown / missing bus ids fall back to masterMixer so
+    /// playback still works when the manifest declares a bus that
+    /// wasn't built (cycle bypass, validation-skipped, etc.).
+    private func resolveTrackRoutingTarget(track: Studio.Track) -> AVAudioMixerNode {
+        let busId: String?
+        switch track {
+        case .audio(let t): busId = t.output?.bus_id
+        case .midi(let t):  busId = t.output?.bus_id
+        }
+        guard let id = busId, id != Studio.masterBusId else { return masterMixer }
+        if let bus = buses[id] { return bus.strip }
+        NSLog("[Studio] track routing target '\(id)' not built — falling back to master")
+        return masterMixer
+    }
+
+    /// Resolve a bus's declared output to the mixer node its tail
+    /// should feed. Same fallback policy as tracks.
+    private func resolveBusRoutingTarget(bus: Studio.Bus) -> AVAudioMixerNode {
+        let id = bus.output.bus_id
+        if id == Studio.masterBusId { return masterMixer }
+        if let downstream = buses[id] { return downstream.strip }
+        NSLog("[Studio] bus routing target '\(id)' not built — falling back to master")
+        return masterMixer
     }
 
     // MARK: - Session binding
@@ -383,22 +420,45 @@ public final class StudioNativeEngine {
         // Tear down previous bindings.
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
+        for (_, b) in buses { b.dispose() }
+        buses.removeAll()
         masterFxChain?.dispose()
         masterFxChain = nil
         NSLog("[Studio.load] old bindings disposed")
 
         self.session = s
 
-        // Build per-track bindings FIRST, master wiring after. Track
-        // building connects inputs into masterMixer, and (before the
-        // explicit-format fix in TrackBinding.build) those connects
-        // re-negotiated masterMixer's format and silently dropped its
-        // output link — wiring the master last means nothing runs after
-        // it that could tear it down again.
+        // v2.0.0 (Phase 4a mirror) — build BusBindings BEFORE tracks
+        // so track routing has real input nodes to connect to. First:
+        // cycle-check the declared bus edges. On cycle, bypass ALL
+        // bus routing (buses stay empty, every track falls back to
+        // masterMixer) — same policy engine.ts loadSession uses.
+        let sessionBuses = s.buses ?? []
+        var busGraphOk = true
+        if !sessionBuses.isEmpty {
+            let edges = sessionBuses.map { RoutingEdge(from: $0.id, to: $0.output.bus_id) }
+            let check = findRoutingCycle(edges)
+            if case .cycle(let path) = check {
+                NSLog("[Studio.load] bus routing cycle detected — bypassing bus routing: \(formatCycle(path))")
+                busGraphOk = false
+            }
+        }
+        if busGraphOk {
+            for b in sessionBuses {
+                let binding = BusBinding.build(bus: b, engine: engine)
+                buses[b.id] = binding
+            }
+        }
+
+        // Build per-track bindings. Track building connects inputs into
+        // its declared output bus (defaults to masterMixer). Unknown /
+        // cycle-bypassed bus ids fall back to masterMixer so playback
+        // still works.
         for (i, tr) in s.tracks.enumerated() {
             NSLog("[Studio.load] build track \(i+1)/\(s.tracks.count) …")
+            let target = self.resolveTrackRoutingTarget(track: tr)
             let binding = try await TrackBinding.build(
-                track: tr, engine: engine, master: masterMixer, assetLoader: assetLoader,
+                track: tr, engine: engine, master: target, assetLoader: assetLoader,
                 allAssets: s.assets)
             switch tr {
             case .audio(let t): binding.userMute = t.mute; binding.userSolo = t.solo
@@ -407,6 +467,18 @@ public final class StudioNativeEngine {
             tracks[binding.trackId] = binding
             NSLog("[Studio.load] built track \(i+1) ok")
         }
+
+        // Wire each bus's tail to its own downstream target (another
+        // bus's strip, or masterMixer). Done AFTER tracks so every
+        // bus's strip has received its inbound connections first.
+        if busGraphOk {
+            for b in sessionBuses {
+                guard let bus = buses[b.id] else { continue }
+                let target = self.resolveBusRoutingTarget(bus: b)
+                engine.connect(bus.output, to: target, format: nil)
+            }
+        }
+
         recomputeSolo()
         NSLog("[Studio.load] all tracks built; wiring master fx")
 
