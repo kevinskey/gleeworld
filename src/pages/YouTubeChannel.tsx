@@ -17,6 +17,7 @@ import { AddYouTubeVideoForm } from '@/components/youtube/AddYouTubeVideoForm';
 import { EditVideoDialog, type EditVideoRow } from '@/components/youtube/EditVideoDialog';
 import { AddToPlaylistDialog } from '@/components/youtube/AddToPlaylistDialog';
 import { ShareVideoDialog } from '@/components/youtube/ShareVideoDialog';
+import { PlaylistDetailDialog } from '@/components/youtube/PlaylistDetailDialog';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { usePersonalPlaylists, useSharedWithMe, type Playlist } from '@/hooks/useVideoLibrary';
@@ -79,6 +80,7 @@ export const YouTubeChannel: React.FC = () => {
   const [editing, setEditing] = useState<EditVideoRow | null>(null);
   const [playlistTargetId, setPlaylistTargetId] = useState<string | null>(null);
   const [shareTarget, setShareTarget] = useState<{ id: string; title: string; type: 'video' | 'playlist' } | null>(null);
+  const [openPlaylist, setOpenPlaylist] = useState<Playlist | null>(null);
   const [newPlaylistTitle, setNewPlaylistTitle] = useState('');
   const [showNewPlaylistForm, setShowNewPlaylistForm] = useState(false);
 
@@ -405,6 +407,7 @@ export const YouTubeChannel: React.FC = () => {
               onRename={personal.rename}
               onDelete={personal.remove}
               onShare={(p) => setShareTarget({ id: p.id, title: p.title, type: 'playlist' })}
+              onOpen={(p) => setOpenPlaylist(p)}
             />
           ) : tab === 'shared' ? (
             <SharedInboxPanel
@@ -637,6 +640,33 @@ export const YouTubeChannel: React.FC = () => {
           onClose={() => setShareTarget(null)}
           onShared={() => sharedInbox.refresh()}
         />
+        <PlaylistDetailDialog
+          playlist={openPlaylist}
+          open={!!openPlaylist}
+          onClose={() => setOpenPlaylist(null)}
+          onShare={(p) => setShareTarget({ id: p.id, title: p.title, type: 'playlist' })}
+          onRename={(p) => {
+            const t = window.prompt('Rename playlist', p.title);
+            if (t && t.trim() && t !== p.title) personal.rename(p.id, t.trim());
+          }}
+          onPlay={(v) => {
+            setSelectedVideo({
+              id: '',
+              video_id: v.video_id,
+              title: v.title,
+              description: null,
+              thumbnail_url: null,
+              video_url: v.video_url,
+              duration: null,
+              view_count: null,
+              published_at: null,
+              category: null,
+              tags: null,
+              is_featured: null,
+            });
+          }}
+          onChanged={() => personal.refresh()}
+        />
       </DashboardShell>
     </UniversalLayout>
   );
@@ -645,7 +675,7 @@ export const YouTubeChannel: React.FC = () => {
 // ── Playlists tab ────────────────────────────────────────────────────
 function PlaylistsPanel({
   playlists, loading, showForm, newTitle, onNewTitleChange, onShowForm, onHideForm, onCreate,
-  onRename, onDelete, onShare,
+  onRename, onDelete, onShare, onOpen,
 }: {
   playlists: Playlist[];
   loading: boolean;
@@ -658,6 +688,7 @@ function PlaylistsPanel({
   onRename: (id: string, title: string) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
   onShare: (p: Playlist) => void;
+  onOpen: (p: Playlist) => void;
 }) {
   if (loading) {
     return (
@@ -699,7 +730,12 @@ function PlaylistsPanel({
       ) : (
         <ul className="divide-y divide-border rounded-xl border border-border bg-card">
           {playlists.map((p) => (
-            <li key={p.id} className="p-4 flex items-center gap-3">
+            <li
+              key={p.id}
+              className="p-4 flex items-center gap-3 cursor-pointer hover:bg-muted/30 transition-colors"
+              onClick={() => onOpen(p)}
+              title="Open playlist"
+            >
               <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
                 <ListVideo className="w-5 h-5 text-muted-foreground" />
               </div>
@@ -709,14 +745,15 @@ function PlaylistsPanel({
                   {p.item_count ?? 0} video{p.item_count === 1 ? '' : 's'} · Updated {new Date(p.updated_at).toLocaleDateString()}
                 </div>
               </div>
-              <Button size="sm" variant="ghost" className="text-xs" onClick={() => onShare(p)}>
+              <Button size="sm" variant="ghost" className="text-xs" onClick={(e) => { e.stopPropagation(); onShare(p); }}>
                 <Share2 className="w-3.5 h-3.5 mr-1" /> Share
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
                 className="text-xs"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   const title = window.prompt('Rename playlist', p.title);
                   if (title && title.trim() && title !== p.title) onRename(p.id, title.trim());
                 }}
@@ -727,7 +764,8 @@ function PlaylistsPanel({
                 size="sm"
                 variant="ghost"
                 className="text-xs text-destructive hover:text-destructive"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   if (window.confirm(`Delete "${p.title}"?`)) onDelete(p.id);
                 }}
               >
