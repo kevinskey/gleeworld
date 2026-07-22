@@ -12,7 +12,12 @@
 //   │  tenant)   │                                        │
 //   └────────────┴────────────────────────────────────────┘
 
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+// Idempotence guard. Some pages self-wrap in <DashboardShell> while their
+// route in App.tsx already wraps them — nested instances would render two
+// sidebars + two topbars. Nested instances short-circuit to a pass-through.
+const DashboardShellNestedContext = createContext(false);
 
 const UserNotificationsSection = lazy(() =>
   import('@/components/notifications/UserNotificationsSection').then(m => ({ default: m.UserNotificationsSection }))
@@ -950,6 +955,8 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 // ── Shell ───────────────────────────────────────────────────────────────────
 
 export function DashboardShell({ children }: { children: ReactNode }) {
+  const alreadyInsideShell = useContext(DashboardShellNestedContext);
+  if (alreadyInsideShell) return <>{children}</>;
   // Calendar keeps its compact header spacing but shows the nav like every
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
@@ -969,6 +976,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     try { localStorage.setItem('gw_sidebar_collapsed', v ? '1' : '0'); } catch { /* private mode */ }
   };
   return (
+    <DashboardShellNestedContext.Provider value={true}>
     <AssistantProvider>
       <div className="flex min-h-screen w-full bg-background">
         {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
@@ -1003,5 +1011,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <AssistantSheet />
       </div>
     </AssistantProvider>
+    </DashboardShellNestedContext.Provider>
   );
 }
