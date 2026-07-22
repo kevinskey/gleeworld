@@ -576,7 +576,7 @@ export class StudioEngine {
       this.trackOutputTargets.set(tr.id, target);
       // Parallel meter tap — a second `.connect()` off the same output
       // fans the signal out without removing the destination connection.
-      const meter = new Tone.Meter({ channelCount: 1, smoothing: 0.7 });
+      const meter = new Tone.Meter({ channelCount: 2, smoothing: 0.7 });
       eng.output.connect(meter);
       this.trackMeters.set(tr.id, meter);
       this.tracks.set(tr.id, eng);
@@ -593,7 +593,7 @@ export class StudioEngine {
         const target = this.resolveRoutingTarget(b.output.bus_id);
         bus.output.connect(target);
         this.busOutputTargets.set(b.id, target);
-        const meter = new Tone.Meter({ channelCount: 1, smoothing: 0.7 });
+        const meter = new Tone.Meter({ channelCount: 2, smoothing: 0.7 });
         bus.output.connect(meter);
         this.busMeters.set(b.id, meter);
       }
@@ -768,21 +768,29 @@ export class StudioEngine {
    *  meter loop — ballistics (attack/release/peak-hold) are applied in
    *  the UI via mixerMath's `ppmDecay`, the same way the transport bar's
    *  existing peakDbL/R meter already works. -Infinity for an unknown
-   *  or not-yet-built track. */
+   *  or not-yet-built track. Returns max(L, R) — stereo callers use
+   *  getTrackPeakDbStereo. */
   getTrackPeakDb(trackId: string): number {
-    const m = this.trackMeters.get(trackId);
-    if (!m) return -Infinity;
-    const v = m.getValue();
-    return Array.isArray(v) ? (v[0] ?? -Infinity) : v;
+    return maxChannel(this.trackMeters.get(trackId));
   }
 
-  /** Per-bus PPM peak read (Phase 6). Same signature and semantics as
+  /** Stereo variant of getTrackPeakDb. Returns L and R separately so
+   *  the UI can render two bars. -Infinity on either side when the
+   *  track / meter isn't known or the tap hasn't received a channel
+   *  yet. */
+  getTrackPeakDbStereo(trackId: string): { L: number; R: number } {
+    return stereoChannels(this.trackMeters.get(trackId));
+  }
+
+  /** Per-bus PPM peak read (Phase 6). Same semantics as
    *  getTrackPeakDb. -Infinity for an unknown or not-yet-built bus. */
   getBusPeakDb(busId: string): number {
-    const m = this.busMeters.get(busId);
-    if (!m) return -Infinity;
-    const v = m.getValue();
-    return Array.isArray(v) ? (v[0] ?? -Infinity) : v;
+    return maxChannel(this.busMeters.get(busId));
+  }
+
+  /** Stereo variant of getBusPeakDb. */
+  getBusPeakDbStereo(busId: string): { L: number; R: number } {
+    return stereoChannels(this.busMeters.get(busId));
   }
 
   // ── v2.0.0: bus lifecycle + routing ───────────────────────────────
@@ -1257,4 +1265,28 @@ export function dbToGain(db: number): number {
 }
 export function gainToDb(g: number): number {
   return g > 0 ? 20 * Math.log10(g) : -Infinity;
+}
+
+// ── Stereo meter helpers ───────────────────────────────────────────
+// Meter taps run at channelCount: 2, so Tone.Meter.getValue() returns
+// a number[] with one entry per channel. maxChannel keeps the old
+// mono contract (max across L/R) for callers that haven't switched
+// to the stereo API yet; stereoChannels returns { L, R }.
+
+function maxChannel(meter: Tone.Meter | undefined): number {
+  if (!meter) return -Infinity;
+  const v = meter.getValue();
+  if (!Array.isArray(v)) return v as number;
+  const L = v[0] ?? -Infinity;
+  const R = v[1] ?? L;
+  return Math.max(L, R);
+}
+
+function stereoChannels(meter: Tone.Meter | undefined): { L: number; R: number } {
+  if (!meter) return { L: -Infinity, R: -Infinity };
+  const v = meter.getValue();
+  if (!Array.isArray(v)) return { L: v as number, R: v as number };
+  const L = v[0] ?? -Infinity;
+  const R = v[1] ?? L;
+  return { L, R };
 }

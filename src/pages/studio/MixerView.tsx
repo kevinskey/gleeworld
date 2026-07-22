@@ -105,11 +105,20 @@ function useTapTracker(delayMs = 300) {
 // "master") by the single rAF loop in MixerView. ─────────────────────
 
 interface MeterEntry {
-  db: number;      // current displayed (post-ballistics) level
-  holdDb: number;  // peak-hold — only moves up; resets on tap
-  clip: boolean;   // latches true once peak crosses 0 dBFS; resets on tap
+  /** Post-ballistics displayed level per channel (L / R). Kept
+   *  independent so a hard-panned track shows a lone bar instead of
+   *  averaging into a false middle reading. */
+  dbL: number;
+  dbR: number;
+  /** Peak-hold per channel — only moves up; resets on tap. */
+  holdL: number;
+  holdR: number;
+  /** Latches true once EITHER channel crosses 0 dBFS. */
+  clip: boolean;
 }
-const EMPTY_METER: MeterEntry = { db: -Infinity, holdDb: -Infinity, clip: false };
+const EMPTY_METER: MeterEntry = {
+  dbL: -Infinity, dbR: -Infinity, holdL: -Infinity, holdR: -Infinity, clip: false,
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // MixerView
@@ -158,36 +167,36 @@ export function MixerView({
         lastEmit = now;
         setMeters((prev) => {
           const next: Record<string, MeterEntry> = { ...prev };
+          const applyStereo = (
+            id: string,
+            raw: { L: number; R: number },
+          ) => {
+            const prevEntry = prev[id] ?? EMPTY_METER;
+            const decayedL = ppmDecay(prevEntry.dbL, dtSeconds);
+            const decayedR = ppmDecay(prevEntry.dbR, dtSeconds);
+            const dbL = Math.max(raw.L, decayedL);
+            const dbR = Math.max(raw.R, decayedR);
+            next[id] = {
+              dbL,
+              dbR,
+              holdL: dbL > prevEntry.holdL ? dbL : prevEntry.holdL,
+              holdR: dbR > prevEntry.holdR ? dbR : prevEntry.holdR,
+              clip: prevEntry.clip || raw.L > 0 || raw.R > 0,
+            };
+          };
           for (const t of session.tracks) {
-            const raw = engineState.getTrackPeakDb(t.id);
-            const prevEntry = prev[t.id] ?? EMPTY_METER;
-            const decayed = ppmDecay(prevEntry.db, dtSeconds);
-            const db = Math.max(raw, decayed);
-            const holdDb = db > prevEntry.holdDb ? db : prevEntry.holdDb;
-            const clip = prevEntry.clip || raw > 0;
-            next[t.id] = { db, holdDb, clip };
+            applyStereo(t.id, engineState.getTrackPeakDbStereo?.(t.id) ?? { L: -Infinity, R: -Infinity });
           }
           // Phase 6: same read path for user buses.
           for (const b of session.buses ?? []) {
-            const raw = engineState.getBusPeakDb?.(b.id) ?? -Infinity;
-            const prevEntry = prev[b.id] ?? EMPTY_METER;
-            const decayed = ppmDecay(prevEntry.db, dtSeconds);
-            const db = Math.max(raw, decayed);
-            const holdDb = db > prevEntry.holdDb ? db : prevEntry.holdDb;
-            const clip = prevEntry.clip || raw > 0;
-            next[b.id] = { db, holdDb, clip };
+            applyStereo(b.id, engineState.getBusPeakDbStereo?.(b.id) ?? { L: -Infinity, R: -Infinity });
           }
-          // Master bus reuses the transport bar's existing peakDbL/R —
-          // average L/R into a single displayed number for the strip.
-          const masterRaw = Math.max(state?.peakDbL ?? -Infinity, state?.peakDbR ?? -Infinity);
-          const prevMaster = prev.master ?? EMPTY_METER;
-          const masterDecayed = ppmDecay(prevMaster.db, dtSeconds);
-          const masterDb = Math.max(masterRaw, masterDecayed);
-          next.master = {
-            db: masterDb,
-            holdDb: masterDb > prevMaster.holdDb ? masterDb : prevMaster.holdDb,
-            clip: prevMaster.clip || masterRaw > 0,
-          };
+          // Master reuses the engine's existing peakDbL/R (already
+          // stereo since the mastering chain reports both sides).
+          applyStereo('master', {
+            L: state?.peakDbL ?? -Infinity,
+            R: state?.peakDbR ?? -Infinity,
+          });
           return next;
         });
       }
@@ -199,7 +208,13 @@ export function MixerView({
   }, [session.tracks, session.buses, engineState, state?.peakDbL, state?.peakDbR]);
 
   const resetHold = useCallback((id: string) => {
-    setMeters((prev) => ({ ...prev, [id]: { db: prev[id]?.db ?? -Infinity, holdDb: -Infinity, clip: false } }));
+    setMeters((prev) => {
+      const p = prev[id] ?? EMPTY_METER;
+      return {
+        ...prev,
+        [id]: { dbL: p.dbL, dbR: p.dbR, holdL: -Infinity, holdR: -Infinity, clip: false },
+      };
+    });
   }, []);
 
   const setStrip = useCallback((trackId: string, patch: StripPatch) => {
@@ -488,9 +503,12 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
     <div className="flex gap-1.5 items-end px-1 py-1 bg-card border border-border rounded-md overflow-x-auto">
       {tracks.map((t) => {
         const m = meters[t.id] ?? EMPTY_METER;
-        const pct = clamp(((m.db === -Infinity ? -60 : m.db) + 60) / 60 * 100, 0, 100);
-        const hot = m.db > -3;
-        const warm = m.db > -12;
+        // Compact phone bridge shows max(L, R) as one bar — full stereo
+        // rendering is on the docked ChannelStrip meter.
+        const db = Math.max(m.dbL, m.dbR);
+        const pct = clamp(((db === -Infinity ? -60 : db) + 60) / 60 * 100, 0, 100);
+        const hot = db > -3;
+        const warm = db > -12;
         return (
           <div key={t.id} className="flex flex-col items-center gap-0.5 shrink-0 w-6" title={t.name}>
             <div className="w-2 h-8 bg-muted rounded-sm overflow-hidden flex flex-col justify-end">
@@ -614,14 +632,14 @@ function ChannelStrip({
           <PanKnob pan={track.pan} onChange={(pan) => onStripChange({ pan })} />
           <div className="flex items-end gap-1.5 flex-1">
             <Fader volumeDb={track.volume_db} muted={track.mute} onChange={(db) => onStripChange({ volume_db: db })} />
-            <PeakMeter db={meter.db} holdDb={meter.holdDb} clip={meter.clip} onReset={onResetHold} />
+            <PeakMeter dbL={meter.dbL} dbR={meter.dbR} holdL={meter.holdL} holdR={meter.holdR} clip={meter.clip} onReset={onResetHold} />
           </div>
         </>
       )}
       {isPhone && (
         <div className="w-full flex items-center gap-1.5">
           <div className="flex-1 text-xs tabular-nums text-center text-muted-foreground">{formatDb(track.volume_db)}</div>
-          <PeakMeter db={meter.db} holdDb={meter.holdDb} clip={meter.clip} onReset={onResetHold} height={48} />
+          <PeakMeter dbL={meter.dbL} dbR={meter.dbR} holdL={meter.holdL} holdR={meter.holdR} clip={meter.clip} onReset={onResetHold} height={48} />
         </div>
       )}
 
@@ -882,12 +900,13 @@ function Fader({ volumeDb, muted, onChange }: { volumeDb: number; muted: boolean
 // PeakMeter — PPM bar + numeric peak-hold, tap resets
 // ═══════════════════════════════════════════════════════════════════
 
-function PeakMeter({ db, holdDb, clip = false, onReset, height = FADER_TRACK_HEIGHT }: {
-  db: number; holdDb: number; clip?: boolean; onReset: () => void; height?: number;
+function PeakMeter({ dbL, dbR, holdL, holdR, clip = false, onReset, height = FADER_TRACK_HEIGHT }: {
+  dbL: number; dbR: number; holdL: number; holdR: number;
+  clip?: boolean; onReset: () => void; height?: number;
 }) {
-  const pct = clamp(((db === -Infinity ? -60 : db) + 60) / 60 * 100, 0, 100);
-  const hot = db > -3;
-  const warm = db > -12;
+  // The peak-hold readout combines both sides so a hard-panned track
+  // still shows a numeric peak. Bars stay independent.
+  const holdDb = Math.max(holdL, holdR);
   return (
     <button
       type="button"
@@ -895,19 +914,36 @@ function PeakMeter({ db, holdDb, clip = false, onReset, height = FADER_TRACK_HEI
       title={clip ? 'Clipped — tap to reset' : 'Tap to reset peak hold'}
       className="flex flex-col items-center gap-0.5 justify-end px-2 py-1 min-w-11 min-h-11"
     >
-      {/* Phase 6 — persistent clip indicator. Latches red once peak
-       *  ever crosses 0 dBFS; clears on the same reset tap as peak-hold. */}
+      {/* Phase 6 — persistent clip indicator. Latches red once EITHER
+       *  channel crosses 0 dBFS; clears on the same reset tap as peak-hold. */}
       <span
-        className={`w-2 h-1 rounded-sm ${clip ? 'bg-rose-500' : 'bg-transparent'}`}
+        className={`w-4 h-1 rounded-sm ${clip ? 'bg-rose-500' : 'bg-transparent'}`}
         aria-label={clip ? 'Clipping' : undefined}
       />
       <span className={`text-xs tabular-nums leading-none ${clip ? 'text-rose-400' : 'text-muted-foreground'}`}>
         {holdDb === -Infinity ? '—' : holdDb.toFixed(0)}
       </span>
-      <div className="w-2 bg-muted rounded-sm overflow-hidden flex flex-col justify-end" style={{ height }}>
-        <div className={`w-full transition-[height] duration-75 ${hot ? 'bg-rose-500' : warm ? 'bg-amber-400' : 'bg-emerald-500'}`} style={{ height: `${pct}%` }} />
+      <div className="flex gap-0.5 items-end" style={{ height }}>
+        <StereoBar db={dbL} height={height} />
+        <StereoBar db={dbR} height={height} />
       </div>
     </button>
+  );
+}
+
+/** One side of a stereo PPM bar. Shared color ramp (green / amber /
+ *  rose) matches the pre-stereo single-bar look. */
+function StereoBar({ db, height }: { db: number; height: number }) {
+  const pct = clamp(((db === -Infinity ? -60 : db) + 60) / 60 * 100, 0, 100);
+  const hot = db > -3;
+  const warm = db > -12;
+  return (
+    <div className="w-1.5 bg-muted rounded-sm overflow-hidden flex flex-col justify-end" style={{ height }}>
+      <div
+        className={`w-full transition-[height] duration-75 ${hot ? 'bg-rose-500' : warm ? 'bg-amber-400' : 'bg-emerald-500'}`}
+        style={{ height: `${pct}%` }}
+      />
+    </div>
   );
 }
 
@@ -1112,7 +1148,7 @@ function MasterStrip({
 
       <div className="flex items-center justify-center gap-3">
         <span className="text-xs text-muted-foreground">Peak {block ? `${block.peakDb.toFixed(1)}dB` : '—'}</span>
-        <PeakMeter db={meter.db} holdDb={meter.holdDb} clip={meter.clip} onReset={onResetHold} height={64} />
+        <PeakMeter dbL={meter.dbL} dbR={meter.dbR} holdL={meter.holdL} holdR={meter.holdR} clip={meter.clip} onReset={onResetHold} height={64} />
       </div>
 
       <button
@@ -1241,7 +1277,7 @@ function BusStrip({
       <PanKnob pan={bus.pan} onChange={(pan) => onStripChange({ pan })} />
       <div className="flex items-end gap-1.5 flex-1">
         <Fader volumeDb={bus.volume_db} muted={bus.mute} onChange={(db) => onStripChange({ volume_db: db })} />
-        <PeakMeter db={meter.db} holdDb={meter.holdDb} clip={meter.clip} onReset={onResetHold} />
+        <PeakMeter dbL={meter.dbL} dbR={meter.dbR} holdL={meter.holdL} holdR={meter.holdR} clip={meter.clip} onReset={onResetHold} />
       </div>
       <div className="flex items-center gap-1">
         <button
