@@ -559,6 +559,25 @@ public final class StudioNativeEngine {
         recomputeSolo()
     }
 
+    /// v2.0.0 (Phase 4a mirror) — live bus strip update. Same shape
+    /// as updateTrackStrip: volume/pan apply to the bus's PanVol
+    /// mixer directly; mute flips the muteGate. No graph rebuild.
+    /// Structural bus edits (add/remove/setOutput) still go through
+    /// loadSession.
+    public func updateBusStrip(id: String, volumeDb: Double?, pan: Double?, mute: Bool?, solo: Bool? = nil) {
+        guard let b = buses[id] else { return }
+        if let v = volumeDb { b.setVolumeDb(v) }
+        if let p = pan { b.setPan(Float(p)) }
+        if let m = mute { b.userMute = m }
+        if let s = solo { b.userSolo = s }
+        // Solo re-eval — bus solo affects the master mix same as
+        // track solo. recomputeSolo already reads both maps once we
+        // wire that logic; keeping the call here so the same trigger
+        // point covers future bus-solo behavior without another
+        // bridge round-trip.
+        recomputeSolo()
+    }
+
     /// Live FX-parameter update — apply changed params to an already-built FX
     /// node without rebuilding the graph, so tweaking a reverb/EQ/gain knob
     /// doesn't stop playback or re-decode assets. `trackId == nil` targets the

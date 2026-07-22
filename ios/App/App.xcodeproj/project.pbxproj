@@ -39,6 +39,7 @@
 		E1A2B3C4D5E6F7081923A4BF /* RealtimeThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4C0 /* RealtimeThread.swift */; };
 		ED56BC98FAF679C5E8E8460B /* Mixdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93A915581BC73F5E718C6B9 /* Mixdown.swift */; };
 		F3827DBA2B1BCFB65967AA84 /* Fx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B41B6DB59A4EC515A3D916 /* Fx.swift */; };
+		FAF6A9CF387E9159480E5FB3 /* Automation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27146FB8EE06B9F0D866B053 /* Automation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 		170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioEnginePlugin.swift; sourceTree = "<group>"; };
 		1A1A1A1A1A1A1A1A1A1A1A1A /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		1DAD2143C4798E9ADDA1A3AF /* StudioModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioModel.swift; sourceTree = "<group>"; };
+		27146FB8EE06B9F0D866B053 /* Automation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Automation.swift; sourceTree = "<group>"; };
 		2A1A1A1A1A1A1A1A1A1A1A1A /* AudioSessionConfigPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionConfigPlugin.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		3A1A1A1A1A1A1A1A1A1A1A1A /* NativeMusicKitPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMusicKitPlugin.swift; sourceTree = "<group>"; };
@@ -176,6 +178,7 @@
 				E1A2B3C4D5E6F7081923A4C0 /* RealtimeThread.swift */,
 				1115083A228D70B1C4E1C12A /* RoutingGraph.swift */,
 				E35A0870023595C0377512D8 /* Buses.swift */,
+				27146FB8EE06B9F0D866B053 /* Automation.swift */,
 			);
 			name = Studio;
 			path = Studio;
@@ -320,6 +323,7 @@
 				3FAFA54C6D73BFE7F1E141C5 /* StudioObjC.m in Sources */,
 				46FE7AE84FD551DD3D8C4609 /* RoutingGraph.swift in Sources */,
 				285A1D8A2AC39FF2C4CFCBAB /* Buses.swift in Sources */,
+				FAF6A9CF387E9159480E5FB3 /* Automation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
