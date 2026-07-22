@@ -6,6 +6,7 @@ import { AddYouTubeVideoForm } from '@/components/youtube/AddYouTubeVideoForm';
 import { getOrgName } from '@/lib/orgName';
 import { useUserRole } from '@/hooks/useUserRole';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface YouTubeVideo {
   id: string;
@@ -116,7 +117,8 @@ export const YouTubeChannel: React.FC = () => {
   }, [loading, hasMore, loadingMore, videos.length, fetchVideos]);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 rounded-full bg-destructive flex items-center justify-center">
@@ -211,6 +213,7 @@ export const YouTubeChannel: React.FC = () => {
         videoId={selectedVideo?.video_id || ''}
         title={selectedVideo?.title}
       />
+      </DashboardShell>
     </UniversalLayout>
   );
 };

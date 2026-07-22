@@ -49,6 +49,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function ConcertPlannerEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -242,21 +243,25 @@ export default function ConcertPlannerEditorPage() {
   // ── Render ───────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-10 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   if (!program) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-10 text-center space-y-2">
           <div className="text-sm text-muted-foreground">Program not found.</div>
           <Button asChild variant="outline" size="sm">
             <Link to="/dashboard/concert-planner"><ArrowLeft className="w-4 h-4 mr-1" /> All programs</Link>
           </Button>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 

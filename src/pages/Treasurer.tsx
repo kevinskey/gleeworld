@@ -9,12 +9,14 @@ import { MerchandiseIncomeRegister } from '@/components/treasurer/MerchandiseInc
 import { PerformanceStipendsRegister } from '@/components/treasurer/PerformanceStipendsRegister';
 import { GleeClubLedger } from '@/components/treasurer/GleeClubLedger';
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 const Treasurer = () => {
   const [activeTab, setActiveTab] = useState('dues');
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <div className="max-w-7xl mx-auto p-4 space-y-6">
         {/* Compact Header */}
@@ -205,6 +207,7 @@ const Treasurer = () => {
         </Card>
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

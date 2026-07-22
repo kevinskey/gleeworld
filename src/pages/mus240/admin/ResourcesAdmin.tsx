@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -88,7 +89,8 @@ export default function ResourcesAdmin() {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="p-6 space-y-6 academy-neutral">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -288,6 +290,7 @@ export default function ResourcesAdmin() {
           />
         )}
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

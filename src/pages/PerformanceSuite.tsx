@@ -19,6 +19,7 @@ import { LicensingTracker } from '@/modules/performance/licensing/LicensingTrack
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const PerformanceSuite = () => {
   const { user } = useAuth();
@@ -65,7 +66,8 @@ const PerformanceSuite = () => {
   ];
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Performance Suite"
       subtitle="Manage setlists, tours, and licensing for performances"
@@ -263,6 +265,7 @@ const PerformanceSuite = () => {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

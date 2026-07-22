@@ -17,6 +17,7 @@ import { SpotlightSection } from "@/components/graduates/SpotlightSection";
 import { AnnouncementSection } from "@/components/graduates/AnnouncementSection";
 import { getOrgName } from "@/lib/orgName";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 interface GraduatesStats {
   classYear: number | null;
   yearsOut: number;
@@ -188,11 +189,13 @@ export default function GraduatesLanding() {
   };
   if (loading || loadingStats) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center min-h-[60vh]">
           <LoadingSpinner size="lg" text="Loading graduates portal..." />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   const getClassYearDisplay = () => {

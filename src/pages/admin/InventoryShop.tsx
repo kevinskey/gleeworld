@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { ProductManager } from "@/components/admin/ProductManager";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface OrderStats {
   totalProducts: number;
@@ -211,7 +212,8 @@ const InventoryShop = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
       title="Inventory & Shop"
       subtitle="Merchandise, orders, and shipping management"
@@ -398,6 +400,7 @@ const InventoryShop = () => {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

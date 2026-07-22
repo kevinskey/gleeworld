@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -121,7 +122,8 @@ export default function QuizQuestionsPage() {
   const totalPoints = questions.reduce((s, q) => s + (q.points || 0), 0);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       maxWidth="4xl"
       title={test?.title ?? 'Quiz'}
@@ -175,6 +177,7 @@ export default function QuizQuestionsPage() {
         </>
       )}
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

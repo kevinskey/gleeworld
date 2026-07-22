@@ -1,13 +1,15 @@
 
 import React from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import SMSTestComponent from '@/components/notifications/SMSTestComponent';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, Shield, Phone } from 'lucide-react';
 
 const SMSTest = () => {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
@@ -63,6 +65,7 @@ const SMSTest = () => {
           </div>
         </div>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

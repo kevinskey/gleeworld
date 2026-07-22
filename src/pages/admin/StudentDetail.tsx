@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Trash2, Pin, Loader2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function StudentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -49,7 +50,8 @@ export default function StudentDetail() {
   if (!id) return null;
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       maxWidth="4xl"
       title={profile?.full_name || profile?.email || 'Student'}
@@ -98,6 +100,7 @@ export default function StudentDetail() {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

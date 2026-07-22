@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { SMUS100MidtermExam } from '@/components/exams/SMUS100MidtermExam';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SMUS100MidtermExamPage: React.FC = () => {
   useEffect(() => {
@@ -31,8 +32,10 @@ const SMUS100MidtermExamPage: React.FC = () => {
   }, []);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <SMUS100MidtermExam />
+    </DashboardShell>
     </UniversalLayout>
   );
 };

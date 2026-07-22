@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 type Course = { id: string; course_code: string | null; title: string | null; join_code: string | null };
 
@@ -42,7 +43,8 @@ export default function StudentOnboarding() {
   });
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       maxWidth="4xl"
       title="Onboard students"
@@ -67,6 +69,7 @@ export default function StudentOnboarding() {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

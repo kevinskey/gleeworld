@@ -42,6 +42,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -534,15 +535,18 @@ export default function PublicPageEditor() {
 
   if (siteLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-10 text-center text-muted-foreground">Loading…</div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!site) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="max-w-xl mx-auto px-4 py-16">
           <Card>
             <CardHeader className="text-center">
@@ -561,12 +565,14 @@ export default function PublicPageEditor() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
       title="Public page"
       maxWidth="7xl"
@@ -914,6 +920,7 @@ export default function PublicPageEditor() {
         </Card>
       </div>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

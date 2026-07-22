@@ -3,6 +3,7 @@ import { Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { AssignmentSubmissionsView } from '@/components/grading/instructor/AssignmentSubmissionsView';
 
@@ -29,8 +30,10 @@ const AssignmentSubmissionsPage: React.FC = () => {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <AssignmentSubmissionsView assignmentId={assignment_id} />
+    </DashboardShell>
     </UniversalLayout>
   );
 };

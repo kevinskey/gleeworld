@@ -19,6 +19,7 @@ import {
 } from '@/hooks/useConcertPrograms';
 import { useQueryClient } from '@tanstack/react-query';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const TEMPLATES: Array<{ kind: ProgramTemplate; label: string; blurb: string }> = [
   { kind: 'choral',    label: 'Choral Concert',     blurb: 'Vintage letterpress style — title and composer with dot leaders, performer name centered under each group.' },
@@ -34,7 +35,8 @@ export default function ConcertPlannerPage() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Concert Planner"
       icon={ClipboardList}
@@ -108,6 +110,7 @@ export default function ConcertPlannerPage() {
         }}
       />
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

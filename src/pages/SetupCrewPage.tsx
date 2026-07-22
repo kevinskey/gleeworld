@@ -13,6 +13,7 @@ import { Plus, Users, Calendar, Settings } from 'lucide-react';
 import { SetupCrewDetails } from '@/components/setup-crew/SetupCrewDetails';
 import { useToast } from '@/hooks/use-toast';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface Event {
   id: string;
@@ -99,7 +100,8 @@ export default function SetupCrewPage() {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
@@ -258,6 +260,7 @@ export default function SetupCrewPage() {
         )}
       </div>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,8 @@ const Announcements = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
         title="Announcements"
         subtitle="Manage and view club announcements"
@@ -168,6 +170,7 @@ const Announcements = () => {
           </div>
         )}
       </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function JoinCourse() {
   const { code } = useParams<{ code: string }>();
@@ -65,17 +66,20 @@ export default function JoinCourse() {
 
   if (isLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 animate-spin" />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!course) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardHeader>
@@ -91,12 +95,14 @@ export default function JoinCourse() {
           </CardContent>
         </Card>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="flex items-center justify-center p-6">
       <Card className="max-w-md w-full">
         <CardHeader>
@@ -140,6 +146,7 @@ export default function JoinCourse() {
         </CardContent>
       </Card>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

@@ -8,6 +8,7 @@ import { AccountingFilters } from "@/components/accounting/AccountingFilters";
 import { useAccountingData } from "@/hooks/useAccountingData";
 import { useAccountingFiltering } from "@/hooks/useAccountingFiltering";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 const Accounting = () => {
   const { accountingData, loading, totalStipends, contractCount } = useAccountingData();
@@ -36,19 +37,22 @@ const Accounting = () => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="min-h-[50vh] flex items-center justify-center">
           <div className="flex items-center space-x-2">
             <Calculator className="h-6 w-6 animate-spin" />
             <span>Loading accounting data...</span>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="space-y-4 md:space-y-6">
         <Card>
           <CardHeader className="pb-4">
@@ -88,6 +92,7 @@ const Accounting = () => {
           </CardContent>
         </Card>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

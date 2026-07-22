@@ -1,11 +1,13 @@
 import React from "react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { BudgetTracking } from "@/components/admin/financial/BudgetTracking";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 
 export default function Budgets() {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
         title="Budget Management"
         subtitle="Create, track, and manage budgets for events and projects"
@@ -18,6 +20,7 @@ export default function Budgets() {
       >
         <BudgetTracking />
       </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

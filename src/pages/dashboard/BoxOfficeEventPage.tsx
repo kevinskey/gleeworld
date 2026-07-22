@@ -30,6 +30,7 @@ import {
   type BoxOfficeEvent, type TicketTier,
 } from '@/lib/boxOffice/api';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 function useTenantStripeReady() {
   const tenantSlug = typeof window !== 'undefined'
@@ -83,13 +84,16 @@ export default function BoxOfficeEventPage() {
   });
 
   if (isLoading || roleLoading) return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="p-6 text-sm text-muted-foreground">Loading…</div>
+    </DashboardShell>
     </UniversalLayout>
   );
   if (!isAdmin()) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <Card>
           <CardHeader>
@@ -103,19 +107,22 @@ export default function BoxOfficeEventPage() {
           </CardContent>
         </Card>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   if (!event) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <p className="text-sm text-muted-foreground mb-3">Event not found.</p>
         <Button asChild variant="outline" size="sm">
           <Link to="/dashboard/box-office"><ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Box Office</Link>
         </Button>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -130,7 +137,8 @@ export default function BoxOfficeEventPage() {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button asChild variant="ghost" size="sm">
@@ -198,6 +206,7 @@ export default function BoxOfficeEventPage() {
 
       <SummaryCard eventId={event.id} />
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, CreditCard, TrendingUp, FileText } from "lucide-react";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 // Spreadsheet-style finance dashboard. Stats sit in compact rows of a
 // dense table — easier to scan when the numbers are what matter, and
@@ -24,7 +25,8 @@ const STAT_ROWS: Array<{
 
 const FinancialManagement = () => {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
       title="Financial Management"
       subtitle="Payments, stipends, dues, and budgets."
@@ -84,6 +86,7 @@ const FinancialManagement = () => {
         </div>
       </div>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

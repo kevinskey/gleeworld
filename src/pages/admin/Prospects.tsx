@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Trash2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const STATUSES = ['new', 'contacted', 'auditioned', 'enrolled', 'declined'] as const;
 
@@ -77,7 +78,8 @@ export default function Prospects() {
   }));
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Prospective Students"
       icon={UserPlus}
@@ -128,6 +130,7 @@ export default function Prospects() {
         </Card>
       ))}
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

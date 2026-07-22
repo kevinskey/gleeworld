@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Camera, Play, Image as ImageIcon, Trash2, RefreshCw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 interface MediaItem {
   id: string;
@@ -164,18 +165,21 @@ export default function GleeCamGallery() {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   const captureCategory = SLUG_TO_QUICK_CAPTURE_CATEGORY[categorySlug || ''];
   if (!category) return null;
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -295,6 +299,7 @@ export default function GleeCamGallery() {
         </DialogContent>
       </Dialog>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -161,14 +162,19 @@ export default function QuizTakingPage() {
   }
 
   if (testLoading || qLoading) {
-    return <UniversalLayout><div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div></UniversalLayout>;
+    return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div></DashboardShell>
+    </UniversalLayout>;
   }
   if (!test) {
-    return <UniversalLayout><div className="py-12 text-center text-sm text-muted-foreground">Quiz not found.</div></UniversalLayout>;
+    return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><div className="py-12 text-center text-sm text-muted-foreground">Quiz not found.</div></DashboardShell>
+    </UniversalLayout>;
   }
   if (!test.is_published) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="px-6 py-10 max-w-2xl mx-auto">
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
           <CardContent className="p-8 text-center space-y-3">
@@ -179,14 +185,16 @@ export default function QuizTakingPage() {
           </CardContent>
         </Card>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (result) {
     const pct = result.max_score > 0 ? Math.round((result.score / result.max_score) * 100) : 0;
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="px-6 py-10 max-w-2xl mx-auto">
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
           <CardContent className="p-8 text-center space-y-3">
@@ -206,12 +214,14 @@ export default function QuizTakingPage() {
           </CardContent>
         </Card>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="px-6 py-6 max-w-3xl mx-auto space-y-4">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=quizzes`)}>
@@ -271,6 +281,7 @@ export default function QuizTakingPage() {
         </div>
       )}
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

@@ -8,6 +8,7 @@ import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Users, FileSpreadsheet } from "lucide-react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 const UserManagement = () => {
   console.log('UserManagement: Component starting to load...');
@@ -43,14 +44,16 @@ const UserManagement = () => {
   // Show loading while auth or profile is loading, OR while we have a user but no profile yet
   if (authLoading || profileLoading || (user && !userProfile)) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p>Loading user management...</p>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -63,7 +66,8 @@ const UserManagement = () => {
   console.log('UserManagement: Rendering main content');
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
           <div className="flex items-center gap-2 text-slate-600">
@@ -85,6 +89,7 @@ const UserManagement = () => {
       </div>
 
       <RosterImport open={showRosterImport} onOpenChange={setShowRosterImport} onImported={refetchUsers} />
+    </DashboardShell>
     </UniversalLayout>
   );
 };

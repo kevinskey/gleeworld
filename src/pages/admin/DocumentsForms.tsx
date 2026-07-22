@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { FileText, File, Download, Plus } from "lucide-react";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const DocumentsForms = () => {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
       title="Documents & Forms"
       subtitle="Contracts, W9s, and official paperwork"
@@ -97,6 +99,7 @@ const DocumentsForms = () => {
         </Card>
       </div>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

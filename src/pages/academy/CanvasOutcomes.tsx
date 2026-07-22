@@ -17,6 +17,7 @@ import { useCanvasOutcomes, useCreateOutcome, useOutcomeRollups } from '@/hooks/
 import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface RatingDraft { description: string; points: number }
 
@@ -33,7 +34,8 @@ export default function CanvasOutcomes() {
   const [open, setOpen] = useState(false);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Outcomes & Mastery"
       actions={<Button onClick={() => setOpen(true)}><Plus className="w-4 h-4 mr-1" /> New outcome</Button>}
@@ -57,6 +59,7 @@ export default function CanvasOutcomes() {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

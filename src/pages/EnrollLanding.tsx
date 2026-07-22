@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Hash, ArrowRight } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function EnrollLanding() {
   const navigate = useNavigate();
@@ -19,7 +20,8 @@ export default function EnrollLanding() {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="flex items-center justify-center p-6">
       <Card className="max-w-md w-full">
         <CardHeader>
@@ -53,6 +55,7 @@ export default function EnrollLanding() {
         </CardContent>
       </Card>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

@@ -34,6 +34,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DateCardTabPanel } from '@/components/home/date-card/DateCardTabPanel';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -55,7 +56,8 @@ export default function WorkspaceSettingsPage() {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Workspace Settings"
       subtitle="Configure your workspace — branding, modules, billing, integrations."
@@ -88,6 +90,7 @@ export default function WorkspaceSettingsPage() {
         <TabsContent value="general"><GeneralTabPanel canManage={canManage} /></TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

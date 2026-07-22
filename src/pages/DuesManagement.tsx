@@ -16,6 +16,7 @@ import { CreateDuesDialog } from "@/components/dues/CreateDuesDialog";
 import { CreatePaymentPlanDialog } from "@/components/dues/CreatePaymentPlanDialog";
 import { CreateReminderDialog } from "@/components/dues/CreateReminderDialog";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 export const DuesManagement = () => {
   const { user } = useAuth();
@@ -43,7 +44,8 @@ export const DuesManagement = () => {
   // If user is not authenticated, show sign-in prompt
   if (!user) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center min-h-[60vh] bg-background">
           <Card className="w-full max-w-md">
             <CardHeader>
@@ -64,7 +66,8 @@ export const DuesManagement = () => {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -164,7 +167,8 @@ export const DuesManagement = () => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="container mx-auto p-6">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-muted rounded w-64"></div>
@@ -176,12 +180,14 @@ export const DuesManagement = () => {
             </div>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -300,6 +306,7 @@ export const DuesManagement = () => {
         paymentPlans={paymentPlans}
       />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

@@ -27,6 +27,7 @@ import {
 } from '@/hooks/useCanvasAcademy';
 import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const QUESTION_TYPES: Array<{ value: string; label: string }> = [
   { value: 'multiple_choice_question', label: 'Multiple choice' },
@@ -44,14 +45,20 @@ export default function CanvasQuizEditor() {
   const quizId = params.quizId ? Number(params.quizId) : null;
   const { data, isLoading, error } = useCanvasQuizDetail(courseId, quizId);
 
-  if (isLoading) return <UniversalLayout><div className="flex items-center justify-center py-16 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading quiz…</div></UniversalLayout>;
+  if (isLoading) return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><div className="flex items-center justify-center py-16 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading quiz…</div></DashboardShell>
+    </UniversalLayout>;
   if (error || !data || 'error' in data) {
-    return <UniversalLayout><div className="max-w-4xl mx-auto p-6"><div className="text-sm text-destructive p-3 rounded-lg border border-destructive/30 bg-destructive/5 flex items-start gap-2">
+    return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><div className="max-w-4xl mx-auto p-6"><div className="text-sm text-destructive p-3 rounded-lg border border-destructive/30 bg-destructive/5 flex items-start gap-2">
       <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><div>Could not load quiz.</div>
-    </div></div></UniversalLayout>;
+    </div></div></DashboardShell>
+    </UniversalLayout>;
   }
 
-  return <UniversalLayout><Editor courseId={courseId!} quizId={quizId!} quiz={data.quiz} questions={data.questions} /></UniversalLayout>;
+  return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><Editor courseId={courseId!} quizId={quizId!} quiz={data.quiz} questions={data.questions} /></DashboardShell>
+    </UniversalLayout>;
 }
 
 function Editor({

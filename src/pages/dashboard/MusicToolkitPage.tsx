@@ -14,6 +14,7 @@ import { PitchPipe } from '@/components/pitch-pipe/PitchPipe';
 import { VirtualPiano } from '@/components/sight-singing/VirtualPiano';
 import { Tuner } from '@/components/tuner/Tuner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -26,7 +27,8 @@ const TOP_CARD_HEIGHT = 260;
 
 export default function MusicToolkitPage() {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Music Toolkit"
       maxWidth="7xl"
@@ -60,6 +62,7 @@ export default function MusicToolkitPage() {
         </CardContent>
       </Card>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

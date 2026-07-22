@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { BarChart3, PieChart, TrendingUp, Download } from "lucide-react";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const Analytics = () => {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
       title="Analytics & Reports"
       subtitle="Usage stats, financial reports, and insights"
@@ -62,6 +64,7 @@ const Analytics = () => {
         </Card>
       </div>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

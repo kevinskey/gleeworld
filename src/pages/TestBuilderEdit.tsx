@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { TestEditorInterface } from '@/components/test-builder/TestEditorInterface';
 
 export default function TestBuilderEdit() {
@@ -10,10 +11,12 @@ export default function TestBuilderEdit() {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto py-6">
         <TestEditorInterface testId={testId} />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

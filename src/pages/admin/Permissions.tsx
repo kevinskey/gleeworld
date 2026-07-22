@@ -17,6 +17,7 @@ import { USER_ROLES } from '@/constants/permissions';
 import { toast } from 'sonner';
 import { SelectedUserProfileCard } from '@/components/admin/SelectedUserProfileCard';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface PreviewUser {
   id: string;
@@ -113,12 +114,15 @@ const PermissionsPage: React.FC = () => {
     }
   };
 
-if (loading) return <UniversalLayout><LoadingSpinner /></UniversalLayout>;
+if (loading) return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><LoadingSpinner /></DashboardShell>
+    </UniversalLayout>;
 
   const roleOptions = Object.values(USER_ROLES) as string[];
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <main className="container mx-auto px-4 py-6">
       <PageHeader 
         title="Permissions"
@@ -246,6 +250,7 @@ if (loading) return <UniversalLayout><LoadingSpinner /></UniversalLayout>;
         </TabsContent>
       </Tabs>
     </main>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

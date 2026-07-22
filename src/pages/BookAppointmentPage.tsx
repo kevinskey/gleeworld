@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { format, addDays, isToday, isFuture, isPast } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -220,7 +221,8 @@ export default function BookAppointmentPage() {
   }
   // ─── Student View ───
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       {/* Header Banner */}
       <div className="w-full py-3 sm:py-8" style={{ backgroundColor: '#150d26' }}>
         <div className="px-3 sm:px-8 flex flex-col items-center">
@@ -620,6 +622,7 @@ export default function BookAppointmentPage() {
           <AmazonProductSlider />
         </div>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

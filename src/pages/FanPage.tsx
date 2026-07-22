@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PublicSiteView, type PublicSitePayload } from '@/components/public-site/PublicSiteView';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import FanDashboard from './FanDashboard';
 
 export default function FanPage() {
@@ -20,11 +21,13 @@ export default function FanPage() {
 
   if (isLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="min-h-[50vh] flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">Loading…</div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 

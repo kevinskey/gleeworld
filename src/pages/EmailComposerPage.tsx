@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -387,7 +388,8 @@ const EmailComposerPage = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
         title="GleeWorld Messenger"
         subtitle="Send branded emails and SMS to members or anyone"
@@ -870,6 +872,7 @@ const EmailComposerPage = () => {
           </div>
         </div>
       </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

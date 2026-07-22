@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { getOrgName } from '@/lib/orgName';
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 interface PerformanceEvent {
   id: string;
@@ -341,7 +342,8 @@ const MemberExitInterview = () => {
 
   if (!session) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="bg-background py-8 px-4">
           <div className="max-w-md mx-auto">
             <Card>
@@ -363,13 +365,15 @@ const MemberExitInterview = () => {
             </Card>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="bg-background py-8 px-4">
           <div className="max-w-2xl mx-auto">
             {/* Back button skeleton */}
@@ -402,13 +406,15 @@ const MemberExitInterview = () => {
           </Card>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (submitted) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center bg-background p-4 min-h-[60vh]">
           <Card className="w-full max-w-md">
             <CardContent className="pt-6 text-center">
@@ -423,12 +429,14 @@ const MemberExitInterview = () => {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <Card>
@@ -979,6 +987,7 @@ const MemberExitInterview = () => {
         </Card>
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

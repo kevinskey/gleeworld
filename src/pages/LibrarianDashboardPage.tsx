@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Shield } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const LibrarianDashboardPage = () => {
   console.log('🔍 LibrarianDashboardPage rendering');
@@ -18,11 +19,13 @@ const LibrarianDashboardPage = () => {
   
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-20">
           <LoadingSpinner size="lg" text="Checking permissions..." />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   
@@ -37,7 +40,8 @@ const LibrarianDashboardPage = () => {
   
   if (!hasLibrarianAccess) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4 py-20">
           <div className="max-w-md mx-auto text-center">
             <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -47,25 +51,30 @@ const LibrarianDashboardPage = () => {
             </p>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   try {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <LibrarianDashboard />
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   } catch (error) {
     console.error('🚨 LibrarianDashboardPage error:', error);
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-4">
           <h1>Error loading Librarian Dashboard</h1>
           <p>Please check the console for details.</p>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 };

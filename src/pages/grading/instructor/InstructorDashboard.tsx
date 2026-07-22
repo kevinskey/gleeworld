@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { supabase } from '@/integrations/supabase/client';
 import { BookOpen, GraduationCap, ChevronRight } from 'lucide-react';
 
@@ -49,7 +50,8 @@ const InstructorDashboard: React.FC = () => {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="max-w-6xl mx-auto p-4 sm:p-6" style={{ background: '#f8f9fb' }}>
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold mb-1" style={{ color: '#0f172a' }}>Instructor Dashboard</h1>
@@ -99,6 +101,7 @@ const InstructorDashboard: React.FC = () => {
           })}
         </div>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

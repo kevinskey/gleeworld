@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { StudentCourseView } from '@/components/grading/student/StudentCourseView';
 
@@ -22,8 +23,10 @@ const StudentCoursePage: React.FC = () => {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <StudentCourseView courseId={course_id} />
+    </DashboardShell>
     </UniversalLayout>
   );
 };

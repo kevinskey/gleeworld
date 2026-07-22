@@ -1,4 +1,5 @@
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { PRCoordinatorHub } from "@/components/pr-coordinator/PRCoordinatorHub";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -17,13 +18,15 @@ const PRHubPage = () => {
   if (loading) {
     console.log('PRHubPage: Still loading profile...');
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 flex items-center justify-center">
           <div className="bg-card/80 backdrop-blur-sm p-8 rounded-lg border border-border shadow-lg">
             <LoadingSpinner size="lg" text="Loading PR Hub..." />
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -47,7 +50,8 @@ const PRHubPage = () => {
   console.log('PRHubPage: Rendering PR Hub (access control disabled for debugging)');
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
         <div className="container mx-auto px-4 py-8">
           {/* Hero Header */}
@@ -89,6 +93,7 @@ const PRHubPage = () => {
           </div>
         </div>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

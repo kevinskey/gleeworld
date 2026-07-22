@@ -26,6 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 function formatDate(d: string | null) {
   if (!d) return '—';
@@ -51,17 +52,20 @@ export default function CanvasCourseDetail() {
 
   if (isLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="flex items-center justify-center py-16 text-muted-foreground">
         <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading course…
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   if (error || !data || 'error' in data) {
     const msg = (error as Error | undefined)?.message ?? (data && 'detail' in data ? data.detail : 'Unknown error');
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-sm text-destructive p-3 rounded-lg border border-destructive/30 bg-destructive/5 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -71,7 +75,8 @@ export default function CanvasCourseDetail() {
           </div>
         </div>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   const { course, modules, assignments } = data;
@@ -84,7 +89,8 @@ export default function CanvasCourseDetail() {
     .sort((a, b) => (b.due_at ?? '').localeCompare(a.due_at ?? ''));
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
       <div>
         <Link to="/academy/canvas" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -189,6 +195,7 @@ export default function CanvasCourseDetail() {
         </TabsContent>
       </Tabs>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

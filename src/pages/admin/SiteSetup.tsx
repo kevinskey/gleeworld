@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Save, ArrowRight, Upload, Image as ImageIcon, X, Globe, Settings as SettingsIcon, ExternalLink, Check, Layout } from 'lucide-react';
 import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function SiteSetup() {
   const navigate = useNavigate();
@@ -75,23 +76,27 @@ export default function SiteSetup() {
 
   if (!user) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center bg-[hsl(40,10%,96%)] p-6 py-20">
           <div className="text-center text-muted-foreground">Please sign in.</div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center bg-[hsl(40,10%,96%)] p-6 py-20">
           <div className="text-center text-muted-foreground">
             Site setup is admin-only.
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -243,7 +248,8 @@ export default function SiteSetup() {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div
       className="bg-[hsl(40,10%,96%)] pb-8 px-4 pt-8"
     >
@@ -661,6 +667,7 @@ export default function SiteSetup() {
         </p>
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

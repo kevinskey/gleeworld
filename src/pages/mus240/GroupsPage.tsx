@@ -14,10 +14,12 @@ import {
   Mic
 } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function GroupsPage() {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="bg-gradient-to-br from-background to-secondary/20 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
@@ -311,6 +313,7 @@ export default function GroupsPage() {
 
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

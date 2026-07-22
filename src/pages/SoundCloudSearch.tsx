@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 interface Track {
   id: number;
@@ -159,7 +160,8 @@ export default function SoundCloudSearch() {
 
   if (!user) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="container mx-auto p-6 max-w-4xl">
           <Alert>
             <AlertDescription>
@@ -167,12 +169,14 @@ export default function SoundCloudSearch() {
             </AlertDescription>
           </Alert>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="SoundCloud Search"
       subtitle="Search for tracks on SoundCloud to discover music and audio content"
@@ -265,6 +269,7 @@ export default function SoundCloudSearch() {
         </>
       )}
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

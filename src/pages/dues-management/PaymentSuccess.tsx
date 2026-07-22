@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface PaymentDetails {
   success: boolean;
@@ -77,7 +78,8 @@ export const PaymentSuccess = () => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -89,13 +91,15 @@ export const PaymentSuccess = () => {
           </CardContent>
         </Card>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (error || !paymentDetails) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -115,12 +119,14 @@ export const PaymentSuccess = () => {
           </CardContent>
         </Card>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <Card>
         <CardHeader className="text-center">
@@ -191,6 +197,7 @@ export const PaymentSuccess = () => {
         </CardContent>
       </Card>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

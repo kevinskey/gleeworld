@@ -15,6 +15,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface UploadFile {
   file: File;
@@ -311,16 +312,19 @@ export default function JazzPage() {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="bg-background p-6 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading jazz tracks..." />
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="bg-background">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Header */}
@@ -642,6 +646,7 @@ export default function JazzPage() {
         <audio ref={audioRef} />
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

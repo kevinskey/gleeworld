@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowLeft, AlertCircle, Calendar, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCanvasCalendar, type CanvasCalendarAssignment, type CanvasCalendarEvent } from '@/hooks/useCanvasAcademy';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 function isoDate(d: Date) { return d.toISOString().slice(0, 10); }
 function formatTime(s: string | null) {
@@ -61,7 +62,8 @@ export default function CanvasCalendar() {
   }, [data]);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto space-y-5">
       <div>
         <Link to="/academy/canvas" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -149,6 +151,7 @@ export default function CanvasCalendar() {
         </ul>
       )}
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

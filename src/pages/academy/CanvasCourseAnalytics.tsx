@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2, ArrowLeft, AlertCircle, BarChart3, Users, FileText } from 'lucide-react';
 import { useCanvasCourse, useCanvasCourseAnalytics } from '@/hooks/useCanvasAcademy';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function CanvasCourseAnalytics() {
   const params = useParams<{ courseId: string }>();
@@ -18,7 +19,8 @@ export default function CanvasCourseAnalytics() {
   const courseName = courseData && 'ok' in courseData ? courseData.course.name : '';
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
       <div>
         <Link to={`/academy/canvas/courses/${courseId}`} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -48,6 +50,7 @@ export default function CanvasCourseAnalytics() {
         <AnalyticsView data={data} />
       )}
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

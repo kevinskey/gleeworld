@@ -3,6 +3,7 @@ import { Navigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ManageStudentsView } from '@/components/grading/instructor/ManageStudentsView';
 
@@ -29,8 +30,10 @@ const ManageStudents: React.FC = () => {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <ManageStudentsView courseId={course_id} />
+    </DashboardShell>
     </UniversalLayout>
   );
 };

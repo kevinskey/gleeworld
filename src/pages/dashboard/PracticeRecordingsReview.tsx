@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface RecordingRow {
   id: string;
@@ -93,7 +94,8 @@ export default function PracticeRecordingsReview() {
   });
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Practice recordings"
       icon={Mic}
@@ -145,6 +147,7 @@ export default function PracticeRecordingsReview() {
         ))}
       </ul>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

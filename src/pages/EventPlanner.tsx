@@ -2,6 +2,7 @@
 import { useState } from "react";
 
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Users, DollarSign, Plus } from "lucide-react";
@@ -18,7 +19,8 @@ export default function EventPlanner() {
   const [openQuickBudget, setOpenQuickBudget] = useState(false);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto p-6 max-w-7xl">
         {/* Hero Header Section */}
         <div className="relative mb-8 rounded-2xl bg-gradient-to-br from-brand-blue-dark via-brand-blue-light to-brand-blue-dark p-8 backdrop-blur-sm border border-white/20 shadow-2xl">
@@ -117,6 +119,7 @@ export default function EventPlanner() {
           </TabsContent>
         </Tabs>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

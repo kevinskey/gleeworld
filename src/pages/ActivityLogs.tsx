@@ -11,6 +11,7 @@ import { useActivityLogs } from "@/hooks/useActivityLogs";
 import { format } from "date-fns";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 const ActivityLogs = () => {
   const { logs, loading, error, refetch } = useActivityLogs();
@@ -61,7 +62,8 @@ const ActivityLogs = () => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-8">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-center py-12">
@@ -69,13 +71,15 @@ const ActivityLogs = () => {
             </div>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (error) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-8">
           <div className="max-w-7xl mx-auto">
             <Card>
@@ -90,12 +94,14 @@ const ActivityLogs = () => {
             </Card>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Activity Logs"
       subtitle="Track all user activities related to contracts and templates"
@@ -224,6 +230,7 @@ const ActivityLogs = () => {
           </CardContent>
         </Card>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

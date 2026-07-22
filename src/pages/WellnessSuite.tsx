@@ -5,12 +5,14 @@ import { UniformTracker } from '@/modules/logistics/uniforms/UniformTracker';
 import { RehearsalFeedback } from '@/modules/rehearsals/feedback/RehearsalFeedback';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const WellnessSuite = () => {
   const [activeTab, setActiveTab] = useState('wellness');
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
         title="Wellness & Development Suite"
         subtitle="Track vocal health, manage gear, and monitor performance development"
@@ -35,6 +37,7 @@ const WellnessSuite = () => {
           </TabsContent>
         </Tabs>
       </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

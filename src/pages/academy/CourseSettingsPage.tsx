@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -162,14 +163,19 @@ export default function CourseSettingsPage() {
   });
 
   if (isLoading || !form) {
-    return <UniversalLayout><div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div></UniversalLayout>;
+    return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div></DashboardShell>
+    </UniversalLayout>;
   }
   if (!course) {
-    return <UniversalLayout><div className="py-12 text-center text-sm text-muted-foreground">Course not found.</div></UniversalLayout>;
+    return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><div className="py-12 text-center text-sm text-muted-foreground">Course not found.</div></DashboardShell>
+    </UniversalLayout>;
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell maxWidth="4xl" title="Settings">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}`)}>
@@ -398,6 +404,7 @@ export default function CourseSettingsPage() {
         </DialogContent>
       </Dialog>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

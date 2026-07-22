@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 const W9FormPage = () => {
   const navigate = useNavigate();
@@ -26,12 +27,14 @@ const W9FormPage = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="py-8">
         <div className="max-w-4xl mx-auto px-4">
           <SmartW9Form onSuccess={handleSuccess} />
         </div>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

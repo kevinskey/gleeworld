@@ -12,6 +12,7 @@ import { ClipboardList, Plus, Trash2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function RehearsalPlans() {
   const qc = useQueryClient();
@@ -80,7 +81,8 @@ export default function RehearsalPlans() {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       maxWidth="4xl"
       title="Rehearsal Plans"
@@ -146,6 +148,7 @@ export default function RehearsalPlans() {
         </CardContent>
       </Card>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

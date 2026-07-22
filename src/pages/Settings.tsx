@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 import { DeleteAccountDialog } from "@/components/auth/DeleteAccountDialog";
@@ -192,7 +193,8 @@ export default function Settings() {
   ];
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
         title="Settings"
         icon={SettingsIcon}
@@ -596,6 +598,7 @@ export default function Settings() {
 
         <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
       </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

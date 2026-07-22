@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface BusCompany {
   id: string;
@@ -77,7 +78,8 @@ const BusInformation = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Bus Information"
       subtitle="Search for charter bus companies for tour transportation"
@@ -233,6 +235,7 @@ const BusInformation = () => {
           </Card>
         )}
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };
