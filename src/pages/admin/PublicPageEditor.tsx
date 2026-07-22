@@ -41,6 +41,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -532,34 +533,41 @@ export default function PublicPageEditor() {
   const selectedMod = selected ? getBlockModule(selected.block_type) : null;
 
   if (siteLoading) {
-    return <div className="p-10 text-center text-muted-foreground">Loading…</div>;
+    return (
+      <UniversalLayout>
+        <div className="p-10 text-center text-muted-foreground">Loading…</div>
+      </UniversalLayout>
+    );
   }
 
   if (!site) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-16">
-        <Card>
-          <CardHeader className="text-center">
-            <Globe className="w-10 h-10 mx-auto mb-2 text-primary" />
-            <CardTitle>Create your public page</CardTitle>
-            <CardDescription>
-              A simple public website for your choir — events, story, contact info — built from blocks
-              you arrange. We&apos;ll start you off with a header, hero, and events section using your branding.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button onClick={activate} disabled={activating} size="lg">
-              <Rocket className="w-4 h-4 mr-2" />
-              {activating ? 'Setting up…' : 'Create my page'}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <div className="max-w-xl mx-auto px-4 py-16">
+          <Card>
+            <CardHeader className="text-center">
+              <Globe className="w-10 h-10 mx-auto mb-2 text-primary" />
+              <CardTitle>Create your public page</CardTitle>
+              <CardDescription>
+                A simple public website for your choir — events, story, contact info — built from blocks
+                you arrange. We&apos;ll start you off with a header, hero, and events section using your branding.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Button onClick={activate} disabled={activating} size="lg">
+                <Rocket className="w-4 h-4 mr-2" />
+                {activating ? 'Setting up…' : 'Create my page'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <DashboardPageShell
+    <UniversalLayout>
+      <DashboardPageShell
       title="Public page"
       maxWidth="7xl"
       subtitle={site.is_published
@@ -649,14 +657,13 @@ export default function PublicPageEditor() {
             </DialogContent>
           </Dialog>
           {site.is_published && site.slug && (
-            // Real anchor (not window.open) so popup blockers can't swallow it
-            // and Cmd/Ctrl+click keeps its usual meaning. /sites/<slug> is the
-            // canonical public-only route (the tenant root redirects logged-in
-            // admins to control center, which isn't what "view site" means).
-            <Button variant="outline" asChild title="Open your live site in a new tab">
-              <a href={`/sites/${site.slug}`} target="_blank" rel="noopener noreferrer">
+            // /sites/<slug> is the canonical public-only route (the tenant root
+            // redirects logged-in admins to control center, which isn't what
+            // "view site" means). Uses Link so it opens in-app with nav.
+            <Button variant="outline" asChild title="Open your live site">
+              <Link to={`/sites/${site.slug}`}>
                 <ExternalLink className="w-4 h-4 mr-1.5" /> View site
-              </a>
+              </Link>
             </Button>
           )}
           {site.is_published && (
@@ -907,5 +914,6 @@ export default function PublicPageEditor() {
         </Card>
       </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

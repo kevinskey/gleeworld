@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowLeft, AlertCircle, ExternalLink, Download, FileText } from 'lucide-react';
 import { useCanvasAssignment, useCanvasSubmission, useUpdateSubmission } from '@/hooks/useCanvasAcademy';
 import { toast } from 'sonner';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 function formatDate(d: string | null) {
   if (!d) return '—';
@@ -42,17 +43,17 @@ export default function CanvasPeerReview() {
   }, [submissionQ.data]);
 
   if (assignmentQ.isLoading || submissionQ.isLoading) {
-    return <div className="flex items-center justify-center py-16 text-muted-foreground">
+    return <UniversalLayout><div className="flex items-center justify-center py-16 text-muted-foreground">
       <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading peer review…
-    </div>;
+    </div></UniversalLayout>;
   }
   if (!assignmentQ.data || 'error' in assignmentQ.data || !submissionQ.data || 'error' in submissionQ.data) {
-    return <div className="max-w-4xl mx-auto p-6">
+    return <UniversalLayout><div className="max-w-4xl mx-auto p-6">
       <div className="text-sm text-destructive p-3 rounded-lg border border-destructive/30 bg-destructive/5 flex items-start gap-2">
         <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
         <div>Could not load peer review.</div>
       </div>
-    </div>;
+    </div></UniversalLayout>;
   }
   const a = assignmentQ.data.assignment;
   const s = submissionQ.data.submission;
@@ -84,6 +85,7 @@ export default function CanvasPeerReview() {
   };
 
   return (
+    <UniversalLayout>
     <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto space-y-4">
       <div>
         <Link to={`/academy/canvas/courses/${courseId}/assignments/${assignmentId}`} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -186,5 +188,6 @@ export default function CanvasPeerReview() {
         </CardContent>
       </Card>
     </div>
+    </UniversalLayout>
   );
 }

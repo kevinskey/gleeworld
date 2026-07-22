@@ -10,6 +10,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { format } from "date-fns";
 import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface Audition {
   id: string;
@@ -113,16 +114,19 @@ export default function ChildrenGoAuditionsAdmin() {
   if (loading) {
     return (
       <AdminOnlyRoute>
-        <div className="flex items-center justify-center min-h-screen">
-          <LoadingSpinner size="lg" />
-        </div>
+        <UniversalLayout>
+          <div className="flex items-center justify-center min-h-screen">
+            <LoadingSpinner size="lg" />
+          </div>
+        </UniversalLayout>
       </AdminOnlyRoute>
     );
   }
 
   return (
     <AdminOnlyRoute>
-      <DashboardPageShell
+      <UniversalLayout>
+        <DashboardPageShell
         title="Children Go Auditions"
         subtitle='Review and manage "Children, Go Where I Send Thee" rap auditions'
       >
@@ -210,6 +214,7 @@ export default function ChildrenGoAuditionsAdmin() {
           )}
         </div>
       </DashboardPageShell>
+      </UniversalLayout>
     </AdminOnlyRoute>
   );
 }

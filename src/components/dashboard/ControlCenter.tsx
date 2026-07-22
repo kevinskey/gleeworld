@@ -12,7 +12,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import { Shield, Database, Search, Eye, GraduationCap, Settings, Store } from 'lucide-react';
-import { isNativeApp } from '@/lib/nativeTenant';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useCourseProducts, LEVEL_LABEL } from '@/hooks/useCourseStore';
 import { OnboardingChecklist } from './OnboardingChecklist';
@@ -134,16 +133,8 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              // ?preview=1 bypasses the role-redirect so super-admins can view the public landing.
-              // window.open is a no-op in the Capacitor WebView, so navigate in-app there.
-              if (isNativeApp()) {
-                navigate('/?preview=1');
-              } else {
-                window.open('/?preview=1', '_blank', 'noopener');
-              }
-            }}
-            title="Open your public landing in a new tab"
+            onClick={() => navigate('/?preview=1')}
+            title="Open your public landing"
           >
             <Eye className="h-4 w-4 mr-2" />
             View public site

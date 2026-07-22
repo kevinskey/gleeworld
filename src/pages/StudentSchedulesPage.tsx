@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { SecretaryScheduleView } from '@/components/academy/SecretaryScheduleView';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const StudentSchedulesPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <DashboardPageShell
+    <UniversalLayout>
+      <DashboardPageShell
       title="Student Class Schedules"
       subtitle="View all submitted student schedules and identify rehearsal conflicts"
     >
@@ -21,6 +23,7 @@ const StudentSchedulesPage: React.FC = () => {
       {/* Secretary View Component */}
       <SecretaryScheduleView semester="Spring 2026" />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

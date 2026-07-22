@@ -9,6 +9,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { usePreviewRole } from '@/lib/nav/navPreview';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const InstructorWorkshop = lazy(() => import('@/components/officehours/InstructorWorkshop'));
 const StudentBooking = lazy(() => import('@/components/officehours/StudentBooking'));
@@ -27,6 +28,7 @@ export default function OfficeHoursPage() {
     : realIsInstructor;
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Studio Hours"
       subtitle={isInstructor
@@ -37,5 +39,6 @@ export default function OfficeHoursPage() {
         {isInstructor ? <InstructorWorkshop /> : <StudentBooking />}
       </Suspense>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

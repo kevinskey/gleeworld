@@ -19,6 +19,7 @@ import { useCanvasCourses, useBootstrapCanvas, useCreateCourse } from '@/hooks/u
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function CanvasAcademy() {
   const { data, isLoading, error, refetch } = useCanvasCourses();
@@ -33,6 +34,7 @@ export default function CanvasAcademy() {
   const courses = data && 'ok' in data ? data.courses : [];
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Academy"
       subtitle={canTeach
@@ -166,6 +168,7 @@ export default function CanvasAcademy() {
         Academy data is stored in your organization's private workspace.
       </footer>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

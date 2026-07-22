@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -329,9 +329,9 @@ export default function GraduatesAdmin() {
           </p>
           <div className="flex justify-center">
             <Button asChild variant="outline" size="sm">
-              <a href="/graduates" target="_blank" rel="noreferrer">
+              <Link to="/graduates">
                 View public page <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
-              </a>
+              </Link>
             </Button>
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export const StudentMidtermGrading = () => {
   const { studentId } = useParams();
@@ -287,15 +288,18 @@ export const StudentMidtermGrading = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <UniversalLayout>
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg">Loading student submission...</div>
       </div>
+      </UniversalLayout>
     );
   }
 
   if (!submission) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <UniversalLayout>
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <Button
             variant="ghost"
@@ -312,11 +316,13 @@ export const StudentMidtermGrading = () => {
           </div>
         </div>
       </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <UniversalLayout>
+    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -816,5 +822,6 @@ export const StudentMidtermGrading = () => {
         </div>
       </div>
     </div>
+    </UniversalLayout>
   );
 };

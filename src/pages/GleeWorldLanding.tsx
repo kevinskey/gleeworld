@@ -1705,7 +1705,7 @@ function GleeAcademyShowcase() {
     },
   ];
   return (
-    <section id="academy" className="py-20 sm:py-28 md:py-36" style={{ backgroundColor: '#fef3c7' }}>
+    <section id="academy" className="py-8 sm:py-14 md:py-20 lg:py-28" style={{ backgroundColor: '#fef3c7' }}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12 sm:mb-16">
           <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>
@@ -1797,7 +1797,7 @@ function EnsemblesShowcase() {
     },
   ];
   return (
-    <section id="ensembles" className="py-20 sm:py-28 md:py-36" style={{ backgroundColor: '#dcfce7' }}>
+    <section id="ensembles" className="py-8 sm:py-14 md:py-20 lg:py-28" style={{ backgroundColor: '#dcfce7' }}>
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12 sm:mb-16">
           <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: '#0071e3' }}>

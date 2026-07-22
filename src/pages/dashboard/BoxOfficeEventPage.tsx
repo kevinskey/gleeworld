@@ -29,6 +29,7 @@ import {
   createTier, updateTier, deleteTier, slugify,
   type BoxOfficeEvent, type TicketTier,
 } from '@/lib/boxOffice/api';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 function useTenantStripeReady() {
   const tenantSlug = typeof window !== 'undefined'
@@ -81,9 +82,14 @@ export default function BoxOfficeEventPage() {
     },
   });
 
-  if (isLoading || roleLoading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+  if (isLoading || roleLoading) return (
+    <UniversalLayout>
+      <div className="p-6 text-sm text-muted-foreground">Loading…</div>
+    </UniversalLayout>
+  );
   if (!isAdmin()) {
     return (
+      <UniversalLayout>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <Card>
           <CardHeader>
@@ -97,16 +103,19 @@ export default function BoxOfficeEventPage() {
           </CardContent>
         </Card>
       </div>
+      </UniversalLayout>
     );
   }
   if (!event) {
     return (
+      <UniversalLayout>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <p className="text-sm text-muted-foreground mb-3">Event not found.</p>
         <Button asChild variant="outline" size="sm">
           <Link to="/dashboard/box-office"><ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Box Office</Link>
         </Button>
       </div>
+      </UniversalLayout>
     );
   }
 
@@ -121,6 +130,7 @@ export default function BoxOfficeEventPage() {
   };
 
   return (
+    <UniversalLayout>
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button asChild variant="ghost" size="sm">
@@ -188,6 +198,7 @@ export default function BoxOfficeEventPage() {
 
       <SummaryCard eventId={event.id} />
     </div>
+    </UniversalLayout>
   );
 }
 
@@ -265,16 +276,14 @@ function PublishCard({
             <div className="flex-1">
               <div className="font-semibold">Live</div>
               {publicHref && (
-                <a
-                  href={publicHref}
-                  target="_blank"
-                  rel="noreferrer"
+                <Link
+                  to={publicHref}
                   className="text-sm text-emerald-700 underline inline-flex items-center gap-1"
                 >
                   <Globe className="w-3.5 h-3.5" />
                   {window.location.origin}{publicHref}
                   <ExternalLink className="w-3 h-3" />
-                </a>
+                </Link>
               )}
             </div>
             <div className="flex gap-2">

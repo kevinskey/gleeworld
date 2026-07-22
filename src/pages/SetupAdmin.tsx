@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Crown, UserCog } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SetupAdmin = () => {
   const { user } = useAuth();
@@ -87,7 +88,8 @@ const SetupAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 p-4">
+    <UniversalLayout>
+    <div className="flex items-center justify-center p-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -143,6 +145,7 @@ const SetupAdmin = () => {
         </CardContent>
       </Card>
     </div>
+    </UniversalLayout>
   );
 };
 

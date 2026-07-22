@@ -22,10 +22,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Calendar, Clock, MapPin, Users, Megaphone, BookOpen,
+  Calendar, Clock, MapPin, Users, Megaphone, BookOpen,
   Music, Check, X, AlertCircle, Loader2, Send,
 } from "lucide-react";
 import { format } from "date-fns";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 interface CourseRow {
   id: string;
@@ -264,19 +265,23 @@ export default function RehearsalTonight() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(40,10%,96%)]">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        </div>
+      </UniversalLayout>
     );
   }
   if (!course) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(40,10%,96%)]">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">Class not found.</p>
-          <Button onClick={() => navigate("/control-center?module=glee-academy")}>Back to Glee Academy</Button>
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <p className="text-slate-600 mb-4">Class not found.</p>
+            <Button onClick={() => navigate("/control-center?module=glee-academy")}>Back to Glee Academy</Button>
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
@@ -285,17 +290,11 @@ export default function RehearsalTonight() {
   const pct = total ? Math.round((present / total) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-[hsl(40,10%,96%)] pb-24">
+    <UniversalLayout containerized={false}>
+    <div className="pb-24">
       {/* Header */}
       <div className="bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 text-xs text-slate-300 hover:text-white mb-3"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
           <div className="flex flex-wrap items-baseline gap-3">
             <h1 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: '-0.02em' }}>
               Rehearsal Tonight
@@ -479,5 +478,6 @@ export default function RehearsalTonight() {
         </div>
       </div>
     </div>
+    </UniversalLayout>
   );
 }

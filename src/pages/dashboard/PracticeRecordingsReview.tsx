@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface RecordingRow {
   id: string;
@@ -92,6 +93,7 @@ export default function PracticeRecordingsReview() {
   });
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Practice recordings"
       icon={Mic}
@@ -143,6 +145,7 @@ export default function PracticeRecordingsReview() {
         ))}
       </ul>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -205,11 +206,11 @@ export const GraduatesDashboardMonitor = () => {
             Refresh
           </Button>
           <Button asChild>
-            <a href="/graduates" target="_blank" rel="noopener noreferrer">
+            <Link to="/graduates">
               <Eye className="h-4 w-4 mr-2" />
               View Graduates Page
               <ExternalLink className="h-3 w-3 ml-1" />
-            </a>
+            </Link>
           </Button>
         </div>
       </div>

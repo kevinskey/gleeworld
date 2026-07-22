@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +19,7 @@ interface SightSingingManagerProps {
 }
 
 export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
+  const navigate = useNavigate();
   const [generatedMelody, setGeneratedMelody] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("assignments");
   const [stats] = useState({
@@ -41,7 +43,7 @@ export const SightSingingManager = ({ user }: SightSingingManagerProps) => {
             Manage sight singing exercises and track student progress
           </p>
         </div>
-        <Button onClick={() => window.open('/sight-reading-submission', '_blank')}>
+        <Button onClick={() => navigate('/sight-reading-submission')}>
           <ExternalLink className="h-4 w-4 mr-2" />
           Open Sight Reading Submission
         </Button>

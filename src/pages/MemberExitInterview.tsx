@@ -11,10 +11,11 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Loader2, CheckCircle, Music, ArrowLeft, Star, Award, Users } from 'lucide-react';
+import { Loader2, CheckCircle, Music, Star, Award, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { getOrgName } from '@/lib/orgName';
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 interface PerformanceEvent {
   id: string;
@@ -340,38 +341,41 @@ const MemberExitInterview = () => {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-background py-8 px-4">
-        <div className="max-w-md mx-auto">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center mb-4">
-                <Music className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
-              </div>
-              <p className="text-center text-muted-foreground mb-4">
-                Please sign in to complete your exit interview.
-              </p>
-              <Button 
-                className="w-full" 
-                onClick={() => navigate('/auth?redirect=/member-exit-interview')}
-              >
-                Sign In
-              </Button>
-            </CardContent>
-          </Card>
+      <UniversalLayout>
+        <div className="bg-background py-8 px-4">
+          <div className="max-w-md mx-auto">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center mb-4">
+                  <Music className="h-12 w-12 text-primary mx-auto mb-4" />
+                  <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
+                </div>
+                <p className="text-center text-muted-foreground mb-4">
+                  Please sign in to complete your exit interview.
+                </p>
+                <Button
+                  className="w-full"
+                  onClick={() => navigate('/auth?redirect=/member-exit-interview')}
+                >
+                  Sign In
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Back button skeleton */}
-          <div className="h-10 w-40 mb-4 bg-muted animate-pulse rounded" />
-          
-          <Card>
+      <UniversalLayout>
+        <div className="bg-background py-8 px-4">
+          <div className="max-w-2xl mx-auto">
+            {/* Back button skeleton */}
+            <div className="h-10 w-40 mb-4 bg-muted animate-pulse rounded" />
+
+            <Card>
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
@@ -396,42 +400,37 @@ const MemberExitInterview = () => {
               <div className="h-12 w-full bg-muted animate-pulse rounded" />
             </CardContent>
           </Card>
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
-            <p className="text-muted-foreground mb-6">
-              Your Fall 2025 exit interview has been submitted successfully.
-            </p>
-            <Button onClick={() => navigate('/dashboard')}>
-              Return to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center bg-background p-4 min-h-[60vh]">
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6 text-center">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
+              <p className="text-muted-foreground mb-6">
+                Your Fall 2025 exit interview has been submitted successfully.
+              </p>
+              <Button onClick={() => navigate('/dashboard')}>
+                Return to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <UniversalLayout>
+    <div className="bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <Button 
-          variant="ghost" 
-          className="mb-4"
-          onClick={() => navigate('/dashboard')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-
         <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
@@ -980,6 +979,7 @@ const MemberExitInterview = () => {
         </Card>
       </div>
     </div>
+    </UniversalLayout>
   );
 };
 

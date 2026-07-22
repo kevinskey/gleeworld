@@ -264,12 +264,14 @@ const AdminSigning = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading pending contracts...</span>
+      <UniversalLayout>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Loading pending contracts...</span>
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 

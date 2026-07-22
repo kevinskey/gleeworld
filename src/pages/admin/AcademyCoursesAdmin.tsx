@@ -16,6 +16,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, GraduationCap, Save, Music, BookOpen, 
 import { useNavigate } from 'react-router-dom';
 import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface AcademyCourse {
   id: string;
@@ -231,6 +232,7 @@ export default function AcademyCoursesAdmin() {
   };
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Glee Academy Courses"
       icon={GraduationCap}
@@ -486,5 +488,6 @@ export default function AcademyCoursesAdmin() {
         </DialogContent>
       </Dialog>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

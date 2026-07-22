@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -118,6 +119,7 @@ export default function WorkspaceUsersPage() {
   }, [people]);
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="People"
       subtitle="Everyone in this workspace — teachers, students, fans."
@@ -190,6 +192,7 @@ export default function WorkspaceUsersPage() {
         }}
       />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Trash2, Pin, Loader2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function StudentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -48,6 +49,7 @@ export default function StudentDetail() {
   if (!id) return null;
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="4xl"
       title={profile?.full_name || profile?.email || 'Student'}
@@ -96,6 +98,7 @@ export default function StudentDetail() {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

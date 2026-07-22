@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield } from 'lucide-react';
 import { RoleTransitionManager } from '@/components/admin/RoleTransitionManager';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const RoleManager = () => {
   const { user } = useAuth();
@@ -27,9 +28,11 @@ const RoleManager = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-20">
+          <LoadingSpinner size="lg" text="Loading..." />
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -39,6 +42,7 @@ const RoleManager = () => {
   }
 
   return (
+    <UniversalLayout>
     <div className="container mx-auto p-6 space-y-6">
       <PageHeader
         title="Role Manager"
@@ -64,6 +68,7 @@ const RoleManager = () => {
         </section>
       </main>
     </div>
+    </UniversalLayout>
   );
 };
 

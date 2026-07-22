@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function JoinCourse() {
   const { code } = useParams<{ code: string }>();
@@ -64,15 +65,18 @@ export default function JoinCourse() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin" />
+        </div>
+      </UniversalLayout>
     );
   }
 
   if (!course) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
+      <UniversalLayout>
+      <div className="flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
@@ -87,11 +91,13 @@ export default function JoinCourse() {
           </CardContent>
         </Card>
       </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-background to-muted">
+    <UniversalLayout>
+    <div className="flex items-center justify-center p-6">
       <Card className="max-w-md w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -134,5 +140,6 @@ export default function JoinCourse() {
         </CardContent>
       </Card>
     </div>
+    </UniversalLayout>
   );
 }

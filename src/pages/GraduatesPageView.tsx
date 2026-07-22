@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { UniversalHeader } from '@/components/layout/UniversalHeader';
-import { UniversalFooter } from '@/components/layout/UniversalFooter';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GraduatesPageHero } from '@/components/graduates/GraduatesPageHero';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,16 +33,17 @@ export default function GraduatesPageView() {
     }
   };
   if (loading) {
-    return <div className="min-h-screen flex flex-col">
-        <UniversalHeader />
-        <div className="flex-1 flex items-center justify-center">
+    return (
+      <UniversalLayout>
+        <div className="flex-1 flex items-center justify-center py-20">
           <LoadingSpinner size="lg" text="Loading Graduates Portal..." />
         </div>
-      </div>;
+      </UniversalLayout>
+    );
   }
   if (error) {
-    return <div className="min-h-screen flex flex-col">
-        <UniversalHeader />
+    return (
+      <UniversalLayout>
         <div className="flex-1 container mx-auto px-4 py-20">
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6 text-center">
@@ -52,12 +52,12 @@ export default function GraduatesPageView() {
             </CardContent>
           </Card>
         </div>
-        <UniversalFooter />
-      </div>;
+      </UniversalLayout>
+    );
   }
   if (sections.length === 0) {
-    return <div className="min-h-screen flex flex-col">
-        <UniversalHeader />
+    return (
+      <UniversalLayout>
         <div className="flex-1 container mx-auto px-4 py-20">
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-12 pb-12 text-center">
@@ -75,14 +75,13 @@ export default function GraduatesPageView() {
             </CardContent>
           </Card>
         </div>
-        <UniversalFooter />
-      </div>;
+      </UniversalLayout>
+    );
   }
-  return <div className="min-h-screen flex flex-col">
-      <UniversalHeader />
-      
+  return (
+    <UniversalLayout containerized={false}>
       {/* Welcome Header */}
-      <div className="w-full py-6 md:py-8 bg-primary mt-16">
+      <div className="w-full py-6 md:py-8 bg-primary">
         <div className="container mx-auto px-4">
           <h1 className="text-2xl md:text-4xl font-display text-white text-center tracking-wide">
             Welcome {getOrgName()} Graduate
@@ -91,9 +90,8 @@ export default function GraduatesPageView() {
       </div>
 
       <GraduatesPageHero />
-      
+
       <div className="flex-1 w-full" />
-      
-      <UniversalFooter />
-    </div>;
+    </UniversalLayout>
+  );
 }

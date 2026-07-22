@@ -13,10 +13,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, BookOpen, Check, Loader2 } from 'lucide-react';
+import { BookOpen, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AiCourseForm } from '@/components/academy/AiCourseForm';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -83,15 +84,12 @@ export default function NewCoursePage() {
   }
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="4xl"
       title="New Course"
       subtitle="Spin up a fresh course. You can build out modules, assignments, and tests after."
     >
-      <Button variant="ghost" size="icon" onClick={() => navigate('/academy')}>
-        <ArrowLeft className="w-5 h-5" />
-      </Button>
-
       <div className="mb-4 flex items-center gap-3 text-sm">
         <span className="font-medium">New course</span>
         <button type="button" className={mode === 'ai' ? 'underline font-medium' : 'text-muted-foreground'}
@@ -189,5 +187,6 @@ export default function NewCoursePage() {
         </>
       )}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

@@ -173,7 +173,10 @@ export default function TenantLanding() {
     <div className="min-h-screen bg-background text-foreground">
       <DemoBackToGleeWorldBanner />
       {/* Header strip */}
-      <header className="sticky top-0 z-50 bg-[hsl(var(--brand-navy))] text-white border-b border-white/10 backdrop-blur-md">
+      <header
+        className="sticky top-0 z-50 bg-[hsl(var(--brand-navy))] text-white border-b border-white/10 backdrop-blur-md"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <Link to="/" className="flex min-w-0 flex-1 items-center gap-3">
             <img src={logo} alt={orgName} className="h-9 sm:h-11 w-auto object-contain shrink-0" />
@@ -229,7 +232,7 @@ export default function TenantLanding() {
               background: `radial-gradient(80% 60% at 85% 10%, ${accent}33 0%, transparent 60%), radial-gradient(70% 50% at 10% 90%, rgba(255,255,255,0.08) 0%, transparent 55%)`,
             }}
           />
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-20 md:py-28 text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-white shadow-2xl mb-8 p-3">
               <img src={logo} alt={orgName} className="w-full h-full object-contain" />
             </div>
@@ -298,7 +301,7 @@ export default function TenantLanding() {
 
         if (layout === 'banner') {
           return (
-            <section className="relative overflow-hidden py-24 sm:py-32 text-white">
+            <section className="relative overflow-hidden py-12 sm:py-20 md:py-32 text-white">
               {img ? (
                 <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover" />
               ) : (
@@ -314,7 +317,7 @@ export default function TenantLanding() {
         }
         if (layout === 'image-left') {
           return (
-            <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+            <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
               <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
                 <ImageOrPlaceholder />
                 <div><TitleBody /></div>
@@ -324,7 +327,7 @@ export default function TenantLanding() {
         }
         if (layout === 'image-right') {
           return (
-            <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
+            <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
               <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
                 <div><TitleBody /></div>
                 <ImageOrPlaceholder />
@@ -334,7 +337,7 @@ export default function TenantLanding() {
         }
         // default centered
         return (
-          <section className="max-w-3xl mx-auto px-4 sm:px-6 py-16 text-center">
+          <section className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16 text-center">
             <TitleBody />
           </section>
         );
@@ -343,7 +346,7 @@ export default function TenantLanding() {
       {/* Music samples */}
       {music?.enabled && (music.config.embeds?.length ?? 0) > 0 && (
         <section
-          className="relative overflow-hidden py-16"
+          className="relative overflow-hidden py-8 sm:py-12 md:py-16"
           style={{
             background: `linear-gradient(135deg, ${accent} 0%, hsl(var(--brand-navy)) 50%, hsl(var(--brand-blue-light)) 100%)`,
           }}
@@ -395,7 +398,7 @@ export default function TenantLanding() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-border bg-muted/30 mt-16">
+      <footer className="border-t border-border bg-muted/30 mt-8 md:mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-sm text-muted-foreground text-center">
           {social?.enabled && (
             <div className="flex justify-center gap-4 mb-4">
@@ -555,7 +558,7 @@ function HeroSlideRender({
       )}
       {slide?.image_url && <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/60 to-transparent" />}
       {!slide?.image_url && <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--brand-navy))]/80 via-[hsl(var(--brand-navy))]/60 to-transparent" />}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 md:py-36">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-14 md:py-20 lg:py-28">
         <div className="max-w-2xl">
           {(slide?.title || (!slide?.image_url && fallbackTitle)) && (
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 leading-tight">

@@ -29,6 +29,7 @@ import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
 import { ScopeFilterChips } from '@/components/library/ScopeFilterChips';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -136,6 +137,7 @@ export default function MediaLibraryPage() {
   });
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Media Library"
       subtitle="Audio, video, MusicXML, documents, images — everything that isn't sheet music."
@@ -280,6 +282,7 @@ export default function MediaLibraryPage() {
         onOpenChange={(v) => { if (!v) setShareFolder(null); }}
       />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

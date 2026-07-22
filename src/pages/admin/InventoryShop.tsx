@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ProductManager } from "@/components/admin/ProductManager";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface OrderStats {
   totalProducts: number;
@@ -210,7 +211,8 @@ const InventoryShop = () => {
   };
 
   return (
-    <DashboardPageShell
+    <UniversalLayout>
+      <DashboardPageShell
       title="Inventory & Shop"
       subtitle="Merchandise, orders, and shipping management"
       actions={
@@ -396,6 +398,7 @@ const InventoryShop = () => {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { listBoxOfficeEvents, createBoxOfficeEvent, slugify, type BoxOfficeEvent } from '@/lib/boxOffice/api';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function BoxOfficePage() {
   const { hasAccess, isLoading: moduleLoading } = useModuleAccess('box_office');
@@ -65,7 +66,11 @@ export default function BoxOfficePage() {
   };
 
   if (moduleLoading || roleLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <UniversalLayout>
+        <div className="p-6 text-sm text-muted-foreground">Loading…</div>
+      </UniversalLayout>
+    );
   }
 
   // Box Office admin surface is admin-only. Non-admins land here via a stale
@@ -73,47 +78,51 @@ export default function BoxOfficePage() {
   // organization's tickets are still one click away.
   if (!isAdmin()) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Box Office</CardTitle>
-            <CardDescription>
-              The Box Office admin is for tenant administrators. To browse tickets, head
-              to the public Box Office.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild><Link to="/box-office">Open Box Office</Link></Button>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+          <Card>
+            <CardHeader>
+              <CardTitle>Box Office</CardTitle>
+              <CardDescription>
+                The Box Office admin is for tenant administrators. To browse tickets, head
+                to the public Box Office.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild><Link to="/box-office">Open Box Office</Link></Button>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
   if (!hasAccess) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-        <Card>
-          <CardHeader>
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-rose-50 text-rose-700 mb-2">
-              <Ticket className="w-6 h-6" />
-            </div>
-            <CardTitle>Box Office</CardTitle>
-            <CardDescription>
-              Sell tickets to your concerts with QR check-in at the door. Ticket revenue
-              lands in your own Stripe account — GleeWorld takes 0%.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              This add-on isn't enabled for your tenant yet. Activate it from the Modules page.
-            </p>
-            <Button asChild>
-              <Link to="/settings/modules">Open Modules</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+          <Card>
+            <CardHeader>
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-rose-50 text-rose-700 mb-2">
+                <Ticket className="w-6 h-6" />
+              </div>
+              <CardTitle>Box Office</CardTitle>
+              <CardDescription>
+                Sell tickets to your concerts with QR check-in at the door. Ticket revenue
+                lands in your own Stripe account — GleeWorld takes 0%.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                This add-on isn't enabled for your tenant yet. Activate it from the Modules page.
+              </p>
+              <Button asChild>
+                <Link to="/settings/modules">Open Modules</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -121,6 +130,7 @@ export default function BoxOfficePage() {
   const ready = connected && stripe?.stripe_charges_enabled;
 
   return (
+    <UniversalLayout>
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div>
@@ -137,9 +147,9 @@ export default function BoxOfficePage() {
           </p>
         </div>
         <Button asChild variant="outline" size="sm" className="shrink-0">
-          <a href="/box-office" target="_blank" rel="noreferrer">
+          <Link to="/box-office">
             View public page <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
-          </a>
+          </Link>
         </Button>
       </header>
 
@@ -245,6 +255,7 @@ export default function BoxOfficePage() {
 
       <EventsSection />
     </div>
+    </UniversalLayout>
   );
 }
 

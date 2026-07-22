@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface PollOption {
   id: string;
@@ -169,7 +170,8 @@ export default function PollViewPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <UniversalLayout>
+      <div className="flex items-center justify-center p-4 py-12">
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -187,20 +189,24 @@ export default function PollViewPage() {
           </CardContent>
         </Card>
       </div>
+      </UniversalLayout>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </UniversalLayout>
     );
   }
 
   if (error || !poll) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <UniversalLayout>
+      <div className="flex items-center justify-center p-4 py-12">
         <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
@@ -219,6 +225,7 @@ export default function PollViewPage() {
           </CardContent>
         </Card>
       </div>
+      </UniversalLayout>
     );
   }
 
@@ -232,7 +239,8 @@ export default function PollViewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <UniversalLayout>
+    <div className="p-4">
       <div className="max-w-2xl mx-auto space-y-4">
         <Button 
           onClick={() => navigate(-1)} 
@@ -410,5 +418,6 @@ export default function PollViewPage() {
         </Card>
       </div>
     </div>
+    </UniversalLayout>
   );
 }

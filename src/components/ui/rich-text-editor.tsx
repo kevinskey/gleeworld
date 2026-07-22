@@ -820,7 +820,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
               </div> : <div className="space-y-4">
                 {/* Thumbnail Grid */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {filteredMedia.slice(0, 60).map(item => <button key={item.id} onClick={() => insertImage(item.file_url)} className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/20 transition-all bg-muted/30" title={item.title}>
                       <img src={item.file_url} alt={item.title || 'Media image'} className="w-full h-full object-cover" loading="lazy" />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 interface Track {
   id: number;
@@ -158,17 +159,20 @@ export default function SoundCloudSearch() {
 
   if (!user) {
     return (
-      <div className="container mx-auto p-6 max-w-4xl">
-        <Alert>
-          <AlertDescription>
-            Please sign in to use SoundCloud search.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <UniversalLayout>
+        <div className="container mx-auto p-6 max-w-4xl">
+          <Alert>
+            <AlertDescription>
+              Please sign in to use SoundCloud search.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </UniversalLayout>
     );
   }
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="SoundCloud Search"
       subtitle="Search for tracks on SoundCloud to discover music and audio content"
@@ -261,5 +265,6 @@ export default function SoundCloudSearch() {
         </>
       )}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Bus, Search, MapPin, Star, Phone, Globe, ArrowLeft, 
-  Loader2, Building2, Clock, DollarSign, ExternalLink 
+import {
+  Bus, Search, MapPin, Star,
+  Loader2, Building2, DollarSign, ExternalLink
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface BusCompany {
   id: string;
@@ -26,7 +26,6 @@ interface BusCompany {
 }
 
 const BusInformation = () => {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
   const [companies, setCompanies] = useState<BusCompany[]>([]);
@@ -78,15 +77,12 @@ const BusInformation = () => {
   };
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Bus Information"
       subtitle="Search for charter bus companies for tour transportation"
       icon={Bus}
     >
-      <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard?module=tour-management')}>
-        <ArrowLeft className="h-5 w-5" />
-      </Button>
-
       {/* Search Section */}
         <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80">
           <CardHeader>
@@ -237,6 +233,7 @@ const BusInformation = () => {
           </Card>
         )}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

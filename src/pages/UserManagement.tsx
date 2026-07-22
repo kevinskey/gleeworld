@@ -4,9 +4,10 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { EnhancedUserManagement } from "@/components/admin/user-management/EnhancedUserManagement";
 import { RosterImport } from "@/components/admin/RosterImport";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home, Users, FileSpreadsheet } from "lucide-react";
+import { Users, FileSpreadsheet } from "lucide-react";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 const UserManagement = () => {
   console.log('UserManagement: Component starting to load...');
@@ -29,28 +30,30 @@ const UserManagement = () => {
 
   // Check if user can access user management (admin, super admin, OR executive board)
   const canAccessUserManagement = !!(
-    userProfile?.is_admin || 
-    userProfile?.is_super_admin || 
+    userProfile?.is_admin ||
+    userProfile?.is_super_admin ||
     userProfile?.is_exec_board ||
-    userProfile?.role === 'admin' || 
+    userProfile?.role === 'admin' ||
     userProfile?.role === 'super-admin'
   );
-  
+
   console.log('UserManagement page loaded - user:', user?.id, 'canAccessUserManagement:', canAccessUserManagement, 'userProfile:', userProfile);
   console.log('UserManagement: Access check details - is_admin:', userProfile?.is_admin, 'is_super_admin:', userProfile?.is_super_admin, 'is_exec_board:', userProfile?.is_exec_board);
-  
+
   // Show loading while auth or profile is loading, OR while we have a user but no profile yet
   if (authLoading || profileLoading || (user && !userProfile)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading user management...</p>
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading user management...</p>
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
-  
+
   // Redirect if user cannot access (only after loading is complete)
   if (!authLoading && !profileLoading && !canAccessUserManagement) {
     console.log('UserManagement: Redirecting user without access');
@@ -60,41 +63,19 @@ const UserManagement = () => {
   console.log('UserManagement: Rendering main content');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header Navigation */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="hidden sm:inline">Back to Dashboard</span>
-                </Button>
-              </Link>
-              <div className="flex items-center gap-2 text-slate-600">
-                <Users className="h-5 w-5" />
-                <h1 className="text-xl font-semibold text-slate-800">User Management</h1>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowRosterImport(true)}>
-                <FileSpreadsheet className="h-4 w-4" />
-                Import Roster (CSV)
-              </Button>
-              <Link to="/">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Home className="h-4 w-4" />
-                  Home
-                </Button>
-              </Link>
-            </div>
+    <UniversalLayout>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+          <div className="flex items-center gap-2 text-slate-600">
+            <Users className="h-5 w-5" />
+            <h1 className="text-xl font-semibold">User Management</h1>
           </div>
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowRosterImport(true)}>
+            <FileSpreadsheet className="h-4 w-4" />
+            Import Roster (CSV)
+          </Button>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
         <EnhancedUserManagement
           users={users}
           loading={usersLoading}
@@ -104,7 +85,7 @@ const UserManagement = () => {
       </div>
 
       <RosterImport open={showRosterImport} onOpenChange={setShowRosterImport} onImported={refetchUsers} />
-    </div>
+    </UniversalLayout>
   );
 };
 

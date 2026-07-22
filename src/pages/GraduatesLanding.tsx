@@ -16,6 +16,7 @@ import { HeroSlideshow } from "@/components/graduates/HeroSlideshow";
 import { SpotlightSection } from "@/components/graduates/SpotlightSection";
 import { AnnouncementSection } from "@/components/graduates/AnnouncementSection";
 import { getOrgName } from "@/lib/orgName";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 interface GraduatesStats {
   classYear: number | null;
   yearsOut: number;
@@ -187,9 +188,11 @@ export default function GraduatesLanding() {
   };
   if (loading || loadingStats) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading graduates portal..." />
-      </div>
+      <UniversalLayout>
+        <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" text="Loading graduates portal..." />
+        </div>
+      </UniversalLayout>
     );
   }
   const getClassYearDisplay = () => {
@@ -197,7 +200,8 @@ export default function GraduatesLanding() {
     return `Class of '${graduatesStats.classYear.toString().slice(-2)}`;
   };
   return (
-    <div className="min-h-screen bg-background">
+    <UniversalLayout containerized={false}>
+    <div className="bg-background">
       {/* Concert Ticket Request Hero */}
       <div className="relative overflow-hidden bg-gradient-to-br from-brand-blue via-primary to-brand-maroon">
         <div className="absolute inset-0 bg-[url('/images/themes/gleeworld-bg.jpg')] bg-cover bg-center opacity-20" />
@@ -437,5 +441,6 @@ export default function GraduatesLanding() {
         </Card>
       </div>
     </div>
+    </UniversalLayout>
   );
 }

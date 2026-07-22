@@ -30,6 +30,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { convertToSecureUrl } from '@/utils/secureFileAccess';
 import { StudentGradeSummary } from '@/components/mus240/instructor/StudentGradeSummary';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export const StudentWorkOverview = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -78,17 +79,21 @@ export const StudentWorkOverview = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <UniversalLayout>
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg">Loading student information...</div>
       </div>
+      </UniversalLayout>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <UniversalLayout>
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg text-red-600">Student not found</div>
       </div>
+      </UniversalLayout>
     );
   }
 
@@ -242,7 +247,8 @@ export const StudentWorkOverview = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <UniversalLayout>
+    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
@@ -279,7 +285,7 @@ export const StudentWorkOverview = () => {
           <Button
             variant="default"
             size="sm"
-            onClick={() => window.open(`/academy/mus-240`, '_blank')}
+            onClick={() => navigate('/academy/mus-240')}
             className="bg-primary"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
@@ -480,5 +486,6 @@ export const StudentWorkOverview = () => {
         </Tabs>
       </div>
     </div>
+    </UniversalLayout>
   );
 };

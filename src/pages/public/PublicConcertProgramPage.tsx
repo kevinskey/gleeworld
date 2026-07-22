@@ -18,6 +18,7 @@ import {
   printFormatStyles,
   type ConcertProgram, type ConcertPiece, type RosterSection,
 } from '@/lib/concertPlanner';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 
 export default function PublicConcertProgramPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -72,25 +73,29 @@ export default function PublicConcertProgramPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      <PublicLayout>
+        <div className="flex items-center justify-center bg-background py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </PublicLayout>
     );
   }
 
   if (error || !data || !data.program) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-3">
-          <h1 className="text-xl font-semibold">Program not found</h1>
-          <p className="text-sm text-muted-foreground">
-            This program may have been unpublished or moved.
-          </p>
-          <Link to="/" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
-            <ArrowLeft className="w-4 h-4" /> Home
-          </Link>
+      <PublicLayout>
+        <div className="flex items-center justify-center bg-background py-20">
+          <div className="text-center space-y-3">
+            <h1 className="text-xl font-semibold">Program not found</h1>
+            <p className="text-sm text-muted-foreground">
+              This program may have been unpublished or moved.
+            </p>
+            <Link to="/" className="text-sm text-primary hover:underline inline-flex items-center gap-1">
+              <ArrowLeft className="w-4 h-4" /> Home
+            </Link>
+          </div>
         </div>
-      </div>
+      </PublicLayout>
     );
   }
 
@@ -102,7 +107,8 @@ export default function PublicConcertProgramPage() {
   const publicUrl = `${window.location.origin}/program/${program.published_slug}`;
 
   return (
-    <div className={`min-h-screen ${theme.container}`}>
+    <PublicLayout>
+    <div className={theme.container}>
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           .no-print { display: none !important; }
@@ -239,6 +245,7 @@ export default function PublicConcertProgramPage() {
         })}
       </main>
     </div>
+    </PublicLayout>
   );
 }
 

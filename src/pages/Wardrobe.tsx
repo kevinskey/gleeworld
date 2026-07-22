@@ -1,11 +1,14 @@
 import React from 'react';
 import { WardrobeMistressHub } from '@/components/tour-manager/WardrobeMistressHub';
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 const Wardrobe = () => {
   return (
-    <div className="container mx-auto p-6">
-      <WardrobeMistressHub />
-    </div>
+    <UniversalLayout>
+      <div className="container mx-auto p-6">
+        <WardrobeMistressHub />
+      </div>
+    </UniversalLayout>
   );
 };
 

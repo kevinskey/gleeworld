@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useFeedSaves } from '@/hooks/useFeedSaves';
 import { useAuth } from '@/contexts/AuthContext';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SavedFeed = () => {
   const { user } = useAuth();
@@ -12,9 +13,11 @@ const SavedFeed = () => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground">Please sign in to view your saved feed.</p>
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p className="text-muted-foreground">Please sign in to view your saved feed.</p>
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -25,6 +28,7 @@ const SavedFeed = () => {
     : allSaves.filter(s => s.is_liked);
 
   return (
+    <UniversalLayout>
     <div className="max-w-6xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-4" style={{ fontFamily: "'Cinzel', serif" }}>Saved Feed</h1>
 
@@ -95,6 +99,7 @@ const SavedFeed = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </UniversalLayout>
   );
 };
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,6 +70,7 @@ const CONTENT_TYPES = [
 ];
 
 export function GraduatesPortalModule({ user, isFullPage, onNavigate }: ModuleProps) {
+  const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
   
@@ -298,7 +300,7 @@ export function GraduatesPortalModule({ user, isFullPage, onNavigate }: ModulePr
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => window.open('/graduates', '_blank')} variant="outline">
+            <Button onClick={() => navigate('/graduates')} variant="outline">
               <Eye className="h-4 w-4 mr-2" />
               Preview Portal
             </Button>

@@ -16,6 +16,7 @@ import { UserModuleMatrix } from '@/components/admin/UserModuleMatrix';
 import { USER_ROLES } from '@/constants/permissions';
 import { toast } from 'sonner';
 import { SelectedUserProfileCard } from '@/components/admin/SelectedUserProfileCard';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface PreviewUser {
   id: string;
@@ -112,12 +113,13 @@ const PermissionsPage: React.FC = () => {
     }
   };
 
-if (loading) return <LoadingSpinner />;
+if (loading) return <UniversalLayout><LoadingSpinner /></UniversalLayout>;
 
   const roleOptions = Object.values(USER_ROLES) as string[];
 
   return (
-    <main className="container mx-auto px-4 py-6">
+    <UniversalLayout>
+      <main className="container mx-auto px-4 py-6">
       <PageHeader 
         title="Permissions"
         description="Simplified role-based controls with user preview and advanced tools."
@@ -244,6 +246,7 @@ if (loading) return <LoadingSpinner />;
         </TabsContent>
       </Tabs>
     </main>
+    </UniversalLayout>
   );
 };
 

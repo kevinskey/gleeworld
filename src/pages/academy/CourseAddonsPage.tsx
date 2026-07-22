@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -116,13 +117,15 @@ export default function CourseAddonsPage() {
   });
 
   if (courseLoading) {
-    return <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div>;
+    return <UniversalLayout><div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div></UniversalLayout>;
   }
   if (!course) {
     return (
+      <UniversalLayout>
       <div className="px-6 py-10 max-w-3xl mx-auto">
         <p className="text-sm text-muted-foreground text-center">Course not found.</p>
       </div>
+      </UniversalLayout>
     );
   }
 
@@ -130,6 +133,7 @@ export default function CourseAddonsPage() {
   const enabledCount = addons.filter((a: any) => a.is_enabled).length;
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="4xl"
       title={`Add-ons for ${course.title}`}
@@ -175,5 +179,6 @@ export default function CourseAddonsPage() {
         })}
       </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface UploadFile {
   file: File;
@@ -310,14 +311,17 @@ export default function JazzPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+      <UniversalLayout>
+      <div className="bg-background p-6 flex items-center justify-center">
         <LoadingSpinner size="lg" text="Loading jazz tracks..." />
       </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <UniversalLayout>
+    <div className="bg-background">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
@@ -638,5 +642,6 @@ export default function JazzPage() {
         <audio ref={audioRef} />
       </div>
     </div>
+    </UniversalLayout>
   );
 }

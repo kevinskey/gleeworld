@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Settings, Globe, Lock, Database } from "lucide-react";
 import { CountdownManager } from "@/components/admin/countdown/CountdownManager";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SystemSettings = () => {
   return (
-    <DashboardPageShell
+    <UniversalLayout>
+      <DashboardPageShell
       title="System Settings"
       subtitle="Platform configuration and preferences"
       actions={
@@ -106,6 +108,7 @@ const SystemSettings = () => {
         </Card>
       </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

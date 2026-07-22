@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,7 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
   coursePath,
   icon,
 }) => {
+  const navigate = useNavigate();
   // Generate placement key from course code (e.g., "MUS 240" -> "mus240-topic-photos")
   const placementKey = `${courseCode.toLowerCase().replace(/\s+/g, '')}-topic-photos`;
   
@@ -233,7 +235,7 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
                 variant="outline"
                 size="sm"
                 className="w-full"
-                onClick={() => window.open(coursePath, '_blank')}
+                onClick={() => navigate(coursePath)}
               >
                 <ExternalLink className="mr-1 h-3.5 w-3.5" />
                 Preview

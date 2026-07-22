@@ -15,6 +15,7 @@ import { DuesRemindersList } from "@/components/dues/DuesRemindersList";
 import { CreateDuesDialog } from "@/components/dues/CreateDuesDialog";
 import { CreatePaymentPlanDialog } from "@/components/dues/CreatePaymentPlanDialog";
 import { CreateReminderDialog } from "@/components/dues/CreateReminderDialog";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 export const DuesManagement = () => {
   const { user } = useAuth();
@@ -42,26 +43,28 @@ export const DuesManagement = () => {
   // If user is not authenticated, show sign-in prompt
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">Authentication Required</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-center text-muted-foreground">
-              You need to be signed in to access the dues management system.
-            </p>
-            <div className="flex flex-col gap-2">
-              <Button onClick={() => navigate('/auth')} className="w-full">
-                Sign In
-              </Button>
-              <Button onClick={() => navigate('/')} variant="outline" className="w-full">
-                Go Home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center min-h-[60vh] bg-background">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-center">Authentication Required</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-center text-muted-foreground">
+                You need to be signed in to access the dues management system.
+              </p>
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => navigate('/auth')} className="w-full">
+                  Sign In
+                </Button>
+                <Button onClick={() => navigate('/')} variant="outline" className="w-full">
+                  Go Home
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -161,22 +164,25 @@ export const DuesManagement = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-64"></div>
-          <div className="h-32 bg-muted rounded"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-24 bg-muted rounded"></div>
-            ))}
+      <UniversalLayout>
+        <div className="container mx-auto p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-muted rounded w-64"></div>
+            <div className="h-32 bg-muted rounded"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-24 bg-muted rounded"></div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <UniversalLayout>
+      <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
@@ -286,13 +292,14 @@ export const DuesManagement = () => {
         duesRecords={duesRecords}
       />
       
-      <CreateReminderDialog 
-        open={createReminderOpen} 
+      <CreateReminderDialog
+        open={createReminderOpen}
         onOpenChange={setCreateReminderOpen}
         onSuccess={handleSuccess}
         duesRecords={duesRecords}
         paymentPlans={paymentPlans}
       />
-    </div>
+      </div>
+    </UniversalLayout>
   );
 };

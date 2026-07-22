@@ -18,6 +18,7 @@ import {
   type CanvasAssignmentSubmission,
 } from '@/hooks/useCanvasAcademy';
 import { toast } from 'sonner';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function CanvasGradebook() {
   const params = useParams<{ courseId: string }>();
@@ -34,6 +35,7 @@ export default function CanvasGradebook() {
   const selectedAssignment = assignments.find((a) => a.id === assignmentId) ?? null;
 
   return (
+    <UniversalLayout>
     <div className="px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
       <div>
         <Link to={`/academy/canvas/courses/${courseId}`} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -97,6 +99,7 @@ export default function CanvasGradebook() {
         </>
       )}
     </div>
+    </UniversalLayout>
   );
 }
 

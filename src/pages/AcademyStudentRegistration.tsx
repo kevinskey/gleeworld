@@ -1,5 +1,10 @@
 import { AcademyStudentRegistration } from '@/components/auth/AcademyStudentRegistration';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function AcademyStudentRegistrationPage() {
-  return <AcademyStudentRegistration />;
+  return (
+    <UniversalLayout>
+      <AcademyStudentRegistration />
+    </UniversalLayout>
+  );
 }

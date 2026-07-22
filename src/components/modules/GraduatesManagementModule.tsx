@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,7 @@ export const GraduatesManagementModule = ({
   user,
   isFullPage = false
 }: ModuleProps) => {
+  const navigate = useNavigate();
   const [graduatesCount, setGraduatesCount] = useState(0);
   const [newsletterCount, setNewsletterCount] = useState(0);
   const [interviewCount, setInterviewCount] = useState(0);
@@ -69,7 +71,7 @@ export const GraduatesManagementModule = ({
             <h2 className="text-2xl font-bold text-primary">Graduates Page Management</h2>
             
           </div>}
-        <Button onClick={() => window.open('/graduates', 'graduatesPreview', 'width=1400,height=900,resizable=yes,scrollbars=yes,status=yes,toolbar=yes,menubar=no,location=yes')} variant="outline" className="gap-2">
+        <Button onClick={() => navigate('/graduates')} variant="outline" className="gap-2">
           <ExternalLink className="h-4 w-4" />
           View Live Page
         </Button>

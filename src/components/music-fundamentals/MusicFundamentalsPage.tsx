@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Music, Upload, BookOpen, Trophy, Settings, Clock } from 'lucide-react';
-import { UniversalHeader } from '@/components/layout/UniversalHeader';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 import { FileUploadSection } from '@/components/music-fundamentals/FileUploadSection';
 import { AssignmentsList } from '@/components/music-fundamentals/AssignmentsList';
@@ -19,9 +20,7 @@ export const MusicFundamentalsPage: React.FC = () => {
   const isAdmin = user?.email?.includes('admin') || false;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <UniversalHeader />
-      
+    <UniversalLayout>
       <div className="page-container">
         <div className="container mx-auto px-1 sm:px-2 lg:px-4">
           {/* Header Section */}
@@ -38,15 +37,13 @@ export const MusicFundamentalsPage: React.FC = () => {
               Practice sight singing, complete assignments, and master the fundamentals of music theory and performance.
             </p>
             <div className="mt-4 flex flex-wrap gap-3 justify-center">
-              <a 
-                href="/grand-staves"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/grand-staves"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
               >
                 <Music className="h-4 w-4" />
                 Open Grand Staves for Class
-              </a>
+              </Link>
               <a 
                 href="/mus100-sight-singing"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors text-sm font-medium"
@@ -256,6 +253,6 @@ export const MusicFundamentalsPage: React.FC = () => {
         </Tabs>
         </div>
       </div>
-    </div>
+    </UniversalLayout>
   );
 };

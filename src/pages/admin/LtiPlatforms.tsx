@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner';
 import { Loader2, Plus, Pencil, Trash2, Power } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface Platform {
   id: string;
@@ -82,6 +83,7 @@ export default function LtiPlatforms() {
   };
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="LTI Platforms"
       subtitle="Registered Canvas (or other LMS) instances that can launch into GleeWorld."
@@ -171,6 +173,7 @@ export default function LtiPlatforms() {
         </CardContent>
       </Card>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

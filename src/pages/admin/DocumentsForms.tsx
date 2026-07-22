@@ -3,10 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { FileText, File, Download, Plus } from "lucide-react";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const DocumentsForms = () => {
   return (
-    <DashboardPageShell
+    <UniversalLayout>
+      <DashboardPageShell
       title="Documents & Forms"
       subtitle="Contracts, W9s, and official paperwork"
       actions={
@@ -95,6 +97,7 @@ const DocumentsForms = () => {
         </Card>
       </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

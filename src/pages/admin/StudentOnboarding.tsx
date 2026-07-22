@@ -18,6 +18,7 @@ import {
   UserPlus, Upload, Hash, Loader2, Mail, FileText, Copy, RefreshCw, CheckCircle2,
 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 type Course = { id: string; course_code: string | null; title: string | null; join_code: string | null };
 
@@ -41,6 +42,7 @@ export default function StudentOnboarding() {
   });
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="4xl"
       title="Onboard students"
@@ -65,6 +67,7 @@ export default function StudentOnboarding() {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

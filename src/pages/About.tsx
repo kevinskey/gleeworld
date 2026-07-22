@@ -49,7 +49,7 @@ export default function About() {
         </section>
 
         {/* Intro Block */}
-        <section id="about-intro" className="py-20 px-4 bg-background relative">
+        <section id="about-intro" className="py-10 sm:py-16 md:py-20 px-4 bg-background relative">
           <div className="absolute inset-0 opacity-30"></div>
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="text-center mb-16">
@@ -71,7 +71,7 @@ export default function About() {
         </section>
 
         {/* Feature Grid */}
-        <section id="about-features" className="py-20 px-4 bg-background">
+        <section id="about-features" className="py-10 sm:py-16 md:py-20 px-4 bg-background">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold text-center text-foreground mb-16 font-['Bebas_Neue']">Our Community</h2>
             <div className="grid lg:grid-cols-3 gap-10">
@@ -145,7 +145,7 @@ export default function About() {
         </section>
 
         {/* Mission Block */}
-        <section id="about-mission" className="py-20 px-4 bg-background relative">
+        <section id="about-mission" className="py-10 sm:py-16 md:py-20 px-4 bg-background relative">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <blockquote className="text-2xl md:text-3xl font-light text-foreground italic leading-relaxed max-w-4xl mx-auto mb-12">
@@ -154,7 +154,7 @@ export default function About() {
                 Glee Club continues to amaze and inspire for generations to come."
               </blockquote>
               
-              <div className="flex flex-col md:flex-row items-center justify-center gap-8 mt-16">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-8 mt-8 md:mt-16">
                 <div className="w-32 h-32 rounded-full overflow-hidden shadow-xl">
                   <img 
                     src="/lovable-uploads/82759e4e-12b8-47a8-907b-7b6b22294919.png"
@@ -172,7 +172,7 @@ export default function About() {
         </section>
 
         {/* Why GleeWorld Block */}
-        <section id="about-why" className="py-20 px-4 bg-black text-white relative overflow-hidden">
+        <section id="about-why" className="py-10 sm:py-16 md:py-20 px-4 bg-black text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200')] bg-cover bg-center opacity-10"></div>
           <div className="max-w-6xl mx-auto relative z-10">
             <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 font-['Bebas_Neue']">Why GleeWorld?</h2>
@@ -187,7 +187,7 @@ export default function About() {
         </section>
 
         {/* Quote/Motto Section */}
-        <section id="about-quote" className="py-32 px-4 bg-gradient-to-r from-brand-blue-dark via-brand-blue-light to-brand-blue-dark text-white text-center relative overflow-hidden">
+        <section id="about-quote" className="py-14 sm:py-20 md:py-32 px-4 bg-gradient-to-r from-brand-blue-dark via-brand-blue-light to-brand-blue-dark text-white text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-black/20"></div>
           <div className="max-w-4xl mx-auto relative z-10">
             <div className="animate-fade-in">
@@ -202,7 +202,7 @@ export default function About() {
         </section>
 
         {/* Call to Action Footer Block */}
-        <section id="about-cta" className="py-20 px-4 bg-background text-center">
+        <section id="about-cta" className="py-10 sm:py-16 md:py-20 px-4 bg-background text-center">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-8 font-['Bebas_Neue']">Enter Our World</h2>
             <p className="text-xl text-foreground mb-12 leading-relaxed max-w-3xl mx-auto">

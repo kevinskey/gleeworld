@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Search, Users, Shield, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface ModuleRecord {
   id: string;
@@ -189,8 +190,9 @@ const ModuleAccess: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      <div className="container mx-auto px-6 py-6">
+    <UniversalLayout>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="container mx-auto px-6 py-6">
         <Card className="mb-4 bg-background/50 border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -312,6 +314,7 @@ const ModuleAccess: React.FC = () => {
         </Card>
       </div>
     </div>
+    </UniversalLayout>
   );
 };
 

@@ -49,6 +49,7 @@ import {
 import { AvatarCropDialog } from "@/components/shared/AvatarCropDialog";
 import { RequestChangeDialog } from "@/components/profile/RequestChangeDialog";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
 
 const profileSchema = z.object({
@@ -569,15 +570,18 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p>Please sign in to view your profile.</p>
+      <UniversalLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <p>Please sign in to view your profile.</p>
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="My Profile"
       subtitle="Manage your personal information and preferences"
@@ -1015,6 +1019,7 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
         userEmail={user?.email || ""}
       />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

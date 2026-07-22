@@ -3,12 +3,12 @@ import { SmartW9Form } from "@/components/SmartW9Form";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 const W9FormPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   const handleSuccess = () => {
     console.log('W9 form completed successfully');
@@ -26,11 +26,13 @@ const W9FormPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <SmartW9Form onSuccess={handleSuccess} />
+    <UniversalLayout>
+      <div className="py-8">
+        <div className="max-w-4xl mx-auto px-4">
+          <SmartW9Form onSuccess={handleSuccess} />
+        </div>
       </div>
-    </div>
+    </UniversalLayout>
   );
 };
 

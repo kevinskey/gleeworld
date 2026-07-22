@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { UniversalHeader } from '@/components/layout/UniversalHeader';
-import { UniversalFooter } from '@/components/layout/UniversalFooter';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Heart, Mail, Lock, AlertCircle, CheckCircle, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
@@ -42,7 +41,9 @@ const MemberRegistration = () => {
         // User might exist but wrong password, or user doesn't exist
         // Try password reset to definitively check
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `https://gleeworld.org/reset-password`
+          // Current origin, not gleeworld.org — a tenant user resetting from
+          // theirchoir.gleeworld.org must land back on their own site.
+          redirectTo: `${window.location.origin}/reset-password`
         });
 
         if (resetError && resetError.message.includes('User not found')) {
@@ -118,7 +119,9 @@ const MemberRegistration = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://gleeworld.org/reset-password`
+        // Current origin, not gleeworld.org — a tenant user resetting from
+        // theirchoir.gleeworld.org must land back on their own site.
+        redirectTo: `${window.location.origin}/reset-password`
       });
 
       if (error) throw error;
@@ -372,10 +375,8 @@ const MemberRegistration = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <UniversalHeader />
-      
-      <main className="flex-1 flex items-center justify-center px-4 py-8">
+    <UniversalLayout>
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           {/* Hero Section */}
           <div className="text-center mb-8 space-y-4">
@@ -407,10 +408,8 @@ const MemberRegistration = () => {
             </p>
           </div>
         </div>
-      </main>
-
-      <UniversalFooter />
-    </div>
+      </div>
+    </UniversalLayout>
   );
 };
 

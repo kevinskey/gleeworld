@@ -1,12 +1,15 @@
 import React from 'react';
 import { ReceiptsModule } from '@/components/receipts/ReceiptsModule';
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 export const ReceiptsPage = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <ReceiptsModule />
+    <UniversalLayout>
+      <div className="bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <ReceiptsModule />
+        </div>
       </div>
-    </div>
+    </UniversalLayout>
   );
 };

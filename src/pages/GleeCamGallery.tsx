@@ -4,14 +4,15 @@
 // to the quick_capture_media table and the gallery refreshes.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Play, Image as ImageIcon, Trash2, RefreshCw, Loader2 } from 'lucide-react';
+import { Camera, Play, Image as ImageIcon, Trash2, RefreshCw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 interface MediaItem {
   id: string;
@@ -44,7 +45,6 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
 
 export default function GleeCamGallery() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
-  const navigate = useNavigate();
   const [category, setCategory] = useState<Category | null>(null);
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -164,21 +164,21 @@ export default function GleeCamGallery() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </UniversalLayout>
     );
   }
   const captureCategory = SLUG_TO_QUICK_CAPTURE_CATEGORY[categorySlug || ''];
   if (!category) return null;
 
   return (
+    <UniversalLayout>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
         <div className="flex-1 min-w-0">
           <h1 className="font-sans normal-case font-bold tracking-tight text-2xl leading-tight">
             {category.name}
@@ -295,6 +295,7 @@ export default function GleeCamGallery() {
         </DialogContent>
       </Dialog>
     </div>
+    </UniversalLayout>
   );
 }
 

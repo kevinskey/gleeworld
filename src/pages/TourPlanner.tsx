@@ -2,6 +2,7 @@ import React from 'react';
 import { TourManagerDashboard } from '@/components/tour-manager/TourManagerDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const TourPlanner: React.FC = () => {
   const { user: authUser } = useAuth();
@@ -17,7 +18,11 @@ const TourPlanner: React.FC = () => {
       }
     : undefined;
 
-  return <TourManagerDashboard user={user} />;
+  return (
+    <UniversalLayout>
+      <TourManagerDashboard user={user} />
+    </UniversalLayout>
+  );
 };
 
 export default TourPlanner;

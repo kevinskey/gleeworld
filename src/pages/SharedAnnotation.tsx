@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Download, Eye, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 interface SharedAnnotation {
   id: string;
@@ -143,32 +144,37 @@ export const SharedAnnotation = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Loading shared annotation...</p>
+      <UniversalLayout>
+        <div className="container mx-auto py-8">
+          <div className="flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Loading shared annotation...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   if (error || !annotation) {
     return (
-      <div className="container mx-auto py-8">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="text-center py-8">
-            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive" />
-            <h2 className="text-xl font-semibold mb-2">Unable to Load Annotation</h2>
-            <p className="text-muted-foreground">{error || 'This annotation could not be found.'}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <div className="container mx-auto py-8">
+          <Card className="max-w-md mx-auto">
+            <CardContent className="text-center py-8">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive" />
+              <h2 className="text-xl font-semibold mb-2">Unable to Load Annotation</h2>
+              <p className="text-muted-foreground">{error || 'This annotation could not be found.'}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
   return (
+    <UniversalLayout>
     <div className="container mx-auto py-8 space-y-6">
       {/* Header */}
       <Card>
@@ -258,5 +264,6 @@ export const SharedAnnotation = () => {
         </CardContent>
       </Card>
     </div>
+    </UniversalLayout>
   );
 };

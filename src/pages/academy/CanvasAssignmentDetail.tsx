@@ -14,6 +14,7 @@ import { Loader2, ArrowLeft, Calendar, AlertCircle, CheckCircle2, MessageSquare,
 import { useCanvasAssignment, useSubmitAssignment, useMyPeerReviews, useMyGroup } from '@/hooks/useCanvasAcademy';
 import { Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 function formatDate(d: string | null) {
   if (!d) return '—';
@@ -28,14 +29,17 @@ export default function CanvasAssignmentDetail() {
 
   if (isLoading) {
     return (
+      <UniversalLayout>
       <div className="flex items-center justify-center py-16 text-muted-foreground">
         <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading assignment…
       </div>
+      </UniversalLayout>
     );
   }
   if (error || !data || 'error' in data) {
     const msg = (error as Error | undefined)?.message ?? (data && 'detail' in data ? data.detail : 'Unknown error');
     return (
+      <UniversalLayout>
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-sm text-destructive p-3 rounded-lg border border-destructive/30 bg-destructive/5 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -45,6 +49,7 @@ export default function CanvasAssignmentDetail() {
           </div>
         </div>
       </div>
+      </UniversalLayout>
     );
   }
   const { assignment } = data;
@@ -54,6 +59,7 @@ export default function CanvasAssignmentDetail() {
   const alreadySubmitted = s && s.state !== 'unsubmitted' && s.submitted_at;
 
   return (
+    <UniversalLayout>
     <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto space-y-5">
       <div>
         <Link to={`/academy/canvas/courses/${courseId}`} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -150,6 +156,7 @@ export default function CanvasAssignmentDetail() {
         </Card>
       )}
     </div>
+    </UniversalLayout>
   );
 }
 

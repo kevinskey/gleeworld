@@ -9,11 +9,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  ArrowLeft, ClipboardCheck, ChevronRight, Loader2, Award, Clock,
+  ClipboardCheck, ChevronRight, Loader2, Clock,
 } from 'lucide-react';
-import { format, parseISO, formatDistanceToNow } from 'date-fns';
+import { parseISO, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -84,17 +85,12 @@ export default function QuizAttemptsPage() {
   });
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="4xl"
       title={test?.title ?? 'Quiz'}
       subtitle={`${attempts.length} attempt${attempts.length === 1 ? '' : 's'}`}
     >
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/academy/c/${code}?tab=quizzes`)}>
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="text-xs text-muted-foreground">Attempts</div>
-      </div>
 
       {isLoading ? (
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
@@ -156,5 +152,6 @@ export default function QuizAttemptsPage() {
         </Card>
       )}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

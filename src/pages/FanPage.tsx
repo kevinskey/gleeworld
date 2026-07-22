@@ -4,6 +4,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PublicSiteView, type PublicSitePayload } from '@/components/public-site/PublicSiteView';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import FanDashboard from './FanDashboard';
 
 export default function FanPage() {
@@ -19,17 +20,21 @@ export default function FanPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-pulse text-muted-foreground">Loading…</div>
-      </div>
+      <UniversalLayout>
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <div className="animate-pulse text-muted-foreground">Loading…</div>
+        </div>
+      </UniversalLayout>
     );
   }
 
-  // No published fan page yet — show the legacy dashboard so the route still
-  // works while the admin builds out their block-based layout.
   if (!data) {
     return <FanDashboard />;
   }
 
-  return <PublicSiteView data={data} slug="fan" memberSignIn={false} />;
+  return (
+    <UniversalLayout containerized={false}>
+      <PublicSiteView data={data} slug="fan" memberSignIn={false} />
+    </UniversalLayout>
+  );
 }

@@ -22,6 +22,7 @@ import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt,
 import { Button } from '@/components/ui/button';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 // Feature flag for subscriptions
 const FEATURE_SUBSCRIPTIONS_ENABLED = false;
@@ -88,7 +89,11 @@ export const ProductManagement = () => {
   };
 
   if (moduleLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <UniversalLayout>
+        <div className="p-6 text-sm text-muted-foreground">Loading…</div>
+      </UniversalLayout>
+    );
   }
 
   // Store builder is gated behind the `store` add-on. A tenant that
@@ -97,32 +102,34 @@ export const ProductManagement = () => {
   // management surface. Mirrors BoxOfficePage's !hasAccess state.
   if (!hasStore) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-        <Card>
-          <CardHeader>
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-status-warning-bg text-status-warning-fg mb-2">
-              <Store className="w-6 h-6" />
-            </div>
-            <CardTitle>Store</CardTitle>
-            <CardDescription>
-              Sell merchandise and digital products from your own storefront. Order payments
-              land in your own Stripe account.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              This add-on isn't enabled for your tenant yet. Activate it from the Modules page.
-            </p>
-            <Button asChild>
-              <Link to="/settings/modules">Open Modules</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+          <Card>
+            <CardHeader>
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-status-warning-bg text-status-warning-fg mb-2">
+                <Store className="w-6 h-6" />
+              </div>
+              <CardTitle>Store</CardTitle>
+              <CardDescription>
+                Sell merchandise and digital products from your own storefront. Order payments
+                land in your own Stripe account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                This add-on isn't enabled for your tenant yet. Activate it from the Modules page.
+              </p>
+              <Button asChild>
+                <Link to="/settings/modules">Open Modules</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
-  return <DashboardPageShell
+  return <UniversalLayout><DashboardPageShell
       title="Merch Store Management"
       subtitle="Manage products, orders, and customers"
       icon={Store}
@@ -228,5 +235,5 @@ export const ProductManagement = () => {
 
       {/* Order Detail Drawer */}
       <OrderDetailDrawer orderId={selectedOrderId} isOpen={isOrderDrawerOpen} onClose={handleCloseOrderDrawer} />
-    </DashboardPageShell>;
+    </DashboardPageShell></UniversalLayout>;
 };
