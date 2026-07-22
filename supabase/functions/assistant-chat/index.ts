@@ -30,14 +30,13 @@ serve(async (req) => {
   const model = Deno.env.get('ASSISTANT_MODEL') ?? 'deepseek-chat';
   if (!apiKey) return json({ error: 'Assistant is not configured' }, 500);
 
-  let body: { messages?: Array<{ role: string; content: string }>; context?: Record<string, unknown> };
+  let body: {
+    messages?: Array<{ role: string; content: string }>;
+    context?: Record<string, unknown>;
+    thread_id?: string;
+    new_thread?: boolean;
+  };
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
-  const history = (body.messages ?? []).filter(
-    (m) => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string',
-  ).slice(-20);
-  if (history.length === 0 || history[history.length - 1].role !== 'user') {
-    return json({ error: 'messages must end with a user message' }, 400);
-  }
 
   // Client constructed WITH the caller's JWT: every query below runs under RLS.
   const userClient = createClient(
@@ -45,6 +44,62 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } },
   );
+
+  // === Thread resolution (Layer 2: persistent chat) ==================
+  // Three ways in:
+  //   1. Client passed a valid thread_id → load its history from the DB.
+  //   2. Client passed thread_id but it's stale/foreign/deleted → treat as
+  //      no-thread and create a new one (don't 400 the user off — the
+  //      localStorage they had may just point at a deleted thread).
+  //   3. Client passed nothing (or new_thread: true) → create a new thread.
+  // If the client also passed `messages`, we take only the LAST user message
+  // as the current turn — the DB is now the source of truth for history.
+  let threadId: string | null = null;
+  let dbHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+  if (!body.new_thread && typeof body.thread_id === 'string' && body.thread_id.length > 0) {
+    const { data: existing } = await userClient
+      .from('gw_assistant_threads')
+      .select('id')
+      .eq('id', body.thread_id)
+      .maybeSingle();
+    if (existing) {
+      threadId = existing.id;
+      const { data: msgs } = await userClient
+        .from('gw_assistant_messages')
+        .select('role, content, created_at')
+        .eq('thread_id', threadId)
+        .in('role', ['user', 'assistant'])
+        .order('created_at', { ascending: true })
+        .limit(30);
+      dbHistory = (msgs ?? [])
+        .filter((m) => typeof m.content === 'string' && m.content.length > 0)
+        .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content as string }));
+    }
+  }
+  if (!threadId) {
+    const { data: created } = await userClient
+      .from('gw_assistant_threads')
+      .insert({ user_id: caller.userId })
+      .select('id')
+      .single();
+    threadId = created?.id ?? null;
+    // If insert failed (RLS mis-config, etc.), we still serve the turn —
+    // just without persistence. Better than 500ing on a chat.
+  }
+
+  // Latest user message from the client (they always send at least this).
+  const clientHistory = (body.messages ?? []).filter(
+    (m) => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string',
+  );
+  const latestUser = clientHistory[clientHistory.length - 1];
+  if (!latestUser || latestUser.role !== 'user') {
+    return json({ error: 'messages must end with a user message' }, 400);
+  }
+
+  // Server-side truth: prior DB history + latest client user turn.
+  // Capped at 20 to bound prompt size; DB stores everything, we only feed
+  // the tail to the model.
+  const history = [...dbHistory, { role: 'user' as const, content: latestUser.content }].slice(-20);
 
   const ctx = {
     firstName: String(body.context?.firstName ?? 'there'),
@@ -63,12 +118,45 @@ serve(async (req) => {
   ];
   const actions: Array<{ tool: string; args: Record<string, unknown>; confirm: boolean }> = [];
 
+  // Persist the user's turn immediately so we don't lose it if the model
+  // call fails downstream. The assistant reply is saved once we have it.
+  // If threadId is null (persistence disabled by an insert failure), these
+  // are no-ops.
+  const persistUserTurn = async () => {
+    if (!threadId) return;
+    await userClient.from('gw_assistant_messages').insert({
+      thread_id: threadId,
+      user_id: caller.userId,
+      role: 'user',
+      content: latestUser.content,
+    });
+    // First user message in an empty thread becomes the thread title so
+    // the picker can show something recognizable. Truncated so it doesn't
+    // eat the row.
+    if (dbHistory.length === 0) {
+      const title = latestUser.content.slice(0, 80).trim();
+      await userClient.from('gw_assistant_threads').update({ title }).eq('id', threadId);
+    }
+  };
+  const persistAssistantReply = async (reply: string) => {
+    if (!threadId || !reply) return;
+    await userClient.from('gw_assistant_messages').insert({
+      thread_id: threadId,
+      user_id: caller.userId,
+      role: 'assistant',
+      content: reply,
+    });
+  };
+  await persistUserTurn();
+
   try {
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const { message } = await callModel(buildChatRequest(messages, openAiTools, model), apiKey, apiUrl);
       const toolCalls = message.tool_calls ?? [];
       if (toolCalls.length === 0) {
-        return json({ reply: message.content ?? '', actions });
+        const reply = message.content ?? '';
+        await persistAssistantReply(reply);
+        return json({ reply, actions, thread_id: threadId });
       }
       messages.push({ role: 'assistant', content: message.content ?? null, tool_calls: toolCalls });
       for (const tc of toolCalls) {
@@ -104,7 +192,9 @@ serve(async (req) => {
         messages.push({ role: 'tool', content: result, tool_call_id: tc.id });
       }
     }
-    return json({ reply: 'That took too many steps — try breaking the request into smaller pieces.', actions });
+    const timeoutReply = 'That took too many steps — try breaking the request into smaller pieces.';
+    await persistAssistantReply(timeoutReply);
+    return json({ reply: timeoutReply, actions, thread_id: threadId });
   } catch (e) {
     console.error('assistant-chat error:', e);
     return json({ error: "I couldn't reach the assistant right now. Please try again." }, 502);

@@ -58,27 +58,34 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
     stopTone();
 
     const masterGain = audioContext.createGain();
-    // Compressor catches the harmonic-sum peaks (fundamental 1.0 + 2nd 0.3
-    // + 3rd 0.1 → ~1.4) so we can run masterGain at full 1.0 without
-    // hearing iOS soft-clip distort the tone.
-    const compressor = audioContext.createDynamicsCompressor();
-    compressor.threshold.value = -8;
-    compressor.knee.value = 6;
-    compressor.ratio.value = 6;
-    compressor.attack.value = 0.005;
-    compressor.release.value = 0.1;
-    masterGain.connect(compressor);
-    compressor.connect(audioContext.destination);
+    // Safety limiter (a DynamicsCompressor tuned as one): high ratio, tight
+    // threshold, near-zero knee, ~1ms attack. Only engages on sub-clip peaks
+    // and never colors the sustained tone. Previous "compressor" tuning
+    // (threshold -8, ratio 6, knee 6, attack 5ms) squashed the sustain
+    // audibly AND still let fast peaks through — you heard both the pump and
+    // the clip. This one prevents clip without touching the steady state.
+    const limiter = audioContext.createDynamicsCompressor();
+    limiter.threshold.value = -1;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.001;
+    limiter.release.value = 0.05;
+    masterGain.connect(limiter);
+    limiter.connect(audioContext.destination);
 
     const currentVolume = isMuted ? 0 : volume[0];
     masterGain.gain.setValueAtTime(0, audioContext.currentTime);
     masterGain.gain.linearRampToValueAtTime(currentVolume, audioContext.currentTime + 0.08);
 
-    // Flute-like timbre: fundamental + soft harmonics
+    // Flute-like timbre: fundamental + soft harmonics, normalized so the
+    // in-phase sum tops out at 1.0 (raw values 1.0 + 0.3 + 0.1 = 1.4 → peaks
+    // hit 1.4 with masterGain at 1.0 and hard-clip at the destination before
+    // the limiter can react). Ratios kept the same so timbre is unchanged.
+    const HARMONIC_SUM = 1.0 + 0.3 + 0.1; // = 1.4
     const harmonics = [
-      { ratio: 1, gain: 1.0 },      // Fundamental
-      { ratio: 2, gain: 0.3 },      // 2nd harmonic (soft)
-      { ratio: 3, gain: 0.1 },      // 3rd harmonic (very soft)
+      { ratio: 1, gain: 1.0 / HARMONIC_SUM }, // Fundamental (~0.714)
+      { ratio: 2, gain: 0.3 / HARMONIC_SUM }, // 2nd harmonic (~0.214)
+      { ratio: 3, gain: 0.1 / HARMONIC_SUM }, // 3rd harmonic (~0.071)
     ];
 
     const oscillators: OscillatorNode[] = [];

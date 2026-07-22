@@ -7,6 +7,7 @@ import { executeClientAction } from './clientActions';
 import { getSpeechInput, isMuted, setMuted, speak, stopSpeaking } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
+import { useAssistantVoice } from './voices';
 import type { AssistantAction, ThreadState } from './types';
 
 export interface AssistantContextValue {
@@ -27,6 +28,9 @@ export interface AssistantContextValue {
   videoRoom: string | null;
   setVideoRoom: (room: string | null) => void;
   captionReply: { id: string; text: string } | null;
+  /** Tenant-configured assistant voice from Workspace Settings → Branding.
+   *  Null while loading, or if the tenant hasn't picked one (app default). */
+  voiceId: string | null;
 }
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
@@ -61,6 +65,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   const [speaking, setSpeaking] = useState(false);
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
   const [captionReply, setCaptionReply] = useState<{ id: string; text: string } | null>(null);
+  const { voiceId } = useAssistantVoice();
+  const voiceIdRef = useRef<string | null>(voiceId);
+  useEffect(() => { voiceIdRef.current = voiceId; }, [voiceId]);
   const speechRef = useRef(getSpeechInput());
   const confirmQueueRef = useRef(new ConfirmActionQueue());
   // Async send() must see the CURRENT open state, not the one captured at
@@ -89,8 +96,18 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
 
   // Speak a reply while tracking `speaking` so the UI can show a Stop
   // control; stopSpeakingNow cuts her off immediately (barge-in / Stop tap).
-  const speakNow = useCallback((text: string) => {
-    speak(text, { muted, onStart: () => setSpeaking(true), onEnd: () => setSpeaking(false) });
+  const speakNow = useCallback(async (text: string) => {
+    // Grab the current auth token on every speak() so a token refresh
+    // doesn't leave us stuck on a 401 — cheap, session cache is in memory.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    speak(text, {
+      muted,
+      voiceId: voiceIdRef.current,
+      accessToken,
+      onStart: () => setSpeaking(true),
+      onEnd: () => setSpeaking(false),
+    });
   }, [muted]);
 
   const stopSpeakingNow = useCallback(() => {
@@ -125,17 +142,30 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     const text = content.trim();
     if (!text || state.busy) return;
     dispatch({ type: 'send', id: crypto.randomUUID(), content: text });
-    const history = [...state.messages.map((m) => ({ role: m.role, content: m.content })), { role: 'user' as const, content: text }];
+    // Only the latest user turn matters — the edge function loads prior
+    // history from the DB by thread_id (Layer 2 persistence). Older
+    // clients that sent full history still work; the server takes the
+    // last user message.
+    const history = [{ role: 'user' as const, content: text }];
+    const storedThreadId = (() => {
+      try { return localStorage.getItem('gw-assistant-thread-id') ?? undefined; }
+      catch { return undefined; }
+    })();
     try {
       const { data, error } = await supabase.functions.invoke('assistant-chat', {
         body: {
           messages: history,
+          thread_id: storedThreadId,
           context: {
             firstName: profile?.full_name?.split(' ')[0] ?? 'there',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           },
         },
       });
+      if (data?.thread_id && data.thread_id !== storedThreadId) {
+        try { localStorage.setItem('gw-assistant-thread-id', data.thread_id); }
+        catch { /* private mode / quota — persistence just doesn't survive refresh */ }
+      }
       if (error || data?.error) {
         dispatch({ type: 'fail', error: data?.error ?? "I couldn't reach the assistant right now." });
         return;
@@ -201,6 +231,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       speaking, stopSpeaking: stopSpeakingNow,
       videoRoom, setVideoRoom,
       captionReply,
+      voiceId,
     }}>
       {children}
     </AssistantContext.Provider>

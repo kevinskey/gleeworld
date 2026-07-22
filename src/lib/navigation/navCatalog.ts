@@ -52,9 +52,6 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'home',     to: '/dashboard',           label: 'Command Center', icon: Home,          section: 'today', tone: 'bg-primary/10 text-primary', tourId: 'nav-command-center', end: true, surfaces: ['sidebar'] },
   { key: 'messages', to: '/dashboard/messenger', label: 'Messages',       icon: MessageSquare, section: 'today', tone: 'bg-cyan-50 text-cyan-600',   tourId: 'nav-messenger',      surfaces: ['sidebar'] },
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
-  // Notes (GleeWorld Planner add-on, module id 'planner') lives right under
-  // Calendar per Kevin 2026-07-11; keeps its home-grid tile unlike the
-  // sidebar-only tab-bar trio above.
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
   // Music
   { key: 'music-library', to: '/dashboard/music-library', label: 'Music Library', icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },

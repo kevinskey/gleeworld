@@ -66,10 +66,44 @@ const detailOfRejection = (r: unknown): string => {
   if (parts.length === 0) parts.push('raw: <no detail>');
   return parts.join('\n');
 };
+// Same "stale-chunk from previous deploy" recovery the React
+// BootErrorBoundary does — but for failures that fire BEFORE React
+// mounts (initial ES module load). Without this, a fresh deploy makes
+// every open tab hit the crash screen until the user hard-refreshes,
+// because the failing import throws at module-eval time and never
+// reaches the boundary. Shares the `gw-chunk-retried` sessionStorage
+// guard so boundary + window listeners can't double-reload.
+const STALE_CHUNK_RE =
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError/i;
+// Once we ask the browser to reload, more errors can still fire before it
+// actually navigates (a page-load usually loses many chunks at once). If
+// any of those repaint the boot-error screen, the user sees the crash flash
+// briefly before the reload — the "blinking" you saw. `reloadInFlight`
+// suppresses ALL subsequent boot rendering after the first reload call.
+let reloadInFlight = false;
+const reloadOnceForStaleChunk = (): boolean => {
+  if (reloadInFlight) return true;
+  try {
+    if (sessionStorage.getItem('gw-chunk-retried')) return false;
+    sessionStorage.setItem('gw-chunk-retried', '1');
+    reloadInFlight = true;
+    window.location.reload();
+    return true;
+  } catch {
+    return false;
+  }
+};
 window.addEventListener('error', (e) => {
+  if (reloadInFlight) return;
+  const msg = (e.error?.message as string | undefined) || e.message || '';
+  if (STALE_CHUNK_RE.test(msg) && reloadOnceForStaleChunk()) return;
   renderBootError('Boot error', detailOf(e));
 });
 window.addEventListener('unhandledrejection', (e) => {
+  if (reloadInFlight) return;
+  const r = e.reason as { message?: string } | string | undefined;
+  const msg = typeof r === 'string' ? r : r?.message || '';
+  if (STALE_CHUNK_RE.test(msg) && reloadOnceForStaleChunk()) return;
   renderBootError('Unhandled rejection', detailOfRejection(e.reason));
 });
 

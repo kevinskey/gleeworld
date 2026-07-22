@@ -93,6 +93,13 @@ export class StudioEngine {
   private masterPan: Tone.Panner;
   private masterFx: EngineFxChain;
   private masterMeter: Tone.Meter;
+  // Safety limiter that ALWAYS sits right before the raw destination.
+  // Prevents summed voices (chords, dense percussion, multi-track playback)
+  // from clipping at the DAC. Threshold at -0.5 dBFS gives sub-ms lookahead
+  // room without touching normal signal — engages only on sub-clip peaks.
+  // Independent of session.master.mastering, which is an opt-in FX chain
+  // for perceived-loudness sculpting.
+  private masterLimiter: Tone.Limiter;
   // Mastering chain (B1 task 4/5) — built async (AudioWorklet module
   // load) only when session.master.mastering?.enabled. chainSync.handle
   // null means bypass: masterFx.output feeds Destination directly.
@@ -215,6 +222,7 @@ export class StudioEngine {
     this.masterIn.connect(this.masterPan);
     this.masterPan.connect(this.masterFx.input);
     this.masterMeter = new Tone.Meter({ channelCount: 2, smoothing: 0.7 });
+    this.masterLimiter = new Tone.Limiter(-0.5);
     // No session loaded yet, so no mastering chain either — this is the
     // bypass wiring (masterFx.output straight to Destination).
     this.wireMasterOutput();
@@ -260,12 +268,21 @@ export class StudioEngine {
    * masterFx.output or the plain GainNode chainSync.handle.output. */
   private connectToDestination(tail: Tone.ToneAudioNode | AudioNode): void {
     try {
-      Tone.connect(tail, Tone.getDestination());
+      // Route through the safety limiter so hard clipping is impossible,
+      // no matter what the current `tail` is (masterFx.output when the
+      // mastering chain is off, or chainSync.handle.output when it's on).
+      // Disconnect its previous input first — this method is called on
+      // every rewireMasterOutput() (session load, mastering toggle,
+      // async chain build), and stacking connections into a single node
+      // would silently sum the same signal N times.
+      this.masterLimiter.disconnect();
+      Tone.connect(tail, this.masterLimiter);
+      Tone.connect(this.masterLimiter, Tone.getDestination());
       const dest = Tone.getDestination();
       dest.volume.value = 0;
       dest.mute = false;
       Tone.getContext().rawContext.resume?.();
-      Tone.connect(tail, Tone.getContext().rawContext.destination);
+      Tone.connect(this.masterLimiter, Tone.getContext().rawContext.destination);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.warn('[studio] destination wiring failed', e);
@@ -491,6 +508,7 @@ export class StudioEngine {
     this.masterFx.dispose();
     this.masterPan.dispose();
     this.masterIn.dispose();
+    this.masterLimiter.dispose();
     Tone.getTransport().stop();
     Tone.getTransport().cancel();
   }

@@ -76,6 +76,20 @@ export interface MicRecorderOptions {
    * always decodes AND plays. Recommended on Apple web engines. The
    * returned blob is `audio/wav`. */
   captureWav?: boolean;
+  /** Zero-based index of the interface input to record from (0 = Input 1,
+   * 1 = Input 2, ... 7 = Input 8). Chrome on macOS honors `channelCount`
+   * on multi-channel interfaces like UA Apollo; we ask for the full N
+   * channels, then a ChannelSplitterNode routes only `channelIndex` into
+   * the rest of the graph. Passing this forces the manual getUserMedia
+   * path (Tone.UserMedia can't express channelCount). Ignored / defaults
+   * to 0 on Safari or single-channel devices — the splitter safely
+   * upmixes so channel 0 is always valid. */
+  channelIndex?: number;
+  /** Total channels to request from the device (`channelCount` in the
+   * getUserMedia constraint). Defaults to 8 when `channelIndex` is set,
+   * which covers Apollo 8 / Apollo x8 / MOTU 8pre and downgrades on
+   * anything smaller. Ignored when `channelIndex` is omitted. */
+  desiredChannelCount?: number;
 }
 
 export interface MicRecorder {
@@ -130,13 +144,23 @@ export async function openMicRecorder(
   let mic: Tone.UserMedia | null = null;
   let manualStream: MediaStream | null = null;
   let manualSourceNode: MediaStreamAudioSourceNode | null = null;
+  let channelSplitter: ChannelSplitterNode | null = null;
 
-  // captureWav needs the raw MediaStream (Tone.UserMedia hides it), so it
-  // opens the mic manually too — even without explicit `constraints`.
-  if (args.constraints || args.captureWav) {
+  // channelIndex forces the manual path too — Tone.UserMedia doesn't
+  // request multi-channel input, so we'd only ever see channels 0-1.
+  const wantChannelIndex = typeof args.channelIndex === 'number' && args.channelIndex > 0;
+  const useManualPath = !!args.constraints || !!args.captureWav || wantChannelIndex;
+
+  if (useManualPath) {
     const constraints: MediaTrackConstraints = { ...(args.constraints ?? {}) };
     if (args.inputDeviceId && args.inputDeviceId !== 'default') {
       (constraints as { deviceId?: ConstrainDOMString }).deviceId = { exact: args.inputDeviceId };
+    }
+    // Ask for the full channel count when the caller wants a specific
+    // channel — Chrome on macOS honors this against Apollo-class
+    // interfaces and hands back one N-channel MediaStreamTrack.
+    if (wantChannelIndex && !constraints.channelCount) {
+      constraints.channelCount = args.desiredChannelCount ?? 8;
     }
     try {
       manualStream = await navigator.mediaDevices.getUserMedia({ audio: constraints, video: false });
@@ -168,8 +192,27 @@ export async function openMicRecorder(
   // so a single slider boosts/cuts the recorded signal AND the meter.
   const inputDb = args.inputGainDb ?? 0;
   const inputGain = new Tone.Gain(Math.pow(10, inputDb / 20));
-  if (mic) mic.connect(inputGain);
-  else Tone.connect(manualSourceNode!, inputGain);
+  if (mic) {
+    mic.connect(inputGain);
+  } else if (wantChannelIndex && manualSourceNode) {
+    // Split the incoming multi-channel stream and route ONLY the
+    // requested channel into inputGain — everything downstream (recorder,
+    // meter, waveform, monitor) sees a mono stream from Apollo Input N+1.
+    // If the device gave us fewer channels than requested (Safari caps at
+    // 2, or a mono device silently downgraded the constraint), clamp so
+    // we never point the splitter at a channel that doesn't exist.
+    const trackChannels = manualStream?.getAudioTracks()[0]?.getSettings().channelCount
+      ?? args.desiredChannelCount
+      ?? 8;
+    const splitterSize = Math.max(2, trackChannels);
+    const idx = Math.min(args.channelIndex!, splitterSize - 1);
+    const rawCtx = Tone.getContext().rawContext;
+    channelSplitter = rawCtx.createChannelSplitter(splitterSize);
+    Tone.connect(manualSourceNode, channelSplitter);
+    Tone.connect(channelSplitter, inputGain, idx, 0);
+  } else {
+    Tone.connect(manualSourceNode!, inputGain);
+  }
   const monitor = new Tone.Gain(args.monitorGain ?? 0); // default off to avoid feedback
 
   // CAPTURE path splits by how the mic was opened:
@@ -218,10 +261,31 @@ export async function openMicRecorder(
     if (pcmCtx.state !== 'running') { try { await pcmCtx.resume(); } catch { /* ignore */ } }
     pcmSampleRate = pcmCtx.sampleRate;
     pcmSourceNode = pcmCtx.createMediaStreamSource(manualStream);
+    // When a specific interface channel is requested we need our OWN
+    // splitter on the PCM context (audio nodes can't cross AudioContext
+    // boundaries — the graph splitter above lives on Tone's context).
+    // Then read block channel `idx` on every render tick.
+    const trackChannels = manualStream.getAudioTracks()[0]?.getSettings().channelCount
+      ?? args.desiredChannelCount
+      ?? 8;
+    const pcmSplitterSize = wantChannelIndex ? Math.max(2, trackChannels) : 1;
+    const pcmChannelIdx = wantChannelIndex ? Math.min(args.channelIndex!, pcmSplitterSize - 1) : 0;
+    let pcmSplitter: ChannelSplitterNode | null = null;
+    // ScriptProcessor's input channel count matches the splitter output —
+    // a per-channel splitter output is always 1 channel wide.
     pcmProcessor = pcmCtx.createScriptProcessor(4096, 1, 1);
+    if (wantChannelIndex) {
+      pcmSplitter = pcmCtx.createChannelSplitter(pcmSplitterSize);
+      pcmSourceNode.connect(pcmSplitter);
+      pcmSplitter.connect(pcmProcessor, pcmChannelIdx, 0);
+    } else {
+      pcmSourceNode.connect(pcmProcessor);
+    }
     const gainMul = Math.pow(10, (args.inputGainDb ?? 0) / 20);
     pcmProcessor.onaudioprocess = (ev: AudioProcessingEvent) => {
       if (!recording) return;          // capture only while armed
+      // Splitter output is always channel 0 here regardless of which
+      // interface input we picked — the routing happened above.
       const src = ev.inputBuffer.getChannelData(0);
       const block = new Float32Array(src.length);
       for (let i = 0; i < src.length; i++) block[i] = src[i] * gainMul;
@@ -229,7 +293,6 @@ export async function openMicRecorder(
     };
     const mute = pcmCtx.createGain();
     mute.gain.value = 0;
-    pcmSourceNode.connect(pcmProcessor);
     pcmProcessor.connect(mute);
     mute.connect(pcmCtx.destination);
   }
@@ -343,6 +406,8 @@ export async function openMicRecorder(
         try { manualStream.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ }
       }
       try { manualSourceNode?.disconnect(); } catch { /* ignore */ }
+      try { channelSplitter?.disconnect(); } catch { /* ignore */ }
+      channelSplitter = null;
       if (pcmProcessor) {
         try { pcmProcessor.disconnect(); } catch { /* ignore */ }
         pcmProcessor.onaudioprocess = null;

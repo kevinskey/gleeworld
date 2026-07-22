@@ -27,20 +27,9 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import VoiceConversationAgent from '@/components/assistant/VoiceConversationAgent';
-
-// Voice options for TTS
-const VOICES = [
-  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah' },
-  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger' },
-  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura' },
-  { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie' },
-  { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam' },
-  { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice' },
-  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel' },
-  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily' },
-];
+// Single source of truth for TTS voice options — shared with the main
+// assistant and Office Hours so a user sees the same choices everywhere.
+import { ASSISTANT_VOICES } from '@/lib/assistant/voices';
 
 export const TheLabModule: React.FC = () => {
   return (
@@ -114,7 +103,7 @@ export const TheLabModule: React.FC = () => {
 // Text to Speech Tab
 const TextToSpeechTab: React.FC = () => {
   const [text, setText] = useState('');
-  const [voiceId, setVoiceId] = useState(VOICES[0].id);
+  const [voiceId, setVoiceId] = useState(ASSISTANT_VOICES[0].id);
   const [stability, setStability] = useState([0.5]);
   const [similarity, setSimilarity] = useState([0.75]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -184,9 +173,9 @@ const TextToSpeechTab: React.FC = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {VOICES.map((voice) => (
+                {ASSISTANT_VOICES.map((voice) => (
                   <SelectItem key={voice.id} value={voice.id}>
-                    {voice.name}
+                    {voice.label}
                   </SelectItem>
                 ))}
               </SelectContent>
