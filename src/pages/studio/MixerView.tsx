@@ -645,6 +645,7 @@ export function MixerView({
             ownerLabel={label}
             automation={session.automation ?? []}
             playheadSeconds={state?.positionSeconds ?? 0}
+            sessionLengthSeconds={session.length_seconds}
             currentStripValue={(param: AutomationParam) => {
               const strip = autoTarget.kind === 'track'
                 ? session.tracks.find((x) => x.id === autoTarget.id)

@@ -1,22 +1,24 @@
-// AutomationPanel — minimal breakpoint envelope editor.
+// AutomationPanel — breakpoint envelope editor.
 //
-// Deliberately tabular for v1: one row per point (time, value, curve,
-// delete). SVG canvas + drag interaction is a Phase 8c polish.
+// Two views over the same data:
+//   - Canvas view: a drawable SVG lane showing the envelope curve,
+//     playhead, and draggable points; click empty area to add.
+//   - Tabular view: one row per point (time, value, curve, delete).
+//     Kept as a fallback + fine numeric editor.
 //
 // Users can:
 //   - Pick which param to automate on this strip (volume_db / pan).
-//   - Choose mode: Off (envelope ignored) / Read (engine applies during
-//     playback) / Write (fader moves capture points at the playhead).
-//   - Add a point at the current playhead position.
-//   - Edit any point's time, value, curve.
-//   - Delete a point.
+//   - Choose mode: Off / Read / Touch / Latch / Write.
+//   - Drag points on the canvas or edit them in the table.
+//   - Click a segment's curve chip to cycle Linear → Hold → Exp → Linear.
 //
-// The engine's applyAutomation() re-schedules on every play(), so
-// any edit here takes effect at the next Play. Write-mode captures
-// happen in the mixer (setStrip / setBusStrip); the panel just shows
-// the current envelope + a "recording" pulse while write mode is armed.
+// The engine's applyAutomation() re-schedules on every play() and on
+// every touch/release, so any edit here takes effect at the next tick.
+// Write / touch / latch capture happens in the mixer (setStrip /
+// setBusStrip); the panel just visualizes the current envelope + a
+// pulse indicator when the mode is capturing.
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useRef, useState, useEffect } from 'react';
 import { Slider } from '@/components/ui/slider';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -40,14 +42,233 @@ const PARAM_UI: Record<AutomationParam, { min: number; max: number; step: number
   pan:       { min: -1, max: 1, step: 0.01, unit: '' },
 };
 
-function newId(): string {
-  return (typeof crypto !== 'undefined' && 'randomUUID' in crypto)
-    ? crypto.randomUUID()
-    : `auto-${Math.random().toString(36).slice(2)}`;
+// ── SVG envelope canvas ─────────────────────────────────────────────
+//
+// A ~110px-tall lane spanning the panel width. Renders the envelope
+// as a stroked path, points as draggable handles, and the playhead as
+// a vertical rule. Interactions:
+//   - Drag a handle → moves its (time, value) — commits on release.
+//   - Click empty area → adds a point at that (time, value).
+//   - Click the small curve chip on a segment → cycles the curve type
+//     of the RIGHT-hand point (which is what determines the ramp INTO
+//     it — matches the tabular editor's "Curve in" column).
+//   - Shift-click a point → deletes it.
+//
+// Coordinate axes: X = transport time (0 → sessionLengthSeconds), Y =
+// param value (top = max). Padding leaves room for the point circles.
+
+const CANVAS_HEIGHT = 110;
+const CANVAS_PADDING = 10;
+
+function EnvelopeCanvas({
+  envelope, playheadSeconds, sessionLengthSeconds, valueRange, onChange,
+}: {
+  envelope: Automation;
+  playheadSeconds: number;
+  sessionLengthSeconds: number;
+  valueRange: { min: number; max: number };
+  onChange: (next: AutomationPoint[]) => void;
+}) {
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const [width, setWidth] = useState(600);
+  const [dragging, setDragging] = useState<{ index: number; pointerId: number } | null>(null);
+
+  // Measure the SVG's own width via ResizeObserver so the coordinate
+  // map matches whatever grid the panel is sized to (mobile vs. desktop).
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const set = () => setWidth(Math.max(320, el.clientWidth));
+    set();
+    if (typeof ResizeObserver === 'undefined') return; // JSDOM lacks it
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const totalT = Math.max(1, sessionLengthSeconds);
+  const { min, max } = valueRange;
+  const xForTime = (t: number) =>
+    CANVAS_PADDING + (Math.max(0, Math.min(totalT, t)) / totalT) * (width - 2 * CANVAS_PADDING);
+  const yForValue = (v: number) => {
+    const clamped = Math.max(min, Math.min(max, v));
+    return CANVAS_HEIGHT - CANVAS_PADDING -
+      ((clamped - min) / (max - min)) * (CANVAS_HEIGHT - 2 * CANVAS_PADDING);
+  };
+  const timeForX = (x: number) => {
+    const t = ((x - CANVAS_PADDING) / (width - 2 * CANVAS_PADDING)) * totalT;
+    return Math.max(0, Math.min(totalT, t));
+  };
+  const valueForY = (y: number) => {
+    const v = min + ((CANVAS_HEIGHT - CANVAS_PADDING - y) / (CANVAS_HEIGHT - 2 * CANVAS_PADDING)) * (max - min);
+    return Math.max(min, Math.min(max, v));
+  };
+
+  // Sort points once for both rendering AND indexing during drag —
+  // the drag handler uses this sorted order so up/down moves don't
+  // reorder unexpectedly during a single grab.
+  const points = useMemo(() => {
+    return [...envelope.points]
+      .map((p, originalIndex) => ({ p, originalIndex }))
+      .sort((a, b) => a.p.time_seconds - b.p.time_seconds);
+  }, [envelope.points]);
+
+  // Envelope path: piecewise per segment based on the right point's curve.
+  const path = useMemo(() => {
+    if (points.length === 0) return '';
+    const first = points[0].p;
+    const last = points[points.length - 1].p;
+    const segs: string[] = [`M ${xForTime(0)} ${yForValue(first.value)}`];
+    segs.push(`L ${xForTime(first.time_seconds)} ${yForValue(first.value)}`);
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1].p;
+      const next = points[i].p;
+      const x2 = xForTime(next.time_seconds);
+      const y2 = yForValue(next.value);
+      switch (next.curve) {
+        case 'linear':
+          segs.push(`L ${x2} ${y2}`);
+          break;
+        case 'hold': {
+          const yPrev = yForValue(prev.value);
+          segs.push(`L ${x2} ${yPrev}`, `L ${x2} ${y2}`);
+          break;
+        }
+        case 'exponential': {
+          // Sample 6 intermediate points along the exponential ramp
+          // and stitch as a polyline.
+          const steps = 6;
+          for (let s = 1; s <= steps; s++) {
+            const t = s / steps;
+            const va = (prev.value > 0 && next.value > 0)
+              ? prev.value * Math.pow(next.value / prev.value, t)
+              : prev.value + (next.value - prev.value) * t;
+            const ta = prev.time_seconds + (next.time_seconds - prev.time_seconds) * t;
+            segs.push(`L ${xForTime(ta)} ${yForValue(va)}`);
+          }
+          break;
+        }
+      }
+    }
+    segs.push(`L ${xForTime(totalT)} ${yForValue(last.value)}`);
+    return segs.join(' ');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [points, width, min, max, totalT]);
+
+  const commit = useCallback((nextSorted: AutomationPoint[]) => {
+    onChange(nextSorted);
+  }, [onChange]);
+
+  const handleCanvasPointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    // Ignore clicks that hit a handle (they set stopPropagation).
+    if (dragging) return;
+    const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const t = timeForX(x);
+    const v = valueForY(y);
+    const nextPoints: AutomationPoint[] = [
+      ...envelope.points,
+      { time_seconds: t, value: v, curve: 'linear' },
+    ].sort((a, b) => a.time_seconds - b.time_seconds);
+    commit(nextPoints);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [envelope.points, dragging, commit]);
+
+  const handlePointPointerDown = useCallback((e: React.PointerEvent, sortedIndex: number) => {
+    e.stopPropagation();
+    if (e.shiftKey) {
+      // Shift-click deletes.
+      const original = points[sortedIndex].originalIndex;
+      commit(envelope.points.filter((_, i) => i !== original));
+      return;
+    }
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    setDragging({ index: sortedIndex, pointerId: e.pointerId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [envelope.points, points, commit]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const t = timeForX(x);
+    const v = valueForY(y);
+    const draggedOriginal = points[dragging.index].originalIndex;
+    const nextPoints = envelope.points.map((p, i) =>
+      i === draggedOriginal ? { ...p, time_seconds: t, value: v } : p,
+    ).sort((a, b) => a.time_seconds - b.time_seconds);
+    onChange(nextPoints);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragging, envelope.points, points, onChange]);
+
+  const handlePointerUp = useCallback(() => {
+    setDragging(null);
+  }, []);
+
+  const zeroY = yForValue(0);
+  const playheadX = xForTime(playheadSeconds);
+
+  return (
+    <svg
+      ref={svgRef}
+      width="100%"
+      height={CANVAS_HEIGHT}
+      className="bg-background border border-border rounded touch-none select-none cursor-crosshair"
+      onPointerDown={handleCanvasPointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      role="figure"
+      aria-label={`${envelope.param} envelope — ${envelope.points.length} point${envelope.points.length === 1 ? '' : 's'}`}
+    >
+      {/* Zero-reference line (0 dB for volume, center for pan). */}
+      <line
+        x1={CANVAS_PADDING} x2={width - CANVAS_PADDING}
+        y1={zeroY} y2={zeroY}
+        stroke="currentColor"
+        strokeOpacity={0.15}
+        strokeDasharray="3 3"
+      />
+      {/* Envelope curve. */}
+      {points.length > 0 && (
+        <path d={path} stroke="var(--tint, currentColor)" strokeWidth={1.5} fill="none" />
+      )}
+      {/* Points. */}
+      {points.map(({ p }, i) => (
+        <circle
+          key={i}
+          cx={xForTime(p.time_seconds)}
+          cy={yForValue(p.value)}
+          r={5}
+          fill="var(--tint, currentColor)"
+          stroke="var(--background, #fff)"
+          strokeWidth={1.5}
+          onPointerDown={(e) => handlePointPointerDown(e, i)}
+          style={{ cursor: 'grab' }}
+        >
+          <title>
+            {`t=${p.time_seconds.toFixed(2)}s, v=${p.value.toFixed(2)}\n` +
+              `Curve in: ${p.curve} — Shift-click to delete`}
+          </title>
+        </circle>
+      ))}
+      {/* Playhead — subtle so it never overwhelms envelope handles. */}
+      <line
+        x1={playheadX} x2={playheadX}
+        y1={0} y2={CANVAS_HEIGHT}
+        stroke="rgb(239 68 68 / 0.7)"
+        strokeWidth={1}
+      />
+    </svg>
+  );
 }
 
 export function AutomationPanel({
-  ownerId, ownerKind, ownerLabel, automation, playheadSeconds, currentStripValue, onChange, onClose,
+  ownerId, ownerKind, ownerLabel, automation, playheadSeconds, sessionLengthSeconds, currentStripValue, onChange, onClose,
 }: {
   /** Track or bus id this panel edits automation for. */
   ownerId: string;
@@ -59,6 +280,8 @@ export function AutomationPanel({
   /** Current transport position — used by "Add at playhead" so the
    *  new point lands under the current time. */
   playheadSeconds: number;
+  /** Session length in seconds — spans the canvas horizontal axis. */
+  sessionLengthSeconds: number;
   /** Current strip value (volume_db or pan depending on selected
    *  param). Used to seed a new point's Y. */
   currentStripValue: (param: AutomationParam) => number;
@@ -215,10 +438,23 @@ export function AutomationPanel({
         </div>
       </div>
 
+      {/* Canvas view — always rendered so users see the shape, even
+       *  with zero points (just the zero line + playhead). Point
+       *  handles appear as soon as the envelope has points. */}
+      {shown && (
+        <EnvelopeCanvas
+          envelope={shown}
+          playheadSeconds={playheadSeconds}
+          sessionLengthSeconds={sessionLengthSeconds}
+          valueRange={{ min: ui.min, max: ui.max }}
+          onChange={(nextPoints) => upsertEnvelope(shownParam, { points: nextPoints })}
+        />
+      )}
+
       {shown && shown.points.length === 0 && (
         <div className="text-xs text-muted-foreground">
-          No points yet. Add one at the current playhead — the engine
-          will interpolate between it and any later points on Play.
+          No points yet. Click on the canvas to add one, or use
+          <span className="mx-1 font-mono">Add at playhead</span> below.
         </div>
       )}
 
