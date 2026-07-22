@@ -15,6 +15,7 @@ import { Loader2, Library, Home, Mic, ExternalLink, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface Score {
   id: string;
@@ -105,18 +106,21 @@ export default function DeepLinkPicker() {
 
   if (!handle) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center p-6">
           <Card className="max-w-md"><CardContent className="p-6 text-center">
             <p className="text-sm text-muted-foreground">This page is only reachable from a Canvas Deep Linking launch.</p>
           </CardContent></Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="bg-background p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <header>
@@ -225,6 +229,7 @@ export default function DeepLinkPicker() {
         </section>
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

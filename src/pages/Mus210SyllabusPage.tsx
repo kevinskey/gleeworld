@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Printer, Music, Users, Calendar, Target } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const Mus210SyllabusPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,7 +16,8 @@ const Mus210SyllabusPage: React.FC = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="min-h-screen bg-background">
         {/* Action Bar - hidden in print */}
         <div className="print:hidden sticky top-16 z-20 bg-background/95 backdrop-blur border-b border-border">
@@ -440,6 +442,7 @@ const Mus210SyllabusPage: React.FC = () => {
           </footer>
         </div>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

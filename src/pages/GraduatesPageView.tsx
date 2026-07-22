@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { GraduatesPageHero } from '@/components/graduates/GraduatesPageHero';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,16 +35,19 @@ export default function GraduatesPageView() {
   };
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex-1 flex items-center justify-center py-20">
           <LoadingSpinner size="lg" text="Loading Graduates Portal..." />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   if (error) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex-1 container mx-auto px-4 py-20">
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6 text-center">
@@ -52,12 +56,14 @@ export default function GraduatesPageView() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   if (sections.length === 0) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex-1 container mx-auto px-4 py-20">
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-12 pb-12 text-center">
@@ -75,7 +81,8 @@ export default function GraduatesPageView() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
   return (

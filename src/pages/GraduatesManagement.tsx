@@ -6,6 +6,7 @@ import { GraduatesManagementModule } from "@/components/modules/GraduatesManagem
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 export default function GraduatesManagement() {
   const { user, loading: authLoading } = useAuth();
@@ -14,11 +15,13 @@ export default function GraduatesManagement() {
 
   if (authLoading || profileLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center min-h-[60vh]">
           <LoadingSpinner />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -28,7 +31,8 @@ export default function GraduatesManagement() {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-8">
         <Button
           variant="ghost"
@@ -40,6 +44,7 @@ export default function GraduatesManagement() {
         </Button>
         <GraduatesManagementModule isFullPage={true} />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

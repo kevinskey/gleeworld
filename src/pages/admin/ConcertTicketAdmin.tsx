@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -130,14 +131,17 @@ const ConcertTicketAdmin: React.FC = () => {
 
   if (isLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <LoadingSpinner size="lg" text="Loading ticket requests..." />
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto py-8 px-4">
         <Card>
           <CardHeader>
@@ -377,6 +381,7 @@ const ConcertTicketAdmin: React.FC = () => {
           </DialogContent>
         </Dialog>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

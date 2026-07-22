@@ -21,6 +21,7 @@ import { createPartTracksProject, deletePartTracksProject, type PartTracksProjec
 import { PartTracksStudio } from '@/components/partTracks/PartTracksStudio';
 import { AccompanimentPicker } from '@/components/partTracks/AccompanimentPicker';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface ScoreOption {
   id: string;
@@ -40,9 +41,11 @@ export default function PartTracksLandingPage() {
 
   if (projectId) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <PartTracksStudio projectId={projectId} />
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -80,7 +83,8 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
   }, [projects, search]);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Part Tracks Studio"
       icon={Disc3}
@@ -185,6 +189,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
         onCreated={(id) => { setCreating(false); refetch(); onOpen(id); }}
       />
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

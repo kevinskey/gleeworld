@@ -4,10 +4,12 @@ import { QRScanHistory } from '@/components/qr/QRScanHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const QRGeneratorPage = () => {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
         title="QR Code Management"
         subtitle="Generate QR codes and view scan history for GleeWorld attendance tracking."
@@ -55,6 +57,7 @@ const QRGeneratorPage = () => {
             </TabsContent>
           </Tabs>
       </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

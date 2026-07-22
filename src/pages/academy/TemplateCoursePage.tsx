@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 type Exercise = { id: string; sort_order: number; type: string; data: any };
 type Listening = { title?: string; composer?: string; url?: string };
@@ -73,24 +74,28 @@ export default function TemplateCoursePage() {
 
   if (isLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="flex items-center justify-center py-16">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!course) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="flex flex-col items-center justify-center gap-3 py-16">
         <p className="text-muted-foreground">Course not found.</p>
         <Button variant="outline" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-4 h-4 mr-1.5" /> Back
         </Button>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -99,7 +104,8 @@ export default function TemplateCoursePage() {
   const lessonCount = units.reduce((n, u) => n + u.gw_academy_lessons.length, 0);
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       <div>
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="-ml-2 mb-2">
@@ -129,6 +135,7 @@ export default function TemplateCoursePage() {
         ))}
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

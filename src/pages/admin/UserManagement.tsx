@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RosterImport } from "@/components/admin/RosterImport";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 interface UserProfile {
   id: string;
   user_id: string;
@@ -144,16 +145,19 @@ const updateUserRole = async (userId: string, newRole: string) => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-20">
           <div className="text-center">Loading users...</div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -369,6 +373,7 @@ const updateUserRole = async (userId: string, newRole: string) => {
       </Card>
 
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

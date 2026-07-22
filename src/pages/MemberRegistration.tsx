@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Heart, Mail, Lock, AlertCircle, CheckCircle, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
@@ -375,7 +376,8 @@ const MemberRegistration = () => {
   );
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           {/* Hero Section */}
@@ -409,6 +411,7 @@ const MemberRegistration = () => {
           </div>
         </div>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

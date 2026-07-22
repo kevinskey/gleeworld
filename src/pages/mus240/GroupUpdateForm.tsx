@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -205,17 +206,20 @@ export default function GroupUpdateForm() {
 
   if (enrollmentLoading || roleLoading || loadingGroups) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center h-64">
           <LoadingSpinner />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!user) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Card className="border-amber-200 bg-amber-50">
             <CardHeader>
@@ -226,14 +230,16 @@ export default function GroupUpdateForm() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   // Allow admins and super admins to bypass enrollment check
   if (!isEnrolled() && !isAdmin() && !isSuperAdmin()) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Card className="border-amber-200 bg-amber-50">
             <CardHeader>
@@ -247,7 +253,8 @@ export default function GroupUpdateForm() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 

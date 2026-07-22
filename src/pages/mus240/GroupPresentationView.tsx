@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, ChevronLeft, ChevronRight, Presentation, ExternalLink, Users, Target, TrendingUp, Package, AlertCircle, CheckSquare, Link2 } from 'lucide-react';
@@ -350,11 +351,13 @@ export default function GroupPresentationView() {
   // Early return for loading/error states
   if (loading || !update) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
           <LoadingSpinner />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 

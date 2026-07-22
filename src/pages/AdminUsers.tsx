@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { UnifiedUserManagement } from '@/components/admin/UnifiedUserManagement';
 import { Loader2 } from 'lucide-react';
 
@@ -19,22 +20,26 @@ const AdminUsers = () => {
 
   if (authLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex items-center gap-2 text-brand-600">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span>Loading...</span>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="px-4 md:px-0">
         <UnifiedUserManagement />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

@@ -36,6 +36,7 @@ import { MyMusicTab } from '@/components/music-library/MyMusicTab';
 import { getSignedUrl } from '@/utils/storage';
 import { BookOpen as BookOpenIcon } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SetlistBuilder = lazy(() =>
   import('@/components/music-library/SetlistBuilder').then((m) => ({ default: m.SetlistBuilder })),
@@ -222,7 +223,8 @@ export default function MusicLibraryPage() {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Music Library"
       subtitle="Sheet music scores across your ensembles. Other media types live in the Media Library."
@@ -515,6 +517,7 @@ export default function MusicLibraryPage() {
 
       <CopyrightPolicyLink />
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

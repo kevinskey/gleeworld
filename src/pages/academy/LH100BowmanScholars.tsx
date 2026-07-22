@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -176,7 +177,8 @@ export default function LH100BowmanScholars() {
   ];
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-4 sm:py-6 max-w-6xl">
         {/* Header */}
         <div className="flex flex-col gap-4 mb-6">
@@ -593,6 +595,7 @@ export default function LH100BowmanScholars() {
         )}
 
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

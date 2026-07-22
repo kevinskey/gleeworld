@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { Plus, Settings } from 'lucide-react';
@@ -31,7 +32,8 @@ const GradingAdminDashboard: React.FC = () => {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto py-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -69,6 +71,7 @@ const GradingAdminDashboard: React.FC = () => {
           onOpenChange={setCreateDialogOpen}
         />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

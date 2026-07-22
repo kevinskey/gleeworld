@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { TestScoresView } from '@/components/test-builder/TestScoresView';
 import { MidtermSubmissionAnalytics } from '@/components/mus240/admin/MidtermSubmissionAnalytics';
 
@@ -17,7 +18,8 @@ export default function TestScoresPage() {
   const isMus240Midterm = testId === MUS240_MIDTERM_TEST_ID;
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto py-6">
         {isMus240Midterm ? (
           <MidtermSubmissionAnalytics />
@@ -25,6 +27,7 @@ export default function TestScoresPage() {
           <TestScoresView testId={testId} />
         )}
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

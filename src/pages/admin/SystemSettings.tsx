@@ -5,10 +5,12 @@ import { Settings, Globe, Lock, Database } from "lucide-react";
 import { CountdownManager } from "@/components/admin/countdown/CountdownManager";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SystemSettings = () => {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
       title="System Settings"
       subtitle="Platform configuration and preferences"
@@ -108,6 +110,7 @@ const SystemSettings = () => {
         </Card>
       </div>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

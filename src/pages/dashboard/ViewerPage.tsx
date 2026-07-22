@@ -31,6 +31,7 @@ import { useViewerSetlists, useSetlistScores, type ViewerSetlist } from '@/hooks
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const ViewerReader = lazy(() =>
   import('@/components/viewer/ViewerReader').then((m) => ({ default: m.ViewerReader })),
@@ -68,13 +69,15 @@ export default function ViewerPage() {
   //     to the landing, not the dashboard, so the list is one tap away.
   if (!scoreId) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <ViewerLanding
           onOpenScore={(id, setlist) =>
             navigate(`/dashboard/viewer/${id}${setlist ? `?setlist=${setlist}` : ''}`)
           }
         />
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 

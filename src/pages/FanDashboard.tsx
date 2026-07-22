@@ -8,6 +8,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigate, Link } from "react-router-dom";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { toast } from "sonner";
 import { GleeAcademyDashboardCard } from "@/components/user-dashboard/GleeAcademyDashboardCard";
@@ -132,11 +133,13 @@ export default function FanDashboard() {
 
   if (loading || loadingStats) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center min-h-[60vh]">
           <LoadingSpinner />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -146,7 +149,8 @@ export default function FanDashboard() {
 function FanDashboardBody({ fanStats, upcomingEvents, handleRSVP }: { fanStats: FanStats | null; upcomingEvents: UpcomingEvent[]; handleRSVP: (eventId: string) => void }) {
   const { data: fanHeroSlides = [] } = useUniversalHeroSlides('fan_landing_hero');
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-6 space-y-6">
 
         {/* Fan-specific hero — admin sets slides at /admin/sliders for slot
@@ -357,6 +361,7 @@ function FanDashboardBody({ fanStats, upcomingEvents, handleRSVP }: { fanStats: 
           </CardContent>
         </Card>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

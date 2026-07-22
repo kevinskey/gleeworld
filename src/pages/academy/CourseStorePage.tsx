@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -76,7 +77,8 @@ export default function CourseStorePage() {
   });
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Course Store"
       subtitle="Adopt a pre-built course into your tenant. You can edit everything after."
@@ -131,6 +133,7 @@ export default function CourseStorePage() {
         </div>
       )}
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

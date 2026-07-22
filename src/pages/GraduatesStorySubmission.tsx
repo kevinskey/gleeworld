@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { AddStoryDialog } from "@/components/graduates/AddStoryDialog";
 import { BookOpenIcon, PlusIcon, CheckCircleIcon, ClockIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -76,17 +77,20 @@ export default function GraduatesStorySubmission() {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!isVerifiedAlumna) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Card>
             <CardContent className="text-center py-12">
@@ -102,12 +106,14 @@ export default function GraduatesStorySubmission() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -260,6 +266,7 @@ export default function GraduatesStorySubmission() {
           onStoryAdded={handleStoryAdded}
         />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

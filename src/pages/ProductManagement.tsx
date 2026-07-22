@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 // Feature flag for subscriptions
 const FEATURE_SUBSCRIPTIONS_ENABLED = false;
@@ -90,9 +91,11 @@ export const ProductManagement = () => {
 
   if (moduleLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-6 text-sm text-muted-foreground">Loading…</div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -102,7 +105,8 @@ export const ProductManagement = () => {
   // management surface. Mirrors BoxOfficePage's !hasAccess state.
   if (!hasStore) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
           <Card>
             <CardHeader>
@@ -125,11 +129,13 @@ export const ProductManagement = () => {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
-  return <UniversalLayout><DashboardPageShell
+  return <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell><DashboardPageShell
       title="Merch Store Management"
       subtitle="Manage products, orders, and customers"
       icon={Store}
@@ -235,5 +241,6 @@ export const ProductManagement = () => {
 
       {/* Order Detail Drawer */}
       <OrderDetailDrawer orderId={selectedOrderId} isOpen={isOrderDrawerOpen} onClose={handleCloseOrderDrawer} />
-    </DashboardPageShell></UniversalLayout>;
+    </DashboardPageShell></DashboardShell>
+    </UniversalLayout>;
 };

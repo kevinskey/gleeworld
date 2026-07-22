@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { StudentTestTaking } from '@/components/test-builder/StudentTestTaking';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -13,7 +14,8 @@ export default function StudentTestPage() {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto py-6">
         <Button
           variant="outline"
@@ -26,6 +28,7 @@ export default function StudentTestPage() {
         </Button>
         <StudentTestTaking testId={testId} />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

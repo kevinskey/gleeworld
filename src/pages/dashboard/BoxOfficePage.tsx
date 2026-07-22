@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { listBoxOfficeEvents, createBoxOfficeEvent, slugify, type BoxOfficeEvent } from '@/lib/boxOffice/api';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function BoxOfficePage() {
   const { hasAccess, isLoading: moduleLoading } = useModuleAccess('box_office');
@@ -67,9 +68,11 @@ export default function BoxOfficePage() {
 
   if (moduleLoading || roleLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-6 text-sm text-muted-foreground">Loading…</div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -78,7 +81,8 @@ export default function BoxOfficePage() {
   // organization's tickets are still one click away.
   if (!isAdmin()) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
           <Card>
             <CardHeader>
@@ -93,13 +97,15 @@ export default function BoxOfficePage() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!hasAccess) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
           <Card>
             <CardHeader>
@@ -122,7 +128,8 @@ export default function BoxOfficePage() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -130,7 +137,8 @@ export default function BoxOfficePage() {
   const ready = connected && stripe?.stripe_charges_enabled;
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div>
@@ -255,6 +263,7 @@ export default function BoxOfficePage() {
 
       <EventsSection />
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

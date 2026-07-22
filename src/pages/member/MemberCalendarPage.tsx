@@ -7,17 +7,20 @@ import { usePublicGleeWorldEvents } from '@/hooks/usePublicGleeWorldEvents';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const MemberCalendarPage = () => {
   const { events, loading, getUpcomingEvents } = usePublicGleeWorldEvents();
   
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -30,7 +33,8 @@ const MemberCalendarPage = () => {
   });
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Back Navigation */}
@@ -206,6 +210,7 @@ const MemberCalendarPage = () => {
         </div>
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

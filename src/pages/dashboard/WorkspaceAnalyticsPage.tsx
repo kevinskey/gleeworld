@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -115,7 +116,8 @@ export default function WorkspaceAnalyticsPage() {
   const isLoading = profiles.length === 0 && courses.length === 0;
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Workspace Analytics"
       icon={TrendingUp}
@@ -182,6 +184,7 @@ export default function WorkspaceAnalyticsPage() {
         </>
       )}
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

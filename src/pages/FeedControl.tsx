@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -164,7 +165,8 @@ export default function FeedControl() {
   );
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Feed Control"
       icon={Rss}
@@ -272,6 +274,7 @@ export default function FeedControl() {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

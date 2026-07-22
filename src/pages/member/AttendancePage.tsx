@@ -16,6 +16,7 @@ import { AttendancePolicyModal } from '@/components/attendance/AttendancePolicyM
 import { AttendanceDashboard } from '@/components/attendance/AttendanceDashboard';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
@@ -29,30 +30,35 @@ const AttendancePage = () => {
   const isExecBoard = Boolean(userProfile?.is_exec_board);
   if (isAdminLike || isExecBoard) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
           <div className="max-w-7xl mx-auto animate-fade-in">
             <AttendanceDashboard />
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   const stats = getAttendanceStats();
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Attendance"
       subtitle="Track your attendance and submit excuses"
@@ -269,6 +275,7 @@ const AttendancePage = () => {
         onClose={() => setIsPolicyModalOpen(false)}
       />
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

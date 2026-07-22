@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Timer, Flame, Trash2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export default function PracticeLog() {
   const { user } = useAuth();
@@ -71,7 +72,8 @@ export default function PracticeLog() {
   });
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell title="Practice Log" icon={Timer} maxWidth="4xl">
       <div className="grid grid-cols-2 gap-3">
         <Card>
@@ -128,6 +130,7 @@ export default function PracticeLog() {
         </CardContent>
       </Card>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

@@ -18,6 +18,7 @@ import {
 } from '@/hooks/useCanvasAcademy';
 import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface RatingDraft { description: string; points: number }
 interface CriterionDraft { description: string; long_description: string; points: number; ratings: RatingDraft[] }
@@ -39,7 +40,8 @@ export default function CanvasRubricsPage() {
   const editing = isNew || rubricId !== null;
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto space-y-5">
       <div>
         <Link to={`/academy/canvas/courses/${courseId}`} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -52,6 +54,7 @@ export default function CanvasRubricsPage() {
         ? <RubricEditor courseId={courseId!} rubricId={rubricId} />
         : <RubricList courseId={courseId!} />}
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

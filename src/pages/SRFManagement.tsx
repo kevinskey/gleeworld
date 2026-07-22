@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
 import { useNavigate } from "react-router-dom";
 import { useSRFAssignments } from "@/hooks/useSRFAssignments";
@@ -22,7 +23,8 @@ export const SRFManagement = () => {
   const { assignments: srfAssignments, loading, createAssignment, sendReminder } = useSRFAssignments();
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
         title="SRF Management"
         icon={BookOpen}
@@ -107,6 +109,7 @@ export const SRFManagement = () => {
           </CardContent>
         </Card>
       </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

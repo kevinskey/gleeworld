@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Database, HardDrive, Download, Upload } from "lucide-react";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const DatabaseAdmin = () => {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
       title="Database Administration"
       subtitle="Advanced database operations and backups"
@@ -89,6 +91,7 @@ const DatabaseAdmin = () => {
         </Card>
       </div>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface AcademyCourse {
   id: string;
@@ -232,7 +233,8 @@ export default function AcademyCoursesAdmin() {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Glee Academy Courses"
       icon={GraduationCap}
@@ -488,6 +490,7 @@ export default function AcademyCoursesAdmin() {
         </DialogContent>
       </Dialog>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

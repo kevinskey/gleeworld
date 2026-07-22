@@ -46,6 +46,7 @@ import { useBlockPageEditor } from '@/hooks/useBlockPageEditor';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { BLOCK_LIST, getBlockModule, isBlockAvailable } from '@/components/public-site/registry';
 import { AutoForm } from '@/components/public-site/AutoForm';
 import { fontStack, safeConfig, type SiteBlock, type SiteRenderContext } from '@/components/public-site/types';
@@ -169,15 +170,18 @@ export default function FanPageEditor() {
 
   if (editor.pageLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="p-10 text-center text-muted-foreground">Loading…</div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!editor.page) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="max-w-xl mx-auto px-4 py-16">
           <Card>
             <CardHeader className="text-center">
@@ -196,14 +200,16 @@ export default function FanPageEditor() {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   const existingBlockTypes = new Set(editor.blocks.map((b) => b.block_type));
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
       title="Fan page"
       maxWidth="7xl"
@@ -395,6 +401,7 @@ export default function FanPageEditor() {
         </Card>
       </div>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

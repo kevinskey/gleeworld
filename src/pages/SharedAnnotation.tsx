@@ -7,6 +7,7 @@ import { AlertCircle, Download, Eye, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 interface SharedAnnotation {
   id: string;
@@ -144,7 +145,8 @@ export const SharedAnnotation = () => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="container mx-auto py-8">
           <div className="flex items-center justify-center">
             <div className="text-center">
@@ -153,13 +155,15 @@ export const SharedAnnotation = () => {
             </div>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (error || !annotation) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="container mx-auto py-8">
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-8">
@@ -169,12 +173,14 @@ export const SharedAnnotation = () => {
             </CardContent>
           </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="container mx-auto py-8 space-y-6">
       {/* Header */}
       <Card>
@@ -264,6 +270,7 @@ export const SharedAnnotation = () => {
         </CardContent>
       </Card>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

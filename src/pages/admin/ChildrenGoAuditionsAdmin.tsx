@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface Audition {
   id: string;
@@ -114,18 +115,21 @@ export default function ChildrenGoAuditionsAdmin() {
   if (loading) {
     return (
       <AdminOnlyRoute>
-        <UniversalLayout>
+        <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
           <div className="flex items-center justify-center min-h-screen">
             <LoadingSpinner size="lg" />
           </div>
-        </UniversalLayout>
+        </DashboardShell>
+    </UniversalLayout>
       </AdminOnlyRoute>
     );
   }
 
   return (
     <AdminOnlyRoute>
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <DashboardPageShell
         title="Children Go Auditions"
         subtitle='Review and manage "Children, Go Where I Send Thee" rap auditions'
@@ -214,7 +218,8 @@ export default function ChildrenGoAuditionsAdmin() {
           )}
         </div>
       </DashboardPageShell>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     </AdminOnlyRoute>
   );
 }

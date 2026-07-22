@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { ConsolidatedStatsCards } from "@/components/ConsolidatedStatsCards";
 import { ContractCreationCollapsible } from "@/components/ContractCreationCollapsible";
 import { ContractTemplatesCollapsible } from "@/components/ContractTemplatesCollapsible";
@@ -146,22 +147,26 @@ const Index = () => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <LoadingSpinner size="lg" text="Loading contracts..." />
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (error) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-20">
           <ErrorState 
             message={error} 
             onRetry={refetch}
           />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 

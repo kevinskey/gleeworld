@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface ScanStats {
   total_scans: number;
@@ -174,7 +175,8 @@ export default function QRAnalytics() {
 
   if (!user) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="container mx-auto py-6 px-4">
           <Alert>
             <AlertTriangle className="h-4 w-4" />
@@ -183,13 +185,15 @@ export default function QRAnalytics() {
             </AlertDescription>
           </Alert>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="container mx-auto py-6 px-4">
           <Alert>
             <AlertTriangle className="h-4 w-4" />
@@ -198,25 +202,29 @@ export default function QRAnalytics() {
             </AlertDescription>
           </Alert>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="container mx-auto py-6 px-4">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <p className="mt-2 text-muted-foreground">Loading analytics...</p>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell title="QR Code Analytics" icon={QrCode}>
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -344,6 +352,7 @@ export default function QRAnalytics() {
         </CardContent>
       </Card>
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

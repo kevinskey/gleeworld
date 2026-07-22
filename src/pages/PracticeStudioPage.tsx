@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,7 +43,8 @@ const PracticeStudioPage: React.FC = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="space-y-6">
         {/* Header */}
         <div className="border-b border-border pb-6">
@@ -169,6 +171,7 @@ const PracticeStudioPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

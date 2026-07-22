@@ -1,4 +1,5 @@
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,7 +25,8 @@ import { getOrgName } from "@/lib/orgName";
 
 const Tour2026Page = () => {
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Hero Section */}
         <div className="relative rounded-3xl overflow-hidden mb-8 bg-gradient-to-br from-primary via-primary/80 to-primary/60 p-8 md:p-12">
@@ -196,6 +198,7 @@ const Tour2026Page = () => {
           </TabsContent>
         </Tabs>
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

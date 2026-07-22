@@ -1,13 +1,15 @@
 import React from 'react';
 import { MemberSightReadingStudio } from '@/components/member-sight-reading/MemberSightReadingStudio';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { useAuth } from '@/contexts/AuthContext';
 
 const MemberSightReadingStudioPage: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <MemberSightReadingStudio
         user={user ? {
           id: user.id,
@@ -16,6 +18,7 @@ const MemberSightReadingStudioPage: React.FC = () => {
           role: user.user_metadata?.role,
         } : undefined}
       />
+    </DashboardShell>
     </UniversalLayout>
   );
 };

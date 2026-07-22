@@ -3,6 +3,7 @@ import { JournalBrowserForReview } from '@/components/mus240/peer-review/Journal
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
@@ -24,7 +25,8 @@ export const PeerReviewBrowserPage = () => {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="max-w-6xl mx-auto px-4 py-8">
         <Button 
           variant="ghost" 
@@ -44,6 +46,7 @@ export const PeerReviewBrowserPage = () => {
 
         <JournalBrowserForReview />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Sparkles, Copy, Loader2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 type Mode = 'plan' | 'warmup' | 'notes' | 'letter';
 
@@ -94,7 +95,8 @@ export default function AIRehearsalAssistant() {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       maxWidth="4xl"
       title="AI Rehearsal Assistant"
@@ -183,6 +185,7 @@ export default function AIRehearsalAssistant() {
         </Card>
       )}
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

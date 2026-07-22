@@ -10,11 +10,13 @@ import { RoleTransitionManager } from '@/components/admin/RoleTransitionManager'
 import { UnifiedUserManagement } from '@/components/admin/UnifiedUserManagement';
 import { ROUTES } from '@/constants/routes';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 const AccessControl = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="container mx-auto p-6 space-y-6">
       <PageHeader
         title="Access Control"
@@ -115,6 +117,7 @@ const AccessControl = () => {
         <UnifiedUserManagement />
       </section>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

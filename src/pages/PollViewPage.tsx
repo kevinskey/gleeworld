@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 interface PollOption {
   id: string;
@@ -170,7 +171,8 @@ export default function PollViewPage() {
 
   if (!user) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="flex items-center justify-center p-4 py-12">
         <Card className="max-w-md w-full">
           <CardHeader>
@@ -189,23 +191,27 @@ export default function PollViewPage() {
           </CardContent>
         </Card>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (error || !poll) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="flex items-center justify-center p-4 py-12">
         <Card className="max-w-md w-full">
           <CardHeader>
@@ -225,7 +231,8 @@ export default function PollViewPage() {
           </CardContent>
         </Card>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -239,7 +246,8 @@ export default function PollViewPage() {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="p-4">
       <div className="max-w-2xl mx-auto space-y-4">
         <Button 
@@ -418,6 +426,7 @@ export default function PollViewPage() {
         </Card>
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 }

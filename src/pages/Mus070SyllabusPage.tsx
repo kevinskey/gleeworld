@@ -1,5 +1,6 @@
 import React from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { SyllabusTemplate } from '@/components/academy/syllabus/SyllabusTemplate';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Printer } from 'lucide-react';
@@ -13,7 +14,8 @@ const Mus070SyllabusPage: React.FC = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="min-h-screen bg-background">
         {/* Action Bar - hidden in print */}
         <div className="print:hidden sticky top-16 z-20 bg-background/95 backdrop-blur border-b border-border">
@@ -54,6 +56,7 @@ const Mus070SyllabusPage: React.FC = () => {
           officeHours="Monday & Wednesday, 3:00–5:00 PM (or by appointment)"
         />
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

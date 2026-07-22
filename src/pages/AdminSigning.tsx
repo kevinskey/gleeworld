@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { SignatureCanvas } from "@/components/SignatureCanvas";
 import { EmbeddedSignature } from "@/types/contractSigning";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
 interface ContractSignature {
   id: string;
@@ -264,19 +265,22 @@ const AdminSigning = () => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="flex items-center space-x-2">
             <Loader2 className="h-6 w-6 animate-spin" />
             <span>Loading pending contracts...</span>
           </div>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="space-y-6">
 
         {pendingContracts.length === 0 ? (
@@ -408,6 +412,7 @@ const AdminSigning = () => {
           </div>
         )}
       </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

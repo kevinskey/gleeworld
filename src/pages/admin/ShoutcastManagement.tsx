@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { 
   Radio, 
@@ -278,16 +279,19 @@ export const ShoutcastManagement = () => {
 
   if (loading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="flex items-center justify-center py-20">
           <RefreshCw className="h-8 w-8 animate-spin" />
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <DashboardPageShell
         title="Shoutcast Management"
         subtitle="Manage your Shoutcast streaming infrastructure"
@@ -701,6 +705,7 @@ export const ShoutcastManagement = () => {
           </DialogContent>
         </Dialog>
       </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

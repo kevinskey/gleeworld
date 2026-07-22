@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +17,8 @@ const BownaScholarLanding = () => {
 
   return (
     <TooltipProvider>
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
         <div className="container mx-auto px-6 py-8 max-w-4xl">
           {/* Hero Section */}
           <div className="text-center mb-12">
@@ -400,7 +402,8 @@ const BownaScholarLanding = () => {
           </CardContent>
         </Card>
         </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     </TooltipProvider>
   );
 };

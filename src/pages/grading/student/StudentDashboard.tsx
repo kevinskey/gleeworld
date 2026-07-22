@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { StudentDashboardContent } from '@/components/grading/student/StudentDashboardContent';
 
@@ -19,8 +20,10 @@ const StudentDashboard: React.FC = () => {
   }
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <StudentDashboardContent />
+    </DashboardShell>
     </UniversalLayout>
   );
 };

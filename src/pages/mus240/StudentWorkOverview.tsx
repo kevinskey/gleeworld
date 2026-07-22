@@ -31,6 +31,7 @@ import { convertToSecureUrl } from '@/utils/secureFileAccess';
 import { StudentGradeSummary } from '@/components/mus240/instructor/StudentGradeSummary';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 export const StudentWorkOverview = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -79,21 +80,25 @@ export const StudentWorkOverview = () => {
 
   if (isLoading) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg">Loading student information...</div>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
   if (!user) {
     return (
-      <UniversalLayout>
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
       <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg text-red-600">Student not found</div>
       </div>
-      </UniversalLayout>
+      </DashboardShell>
+    </UniversalLayout>
     );
   }
 
@@ -247,7 +252,8 @@ export const StudentWorkOverview = () => {
   };
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
@@ -486,6 +492,7 @@ export const StudentWorkOverview = () => {
         </Tabs>
       </div>
     </div>
+    </DashboardShell>
     </UniversalLayout>
   );
 };

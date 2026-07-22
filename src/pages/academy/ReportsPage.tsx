@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -94,7 +95,8 @@ export default function ReportsPage() {
   const loading = cLoading;
 
   return (
-    <UniversalLayout>
+    <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
     <DashboardPageShell
       title="Reports"
       subtitle="A snapshot of each course — class size, grade average, what's pending, who needs help."
@@ -153,6 +155,7 @@ export default function ReportsPage() {
         </div>
       )}
     </DashboardPageShell>
+    </DashboardShell>
     </UniversalLayout>
   );
 }
