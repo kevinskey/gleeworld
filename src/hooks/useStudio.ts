@@ -748,16 +748,14 @@ export function useStudioEngine(session: Session | null) {
           NativeStudio.setTrackOutput({ trackId, targetBusId }),
         setBusOutput: (busId: string, targetBusId: string) =>
           NativeStudio.setBusOutput({ busId, targetBusId }),
-        // Automation touch/release — native mirror ships in a follow-up
-        // (needs an Automation.suspend/resume in AutomationScheduler.swift).
-        // No-op on native for now; Read + Write still work because the
-        // envelope points are persisted in the session and the native
-        // scheduler applies them like the web engine does.
-        touchAutomation: (_kind: 'track' | 'bus', _id: string, _param: 'volume_db' | 'pan') => {
-          /* native mirror pending */
+        // Automation touch/release — native AutomationScheduler
+        // suspends/resumes the envelope so live fader/pan writes are
+        // uncontested. Fire-and-forget: the mixer never awaits these.
+        touchAutomation: (kind: 'track' | 'bus', id: string, param: 'volume_db' | 'pan') => {
+          void NativeStudio.touchAutomation({ kind, id, param });
         },
-        releaseAutomation: (_kind: 'track' | 'bus', _id: string, _param: 'volume_db' | 'pan') => {
-          /* native mirror pending */
+        releaseAutomation: (kind: 'track' | 'bus', id: string, param: 'volume_db' | 'pan') => {
+          void NativeStudio.releaseAutomation({ kind, id, param });
         },
       };
     }

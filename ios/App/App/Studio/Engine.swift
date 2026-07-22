@@ -975,6 +975,30 @@ public final class StudioNativeEngine {
         )
     }
 
+    /// Mark an envelope as physically manipulated by the user; the
+    /// automation scheduler stops writing this envelope until release,
+    /// so live fader/pan updates from the mixer are uncontested.
+    /// Idempotent — safe to call before playback or when nothing is
+    /// armed yet (the scheduler tracks suspensions across re-arm).
+    public func touchAutomation(
+        kind: Studio.AutomationTargetKind,
+        id: String,
+        param: Studio.AutomationParam,
+    ) {
+        automationScheduler.touch(kind: kind, id: id, param: param)
+    }
+
+    /// Release a previously touched envelope; the scheduler resumes
+    /// writing this envelope on the next tick. Idempotent — safe to
+    /// call when the envelope isn't currently touched.
+    public func releaseAutomation(
+        kind: Studio.AutomationTargetKind,
+        id: String,
+        param: Studio.AutomationParam,
+    ) {
+        automationScheduler.release(kind: kind, id: id, param: param)
+    }
+
     public func pause() {
         cancelCountIn()
         wantsPlayback = false   // deliberate stop — don't auto-resume

@@ -25,15 +25,22 @@
 import Foundation
 
 public final class AutomationScheduler {
-    /// Envelope + resolved writer closure. One entry per read-mode
-    /// automation in the session.
+    /// Envelope + resolved writer closure. One entry per applicable
+    /// automation in the session (read / touch / latch).
     private struct Active {
         let entry: Studio.Automation
         let writer: (Double) -> Void
+        /// Stable identity key so a mid-play suspend/resume can filter
+        /// one envelope in/out without a rescan. Matches the string
+        /// the web engine builds in envelopeKey().
+        let key: String
     }
     private var active: [Active] = []
     private var timer: Timer?
     private var positionProvider: (() -> Double)?
+    /// Envelope keys currently suspended by touch — the tick skips them
+    /// so the mixer's live fader writes are uncontested.
+    private var suspendedKeys = Set<String>()
 
     /// Fires 60 times per second during playback — 16.67 ms cadence.
     /// Matches display refresh so a fader driven by automation looks
@@ -43,13 +50,24 @@ public final class AutomationScheduler {
 
     public init() {}
 
+    /// Stable key for one (kind, id, param) envelope — must match the
+    /// string the web engine builds in envelopeKey().
+    public static func envelopeKey(
+        kind: Studio.AutomationTargetKind,
+        id: String,
+        param: Studio.AutomationParam,
+    ) -> String {
+        return "\(kind.rawValue):\(id):\(param.rawValue)"
+    }
+
     /// Arm the scheduler for a fresh play(). Every previously-active
     /// envelope is cancelled first so re-arming from a different
     /// transport position doesn't stack timers.
     ///
     /// - Parameters:
-    ///   - automation: session.automation entries. Only entries with
-    ///     `.mode == .read` are applied.
+    ///   - automation: session.automation entries. Entries with
+    ///     `.mode` in `{read, touch, latch}` are applied; `off` and
+    ///     `write` never schedule.
     ///   - positionProvider: closure returning the current transport
     ///     position in seconds. Called every timer tick.
     ///   - targetResolver: closure that maps (target_id, target_kind,
@@ -60,19 +78,33 @@ public final class AutomationScheduler {
         positionProvider: @escaping () -> Double,
         targetResolver: (String, Studio.AutomationTargetKind, Studio.AutomationParam) -> ((Double) -> Void)?,
     ) {
+        // Preserve the caller's touch/latch suspensions across a
+        // re-arm — the mixer keeps holding those envelopes.
+        let carriedSuspensions = suspendedKeys
         cancel()
+        suspendedKeys = carriedSuspensions
         self.positionProvider = positionProvider
-        for entry in automation where entry.mode == .read && !entry.points.isEmpty {
+        for entry in automation where !entry.points.isEmpty {
+            switch entry.mode {
+            case .off, .write:
+                continue
+            case .read, .touch, .latch:
+                break
+            }
             guard let writer = targetResolver(entry.target_id, entry.target_kind, entry.param) else {
                 continue
             }
+            let key = Self.envelopeKey(kind: entry.target_kind, id: entry.target_id, param: entry.param)
             // Prime with the value at the current transport position so
             // playback starts at the right level rather than jumping on
-            // the first tick.
-            if let v = Studio.automationValueAt(points: entry.points, atSeconds: positionProvider()) {
+            // the first tick — but skip primed writes for suspended
+            // envelopes so a live fader hold isn't yanked back.
+            if !suspendedKeys.contains(key),
+               let v = Studio.automationValueAt(points: entry.points, atSeconds: positionProvider())
+            {
                 writer(v)
             }
-            active.append(Active(entry: entry, writer: writer))
+            active.append(Active(entry: entry, writer: writer, key: key))
         }
         if active.isEmpty { return }
         // Weak self so a stray extra tick after cancel() (rare — the
@@ -82,6 +114,7 @@ public final class AutomationScheduler {
             guard let self = self, let pp = self.positionProvider else { return }
             let pos = pp()
             for a in self.active {
+                if self.suspendedKeys.contains(a.key) { continue }
                 if let v = Studio.automationValueAt(points: a.entry.points, atSeconds: pos) {
                     a.writer(v)
                 }
@@ -89,12 +122,35 @@ public final class AutomationScheduler {
         }
     }
 
+    /// Mark an envelope as touched — subsequent ticks skip it so the
+    /// mixer's live fader write is the sole source of truth.
+    public func touch(
+        kind: Studio.AutomationTargetKind,
+        id: String,
+        param: Studio.AutomationParam,
+    ) {
+        suspendedKeys.insert(Self.envelopeKey(kind: kind, id: id, param: param))
+    }
+
+    /// Release a previously-touched envelope. The scheduler resumes
+    /// writing this envelope on the next tick.
+    public func release(
+        kind: Studio.AutomationTargetKind,
+        id: String,
+        param: Studio.AutomationParam,
+    ) {
+        suspendedKeys.remove(Self.envelopeKey(kind: kind, id: id, param: param))
+    }
+
     /// Stop writing. Called on pause / stop / seek / dispose.
-    /// Idempotent — safe to call when nothing is armed.
+    /// Idempotent — safe to call when nothing is armed. Clears touch
+    /// suspensions too since transport stop clears latch on the web
+    /// side; the mixer will re-issue touches on the next Play.
     public func cancel() {
         timer?.invalidate()
         timer = nil
         active.removeAll()
         positionProvider = nil
+        suspendedKeys.removeAll()
     }
 }
