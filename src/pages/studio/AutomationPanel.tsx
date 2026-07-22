@@ -169,13 +169,20 @@ export function AutomationPanel({
           </SelectContent>
         </Select>
         <div className="flex-1" />
-        {modeValue === 'write' && (
+        {(modeValue === 'write' || modeValue === 'touch' || modeValue === 'latch') && (
           <span
             className="text-[10px] font-semibold uppercase tracking-wide text-red-500 inline-flex items-center gap-1 animate-pulse"
             aria-live="polite"
+            title={
+              modeValue === 'write'
+                ? 'Every fader/pan move captures a point at the playhead'
+                : modeValue === 'touch'
+                  ? 'Captures only while you hold the fader/knob'
+                  : 'Captures once touched, keeps writing until Stop'
+            }
           >
             <Circle className="w-2.5 h-2.5 fill-current" />
-            Writing
+            {modeValue === 'write' ? 'Writing' : modeValue === 'touch' ? 'Touch' : 'Latch'}
           </span>
         )}
         <div
@@ -183,7 +190,7 @@ export function AutomationPanel({
           aria-label="Automation mode"
           className="inline-flex rounded border border-border overflow-hidden text-[11px] font-semibold"
         >
-          {(['off', 'read', 'write'] as AutomationMode[]).map((m) => (
+          {(['off', 'read', 'touch', 'latch', 'write'] as AutomationMode[]).map((m) => (
             <button
               key={m}
               type="button"
@@ -191,11 +198,13 @@ export function AutomationPanel({
               className={
                 'h-8 px-2.5 uppercase tracking-wide transition-colors ' +
                 (m === modeValue
-                  ? m === 'write'
+                  ? m === 'write' || m === 'latch'
                     ? 'bg-red-500/15 text-red-600'
-                    : m === 'read'
-                      ? 'bg-primary/15 text-foreground'
-                      : 'bg-muted text-foreground'
+                    : m === 'touch'
+                      ? 'bg-amber-500/20 text-amber-600'
+                      : m === 'read'
+                        ? 'bg-primary/15 text-foreground'
+                        : 'bg-muted text-foreground'
                   : 'bg-transparent text-muted-foreground hover:bg-muted')
               }
               aria-pressed={m === modeValue}

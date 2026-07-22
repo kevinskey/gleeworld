@@ -88,4 +88,56 @@ describe('captureWriteModeAutomation', () => {
     const out = captureWriteModeAutomation(auto, 'track-a', 'track', { volume_db: -3 }, PLAYING);
     expect(out[0].points).toEqual([{ time_seconds: 1.5, value: -3, curve: 'linear' }]);
   });
+
+  it('touch mode: captures only when the envelope key is in the touched set', () => {
+    const auto = [env('touch', 'volume_db')];
+    const key = 'track:track-a:volume_db';
+
+    // Not touched — no capture.
+    const noCap = captureWriteModeAutomation(
+      auto, 'track-a', 'track', { volume_db: -3 }, PLAYING, new Set(), new Set(),
+    );
+    expect(noCap).toBe(auto);
+
+    // Touched — captures.
+    const cap = captureWriteModeAutomation(
+      auto, 'track-a', 'track', { volume_db: -3 }, PLAYING, new Set([key]), new Set(),
+    );
+    expect(cap[0].points).toEqual([{ time_seconds: 1.5, value: -3, curve: 'linear' }]);
+  });
+
+  it('latch mode: captures when touched OR latched', () => {
+    const auto = [env('latch', 'volume_db')];
+    const key = 'track:track-a:volume_db';
+
+    // Neither touched nor latched — no capture.
+    const noCap = captureWriteModeAutomation(
+      auto, 'track-a', 'track', { volume_db: -3 }, PLAYING, new Set(), new Set(),
+    );
+    expect(noCap).toBe(auto);
+
+    // Latched only (touch released, latch continues) — captures.
+    const latched = captureWriteModeAutomation(
+      auto, 'track-a', 'track', { volume_db: -3 }, PLAYING, new Set(), new Set([key]),
+    );
+    expect(latched[0].points).toEqual([{ time_seconds: 1.5, value: -3, curve: 'linear' }]);
+
+    // Touched only — also captures.
+    const touchedOnly = captureWriteModeAutomation(
+      auto, 'track-a', 'track', { volume_db: 0 }, PLAYING, new Set([key]), new Set(),
+    );
+    expect(touchedOnly[0].points).toEqual([{ time_seconds: 1.5, value: 0, curve: 'linear' }]);
+  });
+
+  it('touch/latch touched-set is scoped by param (touching pan does not write volume)', () => {
+    const auto = [env('touch', 'volume_db'), env('touch', 'pan')];
+    const panKey = 'track:track-a:pan';
+
+    // User is touching pan, dragging pan — captures pan only.
+    const out = captureWriteModeAutomation(
+      auto, 'track-a', 'track', { pan: 0.5 }, PLAYING, new Set([panKey]), new Set(),
+    );
+    expect(out[0]).toBe(auto[0]); // volume envelope untouched
+    expect(out[1].points).toEqual([{ time_seconds: 1.5, value: 0.5, curve: 'linear' }]);
+  });
 });

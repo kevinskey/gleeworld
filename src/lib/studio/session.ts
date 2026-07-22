@@ -265,25 +265,25 @@ export interface Bus {
 //
 // Breakpoint automation for a single strip parameter.
 //
-// Modes:
+// Modes (Logic-Pro convention):
 //   - 'off'   — envelope stored but ignored during playback.
 //   - 'read'  — engine schedules ramps against the transport (Phase 8).
-//   - 'write' — while transport is playing, live fader/pan moves capture
-//               points at the current playhead ("punch write"): any
-//               existing points inside a small window around the
-//               playhead are replaced by the incoming value. Between
-//               plays, 'write' behaves like 'off' (the engine schedules
-//               nothing, so the user's current fader position dictates
-//               the sound).
+//   - 'write' — while transport is playing, EVERY live fader/pan move
+//               captures a point at the playhead (punch-write).
+//   - 'touch' — engine reads the envelope until the user grabs the
+//               control; then captures until release. On release the
+//               envelope takes back over.
+//   - 'latch' — like 'touch', but keeps capturing after release until
+//               transport stops.
 //
 // Interpolation math lives in automation.ts; the engine schedules Tone
 // AudioParam ramps against the transport clock when play() starts
-// (engine/automation.ts). The write-mode capture happens in the mixer's
-// setStrip / setBusStrip; see writeAutomationPoint in automation.ts.
+// (engine/automation.ts). Capture happens in the mixer's setStrip /
+// setBusStrip; see writeAutomationPoint in automation.ts.
 
 export type AutomationParam = 'volume_db' | 'pan';
 export type AutomationCurve = 'hold' | 'linear' | 'exponential';
-export type AutomationMode = 'off' | 'read' | 'write';
+export type AutomationMode = 'off' | 'read' | 'write' | 'touch' | 'latch';
 
 export interface AutomationPoint {
   time_seconds: number;   // transport position; >= 0
