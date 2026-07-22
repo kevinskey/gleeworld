@@ -24,6 +24,10 @@ public final class TrackBinding {
     private let strip: AVAudioMixerNode     // pan + vol
     private let muteGate: AVAudioMixerNode  // separate so we don't lose volume_db on mute
     private var fxChain: FxChain?
+    /// Terminal node in the track's chain (post-FX if any, else the
+    /// muteGate). Metering taps install here so the meter shows the
+    /// post-processed signal the master bus receives.
+    public var meterNode: AVAudioNode { fxChain?.output ?? muteGate }
     private let kind: Studio.TrackKind
 
     // Audio-track resources (push path — default).
