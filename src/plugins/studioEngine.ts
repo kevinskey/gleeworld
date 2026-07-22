@@ -16,6 +16,16 @@ export interface NativeEngineState {
   metronomeOn: boolean;
 }
 
+/** Result of an incremental routing edit (setTrackOutput / setBusOutput).
+ *  Discriminated so the UI can differentiate "target doesn't exist" from
+ *  "would introduce a cycle" — the latter carries the offending bus_id
+ *  path so error toasts can echo the same "a → b → c → a" formatting
+ *  the web engine uses via formatCycle. */
+export type RoutingEditResult =
+  | { ok: true }
+  | { ok: false; error: 'unknown_track' | 'unknown_bus' | 'unknown_target' }
+  | { ok: false; error: 'cycle'; cycle: string[] };
+
 interface StudioEnginePluginShape {
   start(): Promise<void>;
   stopEngine(): Promise<void>;
@@ -33,6 +43,14 @@ interface StudioEnginePluginShape {
   // target-bus / pre-fader toggle / enabled toggle) still route
   // through loadSession via the skeleton-diff.
   updateSendLevel(args: { trackId: string; sendId: string; levelDb: number }): Promise<void>;
+  // v2.0.0 (Phase 4a/4c mirror) — incremental routing edits. Returns
+  // { ok: true } on success, or a discriminated failure so the UI can
+  // toast the specific cause (unknown_target / cycle with path).
+  // Structural graph mutations happen with the engine stopped briefly
+  // (~50 ms interruption) — still far cheaper than the multi-second
+  // full loadSession reload the skeleton-diff would otherwise fire.
+  setTrackOutput(args: { trackId: string; targetBusId: string }): Promise<RoutingEditResult>;
+  setBusOutput(args: { busId: string; targetBusId: string }): Promise<RoutingEditResult>;
   // Phase 6 mirror — per-strip stereo peak read. Poll at ~30 Hz per
   // visible strip. Native returns { L, R } in dBFS. Silence (no signal
   // since the last poll) reads back as -160 dB; JS layer normalizes

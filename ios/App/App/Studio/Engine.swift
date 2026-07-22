@@ -88,6 +88,13 @@ public final class StudioNativeEngine {
     /// alongside track routing. Level edits go through the live
     /// updateSendLevel path without touching this map.
     private var trackSends: [String: [String: SendBinding]] = [:]
+    /// Phase 4a-mirror lookup maps — for each track/bus, the mixer
+    /// node its tail currently connects to. Populated in loadSession
+    /// when the initial output edges are wired; updated by
+    /// setTrackOutput / setBusOutput on live edits so subsequent
+    /// disconnects target the right previous destination.
+    private var trackOutputTargets: [String: AVAudioMixerNode] = [:]
+    private var busOutputTargets: [String: AVAudioMixerNode] = [:]
 
     /// Session currently bound. Read-only after loadSession; structural
     /// edits require a fresh loadSession.
@@ -489,6 +496,7 @@ public final class StudioNativeEngine {
         // its declared output bus (defaults to masterMixer). Unknown /
         // cycle-bypassed bus ids fall back to masterMixer so playback
         // still works.
+        trackOutputTargets.removeAll()
         for (i, tr) in s.tracks.enumerated() {
             NSLog("[Studio.load] build track \(i+1)/\(s.tracks.count) …")
             let target = self.resolveTrackRoutingTarget(track: tr)
@@ -500,17 +508,20 @@ public final class StudioNativeEngine {
             case .midi(let t):  binding.userMute = t.mute; binding.userSolo = t.solo
             }
             tracks[binding.trackId] = binding
+            trackOutputTargets[binding.trackId] = target
             NSLog("[Studio.load] built track \(i+1) ok")
         }
 
         // Wire each bus's tail to its own downstream target (another
         // bus's strip, or masterMixer). Done AFTER tracks so every
         // bus's strip has received its inbound connections first.
+        busOutputTargets.removeAll()
         if busGraphOk {
             for b in sessionBuses {
                 guard let bus = buses[b.id] else { continue }
                 let target = self.resolveBusRoutingTarget(bus: b)
                 engine.connect(bus.output, to: target, format: nil)
+                busOutputTargets[b.id] = target
             }
         }
 
@@ -683,6 +694,108 @@ public final class StudioNativeEngine {
     public func getBusPeakDbStereo(id: String) -> (L: Double, R: Double) {
         guard let meter = busMeters[id] else { return (L: -.infinity, R: -.infinity) }
         return meter.readAndReset()
+    }
+
+    // MARK: - v2.0.0 incremental routing
+
+    /// Discriminated result for setBusOutput. Cycle rejection carries
+    /// the offending path so the UI can show it verbatim (matches
+    /// wouldEditCycle's contract).
+    public enum RoutingEditResult {
+        case ok
+        case unknownSource
+        case unknownTarget
+        case cycle(_ path: [String])
+    }
+
+    /// Incremental track routing — disconnect the track's routingGate
+    /// from its current downstream target and reconnect to the new
+    /// one. Same fallback policy as loadSession: unknown target ids
+    /// route to master.
+    ///
+    /// AVAudioEngine graph mutations must happen with the engine
+    /// STOPPED (see TrackBinding.build's wiring note). We stop and
+    /// restart around the single-edge rewire — takes ~50 ms and
+    /// avoids the multi-second full loadSession reload that would
+    /// otherwise fire from the skeleton-diff path.
+    @discardableResult
+    public func setTrackOutput(trackId: String, targetBusId: String) -> RoutingEditResult {
+        guard let track = tracks[trackId] else { return .unknownSource }
+        if targetBusId != Studio.masterBusId && buses[targetBusId] == nil {
+            return .unknownTarget
+        }
+        let newTarget = resolveRoutingTargetNode(busId: targetBusId)
+        let oldTarget = trackOutputTargets[trackId] ?? masterMixer
+        if oldTarget === newTarget { return .ok }
+
+        let wasRunning = engine.isRunning
+        if wasRunning { engine.stop() }
+        _ = StudioObjC.catchExceptions {
+            self.engine.disconnectNodeOutput(track.routingGate)
+            self.engine.connect(track.routingGate, to: newTarget, format: nil)
+        }
+        trackOutputTargets[trackId] = newTarget
+        if wasRunning {
+            do { try engine.start() }
+            catch { NSLog("[Studio] setTrackOutput: engine restart failed: \(error.localizedDescription)") }
+        }
+        return .ok
+    }
+
+    /// Incremental bus routing — same shape as setTrackOutput plus a
+    /// cycle check. Rejects the edit (leaves the graph untouched) if
+    /// applying it would introduce bus1 → bus2 → bus1 or similar.
+    @discardableResult
+    public func setBusOutput(busId: String, targetBusId: String) -> RoutingEditResult {
+        guard let bus = buses[busId] else { return .unknownSource }
+        if targetBusId != Studio.masterBusId && buses[targetBusId] == nil {
+            return .unknownTarget
+        }
+        // Cycle check against the current bus-output edge set with
+        // the proposed edit substituted in. Same helper the load-time
+        // check uses so decisions align exactly with loadSession.
+        let currentEdges: [RoutingEdge] = busOutputTargets.map { (from, node) in
+            RoutingEdge(from: from, to: reverseResolveBusIdForNode(node))
+        }
+        let check = wouldEditCycle(existingEdges: currentEdges,
+                                   edit: RoutingEdge(from: busId, to: targetBusId))
+        if case .cycle(let path) = check { return .cycle(path) }
+
+        let newTarget = resolveRoutingTargetNode(busId: targetBusId)
+        let oldTarget = busOutputTargets[busId] ?? masterMixer
+        if oldTarget === newTarget { return .ok }
+
+        let wasRunning = engine.isRunning
+        if wasRunning { engine.stop() }
+        _ = StudioObjC.catchExceptions {
+            self.engine.disconnectNodeOutput(bus.output)
+            self.engine.connect(bus.output, to: newTarget, format: nil)
+        }
+        busOutputTargets[busId] = newTarget
+        if wasRunning {
+            do { try engine.start() }
+            catch { NSLog("[Studio] setBusOutput: engine restart failed: \(error.localizedDescription)") }
+        }
+        return .ok
+    }
+
+    /// Resolve a bus id to the mixer node it should feed. Same as
+    /// resolveTrackRoutingTarget / resolveBusRoutingTarget but keyed
+    /// directly on a bus_id (no wrapper struct).
+    private func resolveRoutingTargetNode(busId: String) -> AVAudioMixerNode {
+        if busId == Studio.masterBusId { return masterMixer }
+        if let bus = buses[busId] { return bus.strip }
+        NSLog("[Studio] resolveRoutingTargetNode: unknown '\(busId)' — falling back to master")
+        return masterMixer
+    }
+
+    /// Reverse of resolveRoutingTargetNode — maps a mixer node back
+    /// to its declared bus_id, for the cycle check. Nodes we can't
+    /// identify (masterMixer or an unbuilt bus) map to MASTER_BUS_ID.
+    private func reverseResolveBusIdForNode(_ node: AVAudioMixerNode) -> String {
+        if node === masterMixer { return Studio.masterBusId }
+        for (id, bus) in buses where bus.strip === node { return id }
+        return Studio.masterBusId
     }
 
     public func updateTrackStrip(id: String, volumeDb: Double?, pan: Double?, mute: Bool?, solo: Bool? = nil) {
