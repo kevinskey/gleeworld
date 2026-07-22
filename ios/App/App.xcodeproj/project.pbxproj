@@ -27,6 +27,7 @@
 		6A1D00000000000000000003 /* GWSpeechPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000004 /* GWSpeechPlugin.swift */; };
 		768412EC465E014A6BC6AFDE /* Instruments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDD37EFA950FB969BF90C82 /* Instruments.swift */; };
 		7696E25FC90C885166862AE1 /* StudioModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DAD2143C4798E9ADDA1A3AF /* StudioModel.swift */; };
+		811FD86D3D010FEDDBB8E3D5 /* AutomationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704B44948CC7846CABD487D3 /* AutomationScheduler.swift */; };
 		9FC224AE2381121D2FB58450 /* AssetLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED85A7982F21BD5123300ED4 /* AssetLoader.swift */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
 		B3E7A1C2D4F508192A3B4C5D /* ExternalRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E7A1C2D4F508192A3B4C5E /* ExternalRecorder.swift */; };
@@ -66,6 +67,7 @@
 		693451AC85FAAD6C29DB7ED2 /* StudioObjC.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = StudioObjC.h; sourceTree = "<group>"; };
 		6A1D00000000000000000002 /* GWMidiPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWMidiPlugin.swift; sourceTree = "<group>"; };
 		6A1D00000000000000000004 /* GWSpeechPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWSpeechPlugin.swift; sourceTree = "<group>"; };
+		704B44948CC7846CABD487D3 /* AutomationScheduler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutomationScheduler.swift; sourceTree = "<group>"; };
 		90B41B6DB59A4EC515A3D916 /* Fx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Fx.swift; sourceTree = "<group>"; };
 		A71A15DBCA0F6701D171ED70 /* Tracks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Tracks.swift; sourceTree = "<group>"; };
 		ACAAED23BD56BF3B55CC650A /* Recorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
@@ -182,6 +184,7 @@
 				E35A0870023595C0377512D8 /* Buses.swift */,
 				27146FB8EE06B9F0D866B053 /* Automation.swift */,
 				1367BF35A73FBB20384CA757 /* Metering.swift */,
+				704B44948CC7846CABD487D3 /* AutomationScheduler.swift */,
 			);
 			name = Studio;
 			path = Studio;
@@ -328,6 +331,7 @@
 				285A1D8A2AC39FF2C4CFCBAB /* Buses.swift in Sources */,
 				FAF6A9CF387E9159480E5FB3 /* Automation.swift in Sources */,
 				0E71D57B938889625A90DA8A /* Metering.swift in Sources */,
+				811FD86D3D010FEDDBB8E3D5 /* AutomationScheduler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
