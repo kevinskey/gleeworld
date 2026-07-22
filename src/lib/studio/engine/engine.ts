@@ -1077,6 +1077,8 @@ export class StudioEngine {
     if (!this.session) return;
     const entries = this.session.automation ?? [];
     for (const auto of entries) {
+      // Only 'read' schedules ramps. 'write' leaves the fader in charge
+      // so the user's live moves are captured, not fought.
       if (auto.mode !== 'read' || auto.points.length === 0) continue;
       const panvol = auto.target_kind === 'track'
         ? this.tracks.get(auto.target_id)?.panvol

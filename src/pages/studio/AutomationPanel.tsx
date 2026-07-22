@@ -1,27 +1,27 @@
 // AutomationPanel — minimal breakpoint envelope editor.
 //
 // Deliberately tabular for v1: one row per point (time, value, curve,
-// delete). SVG canvas + drag interaction is a Phase 8b polish.
+// delete). SVG canvas + drag interaction is a Phase 8c polish.
 //
 // Users can:
 //   - Pick which param to automate on this strip (volume_db / pan).
-//   - Toggle mode between off (envelope ignored) and read (engine
-//     applies during playback).
+//   - Choose mode: Off (envelope ignored) / Read (engine applies during
+//     playback) / Write (fader moves capture points at the playhead).
 //   - Add a point at the current playhead position.
 //   - Edit any point's time, value, curve.
 //   - Delete a point.
 //
 // The engine's applyAutomation() re-schedules on every play(), so
-// any edit here takes effect at the next Play. The panel doesn't
-// need to imperatively poke the engine.
+// any edit here takes effect at the next Play. Write-mode captures
+// happen in the mixer (setStrip / setBusStrip); the panel just shows
+// the current envelope + a "recording" pulse while write mode is armed.
 
 import { useMemo, useCallback } from 'react';
 import { Slider } from '@/components/ui/slider';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { X, Plus, Clock } from 'lucide-react';
+import { X, Plus, Clock, Circle } from 'lucide-react';
 import {
   type Automation, type AutomationPoint, type AutomationParam,
   type AutomationCurve, type AutomationMode,
@@ -169,14 +169,41 @@ export function AutomationPanel({
           </SelectContent>
         </Select>
         <div className="flex-1" />
-        <span className={`text-xs ${modeValue === 'read' ? '' : 'text-muted-foreground'}`}>
-          {modeValue === 'read' ? 'Read' : 'Off'}
-        </span>
-        <Switch
-          checked={modeValue === 'read'}
-          onCheckedChange={(v) => setMode(v ? 'read' : 'off')}
-          aria-label={modeValue === 'read' ? 'Disable automation' : 'Enable automation'}
-        />
+        {modeValue === 'write' && (
+          <span
+            className="text-[10px] font-semibold uppercase tracking-wide text-red-500 inline-flex items-center gap-1 animate-pulse"
+            aria-live="polite"
+          >
+            <Circle className="w-2.5 h-2.5 fill-current" />
+            Writing
+          </span>
+        )}
+        <div
+          role="group"
+          aria-label="Automation mode"
+          className="inline-flex rounded border border-border overflow-hidden text-[11px] font-semibold"
+        >
+          {(['off', 'read', 'write'] as AutomationMode[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={
+                'h-8 px-2.5 uppercase tracking-wide transition-colors ' +
+                (m === modeValue
+                  ? m === 'write'
+                    ? 'bg-red-500/15 text-red-600'
+                    : m === 'read'
+                      ? 'bg-primary/15 text-foreground'
+                      : 'bg-muted text-foreground'
+                  : 'bg-transparent text-muted-foreground hover:bg-muted')
+              }
+              aria-pressed={m === modeValue}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
       </div>
 
       {shown && shown.points.length === 0 && (

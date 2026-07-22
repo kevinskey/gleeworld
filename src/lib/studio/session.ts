@@ -263,15 +263,27 @@ export interface Bus {
 
 // ── Automation (v2.0.0, Phase 8) ─────────────────────────────────────
 //
-// Breakpoint automation for a single strip parameter. Read-only for now
-// (mode: 'read' | 'off'); write / touch / latch modes ship with the
-// automation UI in a later phase. Interpolation math lives in
-// automation.ts; the engine schedules Tone AudioParam ramps against the
-// transport clock when play() starts (engine/automation.ts).
+// Breakpoint automation for a single strip parameter.
+//
+// Modes:
+//   - 'off'   — envelope stored but ignored during playback.
+//   - 'read'  — engine schedules ramps against the transport (Phase 8).
+//   - 'write' — while transport is playing, live fader/pan moves capture
+//               points at the current playhead ("punch write"): any
+//               existing points inside a small window around the
+//               playhead are replaced by the incoming value. Between
+//               plays, 'write' behaves like 'off' (the engine schedules
+//               nothing, so the user's current fader position dictates
+//               the sound).
+//
+// Interpolation math lives in automation.ts; the engine schedules Tone
+// AudioParam ramps against the transport clock when play() starts
+// (engine/automation.ts). The write-mode capture happens in the mixer's
+// setStrip / setBusStrip; see writeAutomationPoint in automation.ts.
 
 export type AutomationParam = 'volume_db' | 'pan';
 export type AutomationCurve = 'hold' | 'linear' | 'exponential';
-export type AutomationMode = 'off' | 'read';
+export type AutomationMode = 'off' | 'read' | 'write';
 
 export interface AutomationPoint {
   time_seconds: number;   // transport position; >= 0

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  automationValueAt, sortAutomationPoints, type AutomationPoint,
+  automationValueAt, sortAutomationPoints, writeAutomationPoint,
+  type AutomationPoint,
 } from '../automation';
 
 const P = (t: number, v: number, curve: AutomationPoint['curve'] = 'linear'): AutomationPoint =>
@@ -72,6 +73,55 @@ describe('automationValueAt', () => {
     const pts = [P(2, -6), P(2, 3, 'linear')];
     expect(automationValueAt(pts, 2)).toBe(-6); // clamps to first via at<=first branch
     expect(automationValueAt(pts, 2.0001)).toBe(3);
+  });
+});
+
+describe('writeAutomationPoint (Write-mode punch)', () => {
+  it('appends a point to an empty envelope', () => {
+    const out = writeAutomationPoint([], 1.5, -3);
+    expect(out).toEqual([P(1.5, -3, 'linear')]);
+  });
+
+  it('inserts sorted when the write lands between existing points', () => {
+    const pts = [P(0, 0), P(2, -6)];
+    const out = writeAutomationPoint(pts, 1, -3);
+    expect(out.map((p) => p.time_seconds)).toEqual([0, 1, 2]);
+    expect(out[1].value).toBe(-3);
+  });
+
+  it('replaces existing points within the punch window (default 75ms)', () => {
+    // Two old points near the playhead — a moving fader should overwrite
+    // both with a single fresh point at the current time.
+    const pts = [P(1.0, -12), P(1.05, -10), P(1.10, -8), P(2.0, 0)];
+    const out = writeAutomationPoint(pts, 1.05, -2);
+    expect(out).toEqual([P(1.05, -2, 'linear'), P(2.0, 0, 'linear')]);
+  });
+
+  it('leaves points outside the punch window untouched', () => {
+    const pts = [P(0, 0), P(5, -6)];
+    const out = writeAutomationPoint(pts, 2.5, -3);
+    expect(out.length).toBe(3);
+    expect(out[0]).toEqual(P(0, 0));
+    expect(out[2]).toEqual(P(5, -6));
+  });
+
+  it('clamps a negative playhead time to 0', () => {
+    const out = writeAutomationPoint([], -0.4, 1);
+    expect(out[0].time_seconds).toBe(0);
+  });
+
+  it('honors a caller-supplied window', () => {
+    const pts = [P(1.0, -12), P(1.3, -10)];
+    // Wide window (500ms) — should eat both old points.
+    const out = writeAutomationPoint(pts, 1.15, -2, 'linear', 0.5);
+    expect(out).toEqual([P(1.15, -2, 'linear')]);
+  });
+
+  it('does not mutate the input array', () => {
+    const pts = [P(0, 0), P(2, -6)];
+    const snapshot = pts.map((p) => ({ ...p }));
+    writeAutomationPoint(pts, 1, -3);
+    expect(pts).toEqual(snapshot);
   });
 });
 

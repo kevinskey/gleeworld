@@ -38,6 +38,7 @@ import {
   type Session, type Track, type TrackEqBand, type MasteringParams,
   type Bus, type Send, type FxNode, type Automation, type AutomationParam,
 } from '@/lib/studio/session';
+import { writeAutomationPoint } from '@/lib/studio/automation';
 import { newBus } from '@/lib/studio/defaults';
 import { wouldEditCycle, formatCycle, type RoutingEdge } from '@/lib/studio/routingGraph';
 import { toast } from 'sonner';
@@ -47,6 +48,47 @@ import { faderPosToDb, dbToFaderPos } from '@/lib/studio/dsp/faderTaper';
 import { ppmDecay, servoStep } from './mixerMath';
 
 type StripPatch = Partial<Pick<Track, 'volume_db' | 'pan' | 'mute' | 'solo'>>;
+
+/** Punch-write any envelope for this strip that's in write mode, using
+ *  the incoming patch's volume_db / pan values, at the current transport
+ *  position. Returns the possibly-updated automation array. Callers pass
+ *  it back into session.automation so live fader/pan moves persist as
+ *  breakpoints while transport is playing.
+ *
+ *  Silent no-op when transport is not playing, when no matching write
+ *  envelope exists, or when the patch touches only mute/solo. */
+export function captureWriteModeAutomation(
+  automation: Automation[],
+  ownerId: string,
+  ownerKind: 'track' | 'bus',
+  patch: StripPatch,
+  transport: { isPlaying: boolean; positionSeconds: number },
+): Automation[] {
+  if (!transport.isPlaying) return automation;
+  const paramValue: Partial<Record<AutomationParam, number>> = {};
+  if (patch.volume_db !== undefined) paramValue.volume_db = patch.volume_db;
+  if (patch.pan !== undefined) paramValue.pan = patch.pan;
+  const paramsToWrite = Object.keys(paramValue) as AutomationParam[];
+  if (paramsToWrite.length === 0) return automation;
+
+  let next = automation;
+  for (const param of paramsToWrite) {
+    const idx = next.findIndex(
+      (a) => a.target_id === ownerId && a.target_kind === ownerKind && a.param === param,
+    );
+    if (idx < 0) continue;
+    const env = next[idx];
+    if (env.mode !== 'write') continue;
+    const points = writeAutomationPoint(
+      env.points, transport.positionSeconds, paramValue[param]!,
+    );
+    // Only allocate a new array when we actually mutate — cheaper for
+    // the common no-op case (env exists but wrong mode).
+    if (next === automation) next = [...automation];
+    next[idx] = { ...env, points };
+  }
+  return next;
+}
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
@@ -140,6 +182,20 @@ export function MixerView({
   const isPhone = useIsPhone();
   const [meters, setMeters] = useState<Record<string, MeterEntry>>({});
   const [activePhoneTrackId, setActivePhoneTrackId] = useState<string | null>(null);
+
+  // Ref mirror of transport state so Write-mode capture in setStrip /
+  // setBusStrip can read positionSeconds + isPlaying without adding
+  // them to useCallback deps (they emit ~30Hz and would thrash the
+  // ChannelStrip's memoization otherwise).
+  const transportRef = useRef<{ isPlaying: boolean; positionSeconds: number }>({
+    isPlaying: false, positionSeconds: 0,
+  });
+  useEffect(() => {
+    transportRef.current = {
+      isPlaying: !!state?.isPlaying,
+      positionSeconds: state?.positionSeconds ?? 0,
+    };
+  }, [state?.isPlaying, state?.positionSeconds]);
   // Which track's EQ editor is docked open below the strips. Previously
   // a portaled bottom Sheet — it escaped the Studio's `.dark` container
   // (rendered LIGHT) and modally dimmed the whole app; Kevin: "should
@@ -221,10 +277,13 @@ export function MixerView({
   }, []);
 
   const setStrip = useCallback((trackId: string, patch: StripPatch) => {
-    update((s) => ({
-      ...s,
-      tracks: s.tracks.map((t) => t.id === trackId ? { ...t, ...patch } as Track : t),
-    }));
+    update((s) => {
+      const tracks = s.tracks.map((t) => t.id === trackId ? { ...t, ...patch } as Track : t);
+      const automation = captureWriteModeAutomation(
+        s.automation ?? [], trackId, 'track', patch, transportRef.current,
+      );
+      return { ...s, tracks, automation };
+    });
     engineState.updateTrackStrip(trackId, patch);
   }, [update, engineState]);
 
@@ -237,10 +296,13 @@ export function MixerView({
 
   // v2.0.0: bus lifecycle + routing edits.
   const setBusStrip = useCallback((busId: string, patch: StripPatch) => {
-    update((s) => ({
-      ...s,
-      buses: (s.buses ?? []).map((b) => b.id === busId ? { ...b, ...patch } as Bus : b),
-    }));
+    update((s) => {
+      const buses = (s.buses ?? []).map((b) => b.id === busId ? { ...b, ...patch } as Bus : b);
+      const automation = captureWriteModeAutomation(
+        s.automation ?? [], busId, 'bus', patch, transportRef.current,
+      );
+      return { ...s, buses, automation };
+    });
     // Live engine ramp — bus strip fields are deliberately excluded
     // from the skeleton so a fader drag doesn't trigger a full reload.
     engineState.updateBusStrip?.(busId, patch);
