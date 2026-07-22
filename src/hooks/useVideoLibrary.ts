@@ -169,6 +169,77 @@ export function useSharedWithMe() {
   return { shares, loading, refresh: load };
 }
 
+export interface PlaylistItemWithVideo {
+  itemId: string; // gw_video_playlist_items.id (for reorder/remove)
+  displayOrder: number;
+  videoRowId: string;
+  video_id: string;
+  title: string;
+  thumbnail_url: string | null;
+  video_url: string;
+  duration: string | null;
+  published_at: string | null;
+}
+
+// Load a playlist's items joined with the underlying youtube_videos row so
+// the detail view can render cards + play them.
+export async function loadPlaylistItems(playlistId: string): Promise<PlaylistItemWithVideo[]> {
+  // Two-step join keeps typing simple and avoids relying on PostgREST FK
+  // hints that may or may not be present for the manually-added tables.
+  const { data: itemRows } = await (supabase as AnyFrom)
+    .from('gw_video_playlist_items')
+    .select('id, video_id, display_order')
+    .eq('playlist_id', playlistId)
+    .order('display_order', { ascending: true });
+  const items = (itemRows || []) as { id: string; video_id: string; display_order: number }[];
+  if (items.length === 0) return [];
+
+  const { data: videos } = await supabase
+    .from('youtube_videos')
+    .select('id, video_id, title, thumbnail_url, video_url, duration, published_at')
+    .in('id', items.map((i) => i.video_id));
+  const byId = new Map((videos || []).map((v) => [v.id, v]));
+
+  return items
+    .map((it) => {
+      const v = byId.get(it.video_id);
+      if (!v) return null;
+      return {
+        itemId: it.id,
+        displayOrder: it.display_order,
+        videoRowId: v.id,
+        video_id: v.video_id,
+        title: v.title,
+        thumbnail_url: v.thumbnail_url,
+        video_url: v.video_url,
+        duration: v.duration,
+        published_at: v.published_at,
+      } as PlaylistItemWithVideo;
+    })
+    .filter((x): x is PlaylistItemWithVideo => x !== null);
+}
+
+export async function removePlaylistItem(itemId: string) {
+  const { error } = await (supabase as AnyFrom)
+    .from('gw_video_playlist_items')
+    .delete()
+    .eq('id', itemId);
+  return error;
+}
+
+// Persist a full reordering. Cheaper than one-by-one updates when the user
+// drags things around — we compute the new order client-side then push
+// once. If a partial update fails, subsequent loads still show a valid
+// order (existing display_orders are integers; we never zero them out).
+export async function reorderPlaylist(items: { itemId: string; displayOrder: number }[]) {
+  await Promise.all(items.map(({ itemId, displayOrder }) =>
+    (supabase as AnyFrom)
+      .from('gw_video_playlist_items')
+      .update({ display_order: displayOrder })
+      .eq('id', itemId)
+  ));
+}
+
 export async function shareResource(params: {
   resourceType: ShareResourceType;
   resourceId?: string;
