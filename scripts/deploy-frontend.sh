@@ -35,14 +35,17 @@ echo "==> Local build: $LOCAL_HASH · $LOCAL_CACHE"
 
 # 2. Sync — no --delete: /var/www/gleeworld/html/tenants/ has per-tenant
 #    bootstrap files that are not in dist/ and MUST survive.
+#    --chmod forces perms at transfer time (Files 644, Dirs 755) so
+#    every file lands nginx-readable even when the local mode was
+#    tighter. This is the root-cause fix for the "sw.js is 403" and
+#    "logo PNG is 403" bugs that a post-rsync chmod could only paper
+#    over.
 echo "==> Rsync to $DROPLET:$REMOTE_DIR"
-rsync -az dist/ "$DROPLET:$REMOTE_DIR/"
+rsync -az --chmod=F644,D755 dist/ "$DROPLET:$REMOTE_DIR/"
 
-# 3. Fix perms so nginx can read everything, including sw.js.
-#    `chmod -R a+rX` alone missed some files — `+X` only adds execute
-#    when the target is already-executable or a directory, and the
-#    recursion doesn't always cross into every rsync-recreated tree.
-#    Explicit find loops always work: files get a+r, dirs get a+rx.
+# 3. Belt-and-suspenders chmod. Cheap, and covers any file rsync
+#    couldn't rewrite (e.g. changing mtime on an existing 600 file
+#    without --chmod would leave it at 600 on some rsync builds).
 echo "==> Fixing perms on $REMOTE_DIR"
 ssh "$DROPLET" "find $REMOTE_DIR -type f -exec chmod a+r {} + && find $REMOTE_DIR -type d -exec chmod a+rx {} +"
 
