@@ -16,6 +16,7 @@ import {
   useCreateConversation, useSearchRecipients, type CanvasRecipient,
 } from '@/hooks/useCanvasAcademy';
 import { toast } from 'sonner';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 function formatDate(d: string | null) {
   if (!d) return '';
@@ -32,6 +33,7 @@ export default function CanvasInbox() {
   if (convId) return <ConversationDetail conversationId={convId} />;
 
   return (
+    <UniversalLayout>
     <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto space-y-5">
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
@@ -108,6 +110,7 @@ export default function CanvasInbox() {
         </ul>
       )}
     </div>
+    </UniversalLayout>
   );
 }
 
@@ -128,25 +131,30 @@ function ConversationDetail({ conversationId }: { conversationId: number }) {
 
   if (isLoading) {
     return (
+      <UniversalLayout>
       <div className="flex items-center justify-center py-16 text-muted-foreground">
         <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading conversation…
       </div>
+      </UniversalLayout>
     );
   }
   if (error || !data || 'error' in data) {
     return (
+      <UniversalLayout>
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-sm text-destructive p-3 rounded-lg border border-destructive/30 bg-destructive/5 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <div>Could not load conversation.</div>
         </div>
       </div>
+      </UniversalLayout>
     );
   }
   const { conversation } = data;
   const byId = new Map(conversation.participants.map((p) => [p.id, p]));
 
   return (
+    <UniversalLayout>
     <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto space-y-5">
       <div>
         <Link to="/academy/canvas/inbox" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -194,6 +202,7 @@ function ConversationDetail({ conversationId }: { conversationId: number }) {
         </CardContent>
       </Card>
     </div>
+    </UniversalLayout>
   );
 }
 

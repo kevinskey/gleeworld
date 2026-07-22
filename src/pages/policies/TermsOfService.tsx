@@ -24,8 +24,9 @@
 // the rendered page; changing it here updates every reference.
 
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Scale, AlertTriangle } from 'lucide-react';
+import { FileText, Scale, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 
 const LAST_UPDATED = 'June 2026';
 const COMPANY_NAME = 'GleeWorld';
@@ -42,30 +43,24 @@ const SECURITY_EMAIL = 'support@gleeworld.org';
 
 export default function TermsOfService() {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Scale className="w-5 h-5 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Terms of Service</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">Last updated: {LAST_UPDATED}</p>
-            </div>
+    <PublicLayout>
+    <div className="bg-background">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between gap-4 flex-wrap border-b border-border">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Scale className="w-5 h-5 text-primary" />
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <FileText className="w-4 h-4 mr-1.5" /> Print
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/"><ArrowLeft className="w-4 h-4 mr-1" /> Back</Link>
-            </Button>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Terms of Service</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Last updated: {LAST_UPDATED}</p>
           </div>
         </div>
-      </header>
+        <Button variant="outline" size="sm" onClick={() => window.print()}>
+          <FileText className="w-4 h-4 mr-1.5" /> Print
+        </Button>
+      </div>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8 text-foreground">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8 text-foreground">
         <section className="rounded-xl border border-sky-200 bg-sky-50 p-4 flex gap-3 text-sm text-sky-950">
           <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
@@ -320,8 +315,9 @@ export default function TermsOfService() {
             published as the contractual basis for paid sign-ups at scale.
           </p>
         </footer>
-      </main>
+      </div>
     </div>
+    </PublicLayout>
   );
 }
 

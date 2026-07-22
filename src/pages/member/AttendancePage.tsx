@@ -15,6 +15,7 @@ import { ExcuseGenerator } from '@/components/attendance/ExcuseGenerator';
 import { AttendancePolicyModal } from '@/components/attendance/AttendancePolicyModal';
 import { AttendanceDashboard } from '@/components/attendance/AttendanceDashboard';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
@@ -28,25 +29,30 @@ const AttendancePage = () => {
   const isExecBoard = Boolean(userProfile?.is_exec_board);
   if (isAdminLike || isExecBoard) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
-        <div className="max-w-7xl mx-auto animate-fade-in">
-          <AttendanceDashboard />
+      <UniversalLayout>
+        <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
+          <div className="max-w-7xl mx-auto animate-fade-in">
+            <AttendanceDashboard />
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
-  
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <UniversalLayout>
+        <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </UniversalLayout>
     );
   }
 
   const stats = getAttendanceStats();
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Attendance"
       subtitle="Track your attendance and submit excuses"
@@ -263,6 +269,7 @@ const AttendancePage = () => {
         onClose={() => setIsPolicyModalOpen(false)}
       />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

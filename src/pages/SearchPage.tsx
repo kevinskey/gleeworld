@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { UNIFIED_MODULES } from "@/config/unified-modules";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 // Simple SEO helper (local to this page)
 const useSEO = (title: string, description: string, canonical?: string) => {
@@ -133,6 +134,7 @@ export const SearchPage: React.FC = () => {
   }, [q]);
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Search GleeWorld"
       subtitle="Find content you have access to across events, media, PDFs, music, and modules."
@@ -256,6 +258,7 @@ export const SearchPage: React.FC = () => {
         </section>
       </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

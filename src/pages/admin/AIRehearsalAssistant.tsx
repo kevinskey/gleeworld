@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Sparkles, Copy, Loader2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 type Mode = 'plan' | 'warmup' | 'notes' | 'letter';
 
@@ -93,6 +94,7 @@ export default function AIRehearsalAssistant() {
   }
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="4xl"
       title="AI Rehearsal Assistant"
@@ -181,6 +183,7 @@ export default function AIRehearsalAssistant() {
         </Card>
       )}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

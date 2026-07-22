@@ -94,9 +94,9 @@ const PressKit = () => {
           background made everything invisible; this wrapper restores the
           intended editorial-dark look so all text reads clearly. */}
       <div className="bg-[#0b1220] -mt-px">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16 animate-fade-in text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 md:space-y-16 animate-fade-in text-white">
         {/* Hero Header */}
-        <div className="relative text-center space-y-8 py-20 overflow-hidden min-h-[80vh] flex items-center justify-center">
+        <div className="relative text-center space-y-8 py-10 sm:py-16 md:py-20 overflow-hidden min-h-[80vh] flex items-center justify-center">
           {/* Slideshow Background */}
           {heroSlides.length > 0 && heroSlides.map((slide, index) => (
             <div

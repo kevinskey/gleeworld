@@ -26,6 +26,7 @@ import {
   Loader2,
   Globe,
 } from 'lucide-react';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface TenantRow {
   id: string;
@@ -123,6 +124,7 @@ export default function PlatformTenantsPortal() {
 
   if (!isPlatformAdmin) {
     return (
+      <UniversalLayout>
       <div className="max-w-xl mx-auto px-4 py-16">
         <Card>
           <CardHeader className="text-center">
@@ -140,6 +142,7 @@ export default function PlatformTenantsPortal() {
           </CardContent>
         </Card>
       </div>
+      </UniversalLayout>
     );
   }
 
@@ -154,6 +157,7 @@ export default function PlatformTenantsPortal() {
   });
 
   return (
+    <UniversalLayout>
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -274,5 +278,6 @@ export default function PlatformTenantsPortal() {
         </div>
       )}
     </div>
+    </UniversalLayout>
   );
 }

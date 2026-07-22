@@ -48,6 +48,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/integrations/supabase/client';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function ConcertPlannerEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -240,16 +241,22 @@ export default function ConcertPlannerEditorPage() {
 
   // ── Render ───────────────────────────────────────────────────────
   if (isLoading) {
-    return <div className="p-10 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>;
+    return (
+      <UniversalLayout>
+        <div className="p-10 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+      </UniversalLayout>
+    );
   }
   if (!program) {
     return (
-      <div className="p-10 text-center space-y-2">
-        <div className="text-sm text-muted-foreground">Program not found.</div>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/dashboard/concert-planner"><ArrowLeft className="w-4 h-4 mr-1" /> All programs</Link>
-        </Button>
-      </div>
+      <UniversalLayout>
+        <div className="p-10 text-center space-y-2">
+          <div className="text-sm text-muted-foreground">Program not found.</div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/dashboard/concert-planner"><ArrowLeft className="w-4 h-4 mr-1" /> All programs</Link>
+          </Button>
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -260,7 +267,8 @@ export default function ConcertPlannerEditorPage() {
     : null;
 
   return (
-    <div className={`min-h-screen ${theme.container} transition-colors flex flex-col`}>
+    <UniversalLayout containerized={false}>
+    <div className={`${theme.container} transition-colors flex flex-col`}>
       {/* Print CSS — one card per page, no editor chrome. */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
@@ -617,6 +625,7 @@ export default function ConcertPlannerEditorPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </UniversalLayout>
   );
 }
 

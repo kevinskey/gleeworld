@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -163,6 +164,7 @@ export default function FeedControl() {
   );
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Feed Control"
       icon={Rss}
@@ -270,5 +272,6 @@ export default function FeedControl() {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

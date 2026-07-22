@@ -6,18 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, Database, User, FileText, Calendar, ArrowLeft } from "lucide-react";
+import { Search, Download, Database, User, FileText, Calendar } from "lucide-react";
 import { useActivityLogs } from "@/hooks/useActivityLogs";
-import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { DashboardPageShell } from "@/components/dashboard/DashboardPageShell";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 const ActivityLogs = () => {
   const { logs, loading, error, refetch } = useActivityLogs();
   const [searchTerm, setSearchTerm] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
   const [resourceFilter, setResourceFilter] = useState("all");
-  const navigate = useNavigate();
 
   const getActionColor = (actionType: string) => {
     if (actionType.includes('created')) return "bg-green-100 text-green-800";
@@ -62,50 +61,45 @@ const ActivityLogs = () => {
 
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <UniversalLayout>
+        <div className="p-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
           </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8">
-        <div className="max-w-7xl mx-auto">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center text-red-600">
-                <p>Error loading activity logs: {error}</p>
-                <Button onClick={refetch} className="mt-4">
-                  Try Again
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+      <UniversalLayout>
+        <div className="p-8">
+          <div className="max-w-7xl mx-auto">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center text-red-600">
+                  <p>Error loading activity logs: {error}</p>
+                  <Button onClick={refetch} className="mt-4">
+                    Try Again
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Activity Logs"
       subtitle="Track all user activities related to contracts and templates"
       maxWidth="7xl"
-      actions={
-        <Button
-          variant="outline"
-          onClick={() => navigate('/')}
-          className="flex items-center space-x-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Dashboard</span>
-        </Button>
-      }
     >
         <Card>
           <CardHeader>
@@ -230,6 +224,7 @@ const ActivityLogs = () => {
           </CardContent>
         </Card>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

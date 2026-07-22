@@ -6,15 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { usePublicGleeWorldEvents } from '@/hooks/usePublicGleeWorldEvents';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidget';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const MemberCalendarPage = () => {
   const { events, loading, getUpcomingEvents } = usePublicGleeWorldEvents();
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <UniversalLayout>
+        <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -27,7 +30,8 @@ const MemberCalendarPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
+    <UniversalLayout>
+    <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Back Navigation */}
         <BackNavigation />
@@ -202,6 +206,7 @@ const MemberCalendarPage = () => {
         </div>
       </div>
     </div>
+    </UniversalLayout>
   );
 };
 

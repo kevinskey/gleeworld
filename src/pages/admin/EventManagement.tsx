@@ -3,10 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const EventManagement = () => {
   return (
-    <DashboardPageShell
+    <UniversalLayout>
+      <DashboardPageShell
       title="Event & Calendar Management"
       subtitle="Manage performances, rehearsals, and tours"
       actions={
@@ -66,6 +68,7 @@ const EventManagement = () => {
         </Card>
       </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

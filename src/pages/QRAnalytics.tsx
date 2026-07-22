@@ -19,6 +19,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface ScanStats {
   total_scans: number;
@@ -173,42 +174,49 @@ export default function QRAnalytics() {
 
   if (!user) {
     return (
-      <div className="container mx-auto py-6 px-4">
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Please log in to view QR analytics.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <UniversalLayout>
+        <div className="container mx-auto py-6 px-4">
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Please log in to view QR analytics.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </UniversalLayout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="container mx-auto py-6 px-4">
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            You need administrator privileges to view QR analytics.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <UniversalLayout>
+        <div className="container mx-auto py-6 px-4">
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              You need administrator privileges to view QR analytics.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </UniversalLayout>
     );
   }
 
   if (loading) {
     return (
-      <div className="container mx-auto py-6 px-4">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-2 text-muted-foreground">Loading analytics...</p>
+      <UniversalLayout>
+        <div className="container mx-auto py-6 px-4">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-muted-foreground">Loading analytics...</p>
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
   return (
+    <UniversalLayout>
     <DashboardPageShell title="QR Code Analytics" icon={QrCode}>
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -336,5 +344,6 @@ export default function QRAnalytics() {
         </CardContent>
       </Card>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

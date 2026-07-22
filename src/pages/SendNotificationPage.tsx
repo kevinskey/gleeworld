@@ -1,7 +1,12 @@
 import { CommunicationHub } from "@/components/communication/CommunicationHub";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 const SendNotificationPage = () => {
-  return <CommunicationHub />;
+  return (
+    <UniversalLayout>
+      <CommunicationHub />
+    </UniversalLayout>
+  );
 };
 
 export default SendNotificationPage;

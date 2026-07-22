@@ -3,27 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { DollarSign, FileText, Users, BookOpen, ArrowLeft, Calculator, TrendingUp, Receipt, Wallet, ShoppingBag } from 'lucide-react';
+import { DollarSign, FileText, Users, BookOpen, Calculator, TrendingUp, Receipt, Wallet, ShoppingBag } from 'lucide-react';
 import { MemberDuesRegister } from '@/components/treasurer/MemberDuesRegister';
 import { MerchandiseIncomeRegister } from '@/components/treasurer/MerchandiseIncomeRegister';
 import { PerformanceStipendsRegister } from '@/components/treasurer/PerformanceStipendsRegister';
 import { GleeClubLedger } from '@/components/treasurer/GleeClubLedger';
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 const Treasurer = () => {
   const [activeTab, setActiveTab] = useState('dues');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <UniversalLayout>
+    <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <div className="max-w-7xl mx-auto p-4 space-y-6">
         {/* Compact Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/80 backdrop-blur-sm p-4 rounded-xl border shadow-sm">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild className="shrink-0">
-              <Link to="/dashboard" className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Link>
-            </Button>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
                 <DollarSign className="h-5 w-5 text-white" />
@@ -209,6 +205,7 @@ const Treasurer = () => {
         </Card>
       </div>
     </div>
+    </UniversalLayout>
   );
 };
 

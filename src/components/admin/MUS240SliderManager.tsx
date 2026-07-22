@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import { cn } from '@/lib/utils';
 const PLACEMENT_KEY = 'mus240-topic-photos';
 
 export const MUS240SliderManager: React.FC = () => {
+  const navigate = useNavigate();
   const { data: slider, isLoading, refetch } = useSliderByPlacementAdmin(PLACEMENT_KEY);
   const createSlider = useCreateSlider();
   const createSlide = useCreateSlide();
@@ -141,7 +143,7 @@ export const MUS240SliderManager: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => window.open('/academy/mus-240', '_blank')}
+                onClick={() => navigate('/academy/mus-240')}
               >
                 <ExternalLink className="h-3.5 w-3.5 mr-1" />
                 Preview

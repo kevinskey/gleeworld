@@ -18,6 +18,7 @@ import {
   Loader2, TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -114,6 +115,7 @@ export default function WorkspaceAnalyticsPage() {
   const isLoading = profiles.length === 0 && courses.length === 0;
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Workspace Analytics"
       icon={TrendingUp}
@@ -180,6 +182,7 @@ export default function WorkspaceAnalyticsPage() {
         </>
       )}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

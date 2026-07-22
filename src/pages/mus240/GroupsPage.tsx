@@ -3,20 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Music, 
-  Brain, 
-  Scale, 
-  Users, 
-  TrendingUp, 
-  Shield, 
-  Gavel, 
+import {
+  Music,
+  Brain,
+  Scale,
+  Users,
+  TrendingUp,
+  Shield,
+  Gavel,
   Mic
 } from 'lucide-react';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function GroupsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
+    <UniversalLayout>
+    <div className="bg-gradient-to-br from-background to-secondary/20 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -309,5 +311,6 @@ export default function GroupsPage() {
 
       </div>
     </div>
+    </UniversalLayout>
   );
 }

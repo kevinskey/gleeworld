@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -75,6 +76,7 @@ export default function CourseStorePage() {
   });
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Course Store"
       subtitle="Adopt a pre-built course into your tenant. You can edit everything after."
@@ -129,5 +131,6 @@ export default function CourseStorePage() {
         </div>
       )}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

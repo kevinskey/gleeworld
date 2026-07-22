@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Hash, ArrowRight } from 'lucide-react';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function EnrollLanding() {
   const navigate = useNavigate();
@@ -18,7 +19,8 @@ export default function EnrollLanding() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-background to-muted">
+    <UniversalLayout>
+    <div className="flex items-center justify-center p-6">
       <Card className="max-w-md w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -51,5 +53,6 @@ export default function EnrollLanding() {
         </CardContent>
       </Card>
     </div>
+    </UniversalLayout>
   );
 }

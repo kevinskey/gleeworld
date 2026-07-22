@@ -21,6 +21,7 @@ import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -87,6 +88,7 @@ export default function GradingQueuePage() {
   }, [initialSubmissionId, submissions, openSubmission]);
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Grading Queue"
       subtitle="Submissions waiting on you, oldest first. Click a row to grade."
@@ -184,6 +186,7 @@ export default function GradingQueuePage() {
         }}
       />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

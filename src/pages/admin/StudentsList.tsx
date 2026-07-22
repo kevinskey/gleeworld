@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Users, ChevronRight, Loader2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function StudentsList() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export default function StudentsList() {
   });
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Students"
       icon={Users}
@@ -67,5 +69,6 @@ export default function StudentsList() {
         </CardContent>
       </Card>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

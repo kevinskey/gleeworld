@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Youtube, Loader2, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Play, Youtube, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 import { YouTubeVideoModal } from '@/components/youtube/YouTubeVideoModal';
 import { AddYouTubeVideoForm } from '@/components/youtube/AddYouTubeVideoForm';
 import { getOrgName } from '@/lib/orgName';
 import { useUserRole } from '@/hooks/useUserRole';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface YouTubeVideo {
   id: string;
@@ -36,7 +35,6 @@ const formatDate = (dateString: string): string => {
 };
 
 export const YouTubeChannel: React.FC = () => {
-  const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,36 +116,21 @@ export const YouTubeChannel: React.FC = () => {
   }, [loading, hasMore, loadingMore, videos.length, fetchVideos]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-40" style={{ paddingTop: 'var(--gw-safe-top)' }}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/')}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-destructive flex items-center justify-center">
-                  <Youtube className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">{getOrgName()}</h1>
-                  <p className="text-sm text-muted-foreground">
-                    {totalCount > 0 ? `${totalCount} videos` : `${videos.length} videos`}
-                  </p>
-                </div>
-              </div>
-            </div>
+    <UniversalLayout>
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-full bg-destructive flex items-center justify-center">
+            <Youtube className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">{getOrgName()}</h1>
+            <p className="text-sm text-muted-foreground">
+              {totalCount > 0 ? `${totalCount} videos` : `${videos.length} videos`}
+            </p>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Content */}
       <main className="container mx-auto px-4 py-8">
         {isAdmin() && (
           <div className="mb-6">
@@ -228,7 +211,7 @@ export const YouTubeChannel: React.FC = () => {
         videoId={selectedVideo?.video_id || ''}
         title={selectedVideo?.title}
       />
-    </div>
+    </UniversalLayout>
   );
 };
 

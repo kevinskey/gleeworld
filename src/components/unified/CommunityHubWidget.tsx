@@ -645,7 +645,7 @@ export const CommunityHubWidget = () => {
                               <RadioGroup
                                 value={field.value}
                                 onValueChange={field.onChange}
-                                className="grid grid-cols-5 gap-2"
+                                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2"
                               >
                                 {noteColors.map((color) => (
                                   <div key={color.value} className="flex flex-col items-center">

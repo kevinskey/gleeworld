@@ -19,6 +19,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -91,6 +92,7 @@ export default function StudentAcademyDashboard() {
   const greeting = greetingFor(new Date());
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title={`${greeting}, ${firstName}! 👋`}
       subtitle="Here are your classes and what's coming up."
@@ -253,6 +255,7 @@ export default function StudentAcademyDashboard() {
           </Card>
         </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

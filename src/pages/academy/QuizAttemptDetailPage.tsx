@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -149,13 +150,14 @@ export default function QuizAttemptDetailPage() {
   });
 
   if (!attempt) {
-    return <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div>;
+    return <UniversalLayout><div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div></UniversalLayout>;
   }
 
   const pct = attempt.is_graded && attempt.max_score > 0
     ? Math.round((attempt.score / attempt.max_score) * 100) : null;
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="4xl"
       title={student?.full_name || student?.email || 'Student'}
@@ -208,6 +210,7 @@ export default function QuizAttemptDetailPage() {
         </Button>
       </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

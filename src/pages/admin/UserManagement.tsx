@@ -10,6 +10,7 @@ import { Users, UserPlus, Shield, Settings, Search, Filter, Mail, Calendar, Crow
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RosterImport } from "@/components/admin/RosterImport";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 interface UserProfile {
   id: string;
   user_id: string;
@@ -143,13 +144,16 @@ const updateUserRole = async (userId: string, newRole: string) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">Loading users...</div>
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">Loading users...</div>
+        </div>
+      </UniversalLayout>
     );
   }
 
   return (
+    <UniversalLayout>
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -365,6 +369,7 @@ const updateUserRole = async (userId: string, newRole: string) => {
       </Card>
 
     </div>
+    </UniversalLayout>
   );
 };
 

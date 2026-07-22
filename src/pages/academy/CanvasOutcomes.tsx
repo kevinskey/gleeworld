@@ -16,6 +16,7 @@ import { Loader2, ArrowLeft, AlertCircle, Plus, Trash2, Target } from 'lucide-re
 import { useCanvasOutcomes, useCreateOutcome, useOutcomeRollups } from '@/hooks/useCanvasAcademy';
 import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface RatingDraft { description: string; points: number }
 
@@ -32,6 +33,7 @@ export default function CanvasOutcomes() {
   const [open, setOpen] = useState(false);
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Outcomes & Mastery"
       actions={<Button onClick={() => setOpen(true)}><Plus className="w-4 h-4 mr-1" /> New outcome</Button>}
@@ -55,6 +57,7 @@ export default function CanvasOutcomes() {
         </TabsContent>
       </Tabs>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

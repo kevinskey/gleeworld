@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 // Simple SEO helper
 const useSEO = (title: string, description: string, canonical?: string) => {
@@ -96,6 +97,7 @@ export const ModulesDirectory: React.FC = () => {
   }, [query]);
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Modules Directory"
       subtitle="Explore all functional modules in GleeWorld. Open any module or propose cleanup of redundant modules. No deletions will occur without your approval."
@@ -186,6 +188,7 @@ export const ModulesDirectory: React.FC = () => {
           </section>
         ))}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Library, Home, Mic, ExternalLink, Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface Score {
   id: string;
@@ -104,16 +105,19 @@ export default function DeepLinkPicker() {
 
   if (!handle) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="max-w-md"><CardContent className="p-6 text-center">
-          <p className="text-sm text-muted-foreground">This page is only reachable from a Canvas Deep Linking launch.</p>
-        </CardContent></Card>
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center p-6">
+          <Card className="max-w-md"><CardContent className="p-6 text-center">
+            <p className="text-sm text-muted-foreground">This page is only reachable from a Canvas Deep Linking launch.</p>
+          </CardContent></Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <UniversalLayout>
+    <div className="bg-background p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <header>
           <h1 className="text-2xl font-bold">Add GleeWorld to your Canvas course</h1>
@@ -221,5 +225,6 @@ export default function DeepLinkPicker() {
         </section>
       </div>
     </div>
+    </UniversalLayout>
   );
 }

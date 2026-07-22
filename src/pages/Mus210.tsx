@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp, BookOpen, Calendar, Users, FileText, Music, Hom
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
-import { UniversalHeader } from '@/components/layout/UniversalHeader';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { AnnouncementsSection } from '@/components/course/AnnouncementsSection';
 import { AssignmentsSection } from '@/components/course/AssignmentsSection';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
@@ -154,13 +154,11 @@ export default function Mus210() {
     label: 'Help',
     icon: HelpCircle
   }];
-  return <div className="min-h-screen bg-background">
-      <UniversalHeader />
-      
+  return <UniversalLayout containerized={false}>
       {/* Instructor Control Center - Fixed Button */}
       <InstructorControlCenter courseId={courseId} />
-      
-      <div className="flex min-h-[calc(100vh-4rem)] bg-background">{/* Account for header height */}
+
+      <div className="flex bg-background">{/* Account for header height */}
       {/* Left Sidebar Navigation - 15% */}
       <aside className="w-[15%] border-r bg-card">
         <div className="p-4">
@@ -358,5 +356,5 @@ export default function Mus210() {
         </div>
       </aside>
     </div>
-    </div>;
+    </UniversalLayout>;
 }

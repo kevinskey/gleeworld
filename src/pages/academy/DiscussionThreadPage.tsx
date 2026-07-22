@@ -22,6 +22,7 @@ import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { SimpleMarkdown } from '@/components/markdown/SimpleMarkdown';
 import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -226,10 +227,11 @@ export default function DiscussionThreadPage() {
   });
 
   if (threadLoading) {
-    return <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div>;
+    return <UniversalLayout><div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div></UniversalLayout>;
   }
   if (!thread) {
     return (
+      <UniversalLayout>
       <div className="px-6 py-10 max-w-2xl mx-auto">
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
           <CardContent className="p-8 text-center space-y-3">
@@ -241,12 +243,14 @@ export default function DiscussionThreadPage() {
           </CardContent>
         </Card>
       </div>
+      </UniversalLayout>
     );
   }
 
   const openingAuthor = profMap.get(thread.author_id);
 
   return (
+    <UniversalLayout>
     <div className="px-6 py-6 max-w-3xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-start gap-3">
@@ -401,6 +405,7 @@ export default function DiscussionThreadPage() {
         </Card>
       )}
     </div>
+    </UniversalLayout>
   );
 }
 

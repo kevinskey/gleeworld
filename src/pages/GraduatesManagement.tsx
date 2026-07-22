@@ -5,6 +5,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { GraduatesManagementModule } from "@/components/modules/GraduatesManagementModule";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 export default function GraduatesManagement() {
   const { user, loading: authLoading } = useAuth();
@@ -13,9 +14,11 @@ export default function GraduatesManagement() {
 
   if (authLoading || profileLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner />
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner />
+        </div>
+      </UniversalLayout>
     );
   }
 
@@ -25,16 +28,18 @@ export default function GraduatesManagement() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Button
-        variant="ghost"
-        onClick={() => navigate('/admin/graduates')}
-        className="gap-2 mb-4"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Admin
-      </Button>
-      <GraduatesManagementModule isFullPage={true} />
-    </div>
+    <UniversalLayout>
+      <div className="container mx-auto px-4 py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/admin/graduates')}
+          className="gap-2 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Admin
+        </Button>
+        <GraduatesManagementModule isFullPage={true} />
+      </div>
+    </UniversalLayout>
   );
 }

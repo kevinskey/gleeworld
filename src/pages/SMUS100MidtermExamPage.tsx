@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { SMUS100MidtermExam } from '@/components/exams/SMUS100MidtermExam';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SMUS100MidtermExamPage: React.FC = () => {
   useEffect(() => {
     // Set SEO metadata
     document.title = "SMUS-100 Midterm Exam | Music Fundamentals Assessment";
-    
+
     // Set meta description
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
@@ -29,7 +30,11 @@ const SMUS100MidtermExamPage: React.FC = () => {
     }
   }, []);
 
-  return <SMUS100MidtermExam />;
+  return (
+    <UniversalLayout>
+      <SMUS100MidtermExam />
+    </UniversalLayout>
+  );
 };
 
 export default SMUS100MidtermExamPage;

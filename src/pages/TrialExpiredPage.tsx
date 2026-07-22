@@ -14,6 +14,7 @@ import { useTrialStatus } from '@/hooks/useTrialStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { PublicLayout } from '@/components/layout/PublicLayout';
 
 export default function TrialExpiredPage() {
   const navigate = useNavigate();
@@ -30,7 +31,8 @@ export default function TrialExpiredPage() {
   }, [state.kind, navigate]);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 sm:py-16 px-4 sm:px-6">
+    <PublicLayout>
+    <div className="py-10 sm:py-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-10 sm:mb-14">
           <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Trial ended</p>
@@ -127,5 +129,6 @@ export default function TrialExpiredPage() {
         </div>
       </div>
     </div>
+    </PublicLayout>
   );
 }

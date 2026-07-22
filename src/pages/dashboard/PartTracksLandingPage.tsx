@@ -20,6 +20,7 @@ import { format, parseISO } from 'date-fns';
 import { createPartTracksProject, deletePartTracksProject, type PartTracksProject, VOICING_TEMPLATES } from '@/hooks/usePartTracksProject';
 import { PartTracksStudio } from '@/components/partTracks/PartTracksStudio';
 import { AccompanimentPicker } from '@/components/partTracks/AccompanimentPicker';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface ScoreOption {
   id: string;
@@ -38,7 +39,11 @@ export default function PartTracksLandingPage() {
   const navigate = useNavigate();
 
   if (projectId) {
-    return <PartTracksStudio projectId={projectId} />;
+    return (
+      <UniversalLayout>
+        <PartTracksStudio projectId={projectId} />
+      </UniversalLayout>
+    );
   }
 
   return <ProjectsList onOpen={(id) => navigate(`/dashboard/part-tracks/${id}`)} />;
@@ -75,6 +80,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
   }, [projects, search]);
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Part Tracks Studio"
       icon={Disc3}
@@ -179,6 +185,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
         onCreated={(id) => { setCreating(false); refetch(); onOpen(id); }}
       />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

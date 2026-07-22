@@ -24,6 +24,7 @@ import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import type { Ensemble } from '@/types/programHealth';
 import { EnsembleDrawer } from '@/components/admin/ensembles/EnsembleDrawer';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface EnsembleRow extends Ensemble {
   member_count: number;
@@ -87,14 +88,19 @@ export default function EnsemblesPage() {
   });
 
   if (flagLoading) {
-    return <div className="p-6 text-muted-foreground">Loading…</div>;
+    return (
+      <UniversalLayout>
+        <div className="p-6 text-muted-foreground">Loading…</div>
+      </UniversalLayout>
+    );
   }
   if (!enabled) {
     return <Navigate to="/admin" replace />;
   }
 
   return (
-    <DashboardPageShell
+    <UniversalLayout>
+      <DashboardPageShell
       title="Ensembles"
       subtitle="Choirs and groups in this program. Each ensemble has its own roster, directors, section targets, and (soon) stability score."
       actions={
@@ -177,6 +183,7 @@ export default function EnsemblesPage() {
         onClose={() => setDrawerEnsembleId(null)}
       />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

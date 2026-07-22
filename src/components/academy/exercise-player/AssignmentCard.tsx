@@ -21,16 +21,18 @@ export function AssignmentCard({ ex, title }: {
       </div>
       <div>
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Grading</div>
-        <table className="text-sm w-full max-w-sm">
-          <tbody>
-            {ex.rubric.map((r, i) => (
-              <tr key={i} className="border-b border-border/50 last:border-0">
-                <td className="py-1 text-foreground/85">{r.criterion}</td>
-                <td className="py-1 text-right text-muted-foreground">{r.percent}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="w-full overflow-x-auto">
+          <table className="text-sm w-full max-w-sm">
+            <tbody>
+              {ex.rubric.map((r, i) => (
+                <tr key={i} className="border-b border-border/50 last:border-0">
+                  <td className="py-1 text-foreground/85">{r.criterion}</td>
+                  <td className="py-1 text-right text-muted-foreground">{r.percent}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

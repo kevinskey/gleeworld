@@ -9,11 +9,13 @@ import { Link } from "react-router-dom";
 import { RoleTransitionManager } from '@/components/admin/RoleTransitionManager';
 import { UnifiedUserManagement } from '@/components/admin/UnifiedUserManagement';
 import { ROUTES } from '@/constants/routes';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 const AccessControl = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <UniversalLayout>
+      <div className="container mx-auto p-6 space-y-6">
       <PageHeader
         title="Access Control"
         description="Role assignments and security policies"
@@ -113,6 +115,7 @@ const AccessControl = () => {
         <UnifiedUserManagement />
       </section>
     </div>
+    </UniversalLayout>
   );
 };
 

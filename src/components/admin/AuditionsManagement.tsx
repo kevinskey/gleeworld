@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { format } from 'date-fns';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
@@ -786,9 +787,9 @@ export const AuditionsManagement = () => {
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Button asChild variant="outline" size="sm" className="shrink-0">
-              <a href="/auditions" target="_blank" rel="noreferrer">
+              <Link to="/auditions">
                 View public page
-              </a>
+              </Link>
             </Button>
             <Select value={selectedSession} onValueChange={setSelectedSession}>
               <SelectTrigger className="w-full sm:w-48">

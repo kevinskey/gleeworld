@@ -1,5 +1,6 @@
 import React from 'react';
 import { CourseTemplate } from '@/components/academy/CourseTemplate';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function ChoralConductingLiterature() {
   const courseData = {
@@ -86,5 +87,9 @@ Three tardies = 1 absence. A tardy is issued when any student is not in the clas
     textbookIframeUrl: 'https://conducting.gleeworld.org'
   };
 
-  return <CourseTemplate {...courseData} />;
+  return (
+    <UniversalLayout>
+      <CourseTemplate {...courseData} />
+    </UniversalLayout>
+  );
 }

@@ -1,38 +1,14 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 
 // Light, accurate boilerplate ToS + Privacy. Customize before signing real
 // contracts; these are good enough for SaaS sign-ups and most school /
 // church procurement reviews.
 
-const PAGE_STYLE: React.CSSProperties = {
-  fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
-};
-
 function LegalShell({ title, lastUpdated, children }: { title: string; lastUpdated: string; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white text-slate-900" style={PAGE_STYLE}>
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200" style={{ paddingTop: 'var(--gw-safe-top)' }}>
-        <div className="max-w-7xl mx-auto px-6 h-14 sm:h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 sm:w-12 sm:h-12"
-              style={{
-                backgroundImage: 'url(/lovable-uploads/gleeworld-logo.png?v=6)',
-                backgroundSize: 'contain',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-              }}
-            />
-            <span className="font-bold text-xl sm:text-2xl tracking-tight" style={{ letterSpacing: '-0.02em', color: '#000618' }}>
-              GleeWorld
-            </span>
-          </Link>
-          <Link to="/" className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">← Back home</Link>
-        </div>
-      </header>
-
-      <main className="max-w-3xl mx-auto px-6 py-16 sm:py-24">
+    <PublicLayout>
+      <div className="max-w-3xl mx-auto px-6 py-16 sm:py-24">
         <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-slate-900" style={{ letterSpacing: '-0.025em' }}>
           {title}
         </h1>
@@ -40,21 +16,8 @@ function LegalShell({ title, lastUpdated, children }: { title: string; lastUpdat
         <div className="prose prose-slate max-w-none space-y-6 text-slate-700">
           {children}
         </div>
-      </main>
-
-      <footer className="py-12 border-t border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <span>&copy; {new Date().getFullYear()} GleeWorld</span>
-          <div className="flex gap-6 flex-wrap">
-            <Link to="/terms" className="hover:text-slate-700">Terms</Link>
-            <Link to="/privacy" className="hover:text-slate-700">Privacy</Link>
-            <Link to="/security" className="hover:text-slate-700">Trust Center</Link>
-            <Link to="/dpa" className="hover:text-slate-700">DPA</Link>
-            <a href="mailto:kevin@gleeworld.org" className="hover:text-slate-700">kevin@gleeworld.org</a>
-          </div>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </PublicLayout>
   );
 }
 

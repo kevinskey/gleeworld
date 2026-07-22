@@ -10,6 +10,7 @@ import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDial
 import { HairNailSubmission } from '@/components/wardrobe/HairNailSubmission';
 import { DressCodeModal } from '@/components/wardrobe/DressCodeModal';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 const WardrobePage = () => {
   const {
     wardrobeItems,
@@ -24,15 +25,20 @@ const WardrobePage = () => {
     name: string;
   } | null>(null);
   if (loading) {
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>;
+    return (
+      <UniversalLayout>
+        <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 p-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </UniversalLayout>
+    );
   }
   const measurements = getMeasurements();
   const formalCount = wardrobeItems.filter(item => item.category === 'formal').length;
   const costumeCount = wardrobeItems.filter(item => item.category === 'costume').length;
   const needsFittingCount = wardrobeItems.filter(item => item.status === 'needs_fitting').length;
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="7xl"
       title="Wardrobe"
@@ -315,6 +321,7 @@ const WardrobePage = () => {
           onClose={() => setIsDressCodeModalOpen(false)}
         />
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 export default WardrobePage;

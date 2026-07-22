@@ -16,6 +16,7 @@ import {
 import { format, parseISO, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -84,6 +85,7 @@ export default function TeacherAcademyDashboard() {
   });
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Teaching Dashboard"
       subtitle="Everything that needs your attention, across every class."
@@ -258,6 +260,7 @@ export default function TeacherAcademyDashboard() {
         </CardContent>
       </Card>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

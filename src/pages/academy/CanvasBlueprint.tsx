@@ -18,6 +18,7 @@ import {
   useCanvasCourses,
 } from '@/hooks/useCanvasAcademy';
 import { toast } from 'sonner';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function CanvasBlueprint() {
   const params = useParams<{ courseId: string }>();
@@ -53,7 +54,7 @@ export default function CanvasBlueprint() {
     }
   };
 
-  if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading blueprint status…</div>;
+  if (isLoading) return <UniversalLayout><div className="flex items-center justify-center py-16 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading blueprint status…</div></UniversalLayout>;
 
   const isBlueprint = status && 'ok' in status && status.is_blueprint;
   const associated = status && 'ok' in status ? status.associated_courses : [];
@@ -64,6 +65,7 @@ export default function CanvasBlueprint() {
   const availableToAdd = courses.filter((c) => c.id !== courseId && !associatedIds.has(c.id));
 
   return (
+    <UniversalLayout>
     <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto space-y-5">
       <div>
         <Link to={`/academy/canvas/courses/${courseId}`} className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -200,5 +202,6 @@ export default function CanvasBlueprint() {
         </>
       )}
     </div>
+    </UniversalLayout>
   );
 }

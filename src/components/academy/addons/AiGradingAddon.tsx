@@ -88,7 +88,7 @@ export default function AiGradingAddon({ courseId, canEdit }: Props) {
             AI-drafted scores for review. Accept to apply, override to grade manually.
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => window.open('/admin/assessment-hub', '_blank')}>
+        <Button size="sm" variant="outline" onClick={() => navigate('/admin/assessment-hub')}>
           <Sparkles className="w-4 h-4 mr-1.5" /> Run AI grading <ExternalLink className="w-3 h-3 ml-1" />
         </Button>
       </div>

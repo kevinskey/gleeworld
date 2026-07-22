@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { isNativeApp } from '@/lib/nativeTenant';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -12,6 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Save, ArrowRight, Upload, Image as ImageIcon, X, Globe, Settings as SettingsIcon, ExternalLink, Check, Layout } from 'lucide-react';
 import { toast } from 'sonner';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function SiteSetup() {
   const navigate = useNavigate();
@@ -75,19 +75,23 @@ export default function SiteSetup() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(40,10%,96%)] p-6">
-        <div className="text-center text-muted-foreground">Please sign in.</div>
-      </div>
+      <UniversalLayout>
+        <div className="flex items-center justify-center bg-[hsl(40,10%,96%)] p-6 py-20">
+          <div className="text-center text-muted-foreground">Please sign in.</div>
+        </div>
+      </UniversalLayout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(40,10%,96%)] p-6">
-        <div className="text-center text-muted-foreground">
-          Site setup is admin-only.
+      <UniversalLayout>
+        <div className="flex items-center justify-center bg-[hsl(40,10%,96%)] p-6 py-20">
+          <div className="text-center text-muted-foreground">
+            Site setup is admin-only.
+          </div>
         </div>
-      </div>
+      </UniversalLayout>
     );
   }
 
@@ -239,9 +243,9 @@ export default function SiteSetup() {
   }
 
   return (
+    <UniversalLayout>
     <div
-      className="min-h-screen bg-[hsl(40,10%,96%)] pb-8 px-4"
-      style={{ paddingTop: 'max(2rem, calc(env(safe-area-inset-top) + 1rem))' }}
+      className="bg-[hsl(40,10%,96%)] pb-8 px-4 pt-8"
     >
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -257,14 +261,8 @@ export default function SiteSetup() {
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              onClick={() => {
-                if (isNativeApp()) {
-                  navigate('/?preview=1');
-                } else {
-                  window.open('/?preview=1', '_blank', 'noopener');
-                }
-              }}
-              title="Open your public landing in a new tab"
+              onClick={() => navigate('/?preview=1')}
+              title="Open your public landing"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
               View public site
@@ -663,6 +661,7 @@ export default function SiteSetup() {
         </p>
       </div>
     </div>
+    </UniversalLayout>
   );
 }
 

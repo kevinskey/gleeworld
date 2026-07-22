@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Play, BookOpen, Sparkles, ArrowRight, Music2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -90,6 +91,7 @@ const SightReadingPage: React.FC = () => {
   }, []);
 
   return (
+    <UniversalLayout>
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       <header>
         <div className="flex items-center gap-2 mb-1">
@@ -248,6 +250,7 @@ const SightReadingPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </UniversalLayout>
   );
 };
 

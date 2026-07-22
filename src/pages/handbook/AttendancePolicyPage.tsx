@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, AlertTriangle, BookOpen, Users, Calendar } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const AttendancePolicyPage = () => {
   console.log('AttendancePolicyPage: Component rendering');
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       maxWidth="4xl"
       title="Attendance Policy"
@@ -197,6 +199,7 @@ const AttendancePolicyPage = () => {
           </Card>
         </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 };
 

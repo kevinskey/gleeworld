@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Trash2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 const STATUSES = ['new', 'contacted', 'auditioned', 'enrolled', 'declined'] as const;
 
@@ -76,6 +77,7 @@ export default function Prospects() {
   }));
 
   return (
+    <UniversalLayout>
     <DashboardPageShell
       title="Prospective Students"
       icon={UserPlus}
@@ -126,6 +128,7 @@ export default function Prospects() {
         </Card>
       ))}
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }
 

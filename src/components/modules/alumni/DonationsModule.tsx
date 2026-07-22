@@ -71,7 +71,7 @@ export function DonationsModule({ user, isFullPage }: ModuleProps) {
             <CardDescription className="leading-relaxed">Your donation supports current members and preserves our legacy</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <RadioGroup value={selectedAmount} onValueChange={setSelectedAmount} className="grid grid-cols-5 gap-2">
+            <RadioGroup value={selectedAmount} onValueChange={setSelectedAmount} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
               {['50', '100', '250', '500', 'custom'].map((amount) => (
                 <div key={amount}>
                   <RadioGroupItem value={amount} id={`amount-${amount}`} className="peer sr-only" />

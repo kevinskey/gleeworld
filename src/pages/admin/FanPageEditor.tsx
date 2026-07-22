@@ -2,6 +2,7 @@
 // page builder, but the published snapshot is gated to authenticated users
 // via get_tenant_fan_page() and only renders at /fan.
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   DndContext,
   closestCenter,
@@ -44,6 +45,7 @@ import {
 import { useBlockPageEditor } from '@/hooks/useBlockPageEditor';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { BLOCK_LIST, getBlockModule, isBlockAvailable } from '@/components/public-site/registry';
 import { AutoForm } from '@/components/public-site/AutoForm';
 import { fontStack, safeConfig, type SiteBlock, type SiteRenderContext } from '@/components/public-site/types';
@@ -116,6 +118,7 @@ function SortableBlockRow({
 }
 
 export default function FanPageEditor() {
+  const navigate = useNavigate();
   const { settings: branding } = useBrandingSettings();
   const editor = useBlockPageEditor({
     pageTable: 'gw_fan_pages',
@@ -165,36 +168,43 @@ export default function FanPageEditor() {
   };
 
   if (editor.pageLoading) {
-    return <div className="p-10 text-center text-muted-foreground">Loading…</div>;
+    return (
+      <UniversalLayout>
+        <div className="p-10 text-center text-muted-foreground">Loading…</div>
+      </UniversalLayout>
+    );
   }
 
   if (!editor.page) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-16">
-        <Card>
-          <CardHeader className="text-center">
-            <Heart className="w-10 h-10 mx-auto mb-2 text-primary" />
-            <CardTitle>Create your fan page</CardTitle>
-            <CardDescription>
-              A members-only landing page for everyone who signs up as a fan. Same block builder as
-              your public site — start with a header, hero, upcoming events, and music, then publish.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Button onClick={editor.activate} disabled={editor.activating} size="lg">
-              <Rocket className="w-4 h-4 mr-2" />
-              {editor.activating ? 'Setting up…' : 'Create fan page'}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <UniversalLayout>
+        <div className="max-w-xl mx-auto px-4 py-16">
+          <Card>
+            <CardHeader className="text-center">
+              <Heart className="w-10 h-10 mx-auto mb-2 text-primary" />
+              <CardTitle>Create your fan page</CardTitle>
+              <CardDescription>
+                A members-only landing page for everyone who signs up as a fan. Same block builder as
+                your public site — start with a header, hero, upcoming events, and music, then publish.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center">
+              <Button onClick={editor.activate} disabled={editor.activating} size="lg">
+                <Rocket className="w-4 h-4 mr-2" />
+                {editor.activating ? 'Setting up…' : 'Create fan page'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
     );
   }
 
   const existingBlockTypes = new Set(editor.blocks.map((b) => b.block_type));
 
   return (
-    <DashboardPageShell
+    <UniversalLayout>
+      <DashboardPageShell
       title="Fan page"
       maxWidth="7xl"
       subtitle={editor.page.is_published
@@ -230,8 +240,8 @@ export default function FanPageEditor() {
           {editor.page.is_published && (
             <Button
               variant="outline"
-              onClick={() => window.open(`${window.location.origin}/fan?_=${Date.now()}`, '_blank', 'noopener,noreferrer')}
-              title="Open your fan page in a new tab"
+              onClick={() => navigate(`/fan?_=${Date.now()}`)}
+              title="Open your fan page"
             >
               <ExternalLink className="w-4 h-4 mr-1.5" /> View page
             </Button>
@@ -385,5 +395,6 @@ export default function FanPageEditor() {
         </Card>
       </div>
     </DashboardPageShell>
+    </UniversalLayout>
   );
 }

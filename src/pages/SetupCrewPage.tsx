@@ -9,10 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Users, Calendar, Settings, Trash2 } from 'lucide-react';
+import { Plus, Users, Calendar, Settings } from 'lucide-react';
 import { SetupCrewDetails } from '@/components/setup-crew/SetupCrewDetails';
 import { useToast } from '@/hooks/use-toast';
-import { useHomePath } from '@/hooks/useHomePath';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 interface Event {
   id: string;
@@ -22,8 +22,6 @@ interface Event {
 }
 
 export default function SetupCrewPage() {
-  const navigate = useNavigate();
-  const homePath = useHomePath();
   const { crews, loading, fetchCrews, createCrew } = useSetupCrews();
   const { toast } = useToast();
   
@@ -101,26 +99,14 @@ export default function SetupCrewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50" style={{ paddingTop: 'var(--gw-safe-top)' }}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(homePath)}
-                className="gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-              <div className="flex items-center gap-2">
-                <Users className="h-6 w-6 text-primary" />
-                <h1 className="text-2xl font-bold">Setup Crews</h1>
-              </div>
-            </div>
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+    <UniversalLayout>
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Users className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Setup Crews</h1>
+          </div>
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
@@ -195,11 +181,9 @@ export default function SetupCrewPage() {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-6">
+      <div>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-lg">Loading setup crews...</div>
@@ -273,6 +257,7 @@ export default function SetupCrewPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </UniversalLayout>
   );
 }
