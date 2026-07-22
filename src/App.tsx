@@ -924,8 +924,14 @@ const App = () => {
               <Route path="/academy/canvas/courses/:courseId/blueprint" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><CanvasBlueprint /></DashboardShell></UniversalLayout></ProtectedRoute>} />
               <Route path="/studio" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><StudioHome /></DashboardShell></UniversalLayout></ProtectedRoute>} />
               <Route path="/studio/sessions/:id" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><StudioEditor /></DashboardShell></UniversalLayout></ProtectedRoute>} />
-              <Route path="/video" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoLibrary /></DashboardShell></UniversalLayout></ProtectedRoute>} />
-              <Route path="/video/:id" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoPlayer /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/video" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><YouTubeChannel /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              {/* Legacy Studio recording library (upload/render pipeline) — kept
+                  accessible from Studio; the main /video route is now the shared
+                  library. */}
+              <Route path="/studio/videos" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoLibrary /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              <Route path="/studio/videos/:id" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoPlayer /></DashboardShell></UniversalLayout></ProtectedRoute>} />
+              {/* Legacy /video/:id → studio player (backward compat). */}
+              <Route path="/video/:id" element={<Navigate to="/studio/videos" replace />} />
               <Route
                 path="/academy/c/:code/discuss/:threadId"
                 element={
@@ -2154,14 +2160,9 @@ const App = () => {
                     </PublicRoute>
                   } 
                  />
-                <Route 
-                  path="/youtube" 
-                  element={
-                    <PublicRoute>
-                      <YouTubeChannel />
-                    </PublicRoute>
-                  } 
-                />
+                {/* /youtube collapsed into /video (see route above). Kept as a
+                    redirect so old links and search hits still land somewhere. */}
+                <Route path="/youtube" element={<Navigate to="/video" replace />} />
                 <Route 
                   path="/about" 
                   element={

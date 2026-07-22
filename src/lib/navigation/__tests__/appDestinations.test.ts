@@ -126,7 +126,7 @@ const KNOWN_ROUTES = new Set([
   '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
   '/store', '/dashboard/people',
   '/dashboard/music-library', '/dashboard/media-library', '/dashboard/librarian',
-  '/dashboard/office-hours', '/dashboard/practice-recordings', '/video', '/youtube',
+  '/dashboard/office-hours', '/dashboard/practice-recordings', '/video',
   '/dashboard/music-tools', '/dashboard/liturgy', '/tour-manager',
   '/dashboard/auditions', '/dashboard/pr-hub', '/admin/fan-page',
   '/dashboard/feeds', '/dashboard/shop', '/dashboard/alumni',
