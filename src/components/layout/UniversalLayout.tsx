@@ -1,5 +1,11 @@
-import { ReactNode } from "react";
+import { createContext, ReactNode, useContext } from "react";
 import { useLocation } from "react-router-dom";
+
+// Idempotence guard. Pages self-wrap in <UniversalLayout> while routes in
+// App.tsx often already wrap them — nested instances would double the
+// header/footer/shell tinting. Nested instances short-circuit to a
+// pass-through so any wrap-order works.
+const UniversalLayoutNestedContext = createContext(false);
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UniversalHeader } from "./UniversalHeader";
@@ -85,6 +91,8 @@ export const UniversalLayout = ({
   viewMode,
   onViewModeChange
 }: UniversalLayoutProps) => {
+  const alreadyInsideLayout = useContext(UniversalLayoutNestedContext);
+  if (alreadyInsideLayout) return <>{children}</>;
   const location = useLocation();
 
   // Pull the tenant's public-site theme so the admin shell stays in lockstep
@@ -121,10 +129,14 @@ export const UniversalLayout = ({
   // Render DashboardShell instead, which gives them the same admin topbar +
   // sidebar they see on Command Center.
   if (IS_TENANT_DOMAIN && showHeader && !shouldUsePublicHeader) {
-    return <DashboardShell>{children}</DashboardShell>;
+    return (
+      <UniversalLayoutNestedContext.Provider value={true}>
+        <DashboardShell>{children}</DashboardShell>
+      </UniversalLayoutNestedContext.Provider>
+    );
   }
 
-  return <div
+  return <UniversalLayoutNestedContext.Provider value={true}><div
     className="flex flex-col min-h-screen w-full"
     style={{
       background: shellBackground,
@@ -166,5 +178,5 @@ export const UniversalLayout = ({
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
-    </div>;
+    </div></UniversalLayoutNestedContext.Provider>;
 };

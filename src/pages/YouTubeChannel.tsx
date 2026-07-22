@@ -8,20 +8,23 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Play, Youtube, Loader2, Search, ArrowUpDown, Star, Upload, Pencil,
-  Share2, ListPlus, Check,
+  Share2, ListPlus, Check, Users, Inbox, Plus, Trash2, ListVideo, Bookmark,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { YouTubeVideoModal } from '@/components/youtube/YouTubeVideoModal';
 import { AddYouTubeVideoForm } from '@/components/youtube/AddYouTubeVideoForm';
 import { EditVideoDialog, type EditVideoRow } from '@/components/youtube/EditVideoDialog';
 import { AddToPlaylistDialog } from '@/components/youtube/AddToPlaylistDialog';
+import { ShareVideoDialog } from '@/components/youtube/ShareVideoDialog';
 import { useUserRole } from '@/hooks/useUserRole';
+import { usePersonalPlaylists, useSharedWithMe, type Playlist } from '@/hooks/useVideoLibrary';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { parseVideoSource, providerLabel } from '@/lib/videoSources';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 
 interface VideoRow {
@@ -39,7 +42,7 @@ interface VideoRow {
   is_featured: boolean | null;
 }
 
-type Tab = 'all' | 'featured' | 'uploads';
+type Tab = 'all' | 'featured' | 'uploads' | 'playlists' | 'shared';
 type Sort = 'recent' | 'oldest' | 'title' | 'views';
 
 const LIBRARY_HARD_CAP = 500;
@@ -73,6 +76,12 @@ export const YouTubeChannel: React.FC = () => {
 
   const [editing, setEditing] = useState<EditVideoRow | null>(null);
   const [playlistTargetId, setPlaylistTargetId] = useState<string | null>(null);
+  const [shareTarget, setShareTarget] = useState<{ id: string; title: string; type: 'video' | 'playlist' } | null>(null);
+  const [newPlaylistTitle, setNewPlaylistTitle] = useState('');
+  const [showNewPlaylistForm, setShowNewPlaylistForm] = useState(false);
+
+  const personal = usePersonalPlaylists();
+  const sharedInbox = useSharedWithMe();
 
   const fetchVideos = useCallback(async () => {
     setLoading(true);
@@ -181,7 +190,33 @@ export const YouTubeChannel: React.FC = () => {
     { key: 'all', label: 'All' },
     { key: 'featured', label: 'Featured', icon: Star },
     { key: 'uploads', label: 'Uploads', icon: Upload },
+    { key: 'playlists', label: 'My Playlists', icon: ListVideo },
+    { key: 'shared', label: 'Shared with me', icon: Inbox },
   ];
+
+  const saveToPlaylist = async (playlistId: string, videoId: string, playlistTitle: string) => {
+    const err = await personal.addVideo(playlistId, videoId);
+    if (err) {
+      if ((err as { code?: string }).code === '23505') {
+        toast({ title: 'Already in that playlist' });
+      } else {
+        toast({ title: 'Could not save', description: (err as Error).message, variant: 'destructive' });
+      }
+      return;
+    }
+    toast({ title: 'Saved', description: `Added to "${playlistTitle}"` });
+  };
+
+  const createPlaylistInline = async () => {
+    const title = newPlaylistTitle.trim();
+    if (!title) return;
+    const p = await personal.create(title);
+    if (p) {
+      setNewPlaylistTitle('');
+      setShowNewPlaylistForm(false);
+      toast({ title: 'Playlist created' });
+    }
+  };
 
   return (
     <UniversalLayout showHeader={false} showFooter={false}>
@@ -247,7 +282,7 @@ export const YouTubeChannel: React.FC = () => {
                 </SelectContent>
               </Select>
 
-              {allCategories.length > 0 && (
+              {tab !== 'playlists' && tab !== 'shared' && allCategories.length > 0 && (
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger className="h-9 w-[160px] text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
                   <SelectContent>
@@ -290,7 +325,28 @@ export const YouTubeChannel: React.FC = () => {
             )}
           </div>
 
-          {loading ? (
+          {tab === 'playlists' ? (
+            <PlaylistsPanel
+              playlists={personal.playlists}
+              loading={personal.loading}
+              showForm={showNewPlaylistForm}
+              newTitle={newPlaylistTitle}
+              onNewTitleChange={setNewPlaylistTitle}
+              onShowForm={() => setShowNewPlaylistForm(true)}
+              onHideForm={() => { setShowNewPlaylistForm(false); setNewPlaylistTitle(''); }}
+              onCreate={createPlaylistInline}
+              onRename={personal.rename}
+              onDelete={personal.remove}
+              onShare={(p) => setShareTarget({ id: p.id, title: p.title, type: 'playlist' })}
+            />
+          ) : tab === 'shared' ? (
+            <SharedInboxPanel
+              shares={sharedInbox.shares}
+              loading={sharedInbox.loading}
+              videos={videos}
+              onOpenVideo={(v) => setSelectedVideo(v)}
+            />
+          ) : loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-destructive" />
             </div>
@@ -403,10 +459,57 @@ export const YouTubeChannel: React.FC = () => {
                           variant="ghost"
                           size="sm"
                           className="h-7 text-xs px-2"
+                          onClick={(e) => { e.stopPropagation(); setShareTarget({ id: video.id, title: video.title, type: 'video' }); }}
+                          title="Share with a user or course"
+                        >
+                          <Share2 className="w-3.5 h-3.5 mr-1" /> Share
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs px-2"
+                              onClick={(e) => e.stopPropagation()}
+                              title="Save to a playlist"
+                            >
+                              <Bookmark className="w-3.5 h-3.5 mr-1" /> Save
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                            {personal.playlists.length === 0 && (
+                              <div className="px-2 py-1.5 text-xs text-muted-foreground">No playlists yet.</div>
+                            )}
+                            {personal.playlists.map((p) => (
+                              <DropdownMenuItem
+                                key={p.id}
+                                onClick={(e) => { e.stopPropagation(); saveToPlaylist(p.id, video.id, p.title); }}
+                              >
+                                <ListVideo className="w-3.5 h-3.5 mr-2" /> {p.title}
+                              </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const title = window.prompt('New playlist name');
+                                if (!title?.trim()) return;
+                                const p = await personal.create(title.trim());
+                                if (p) await saveToPlaylist(p.id, video.id, p.title);
+                              }}
+                            >
+                              <Plus className="w-3.5 h-3.5 mr-2" /> New playlist…
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs px-2"
                           onClick={(e) => { e.stopPropagation(); copyShareLink(video); }}
                           title="Copy shareable link"
                         >
-                          <Share2 className="w-3.5 h-3.5 mr-1" /> Share
+                          <ListPlus className="w-3.5 h-3.5" />
                         </Button>
                         {isAdmin() && (
                           <>
@@ -417,7 +520,7 @@ export const YouTubeChannel: React.FC = () => {
                               onClick={(e) => { e.stopPropagation(); setPlaylistTargetId(video.id); }}
                               title="Add to a course playlist"
                             >
-                              <ListPlus className="w-3.5 h-3.5 mr-1" /> Playlist
+                              <Users className="w-3.5 h-3.5" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -459,9 +562,182 @@ export const YouTubeChannel: React.FC = () => {
           onClose={() => setPlaylistTargetId(null)}
           onAdded={() => { /* no-op — playlist state lives elsewhere */ }}
         />
+        <ShareVideoDialog
+          open={!!shareTarget}
+          resourceType={shareTarget?.type || 'video'}
+          resourceId={shareTarget?.id}
+          resourceLabel={shareTarget?.title || ''}
+          onClose={() => setShareTarget(null)}
+          onShared={() => sharedInbox.refresh()}
+        />
       </DashboardShell>
     </UniversalLayout>
   );
 };
+
+// ── Playlists tab ────────────────────────────────────────────────────
+function PlaylistsPanel({
+  playlists, loading, showForm, newTitle, onNewTitleChange, onShowForm, onHideForm, onCreate,
+  onRename, onDelete, onShare,
+}: {
+  playlists: Playlist[];
+  loading: boolean;
+  showForm: boolean;
+  newTitle: string;
+  onNewTitleChange: (t: string) => void;
+  onShowForm: () => void;
+  onHideForm: () => void;
+  onCreate: () => Promise<void> | void;
+  onRename: (id: string, title: string) => Promise<void> | void;
+  onDelete: (id: string) => Promise<void> | void;
+  onShare: (p: Playlist) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-destructive" />
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      <div>
+        {showForm ? (
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <label className="text-xs font-medium text-muted-foreground">Playlist title</label>
+              <Input
+                value={newTitle}
+                onChange={(e) => onNewTitleChange(e.target.value)}
+                placeholder="e.g. Concert warmups"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter') onCreate(); }}
+              />
+            </div>
+            <Button size="sm" onClick={() => onCreate()} disabled={!newTitle.trim()}>Create</Button>
+            <Button size="sm" variant="ghost" onClick={onHideForm}>Cancel</Button>
+          </div>
+        ) : (
+          <Button size="sm" onClick={onShowForm} className="gap-1.5">
+            <Plus className="w-4 h-4" /> New playlist
+          </Button>
+        )}
+      </div>
+
+      {playlists.length === 0 ? (
+        <div className="text-center py-20">
+          <ListVideo className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground">No playlists yet. Create one to start organizing videos.</p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+          {playlists.map((p) => (
+            <li key={p.id} className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
+                <ListVideo className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">{p.title}</div>
+                <div className="text-[11px] text-muted-foreground">
+                  {p.item_count ?? 0} video{p.item_count === 1 ? '' : 's'} · Updated {new Date(p.updated_at).toLocaleDateString()}
+                </div>
+              </div>
+              <Button size="sm" variant="ghost" className="text-xs" onClick={() => onShare(p)}>
+                <Share2 className="w-3.5 h-3.5 mr-1" /> Share
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs"
+                onClick={() => {
+                  const title = window.prompt('Rename playlist', p.title);
+                  if (title && title.trim() && title !== p.title) onRename(p.id, title.trim());
+                }}
+              >
+                Rename
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-destructive hover:text-destructive"
+                onClick={() => {
+                  if (window.confirm(`Delete "${p.title}"?`)) onDelete(p.id);
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ── Shared with me tab ───────────────────────────────────────────────
+function SharedInboxPanel({
+  shares, loading, videos, onOpenVideo,
+}: {
+  shares: { id: string; resource_type: string; resource_id: string | null; note: string | null; created_at: string; recipient_type: string }[];
+  loading: boolean;
+  videos: VideoRow[];
+  onOpenVideo: (v: VideoRow) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-destructive" />
+      </div>
+    );
+  }
+  const byVideoId = new Map(videos.map((v) => [v.id, v]));
+  const items = shares
+    .filter((s) => s.resource_type === 'video' && s.resource_id && byVideoId.has(s.resource_id))
+    .map((s) => ({ share: s, video: byVideoId.get(s.resource_id!)! }));
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <Inbox className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
+        <p className="text-sm text-muted-foreground">Nothing shared with you yet.</p>
+      </div>
+    );
+  }
+  return (
+    <ul className="space-y-3">
+      {items.map(({ share, video }) => (
+        <li key={share.id} className="flex gap-3 p-3 rounded-xl border border-border bg-card">
+          <button
+            className="shrink-0 aspect-video w-40 rounded overflow-hidden bg-muted"
+            onClick={() => onOpenVideo(video)}
+          >
+            {video.thumbnail_url ? (
+              <img src={video.thumbnail_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Play className="w-6 h-6 text-muted-foreground/40" />
+              </div>
+            )}
+          </button>
+          <div className="flex-1 min-w-0">
+            <button
+              className="text-sm font-medium hover:text-destructive text-left line-clamp-2"
+              onClick={() => onOpenVideo(video)}
+            >
+              {video.title}
+            </button>
+            {share.note && (
+              <p className="text-xs text-muted-foreground mt-1 italic">"{share.note}"</p>
+            )}
+            <div className="text-[11px] text-muted-foreground mt-1">
+              Shared {new Date(share.created_at).toLocaleDateString()}
+              {share.recipient_type === 'course' && ' · via a course'}
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default YouTubeChannel;
