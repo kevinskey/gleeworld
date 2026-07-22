@@ -12,7 +12,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { isValidIr } from '@/lib/sightReading/irValidate';
 import { toast } from 'sonner';
-import { PageTitle } from '@/components/dashboard/DashboardPageShell';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 interface LibraryRow {
   id: string;
@@ -172,14 +172,11 @@ export default function SightReadingStudio() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6 px-4 py-6">
-      <header className="space-y-1">
-        <PageTitle>Sight Reading</PageTitle>
-        <p className="text-sm text-slate-600">
-          Sing a line, get instant feedback. No grades — just practice.
-        </p>
-      </header>
-
+    <DashboardPageShell
+      title="Sight Reading"
+      subtitle="Sing a line, get instant feedback. No grades — just practice."
+      maxWidth="4xl"
+    >
       <Button size="lg" className="w-full rounded-full" onClick={start}>
         Start practice
       </Button>
@@ -283,6 +280,6 @@ export default function SightReadingStudio() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </DashboardPageShell>
   );
 }

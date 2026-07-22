@@ -13,7 +13,6 @@
 import { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PageContainer } from '@/components/layout/PageContainer';
 
 interface PageTitleProps {
   children: ReactNode;
@@ -54,6 +53,17 @@ interface DashboardPageShellProps {
   children: ReactNode;
 }
 
+// Left-padding tokens are shared with any hand-rolled dashboard page that
+// wants its title to land at the same X as everyone else.
+export const DASHBOARD_PAGE_PADDING = 'px-4 sm:px-6 lg:px-8';
+
+const MAX_WIDTH_CLASSES: Record<NonNullable<DashboardPageShellProps['maxWidth']>, string> = {
+  '4xl': 'max-w-4xl',
+  '6xl': 'max-w-6xl',
+  '7xl': 'max-w-7xl',
+  full: 'max-w-full',
+};
+
 export function DashboardPageShell({
   title,
   subtitle,
@@ -63,11 +73,17 @@ export function DashboardPageShell({
   className,
   children,
 }: DashboardPageShellProps) {
+  // Anchored to the left edge (no mx-auto) so page titles land at the exact
+  // same X coordinate across every page regardless of `maxWidth`. Vertical
+  // padding is fixed so the title's Y is also stable across navigations.
   return (
-    <PageContainer
-      maxWidth={maxWidth}
-      padded={false}
-      className={cn('pt-5 sm:pt-6 pb-10 space-y-6', className)}
+    <div
+      className={cn(
+        'w-full pt-5 sm:pt-6 pb-10 space-y-6',
+        DASHBOARD_PAGE_PADDING,
+        MAX_WIDTH_CLASSES[maxWidth],
+        className,
+      )}
     >
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
@@ -77,7 +93,7 @@ export function DashboardPageShell({
         {actions}
       </header>
       {children}
-    </PageContainer>
+    </div>
   );
 }
 
