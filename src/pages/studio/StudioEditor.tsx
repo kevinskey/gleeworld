@@ -1247,7 +1247,8 @@ function Editor({
       // Web path: Tone.UserMedia + MediaRecorder.
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
-      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb, captureWav: isAppleWebEngine() });
+      const channelIndex = Number(localStorage.getItem('studio.inputChannelIndex') || 0) || 0;
+      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb, channelIndex, captureWav: isAppleWebEngine() });
       await recorder.start();
       // Stamp the moment capture is actually live — getUserMedia +
       // graph setup above is the variable startup cost that used to be
@@ -1551,7 +1552,8 @@ function Editor({
       if (loopEnabled) setLoopEnabled(false);
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
-      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb, captureWav: isAppleWebEngine() });
+      const channelIndex = Number(localStorage.getItem('studio.inputChannelIndex') || 0) || 0;
+      const recorder = await openMicRecorder({ inputDeviceId, inputGainDb, channelIndex, captureWav: isAppleWebEngine() });
       punchRef.current = { recorder, phase: 'pre' };
       engineState.setRecordingActive?.(true);
       const from = preRollStartSeconds(
@@ -5138,7 +5140,8 @@ function MicLevelTester() {
     setMaxDb(-Infinity); // fresh session max
     try {
       const deviceId = localStorage.getItem('studio.inputDeviceId') || '';
-      const rec = await openMicRecorder({ inputDeviceId: deviceId, monitorGain: 0, inputGainDb });
+      const channelIndex = Number(localStorage.getItem('studio.inputChannelIndex') || 0) || 0;
+      const rec = await openMicRecorder({ inputDeviceId: deviceId, channelIndex, monitorGain: 0, inputGainDb });
       recRef.current = rec;
       setRunning(true);
       // Drive the meter directly off the raw waveform analyser samples
@@ -5619,6 +5622,19 @@ function AudioSettingsButton({ midiSync, midiInput }: { midiSync?: MidiSyncProps
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [inputId, setInputId] = useState<string>(() => localStorage.getItem('studio.inputDeviceId') || '');
   const [outputId, setOutputId] = useState<string>(() => localStorage.getItem('studio.outputDeviceId') || '');
+  // Zero-based interface input to record from (0 = Input 1). Stored as
+  // string in localStorage; parsed on read. Applies globally to the next
+  // recording — matches Logic's "input source" per-track, but scoped to
+  // one recorder at a time.
+  const [channelIndex, setChannelIndexState] = useState<number>(() => {
+    const raw = localStorage.getItem('studio.inputChannelIndex');
+    const n = raw !== null ? Number(raw) : 0;
+    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+  });
+  // How many channels the currently selected device reports as available
+  // (via getCapabilities). Filled by probeChannelCount when the device
+  // changes; defaults to 2 so the picker isn't confusingly empty.
+  const [deviceChannelCount, setDeviceChannelCount] = useState<number>(2);
 
   const refresh = async () => {
     try {
@@ -5627,15 +5643,66 @@ function AudioSettingsButton({ midiSync, midiInput }: { midiSync?: MidiSyncProps
       stream.getTracks().forEach((t) => t.stop());
       const list = await navigator.mediaDevices.enumerateDevices();
       setDevices(list.filter((d) => d.kind === 'audioinput' || d.kind === 'audiooutput'));
+      // Probe the currently-saved input so the channel picker knows how
+      // many options to show on first open of the dialog.
+      void probeChannelCount(inputId);
     } catch (e) {
       toast.error('Could not enumerate audio devices', { description: e instanceof Error ? e.message : String(e) });
+    }
+  };
+
+  // Ask the device how many input channels it exposes. Chrome routinely
+  // reports getSettings().channelCount = 2 even when the interface
+  // supports 8 (it treats the constraint as a ceiling, not a request),
+  // so we prefer getCapabilities().channelCount.max — the TRUE device
+  // max — and only fall back to getSettings when capabilities aren't
+  // exposed. Then we retry the open with the higher count so downstream
+  // recording actually gets those channels.
+  const probeChannelCount = async (deviceId: string) => {
+    try {
+      const constraints: MediaTrackConstraints = { channelCount: 8 };
+      if (deviceId && deviceId !== 'default') {
+        (constraints as { deviceId?: ConstrainDOMString }).deviceId = { exact: deviceId };
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: constraints });
+      const track = stream.getAudioTracks()[0];
+      const caps = track?.getCapabilities?.();
+      const capMax = caps?.channelCount?.max;
+      const negotiated = track?.getSettings().channelCount;
+      // Prefer the device's advertised max; if capabilities are missing
+      // (Safari, Firefox), fall back to what we negotiated.
+      const actual = (typeof capMax === 'number' && capMax > 0)
+        ? capMax
+        : (typeof negotiated === 'number' && negotiated > 0 ? negotiated : 2);
+      // eslint-disable-next-line no-console
+      console.log('[studio] channel probe', { deviceId, capMax, negotiated, chose: actual });
+      stream.getTracks().forEach((t) => t.stop());
+      setDeviceChannelCount(Math.min(Math.max(actual, 1), 8));
+    } catch (e) {
+      // OverconstrainedError, permission denied, etc. — stay at stereo
+      // and let the user proceed. If the device really only has 2 the
+      // splitter clamps gracefully anyway.
+      // eslint-disable-next-line no-console
+      console.warn('[studio] channel probe failed', e);
+      setDeviceChannelCount(2);
     }
   };
 
   const onPickInput = (id: string) => {
     setInputId(id);
     localStorage.setItem('studio.inputDeviceId', id);
+    // Reset channel selection when the device changes — Input 5 on
+    // Apollo means nothing on the MacBook mic.
+    setChannelIndexState(0);
+    localStorage.setItem('studio.inputChannelIndex', '0');
+    void probeChannelCount(id);
     toast.success(`Input set — next recording will use this device.`);
+  };
+
+  const onPickChannel = (idx: number) => {
+    setChannelIndexState(idx);
+    localStorage.setItem('studio.inputChannelIndex', String(idx));
+    toast.success(`Recording from Input ${idx + 1} on next take.`);
   };
   const onPickOutput = async (id: string) => {
     setOutputId(id);
@@ -5690,6 +5757,24 @@ function AudioSettingsButton({ midiSync, midiInput }: { midiSync?: MidiSyncProps
               ))}
             </select>
           </div>
+          {/* Channel picker — hidden on plain 1-2 channel devices where
+              there's nothing to pick between. Numbered from 1 to match
+              the physical panel labeling of Apollo/MOTU/etc. interfaces. */}
+          {deviceChannelCount > 2 && (
+            <div>
+              <Label className="text-xs">Interface input channel</Label>
+              <select value={channelIndex} onChange={(e) => onPickChannel(Number(e.target.value))}
+                className="w-full h-8 bg-background border border-border rounded px-2 text-sm">
+                {Array.from({ length: deviceChannelCount }, (_, i) => (
+                  <option key={i} value={i}>Input {i + 1}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Which physical input on your interface to record — like Logic's input
+                source. Requires Chrome/Edge on macOS; Safari caps at Input 1–2.
+              </p>
+            </div>
+          )}
           <div>
             <Label className="text-xs">Speakers / headphones (output)</Label>
             <select value={outputId} onChange={(e) => onPickOutput(e.target.value)}

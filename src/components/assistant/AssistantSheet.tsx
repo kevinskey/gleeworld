@@ -137,9 +137,53 @@ export const AssistantSheet = () => {
           <DialogTitle className="sr-only">GleeWorld Assistant</DialogTitle>
           <DialogDescription className="sr-only">{ASSISTANT_DESCRIPTION}</DialogDescription>
 
-          {/* Row 1 — the spotlight bar itself: mic, borderless input, send, mute. */}
+          {/* Compact header — mute + minimize live here so the input row
+              stays clean and centered on the mic/text/send trio. */}
+          <div className="flex items-center justify-between px-3 py-2 border-b">
+            <span className="text-xs font-medium text-muted-foreground px-1">GleeWorld Assistant</span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={toggleMute}
+                className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
+                title={muted ? 'Unmute replies' : 'Mute replies'}
+              >
+                {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
+              </button>
+              {/* The desktop spotlight otherwise closes only via Esc/backdrop —
+                  an invisible exit. Minimizing returns to the floating mic. */}
+              <button
+                type="button"
+                onClick={() => setSheetOpen(false)}
+                aria-label="Minimize assistant"
+                title="Minimize"
+                className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
+              >
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+          </div>
+
+          {/* Thread grows above the input; when the conversation is empty
+              we show suggestions instead and let the input sit right under
+              them so the dialog doesn't feel bottom-heavy. */}
+          <div className="px-4 py-3">
+            {!hasMessages && <AssistantSuggestions onPick={send} />}
+            <AssistantThread
+              messages={state.messages}
+              busy={state.busy}
+              error={state.error}
+              runAction={runAction}
+              cancelAction={cancelAction}
+              scrollRef={scrollRef}
+              className={hasMessages ? 'max-h-[50vh] overflow-y-auto space-y-3' : undefined}
+            />
+          </div>
+
+          {/* Input row anchored at the bottom, matching the pattern users
+              expect from ChatGPT/Claude/etc. */}
           <form
-            className="flex items-center gap-2 px-4 py-3"
+            className="flex items-center gap-2 px-4 py-3 border-t"
             onSubmit={(e) => { e.preventDefault(); submit(input); }}
           >
             {speaking && (
@@ -160,44 +204,12 @@ export const AssistantSheet = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={listening ? 'Listening…' : 'Ask GleeWorld…'}
-              className="flex-1 h-9 border-0 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground"
+              className="flex-1 h-9 rounded-full border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
             <Button type="submit" size="sm" className="h-9 w-9 shrink-0 rounded-full p-0" disabled={state.busy || !input.trim()}>
               <Send className="w-4 h-4" />
             </Button>
-            <button
-              type="button"
-              onClick={toggleMute}
-              className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
-              title={muted ? 'Unmute replies' : 'Mute replies'}
-            >
-              {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
-            </button>
-            {/* The desktop spotlight otherwise closes only via Esc/backdrop —
-                an invisible exit. Minimizing returns to the floating mic. */}
-            <button
-              type="button"
-              onClick={() => setSheetOpen(false)}
-              aria-label="Minimize assistant"
-              title="Minimize"
-              className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
-            >
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            </button>
           </form>
-
-          <div className="border-t px-4 py-3">
-            {!hasMessages && <AssistantSuggestions onPick={send} />}
-            <AssistantThread
-              messages={state.messages}
-              busy={state.busy}
-              error={state.error}
-              runAction={runAction}
-              cancelAction={cancelAction}
-              scrollRef={scrollRef}
-              className={hasMessages ? 'max-h-[50vh] overflow-y-auto space-y-3' : undefined}
-            />
-          </div>
 
           {videoRoom && (
             <AssistantVideoOverlay

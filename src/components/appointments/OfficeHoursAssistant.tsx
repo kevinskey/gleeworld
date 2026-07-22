@@ -4,6 +4,8 @@ import { Mic, X, Volume2, VolumeX, Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAudioCoordinator } from '@/hooks/useAudioCoordinator';
+// Voice is set tenant-wide on Workspace Settings → Branding.
+import { useAssistantVoice, DEFAULT_VOICE_ID } from '@/lib/assistant/voices';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -22,8 +24,8 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
   const [isMuted, setIsMuted] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedVoiceId, setSelectedVoiceId] = useState('cgSgspJ2msm6clMCkdW9');
-  const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const { voiceId: tenantVoiceId } = useAssistantVoice();
+  const selectedVoiceId = tenantVoiceId || DEFAULT_VOICE_ID;
   const [userId, setUserId] = useState<string | null>(null);
 
   const recognitionRef = useRef<any>(null);
@@ -46,24 +48,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
     registerPauseCallback('aria', pauseAria);
     return () => unregisterPauseCallback('aria');
   }, [registerPauseCallback, unregisterPauseCallback]);
-
-  const voiceOptions = [
-    { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', desc: 'Young, natural female' },
-    { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', desc: 'Soft, warm female' },
-    { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', desc: 'Clear, confident female' },
-    { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda', desc: 'Warm, friendly female' },
-    { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', desc: 'Gentle, soothing female' },
-    { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', desc: 'Deep, authoritative male' },
-    { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', desc: 'Warm British male' },
-    { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', desc: 'Professional male' },
-    { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', desc: 'Classic, mature male' },
-    { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric', desc: 'Friendly, conversational male' },
-  ];
-
-  useEffect(() => {
-    const saved = localStorage.getItem('aria-voice-id');
-    if (saved) setSelectedVoiceId(saved);
-  }, []);
 
   // Get current user ID
   useEffect(() => {
@@ -276,13 +260,6 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
     }
   };
 
-  const handleVoiceSelect = (voiceId: string) => {
-    setSelectedVoiceId(voiceId);
-    localStorage.setItem('aria-voice-id', voiceId);
-    setShowVoicePicker(false);
-    toast.success('Voice updated');
-  };
-
   // ── Orb Button (collapsed) ──
   if (!isOpen) {
     return (
@@ -376,32 +353,7 @@ export const OfficeHoursAssistant: React.FC<OfficeHoursAssistantProps> = ({ appo
               <VolumeX className="h-4 w-4" />
             </button>
           )}
-          <button onClick={() => setShowVoicePicker(!showVoicePicker)} className="p-2 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors text-xs">
-            🎙
-          </button>
         </div>
-
-        {showVoicePicker && (
-          <div className="absolute -bottom-48 bg-black/90 border border-white/10 rounded-xl p-2 max-h-40 overflow-y-auto w-64 backdrop-blur-lg">
-            <div className="grid grid-cols-2 gap-1">
-              {voiceOptions.map(voice => (
-                <button
-                  key={voice.id}
-                  onClick={() => handleVoiceSelect(voice.id)}
-                  className={cn(
-                    "text-left p-1.5 rounded-lg text-xs transition-colors",
-                    selectedVoiceId === voice.id
-                      ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                      : "text-white/60 hover:bg-white/10 hover:text-white border border-transparent"
-                  )}
-                >
-                  <div className="font-medium">{voice.name}</div>
-                  <div className="text-white/30 text-[9px]">{voice.desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

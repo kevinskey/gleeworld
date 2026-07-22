@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { ASSISTANT_VOICES, BROWSER_VOICE_ID, DEFAULT_VOICE_ID } from '@/lib/assistant/voices';
 import { Card, CardContent } from '@/components/ui/card';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
@@ -734,6 +735,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
     font_family: 'sans',
     letter_spacing: 0,
     logo_url: '',
+    assistant_voice_id: '' as string,
   });
   const [saving, setSaving] = useState(false);
 
@@ -747,6 +749,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         font_family: (settings as any).font_family || 'sans',
         letter_spacing: Number((settings as any).letter_spacing ?? 0),
         logo_url: (settings as any).logo_url || '',
+        assistant_voice_id: (settings as any).assistant_voice_id || '',
       });
     }
   }, [settings]);
@@ -778,6 +781,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         font_family: form.font_family,
         letter_spacing: form.letter_spacing,
         logo_url: form.logo_url,
+        assistant_voice_id: form.assistant_voice_id || null,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' });
     setSaving(false);
@@ -895,6 +899,32 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
               )}
             </>
           )}
+        </div>
+        {/* Assistant voice — tenant-branded like the color palette. Sets
+            the ElevenLabs voice everyone in this workspace hears when
+            they talk to the assistant. "Browser default" opts out of
+            ElevenLabs and uses the browser's built-in TTS (free, no API
+            quota). */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Assistant voice</Label>
+          <Select
+            value={form.assistant_voice_id || DEFAULT_VOICE_ID}
+            onValueChange={(v) => setForm({ ...form, assistant_voice_id: v === BROWSER_VOICE_ID ? BROWSER_VOICE_ID : v })}
+            disabled={!canManage}
+          >
+            <SelectTrigger className="h-10"><SelectValue placeholder="Pick a voice" /></SelectTrigger>
+            <SelectContent>
+              {ASSISTANT_VOICES.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.label} <span className="text-muted-foreground">— {v.description}</span>
+                </SelectItem>
+              ))}
+              <SelectItem value={BROWSER_VOICE_ID}>Browser default (no ElevenLabs)</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Applies to every user in the workspace. Preview voices in Studio → The Lab.
+          </p>
         </div>
         {canManage && (
           <div className="flex justify-end pt-2">

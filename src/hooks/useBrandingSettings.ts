@@ -16,6 +16,11 @@ export interface BrandingSettings {
   accent_color: string;
   font_family: string;
   letter_spacing: number;
+  /** ElevenLabs voice_id used for assistant TTS, or 'browser' to force
+   *  browser SpeechSynthesis, or null for the app default (Jessica). Set
+   *  on the Branding tab in Workspace Settings — tenant-scoped like the
+   *  color palette. */
+  assistant_voice_id: string | null;
   setup_completed: boolean;
 }
 
@@ -35,6 +40,7 @@ function fallback(): BrandingSettings {
     accent_color: '#9333ea',
     font_family: 'sans',
     letter_spacing: 0,
+    assistant_voice_id: null,
     setup_completed: false,
   };
 }
