@@ -78,6 +78,11 @@ public final class StudioNativeEngine {
     /// the node itself is detached; otherwise the tap block leaks
     /// its capture list).
     private var tappedNodes: [AVAudioNode] = []
+    /// Phase 8 mirror — schedules read-mode automation ramps against
+    /// the transport during playback. Armed on play(); cancelled on
+    /// pause / stop / seek / dispose so the next play() re-primes
+    /// against the fresh position.
+    private lazy var automationScheduler = AutomationScheduler()
 
     /// Session currently bound. Read-only after loadSession; structural
     /// edits require a fresh loadSession.
@@ -347,6 +352,7 @@ public final class StudioNativeEngine {
         // disarm the click on teardown.
         cancelMetronome()
         metronomeOn = false
+        automationScheduler.cancel()
         positionTimer?.invalidate(); positionTimer = nil
         removeAllMeterTaps()
         for (_, t) in tracks { t.dispose() }
@@ -431,11 +437,13 @@ public final class StudioNativeEngine {
         if wasRunning { engine.stop() }
         NSLog("[Studio.load] engine stopped (wasRunning=\(wasRunning)); disposing \(tracks.count) old bindings")
 
-        // Tear down previous bindings. Meter taps FIRST — they hold
-        // block captures into nodes about to be detached.
+        // Tear down previous bindings. Meter taps + automation
+        // scheduler FIRST — they hold block captures / closures into
+        // nodes and bindings about to be detached.
         removeAllMeterTaps()
         trackMeters.removeAll()
         busMeters.removeAll()
+        automationScheduler.cancel()
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
         for (_, b) in buses { b.dispose() }
@@ -764,9 +772,45 @@ public final class StudioNativeEngine {
         if metronomeOn { scheduleMetronome(from: pausedAt) }
         isPlayingNow = true
         wantsPlayback = true   // user intent — drives interruption recovery
+        armAutomationForPlayback()
         startPositionTimer()
         emit()
         emitEvent(StudioEvents.playbackStarted, ["positionMs": pausedAt * 1000])
+    }
+
+    // MARK: - Automation (Phase 8 mirror)
+
+    /// Arm the automation scheduler with the current session's
+    /// read-mode envelopes. Called from play(); safe to call when
+    /// there is no session or no automation (turns into a cheap
+    /// no-op — no timers armed).
+    private func armAutomationForPlayback() {
+        let entries = session?.automation ?? []
+        if entries.isEmpty { return }
+        automationScheduler.apply(
+            automation: entries,
+            positionProvider: { [weak self] in
+                guard let self = self else { return 0 }
+                return self.currentPositionSeconds()
+            },
+            targetResolver: { [weak self] targetId, targetKind, param -> ((Double) -> Void)? in
+                guard let self = self else { return nil }
+                switch targetKind {
+                case .track:
+                    guard let t = self.tracks[targetId] else { return nil }
+                    switch param {
+                    case .volume_db: return { t.setVolumeDb($0) }
+                    case .pan:       return { t.setPan(Float($0)) }
+                    }
+                case .bus:
+                    guard let b = self.buses[targetId] else { return nil }
+                    switch param {
+                    case .volume_db: return { b.setVolumeDb($0) }
+                    case .pan:       return { b.setPan(Float($0)) }
+                    }
+                }
+            }
+        )
     }
 
     public func pause() {
@@ -777,6 +821,7 @@ public final class StudioNativeEngine {
         pausedAt = currentPositionSeconds()
         for (_, t) in tracks { t.stopScheduling() }
         cancelMetronome()
+        automationScheduler.cancel()
         isPlayingNow = false
         positionTimer?.invalidate(); positionTimer = nil
         emit()
@@ -788,6 +833,7 @@ public final class StudioNativeEngine {
         wantsPlayback = false   // deliberate stop — don't auto-resume
         for (_, t) in tracks { t.stopScheduling() }
         cancelMetronome()
+        automationScheduler.cancel()
         pausedAt = 0
         isPlayingNow = false
         startHostTime = nil
@@ -800,6 +846,7 @@ public final class StudioNativeEngine {
         let wasPlaying = isPlayingNow
         if isPlayingNow {
             for (_, t) in tracks { t.stopScheduling() }
+            automationScheduler.cancel()
             isPlayingNow = false
         }
         pausedAt = max(0, s)
