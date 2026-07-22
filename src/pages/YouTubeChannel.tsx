@@ -239,24 +239,34 @@ export const YouTubeChannel: React.FC = () => {
         <main className="container mx-auto px-4 py-4 space-y-6">
           {isAdmin() && <AddYouTubeVideoForm onAdded={() => fetchVideos()} />}
 
-          {/* Toolbar: tabs, search, sort */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="inline-flex rounded-md border border-border bg-muted/40 p-0.5 text-xs">
-                {tabs.map(({ key, label, icon: Icon }) => (
+          {/* Toolbar: tabs (underlined library-style), search, sort */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2 flex-wrap overflow-x-auto border-b border-border -mx-4 px-4">
+              {tabs.map(({ key, label, icon: Icon }) => {
+                const active = tab === key;
+                return (
                   <button
                     key={key}
                     onClick={() => setTab(key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition-colors ${
-                      tab === key ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'
+                    className={`relative flex items-center gap-1.5 px-1 py-3 text-sm transition-colors whitespace-nowrap ${
+                      active
+                        ? 'text-foreground font-semibold'
+                        : 'text-foreground/60 hover:text-foreground'
                     }`}
                   >
-                    {Icon && <Icon className="w-3.5 h-3.5" />}
+                    {Icon && <Icon className={`w-4 h-4 ${active ? 'text-destructive' : ''}`} />}
                     {label}
+                    <span
+                      className={`absolute left-0 right-0 -bottom-px h-0.5 rounded-full transition-colors ${
+                        active ? 'bg-destructive' : 'bg-transparent'
+                      }`}
+                    />
                   </button>
-                ))}
-              </div>
+                );
+              })}
+            </div>
 
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="flex-1 min-w-[180px]">
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
