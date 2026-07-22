@@ -15,7 +15,8 @@ import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { renderSessionToWav } from '@/lib/studio/engine/mixdown';
 import type { Session, MidiClip } from '@/lib/studio/session';
 import {
-  isNativeStudioAvailable, openNativeStudio, NativeStudio, type NativeEngineState,
+  isNativeStudioAvailable, openNativeStudio, NativeStudio,
+  type NativeEngineState, type RoutingEditResult,
 } from '@/plugins/studioEngine';
 
 // ── Current user's tenant + user id (needed for createSession) ───────
@@ -740,6 +741,13 @@ export function useStudioEngine(session: Session | null) {
         updateSendLevel: async (trackId: string, sendId: string, levelDb: number) => {
           await NativeStudio.updateSendLevel({ trackId, sendId, levelDb });
         },
+        // v2.0.0 incremental routing — apply a track/bus output change
+        // without a full engine reload. Returns a discriminated result
+        // so the UI can toast the specific rejection cause.
+        setTrackOutput: (trackId: string, targetBusId: string) =>
+          NativeStudio.setTrackOutput({ trackId, targetBusId }),
+        setBusOutput: (busId: string, targetBusId: string) =>
+          NativeStudio.setBusOutput({ busId, targetBusId }),
       };
     }
     return {
@@ -775,6 +783,22 @@ export function useStudioEngine(session: Session | null) {
       getTrackPeakDbStereo: (id: string) => engineRef.current?.getTrackPeakDbStereo(id) ?? { L: -Infinity, R: -Infinity },
       getBusPeakDb: (id: string) => engineRef.current?.getBusPeakDb(id) ?? -Infinity,
       getBusPeakDbStereo: (id: string) => engineRef.current?.getBusPeakDbStereo(id) ?? { L: -Infinity, R: -Infinity },
+      // v2.0.0 incremental routing on the web engine. Same discriminated
+      // result shape as the native path so callers can share a common
+      // handler. The web engine.ts already has the underlying method
+      // (Phase 4a/4c) — this wire-up exposes it on the hook.
+      setTrackOutput: async (trackId: string, targetBusId: string): Promise<RoutingEditResult> => {
+        const ok = engineRef.current?.setTrackOutput(trackId, targetBusId);
+        if (ok === undefined) return { ok: false, error: 'unknown_track' };
+        return ok ? { ok: true } : { ok: false, error: 'unknown_target' };
+      },
+      setBusOutput: async (busId: string, targetBusId: string): Promise<RoutingEditResult> => {
+        const r = engineRef.current?.setBusOutput(busId, targetBusId);
+        if (r === undefined) return { ok: false, error: 'unknown_bus' };
+        if (r.ok) return { ok: true };
+        if ('cycle' in r) return { ok: false, error: 'cycle', cycle: r.cycle };
+        return { ok: false, error: r.error === 'unknown_bus' ? 'unknown_bus' : 'unknown_target' };
+      },
     };
   }, [native]);
 

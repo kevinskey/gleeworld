@@ -38,6 +38,15 @@ public final class TrackBinding {
     /// muteGate). Metering taps install here so the meter shows the
     /// post-processed signal the master bus receives.
     public var meterNode: AVAudioNode { fxChain?.output ?? muteGate }
+    /// v2.0.0 — passthrough (unity) node between the FX tail (or
+    /// muteGate when there is no FX) and the downstream target.
+    /// Exists so setTrackOutput can safely disconnectNodeOutput
+    /// on JUST this edge without touching the muteGate outputs
+    /// (which post-fader sends may fan out from — see Sends.swift).
+    /// routingGate never has any other outbound edge, so a
+    /// disconnectNodeOutput on it is always the single track→bus
+    /// edge and nothing else.
+    public let routingGate: AVAudioMixerNode
     private let kind: Studio.TrackKind
 
     // Audio-track resources (push path — default).
@@ -67,7 +76,8 @@ public final class TrackBinding {
     private init(trackId: String, kind: Studio.TrackKind,
                  engine: AVAudioEngine, master: AVAudioMixerNode,
                  preFaderTap: AVAudioMixerNode,
-                 strip: AVAudioMixerNode, muteGate: AVAudioMixerNode, fxChain: FxChain?) {
+                 strip: AVAudioMixerNode, muteGate: AVAudioMixerNode,
+                 routingGate: AVAudioMixerNode, fxChain: FxChain?) {
         self.trackId = trackId
         self.kind = kind
         self.engine = engine
@@ -75,6 +85,7 @@ public final class TrackBinding {
         self.preFaderTap = preFaderTap
         self.strip = strip
         self.muteGate = muteGate
+        self.routingGate = routingGate
         self.fxChain = fxChain
     }
 
@@ -88,9 +99,11 @@ public final class TrackBinding {
         let preFaderTap = AVAudioMixerNode()
         let strip = AVAudioMixerNode()
         let muteGate = AVAudioMixerNode()
+        let routingGate = AVAudioMixerNode()
         engine.attach(preFaderTap)
         engine.attach(strip)
         engine.attach(muteGate)
+        engine.attach(routingGate)
 
         // Pull common track fields.
         let id: String
@@ -123,16 +136,23 @@ public final class TrackBinding {
         engine.connect(preFaderTap, to: strip, format: nil)
         engine.connect(strip, to: muteGate, format: nil)
         let fxChain = FxChain.build(engine: engine, specs: fxSpecs)
+        // Terminal-of-chain feeds routingGate; routingGate then goes
+        // to the declared downstream target (master or a bus's strip).
+        // Splitting the last hop through routingGate gives setTrackOutput
+        // a clean single edge to disconnect without touching muteGate
+        // (which may fan out to post-fader sends).
         if let chain = fxChain {
             engine.connect(muteGate, to: chain.input, format: nil)
-            engine.connect(chain.output, to: master, format: nil)
+            engine.connect(chain.output, to: routingGate, format: nil)
         } else {
-            engine.connect(muteGate, to: master, format: nil)
+            engine.connect(muteGate, to: routingGate, format: nil)
         }
+        engine.connect(routingGate, to: master, format: nil)
 
         let binding = TrackBinding(trackId: id, kind: kind, engine: engine, master: master,
                                    preFaderTap: preFaderTap,
-                                   strip: strip, muteGate: muteGate, fxChain: fxChain)
+                                   strip: strip, muteGate: muteGate,
+                                   routingGate: routingGate, fxChain: fxChain)
 
         switch track {
         case .audio(let t):
@@ -501,9 +521,11 @@ public final class TrackBinding {
             self.engine.disconnectNodeInput(self.preFaderTap)
             self.engine.disconnectNodeInput(self.strip)
             self.engine.disconnectNodeInput(self.muteGate)
+            self.engine.disconnectNodeInput(self.routingGate)
             self.engine.detach(self.preFaderTap)
             self.engine.detach(self.strip)
             self.engine.detach(self.muteGate)
+            self.engine.detach(self.routingGate)
         }) {
             NSLog("[Studio] TrackBinding.dispose teardown raised (ignored): \(err.localizedDescription)")
         }

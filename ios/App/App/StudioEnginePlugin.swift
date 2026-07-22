@@ -86,6 +86,8 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "updateStrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateBusStrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateSendLevel", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setTrackOutput", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setBusOutput", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getTrackPeakDbStereo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getBusPeakDbStereo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setFxParam", returnType: CAPPluginReturnPromise),
@@ -383,6 +385,39 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             "L": peak.L.isFinite ? peak.L : Self.silentFloorDb,
             "R": peak.R.isFinite ? peak.R : Self.silentFloorDb,
         ])
+    }
+
+    // v2.0.0 — incremental track routing. JS calls:
+    //   NativeStudio.setTrackOutput({ trackId, targetBusId })
+    // Returns { ok: true } on success; { ok: false, error, cycle? }
+    // on failure so the UI can toast the specific cause.
+    @objc func setTrackOutput(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let trackId = call.getString("trackId") else { call.reject("missing trackId"); return }
+        guard let targetBusId = call.getString("targetBusId") else { call.reject("missing targetBusId"); return }
+        switch engine.setTrackOutput(trackId: trackId, targetBusId: targetBusId) {
+        case .ok:              call.resolve(["ok": true])
+        case .unknownSource:   call.resolve(["ok": false, "error": "unknown_track"])
+        case .unknownTarget:   call.resolve(["ok": false, "error": "unknown_target"])
+        case .cycle(let path): call.resolve(["ok": false, "error": "cycle", "cycle": path])
+        }
+    }
+
+    // v2.0.0 — incremental bus routing. JS calls:
+    //   NativeStudio.setBusOutput({ busId, targetBusId })
+    // Returns the same discriminated shape as setTrackOutput; the
+    // cycle branch carries the offending bus_id path so the UI can
+    // format the toast verbatim.
+    @objc func setBusOutput(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let busId = call.getString("busId") else { call.reject("missing busId"); return }
+        guard let targetBusId = call.getString("targetBusId") else { call.reject("missing targetBusId"); return }
+        switch engine.setBusOutput(busId: busId, targetBusId: targetBusId) {
+        case .ok:              call.resolve(["ok": true])
+        case .unknownSource:   call.resolve(["ok": false, "error": "unknown_bus"])
+        case .unknownTarget:   call.resolve(["ok": false, "error": "unknown_target"])
+        case .cycle(let path): call.resolve(["ok": false, "error": "cycle", "cycle": path])
+        }
     }
 
     // Live FX-parameter update. `trackId` omitted → master bus. `fx` is the
