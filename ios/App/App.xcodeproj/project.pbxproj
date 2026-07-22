@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0E71D57B938889625A90DA8A /* Metering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1367BF35A73FBB20384CA757 /* Metering.swift */; };
 		0F8FC03F74824DDFA1681673 /* StudioEnginePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */; };
 		1A2A2A2A2A2A2A2A2A2A2A2A /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1A1A1A1A1A1A1A1A1A1A1A /* MainViewController.swift */; };
 		1D09D689DC86B0FDB970E0F3 /* Engine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20BECA3F13EF2967946AC20 /* Engine.swift */; };
@@ -44,6 +45,7 @@
 
 /* Begin PBXFileReference section */
 		1115083A228D70B1C4E1C12A /* RoutingGraph.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RoutingGraph.swift; sourceTree = "<group>"; };
+		1367BF35A73FBB20384CA757 /* Metering.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Metering.swift; sourceTree = "<group>"; };
 		170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioEnginePlugin.swift; sourceTree = "<group>"; };
 		1A1A1A1A1A1A1A1A1A1A1A1A /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		1DAD2143C4798E9ADDA1A3AF /* StudioModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioModel.swift; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				1115083A228D70B1C4E1C12A /* RoutingGraph.swift */,
 				E35A0870023595C0377512D8 /* Buses.swift */,
 				27146FB8EE06B9F0D866B053 /* Automation.swift */,
+				1367BF35A73FBB20384CA757 /* Metering.swift */,
 			);
 			name = Studio;
 			path = Studio;
@@ -324,6 +327,7 @@
 				46FE7AE84FD551DD3D8C4609 /* RoutingGraph.swift in Sources */,
 				285A1D8A2AC39FF2C4CFCBAB /* Buses.swift in Sources */,
 				FAF6A9CF387E9159480E5FB3 /* Automation.swift in Sources */,
+				0E71D57B938889625A90DA8A /* Metering.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -85,6 +85,8 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateStrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateBusStrip", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getTrackPeakDbStereo", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getBusPeakDbStereo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setFxParam", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "bypassEffect", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateTempo", returnType: CAPPluginReturnPromise),
@@ -337,6 +339,36 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             mute: call.getBool("mute"),
             solo: call.getBool("solo"))
         call.resolve()
+    }
+
+    // Phase 6 mirror — per-track stereo peak read. JS polls at ~30 Hz
+    // per visible strip. Returns { L, R } in dBFS; -Infinity when the
+    // track isn't built or when no signal has crossed the tap since
+    // the last poll. Sentinel floor used when the peak is -Infinity
+    // (no signal since last read). Capacitor's JSON serialization
+    // can't round-trip Double.infinity; -160 dB is below the ~-140 dB
+    // noise floor of 16-bit audio, so the UI's PPM ballistics render
+    // it as empty.
+    private static let silentFloorDb = -160.0
+
+    @objc func getTrackPeakDbStereo(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let trackId = call.getString("trackId") else { call.reject("missing trackId"); return }
+        let peak = engine.getTrackPeakDbStereo(id: trackId)
+        call.resolve([
+            "L": peak.L.isFinite ? peak.L : Self.silentFloorDb,
+            "R": peak.R.isFinite ? peak.R : Self.silentFloorDb,
+        ])
+    }
+
+    @objc func getBusPeakDbStereo(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let busId = call.getString("busId") else { call.reject("missing busId"); return }
+        let peak = engine.getBusPeakDbStereo(id: busId)
+        call.resolve([
+            "L": peak.L.isFinite ? peak.L : Self.silentFloorDb,
+            "R": peak.R.isFinite ? peak.R : Self.silentFloorDb,
+        ])
     }
 
     // Live FX-parameter update. `trackId` omitted → master bus. `fx` is the

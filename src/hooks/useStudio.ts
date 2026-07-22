@@ -610,6 +610,20 @@ export function useStudioEngine(session: Session | null) {
 
   const api = useMemo(() => {
     if (native) {
+      // Phase 6 mirror — cache the last stereo peak readings from
+      // the native bridge so the synchronous getTrackPeakDbStereo /
+      // getBusPeakDbStereo the UI polls per rAF can return
+      // immediately. Each read fires a fresh promise to refresh the
+      // cache for the NEXT tick (one frame stale ≈ 33 ms, matches
+      // the web engine's poll cadence). -160 dB is the plugin's
+      // "no signal" sentinel; convert back to -Infinity so the JS
+      // ballistics see the same shape they get on web.
+      const trackPeakCache = new Map<string, { L: number; R: number }>();
+      const busPeakCache = new Map<string, { L: number; R: number }>();
+      const trackPeakPending = new Set<string>();
+      const busPeakPending = new Set<string>();
+      const SILENT_FLOOR = -160;
+      const denorm = (v: number): number => (v <= SILENT_FLOOR ? -Infinity : v);
       return {
         start: async () => { await NativeStudio.start(); },
         play: async () => { await NativeStudio.play(); },
@@ -672,16 +686,44 @@ export function useStudioEngine(session: Session | null) {
           });
           setState((prev) => (prev ? { ...prev, recordingActive: active } : prev));
         },
-        // Native per-track metering isn't bridged yet (B1 Task 6 ships
-        // the web meters first) — MixerView's PeakMeter renders its
-        // empty/floor state on iOS until a follow-up wires this through
-        // NativeStudio.
-        getTrackPeakDb: (_trackId: string) => -Infinity,
-        getTrackPeakDbStereo: (_trackId: string) => ({ L: -Infinity, R: -Infinity }),
-        // Native per-bus metering — same story as track metering, not
-        // wired yet. Web engine ships per-bus meters in Phase 6.
-        getBusPeakDb: (_busId: string) => -Infinity,
-        getBusPeakDbStereo: (_busId: string) => ({ L: -Infinity, R: -Infinity }),
+        // Phase 6 mirror — synchronous getters that read the last
+        // cached peak while kicking off a fresh promise for the next
+        // frame. The `pending` set prevents piling up promises when
+        // the UI polls faster than the bridge can return.
+        getTrackPeakDb: (trackId: string) => {
+          const cached = trackPeakCache.get(trackId);
+          return cached ? Math.max(denorm(cached.L), denorm(cached.R)) : -Infinity;
+        },
+        getTrackPeakDbStereo: (trackId: string) => {
+          if (!trackPeakPending.has(trackId)) {
+            trackPeakPending.add(trackId);
+            NativeStudio.getTrackPeakDbStereo({ trackId }).then((r) => {
+              trackPeakCache.set(trackId, r);
+            }).catch(() => { /* engine not ready or track missing */ })
+              .finally(() => trackPeakPending.delete(trackId));
+          }
+          const cached = trackPeakCache.get(trackId);
+          return cached
+            ? { L: denorm(cached.L), R: denorm(cached.R) }
+            : { L: -Infinity, R: -Infinity };
+        },
+        getBusPeakDb: (busId: string) => {
+          const cached = busPeakCache.get(busId);
+          return cached ? Math.max(denorm(cached.L), denorm(cached.R)) : -Infinity;
+        },
+        getBusPeakDbStereo: (busId: string) => {
+          if (!busPeakPending.has(busId)) {
+            busPeakPending.add(busId);
+            NativeStudio.getBusPeakDbStereo({ busId }).then((r) => {
+              busPeakCache.set(busId, r);
+            }).catch(() => { /* engine not ready or bus missing */ })
+              .finally(() => busPeakPending.delete(busId));
+          }
+          const cached = busPeakCache.get(busId);
+          return cached
+            ? { L: denorm(cached.L), R: denorm(cached.R) }
+            : { L: -Infinity, R: -Infinity };
+        },
         // v2.0.0 bus strip live-edit — mirrors updateTrackStrip above.
         // Structural bus edits (add/remove/setOutput) still route
         // through the skeleton-diff full reload; only strip fader

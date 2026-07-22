@@ -65,6 +65,19 @@ public final class StudioNativeEngine {
     /// engine here; the tail output → downstream target link is
     /// wired by loadSession after every bus has an input node.
     private var buses: [String: BusBinding] = [:]
+    /// Per-track / per-bus PPM peak trackers (Phase 6 mirror). Fed by
+    /// AVAudioNode taps installed in loadSession on each binding's
+    /// terminal node (post-FX). MixerView polls these at ~30 Hz via
+    /// the bridge methods getTrackPeakDbStereo / getBusPeakDbStereo,
+    /// which consume-on-read — the tap block only ever holds a
+    /// single frame's worth of peak between polls.
+    private var trackMeters: [String: PeakMeter] = [:]
+    private var busMeters: [String: PeakMeter] = [:]
+    /// Nodes we've installed a tap on. Kept so dispose can remove
+    /// each one (AVAudioNode.removeTap(onBus:) must be called before
+    /// the node itself is detached; otherwise the tap block leaks
+    /// its capture list).
+    private var tappedNodes: [AVAudioNode] = []
 
     /// Session currently bound. Read-only after loadSession; structural
     /// edits require a fresh loadSession.
@@ -335,6 +348,7 @@ public final class StudioNativeEngine {
         cancelMetronome()
         metronomeOn = false
         positionTimer?.invalidate(); positionTimer = nil
+        removeAllMeterTaps()
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
         for (_, b) in buses { b.dispose() }
@@ -417,7 +431,11 @@ public final class StudioNativeEngine {
         if wasRunning { engine.stop() }
         NSLog("[Studio.load] engine stopped (wasRunning=\(wasRunning)); disposing \(tracks.count) old bindings")
 
-        // Tear down previous bindings.
+        // Tear down previous bindings. Meter taps FIRST — they hold
+        // block captures into nodes about to be detached.
+        removeAllMeterTaps()
+        trackMeters.removeAll()
+        busMeters.removeAll()
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
         for (_, b) in buses { b.dispose() }
@@ -509,6 +527,24 @@ public final class StudioNativeEngine {
         }
         // Apply master gain.
         masterMixer.outputVolume = Float(dbToGain(s.master.volume_db))
+
+        // Phase 6 mirror — install per-track / per-bus meter taps
+        // AFTER the graph is fully wired. The tap's format is
+        // derived from the node's output at install time; installing
+        // before format negotiation would either fail or lock the
+        // node to a stale format. Every install is wrapped so a bad
+        // node degrades to a silent floor rather than aborting the
+        // whole load.
+        for (id, t) in tracks {
+            let meter = PeakMeter()
+            trackMeters[id] = meter
+            installMeterTap(on: t.meterNode, feeding: meter)
+        }
+        for (id, b) in buses {
+            let meter = PeakMeter()
+            busMeters[id] = meter
+            installMeterTap(on: b.output, feeding: meter)
+        }
         NSLog("[Studio.load] master wired; restarting engine (wasRunning=\(wasRunning))")
 
         // Restart — the rebuilt graph negotiates formats here, in one
@@ -548,6 +584,56 @@ public final class StudioNativeEngine {
         }) {
             NSLog("[Studio] master rewire raised \(err.localizedDescription)")
         }
+    }
+
+    // MARK: - Metering (Phase 6 mirror)
+
+    /// Install a peak-tracking tap on `node`'s output bus 0.
+    /// Wrapped so a bad node / format mismatch degrades to a silent
+    /// meter (returns -Infinity) instead of aborting loadSession.
+    private func installMeterTap(on node: AVAudioNode, feeding meter: PeakMeter) {
+        if let err = StudioObjC.catchExceptions({
+            // Buffer size 1024 = ~23 ms at 44.1 kHz. Larger buffers
+            // mean fewer callbacks but slower peak response; UI polls
+            // at ~30 Hz (33 ms) so 1024 is comfortably below that.
+            // format: nil derives from the node's negotiated output
+            // — required for the mixer/effect nodes we tap.
+            node.installTap(onBus: 0, bufferSize: 1024, format: nil) { buffer, _ in
+                meter.write(fromBuffer: buffer)
+            }
+            self.tappedNodes.append(node)
+        }) {
+            NSLog("[Studio] installMeterTap failed for node: \(err.localizedDescription)")
+        }
+    }
+
+    /// Remove every tap we installed. Called before rebuilding
+    /// bindings in loadSession + on engine dispose. Wrapped so a
+    /// stale reference during teardown doesn't throw.
+    private func removeAllMeterTaps() {
+        _ = StudioObjC.catchExceptions {
+            for node in self.tappedNodes {
+                node.removeTap(onBus: 0)
+            }
+        }
+        tappedNodes.removeAll()
+    }
+
+    /// Per-track stereo peak read (Phase 6 mirror of
+    /// engine.getTrackPeakDbStereo on web). Returns { L, R } in
+    /// dBFS. -Infinity when the track isn't built or when no signal
+    /// has crossed the tap since the last poll. Consume-on-read:
+    /// after this call, the internal peak resets to -Infinity, so
+    /// the next poll only sees new signal.
+    public func getTrackPeakDbStereo(id: String) -> (L: Double, R: Double) {
+        guard let meter = trackMeters[id] else { return (L: -.infinity, R: -.infinity) }
+        return meter.readAndReset()
+    }
+
+    /// Same as getTrackPeakDbStereo but for user buses.
+    public func getBusPeakDbStereo(id: String) -> (L: Double, R: Double) {
+        guard let meter = busMeters[id] else { return (L: -.infinity, R: -.infinity) }
+        return meter.readAndReset()
     }
 
     public func updateTrackStrip(id: String, volumeDb: Double?, pan: Double?, mute: Bool?, solo: Bool? = nil) {

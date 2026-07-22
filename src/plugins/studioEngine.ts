@@ -28,6 +28,12 @@ interface StudioEnginePluginShape {
   // v2.0.0 (Phase 4a mirror) — live bus strip update, same shape as
   // updateStrip but keyed by busId. Falls silently on unknown busId.
   updateBusStrip(args: { busId: string; volumeDb?: number; pan?: number; mute?: boolean; solo?: boolean }): Promise<void>;
+  // Phase 6 mirror — per-strip stereo peak read. Poll at ~30 Hz per
+  // visible strip. Native returns { L, R } in dBFS. Silence (no signal
+  // since the last poll) reads back as -160 dB; JS layer normalizes
+  // that to -Infinity so the UI ballistics see the same shape as web.
+  getTrackPeakDbStereo(args: { trackId: string }): Promise<{ L: number; R: number }>;
+  getBusPeakDbStereo(args: { busId: string }): Promise<{ L: number; R: number }>;
   // Live FX-parameter update — apply a changed effect's params without a
   // full engine rebuild. Omit trackId to target the master bus. `fx` is the
   // full updated FxNode.
