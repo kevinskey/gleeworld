@@ -21,8 +21,18 @@ public final class TrackBinding {
 
     private let engine: AVAudioEngine
     private let master: AVAudioMixerNode
+    /// v2.0.0 — passthrough (unity gain) node BEFORE the strip fader.
+    /// Sources connect here. Pre-fader sends read from this node so
+    /// a fader drag doesn't scale the send level. Exposed so
+    /// Engine.swift can wire sends fanning out from it.
+    public let preFaderTap: AVAudioMixerNode
     private let strip: AVAudioMixerNode     // pan + vol
     private let muteGate: AVAudioMixerNode  // separate so we don't lose volume_db on mute
+    /// v2.0.0 — post-fader tap point. Signal AFTER volume/pan/mute,
+    /// BEFORE track FX. Post-fader sends fan out from here, which
+    /// means muting the track silences post-fader sends too (matches
+    /// the DAW convention).
+    public var postFaderTap: AVAudioMixerNode { muteGate }
     private var fxChain: FxChain?
     /// Terminal node in the track's chain (post-FX if any, else the
     /// muteGate). Metering taps install here so the meter shows the
@@ -56,11 +66,13 @@ public final class TrackBinding {
 
     private init(trackId: String, kind: Studio.TrackKind,
                  engine: AVAudioEngine, master: AVAudioMixerNode,
+                 preFaderTap: AVAudioMixerNode,
                  strip: AVAudioMixerNode, muteGate: AVAudioMixerNode, fxChain: FxChain?) {
         self.trackId = trackId
         self.kind = kind
         self.engine = engine
         self.master = master
+        self.preFaderTap = preFaderTap
         self.strip = strip
         self.muteGate = muteGate
         self.fxChain = fxChain
@@ -68,8 +80,15 @@ public final class TrackBinding {
 
     public static func build(track: Studio.Track, engine: AVAudioEngine, master: AVAudioMixerNode,
                              assetLoader: AssetLoader, allAssets: [Studio.AudioAsset]) async throws -> TrackBinding {
+        // v2.0.0 signal path:
+        //   source → preFaderTap (unity) → strip → muteGate → fx → master
+        // preFaderTap is a passthrough on the main signal path; only
+        // sends fan out from it. Audible output is identical to the
+        // pre-v2 wiring.
+        let preFaderTap = AVAudioMixerNode()
         let strip = AVAudioMixerNode()
         let muteGate = AVAudioMixerNode()
+        engine.attach(preFaderTap)
         engine.attach(strip)
         engine.attach(muteGate)
 
@@ -101,6 +120,7 @@ public final class TrackBinding {
         // every track and the metronome bus disconnected — total
         // silence, no error). Engine.loadSession stops the engine
         // around the rebuild and restarts it after.
+        engine.connect(preFaderTap, to: strip, format: nil)
         engine.connect(strip, to: muteGate, format: nil)
         let fxChain = FxChain.build(engine: engine, specs: fxSpecs)
         if let chain = fxChain {
@@ -111,6 +131,7 @@ public final class TrackBinding {
         }
 
         let binding = TrackBinding(trackId: id, kind: kind, engine: engine, master: master,
+                                   preFaderTap: preFaderTap,
                                    strip: strip, muteGate: muteGate, fxChain: fxChain)
 
         switch track {
@@ -148,13 +169,16 @@ public final class TrackBinding {
                 NSLog("[Studio.build] clip \(clip.id): loaded (sr=\(fmt.sampleRate) ch=\(fmt.channelCount)); attaching+connecting player")
                 let player = AVAudioPlayerNode()
                 engine.attach(player)
-                engine.connect(player, to: strip, format: fmt)
+                // v2.0.0 — connect to preFaderTap so pre-fader sends
+                // see the raw source. preFaderTap → strip preserves
+                // the pre-v2 audible signal path.
+                engine.connect(player, to: preFaderTap, format: fmt)
                 binding.playerNodes.append(player)
                 binding.loadedClips.append((clip, file, player))
                 NSLog("[Studio.build] clip \(clip.id): player connected")
             }
         case .midi(let t):
-            let inst = EngineInstrumentFactory.build(spec: t.instrument, engine: engine, destination: strip)
+            let inst = EngineInstrumentFactory.build(spec: t.instrument, engine: engine, destination: preFaderTap)
             binding.instrument = inst
             binding.midiClips = t.clips
         }
@@ -302,7 +326,9 @@ public final class TrackBinding {
         let player = AVAudioPlayerNode()
         engine.attach(player)
         if let err = StudioObjC.catchExceptions({
-            self.engine.connect(player, to: self.strip, format: fmt)
+            // v2.0.0 — connect via preFaderTap so incremental clip-add
+            // follows the same pre-fader-send-visible path as loadSession.
+            self.engine.connect(player, to: self.preFaderTap, format: fmt)
         }) {
             NSLog("[Studio] incremental connect failed for \(clip.id): \(err.localizedDescription)")
             engine.detach(player)
@@ -472,8 +498,10 @@ public final class TrackBinding {
             }
             self.instrument?.dispose()
             self.fxChain?.dispose()
+            self.engine.disconnectNodeInput(self.preFaderTap)
             self.engine.disconnectNodeInput(self.strip)
             self.engine.disconnectNodeInput(self.muteGate)
+            self.engine.detach(self.preFaderTap)
             self.engine.detach(self.strip)
             self.engine.detach(self.muteGate)
         }) {

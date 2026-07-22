@@ -28,6 +28,11 @@ interface StudioEnginePluginShape {
   // v2.0.0 (Phase 4a mirror) — live bus strip update, same shape as
   // updateStrip but keyed by busId. Falls silently on unknown busId.
   updateBusStrip(args: { busId: string; volumeDb?: number; pan?: number; mute?: boolean; solo?: boolean }): Promise<void>;
+  // v2.0.0 (Phase 4b mirror) — live send-level update, key edit path
+  // for a send-slider drag. Structural send edits (add / remove /
+  // target-bus / pre-fader toggle / enabled toggle) still route
+  // through loadSession via the skeleton-diff.
+  updateSendLevel(args: { trackId: string; sendId: string; levelDb: number }): Promise<void>;
   // Phase 6 mirror — per-strip stereo peak read. Poll at ~30 Hz per
   // visible strip. Native returns { L, R } in dBFS. Silence (no signal
   // since the last poll) reads back as -160 dB; JS layer normalizes
