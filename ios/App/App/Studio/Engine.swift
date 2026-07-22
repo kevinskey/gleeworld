@@ -83,6 +83,11 @@ public final class StudioNativeEngine {
     /// pause / stop / seek / dispose so the next play() re-primes
     /// against the fresh position.
     private lazy var automationScheduler = AutomationScheduler()
+    /// v2.0.0 (Phase 4b mirror) — per-track send bindings, keyed
+    /// by (trackId, sendId). Rebuilt from session.tracks[].sends
+    /// alongside track routing. Level edits go through the live
+    /// updateSendLevel path without touching this map.
+    private var trackSends: [String: [String: SendBinding]] = [:]
 
     /// Session currently bound. Read-only after loadSession; structural
     /// edits require a fresh loadSession.
@@ -355,6 +360,8 @@ public final class StudioNativeEngine {
         automationScheduler.cancel()
         positionTimer?.invalidate(); positionTimer = nil
         removeAllMeterTaps()
+        for (_, sends) in trackSends { for (_, s) in sends { s.dispose() } }
+        trackSends.removeAll()
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
         for (_, b) in buses { b.dispose() }
@@ -438,12 +445,14 @@ public final class StudioNativeEngine {
         NSLog("[Studio.load] engine stopped (wasRunning=\(wasRunning)); disposing \(tracks.count) old bindings")
 
         // Tear down previous bindings. Meter taps + automation
-        // scheduler FIRST — they hold block captures / closures into
-        // nodes and bindings about to be detached.
+        // scheduler + sends FIRST — they hold block captures /
+        // closures / edges into nodes and bindings about to be detached.
         removeAllMeterTaps()
         trackMeters.removeAll()
         busMeters.removeAll()
         automationScheduler.cancel()
+        for (_, sends) in trackSends { for (_, s) in sends { s.dispose() } }
+        trackSends.removeAll()
         for (_, t) in tracks { t.dispose() }
         tracks.removeAll()
         for (_, b) in buses { b.dispose() }
@@ -503,6 +512,38 @@ public final class StudioNativeEngine {
                 let target = self.resolveBusRoutingTarget(bus: b)
                 engine.connect(bus.output, to: target, format: nil)
             }
+        }
+
+        // v2.0.0 (Phase 4b mirror) — sends. Built AFTER tracks + buses
+        // so both endpoints exist. A send whose target bus isn't built
+        // is silently skipped (validate.ts rejects that shape at load;
+        // belt-and-suspenders here).
+        for tr in s.tracks {
+            let (trackId, sendSpecs): (String, [Studio.Send])
+            switch tr {
+            case .audio(let t): trackId = t.id; sendSpecs = t.sends ?? []
+            case .midi(let t):  trackId = t.id; sendSpecs = t.sends ?? []
+            }
+            guard let trackBinding = tracks[trackId], !sendSpecs.isEmpty else { continue }
+            var built: [String: SendBinding] = [:]
+            for snd in sendSpecs {
+                let target: AVAudioMixerNode
+                if snd.target_bus_id == Studio.masterBusId {
+                    target = masterMixer
+                } else if let bus = buses[snd.target_bus_id] {
+                    target = bus.strip
+                } else {
+                    NSLog("[Studio.load] send \(snd.id): target bus \(snd.target_bus_id) not built — skip")
+                    continue
+                }
+                let source: AVAudioNode = snd.pre_fader
+                    ? trackBinding.preFaderTap
+                    : trackBinding.postFaderTap
+                built[snd.id] = SendBinding.build(
+                    spec: snd, sourceTrackId: trackId,
+                    source: source, target: target, engine: engine)
+            }
+            if !built.isEmpty { trackSends[trackId] = built }
         }
 
         recomputeSolo()
@@ -664,12 +705,20 @@ public final class StudioNativeEngine {
         if let p = pan { b.setPan(Float(p)) }
         if let m = mute { b.userMute = m }
         if let s = solo { b.userSolo = s }
-        // Solo re-eval — bus solo affects the master mix same as
-        // track solo. recomputeSolo already reads both maps once we
-        // wire that logic; keeping the call here so the same trigger
-        // point covers future bus-solo behavior without another
-        // bridge round-trip.
         recomputeSolo()
+    }
+
+    /// v2.0.0 (Phase 4b mirror) — live send-level ramp. Structural
+    /// send changes (add / remove / target-bus / pre-fader toggle /
+    /// enabled toggle) go through the skeleton-diff full reload so
+    /// the graph is rebuilt consistently — only per-send level is
+    /// a live edit. Returns false when the track or send isn't built
+    /// (caller can decide to fall back to a reload).
+    @discardableResult
+    public func updateSendLevel(trackId: String, sendId: String, levelDb: Double) -> Bool {
+        guard let sends = trackSends[trackId], let send = sends[sendId] else { return false }
+        send.updateLevel(levelDb)
+        return true
     }
 
     /// Live FX-parameter update — apply changed params to an already-built FX

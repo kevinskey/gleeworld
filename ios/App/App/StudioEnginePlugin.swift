@@ -85,6 +85,7 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateStrip", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "updateBusStrip", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateSendLevel", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getTrackPeakDbStereo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getBusPeakDbStereo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setFxParam", returnType: CAPPluginReturnPromise),
@@ -338,6 +339,19 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
             pan: call.getDouble("pan"),
             mute: call.getBool("mute"),
             solo: call.getBool("solo"))
+        call.resolve()
+    }
+
+    // v2.0.0 (Phase 4b mirror) — live send-level update.
+    // JS calls: NativeStudio.updateSendLevel({ trackId, sendId, levelDb }).
+    // Silently no-ops on unknown track / send (matches web engine's
+    // guard-and-return contract).
+    @objc func updateSendLevel(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let trackId = call.getString("trackId") else { call.reject("missing trackId"); return }
+        guard let sendId = call.getString("sendId") else { call.reject("missing sendId"); return }
+        guard let levelDb = call.getDouble("levelDb") else { call.reject("missing levelDb"); return }
+        engine.updateSendLevel(trackId: trackId, sendId: sendId, levelDb: levelDb)
         call.resolve()
     }
 

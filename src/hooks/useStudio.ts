@@ -734,9 +734,12 @@ export function useStudioEngine(session: Session | null) {
             volumeDb: p.volume_db, pan: p.pan, mute: p.mute, solo: p.solo,
           });
         },
-        // v2.0.0 sends — same story: level edits on iOS take effect
-        // on the next reload until the native plugin gets a bridge.
-        updateSendLevel: async (_trackId: string, _sendId: string, _levelDb: number) => { /* not wired on native yet */ },
+        // v2.0.0 send-level live update — mirrors the web engine's
+        // updateSendLevel path. Structural send edits still route
+        // through skeleton-diff reload; only level goes live here.
+        updateSendLevel: async (trackId: string, sendId: string, levelDb: number) => {
+          await NativeStudio.updateSendLevel({ trackId, sendId, levelDb });
+        },
       };
     }
     return {
