@@ -39,8 +39,12 @@ echo "==> Rsync to $DROPLET:$REMOTE_DIR"
 rsync -az dist/ "$DROPLET:$REMOTE_DIR/"
 
 # 3. Fix perms so nginx can read everything, including sw.js.
+#    `chmod -R a+rX` alone missed some files — `+X` only adds execute
+#    when the target is already-executable or a directory, and the
+#    recursion doesn't always cross into every rsync-recreated tree.
+#    Explicit find loops always work: files get a+r, dirs get a+rx.
 echo "==> Fixing perms on $REMOTE_DIR"
-ssh "$DROPLET" "chmod -R a+rX $REMOTE_DIR"
+ssh "$DROPLET" "find $REMOTE_DIR -type f -exec chmod a+r {} + && find $REMOTE_DIR -type d -exec chmod a+rx {} +"
 
 # 4. Verify what the live site is actually serving.
 echo "==> Verifying"
