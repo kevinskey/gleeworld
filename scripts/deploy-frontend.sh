@@ -35,17 +35,16 @@ echo "==> Local build: $LOCAL_HASH · $LOCAL_CACHE"
 
 # 2. Sync — no --delete: /var/www/gleeworld/html/tenants/ has per-tenant
 #    bootstrap files that are not in dist/ and MUST survive.
-#    --chmod forces perms at transfer time (Files 644, Dirs 755) so
-#    every file lands nginx-readable even when the local mode was
-#    tighter. This is the root-cause fix for the "sw.js is 403" and
-#    "logo PNG is 403" bugs that a post-rsync chmod could only paper
-#    over.
+#    Note: --chmod=F644,D755 was tried but macOS BSD rsync rejects it
+#    ("invalid argument"). We do the perms fix on the droplet after
+#    rsync instead — see step 3.
 echo "==> Rsync to $DROPLET:$REMOTE_DIR"
-rsync -az --chmod=F644,D755 dist/ "$DROPLET:$REMOTE_DIR/"
+rsync -az dist/ "$DROPLET:$REMOTE_DIR/"
 
-# 3. Belt-and-suspenders chmod. Cheap, and covers any file rsync
-#    couldn't rewrite (e.g. changing mtime on an existing 600 file
-#    without --chmod would leave it at 600 on some rsync builds).
+# 3. Force perms on the droplet — every file readable by all, every
+#    dir readable+traversable by all. Splits into two find loops so
+#    we do not repeat the `chmod -R a+rX` bug where 51 files stayed
+#    600 because +X is conditional.
 echo "==> Fixing perms on $REMOTE_DIR"
 ssh "$DROPLET" "find $REMOTE_DIR -type f -exec chmod a+r {} + && find $REMOTE_DIR -type d -exec chmod a+rx {} +"
 
