@@ -428,7 +428,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
                 <button
                   type="button"
                   onClick={() => toggleSection(section.label!)}
-                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-foreground/75 hover:text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground hover:text-foreground transition-colors"
                 >
                   <span>{section.label}</span>
                   {isCollapsed ? (
@@ -549,7 +549,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         {sections.map((section) => (
           section.items.length === 0 ? null : (
             <div key={section.label} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
-              <div className="px-2.5 pb-1 pt-1.5 text-[12px] font-semibold tracking-[0.08em] text-muted-foreground/80 uppercase">
+              <div className="px-2.5 pb-1 pt-1.5 text-[12px] font-black tracking-[0.08em] text-foreground uppercase">
                 {section.label}
               </div>
               {section.items.map((item) => (
