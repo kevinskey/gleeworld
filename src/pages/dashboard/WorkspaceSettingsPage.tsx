@@ -742,6 +742,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
     letter_spacing: 0,
     logo_url: '',
     assistant_voice_id: '' as string,
+    youtube_channel_handle: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -756,6 +757,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         letter_spacing: Number((settings as any).letter_spacing ?? 0),
         logo_url: (settings as any).logo_url || '',
         assistant_voice_id: (settings as any).assistant_voice_id || '',
+        youtube_channel_handle: (settings as any).youtube_channel_handle || '',
       });
     }
   }, [settings]);
@@ -788,6 +790,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         letter_spacing: form.letter_spacing,
         logo_url: form.logo_url,
         assistant_voice_id: form.assistant_voice_id || null,
+        youtube_channel_handle: form.youtube_channel_handle.trim().replace(/^@/, '') || null,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' });
     setSaving(false);
@@ -930,6 +933,23 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
           </Select>
           <p className="text-xs text-muted-foreground">
             Applies to every user in the workspace. Preview voices in Studio → The Lab.
+          </p>
+        </div>
+        {/* YouTube channel handle — Video Library page can sync uploads
+            from this channel so a tenant's YouTube content lands
+            automatically alongside anything manually pasted. Store the
+            bare handle (leading @ is stripped on save). */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">YouTube channel handle</Label>
+          <Input
+            value={form.youtube_channel_handle}
+            disabled={!canManage}
+            onChange={(e) => setForm({ ...form, youtube_channel_handle: e.target.value })}
+            placeholder="@GleeWorldOfficial"
+          />
+          <p className="text-xs text-muted-foreground">
+            Optional. When set, the Video Library gets a "Sync from YouTube" button that pulls
+            the channel's uploads into this workspace.
           </p>
         </div>
         {canManage && (

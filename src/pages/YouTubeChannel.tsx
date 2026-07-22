@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Play, Youtube, Loader2, Search, ArrowUpDown, Star, Upload, Pencil,
   Share2, ListPlus, Check, Users, Inbox, Plus, Trash2, ListVideo, Bookmark,
+  RefreshCw,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { YouTubeVideoModal } from '@/components/youtube/YouTubeVideoModal';
@@ -17,6 +18,7 @@ import { EditVideoDialog, type EditVideoRow } from '@/components/youtube/EditVid
 import { AddToPlaylistDialog } from '@/components/youtube/AddToPlaylistDialog';
 import { ShareVideoDialog } from '@/components/youtube/ShareVideoDialog';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { usePersonalPlaylists, useSharedWithMe, type Playlist } from '@/hooks/useVideoLibrary';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
@@ -82,6 +84,9 @@ export const YouTubeChannel: React.FC = () => {
 
   const personal = usePersonalPlaylists();
   const sharedInbox = useSharedWithMe();
+  const branding = useBrandingSettings();
+  const channelHandle = (branding.settings as { youtube_channel_handle?: string } | null)?.youtube_channel_handle || '';
+  const [syncing, setSyncing] = useState(false);
 
   const fetchVideos = useCallback(async () => {
     setLoading(true);
@@ -207,6 +212,41 @@ export const YouTubeChannel: React.FC = () => {
     toast({ title: 'Saved', description: `Added to "${playlistTitle}"` });
   };
 
+  const syncChannel = async () => {
+    if (!channelHandle) {
+      toast({
+        title: 'No YouTube channel set',
+        description: 'Set one in Workspace Settings → Branding first.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('youtube-channel-sync', {
+        body: { handle: channelHandle, max: 50 },
+      });
+      if (error) {
+        toast({ title: 'Sync failed', description: error.message, variant: 'destructive' });
+        return;
+      }
+      const d = data as { channel_title?: string; fetched?: number; inserted?: number; updated?: number; error?: string };
+      if (d?.error) {
+        toast({ title: 'Sync failed', description: d.error, variant: 'destructive' });
+        return;
+      }
+      toast({
+        title: 'Channel synced',
+        description: `${d.channel_title || channelHandle}: ${d.inserted ?? 0} new, ${d.updated ?? 0} updated`,
+      });
+      fetchVideos();
+    } catch (e) {
+      toast({ title: 'Sync failed', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const createPlaylistInline = async () => {
     const title = newPlaylistTitle.trim();
     if (!title) return;
@@ -237,7 +277,24 @@ export const YouTubeChannel: React.FC = () => {
         </div>
 
         <main className="container mx-auto px-4 py-4 space-y-6">
-          {isAdmin() && <AddYouTubeVideoForm onAdded={() => fetchVideos()} />}
+          {isAdmin() && (
+            <div className="flex items-start gap-2 flex-wrap">
+              <AddYouTubeVideoForm onAdded={() => fetchVideos()} />
+              {channelHandle && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={syncChannel}
+                  disabled={syncing}
+                  className="gap-1.5"
+                  title={`Import latest uploads from @${channelHandle}`}
+                >
+                  {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  Sync @{channelHandle}
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Toolbar: tabs (underlined library-style), search, sort */}
           <div className="flex flex-col gap-4">
