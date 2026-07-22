@@ -8,26 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		0F8FC03F74824DDFA1681673 /* StudioEnginePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */; };
-		6A1D00000000000000000001 /* GWMidiPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000002 /* GWMidiPlugin.swift */; };
-		6A1D00000000000000000003 /* GWSpeechPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000004 /* GWSpeechPlugin.swift */; };
 		1A2A2A2A2A2A2A2A2A2A2A2A /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1A1A1A1A1A1A1A1A1A1A1A /* MainViewController.swift */; };
 		1D09D689DC86B0FDB970E0F3 /* Engine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20BECA3F13EF2967946AC20 /* Engine.swift */; };
+		285A1D8A2AC39FF2C4CFCBAB /* Buses.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35A0870023595C0377512D8 /* Buses.swift */; };
 		2A2A2A2A2A2A2A2A2A2A2A2A /* AudioSessionConfigPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A1A1A1A1A1A1A1A1A1A1A1A /* AudioSessionConfigPlugin.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		3A2A2A2A2A2A2A2A2A2A2A2A /* NativeMusicKitPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A1A1A1A1A1A1A1A1A1A1A1A /* NativeMusicKitPlugin.swift */; };
 		3FAFA54C6D73BFE7F1E141C5 /* StudioObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = F32A6B44BE5444770C30D5EB /* StudioObjC.m */; };
+		46FE7AE84FD551DD3D8C4609 /* RoutingGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1115083A228D70B1C4E1C12A /* RoutingGraph.swift */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		6A1D00000000000000000001 /* GWMidiPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000002 /* GWMidiPlugin.swift */; };
+		6A1D00000000000000000003 /* GWSpeechPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000004 /* GWSpeechPlugin.swift */; };
 		768412EC465E014A6BC6AFDE /* Instruments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDD37EFA950FB969BF90C82 /* Instruments.swift */; };
 		7696E25FC90C885166862AE1 /* StudioModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DAD2143C4798E9ADDA1A3AF /* StudioModel.swift */; };
 		9FC224AE2381121D2FB58450 /* AssetLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED85A7982F21BD5123300ED4 /* AssetLoader.swift */; };
 		A084ECDBA7D38E1E42DFC39D /* Pods_App.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */; };
-		C692FCC856285FEA81577B2C /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAAED23BD56BF3B55CC650A /* Recorder.swift */; };
 		B3E7A1C2D4F508192A3B4C5D /* ExternalRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E7A1C2D4F508192A3B4C5E /* ExternalRecorder.swift */; };
+		C692FCC856285FEA81577B2C /* Recorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAAED23BD56BF3B55CC650A /* Recorder.swift */; };
 		D4910ED7763D327934102420 /* Tracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71A15DBCA0F6701D171ED70 /* Tracks.swift */; };
 		E1A2B3C4D5E6F7081923A4B5 /* AudioConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4B6 /* AudioConverter.swift */; };
 		E1A2B3C4D5E6F7081923A4B7 /* PullRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1A2B3C4D5E6F7081923A4B8 /* PullRenderer.swift */; };
@@ -40,9 +42,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1115083A228D70B1C4E1C12A /* RoutingGraph.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RoutingGraph.swift; sourceTree = "<group>"; };
 		170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioEnginePlugin.swift; sourceTree = "<group>"; };
-		6A1D00000000000000000002 /* GWMidiPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWMidiPlugin.swift; sourceTree = "<group>"; };
-		6A1D00000000000000000004 /* GWSpeechPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWSpeechPlugin.swift; sourceTree = "<group>"; };
 		1A1A1A1A1A1A1A1A1A1A1A1A /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		1DAD2143C4798E9ADDA1A3AF /* StudioModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioModel.swift; sourceTree = "<group>"; };
 		2A1A1A1A1A1A1A1A1A1A1A1A /* AudioSessionConfigPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionConfigPlugin.swift; sourceTree = "<group>"; };
@@ -59,20 +60,23 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		5FDD37EFA950FB969BF90C82 /* Instruments.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Instruments.swift; sourceTree = "<group>"; };
 		693451AC85FAAD6C29DB7ED2 /* StudioObjC.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = StudioObjC.h; sourceTree = "<group>"; };
+		6A1D00000000000000000002 /* GWMidiPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWMidiPlugin.swift; sourceTree = "<group>"; };
+		6A1D00000000000000000004 /* GWSpeechPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWSpeechPlugin.swift; sourceTree = "<group>"; };
 		90B41B6DB59A4EC515A3D916 /* Fx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Fx.swift; sourceTree = "<group>"; };
 		A71A15DBCA0F6701D171ED70 /* Tracks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Tracks.swift; sourceTree = "<group>"; };
+		ACAAED23BD56BF3B55CC650A /* Recorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
+		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
+		B3E7A1C2D4F508192A3B4C5E /* ExternalRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExternalRecorder.swift; sourceTree = "<group>"; };
+		C20BECA3F13EF2967946AC20 /* Engine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Engine.swift; sourceTree = "<group>"; };
+		D93A915581BC73F5E718C6B9 /* Mixdown.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Mixdown.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E6F7081923A4B6 /* AudioConverter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioConverter.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E6F7081923A4B8 /* PullRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PullRenderer.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E6F7081923A4BA /* AudioBufferCache.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioBufferCache.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E6F7081923A4BC /* ClipStreamer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClipStreamer.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E6F7081923A4BE /* StudioBufferPool.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StudioBufferPool.swift; sourceTree = "<group>"; };
 		E1A2B3C4D5E6F7081923A4C0 /* RealtimeThread.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RealtimeThread.swift; sourceTree = "<group>"; };
-		ACAAED23BD56BF3B55CC650A /* Recorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Recorder.swift; sourceTree = "<group>"; };
-		B3E7A1C2D4F508192A3B4C5E /* ExternalRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExternalRecorder.swift; sourceTree = "<group>"; };
-		AF277DCFFFF123FFC6DF26C7 /* Pods_App.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_App.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
-		C20BECA3F13EF2967946AC20 /* Engine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Engine.swift; sourceTree = "<group>"; };
-		D93A915581BC73F5E718C6B9 /* Mixdown.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Mixdown.swift; sourceTree = "<group>"; };
+		E35A0870023595C0377512D8 /* Buses.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Buses.swift; sourceTree = "<group>"; };
 		EA39B22D260FD808F5B79930 /* App-Bridging-Header.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "App-Bridging-Header.h"; sourceTree = "<group>"; };
 		ED85A7982F21BD5123300ED4 /* AssetLoader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AssetLoader.swift; sourceTree = "<group>"; };
 		F32A6B44BE5444770C30D5EB /* StudioObjC.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = StudioObjC.m; sourceTree = "<group>"; };
@@ -170,6 +174,8 @@
 				E1A2B3C4D5E6F7081923A4BC /* ClipStreamer.swift */,
 				E1A2B3C4D5E6F7081923A4BE /* StudioBufferPool.swift */,
 				E1A2B3C4D5E6F7081923A4C0 /* RealtimeThread.swift */,
+				1115083A228D70B1C4E1C12A /* RoutingGraph.swift */,
+				E35A0870023595C0377512D8 /* Buses.swift */,
 			);
 			name = Studio;
 			path = Studio;
@@ -312,6 +318,8 @@
 				E1A2B3C4D5E6F7081923A4BD /* StudioBufferPool.swift in Sources */,
 				E1A2B3C4D5E6F7081923A4BF /* RealtimeThread.swift in Sources */,
 				3FAFA54C6D73BFE7F1E141C5 /* StudioObjC.m in Sources */,
+				46FE7AE84FD551DD3D8C4609 /* RoutingGraph.swift in Sources */,
+				285A1D8A2AC39FF2C4CFCBAB /* Buses.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
