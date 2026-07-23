@@ -78,40 +78,33 @@ export default function StudioHome() {
       ) : (sessions.data ?? []).length === 0 ? (
         <EmptyStudio onStart={() => setCreateOpen(true)} disabled={!owner.data} />
       ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <ul className="ml-auto w-full max-w-xs sm:max-w-sm space-y-2">
           {sessions.data!.map((s) => (
             <li key={s.id}>
-              <Card className="hover:shadow-md transition-shadow bg-card/95 backdrop-blur-sm">
-                <CardContent className="p-4 flex flex-col h-full">
-                  <Link to={`/studio/sessions/${s.id}`} className="block flex-1">
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                        <Music2 className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-sm leading-tight">{s.title}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {s.track_count} {s.track_count === 1 ? 'track' : 'tracks'}
-                          {' · '}{Math.round(s.duration_seconds)}s
-                        </div>
-                      </div>
+              <Card className="hover:shadow-md transition-shadow bg-card/90 backdrop-blur-sm">
+                <CardContent className="p-2.5 flex items-center gap-2.5">
+                  <Link to={`/studio/sessions/${s.id}`} className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Music2 className="w-4 h-4" />
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      Updated {formatDate(s.updated_at)}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-sm leading-tight truncate">{s.title}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                        {s.track_count} {s.track_count === 1 ? 'track' : 'tracks'} · {Math.round(s.duration_seconds)}s · {formatDate(s.updated_at)}
+                      </div>
                     </div>
                   </Link>
-                  <div className="mt-3 flex justify-end">
-                    <Button
-                      size="sm" variant="ghost"
-                      onClick={async () => {
-                        if (!confirm(`Delete "${s.title}"? This can't be undone.`)) return;
-                        try { await delMut.mutateAsync(s.id); toast.success('Deleted'); }
-                        catch (e) { toast.error('Could not delete', { description: e instanceof Error ? e.message : String(e) }); }
-                      }}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
+                  <Button
+                    size="sm" variant="ghost"
+                    className="h-7 w-7 p-0 shrink-0"
+                    onClick={async () => {
+                      if (!confirm(`Delete "${s.title}"? This can't be undone.`)) return;
+                      try { await delMut.mutateAsync(s.id); toast.success('Deleted'); }
+                      catch (e) { toast.error('Could not delete', { description: e instanceof Error ? e.message : String(e) }); }
+                    }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 </CardContent>
               </Card>
             </li>
