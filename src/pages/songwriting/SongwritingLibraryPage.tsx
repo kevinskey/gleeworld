@@ -119,20 +119,25 @@ export default function SongwritingLibraryPage() {
         ) : songs.length === 0 ? (
           <EmptySongwriting onStart={newSong} creating={creating} />
         ) : (
-          <ul className="space-y-2">
-            {songs.map((s) => (
+          <ul className="divide-y divide-foreground/15 border-y border-foreground/15">
+            {songs.map((s, i) => (
               <li
                 key={s.id}
-                className="group flex items-center justify-between gap-3 rounded-xl border bg-card/95 backdrop-blur-sm shadow-sm p-4 hover:shadow-md transition-shadow"
+                className="group flex items-center gap-4 py-3.5 px-2 -mx-2 rounded-lg hover:bg-background/40 hover:backdrop-blur-sm transition"
               >
+                <span className="w-6 text-right text-xs font-mono tabular-nums text-foreground/60 shrink-0 drop-shadow-sm">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
                 <Link to={`/songwriting/${s.id}`} className="flex-1 min-w-0">
-                  <div className="text-base font-semibold leading-tight truncate">{s.title || 'Untitled'}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{songMeta(s)}</div>
+                  <div className="text-base font-semibold leading-tight truncate drop-shadow-sm">
+                    {s.title || 'Untitled'}
+                  </div>
+                  <div className="text-xs text-foreground/70 mt-0.5 drop-shadow-sm">{songMeta(s)}</div>
                 </Link>
                 <button
                   type="button"
                   onClick={() => removeSong(s.id)}
-                  className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 p-2 rounded-md text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
+                  className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shrink-0 p-2 rounded-md text-foreground/70 hover:text-rose-600 hover:bg-rose-500/15"
                   aria-label="Delete song"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -148,12 +153,17 @@ export default function SongwritingLibraryPage() {
             {shared.length === 0 ? (
               <p className="text-sm text-foreground/85 drop-shadow-sm">No songs shared yet.</p>
             ) : (
-              <ul className="space-y-2">
-                {shared.map((s) => (
-                  <li key={s.id} className="rounded-xl border bg-card/95 backdrop-blur-sm shadow-sm p-4">
-                    <Link to={`/songwriting/${s.id}`} className="block min-w-0">
-                      <div className="text-base font-semibold leading-tight truncate">{s.title || 'Untitled'}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{songMeta(s)}</div>
+              <ul className="divide-y divide-foreground/15 border-y border-foreground/15">
+                {shared.map((s, i) => (
+                  <li key={s.id} className="flex items-center gap-4 py-3.5 px-2 -mx-2 rounded-lg hover:bg-background/40 hover:backdrop-blur-sm transition">
+                    <span className="w-6 text-right text-xs font-mono tabular-nums text-foreground/60 shrink-0 drop-shadow-sm">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <Link to={`/songwriting/${s.id}`} className="flex-1 min-w-0">
+                      <div className="text-base font-semibold leading-tight truncate drop-shadow-sm">
+                        {s.title || 'Untitled'}
+                      </div>
+                      <div className="text-xs text-foreground/70 mt-0.5 drop-shadow-sm">{songMeta(s)}</div>
                     </Link>
                   </li>
                 ))}
