@@ -93,10 +93,17 @@ export default function SongwritingLibraryPage() {
   return (
     <div className="relative min-h-full">
       {/* Songwriting hero background — served from /public/songwriting-bg.png.
-       * 60% opacity so the photo reads clearly through the page's light theme. */}
+       *
+       * sticky top-0 h-screen keeps the photo pinned to the top of the
+       * scroll container's viewport at all times — no matter how tall
+       * the songs list gets, the chair stays visible.
+       *
+       * The negative margin (-mb-[100vh]) cancels the space this
+       * element would otherwise push into flow, so content sits over
+       * the bg instead of below it. */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
+        className="pointer-events-none sticky top-0 -mb-[100vh] h-screen bg-cover bg-center bg-no-repeat opacity-60 z-0"
         style={{ backgroundImage: 'url(/songwriting-bg.png)' }}
       />
       <div className="relative px-4 sm:px-6 lg:px-8 py-6 max-w-6xl mx-auto space-y-6">

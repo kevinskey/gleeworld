@@ -43,11 +43,15 @@ export default function StudioHome() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)]">
       {/* Studio hero background — singer at a Neumann, mixer through the
-       * glass, piano + sax on the floor. 60% opacity so the photo reads
-       * clearly through the page's light theme. */}
+       * glass, piano + sax on the floor.
+       *
+       * sticky top-0 h-screen pins the photo to the top of the scroll
+       * container's viewport at all times, no matter how long the
+       * sessions list grows. -mb-[100vh] cancels the space it would
+       * otherwise push into flow, so content sits on top. */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
+        className="pointer-events-none sticky top-0 -mb-[100vh] h-screen bg-cover bg-center bg-no-repeat opacity-60 z-0"
         style={{ backgroundImage: 'url(/studio-bg.png)' }}
       />
       <div className="relative px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
