@@ -101,8 +101,35 @@ serve(async (req) => {
   // the tail to the model.
   const history = [...dbHistory, { role: 'user' as const, content: latestUser.content }].slice(-20);
 
+  // Pull the caller's profile server-side so the model has stable, fresh
+  // facts about them on every turn — the client only sends firstName + tz
+  // and we don't want a stale bundle to be the reason the assistant calls
+  // someone by their first initial or forgets they're a bass. RLS scopes
+  // this to their own row; a missing row (fresh signup, no gw_profiles
+  // yet) just falls back to whatever the client passed.
+  let profile: {
+    full_name?: string | null;
+    role?: string | null;
+    voice_part?: string | null;
+    class_year?: string | null;
+  } | null = null;
+  try {
+    const { data } = await userClient
+      .from('gw_profiles')
+      .select('full_name, role, voice_part, class_year')
+      .eq('user_id', caller.userId)
+      .maybeSingle();
+    profile = (data as typeof profile) ?? null;
+  } catch { /* ignore — the assistant still works with fallback context */ }
+
+  const fullName = (profile?.full_name ?? '').trim();
+  const inferredFirst = fullName.split(/\s+/)[0] || '';
   const ctx = {
-    firstName: String(body.context?.firstName ?? 'there'),
+    firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
+    fullName: fullName || undefined,
+    tenantRole: (profile?.role ?? '').trim() || undefined,
+    voicePart: (profile?.voice_part ?? '').trim() || undefined,
+    classYear: (profile?.class_year ?? '').trim() || undefined,
     role,
     tenantName: String(body.context?.tenantName ?? 'GleeWorld'),
     activeModules: Array.isArray(body.context?.activeModules) ? body.context!.activeModules as string[] : [],

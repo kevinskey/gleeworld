@@ -7,6 +7,16 @@ export interface AssistantContext {
   activeModules: string[];
   nowIso: string;
   timezone: string;
+  /** Full name from gw_profiles.full_name — falls through to firstName if absent. */
+  fullName?: string;
+  /** gw_profiles.role: their tenant-facing role like 'director', 'student',
+   *  'exec_board', etc. This is the SEMANTIC role in the choir/school, not
+   *  the auth-level admin/member split — that's still on `role`. */
+  tenantRole?: string;
+  /** gw_profiles.voice_part: 'soprano' | 'alto' | 'tenor' | 'bass' | free text. */
+  voicePart?: string;
+  /** gw_profiles.class_year: e.g. 'Freshman', '2027', 'MUS 070'. Free text. */
+  classYear?: string;
 }
 
 export function buildSystemPrompt(ctx: AssistantContext): string {
@@ -31,10 +41,24 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
       ? '- To change it, restate the target in one sentence and call set_date_card. For custom, always send all three fields (empty string clears a slot). For non-custom types, omit the text fields.'
       : '- Only an admin/director can change the date card. If the user wants a change, tell them to ask a director — do not attempt set_date_card.',
   ].join('\n');
+  // "Who they are" line — name + any of the identity facts we have from the
+  // profile. Kept as one sentence so it reads naturally and doesn't dominate
+  // the prompt; the model just needs enough to address them correctly and to
+  // interpret music/school-specific asks in context (a bass asking to
+  // transpose "up an octave" is a very different intent than a soprano's).
+  const identityBits: string[] = [];
+  if (ctx.tenantRole) identityBits.push(ctx.tenantRole);
+  if (ctx.voicePart) identityBits.push(`${ctx.voicePart} voice`);
+  if (ctx.classYear) identityBits.push(ctx.classYear);
+  const identityTail = identityBits.length ? ` — ${identityBits.join(', ')}` : '';
+  const userLine = ctx.fullName
+    ? `Current user: ${ctx.fullName} (addresses as "${ctx.firstName}")${identityTail}.`
+    : `Current user: ${ctx.firstName}${identityTail}.`;
   return [
     `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`,
     `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, adding YouTube videos to the library, and configuring the dashboard date card' : ''}.`,
-    `Current user: ${ctx.firstName}. Date/time now: ${ctx.nowIso} (${ctx.timezone}). Active modules: ${ctx.activeModules.join(', ') || 'core'}.`,
+    userLine,
+    `Date/time now: ${ctx.nowIso} (${ctx.timezone}). Active modules: ${ctx.activeModules.join(', ') || 'core'}.`,
     memberNote,
     ...(courseBuilderNote ? [courseBuilderNote] : []),
     dateCardNote,

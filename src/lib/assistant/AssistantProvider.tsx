@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useReducer, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { threadReducer, INITIAL_THREAD } from './threadReducer';
 import { executeClientAction } from './clientActions';
@@ -52,6 +53,7 @@ export function useAssistantOptional(): AssistantContextValue | null {
 // the conversation (see threadStorage for the confirm-card sanitizing).
 export const AssistantProvider = ({ children, initialSheetOpen = false }: { children: ReactNode; initialSheetOpen?: boolean }) => {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { profile } = useUserRole();
   const [state, dispatch] = useReducer(
     threadReducer,
@@ -105,6 +107,12 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       muted,
       voiceId: voiceIdRef.current,
       accessToken,
+      // Same reason the voice picker needs it: VITE_SUPABASE_URL isn't set
+      // in this project (client.ts derives the URL from the tenant bootstrap
+      // at runtime), so without an explicit supabaseUrl, speak() falls back
+      // to browser SpeechSynthesis and ignores voiceId — every reply comes
+      // out in the OS default voice regardless of the tenant's pick.
+      supabaseUrl: SUPABASE_URL,
       onStart: () => setSpeaking(true),
       onEnd: () => setSpeaking(false),
     });
@@ -131,7 +139,30 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     if (!outcome.ok) speakNow(outcome.message);
     // Only a confirm-gated action can have a queued follow-up waiting on it.
     if (action.confirm) advanceConfirmQueue(msgId);
-  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow]);
+    // Invalidate whichever react-query caches a successful action just made
+    // stale, so the user sees the change without a page refresh. Every entry
+    // maps a tool → the query key(s) rendered from the row it wrote.
+    // useGleeWorldEvents keys on ['glee-world-events', userId] — invalidating
+    // the base key matches every user-scoped variant. Google-events are
+    // written by the best-effort pushEventToGoogle inside the action, so
+    // bump that key too on create_event.
+    if (outcome.ok) {
+      switch (action.tool) {
+        case 'create_event':
+          // useGleeWorldEvents keys on ['glee-world-events', userId]; invalidating
+          // the base key matches every user-scoped variant. ['events'] is the
+          // legacy key some appointment hooks still use. Google-events comes
+          // from the best-effort pushEventToGoogle inside the executor.
+          qc.invalidateQueries({ queryKey: ['glee-world-events'] });
+          qc.invalidateQueries({ queryKey: ['events'] });
+          qc.invalidateQueries({ queryKey: ['google-events'] });
+          break;
+        case 'set_date_card':
+          qc.invalidateQueries({ queryKey: ['date-card-setting'] });
+          break;
+      }
+    }
+  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc]);
 
   const cancelAction = useCallback((msgId: string) => {
     dispatch({ type: 'action-state', id: msgId, state: 'cancelled' });
