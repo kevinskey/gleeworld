@@ -114,14 +114,37 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
         // is a fallback.
         await syncNativeTenant(data.session);
         window.location.reload();
-      } else {
-        // Platform admin (super-admin on 'main'), or an account with no single
-        // home choir: don't bounce to the marketing site — let them choose
-        // which choir to open. The session persists, so picking an org below
-        // reloads straight into that choir already signed in.
-        setSigningIn(false);
-        setMode('orgs');
+        return;
       }
+
+      // JWT tenant is 'main' or null — look at all the tenants this email
+      // belongs to via my_tenants (SECURITY DEFINER, scoped to auth.uid()).
+      // If exactly one non-main membership exists, drop them straight into
+      // it — the whole point of the native app is "sign in, land in your
+      // choir", not "sign in, pick your choir from a list."
+      try {
+        const { data: myTenantsRaw, error: rpcErr } = await supabase.rpc('my_tenants' as never);
+        if (!rpcErr) {
+          const myTenants = (myTenantsRaw ?? []) as Array<{ slug: string; name: string | null }>;
+          const nonMain = myTenants.filter((t) => t.slug && t.slug !== 'main');
+          if (nonMain.length === 1) {
+            const only = nonMain[0];
+            localStorage.setItem(KEY, JSON.stringify({ tenant: only.slug, org: only.name ?? undefined }));
+            window.location.reload();
+            return;
+          }
+        }
+      } catch (rpcErr) {
+        // Non-fatal: fall through to the picker below so the user still
+        // has a way in when the RPC hiccups.
+        console.warn('[native-login] my_tenants lookup failed', rpcErr);
+      }
+
+      // Zero non-main memberships OR ambiguous (multiple) — user genuinely
+      // needs to pick. The session persists, so picking an org below
+      // reloads straight into that choir already signed in.
+      setSigningIn(false);
+      setMode('orgs');
     } catch (err) {
       console.error('[native-login] sign-in failed', err);
       setSignInError('Something went wrong. Check your connection and try again.');
