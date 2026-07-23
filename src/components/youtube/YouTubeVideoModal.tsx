@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { X, ExternalLink, AlertTriangle, Volume2, VolumeX } from 'lucide-react';
+import { X, ExternalLink, AlertTriangle, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -45,6 +45,14 @@ interface YouTubeVideoModalProps {
 export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playlistId: directPlaylistId }: YouTubeVideoModalProps) => {
   const [hasError, setHasError] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  // We fullscreen the OUTER container (header + video), not the iframe
+  // itself — that way our volume + close controls remain reachable in
+  // fullscreen. iOS Safari doesn't support requestFullscreen on generic
+  // elements (only <video>), so on iOS the toggle silently no-ops and
+  // the user can fall back to YouTube's own fullscreen button inside
+  // the embed.
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   // Hydrate volume/muted synchronously from localStorage so the slider's
   // first paint matches what the user last set — avoids a jarring "50 →
@@ -89,6 +97,46 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
       try { window.localStorage.setItem(MUTED_STORAGE_KEY, next ? '1' : '0'); } catch { /* private mode */ }
       return next;
     });
+  }, []);
+
+  // Fullscreen toggle. Uses the standard + webkit-prefixed APIs so this
+  // works on macOS Safari too. When the browser refuses (iOS Safari
+  // doesn't allow requestFullscreen on generic elements), we swallow the
+  // rejection — the user can still use YouTube's own fullscreen button
+  // inside the iframe.
+  const toggleFullscreen = useCallback(async () => {
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => Promise<void>;
+    };
+    const el = containerRef.current as (HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void>;
+    }) | null;
+    if (!el) return;
+    try {
+      if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+        await (doc.exitFullscreen?.() ?? doc.webkitExitFullscreen?.());
+      } else {
+        await (el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.());
+      }
+    } catch {
+      /* platform refused — silently no-op */
+    }
+  }, []);
+
+  // Keep our own flag in sync with whatever actually happened, including
+  // Esc-to-exit and browser-driven fullscreen changes we didn't initiate.
+  useEffect(() => {
+    const sync = () => {
+      const doc = document as Document & { webkitFullscreenElement?: Element | null };
+      setIsFullscreen(Boolean(doc.fullscreenElement || doc.webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
+    return () => {
+      document.removeEventListener('fullscreenchange', sync);
+      document.removeEventListener('webkitfullscreenchange', sync);
+    };
   }, []);
 
   // Multi-provider routing: if `url` is a non-YouTube provider we know
@@ -144,7 +192,10 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
         <VisuallyHidden>
           <DialogTitle>{title || 'Video Player'}</DialogTitle>
         </VisuallyHidden>
-        <div className="flex flex-col">
+        <div
+          ref={containerRef}
+          className={`flex flex-col ${isFullscreen ? 'w-screen h-screen bg-black' : ''}`}
+        >
           {/* Header strip lifted OUT of the video area — the previous
               absolute-positioned X sat exactly where YouTube's hover controls
               (settings gear, fullscreen) render, so they visibly overlapped
@@ -191,6 +242,16 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/10 h-9 w-9 shrink-0"
+              onClick={toggleFullscreen}
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+            >
+              {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/10 h-9 w-9 shrink-0"
               onClick={onClose}
               aria-label="Close video"
             >
@@ -216,7 +277,7 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
             </div>
           ) : (
             /* Responsive video container */
-            <div className="aspect-video w-full">
+            <div className={isFullscreen ? 'flex-1 w-full bg-black' : 'aspect-video w-full'}>
               {isDirect ? (
                 <video
                   src={parsed!.embedUrl!}
