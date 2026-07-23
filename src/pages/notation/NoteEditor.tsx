@@ -180,12 +180,26 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
     <div className="space-y-2">
       {/* Duration palette + dots + accidentals — one compact row */}
       <div className="flex flex-wrap items-center gap-1.5">
-        {DURATIONS.map((d) => (
-          <button key={d.code} onClick={() => setArmed(d.code)} className={pill(armed === d.code)}>
-            <span className={`mr-1 font-mono text-[11px] ${armed === d.code ? 'text-slate-300' : 'text-slate-400'}`}>{d.key}</span>
-            {d.label}
-          </button>
-        ))}
+        {DURATIONS.map((d) => {
+          // Duration is the "armed pen" — the one thing the user is about
+          // to insert. Painting the active choice in the primary color
+          // makes it read at a glance rather than blending in with the
+          // rest of the toolbar. Matches the Lyrics=orange / MIDI=red
+          // convention of using one color per armed-mode family.
+          const active = armed === d.code;
+          return (
+            <button
+              key={d.code}
+              onClick={() => setArmed(d.code)}
+              className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
+                active ? 'bg-primary text-primary-foreground' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <span className={`mr-1 font-mono text-[11px] ${active ? 'text-primary-foreground/80' : 'text-slate-400'}`}>{d.key}</span>
+              {d.label}
+            </button>
+          );
+        })}
         <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
         {/* Rhythmic dots: real bold bullets rather than "Dot: N" text so the
             button reads as musical notation instead of a form field. w-14
