@@ -237,6 +237,36 @@ export async function executeClientAction(
             : `Added "${title}" to your YouTube videos (couldn't pin it to the dashboard section).`,
         };
       }
+      case 'set_date_card': {
+        // Import lazily so the registry (which pulls in lucide + zod) stays out
+        // of the base bundle — no user hits it until they ask the assistant to
+        // touch this setting.
+        const { getDateCardModule, safeDateCardConfig } = await import('@/components/home/date-card/registry');
+        const type = String(a.type ?? '');
+        const mod = getDateCardModule(type);
+        if (!mod) return { ok: false, message: `Unknown date card type "${type}".` };
+        const rawConfig = type === 'custom'
+          ? {
+              eyebrow: typeof a.eyebrow === 'string' ? a.eyebrow : '',
+              title: typeof a.title === 'string' ? a.title : '',
+              subtitle: typeof a.subtitle === 'string' ? a.subtitle : '',
+            }
+          : {};
+        // safeDateCardConfig fills defaults and drops unknown fields, so a bad
+        // model call becomes a valid write instead of an RLS-passing garbage row.
+        const config = safeDateCardConfig(mod, rawConfig);
+        const setting = { v: 1 as const, type, config };
+        // Same conflict pin as useDateCardConfig.save — the singleton `id`
+        // default would otherwise re-route every tenant's upsert to id=1.
+        const { error } = await deps.supabase
+          .from('gw_branding_settings')
+          .upsert(
+            { date_card: setting, updated_at: new Date().toISOString() },
+            { onConflict: 'tenant_id' } as unknown as Record<string, unknown>,
+          );
+        if (error) return { ok: false, message: `Couldn't update the date card: ${error.message}` };
+        return { ok: true, message: `Date card set to ${mod.name}.` };
+      }
       case 'create_course_draft': {
         const spec = a.spec;
         if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {

@@ -12,6 +12,7 @@ import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { ASSISTANT_VOICES, BROWSER_VOICE_ID, DEFAULT_VOICE_ID } from '@/lib/assistant/voices';
+import { speak } from '@/lib/assistant/speech';
 import { Card, CardContent } from '@/components/ui/card';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
@@ -918,7 +919,26 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
           <Label className="text-xs">Assistant voice</Label>
           <Select
             value={form.assistant_voice_id || DEFAULT_VOICE_ID}
-            onValueChange={(v) => setForm({ ...form, assistant_voice_id: v === BROWSER_VOICE_ID ? BROWSER_VOICE_ID : v })}
+            onValueChange={(v) => {
+              const nextVoiceId = v === BROWSER_VOICE_ID ? BROWSER_VOICE_ID : v;
+              setForm({ ...form, assistant_voice_id: nextVoiceId });
+              // Immediate audio preview so the admin hears the picked voice
+              // reading the tenant's welcome line, before they Save. Bypasses
+              // the mute toggle so the picker demo always plays — this is an
+              // explicit action, not an assistant reply. Fire-and-forget:
+              // speak() self-serializes (stopElevenLabs + synth.cancel), so
+              // switching voices quickly cuts the previous line and starts
+              // the new one.
+              void (async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                const name = (form.short_name || (settings as any)?.short_name || '').trim();
+                speak(`Welcome to ${name || 'GleeWorld'}`, {
+                  voiceId: nextVoiceId,
+                  accessToken: session?.access_token,
+                  muted: false,
+                });
+              })();
+            }}
             disabled={!canManage}
           >
             <SelectTrigger className="h-10"><SelectValue placeholder="Pick a voice" /></SelectTrigger>

@@ -8,7 +8,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { HomeNewsRail } from '@/components/dashboard/HomeNewsRail';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
@@ -39,6 +41,7 @@ export default function HouseHome() {
   const isFaculty = isFacultyProfile(profile);
   const firstName = (profile?.full_name || 'there').split(' ')[0];
   const { settings: brandingSettings } = useBrandingSettings();
+  const isMobile = useIsMobile();
 
   const { data: rows = [], isLoading } = useQuery<FeedRow[]>({
     queryKey: ['house-home-feed'],
@@ -194,10 +197,13 @@ export default function HouseHome() {
 
         <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} />
 
-        {/* Status cards sit in a left column; the News panel on the right
-            spans their combined height (single column again below lg). */}
-        <div className="grid gap-4 lg:grid-cols-3">
-        <div className="min-w-0 space-y-4 lg:col-span-2">
+        {/* Status cards on the left, News rail on the right. Below lg they
+            stack. On lg+ they render inside a horizontal resizable pair —
+            drag the divider to widen either side. Split is persisted in
+            localStorage via autoSaveId so it survives reloads. */}
+        {(() => {
+          const statusColumn = (
+            <div className="min-w-0 space-y-4 h-full">
         {/* Up next — the plate that answers what/where/when. */}
         <div className="bg-card border border-border border-t-2 border-t-primary p-3">
           {upNext ? (
@@ -276,12 +282,34 @@ export default function HouseHome() {
             </ul>
           )}
         </div>
-        </div>
+            </div>
+          );
 
-        {/* News — right rail beside the status cards, fed by the
-            fetch-news-feeds edge function (sources managed in Feed Control). */}
-        <HomeNewsRail />
-        </div>
+          if (isMobile) {
+            return (
+              <div className="space-y-4">
+                {statusColumn}
+                <HomeNewsRail />
+              </div>
+            );
+          }
+
+          return (
+            <ResizablePanelGroup
+              direction="horizontal"
+              autoSaveId="house-home-status-news"
+              className="min-h-[280px]"
+            >
+              <ResizablePanel defaultSize={66} minSize={35} className="min-w-0 pr-3">
+                {statusColumn}
+              </ResizablePanel>
+              <ResizableHandle withHandle className="mx-1" />
+              <ResizablePanel defaultSize={34} minSize={22} className="min-w-0 pl-3">
+                <HomeNewsRail />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          );
+        })()}
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
         {!modulesLoading && !layoutLoading && !roleLoading && (

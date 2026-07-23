@@ -22,12 +22,22 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
         '- Then call create_course_draft ONCE with the complete spec — full module descriptions and authored assignment prompts, not stubs. It creates a draft course only students cannot see; the teacher reviews, edits, and publishes on the course page.',
       ].join('\n')
     : '';
+  const dateCardNote = [
+    'Date card (the hero card at the top of the dashboard — one setting per tenant, seen by every member):',
+    '- Before explaining or changing it, call get_date_card to see the current type + config.',
+    '- Five types, chosen by "type" key: plain (weekday + full date), up_next (title + time of the next event), today (date + count of today\'s items), liturgical (Roman-rite feast title; requires the liturgy_planner add-on), custom (write your own three lines).',
+    '- Custom card has three flat text fields — eyebrow, title, subtitle — each accepts these tokens: {{date}}, {{time}}, {{user_name}}, {{ensemble_name}}, {{next_event}}, {{next_event_date}}. Anything outside that allowlist renders as literal braces, so keep tokens to the list.',
+    ctx.role === 'admin'
+      ? '- To change it, restate the target in one sentence and call set_date_card. For custom, always send all three fields (empty string clears a slot). For non-custom types, omit the text fields.'
+      : '- Only an admin/director can change the date card. If the user wants a change, tell them to ask a director — do not attempt set_date_card.',
+  ].join('\n');
   return [
     `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`,
-    `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, and adding YouTube videos to the library' : ''}.`,
+    `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, adding YouTube videos to the library, and configuring the dashboard date card' : ''}.`,
     `Current user: ${ctx.firstName}. Date/time now: ${ctx.nowIso} (${ctx.timezone}). Active modules: ${ctx.activeModules.join(', ') || 'core'}.`,
     memberNote,
     ...(courseBuilderNote ? [courseBuilderNote] : []),
+    dateCardNote,
     'Rules:',
     '- Prefer calling a tool over describing how to do something manually.',
     '- For calendar questions, call query_calendar with a narrow date range, then answer concisely with times in the user\'s timezone.',
