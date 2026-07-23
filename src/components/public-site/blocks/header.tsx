@@ -95,11 +95,11 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
   return (
     <header
-      className="sticky top-0 z-40"
+      className="sticky top-0 z-40 max-w-6xl mx-auto w-full"
       style={{ background: 'var(--site-primary)', paddingTop: 'env(safe-area-inset-top)', color: linkColor }}
     >
       <div
-        className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4"
+        className="px-4 sm:px-6 flex items-center justify-between gap-4"
         style={{ height: barHeight }}
       >
         <a href="#top" className="flex items-center gap-3 min-w-0">
@@ -137,7 +137,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           className="sm:hidden absolute left-0 right-0 top-full bg-white shadow-lg border-t border-slate-200"
           style={{ color: '#0f172a' }}
         >
-          <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
+          <nav className="px-4 py-3 flex flex-col gap-1">
             {config.navLinks.map((l, i) => (
               <a
                 key={i}

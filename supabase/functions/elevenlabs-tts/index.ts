@@ -48,7 +48,11 @@ serve(async (req) => {
             stability: 0.4, // More expressive, natural variation
             similarity_boost: 0.75,
             style: 0.5, // Moderate style for conversational tone
-            use_speaker_boost: true,
+            // Speaker boost pushes perceived loudness by pinning peaks near
+            // 0 dBFS — routinely clips the returned MP3 on percussive
+            // syllables. Client-side volume attenuation can't undo a clipped
+            // source, so we leave boost off and let the client set gain.
+            use_speaker_boost: false,
             speed: 1.0,
           },
         }),

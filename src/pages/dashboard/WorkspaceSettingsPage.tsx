@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -932,9 +932,16 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
               void (async () => {
                 const { data: { session } } = await supabase.auth.getSession();
                 const name = (form.short_name || (settings as any)?.short_name || '').trim();
+                // VITE_SUPABASE_URL isn't set in this project (client.ts derives
+                // it from the tenant bootstrap at runtime), so pass SUPABASE_URL
+                // explicitly — otherwise speak() falls through to browser
+                // SpeechSynthesis, which uses ONE OS voice regardless of
+                // voiceId → every "voice" sounds identical.
                 speak(`Welcome to ${name || 'GleeWorld'}`, {
                   voiceId: nextVoiceId,
                   accessToken: session?.access_token,
+                  supabaseUrl: SUPABASE_URL,
+                  volume: 0.55,
                   muted: false,
                 });
               })();

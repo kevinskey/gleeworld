@@ -174,10 +174,18 @@ export function speak(
     supabaseUrl?: string;
     /** JWT for the ElevenLabs call. If omitted, falls back to browser TTS. */
     accessToken?: string;
+    /** Playback volume 0..1. Applied to both ElevenLabs audio and browser TTS
+     *  fallback. Default 1.0 preserves the historical behaviour for the
+     *  assistant reply path — pass ~0.5–0.6 for preview UIs like the voice
+     *  picker where full volume is jarring. */
+    volume?: number;
   },
 ): void {
   const muted = opts?.muted ?? isMuted();
   if (muted || !text.trim()) return;
+  const volume = typeof opts?.volume === 'number'
+    ? Math.max(0, Math.min(1, opts.volume))
+    : 1;
 
   // Any prior speech (browser or ElevenLabs) is silenced BEFORE we start
   // the next one — the whole point of barge-in.
@@ -197,6 +205,7 @@ export function speak(
     if (!browserSynth) { opts?.onEnd?.(); return; }
     const UtterCtor = (globalThis as any).SpeechSynthesisUtterance;
     const utterance = UtterCtor ? new UtterCtor(text) : ({ text } as any);
+    utterance.volume = volume;
     if (opts?.onStart) utterance.onstart = opts.onStart;
     if (opts?.onEnd) { utterance.onend = opts.onEnd; utterance.onerror = opts.onEnd; }
     browserSynth.speak(utterance);
@@ -225,6 +234,7 @@ export function speak(
       if (mySession !== speakSession) return;
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
+      audio.volume = volume;
       elevenAudio = audio;
       audio.onplay = () => { if (mySession === speakSession) opts?.onStart?.(); };
       const cleanup = () => {
@@ -242,6 +252,7 @@ export function speak(
       if (!browserSynth) { opts?.onEnd?.(); return; }
       const UtterCtor = (globalThis as any).SpeechSynthesisUtterance;
       const utterance = UtterCtor ? new UtterCtor(text) : ({ text } as any);
+      utterance.volume = volume;
       if (opts?.onStart) utterance.onstart = opts.onStart;
       if (opts?.onEnd) { utterance.onend = opts.onEnd; utterance.onerror = opts.onEnd; }
       browserSynth.speak(utterance);
