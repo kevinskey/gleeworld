@@ -56,7 +56,7 @@ export default function StudioHome() {
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2 drop-shadow-sm">
             <Mic className="w-7 h-7 text-primary" /> Studio
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-foreground/85 mt-1 drop-shadow-sm">
             Multi-track composition + recording. Sessions sync across your devices.
           </p>
         </div>
