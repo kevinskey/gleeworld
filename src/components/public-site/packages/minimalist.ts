@@ -1,6 +1,9 @@
 // Minimalist package — extreme whitespace, monochrome, one accent color,
-// no dividers, quiet type. Editorial. Marked as coming soon until block
-// presets land.
+// no dividers, quiet type. Editorial. Fewest blocks of any package: five
+// sections, each doing one job. Hero is `imageFit: 'fit'` (no forced
+// crop) and CTA-less — the calendar block below stands in for the
+// call-to-action. `showTextOverlay: false` so a photo, when uploaded,
+// reads on its own without a headline scrim.
 
 import type { TemplatePackage } from './index';
 
@@ -9,7 +12,6 @@ export const minimalistPackage: TemplatePackage = {
   name: 'Minimalist',
   description:
     'Extreme whitespace, quiet type, one accent color. The content is the design.',
-  comingSoon: true,
   theme: {
     fontFamily: 'sans',
     headingFontFamily: 'sans',
@@ -19,5 +21,25 @@ export const minimalistPackage: TemplatePackage = {
     letterSpacing: 0,
     package: 'minimalist',
   },
-  blocks: [],
+  blocks: [
+    {
+      type: 'hero',
+      config: {
+        variant: 'image',
+        imageFit: 'fit',
+        headline: '',
+        subheadline: '',
+        ctaLabel: '',
+        ctaUrl: '',
+        showTextOverlay: false,
+        showUnderlay: false,
+        headlineSize: 44,
+        subheadlineSize: 18,
+      },
+    },
+    { type: 'about', config: { title: '', body: '', imageSide: 'right' } },
+    { type: 'music-player', config: { heading: 'Listen', tracks: [] } },
+    { type: 'events', config: { heading: 'Upcoming', style: 'list', limit: 6 } },
+    { type: 'contact', config: { email: '', phone: '' } },
+  ],
 };
