@@ -211,12 +211,20 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         {midi.state.supported && (
           <button
             onClick={() => (midi.state.connected ? midi.disable() : midi.enable())}
-            className={pill(midi.state.connected)}
+            // Fixed-width + label always "MIDI" so the toolbar never
+            // shifts when armed — only the color changes (red = live and
+            // listening). Prevents the reflow the earlier "MIDI ● On"
+            // label caused when it grew wider than "MIDI".
+            className={`rounded-md px-2.5 py-1.5 text-sm font-medium w-16 text-center ${
+              midi.state.connected
+                ? 'bg-rose-600 text-white'
+                : 'bg-slate-100 text-slate-700'
+            }`}
             title={midi.state.connected
               ? `MIDI on — listening to: ${midi.state.inputNames.join(', ') || '(no device)'}`
               : 'Enable a plugged-in MIDI keyboard for note entry'}
           >
-            {midi.state.connected ? 'MIDI ● On' : 'MIDI'}
+            MIDI
           </button>
         )}
       </div>
