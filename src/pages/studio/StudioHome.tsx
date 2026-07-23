@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Loader2, Music2, Plus, Trash2, Mic } from 'lucide-react';
+import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines } from 'lucide-react';
 import {
   useMySessions, useCreateStudioSession, useDeleteStudioSession, useStudioOwner,
 } from '@/hooks/useStudio';
@@ -72,15 +72,7 @@ export default function StudioHome() {
           <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading sessions…
         </div>
       ) : (sessions.data ?? []).length === 0 ? (
-        <Card className="border-dashed bg-card/95 backdrop-blur-sm">
-          <CardContent className="py-12 text-center text-sm text-muted-foreground space-y-3">
-            <Music2 className="w-8 h-8 mx-auto opacity-40" />
-            <p>No sessions yet.</p>
-            <Button size="sm" onClick={() => setCreateOpen(true)} disabled={!owner.data}>
-              <Plus className="w-3.5 h-3.5 mr-1" /> Start your first session
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyStudio onStart={() => setCreateOpen(true)} disabled={!owner.data} />
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {sessions.data!.map((s) => (
@@ -123,6 +115,55 @@ export default function StudioHome() {
         </ul>
       )}
       </div>
+    </div>
+  );
+}
+
+// Empty-state hero. The big-white-card version was a wall on top of the
+// studio photo; this replaces it with a centered editorial column that
+// lets the background lead. Glass badge + drop-shadow text keeps every
+// element readable against the photo without a plain white block.
+function EmptyStudio({ onStart, disabled }: { onStart: () => void; disabled: boolean }) {
+  return (
+    <div className="py-14 sm:py-24">
+      <div className="max-w-md mx-auto text-center flex flex-col items-center gap-5">
+        <div className="w-16 h-16 rounded-2xl bg-primary/15 backdrop-blur-md border border-primary/40 flex items-center justify-center shadow-lg">
+          <Music2 className="w-8 h-8 text-primary" />
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight drop-shadow-md">
+            Start something.
+          </h2>
+          <p className="text-sm sm:text-base text-foreground/85 drop-shadow-sm">
+            Record, mix, and master right in the browser. Sessions sync across every device you sign in on.
+          </p>
+        </div>
+
+        <Button
+          size="lg"
+          onClick={onStart}
+          disabled={disabled}
+          className="rounded-full px-6 shadow-lg"
+        >
+          <Plus className="w-4 h-4 mr-1.5" /> Start your first session
+        </Button>
+
+        <div className="pt-4 grid grid-cols-3 gap-2 w-full max-w-sm">
+          <FeatureChip icon={Mic} label="Record" />
+          <FeatureChip icon={Sliders} label="Mix" />
+          <FeatureChip icon={AudioLines} label="Master" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureChip({ icon: Icon, label }: { icon: typeof Mic; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1 py-2 px-2 rounded-lg bg-background/40 backdrop-blur-sm border border-border/60">
+      <Icon className="w-4 h-4 text-primary" />
+      <span className="text-[11px] font-medium text-foreground/85 drop-shadow-sm">{label}</span>
     </div>
   );
 }
