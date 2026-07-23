@@ -3,6 +3,7 @@ import { EditorScore, noteOf, restOf, Pitch } from '@/lib/notation/model';
 import { BaseDur } from '@/lib/notation/duration';
 import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, respellEnharmonic, setLyric, CommandStack } from '@/lib/notation/commands';
 import { playPitch } from '@/lib/notation/pitchAudio';
+import { useMidiInput, midiToPitch } from '@/lib/notation/useMidiInput';
 import { NotationView } from './NotationView';
 
 const CHROMA_MIDI: Record<Pitch['step'], number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
@@ -64,6 +65,23 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
     dispatch(insertElement(insertAt, noteOf(pitch, armed, armedDots)));
     if (selected != null) setSelected(insertAt);
   }, [armed, armedDots, armedAlter, selected, dispatch]);
+
+  // MIDI note-on → insert a note at the exact pitch the keyboard played.
+  // Uses the currently-armed duration/dots so the "arm quarter, play notes"
+  // rhythm matches every other DAW/scoring app. armedAlter only affects
+  // the choice of enharmonic spelling for black keys: sharp by default
+  // (matches Sibelius Fast Note Input), flat when the user armed ♭.
+  const addPitchFromMidi = useCallback((midi: number) => {
+    const prefer = armedAlter === -1 ? 'flat' : 'sharp';
+    const pitch = midiToPitch(midi, prefer);
+    playPitch(midi);
+    const s = scoreRef.current;
+    const insertAt = selected != null ? selected + 1 : s.elements.length;
+    dispatch(insertElement(insertAt, noteOf(pitch, armed, armedDots)));
+    if (selected != null) setSelected(insertAt);
+  }, [armed, armedDots, armedAlter, selected, dispatch]);
+
+  const midi = useMidiInput(addPitchFromMidi);
 
   const addRest = useCallback(() => {
     const insertAt = selected != null ? selected + 1 : scoreRef.current.elements.length;
@@ -190,9 +208,30 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
         >
           Lyrics
         </button>
+        {midi.state.supported && (
+          <button
+            onClick={() => (midi.state.connected ? midi.disable() : midi.enable())}
+            className={pill(midi.state.connected)}
+            title={midi.state.connected
+              ? `MIDI on — listening to: ${midi.state.inputNames.join(', ') || '(no device)'}`
+              : 'Enable a plugged-in MIDI keyboard for note entry'}
+          >
+            {midi.state.connected ? 'MIDI ● On' : 'MIDI'}
+          </button>
+        )}
       </div>
+      {midi.state.error && (
+        <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs text-rose-700">
+          MIDI: {midi.state.error}
+        </div>
+      )}
+      {midi.state.connected && midi.state.inputNames.length === 0 && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">
+          MIDI is on but no keyboards are connected. Plug one in — it'll be picked up automatically.
+        </div>
+      )}
       <div className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs leading-relaxed text-slate-600">
-        <span className="font-medium text-slate-700">Type to write music — or tap the note pad below.</span>{' '}
+        <span className="font-medium text-slate-700">Type, tap the note pad, or play a MIDI keyboard.</span>{' '}
         Press <Kbd>A</Kbd>–<Kbd>G</Kbd> to add notes · <Kbd>1</Kbd>–<Kbd>6</Kbd> duration ·{' '}
         <Kbd>.</Kbd> dot · <Kbd>=</Kbd> sharp · <Kbd>-</Kbd> flat · <Kbd>R</Kbd> rest ·{' '}
         <Kbd>←</Kbd>/<Kbd>→</Kbd> select a note · <Kbd>↑</Kbd>/<Kbd>↓</Kbd> move its pitch ·{' '}
