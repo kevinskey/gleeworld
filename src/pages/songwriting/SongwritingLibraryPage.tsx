@@ -122,24 +122,24 @@ export default function SongwritingLibraryPage() {
         </header>
 
         {loading ? (
-          <div className="text-sm text-foreground/85 drop-shadow-sm">Loading…</div>
+          <div className="text-sm text-foreground drop-shadow-md">Loading…</div>
         ) : songs.length === 0 ? (
           <EmptySongwriting onStart={newSong} creating={creating} />
         ) : (
-          <ul className="divide-y divide-foreground/15 border-y border-foreground/15">
+          <ul className="ml-auto w-full max-w-xs sm:max-w-sm divide-y divide-foreground/30 border-y border-foreground/30">
             {songs.map((s, i) => (
               <li
                 key={s.id}
                 className="group flex items-center gap-4 py-3.5 px-2 -mx-2 rounded-lg hover:bg-background/40 hover:backdrop-blur-sm transition"
               >
-                <span className="w-6 text-right text-xs font-mono tabular-nums text-foreground/60 shrink-0 drop-shadow-sm">
+                <span className="w-6 text-right text-xs font-mono tabular-nums text-foreground/90 shrink-0 drop-shadow-md">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <Link to={`/songwriting/${s.id}`} className="flex-1 min-w-0">
-                  <div className="text-base font-semibold leading-tight truncate drop-shadow-sm">
+                  <div className="text-base font-semibold leading-tight truncate drop-shadow-md">
                     {s.title || 'Untitled'}
                   </div>
-                  <div className="text-xs text-foreground/70 mt-0.5 drop-shadow-sm">{songMeta(s)}</div>
+                  <div className="text-xs text-foreground mt-0.5 drop-shadow-md">{songMeta(s)}</div>
                 </Link>
                 <button
                   type="button"
@@ -155,22 +155,22 @@ export default function SongwritingLibraryPage() {
         )}
 
         {!loading && (
-          <div className="space-y-3">
-            <h2 className="text-lg font-semibold tracking-tight drop-shadow-sm">Shared with your ensemble</h2>
+          <div className="ml-auto w-full max-w-xs sm:max-w-sm space-y-3">
+            <h2 className="text-lg font-semibold tracking-tight drop-shadow-md">Shared with your ensemble</h2>
             {shared.length === 0 ? (
-              <p className="text-sm text-foreground/85 drop-shadow-sm">No songs shared yet.</p>
+              <p className="text-sm text-foreground drop-shadow-md">No songs shared yet.</p>
             ) : (
-              <ul className="divide-y divide-foreground/15 border-y border-foreground/15">
+              <ul className="divide-y divide-foreground/30 border-y border-foreground/30">
                 {shared.map((s, i) => (
                   <li key={s.id} className="flex items-center gap-4 py-3.5 px-2 -mx-2 rounded-lg hover:bg-background/40 hover:backdrop-blur-sm transition">
-                    <span className="w-6 text-right text-xs font-mono tabular-nums text-foreground/60 shrink-0 drop-shadow-sm">
+                    <span className="w-6 text-right text-xs font-mono tabular-nums text-foreground/90 shrink-0 drop-shadow-md">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <Link to={`/songwriting/${s.id}`} className="flex-1 min-w-0">
-                      <div className="text-base font-semibold leading-tight truncate drop-shadow-sm">
+                      <div className="text-base font-semibold leading-tight truncate drop-shadow-md">
                         {s.title || 'Untitled'}
                       </div>
-                      <div className="text-xs text-foreground/70 mt-0.5 drop-shadow-sm">{songMeta(s)}</div>
+                      <div className="text-xs text-foreground mt-0.5 drop-shadow-md">{songMeta(s)}</div>
                     </Link>
                   </li>
                 ))}
@@ -198,7 +198,7 @@ function EmptySongwriting({ onStart, creating }: { onStart: () => void; creating
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight drop-shadow-md">
             Write something.
           </h2>
-          <p className="text-sm sm:text-base text-foreground/85 drop-shadow-sm">
+          <p className="text-sm sm:text-base text-foreground drop-shadow-md">
             Verses, choruses, bridges. Drafts save automatically and sync everywhere you sign in.
           </p>
         </div>
@@ -226,7 +226,7 @@ function FeatureChip({ icon: Icon, label }: { icon: LucideIcon; label: string })
   return (
     <div className="flex flex-col items-center gap-1 py-2 px-2 rounded-lg bg-background/40 backdrop-blur-sm border border-border/60">
       <Icon className="w-4 h-4 text-primary" />
-      <span className="text-[11px] font-medium text-foreground/85 drop-shadow-sm">{label}</span>
+      <span className="text-[11px] font-medium text-foreground drop-shadow-md">{label}</span>
     </div>
   );
 }
