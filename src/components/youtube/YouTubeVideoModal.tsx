@@ -261,21 +261,6 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title, url, playli
             </div>
           )}
 
-          {/* Bottom action row for the external-link fallback. Moved out of
-              absolute-positioning too — floating over YouTube's bottom
-              control bar (play, seek, volume, CC) obscures the very
-              controls we now want the user to reach freely. */}
-          <div className="bg-black flex items-center justify-end px-3 py-2 border-t border-white/10">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white/80 hover:text-white hover:bg-white/10"
-              onClick={() => window.open(watchUrl, '_blank')}
-            >
-              <ExternalLink className="h-4 w-4 mr-1.5" />
-              {openLabel}
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
