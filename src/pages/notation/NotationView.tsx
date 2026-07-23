@@ -13,11 +13,21 @@ const FIFTHS_KEY: Record<number, string> = {
   [-1]: 'F', [-2]: 'Bb', [-3]: 'Eb', [-4]: 'Ab', [-5]: 'Db', [-6]: 'Gb', [-7]: 'Cb',
 };
 
-// Small, engraving-sized notation. Measures per line are fixed by viewport: 4 across on
-// desktop/iPad, 2 on phones (below Tailwind's md breakpoint).
-const SCALE = 1.0;
-const PER_ROW_DESKTOP = 4;
-const PER_ROW_PHONE = 2;
+// Readable, print-ish notation. Higher SCALE = thicker staff lines, larger
+// noteheads, and more presence overall — the earlier 1.0 rendered a
+// wispy engraving-sized staff that was hard to read at desktop
+// distances. 1.35 sits close to a real score's line weight without
+// looking cartoonishly large. Everything scales proportionally: layout
+// happens in a logicalWidth = cssWidth / SCALE space, then ctx.scale
+// (SCALE) draws it back up to fill the container.
+const SCALE = 1.35;
+// Guardrails only — the actual measures-per-row is decided dynamically
+// by summing each measure's minW until the row can't hold the next one
+// (see the row-packing loop below). These caps keep a page of whole
+// notes from stretching 12 measures wide, and enforce one-per-row on
+// very narrow phones.
+const MAX_PER_ROW_DESKTOP = 6;
+const MAX_PER_ROW_PHONE = 2;
 const PHONE_MAX_WIDTH = 768;
 
 const SELECTED_COLOR = '#ea580c'; // orange-600
@@ -62,17 +72,19 @@ export function NotationView({
     // The SVG is cssWidth CSS px wide; ctx.scale(SCALE) then draws everything SCALE× larger,
     // so we lay out in a logical space of cssWidth / SCALE.
     const logicalWidth = cssWidth / SCALE;
-    // Wrap measures onto multiple lines (systems) so a long exercise flows top-to-bottom like
-    // real sheet music. Measures per line: 4 on desktop/iPad, 2 on phones — capped to the
-    // actual count so a short score fills the width instead of leaving empty slots.
+    // Content-aware line wrapping. Instead of a fixed 4-measures-per-row,
+    // walk the measures accumulating each one's minimum content width;
+    // start a new system when the next measure wouldn't fit. This means
+    // dense 16th-note bars automatically get fewer per row (each is
+    // wider), while sparse whole-note bars pack more per row. Result:
+    // every system's measures fill the width with roughly-consistent
+    // note spacing — no more cramped busy bars next to over-stretched
+    // sparse ones.
     const isPhone = typeof window !== 'undefined' && window.innerWidth < PHONE_MAX_WIDTH;
-    const perRow = Math.max(1, Math.min(isPhone ? PER_ROW_PHONE : PER_ROW_DESKTOP, measures.length));
-    const rows = Math.ceil(measures.length / perRow);
-    const TOP = 20, SYSTEM_H = 120, BOTTOM = 16;
-    const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
-    renderer.resize(cssWidth, Math.ceil(logicalHeight * SCALE));
-    const ctx = renderer.getContext();
-    ctx.scale(SCALE, SCALE);
+    const maxPerRow = isPhone ? MAX_PER_ROW_PHONE : MAX_PER_ROW_DESKTOP;
+    const TOP = 20, SYSTEM_H = 130, BOTTOM = 16;
+    const MOD_RESERVE = 70; // clef (+ key sig) + time sig on a system's first bar
+    const availableW = Math.max(1, logicalWidth - 16 - MOD_RESERVE);
 
     const keySpec = FIFTHS_KEY[score.keyFifths] ?? 'C';
 
@@ -112,19 +124,46 @@ export function NotationView({
       return { m, notes, voice, beams, minW };
     });
 
+    // Row-packing pass. Greedily fill each system with as many measures
+    // as their combined minW allows, using maxPerRow as a readability cap
+    // (whole notes could otherwise stretch a dozen bars across a monitor).
+    // Rows always contain at least one measure — a bar wider than
+    // availableW just overflows its own row rather than being dropped.
+    const rowsPacked: { start: number; end: number }[] = [];
+    {
+      let start = 0;
+      let acc = 0;
+      for (let i = 0; i < built.length; i++) {
+        const w = (built[i].minW || 40) + 20;
+        const inRow = i - start;
+        const wouldOverflow = inRow > 0 && acc + w > availableW;
+        const atCap = inRow >= maxPerRow;
+        if (wouldOverflow || atCap) {
+          rowsPacked.push({ start, end: i });
+          start = i;
+          acc = 0;
+        }
+        acc += w;
+      }
+      if (built.length > 0) rowsPacked.push({ start, end: built.length });
+    }
+    const rows = Math.max(1, rowsPacked.length);
+    const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
+    renderer.resize(cssWidth, Math.ceil(logicalHeight * SCALE));
+    const ctx = renderer.getContext();
+    ctx.scale(SCALE, SCALE);
+
     // Pass 2 — lay out each system with proportional bar widths, then draw.
-    const MOD_RESERVE = 70; // fixed space for clef (+ key sig) + time sig on a system's first bar
     let globalIndex = 0;
     let selPos: { x: number; y: number } | null = null;
-    for (let r = 0; r < rows; r++) {
-      const rowItems = built.slice(r * perRow, r * perRow + perRow);
-      const contentWidth = Math.max(1, logicalWidth - 16 - MOD_RESERVE);
+    for (let r = 0; r < rowsPacked.length; r++) {
+      const rowItems = built.slice(rowsPacked[r].start, rowsPacked[r].end);
       const weights = rowItems.map((b) => b.minW + 20);
       const totalW = weights.reduce((a, w) => a + w, 0) || 1;
       let x = 8;
       rowItems.forEach((b, i) => {
-        const mi = r * perRow + i;
-        const w = (weights[i] / totalW) * contentWidth + (i === 0 ? MOD_RESERVE : 0);
+        const mi = rowsPacked[r].start + i;
+        const w = (weights[i] / totalW) * availableW + (i === 0 ? MOD_RESERVE : 0);
         const stave = new Stave(x, TOP + r * SYSTEM_H, w);
         if (i === 0) {
           stave.addClef(VEX_CLEF[score.clef]);                                                     // clef opens every system

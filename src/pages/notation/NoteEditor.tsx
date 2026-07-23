@@ -187,46 +187,92 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
           </button>
         ))}
         <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
-        <button onClick={() => setArmedDots((d) => ((d + 1) % 3) as 0 | 1 | 2)} className={pill(armedDots > 0)}>
-          Dot: {armedDots}
-        </button>
-        <button onClick={() => setArmedAlter(0)} className={pill(armedAlter === 0)}>♮</button>
-        <button onClick={() => setArmedAlter(1)} className={pill(armedAlter === 1)}>♯</button>
-        <button onClick={() => setArmedAlter(-1)} className={pill(armedAlter === -1)}>♭</button>
-        <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
+        {/* Rhythmic dots: real bold bullets rather than "Dot: N" text so the
+            button reads as musical notation instead of a form field. w-14
+            keeps a 0/1/2-dot label from jostling neighbors when it flips.
+            The 0 state shows a faded outline dot so the affordance is
+            visible even when the button is "off". */}
         <button
-          onClick={() => {
-            const next = !lyricMode;
-            setLyricMode(next);
-            // Entering lyric mode with nothing selected: drop the cursor on the first note.
-            if (next && (selected == null || score.elements[selected]?.kind !== 'note')) {
-              const first = score.elements.findIndex((el) => el.kind === 'note');
-              if (first >= 0) setSelected(first);
-            }
-          }}
-          className={pill(lyricMode)}
+          onClick={() => setArmedDots((d) => ((d + 1) % 3) as 0 | 1 | 2)}
+          className={`rounded-md px-2.5 py-1.5 font-bold w-14 text-center leading-none ${
+            armedDots > 0 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'
+          }`}
+          title={`Dots: ${armedDots}`}
+          aria-label={`Dots: ${armedDots}`}
         >
-          Lyrics
+          <span className="text-2xl tracking-tight">
+            {armedDots === 0 ? '○' : '•'.repeat(armedDots)}
+          </span>
         </button>
-        {midi.state.supported && (
+        {/* Accidentals — larger glyphs so ♮ ♯ ♭ read at score-symbol size
+            instead of body-text size, matching the real notation they'll
+            attach to. Fixed w-10 for consistent hit target. */}
+        <button
+          onClick={() => setArmedAlter(0)}
+          className={`rounded-md px-2 py-1 w-10 text-center leading-none text-2xl font-semibold ${
+            armedAlter === 0 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+          }`}
+          aria-label="Natural"
+        >♮</button>
+        <button
+          onClick={() => setArmedAlter(1)}
+          className={`rounded-md px-2 py-1 w-10 text-center leading-none text-2xl font-semibold ${
+            armedAlter === 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+          }`}
+          aria-label="Sharp"
+        >♯</button>
+        <button
+          onClick={() => setArmedAlter(-1)}
+          className={`rounded-md px-2 py-1 w-10 text-center leading-none text-2xl font-semibold ${
+            armedAlter === -1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+          }`}
+          aria-label="Flat"
+        >♭</button>
+        <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
+        {/* Lyrics + MIDI live in a nested flex group so they wrap together
+            as one unit when the toolbar runs out of width — MIDI never
+            spills onto its own line while Lyrics stays behind. Fixed
+            widths mean neither button shifts its neighbor when armed. */}
+        <div className="flex items-center gap-1.5">
           <button
-            onClick={() => (midi.state.connected ? midi.disable() : midi.enable())}
-            // Fixed-width + label always "MIDI" so the toolbar never
-            // shifts when armed — only the color changes (red = live and
-            // listening). Prevents the reflow the earlier "MIDI ● On"
-            // label caused when it grew wider than "MIDI".
-            className={`rounded-md px-2.5 py-1.5 text-sm font-medium w-16 text-center ${
-              midi.state.connected
-                ? 'bg-rose-600 text-white'
+            onClick={() => {
+              const next = !lyricMode;
+              setLyricMode(next);
+              // Entering lyric mode with nothing selected: drop the cursor on the first note.
+              if (next && (selected == null || score.elements[selected]?.kind !== 'note')) {
+                const first = score.elements.findIndex((el) => el.kind === 'note');
+                if (first >= 0) setSelected(first);
+              }
+            }}
+            // Orange when armed (matches the orange lyric-cursor + selection
+            // color used in NotationView so "lyrics mode" reads visually
+            // consistent with the surface it drives).
+            className={`rounded-md px-2.5 py-1.5 text-sm font-medium w-20 text-center ${
+              lyricMode
+                ? 'bg-orange-500 text-white'
                 : 'bg-slate-100 text-slate-700'
             }`}
-            title={midi.state.connected
-              ? `MIDI on — listening to: ${midi.state.inputNames.join(', ') || '(no device)'}`
-              : 'Enable a plugged-in MIDI keyboard for note entry'}
           >
-            MIDI
+            Lyrics
           </button>
-        )}
+          {midi.state.supported && (
+            <button
+              onClick={() => (midi.state.connected ? midi.disable() : midi.enable())}
+              // Same fixed-width + color-only feedback as Lyrics — rose-600
+              // when live so it reads as "hot mic".
+              className={`rounded-md px-2.5 py-1.5 text-sm font-medium w-16 text-center ${
+                midi.state.connected
+                  ? 'bg-rose-600 text-white'
+                  : 'bg-slate-100 text-slate-700'
+              }`}
+              title={midi.state.connected
+                ? `MIDI on — listening to: ${midi.state.inputNames.join(', ') || '(no device)'}`
+                : 'Enable a plugged-in MIDI keyboard for note entry'}
+            >
+              MIDI
+            </button>
+          )}
+        </div>
       </div>
       {midi.state.error && (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs text-rose-700">
