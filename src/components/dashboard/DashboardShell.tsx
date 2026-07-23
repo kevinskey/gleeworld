@@ -369,7 +369,9 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
           load (broken URL / wrong tenant settings), fall back to a
           colored monogram so the brand block never disappears. Larger
           glyph + bigger type so it visibly anchors the page. */}
-      <div className="flex items-center h-[80px] border-b border-border pr-2">
+      <div
+        className="flex items-center border-b border-border pr-2 pt-[env(safe-area-inset-top,0px)] h-[calc(80px+env(safe-area-inset-top,0px))]"
+      >
         <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-4 h-full">
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
