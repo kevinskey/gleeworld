@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mic, Play, Save } from 'lucide-react';
+import { Loader2, Mic, Play, Save, Music } from 'lucide-react';
 import { useMicPitch } from '@/lib/sightReading/useMicPitch';
 import { scoreAttempt, type ScoreResult, type SungNote } from '@/lib/sightReading/score';
 import { recordTake } from '@/lib/sightReading/takesApi';
@@ -107,6 +107,39 @@ export function SingFlow({
   const [countBeat, setCountBeat] = useState(0);
   const [result, setResult] = useState<ScoreResult | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [pipePlaying, setPipePlaying] = useState(false);
+
+  // Sound the exercise's tonic so the singer can grab their starting note
+  // before hitting Start take. Uses the same triangle-wave envelope the
+  // Studio-level pitch pipe uses so both surfaces sound identical.
+  const soundPitchPipe = useCallback(async () => {
+    if (pipePlaying) return;
+    setPipePlaying(true);
+    try {
+      const AC = window.AudioContext
+        || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AC) return;
+      const actx = new AC();
+      if (actx.state !== 'running') await actx.resume();
+      const hz = 440 * Math.pow(2, (exercise.tonicMidi - 69) / 12);
+      const osc = actx.createOscillator();
+      const g = actx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = hz;
+      const t = actx.currentTime;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+      g.gain.setValueAtTime(0.25, t + 1.4);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.7);
+      osc.connect(g).connect(actx.destination);
+      osc.start(t);
+      osc.stop(t + 1.75);
+      osc.onended = () => { void actx.close(); };
+      await new Promise((r) => setTimeout(r, 1800));
+    } finally {
+      setPipePlaying(false);
+    }
+  }, [exercise.tonicMidi, pipePlaying]);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Save the currently-shown line into the teacher's exercise Library. The generated
@@ -242,6 +275,17 @@ export function SingFlow({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Sing the line</h1>
         <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            onClick={soundPitchPipe}
+            disabled={pipePlaying}
+            title="Sound the starting pitch"
+          >
+            <Music className="mr-1.5 h-4 w-4" />
+            {pipePlaying ? 'Playing…' : 'Pitch pipe'}
+          </Button>
           {isAdmin() && (
             <Button
               variant="outline"

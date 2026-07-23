@@ -21,12 +21,12 @@ const FIFTHS_KEY: Record<number, string> = {
 // happens in a logicalWidth = cssWidth / SCALE space, then ctx.scale
 // (SCALE) draws it back up to fill the container.
 const SCALE = 1.35;
-// Guardrails only — the actual measures-per-row is decided dynamically
-// by summing each measure's minW until the row can't hold the next one
-// (see the row-packing loop below). These caps keep a page of whole
-// notes from stretching 12 measures wide, and enforce one-per-row on
-// very narrow phones.
-const MAX_PER_ROW_DESKTOP = 6;
+// Guardrails on the row-packing loop below. Desktop caps at 4 bars per
+// system so a page of dense notes doesn't turn into an eye-chart; phones
+// cap at 2 for the same reason at a smaller width. Dense bars can still
+// force a lower per-row count via the width check, but never higher than
+// these caps.
+const MAX_PER_ROW_DESKTOP = 4;
 const MAX_PER_ROW_PHONE = 2;
 const PHONE_MAX_WIDTH = 768;
 
@@ -82,7 +82,10 @@ export function NotationView({
     // sparse ones.
     const isPhone = typeof window !== 'undefined' && window.innerWidth < PHONE_MAX_WIDTH;
     const maxPerRow = isPhone ? MAX_PER_ROW_PHONE : MAX_PER_ROW_DESKTOP;
-    const TOP = 20, SYSTEM_H = 130, BOTTOM = 16;
+    // SYSTEM_H is the vertical stride between systems (staff to staff). Lower
+    // = tighter score, more visible at once — the previous 130 was leaving
+    // white space between systems bigger than the staves themselves.
+    const TOP = 20, SYSTEM_H = 96, BOTTOM = 16;
     const MOD_RESERVE = 70; // clef (+ key sig) + time sig on a system's first bar
     const availableW = Math.max(1, logicalWidth - 16 - MOD_RESERVE);
 
@@ -187,6 +190,18 @@ export function NotationView({
             if (idx === selectedIndex && b.m.elements[k].kind === 'note') {   // inline lyric cursor position
               const yb = typeof (stave as any).getYForBottomText === 'function' ? (stave as any).getYForBottomText(1) : stave.getBottomY();
               selPos = { x: (sn as any).getAbsoluteX() * SCALE, y: yb * SCALE };
+              // Auto-scroll the current measure into view. Uses the note's
+              // own SVG element and `block: 'nearest'` so we only scroll
+              // when the note is actually off-screen — never fights the
+              // user's own scroll otherwise. Deferred to a microtask so
+              // the DOM has settled after this render tick.
+              const svgEl = (sn as any).getSVGElement?.();
+              if (svgEl && typeof svgEl.scrollIntoView === 'function') {
+                queueMicrotask(() => {
+                  try { svgEl.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); }
+                  catch { /* older browsers without options object — no-op */ }
+                });
+              }
             }
           });
           try {   // tie curves between paired start/stop notes within this measure

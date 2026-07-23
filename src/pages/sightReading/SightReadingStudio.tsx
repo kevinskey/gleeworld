@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Music, Plus, Pencil } from 'lucide-react';
+import { Music, Plus, Pencil, Trash2 } from 'lucide-react';
 import { SingFlow } from './SingFlow';
 import { ProgressTab } from './ProgressTab';
 import { ClassProgressTab } from './ClassProgressTab';
@@ -69,14 +69,41 @@ function LibraryTabAdmin() {
           {rows.map((row) => (
             <li key={row.id} className="flex items-center justify-between gap-2 px-4 py-3">
               <span className="text-sm text-slate-900">{row.title}</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/dashboard/sight-reading/editor/' + row.id)}
-              >
-                <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit
-              </Button>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/dashboard/sight-reading/editor/' + row.id)}
+                >
+                  <Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                  onClick={async () => {
+                    if (!confirm(`Delete "${row.title}"? This cannot be undone.`)) return;
+                    // Optimistic remove — pop from state first, roll back on error.
+                    const prev = rows;
+                    setRows((r) => r.filter((x) => x.id !== row.id));
+                    const { error } = await supabase
+                      .from('gw_sight_reading_exercises')
+                      .delete()
+                      .eq('id', row.id);
+                    if (error) {
+                      setRows(prev);
+                      toast.error('Could not delete', { description: error.message });
+                    } else {
+                      toast.success('Deleted');
+                    }
+                  }}
+                  aria-label={`Delete ${row.title}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
