@@ -126,7 +126,7 @@ export default function SongwritingLibraryPage() {
         ) : songs.length === 0 ? (
           <EmptySongwriting onStart={newSong} creating={creating} />
         ) : (
-          <ul className="divide-y divide-foreground/30 border-y border-foreground/30">
+          <ul className="ml-auto w-full max-w-xs sm:max-w-sm divide-y divide-foreground/30 border-y border-foreground/30">
             {songs.map((s, i) => (
               <li
                 key={s.id}
@@ -155,7 +155,7 @@ export default function SongwritingLibraryPage() {
         )}
 
         {!loading && (
-          <div className="space-y-3">
+          <div className="ml-auto w-full max-w-xs sm:max-w-sm space-y-3">
             <h2 className="text-lg font-semibold tracking-tight drop-shadow-md">Shared with your ensemble</h2>
             {shared.length === 0 ? (
               <p className="text-sm text-foreground drop-shadow-md">No songs shared yet.</p>
