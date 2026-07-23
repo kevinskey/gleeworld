@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploadField } from '../ImageUploadField';
+import { EditableText } from '../EditableText';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
@@ -159,17 +160,47 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const bgImage = imgFailed ? '' : rawBgImage;
   const embed = config.variant === 'video' ? youtubeEmbed(config.videoUrl) : null;
   const masterOn = config.showTextOverlay !== false;
+  const editable = !!onConfigChange;
   // Each text element has its own visibility flag too. They only matter when
-  // the master overlay toggle is on.
-  const showHeadline = masterOn && config.showHeadline !== false && !!config.headline;
-  const showSubheadline = masterOn && config.showSubheadline !== false && !!config.subheadline;
+  // the master overlay toggle is on. In edit mode we ALSO render when the
+  // text is empty, so tenants have somewhere to click and start typing.
+  const showHeadline = masterOn && config.showHeadline !== false && (!!config.headline || editable);
+  const showSubheadline = masterOn && config.showSubheadline !== false && (!!config.subheadline || editable);
   // Build the list of buttons to render. Newer schema stores buttons in an
   // array; older configs only have the single legacy ctaLabel/ctaUrl pair,
   // which we surface as button #1 so existing tenants keep their CTA.
-  const allButtons = (config.buttons && config.buttons.length > 0)
-    ? config.buttons.filter((b) => b.label && b.url)
+  // Each entry keeps a `source` tag so inline label edits know which slot
+  // in the config to write back to.
+  type ButtonWithSource = {
+    label: string;
+    url: string;
+    color: string;
+    size: number;
+    source: 'legacy' | 'array';
+    arrayIndex?: number;
+  };
+  const allButtons: ButtonWithSource[] = (config.buttons && config.buttons.length > 0)
+    ? config.buttons
+        .map((b, i) => ({
+          label: b.label,
+          url: b.url,
+          color: b.color || '#ffffff',
+          size: b.size ?? 18,
+          source: 'array' as const,
+          arrayIndex: i,
+        }))
+        // On the public site we hide half-filled buttons, but in the editor we
+        // keep them visible so tenants can finish typing without the button
+        // disappearing between keystrokes.
+        .filter((b) => editable || (b.label && b.url))
     : (config.ctaLabel && config.ctaUrl
-        ? [{ label: config.ctaLabel, url: config.ctaUrl, color: config.ctaColor || '#ffffff', size: config.ctaSize ?? 18 }]
+        ? [{
+            label: config.ctaLabel,
+            url: config.ctaUrl,
+            color: config.ctaColor || '#ffffff',
+            size: config.ctaSize ?? 18,
+            source: 'legacy' as const,
+          }]
         : []);
   const showCta = masterOn && config.showCta !== false && allButtons.length > 0;
   const showUnderlay = masterOn && config.showUnderlay !== false;
@@ -263,27 +294,35 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           onPointerCancel={hasImage ? textDrag.onPointerUp : undefined}
         >
           {showHeadline && (
-            <h1
+            <EditableText
+              as="h1"
+              editable={editable}
+              value={config.headline}
+              onChange={(v) => onConfigChange?.({ headline: v } as Partial<Config>)}
+              placeholder="Your headline"
+              ariaLabel="Hero headline"
               className="normal-case font-bold mb-4 leading-tight drop-shadow"
               style={{
                 color: config.headlineColor || '#ffffff',
                 fontSize: fluidPx(config.headlineSize ?? 60),
               }}
-            >
-              {config.headline}
-            </h1>
+            />
           )}
           {showSubheadline && (
-            <p
+            <EditableText
+              as="p"
+              editable={editable}
+              value={config.subheadline}
+              onChange={(v) => onConfigChange?.({ subheadline: v } as Partial<Config>)}
+              placeholder="A short line under the headline"
+              ariaLabel="Hero subheadline"
               className="leading-relaxed"
               style={{
                 color: config.subheadlineColor || '#ffffff',
                 opacity: 0.9,
                 fontSize: fluidPx(config.subheadlineSize ?? 22),
               }}
-            >
-              {config.subheadline}
-            </p>
+            />
           )}
           {draggable && hasImage && (
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-slate-900/80 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none select-none">
@@ -316,27 +355,67 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           onPointerCancel={hasImage ? buttonsDrag.onPointerUp : undefined}
         >
           <div className="flex flex-wrap items-center justify-center gap-3">
-            {allButtons.map((btn, i) => (
-              <Button
-                key={i}
-                asChild
-                size="lg"
-                className="rounded-full px-8 py-6 hover:opacity-90 transition-opacity"
-                style={{
-                  backgroundColor: btn.color || '#ffffff',
-                  color: contrastText(btn.color || '#ffffff'),
-                  fontSize: fluidPx(btn.size ?? 18),
-                }}
-              >
-                <a
-                  href={btn.url}
-                  draggable={false}
-                  onClick={draggable ? (e) => e.preventDefault() : undefined}
+            {allButtons.map((btn, i) => {
+              // Route the label edit back to whichever slot this button came
+              // from — the legacy top-level ctaLabel field, or a specific
+              // index in the newer buttons[] array.
+              const commitLabel = (v: string) => {
+                if (btn.source === 'legacy') {
+                  onConfigChange?.({ ctaLabel: v } as Partial<Config>);
+                  return;
+                }
+                const idx = btn.arrayIndex ?? 0;
+                const nextButtons = config.buttons.map((b, j) => (j === idx ? { ...b, label: v } : b));
+                onConfigChange?.({ buttons: nextButtons } as Partial<Config>);
+              };
+              // Editor: skip the anchor so contentEditable owns the click.
+              // Public site: keep the anchor + Button asChild wrap intact.
+              if (editable) {
+                return (
+                  <Button
+                    key={i}
+                    size="lg"
+                    className="rounded-full px-8 py-6 hover:opacity-90 transition-opacity"
+                    style={{
+                      backgroundColor: btn.color || '#ffffff',
+                      color: contrastText(btn.color || '#ffffff'),
+                      fontSize: fluidPx(btn.size ?? 18),
+                    }}
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <EditableText
+                      as="span"
+                      editable
+                      value={btn.label}
+                      onChange={commitLabel}
+                      placeholder="Button text"
+                      ariaLabel="Button label"
+                    />
+                  </Button>
+                );
+              }
+              return (
+                <Button
+                  key={i}
+                  asChild
+                  size="lg"
+                  className="rounded-full px-8 py-6 hover:opacity-90 transition-opacity"
+                  style={{
+                    backgroundColor: btn.color || '#ffffff',
+                    color: contrastText(btn.color || '#ffffff'),
+                    fontSize: fluidPx(btn.size ?? 18),
+                  }}
                 >
-                  {btn.label}
-                </a>
-              </Button>
-            ))}
+                  <a
+                    href={btn.url}
+                    draggable={false}
+                    onClick={draggable ? (e) => e.preventDefault() : undefined}
+                  >
+                    {btn.label}
+                  </a>
+                </Button>
+              );
+            })}
           </div>
           {draggable && hasImage && (
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-slate-900/80 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none select-none">

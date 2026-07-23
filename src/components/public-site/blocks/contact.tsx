@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { Mail, Phone, Facebook, Instagram, Youtube, Twitter, Music, AtSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { EditableText } from '../EditableText';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
@@ -57,7 +58,8 @@ function readableOn(hex: string): { fg: string; subFg: string; mutedFg: string }
     : { fg: '#ffffff', subFg: 'rgba(255,255,255,0.85)', mutedFg: 'rgba(255,255,255,0.6)' };
 }
 
-function Render({ config, ctx }: BlockRenderProps<Config>) {
+function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
+  const editable = !!onConfigChange;
   const email = cleanEmail(config.email);
   const phone = config.phone.trim();
   const socials: Array<{ key: keyof typeof SOCIAL_BASE; href: string; Icon: typeof Facebook; label: string }> = [
@@ -72,16 +74,44 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
     <footer id="contact" className="mt-10 max-w-6xl mx-auto w-full" style={{ background: 'var(--site-primary)', color: fg }}>
       <div className="px-4 sm:px-6 py-5 text-center space-y-4">
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm" style={{ color: subFg }}>
-          {email && (
+          {/* In edit mode, drop the mailto/tel anchors so clicking a field
+              places a caret instead of prompting the browser to open a mail
+              client. Both fields also always render (even when empty) so
+              tenants have a place to click. */}
+          {editable ? (
+            <span className="inline-flex items-center gap-1.5 break-all">
+              <Mail className="w-4 h-4" />
+              <EditableText
+                as="span"
+                editable
+                value={config.email}
+                onChange={(v) => onConfigChange?.({ email: v } as Partial<Config>)}
+                placeholder="hello@yourchoir.org"
+                ariaLabel="Contact email"
+              />
+            </span>
+          ) : (email && (
             <a href={`mailto:${email}`} className="inline-flex items-center gap-1.5 break-all hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>
               <Mail className="w-4 h-4" /> {email}
             </a>
-          )}
-          {phone && (
+          ))}
+          {editable ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Phone className="w-4 h-4" />
+              <EditableText
+                as="span"
+                editable
+                value={config.phone}
+                onChange={(v) => onConfigChange?.({ phone: v } as Partial<Config>)}
+                placeholder="(555) 555-5555"
+                ariaLabel="Contact phone"
+              />
+            </span>
+          ) : (phone && (
             <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="inline-flex items-center gap-1.5 hover:opacity-100 transition-opacity" style={{ color: 'inherit' }}>
               <Phone className="w-4 h-4" /> {phone}
             </a>
-          )}
+          ))}
         </div>
         {socials.length > 0 && (
           <div className="flex justify-center gap-6">

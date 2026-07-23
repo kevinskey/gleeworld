@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploadField } from '../ImageUploadField';
+import { EditableText } from '../EditableText';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
@@ -48,8 +49,12 @@ function BodyContent({ body }: { body: string }) {
   );
 }
 
-function Render({ config }: BlockRenderProps<Config>) {
-  if (!config.body && !config.imageUrl) return null;
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
+  const editable = !!onConfigChange;
+  // On the public site, an empty About block just hides. In the editor
+  // preview it stays visible so the tenant can click in and add content —
+  // otherwise there'd be nothing to interact with.
+  if (!editable && !config.body && !config.imageUrl && !config.title) return null;
   // Float the image so the body text wraps around it. On mobile the float
   // collapses (full width above the text) so wrapping doesn't squeeze copy.
   const img = config.imageUrl ? (
@@ -63,10 +68,17 @@ function Render({ config }: BlockRenderProps<Config>) {
   ) : null;
   return (
     <section id="about" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
-      {config.title && (
+      {(config.title || editable) && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
-          <Info className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
-          {config.title}
+          <Info className="w-6 h-6 shrink-0" style={{ color: 'var(--site-accent)' }} />
+          <EditableText
+            as="span"
+            editable={editable}
+            value={config.title}
+            onChange={(v) => onConfigChange?.({ title: v } as Partial<Config>)}
+            placeholder="About us"
+            ariaLabel="About title"
+          />
         </h2>
       )}
       {/* Floated image gets pulled out of flow; the clearfix below makes the

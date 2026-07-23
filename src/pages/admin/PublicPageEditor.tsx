@@ -27,11 +27,9 @@ import {
   Lock,
   Plus,
   Rocket,
-  Settings2,
   Trash2,
   Check,
   X,
-  ChevronDown,
   ExternalLink,
   Monitor,
   Smartphone,
@@ -57,9 +55,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Slider } from '@/components/ui/slider';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { BLOCK_LIST, getBlockModule, isBlockAvailable } from '@/components/public-site/registry';
 import { AutoForm } from '@/components/public-site/AutoForm';
-import { fontStack, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
+import { BlockFrame } from '@/components/public-site/BlockFrame';
+import { fontStack, FONT_OPTIONS, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
 import { PACKAGE_LIST, type TemplatePackage } from '@/components/public-site/packages';
 
 interface SiteRow {
@@ -81,21 +83,22 @@ function containsBlobUrl(v: unknown): boolean {
   return false;
 }
 
+// A single row in the sidebar Layers panel. Compact — no inline edit form
+// (structured settings live in the right-side Sheet, opened from the canvas
+// toolbar). Clicking the name selects the block on the canvas and scrolls it
+// into view.
 function SortableBlockRow({
   block,
   selected,
   onSelect,
   onToggle,
   onDelete,
-  expanded,
 }: {
   block: SiteBlock;
   selected: boolean;
   onSelect: () => void;
   onToggle: () => void;
   onDelete: () => void;
-  /** Optional editor form rendered as an accordion panel below the row when selected. */
-  expanded?: React.ReactNode;
 }) {
   const mod = getBlockModule(block.block_type);
   const locked = !!mod?.locked;
@@ -112,38 +115,45 @@ function SortableBlockRow({
       className={isDragging ? 'opacity-60' : ''}
     >
       <div
-        className={`flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5 ${
+        className={`flex items-center gap-2 rounded-md border bg-card px-2 py-1.5 ${
           selected ? 'border-primary ring-1 ring-primary' : 'border-border'
         } ${isDragging ? 'shadow-lg' : ''}`}
       >
         {locked ? (
-          <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         ) : (
-          <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground touch-none" aria-label="Reorder">
-            <GripVertical className="w-4 h-4" />
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab text-muted-foreground touch-none"
+            aria-label="Reorder"
+          >
+            <GripVertical className="w-3.5 h-3.5" />
           </button>
         )}
         <button onClick={onSelect} className="flex items-center gap-2 flex-1 text-left min-w-0">
-          <Icon className="w-4 h-4 shrink-0" />
-          <span className="text-sm font-medium truncate">{mod.name}</span>
-          <ChevronDown className={`w-4 h-4 ml-auto text-muted-foreground transition-transform ${selected ? 'rotate-180' : ''}`} />
+          <Icon className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-sm truncate">{mod.name}</span>
         </button>
         {!locked && (
           <>
-            <button onClick={onToggle} className="text-muted-foreground hover:text-foreground" aria-label="Toggle visibility">
-              {block.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            <button
+              onClick={onToggle}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Toggle visibility"
+            >
+              {block.is_visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
             </button>
-            <button onClick={onDelete} className="text-muted-foreground hover:text-destructive" aria-label="Delete block">
-              <Trash2 className="w-4 h-4" />
+            <button
+              onClick={onDelete}
+              className="text-muted-foreground hover:text-destructive"
+              aria-label="Delete block"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </>
         )}
       </div>
-      {selected && expanded && (
-        <div className="mt-2 mb-2 rounded-lg border border-slate-200 bg-slate-50/50 p-4">
-          {expanded}
-        </div>
-      )}
     </div>
   );
 }
@@ -154,6 +164,12 @@ export default function PublicPageEditor() {
   const { settings: branding } = useBrandingSettings();
   const [blocks, setBlocks] = useState<SiteBlock[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  // When set, opens the right-side settings Sheet for that block. Kept
+  // separate from selectedId so the canvas can stay in a "block selected"
+  // state without the sheet being open.
+  const [settingsOpenId, setSettingsOpenId] = useState<string | null>(null);
+  const blockRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
   const [pickerOpen, setPickerOpen] = useState(false);
   const [slugDraft, setSlugDraft] = useState('');
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
@@ -335,6 +351,88 @@ export default function PublicPageEditor() {
     setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, is_visible: next } : b)));
     await supabase.from('gw_site_blocks').update({ is_visible: next }).eq('id', block.id);
   };
+
+  // Move a block one slot up or down. Same guardrails as drag-reorder:
+  // locked blocks (header) never move, and nothing may sit above a locked
+  // block. Used by the canvas toolbar's arrow buttons.
+  const moveBlock = (id: string, direction: 'up' | 'down') => {
+    setBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === id);
+      if (idx === -1) return prev;
+      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const lockedCount = prev.filter((b) => getBlockModule(b.block_type)?.locked).length;
+      if (targetIdx < lockedCount) return prev;
+      const next = arrayMove(prev, idx, targetIdx).map((b, i) => ({ ...b, position: i }));
+      void persistPositions(next);
+      return next;
+    });
+  };
+
+  // Duplicate inserts a copy of `block` immediately after it. Positions of
+  // every subsequent block shift +1 so the ordering stays contiguous. Locked
+  // blocks (header) can't be duplicated — there's only one header slot.
+  const duplicateBlock = async (block: SiteBlock) => {
+    const mod = getBlockModule(block.block_type);
+    if (!mod || mod.locked) return;
+    const insertPos = block.position + 1;
+    // Optimistic: shift affected positions locally so the new row appears in
+    // the right place before the round-trip completes.
+    const shifted = blocks.map((b) =>
+      b.position >= insertPos ? { ...b, position: b.position + 1 } : b,
+    );
+    setBlocks(shifted);
+    // Persist the position shifts sequentially. Supabase enforces a per-row
+    // unique(tenant_id, position) constraint downstream — updating in bulk
+    // without ordering risks a transient collision.
+    for (const b of shifted) {
+      if (b.position !== blocks.find((o) => o.id === b.id)?.position) {
+        await supabase.from('gw_site_blocks').update({ position: b.position }).eq('id', b.id);
+      }
+    }
+    const { data, error } = await supabase
+      .from('gw_site_blocks')
+      .insert({
+        block_type: block.block_type,
+        position: insertPos,
+        config: block.config,
+        is_visible: block.is_visible,
+      })
+      .select('id, block_type, position, config, is_visible')
+      .single();
+    if (error) {
+      toast({ title: 'Duplicate failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setBlocks((prev) =>
+      [...prev, data as SiteBlock].sort((a, b) => a.position - b.position),
+    );
+    setSelectedId((data as SiteBlock).id);
+  };
+
+  // Scroll the newly-selected block into view in the preview column. Fires
+  // when selection changes (either from clicking a Layer or from an in-canvas
+  // action). Kept as an effect so scroll happens after the DOM has painted
+  // the new selection outline.
+  useEffect(() => {
+    if (!selectedId) return;
+    const el = blockRefs.current.get(selectedId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [selectedId]);
+
+  // Escape deselects (matches Wix/Figma muscle memory) and closes the
+  // settings sheet if it's open — but only when no menu/dialog owns focus.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (settingsOpenId) return; // Sheet handles its own Escape
+      setSelectedId(null);
+      setHoveredId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [settingsOpenId]);
 
   const deleteBlock = async (block: SiteBlock) => {
     setBlocks((prev) => prev.filter((b) => b.id !== block.id));
@@ -529,9 +627,7 @@ export default function PublicPageEditor() {
     toast({ title: 'Reset complete', description: 'Your page now uses the starter template.' });
   };
 
-  const selected = blocks.find((b) => b.id === selectedId) ?? null;
   const existingBlockTypes = useMemo(() => new Set(blocks.map((b) => b.block_type)), [blocks]);
-  const selectedMod = selected ? getBlockModule(selected.block_type) : null;
 
   if (siteLoading) {
     return (
@@ -584,60 +680,173 @@ export default function PublicPageEditor() {
           <Badge variant={site.is_published ? 'default' : 'secondary'}>
             {site.is_published ? 'Published' : 'Draft'}
           </Badge>
-          <Dialog open={packagePickerOpen} onOpenChange={setPackagePickerOpen}>
-            <DialogTrigger asChild>
+          <Sheet open={packagePickerOpen} onOpenChange={setPackagePickerOpen}>
+            <SheetTrigger asChild>
               <Button variant="outline" title="Try a different look for your whole site">
                 <Sparkles className="w-4 h-4 mr-1.5" /> Change look
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Pick a look</DialogTitle>
-                <DialogDescription>
-                  Each package is a curated set of fonts, spacing, and starter blocks that fit together.
-                  Your brand colors and any uploaded media stay the same — only the layout and rhythm change.
-                  Applying a package replaces your current blocks.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid sm:grid-cols-3 gap-3 pt-2">
-                {PACKAGE_LIST.map((pkg) => {
-                  const active = theme.package === pkg.id;
-                  const busy = applyingPackage === pkg.id;
-                  return (
-                    <button
-                      key={pkg.id}
-                      type="button"
-                      onClick={() => !pkg.comingSoon && applyPackage(pkg)}
-                      disabled={pkg.comingSoon || busy}
-                      className={`text-left rounded-xl border p-4 space-y-2 transition-colors ${
-                        active
-                          ? 'border-primary ring-2 ring-primary/40 bg-primary/5'
-                          : pkg.comingSoon
-                            ? 'border-border/60 opacity-70 cursor-not-allowed'
-                            : 'border-border/60 hover:border-primary hover:bg-slate-50'
-                      }`}
+            </SheetTrigger>
+            {/* The look panel lives on the right so tenants can watch the
+                preview repaint as they slide radius / spacing / letter-spacing
+                — every knob wires straight into updateTheme() which pushes
+                `pendingTheme` to the preview instantly and debounces the DB
+                write. */}
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Change look</SheetTitle>
+                <SheetDescription>
+                  Start from a preset, then fine-tune the rhythm. The preview updates as you go.
+                </SheetDescription>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-6">
+                <section className="space-y-2">
+                  <div className="text-xs uppercase tracking-wide font-semibold text-slate-500">
+                    Presets
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Applying a preset replaces your current blocks with that layout. Your brand colors and uploaded media stay the same.
+                  </p>
+                  <div className="space-y-2">
+                    {PACKAGE_LIST.map((pkg) => {
+                      const active = theme.package === pkg.id;
+                      const busy = applyingPackage === pkg.id;
+                      return (
+                        <button
+                          key={pkg.id}
+                          type="button"
+                          onClick={() => !pkg.comingSoon && applyPackage(pkg)}
+                          disabled={pkg.comingSoon || busy}
+                          className={`w-full text-left rounded-xl border p-3 space-y-1 transition-colors ${
+                            active
+                              ? 'border-primary ring-2 ring-primary/40 bg-primary/5'
+                              : pkg.comingSoon
+                                ? 'border-border/60 opacity-70 cursor-not-allowed'
+                                : 'border-border/60 hover:border-primary hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-sm">{pkg.name}</span>
+                            {pkg.comingSoon && (
+                              <Badge variant="secondary" className="gap-1">
+                                <Lock className="w-3 h-3" /> Soon
+                              </Badge>
+                            )}
+                            {active && !pkg.comingSoon && (
+                              <Badge variant="default" className="gap-1">
+                                <Check className="w-3 h-3" /> Applied
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-snug">{pkg.description}</p>
+                          {busy && <p className="text-xs text-primary">Applying…</p>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="space-y-4">
+                  <div className="text-xs uppercase tracking-wide font-semibold text-slate-500">
+                    Fine-tune
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Corner radius</Label>
+                    <ToggleGroup
+                      type="single"
+                      value={theme.radiusScale}
+                      onValueChange={(v) => v && updateTheme({ radiusScale: v as SiteTheme['radiusScale'] })}
+                      className="justify-start"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm">{pkg.name}</span>
-                        {pkg.comingSoon && (
-                          <Badge variant="secondary" className="gap-1">
-                            <Lock className="w-3 h-3" /> Soon
-                          </Badge>
-                        )}
-                        {active && !pkg.comingSoon && (
-                          <Badge variant="default" className="gap-1">
-                            <Check className="w-3 h-3" /> Applied
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-snug">{pkg.description}</p>
-                      {busy && <p className="text-xs text-primary">Applying…</p>}
-                    </button>
-                  );
-                })}
+                      <ToggleGroupItem value="sharp">Sharp</ToggleGroupItem>
+                      <ToggleGroupItem value="soft">Soft</ToggleGroupItem>
+                      <ToggleGroupItem value="round">Round</ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Section spacing</Label>
+                    <ToggleGroup
+                      type="single"
+                      value={theme.sectionPaddingScale}
+                      onValueChange={(v) =>
+                        v && updateTheme({ sectionPaddingScale: v as SiteTheme['sectionPaddingScale'] })
+                      }
+                      className="justify-start flex-wrap"
+                    >
+                      <ToggleGroupItem value="tight">Tight</ToggleGroupItem>
+                      <ToggleGroupItem value="normal">Normal</ToggleGroupItem>
+                      <ToggleGroupItem value="generous">Generous</ToggleGroupItem>
+                      <ToggleGroupItem value="spacious">Spacious</ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Divider between sections</Label>
+                    <ToggleGroup
+                      type="single"
+                      value={theme.dividerStyle}
+                      onValueChange={(v) => v && updateTheme({ dividerStyle: v as SiteTheme['dividerStyle'] })}
+                      className="justify-start"
+                    >
+                      <ToggleGroupItem value="none">None</ToggleGroupItem>
+                      <ToggleGroupItem value="rule">Hairline rule</ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>Heading font</Label>
+                    <Select
+                      value={theme.headingFontFamily ?? '__inherit__'}
+                      onValueChange={(v) =>
+                        updateTheme({ headingFontFamily: v === '__inherit__' ? undefined : v })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__inherit__">Same as body font</SelectItem>
+                        {FONT_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label>Letter spacing</Label>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {(theme.letterSpacing ?? 0).toFixed(2)}em
+                      </span>
+                    </div>
+                    <Slider
+                      min={-0.05}
+                      max={0.3}
+                      step={0.005}
+                      value={[theme.letterSpacing ?? 0]}
+                      onValueChange={(v) => updateTheme({ letterSpacing: v[0] })}
+                    />
+                  </div>
+                </section>
+
+                <section className="rounded-lg border border-slate-200 bg-slate-50/60 p-3 text-xs text-slate-600 space-y-1">
+                  <p className="font-medium text-slate-700">Colors &amp; body font</p>
+                  <p>
+                    Your brand palette and body typeface come from{' '}
+                    <Link to="/settings/branding" className="underline text-primary">
+                      Branding Settings
+                    </Link>
+                    {' '}so they stay consistent across every page, email, and app view.
+                  </p>
+                </section>
               </div>
-            </DialogContent>
-          </Dialog>
+            </SheetContent>
+          </Sheet>
           <Dialog open={resetOpen} onOpenChange={setResetOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" title="Replace all blocks with the default layout">
@@ -685,39 +894,24 @@ export default function PublicPageEditor() {
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Blocks</CardTitle>
+              <CardTitle className="text-base">Layers</CardTitle>
+              <CardDescription className="text-xs">
+                Click a layer to jump to it on the canvas. Edit blocks directly on the preview.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-1.5">
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                 <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
                   {blocks.map((block) => {
-                    const mod = getBlockModule(block.block_type);
                     const isSelected = block.id === selectedId;
-                    const expanded = isSelected && mod ? (
-                      mod.EditorForm ? (
-                        <mod.EditorForm
-                          config={safeConfig(mod, block.config)}
-                          onChange={(config) => updateConfig(block.id, config as Record<string, unknown>)}
-                          theme={theme}
-                          onThemeChange={updateTheme}
-                        />
-                      ) : (
-                        <AutoForm
-                          schema={mod.configSchema}
-                          config={safeConfig(mod, block.config)}
-                          onChange={(config) => updateConfig(block.id, config)}
-                        />
-                      )
-                    ) : null;
                     return (
                       <SortableBlockRow
                         key={block.id}
                         block={block}
                         selected={isSelected}
-                        onSelect={() => setSelectedId(isSelected ? null : block.id)}
+                        onSelect={() => setSelectedId(block.id)}
                         onToggle={() => toggleVisible(block)}
                         onDelete={() => deleteBlock(block)}
-                        expanded={expanded}
                       />
                     );
                   })}
@@ -876,6 +1070,10 @@ export default function PublicPageEditor() {
           <div
             ref={previewOuterRef}
             className="bg-slate-100 max-h-[70dvh] overflow-y-auto overscroll-contain relative"
+            // Clicking the wash around the device frame deselects. Clicks on
+            // a BlockFrame stop propagation so they don't accidentally
+            // deselect while trying to interact with a block.
+            onClick={() => setSelectedId(null)}
           >
             <div
               className="gw-site bg-white mx-auto"
@@ -897,21 +1095,85 @@ export default function PublicPageEditor() {
                 .gw-site > section:not(#top),
                 .gw-site > footer { padding-top: var(--site-section-py); padding-bottom: var(--site-section-py); }
               `}</style>
-              {blocks.map((block) => {
-                const mod = getBlockModule(block.block_type);
-                if (!mod || !block.is_visible) return null;
-                if (!isBlockAvailable(mod, activeAddons)) return null;
-                const Render = mod.Render;
-                const cfg = safeConfig(mod, block.config);
+              {(() => {
+                // Render every non-locked block through a BlockFrame so the
+                // canvas gets hover/select outlines and a floating toolbar.
+                // Hidden blocks still show (dimmed) so tenants can toggle
+                // them back — the public site skips them entirely.
+                const renderable = blocks.filter((b) => {
+                  const mod = getBlockModule(b.block_type);
+                  return mod && isBlockAvailable(mod, activeAddons);
+                });
+                const lockedCount = renderable.filter(
+                  (b) => getBlockModule(b.block_type)?.locked,
+                ).length;
+                // Second DndContext (independent from the sidebar Layers
+                // list) drives drag-to-reorder directly on the canvas. Both
+                // contexts share the same onDragEnd + sensors and update the
+                // same `blocks` state, so a drag in either surface reflects
+                // instantly in the other. Item ids can be duplicated across
+                // separate DndContext instances safely.
                 return (
-                  <Render
-                    key={block.id}
-                    config={cfg}
-                    ctx={ctx}
-                    onConfigChange={(patch) => updateConfig(block.id, { ...cfg, ...patch } as Record<string, unknown>)}
-                  />
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={onDragEnd}
+                  >
+                    <SortableContext
+                      items={renderable.map((b) => b.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {renderable.map((block, idx) => {
+                        const mod = getBlockModule(block.block_type)!;
+                        const Render = mod.Render;
+                        const cfg = safeConfig(mod, block.config);
+                        const locked = !!mod.locked;
+                        const canMoveUp = !locked && idx > lockedCount;
+                        const canMoveDown = !locked && idx < renderable.length - 1;
+                        return (
+                          <BlockFrame
+                            key={block.id}
+                            id={block.id}
+                            ref={(el) => {
+                              if (el) blockRefs.current.set(block.id, el);
+                              else blockRefs.current.delete(block.id);
+                            }}
+                            blockName={mod.name}
+                            selected={selectedId === block.id}
+                            hovered={hoveredId === block.id}
+                            visible={block.is_visible}
+                            locked={locked}
+                            canMoveUp={canMoveUp}
+                            canMoveDown={canMoveDown}
+                            onSelect={() => setSelectedId(block.id)}
+                            onHoverChange={(h) => setHoveredId(h ? block.id : null)}
+                            onMoveUp={() => moveBlock(block.id, 'up')}
+                            onMoveDown={() => moveBlock(block.id, 'down')}
+                            onDuplicate={() => duplicateBlock(block)}
+                            onToggleVisibility={() => toggleVisible(block)}
+                            onDelete={() => deleteBlock(block)}
+                            onOpenSettings={() => {
+                              setSelectedId(block.id);
+                              setSettingsOpenId(block.id);
+                            }}
+                          >
+                            <Render
+                              config={cfg}
+                              ctx={ctx}
+                              onConfigChange={(patch) =>
+                                updateConfig(block.id, {
+                                  ...cfg,
+                                  ...patch,
+                                } as Record<string, unknown>)
+                              }
+                            />
+                          </BlockFrame>
+                        );
+                      })}
+                    </SortableContext>
+                  </DndContext>
                 );
-              })}
+              })()}
               {blocks.length === 0 && (
                 <div className="p-16 text-center text-muted-foreground">Add blocks to see a preview.</div>
               )}
@@ -919,6 +1181,55 @@ export default function PublicPageEditor() {
           </div>
         </Card>
       </div>
+
+      {/* Block settings drawer. Opens from the canvas toolbar's ⚙ button.
+          Holds the block's structured settings form (custom EditorForm for
+          rich blocks like Hero/Header, generic AutoForm for the rest).
+          Kept out of the sidebar so the canvas can breathe and edits happen
+          contextually. */}
+      <Sheet
+        open={!!settingsOpenId}
+        onOpenChange={(open) => {
+          if (!open) setSettingsOpenId(null);
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          {(() => {
+            const b = blocks.find((x) => x.id === settingsOpenId);
+            if (!b) return null;
+            const mod = getBlockModule(b.block_type);
+            if (!mod) return null;
+            const cfg = safeConfig(mod, b.config);
+            return (
+              <>
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <mod.icon className="w-4 h-4" />
+                    {mod.name}
+                  </SheetTitle>
+                  <SheetDescription>{mod.description}</SheetDescription>
+                </SheetHeader>
+                <div className="mt-6">
+                  {mod.EditorForm ? (
+                    <mod.EditorForm
+                      config={cfg}
+                      onChange={(next) => updateConfig(b.id, next as Record<string, unknown>)}
+                      theme={theme}
+                      onThemeChange={updateTheme}
+                    />
+                  ) : (
+                    <AutoForm
+                      schema={mod.configSchema}
+                      config={cfg}
+                      onChange={(next) => updateConfig(b.id, next)}
+                    />
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>

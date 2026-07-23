@@ -4,6 +4,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Placeholder for the public-site inline EditableText primitive. Draws the
+   placeholder via a pseudo-element so we don't have to put React children
+   inside a contentEditable node (which would fight the browser's own edits).
+   Only shows when the element is truly empty — after the tenant types even
+   one character the pseudo disappears. */
+[data-editable-text]:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(148, 163, 184, 0.85);
+  pointer-events: none;
+  font-style: italic;
+}
+
 /* Fast collapsible expand/collapse animation */
 [data-state="open"][data-radix-collapsible-content] {
   animation: collapsible-open 150ms ease-out;

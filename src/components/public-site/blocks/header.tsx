@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import { SignInDialog } from '@/components/auth/SignInDialog';
+import { EditableText } from '../EditableText';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 // Friendly names for the on-page anchor targets that ship as built-in blocks.
@@ -47,7 +48,8 @@ function readableForeground(hex: string): string {
   return yiq >= 150 ? '#0f172a' : '#ffffff';
 }
 
-function Render({ config, ctx }: BlockRenderProps<Config>) {
+function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
+  const editable = !!onConfigChange;
   const name = config.siteName || ctx.orgName;
   const logo = ctx.logoUrl;
   const linkColor = readableForeground(ctx.theme?.primaryColor || '#0f172a');
@@ -102,18 +104,45 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         className="px-4 sm:px-6 flex items-center justify-between gap-4"
         style={{ height: barHeight }}
       >
-        <a href="#top" className="flex items-center gap-3 min-w-0">
-          {logo && (
-            <img
-              src={logo}
-              alt=""
-              className="w-auto object-contain"
-              style={{ height: logoHeight }}
-              onError={(e) => { (e.currentTarget.style.display = 'none'); }}
+        {/* In the editor, unwrap the <a href="#top"> so clicking the site
+            name places a caret instead of jump-scrolling. The placeholder is
+            the tenant's Branding `orgName` — makes the "leave blank to use
+            our org name" behavior visible. */}
+        {editable ? (
+          <div className="flex items-center gap-3 min-w-0">
+            {logo && (
+              <img
+                src={logo}
+                alt=""
+                className="w-auto object-contain"
+                style={{ height: logoHeight }}
+                onError={(e) => { (e.currentTarget.style.display = 'none'); }}
+              />
+            )}
+            <EditableText
+              as="span"
+              editable
+              value={config.siteName}
+              onChange={(v) => onConfigChange?.({ siteName: v } as Partial<Config>)}
+              placeholder={ctx.orgName}
+              ariaLabel="Site name"
+              className="font-bold text-base sm:text-lg truncate"
             />
-          )}
-          <span className="font-bold text-base sm:text-lg truncate">{name}</span>
-        </a>
+          </div>
+        ) : (
+          <a href="#top" className="flex items-center gap-3 min-w-0">
+            {logo && (
+              <img
+                src={logo}
+                alt=""
+                className="w-auto object-contain"
+                style={{ height: logoHeight }}
+                onError={(e) => { (e.currentTarget.style.display = 'none'); }}
+              />
+            )}
+            <span className="font-bold text-base sm:text-lg truncate">{name}</span>
+          </a>
+        )}
         {/* Desktop: inline links. Mobile: a hamburger that toggles the dropdown below. */}
         <nav className="hidden sm:flex items-center gap-4 text-sm">{navInline}</nav>
         {hasLinks && (
