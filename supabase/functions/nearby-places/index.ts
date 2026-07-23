@@ -16,9 +16,77 @@ serve(async (req) => {
       throw new Error('GOOGLE_PLACES_API_KEY is not configured');
     }
 
-    const { lat, lng, categories } = await req.json();
+    const { lat, lng, categories, query, near, maxResults } = await req.json();
+
+    // Text-search mode: caller passed a keyword (e.g. "starbucks",
+    // "vietnamese restaurant"). Uses Places API New's Text Search, which
+    // handles both keyword matching AND embedded location tokens
+    // ("pizza near 30303") natively. Bias to lat/lng when provided so a
+    // caller who has geo permission gets truly-nearest results; otherwise
+    // fall back to including the user-supplied `near` string in the query
+    // itself. Returns a flat, small object shaped for a chat assistant to
+    // read out, not the full Places response.
+    if (typeof query === 'string' && query.trim()) {
+      const q = query.trim();
+      const textQuery = near && typeof near === 'string' && near.trim()
+        ? `${q} near ${near.trim()}`
+        : q;
+      const body: Record<string, unknown> = {
+        textQuery,
+        languageCode: 'en',
+        maxResultCount: Math.max(1, Math.min(10, Number(maxResults) || 5)),
+      };
+      if (typeof lat === 'number' && typeof lng === 'number') {
+        body.locationBias = {
+          circle: {
+            center: { latitude: lat, longitude: lng },
+            radius: 5000,
+          },
+        };
+      }
+      const response = await fetch(
+        'https://places.googleapis.com/v1/places:searchText',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.types,places.location,places.priceLevel,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours,places.googleMapsUri',
+          },
+          body: JSON.stringify(body),
+        }
+      );
+      if (!response.ok) {
+        return new Response(JSON.stringify({ error: `Places text search ${response.status}`, detail: await response.text() }), {
+          status: 502,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const data = await response.json();
+      const places = (data.places || []).map((place: any) => ({
+        id: place.id,
+        name: place.displayName?.text || '',
+        address: place.formattedAddress || '',
+        rating: place.rating || null,
+        ratingCount: place.userRatingCount || 0,
+        priceLevel: place.priceLevel || null,
+        website: place.websiteUri || null,
+        phone: place.nationalPhoneNumber || null,
+        lat: place.location?.latitude ?? null,
+        lng: place.location?.longitude ?? null,
+        isOpen: place.currentOpeningHours?.openNow ?? null,
+        // Universal one-tap link that opens Google Maps in-app on iOS/Android
+        // and web on desktop — safest cross-platform "take me there" surface.
+        mapsUrl: place.googleMapsUri || null,
+      }));
+      return new Response(JSON.stringify({ places }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Legacy category-nearby mode (used by hotel search). Unchanged shape.
     if (!lat || !lng) {
-      return new Response(JSON.stringify({ error: 'lat and lng are required' }), {
+      return new Response(JSON.stringify({ error: 'lat and lng are required for category search' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

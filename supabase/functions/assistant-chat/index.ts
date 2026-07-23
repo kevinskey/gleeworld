@@ -124,6 +124,13 @@ serve(async (req) => {
 
   const fullName = (profile?.full_name ?? '').trim();
   const inferredFirst = fullName.split(/\s+/)[0] || '';
+  // Coarse geolocation, if the client got permission from the browser.
+  // Server just passes lat/lng through to the prompt; the model uses
+  // them when calling find_nearby_place. Silently absent when denied.
+  const rawGeo = body.context?.geo as { lat?: unknown; lng?: unknown } | undefined;
+  const geo = rawGeo && typeof rawGeo.lat === 'number' && typeof rawGeo.lng === 'number'
+    ? { lat: rawGeo.lat, lng: rawGeo.lng }
+    : undefined;
   const ctx = {
     firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
     fullName: fullName || undefined,
@@ -135,6 +142,7 @@ serve(async (req) => {
     activeModules: Array.isArray(body.context?.activeModules) ? body.context!.activeModules as string[] : [],
     nowIso: new Date().toISOString(),
     timezone: String(body.context?.timezone ?? 'America/New_York'),
+    geo,
   };
 
   const tools = toolsForRole(role);

@@ -169,6 +169,40 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     advanceConfirmQueue(msgId);
   }, [advanceConfirmQueue]);
 
+  // Cached geolocation for find_nearby_place. We try once per assistant
+  // session; if the user denies (or the browser has no geolocation) we
+  // remember that so we don't re-prompt on every send. Reused for 15
+  // minutes before requesting a fresh fix. Kept in memory (never
+  // localStorage) — a coarse coordinate is still personal data and the
+  // user's grant is per-tab. When we don't have geo, the model falls
+  // back to asking the user for a `near` string.
+  const geoRef = useRef<{ lat: number; lng: number; ts: number } | null>(null);
+  const geoDeniedRef = useRef(false);
+  const getFreshGeo = useCallback(async (): Promise<{ lat: number; lng: number } | null> => {
+    if (geoDeniedRef.current) return null;
+    const cached = geoRef.current;
+    if (cached && Date.now() - cached.ts < 15 * 60 * 1000) {
+      return { lat: cached.lat, lng: cached.lng };
+    }
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const next = { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() };
+          geoRef.current = next;
+          resolve({ lat: next.lat, lng: next.lng });
+        },
+        () => {
+          // Permission dismissed / denied / errored. Don't re-prompt this
+          // session — user can enable in browser settings if they want it.
+          geoDeniedRef.current = true;
+          resolve(null);
+        },
+        { enableHighAccuracy: false, maximumAge: 15 * 60 * 1000, timeout: 5000 },
+      );
+    });
+  }, []);
+
   const send = useCallback(async (content: string) => {
     const text = content.trim();
     if (!text || state.busy) return;
@@ -182,6 +216,11 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       try { return localStorage.getItem('gw-assistant-thread-id') ?? undefined; }
       catch { return undefined; }
     })();
+    // Try for a fresh coordinate before the request so the assistant can
+    // answer "find me a starbucks nearby" without a permission prompt
+    // mid-conversation. Silently no-op when the user has denied or the
+    // API is unavailable — the assistant will just ask where they are.
+    const geo = await getFreshGeo();
     try {
       const { data, error } = await supabase.functions.invoke('assistant-chat', {
         body: {
@@ -190,6 +229,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           context: {
             firstName: profile?.full_name?.split(' ')[0] ?? 'there',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            ...(geo ? { geo } : {}),
           },
         },
       });
@@ -227,7 +267,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } catch {
       dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
     }
-  }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen]);
+  }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen, getFreshGeo]);
 
   const toggleMic = useCallback(() => {
     const speech = speechRef.current;

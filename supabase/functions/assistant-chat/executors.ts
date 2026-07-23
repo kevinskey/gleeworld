@@ -1,7 +1,10 @@
 // Read-only tool executors. The supabase client is constructed with the
 // CALLER's JWT (Task 5), so RLS scopes every query to their tenant/role.
 
-type SupabaseLike = { from: (table: string) => any };
+type SupabaseLike = {
+  from: (table: string) => any;
+  functions?: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> };
+};
 
 interface Deps { supabase: SupabaseLike; youtubeApiKey?: string }
 
@@ -17,6 +20,8 @@ export async function executeServerTool(
       case 'find_user': return await findUser(args, deps);
       case 'search_youtube': return await searchYoutube(args, deps);
       case 'get_date_card': return await getDateCard(deps);
+      case 'find_nearby_place': return await findNearbyPlace(args, deps);
+      case 'get_preference': return await getPreference(args, deps);
       default: return JSON.stringify({ error: `Unknown tool: ${name}` });
     }
   } catch (e) {
@@ -90,6 +95,38 @@ async function getDateCard({ supabase }: Deps): Promise<string> {
     ? raw
     : { v: 1, type: 'plain', config: {} };
   return JSON.stringify({ setting, available_types: DATE_CARD_TYPES });
+}
+
+async function findNearbyPlace(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+  const query = typeof args.query === 'string' ? args.query.trim() : '';
+  if (!query) return JSON.stringify({ error: 'query is required' });
+  const lat = typeof args.lat === 'number' ? args.lat : undefined;
+  const lng = typeof args.lng === 'number' ? args.lng : undefined;
+  const near = typeof args.near === 'string' ? args.near.trim() : undefined;
+  if (!lat && !lng && !near) {
+    return JSON.stringify({ error: 'Need either lat/lng or a `near` string — ask the user where they are.' });
+  }
+  if (!supabase.functions) return JSON.stringify({ error: 'places lookup unavailable in this context' });
+  const { data, error } = await supabase.functions.invoke('nearby-places', {
+    body: { query, lat, lng, near, maxResults: 5 },
+  });
+  if (error) return JSON.stringify({ error: error.message ?? 'nearby-places failed' });
+  return JSON.stringify(data ?? { places: [] });
+}
+
+async function getPreference(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+  const key = typeof args.key === 'string' ? args.key.trim() : '';
+  if (!key) return JSON.stringify({ error: 'key is required' });
+  // RLS scopes to auth.uid() = user_id so no need to filter user_id here.
+  const { data, error } = await supabase
+    .from('gw_user_preferences')
+    .select('key, value, updated_at')
+    .eq('key', key)
+    .limit(1)
+    .maybeSingle();
+  if (error) return JSON.stringify({ error: error.message });
+  if (!data) return JSON.stringify({ key, value: null });
+  return JSON.stringify({ key: (data as any).key, value: (data as any).value, updated_at: (data as any).updated_at });
 }
 
 async function searchYoutube(args: Record<string, unknown>, { youtubeApiKey }: Deps): Promise<string> {

@@ -291,6 +291,44 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'admin', execution: 'client', confirm: true,
   },
   {
+    name: 'find_nearby_place',
+    description: "Find real-world places near the user via Google Places text search. `query` is what to search for ('starbucks', 'vietnamese restaurant', 'open pharmacy', 'gas station'). Provide EITHER lat/lng (when the system prompt lists the user's live location) OR `near` as a plain-text location ('30303', 'downtown Atlanta', 'my hotel'). Returns places with name, address, mapsUrl (one-tap to open in Maps), website, phone, rating, isOpen.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str('What to look for, e.g. "starbucks" or "pizza"'),
+        lat: { type: 'number', description: "Latitude (use when the system prompt has the user's live location)" },
+        lng: { type: 'number', description: 'Longitude' },
+        near: str("Plain-text location fallback when lat/lng aren't known (e.g. '30303' or 'my school')"),
+      },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_preference',
+    description: "Read one of the user's stored preferences (small key/value scratchpad — starbucks_usual, favorite_pizza, default_lunch, etc.). Returns null if the key was never set. Call this BEFORE asking the user for something they may have already told you.",
+    parameters: {
+      type: 'object',
+      properties: { key: str('Snake-case key, e.g. starbucks_usual') },
+      required: ['key'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'remember_preference',
+    description: "Save (or update) one of the user's preferences for future recall. Use snake_case keys and plain-text values. Examples: key='starbucks_usual' value='grande blonde with oat milk'; key='favorite_pizza' value='Antico — Nona Margherita'.",
+    parameters: {
+      type: 'object',
+      properties: {
+        key: str('Snake-case key, e.g. starbucks_usual'),
+        value: str('Plain text value the user gave you (≤ 4000 chars).'),
+      },
+      required: ['key', 'value'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'get_date_card',
     description: "Read the tenant's current date card (the hero card at the top of the dashboard). Returns { type, config }. Call this before explaining the current setting or before changing it.",
     parameters: { type: 'object', properties: {} },

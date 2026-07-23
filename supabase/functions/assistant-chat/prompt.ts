@@ -17,6 +17,9 @@ export interface AssistantContext {
   voicePart?: string;
   /** gw_profiles.class_year: e.g. 'Freshman', '2027', 'MUS 070'. Free text. */
   classYear?: string;
+  /** Live coarse coords from the browser Geolocation API when the user
+   *  granted permission. Undefined when denied/unavailable. */
+  geo?: { lat: number; lng: number };
 }
 
 export function buildSystemPrompt(ctx: AssistantContext): string {
@@ -54,14 +57,38 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   const userLine = ctx.fullName
     ? `Current user: ${ctx.fullName} (addresses as "${ctx.firstName}")${identityTail}.`
     : `Current user: ${ctx.firstName}${identityTail}.`;
+  // Correct the model's default "I don't have memory" script. This app
+  // persists threads server-side and injects up to the last 20 messages of
+  // the caller's thread on every turn. Combined with the user-line above
+  // (which is refreshed from gw_profiles each request), the assistant DOES
+  // have both conversational memory and stable identity facts about the
+  // user — it just needs to know that.
+  const memoryNote = [
+    'Memory:',
+    '- You have persistent memory in this app. Every turn loads up to the last 20 messages of this user’s thread from the database, plus their live profile (name/role/voice above). If asked whether you remember them or prior conversations, say yes and cite what you can see.',
+    '- What you cannot recall: messages older than the 20-turn window, or anything from a different thread. If a memory is not in this conversation and not in the profile line, say so plainly instead of guessing.',
+    '- Long-term preferences the user has told you (usuals, favorites, defaults) are stored via remember_preference/get_preference and survive across all threads and windows — call get_preference BEFORE asking the user for a fact they may have told you before.',
+  ].join('\n');
+  const geoLine = ctx.geo
+    ? `Approximate location: lat ${ctx.geo.lat.toFixed(4)}, lng ${ctx.geo.lng.toFixed(4)} (browser Geolocation).`
+    : 'Approximate location: unknown (user has not granted geolocation permission — ask for a city / zip / "near X" when using find_nearby_place).';
+  const placesNote = [
+    'Places + preferences (real-world hand-off):',
+    '- Use find_nearby_place for any "where is the nearest X" or "order me Y" ask. Pass the lat/lng from the location line above when present; otherwise ask the user for a `near` string first. Do NOT invent coordinates.',
+    '- You cannot actually place orders (no Starbucks/DoorDash API). What you CAN do: (1) find the nearest place, (2) recall the user\'s usual with get_preference("<place>_usual") — save one with remember_preference the first time they tell you, and (3) hand them a one-tap link. Prefer the `mapsUrl` field returned by find_nearby_place — it opens Google Maps in-app on iOS/Android.',
+    '- Reply pattern for "order me a starbucks":  → tell the user the nearest Starbucks + address + open status, remind them of (or ask for) their usual, and give them the mapsUrl to tap.',
+  ].join('\n');
   return [
     `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`,
     `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, adding YouTube videos to the library, and configuring the dashboard date card' : ''}.`,
     userLine,
     `Date/time now: ${ctx.nowIso} (${ctx.timezone}). Active modules: ${ctx.activeModules.join(', ') || 'core'}.`,
+    geoLine,
     memberNote,
+    memoryNote,
     ...(courseBuilderNote ? [courseBuilderNote] : []),
     dateCardNote,
+    placesNote,
     'Rules:',
     '- Prefer calling a tool over describing how to do something manually.',
     '- For calendar questions, call query_calendar with a narrow date range, then answer concisely with times in the user\'s timezone.',
