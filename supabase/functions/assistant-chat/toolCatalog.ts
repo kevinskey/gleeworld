@@ -290,6 +290,27 @@ export const TOOL_CATALOG: ToolDef[] = [
     },
     minRole: 'admin', execution: 'client', confirm: true,
   },
+  {
+    name: 'get_date_card',
+    description: "Read the tenant's current date card (the hero card at the top of the dashboard). Returns { type, config }. Call this before explaining the current setting or before changing it.",
+    parameters: { type: 'object', properties: {} },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'set_date_card',
+    description: "Change the tenant's date card. `type` must be one of: plain, up_next, today, liturgical, custom. For type='custom' also provide `eyebrow`, `title`, `subtitle` (each ≤80 chars) — they accept tokens {{date}}, {{time}}, {{user_name}}, {{ensemble_name}}, {{next_event}}, {{next_event_date}}. Omit the text fields for non-custom types. Affects every member of the tenant.",
+    parameters: {
+      type: 'object',
+      properties: {
+        type: str("Card type key: 'plain' | 'up_next' | 'today' | 'liturgical' | 'custom'"),
+        eyebrow: str('Custom card: small line above the title (optional)'),
+        title: str('Custom card: main line (optional)'),
+        subtitle: str('Custom card: line below the title (optional)'),
+      },
+      required: ['type'],
+    },
+    minRole: 'admin', execution: 'client', confirm: true,
+  },
 ];
 
 export function toolsForRole(role: AssistantRole): ToolDef[] {

@@ -1,7 +1,7 @@
 // "My Music" — the user's personal library (uploads now; CPDL saves and
 // purchases land here in later phases). User-scoped, follows the person
 // across tenants. Spec: docs/superpowers/specs/2026-07-12-personal-music-library-design.md
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,10 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import { Music, Plus, Trash2, FileMusic, ExternalLink, Loader2 } from 'lucide-react';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { Music, Plus, Trash2, FileMusic, ExternalLink, Loader2, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
 import { getSignedUrl } from '@/utils/storage';
@@ -21,12 +24,54 @@ const SOURCE_LABEL: Record<PersonalScore['source'], string> = {
   purchase: 'Lion & Lamb',
 };
 
+type SortKey = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'composer-asc' | 'source';
+
 export function MyMusicTab() {
   const { scores, isLoading, uploadScore, removeScore } = usePersonalScores();
   const [adding, setAdding] = useState(false);
   const [viewingUrl, setViewingUrl] = useState<string | null>(null);
   const [viewingTitle, setViewingTitle] = useState('');
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('recent');
+
+  // Filter + sort into a derived list. Case-insensitive match against title,
+  // composer, and voicing so a user typing "SATB" or "brahms" both work.
+  // Empty query short-circuits — no need to run toLowerCase on every row.
+  const visibleScores = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? scores.filter((s) =>
+          (s.title || '').toLowerCase().includes(q)
+          || (s.composer || '').toLowerCase().includes(q)
+          || (s.voicing || '').toLowerCase().includes(q))
+      : scores;
+    // Sort a shallow copy — the source array is a react-query cache, mutating
+    // it would break equality checks downstream.
+    const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
+    const sorted = [...filtered];
+    switch (sortKey) {
+      case 'title-asc':
+        sorted.sort((a, b) => collator.compare(a.title || '', b.title || ''));
+        break;
+      case 'title-desc':
+        sorted.sort((a, b) => collator.compare(b.title || '', a.title || ''));
+        break;
+      case 'composer-asc':
+        sorted.sort((a, b) => collator.compare(a.composer || '', b.composer || ''));
+        break;
+      case 'source':
+        sorted.sort((a, b) => a.source.localeCompare(b.source) || collator.compare(a.title, b.title));
+        break;
+      case 'oldest':
+        sorted.sort((a, b) => a.created_at.localeCompare(b.created_at));
+        break;
+      case 'recent':
+      default:
+        sorted.sort((a, b) => b.created_at.localeCompare(a.created_at));
+    }
+    return sorted;
+  }, [scores, query, sortKey]);
 
   const openScore = async (s: PersonalScore) => {
     if (openingId) return; // one at a time — stacking clicks stacked requests
@@ -62,6 +107,34 @@ export function MyMusicTab() {
         </Button>
       </div>
 
+      {scores.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search title, composer, or voicing…"
+              className="pl-9"
+              aria-label="Search My Music"
+            />
+          </div>
+          <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+            <SelectTrigger className="sm:w-56" aria-label="Sort My Music">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Newest first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+              <SelectItem value="title-asc">Title A → Z</SelectItem>
+              <SelectItem value="title-desc">Title Z → A</SelectItem>
+              <SelectItem value="composer-asc">Composer A → Z</SelectItem>
+              <SelectItem value="source">Source</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {scores.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center bg-muted/30">
           <Music className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
@@ -70,9 +143,17 @@ export function MyMusicTab() {
             Add a PDF, save a public-domain score, or buy one from a publisher.
           </p>
         </div>
+      ) : visibleScores.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border p-10 text-center bg-muted/30">
+          <Search className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+          <p className="text-sm font-medium">No matches for "{query}"</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Try a shorter search, or clear it to see everything.
+          </p>
+        </div>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {scores.map((s) => (
+          {visibleScores.map((s) => (
             <li
               key={s.id}
               className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-md focus-within:border-primary/50"

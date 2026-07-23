@@ -16,6 +16,7 @@ export async function executeServerTool(
       case 'search_music': return await searchMusic(args, deps);
       case 'find_user': return await findUser(args, deps);
       case 'search_youtube': return await searchYoutube(args, deps);
+      case 'get_date_card': return await getDateCard(deps);
       default: return JSON.stringify({ error: `Unknown tool: ${name}` });
     }
   } catch (e) {
@@ -67,6 +68,28 @@ async function findUser(args: Record<string, unknown>, { supabase }: Deps): Prom
     .limit(5);
   if (error) return JSON.stringify({ error: error.message });
   return JSON.stringify({ users: data ?? [] });
+}
+
+// Kept in sync with src/hooks/useDateCardConfig.ts + src/components/home/date-card/registry.ts.
+// If a new card type ships, add its key here so the assistant can name it.
+const DATE_CARD_TYPES = ['plain', 'up_next', 'today', 'liturgical', 'custom'] as const;
+
+async function getDateCard({ supabase }: Deps): Promise<string> {
+  // RLS scopes to the caller's tenant. Same shape as gw_branding_settings.date_card.
+  const { data, error } = await supabase
+    .from('gw_branding_settings')
+    .select('date_card')
+    .limit(1)
+    .maybeSingle();
+  if (error) return JSON.stringify({ error: error.message });
+  const raw = (data as { date_card?: unknown } | null)?.date_card;
+  const setting = (raw && typeof raw === 'object'
+    && (raw as any).v === 1
+    && typeof (raw as any).type === 'string'
+    && (DATE_CARD_TYPES as readonly string[]).includes((raw as any).type))
+    ? raw
+    : { v: 1, type: 'plain', config: {} };
+  return JSON.stringify({ setting, available_types: DATE_CARD_TYPES });
 }
 
 async function searchYoutube(args: Record<string, unknown>, { youtubeApiKey }: Deps): Promise<string> {

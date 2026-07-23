@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home, Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare, Book, Plus, Vote, Layers, Archive, Images, User, QrCode } from 'lucide-react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -312,17 +313,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   // Guard: block non-enrolled students from accessing the course
   if (!enrollmentLoading && !isEnrolled && !isAdmin && !isExecutiveBoard && user) {
     return (
-      <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-          <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">Access Restricted</h2>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            You are not enrolled in <strong>{course.title}</strong>. Please contact your instructor or administrator for access.
-          </p>
-          <Button onClick={() => navigate('/course-selection')} variant="outline">
-            Back to My Courses
-          </Button>
-        </div>
+      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+        <DashboardShell>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+            <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">Access Restricted</h2>
+            <p className="text-muted-foreground mb-6 max-w-md">
+              You are not enrolled in <strong>{course.title}</strong>. Please contact your instructor or administrator for access.
+            </p>
+            <Button onClick={() => navigate('/course-selection')} variant="outline">
+              Back to My Courses
+            </Button>
+          </div>
+        </DashboardShell>
       </UniversalLayout>
     );
   }
@@ -330,8 +333,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   // Mobile-first landing page (new simplified layout)
   if (isMobile && activeTab === 'home') {
     return (
-      <UniversalLayout showHeader={true} showFooter={false} containerized={false}>
-        <MobileCourseLanding course={course} />
+      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+        <DashboardShell>
+          <MobileCourseLanding course={course} />
+        </DashboardShell>
       </UniversalLayout>
     );
   }
@@ -339,8 +344,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   const isMus070Page = course.courseCode === 'MUS 070';
   
   return <div className="academy-neutral">
-      <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
-        <div 
+      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+        <DashboardShell>
+        <div
           className={`flex ${isMus070Page ? '' : 'bg-background'}`}
           style={isMus070Page ? {
             background: 'linear-gradient(160deg, #0a1628, #0d1f3c, #081430, #060e1f, #030812)',
@@ -708,6 +714,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           </div>
         </div>
       </div>
+        </DashboardShell>
     </UniversalLayout>
   </div>;
 };
