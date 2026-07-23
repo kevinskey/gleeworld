@@ -978,9 +978,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   return (
     <DashboardShellNestedContext.Provider value={true}>
     <AssistantProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      {/* h-screen + overflow-hidden pins the shell to the viewport so the
+          sidebar rail stays put — each <main> scrolls INSIDE its column
+          instead of pushing the whole document (which used to drag the
+          sidebar off-screen with it). */}
+      <div className="flex h-screen w-full bg-background overflow-hidden">
         {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Trial countdown — self-gates on trial state so it renders null
               for grandfathered / paid / loading / no-tenant. */}
           <TrialBanner />
@@ -993,7 +997,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               it and never scrolls under. Bar = 56px tall + the bottom
               safe-area inset, plus a small gap. */}
           <main className={cn(
-            "flex-1 min-w-0 overflow-x-hidden",
+            "flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden",
             isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0",
             // Calendar and Tour Manager manage their own compact header
             // spacing — no extra breathing room below the topbar.

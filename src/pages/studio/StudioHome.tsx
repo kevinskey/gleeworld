@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Loader2, Music2, Plus, Trash2, Mic } from 'lucide-react';
+import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines } from 'lucide-react';
 import {
   useMySessions, useCreateStudioSession, useDeleteStudioSession, useStudioOwner,
 } from '@/hooks/useStudio';
@@ -43,11 +43,15 @@ export default function StudioHome() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)]">
       {/* Studio hero background — singer at a Neumann, mixer through the
-       * glass, piano + sax on the floor. 60% opacity so the photo reads
-       * clearly through the page's light theme. */}
+       * glass, piano + sax on the floor.
+       *
+       * sticky top-0 h-screen pins the photo to the top of the scroll
+       * container's viewport at all times, no matter how long the
+       * sessions list grows. -mb-[100vh] cancels the space it would
+       * otherwise push into flow, so content sits on top. */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
+        className="pointer-events-none sticky top-0 -mb-[100vh] h-screen bg-cover bg-center bg-no-repeat opacity-60 z-0"
         style={{ backgroundImage: 'url(/studio-bg.png)' }}
       />
       <div className="relative px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
@@ -56,7 +60,7 @@ export default function StudioHome() {
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2 drop-shadow-sm">
             <Mic className="w-7 h-7 text-primary" /> Studio
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-foreground/85 mt-1 drop-shadow-sm">
             Multi-track composition + recording. Sessions sync across your devices.
           </p>
         </div>
@@ -72,50 +76,35 @@ export default function StudioHome() {
           <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading sessions…
         </div>
       ) : (sessions.data ?? []).length === 0 ? (
-        <Card className="border-dashed bg-card/95 backdrop-blur-sm">
-          <CardContent className="py-12 text-center text-sm text-muted-foreground space-y-3">
-            <Music2 className="w-8 h-8 mx-auto opacity-40" />
-            <p>No sessions yet.</p>
-            <Button size="sm" onClick={() => setCreateOpen(true)} disabled={!owner.data}>
-              <Plus className="w-3.5 h-3.5 mr-1" /> Start your first session
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyStudio onStart={() => setCreateOpen(true)} disabled={!owner.data} />
       ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <ul className="ml-auto w-full max-w-xs sm:max-w-sm space-y-2">
           {sessions.data!.map((s) => (
             <li key={s.id}>
-              <Card className="hover:shadow-md transition-shadow bg-card/95 backdrop-blur-sm">
-                <CardContent className="p-4 flex flex-col h-full">
-                  <Link to={`/studio/sessions/${s.id}`} className="block flex-1">
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                        <Music2 className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-sm leading-tight">{s.title}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {s.track_count} {s.track_count === 1 ? 'track' : 'tracks'}
-                          {' · '}{Math.round(s.duration_seconds)}s
-                        </div>
-                      </div>
+              <Card className="hover:shadow-md transition-shadow bg-card/90 backdrop-blur-sm">
+                <CardContent className="p-2.5 flex items-center gap-2.5">
+                  <Link to={`/studio/sessions/${s.id}`} className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Music2 className="w-4 h-4" />
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      Updated {formatDate(s.updated_at)}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold text-sm leading-tight truncate">{s.title}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                        {s.track_count} {s.track_count === 1 ? 'track' : 'tracks'} · {Math.round(s.duration_seconds)}s · {formatDate(s.updated_at)}
+                      </div>
                     </div>
                   </Link>
-                  <div className="mt-3 flex justify-end">
-                    <Button
-                      size="sm" variant="ghost"
-                      onClick={async () => {
-                        if (!confirm(`Delete "${s.title}"? This can't be undone.`)) return;
-                        try { await delMut.mutateAsync(s.id); toast.success('Deleted'); }
-                        catch (e) { toast.error('Could not delete', { description: e instanceof Error ? e.message : String(e) }); }
-                      }}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
+                  <Button
+                    size="sm" variant="ghost"
+                    className="h-7 w-7 p-0 shrink-0"
+                    onClick={async () => {
+                      if (!confirm(`Delete "${s.title}"? This can't be undone.`)) return;
+                      try { await delMut.mutateAsync(s.id); toast.success('Deleted'); }
+                      catch (e) { toast.error('Could not delete', { description: e instanceof Error ? e.message : String(e) }); }
+                    }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 </CardContent>
               </Card>
             </li>
@@ -123,6 +112,55 @@ export default function StudioHome() {
         </ul>
       )}
       </div>
+    </div>
+  );
+}
+
+// Empty-state hero. The big-white-card version was a wall on top of the
+// studio photo; this replaces it with a centered editorial column that
+// lets the background lead. Glass badge + drop-shadow text keeps every
+// element readable against the photo without a plain white block.
+function EmptyStudio({ onStart, disabled }: { onStart: () => void; disabled: boolean }) {
+  return (
+    <div className="py-14 sm:py-24">
+      <div className="max-w-md mx-auto text-center flex flex-col items-center gap-5">
+        <div className="w-16 h-16 rounded-2xl bg-primary/15 backdrop-blur-md border border-primary/40 flex items-center justify-center shadow-lg">
+          <Music2 className="w-8 h-8 text-primary" />
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight drop-shadow-md">
+            Start something.
+          </h2>
+          <p className="text-sm sm:text-base text-foreground/85 drop-shadow-sm">
+            Record, mix, and master right in the browser. Sessions sync across every device you sign in on.
+          </p>
+        </div>
+
+        <Button
+          size="lg"
+          onClick={onStart}
+          disabled={disabled}
+          className="rounded-full px-6 shadow-lg"
+        >
+          <Plus className="w-4 h-4 mr-1.5" /> Start your first session
+        </Button>
+
+        <div className="pt-4 grid grid-cols-3 gap-2 w-full max-w-sm">
+          <FeatureChip icon={Mic} label="Record" />
+          <FeatureChip icon={Sliders} label="Mix" />
+          <FeatureChip icon={AudioLines} label="Master" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureChip({ icon: Icon, label }: { icon: typeof Mic; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1 py-2 px-2 rounded-lg bg-background/40 backdrop-blur-sm border border-border/60">
+      <Icon className="w-4 h-4 text-primary" />
+      <span className="text-[11px] font-medium text-foreground/85 drop-shadow-sm">{label}</span>
     </div>
   );
 }
