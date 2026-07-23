@@ -57,6 +57,30 @@ export function automationValueAt(
   return last.value; // unreachable in practice
 }
 
+/** Punch-write behavior for Write mode: append a point at `atSeconds`
+ *  with `value`, and remove any existing points inside `[atSeconds -
+ *  windowSeconds, atSeconds + windowSeconds]` so a moving fader
+ *  overwrites the old envelope in-place instead of stacking new points
+ *  on top of it. Returns a fresh sorted array — never mutates input.
+ *
+ *  The window is small (~0.075 s default) so a fader hold at a single
+ *  playhead position produces one point, but a sweep across old
+ *  automation punches through it cleanly. */
+export function writeAutomationPoint(
+  points: AutomationPoint[],
+  atSeconds: number,
+  value: number,
+  curve: AutomationCurve = 'linear',
+  windowSeconds: number = 0.075,
+): AutomationPoint[] {
+  const t = Math.max(0, atSeconds);
+  const kept = points.filter(
+    (p) => p.time_seconds < t - windowSeconds || p.time_seconds > t + windowSeconds,
+  );
+  kept.push({ time_seconds: t, value, curve });
+  return sortAutomationPoints(kept);
+}
+
 function interpolate(prev: AutomationPoint, next: AutomationPoint, at: number): number {
   const span = next.time_seconds - prev.time_seconds;
   if (span <= 0) return next.value;

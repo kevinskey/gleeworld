@@ -51,6 +51,14 @@ interface StudioEnginePluginShape {
   // full loadSession reload the skeleton-diff would otherwise fire.
   setTrackOutput(args: { trackId: string; targetBusId: string }): Promise<RoutingEditResult>;
   setBusOutput(args: { busId: string; targetBusId: string }): Promise<RoutingEditResult>;
+  // Automation touch/release — while touched, the native
+  // AutomationScheduler skips this envelope so the mixer's live
+  // fader/pan writes are uncontested. Mirror of the web engine's
+  // StudioEngine.touchAutomation / releaseAutomation. `kind` is the
+  // envelope's target_kind, `id` is the target's id, `param` is the
+  // envelope's param.
+  touchAutomation(args: { kind: 'track' | 'bus'; id: string; param: 'volume_db' | 'pan' }): Promise<void>;
+  releaseAutomation(args: { kind: 'track' | 'bus'; id: string; param: 'volume_db' | 'pan' }): Promise<void>;
   // Phase 6 mirror — per-strip stereo peak read. Poll at ~30 Hz per
   // visible strip. Native returns { L, R } in dBFS. Silence (no signal
   // since the last poll) reads back as -160 dB; JS layer normalizes

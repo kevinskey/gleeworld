@@ -276,7 +276,14 @@ public enum Studio {
     }
 
     public enum AutomationMode: String, Codable, Sendable {
-        case off, read
+        // Read-side modes (scheduler applies envelope during playback):
+        case read
+        // Non-read modes. `off` never applies. `write`/`touch`/`latch`
+        // don't schedule ramps — the fader is the source of truth while
+        // capturing. Touch/latch also gain a "suspend this envelope
+        // while grabbed" signal via touchAutomation / releaseAutomation
+        // on Engine.
+        case off, write, touch, latch
     }
 
     public enum AutomationTargetKind: String, Codable, Sendable {

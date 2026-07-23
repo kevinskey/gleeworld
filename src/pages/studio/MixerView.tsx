@@ -38,6 +38,7 @@ import {
   type Session, type Track, type TrackEqBand, type MasteringParams,
   type Bus, type Send, type FxNode, type Automation, type AutomationParam,
 } from '@/lib/studio/session';
+import { writeAutomationPoint } from '@/lib/studio/automation';
 import { newBus } from '@/lib/studio/defaults';
 import { wouldEditCycle, formatCycle, type RoutingEdge } from '@/lib/studio/routingGraph';
 import { toast } from 'sonner';
@@ -47,6 +48,67 @@ import { faderPosToDb, dbToFaderPos } from '@/lib/studio/dsp/faderTaper';
 import { ppmDecay, servoStep } from './mixerMath';
 
 type StripPatch = Partial<Pick<Track, 'volume_db' | 'pan' | 'mute' | 'solo'>>;
+
+/** Stable key for one (kind, id, param) envelope — must match the
+ *  string the engine builds in envelopeKey() so the touched/latched
+ *  sets stay in sync across boundaries. */
+function envelopeKey(kind: 'track' | 'bus', id: string, param: AutomationParam): string {
+  return `${kind}:${id}:${param}`;
+}
+
+/** Punch-write any envelope for this strip whose mode allows capture
+ *  right now, using the incoming patch's volume_db / pan values, at the
+ *  current transport position. Returns the possibly-updated automation
+ *  array. Callers pass it back into session.automation so live moves
+ *  persist as breakpoints while transport is playing.
+ *
+ *  Which modes capture:
+ *    - 'write' — every move captures.
+ *    - 'touch' — captures only while the user is touching the control.
+ *    - 'latch' — captures on first touch and stays capturing until the
+ *                transport stops (latched cleared elsewhere).
+ *
+ *  Silent no-op when transport is not playing, when no matching
+ *  envelope exists, or when the patch touches only mute/solo. */
+export function captureWriteModeAutomation(
+  automation: Automation[],
+  ownerId: string,
+  ownerKind: 'track' | 'bus',
+  patch: StripPatch,
+  transport: { isPlaying: boolean; positionSeconds: number },
+  touched: ReadonlySet<string> = new Set(),
+  latched: ReadonlySet<string> = new Set(),
+): Automation[] {
+  if (!transport.isPlaying) return automation;
+  const paramValue: Partial<Record<AutomationParam, number>> = {};
+  if (patch.volume_db !== undefined) paramValue.volume_db = patch.volume_db;
+  if (patch.pan !== undefined) paramValue.pan = patch.pan;
+  const paramsToWrite = Object.keys(paramValue) as AutomationParam[];
+  if (paramsToWrite.length === 0) return automation;
+
+  let next = automation;
+  for (const param of paramsToWrite) {
+    const idx = next.findIndex(
+      (a) => a.target_id === ownerId && a.target_kind === ownerKind && a.param === param,
+    );
+    if (idx < 0) continue;
+    const env = next[idx];
+    const key = envelopeKey(ownerKind, ownerId, param);
+    const shouldCapture =
+      env.mode === 'write' ||
+      (env.mode === 'touch' && touched.has(key)) ||
+      (env.mode === 'latch' && (touched.has(key) || latched.has(key)));
+    if (!shouldCapture) continue;
+    const points = writeAutomationPoint(
+      env.points, transport.positionSeconds, paramValue[param]!,
+    );
+    // Only allocate a new array when we actually mutate — cheaper for
+    // the common no-op case (env exists but wrong mode).
+    if (next === automation) next = [...automation];
+    next[idx] = { ...env, points };
+  }
+  return next;
+}
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
@@ -140,6 +202,61 @@ export function MixerView({
   const isPhone = useIsPhone();
   const [meters, setMeters] = useState<Record<string, MeterEntry>>({});
   const [activePhoneTrackId, setActivePhoneTrackId] = useState<string | null>(null);
+
+  // Ref mirror of transport state so Write-mode capture in setStrip /
+  // setBusStrip can read positionSeconds + isPlaying without adding
+  // them to useCallback deps (they emit ~30Hz and would thrash the
+  // ChannelStrip's memoization otherwise).
+  const transportRef = useRef<{ isPlaying: boolean; positionSeconds: number }>({
+    isPlaying: false, positionSeconds: 0,
+  });
+  useEffect(() => {
+    transportRef.current = {
+      isPlaying: !!state?.isPlaying,
+      positionSeconds: state?.positionSeconds ?? 0,
+    };
+  }, [state?.isPlaying, state?.positionSeconds]);
+
+  // Automation touch/latch state — refs (not state) so a pointer-down
+  // during a fader drag doesn't blow up ChannelStrip's memo. `touched`
+  // is the set of currently-held envelopes; `latched` is envelopes that
+  // have been touched at least once while in latch mode and continue
+  // capturing after release, until transport stops.
+  const touchedEnvelopesRef = useRef<Set<string>>(new Set());
+  const latchedEnvelopesRef = useRef<Set<string>>(new Set());
+  // Clear latched on transport stop — Logic behavior: latch releases at
+  // stop, so the next Play starts from Read again.
+  useEffect(() => {
+    if (!state?.isPlaying) latchedEnvelopesRef.current.clear();
+  }, [state?.isPlaying]);
+
+  const touchAutomation = useCallback(
+    (kind: 'track' | 'bus', id: string, param: AutomationParam) => {
+      const key = envelopeKey(kind, id, param);
+      touchedEnvelopesRef.current.add(key);
+      // If the matching envelope is in latch mode, remember it — it
+      // will keep capturing after release until transport stops.
+      const auto = (session.automation ?? []).find(
+        (a) => a.target_id === id && a.target_kind === kind && a.param === param,
+      );
+      if (auto?.mode === 'latch') latchedEnvelopesRef.current.add(key);
+      engineState.touchAutomation?.(kind, id, param);
+    },
+    [engineState, session.automation],
+  );
+  const releaseAutomation = useCallback(
+    (kind: 'track' | 'bus', id: string, param: AutomationParam) => {
+      const key = envelopeKey(kind, id, param);
+      touchedEnvelopesRef.current.delete(key);
+      // On release, if the envelope is still latching, keep the engine
+      // in "touched" (skip ramps) so the fader stays in control. When
+      // the envelope is NOT in latch, tell the engine to resume ramps.
+      if (!latchedEnvelopesRef.current.has(key)) {
+        engineState.releaseAutomation?.(kind, id, param);
+      }
+    },
+    [engineState],
+  );
   // Which track's EQ editor is docked open below the strips. Previously
   // a portaled bottom Sheet — it escaped the Studio's `.dark` container
   // (rendered LIGHT) and modally dimmed the whole app; Kevin: "should
@@ -221,10 +338,14 @@ export function MixerView({
   }, []);
 
   const setStrip = useCallback((trackId: string, patch: StripPatch) => {
-    update((s) => ({
-      ...s,
-      tracks: s.tracks.map((t) => t.id === trackId ? { ...t, ...patch } as Track : t),
-    }));
+    update((s) => {
+      const tracks = s.tracks.map((t) => t.id === trackId ? { ...t, ...patch } as Track : t);
+      const automation = captureWriteModeAutomation(
+        s.automation ?? [], trackId, 'track', patch, transportRef.current,
+        touchedEnvelopesRef.current, latchedEnvelopesRef.current,
+      );
+      return { ...s, tracks, automation };
+    });
     engineState.updateTrackStrip(trackId, patch);
   }, [update, engineState]);
 
@@ -237,10 +358,14 @@ export function MixerView({
 
   // v2.0.0: bus lifecycle + routing edits.
   const setBusStrip = useCallback((busId: string, patch: StripPatch) => {
-    update((s) => ({
-      ...s,
-      buses: (s.buses ?? []).map((b) => b.id === busId ? { ...b, ...patch } as Bus : b),
-    }));
+    update((s) => {
+      const buses = (s.buses ?? []).map((b) => b.id === busId ? { ...b, ...patch } as Bus : b);
+      const automation = captureWriteModeAutomation(
+        s.automation ?? [], busId, 'bus', patch, transportRef.current,
+        touchedEnvelopesRef.current, latchedEnvelopesRef.current,
+      );
+      return { ...s, buses, automation };
+    });
     // Live engine ramp — bus strip fields are deliberately excluded
     // from the skeleton so a fader drag doesn't trigger a full reload.
     engineState.updateBusStrip?.(busId, patch);
@@ -419,6 +544,8 @@ export function MixerView({
             automation={session.automation ?? []}
             isPhone={isPhone}
             onTapPhone={() => setActivePhoneTrackId(t.id)}
+            onTouchParam={(param) => touchAutomation('track', t.id, param)}
+            onReleaseParam={(param) => releaseAutomation('track', t.id, param)}
           />
         ))}
         {/* v2.0.0 — user buses. Sit between the last track and master
@@ -446,6 +573,8 @@ export function MixerView({
               autoTarget?.kind === 'bus' && autoTarget.id === b.id ? null : { kind: 'bus', id: b.id }
             )}
             automation={session.automation ?? []}
+            onTouchParam={(param) => touchAutomation('bus', b.id, param)}
+            onReleaseParam={(param) => releaseAutomation('bus', b.id, param)}
           />
         ))}
         <AddBusTile
@@ -516,6 +645,7 @@ export function MixerView({
             ownerLabel={label}
             automation={session.automation ?? []}
             playheadSeconds={state?.positionSeconds ?? 0}
+            sessionLengthSeconds={session.length_seconds}
             currentStripValue={(param: AutomationParam) => {
               const strip = autoTarget.kind === 'track'
                 ? session.tracks.find((x) => x.id === autoTarget.id)
@@ -572,7 +702,7 @@ function MeterBridge({ tracks, meters }: { tracks: Track[]; meters: Record<strin
 // ═══════════════════════════════════════════════════════════════════
 
 function ChannelStrip({
-  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, sendsOpen, onToggleSends, fxOpen, onToggleFx, autoOpen, onToggleAuto, automation, isPhone, onTapPhone,
+  index, track, buses, meter, onResetHold, onStripChange, onOutputChange, eqOpen, onToggleEq, sendsOpen, onToggleSends, fxOpen, onToggleFx, autoOpen, onToggleAuto, automation, isPhone, onTapPhone, onTouchParam, onReleaseParam,
 }: {
   index: number;
   track: Track;
@@ -600,13 +730,18 @@ function ChannelStrip({
   automation: Automation[];
   isPhone: boolean;
   onTapPhone: () => void;
+  /** Touch/Latch signals — Fader pointer-down / PanKnob pointer-down
+   *  routes here so the mixer can add this envelope to its touched
+   *  set. Release is fired on pointer-up / cancel. */
+  onTouchParam: (param: AutomationParam) => void;
+  onReleaseParam: (param: AutomationParam) => void;
 }) {
   const hasEnabledBand = (track.eq ?? []).some((b) => b.enabled);
   const outputBusId = track.output?.bus_id ?? MASTER_BUS_ID;
   const enabledSendCount = (track.sends ?? []).filter((s) => s.enabled).length;
   const enabledFxCount = track.fx.filter((f) => f.enabled).length;
   const activeAutoCount = automation.filter(
-    (a) => a.target_id === track.id && a.target_kind === 'track' && a.mode === 'read' && a.points.length > 0,
+    (a) => a.target_id === track.id && a.target_kind === 'track' && (a.mode === 'read' || a.mode === 'touch' || a.mode === 'latch') && a.points.length > 0,
   ).length;
 
   return (
@@ -697,9 +832,20 @@ function ChannelStrip({
       {!isPhone && (
         <>
           {/* Pan (vertical swipe, double-tap centers) + Fader + Meter */}
-          <PanKnob pan={track.pan} onChange={(pan) => onStripChange({ pan })} />
+          <PanKnob
+            pan={track.pan}
+            onChange={(pan) => onStripChange({ pan })}
+            onTouch={() => onTouchParam('pan')}
+            onRelease={() => onReleaseParam('pan')}
+          />
           <div className="flex items-end gap-1.5 flex-1">
-            <Fader volumeDb={track.volume_db} muted={track.mute} onChange={(db) => onStripChange({ volume_db: db })} />
+            <Fader
+              volumeDb={track.volume_db}
+              muted={track.mute}
+              onChange={(db) => onStripChange({ volume_db: db })}
+              onTouch={() => onTouchParam('volume_db')}
+              onRelease={() => onReleaseParam('volume_db')}
+            />
             <PeakMeter dbL={meter.dbL} dbR={meter.dbR} holdL={meter.holdL} holdR={meter.holdR} clip={meter.clip} onReset={onResetHold} />
           </div>
         </>
@@ -843,7 +989,12 @@ function TrackEqPanel({
 // PanKnob — vertical-swipe drag, 100px = full -1..1 range, double-tap centers
 // ═══════════════════════════════════════════════════════════════════
 
-function PanKnob({ pan, onChange }: { pan: number; onChange: (pan: number) => void }) {
+function PanKnob({ pan, onChange, onTouch, onRelease }: {
+  pan: number;
+  onChange: (pan: number) => void;
+  onTouch?: () => void;
+  onRelease?: () => void;
+}) {
   const dragRef = useRef<{ y: number; pan: number } | null>(null);
   const movedRef = useRef(false);
   const startYRef = useRef(0);
@@ -853,6 +1004,7 @@ function PanKnob({ pan, onChange }: { pan: number; onChange: (pan: number) => vo
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
     dragRef.current = { y: e.clientY, pan };
     movedRef.current = false;
+    onTouch?.();
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!dragRef.current) return;
@@ -865,6 +1017,7 @@ function PanKnob({ pan, onChange }: { pan: number; onChange: (pan: number) => vo
   const onPointerUp = () => {
     dragRef.current = null;
     tap(movedRef.current, () => onChange(0));
+    onRelease?.();
   };
 
   const angle = pan * 120; // -120deg..120deg sweep
@@ -900,7 +1053,13 @@ function PanKnob({ pan, onChange }: { pan: number; onChange: (pan: number) => vo
 
 const FADER_TRACK_HEIGHT = 132;
 
-function Fader({ volumeDb, muted, onChange }: { volumeDb: number; muted: boolean; onChange: (db: number) => void }) {
+function Fader({ volumeDb, muted, onChange, onTouch, onRelease }: {
+  volumeDb: number;
+  muted: boolean;
+  onChange: (db: number) => void;
+  onTouch?: () => void;
+  onRelease?: () => void;
+}) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
   const movedRef = useRef(false);
@@ -922,6 +1081,7 @@ function Fader({ volumeDb, muted, onChange }: { volumeDb: number; muted: boolean
     movedRef.current = false;
     startYRef.current = e.clientY;
     onChange(faderPosToDb(posFromClientY(e.clientY)));
+    onTouch?.();
   };
   const onPointerMove = (e: React.PointerEvent) => {
     if (!draggingRef.current) return;
@@ -933,6 +1093,7 @@ function Fader({ volumeDb, muted, onChange }: { volumeDb: number; muted: boolean
   const onPointerUp = () => {
     draggingRef.current = false;
     tap(movedRef.current, () => onChange(0));
+    onRelease?.();
   };
 
   return (
@@ -1280,7 +1441,7 @@ function OutputSelector({
  *  the corner triggers session removal + retargets any track pointing
  *  here back to master (see removeBusHandler in MixerView). */
 function BusStrip({
-  bus, downstreamBuses, meter, onResetHold, onStripChange, onOutputChange, onRemove, fxOpen, onToggleFx, autoOpen, onToggleAuto, automation,
+  bus, downstreamBuses, meter, onResetHold, onStripChange, onOutputChange, onRemove, fxOpen, onToggleFx, autoOpen, onToggleAuto, automation, onTouchParam, onReleaseParam,
 }: {
   bus: Bus;
   /** v2.0.0 (Phase 4c) — user buses this bus can route to. Master
@@ -1303,10 +1464,13 @@ function BusStrip({
   autoOpen: boolean;
   onToggleAuto: () => void;
   automation: Automation[];
+  /** Touch/Latch signals from Fader / PanKnob. */
+  onTouchParam: (param: AutomationParam) => void;
+  onReleaseParam: (param: AutomationParam) => void;
 }) {
   const enabledFxCount = bus.fx.filter((f) => f.enabled).length;
   const activeAutoCount = automation.filter(
-    (a) => a.target_id === bus.id && a.target_kind === 'bus' && a.mode === 'read' && a.points.length > 0,
+    (a) => a.target_id === bus.id && a.target_kind === 'bus' && (a.mode === 'read' || a.mode === 'touch' || a.mode === 'latch') && a.points.length > 0,
   ).length;
   return (
     <div className="shrink-0 w-24 sm:w-28 bg-muted/30 border border-border rounded-md flex flex-col items-center gap-1.5 p-1.5 relative">
@@ -1363,9 +1527,20 @@ function BusStrip({
           <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{activeAutoCount}</span>
         )}
       </button>
-      <PanKnob pan={bus.pan} onChange={(pan) => onStripChange({ pan })} />
+      <PanKnob
+        pan={bus.pan}
+        onChange={(pan) => onStripChange({ pan })}
+        onTouch={() => onTouchParam('pan')}
+        onRelease={() => onReleaseParam('pan')}
+      />
       <div className="flex items-end gap-1.5 flex-1">
-        <Fader volumeDb={bus.volume_db} muted={bus.mute} onChange={(db) => onStripChange({ volume_db: db })} />
+        <Fader
+          volumeDb={bus.volume_db}
+          muted={bus.mute}
+          onChange={(db) => onStripChange({ volume_db: db })}
+          onTouch={() => onTouchParam('volume_db')}
+          onRelease={() => onReleaseParam('volume_db')}
+        />
         <PeakMeter dbL={meter.dbL} dbR={meter.dbR} holdL={meter.holdL} holdR={meter.holdR} clip={meter.clip} onReset={onResetHold} />
       </div>
       <div className="flex items-center gap-1">

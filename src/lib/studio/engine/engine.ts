@@ -68,6 +68,13 @@ export interface EngineState {
 
 type Listener = (s: EngineState) => void;
 
+/** Stable key for one (kind, id, param) envelope — used by
+ *  touchAutomation / releaseAutomation. Kept as a plain string so
+ *  Sets and Maps behave. */
+function envelopeKey(kind: 'track' | 'bus', id: string, param: 'volume_db' | 'pan'): string {
+  return `${kind}:${id}:${param}`;
+}
+
 export interface StudioEngineOptions {
   /** Fired at most once per engine instance (i.e. once per session —
    * see the constructor field below) the first time a LIVE mastering
@@ -195,6 +202,11 @@ export class StudioEngine {
   // entry armed at play(). Cleared on pause/stop/seek/loadSession so
   // subsequent playbacks re-schedule fresh against the new start time.
   private automationCancellers: Array<() => void> = [];
+  // Envelopes the mixer has "touched" — while an owner:kind:param key
+  // is in this set, applyAutomation() skips scheduling ramps for that
+  // envelope, so the user's live fader/pan moves are the sole source
+  // of truth. Cleared on release (touchAutomation → releaseAutomation).
+  private touchedEnvelopes = new Set<string>();
   // Per-track PPM peak meters (B1 Task 6) — one Tone.Meter tapped in
   // PARALLEL off each track's post-EQ output (does not affect the
   // signal path to masterIn). Rebuilt alongside `tracks` in
@@ -1077,7 +1089,14 @@ export class StudioEngine {
     if (!this.session) return;
     const entries = this.session.automation ?? [];
     for (const auto of entries) {
-      if (auto.mode !== 'read' || auto.points.length === 0) continue;
+      // 'read', 'touch' (when NOT currently touched), and 'latch' (when
+      // NOT currently touched or already latched) all get ramps
+      // scheduled. 'write' never schedules — the fader is the truth
+      // while writing. 'off' and empty envelopes are skipped.
+      if (auto.points.length === 0) continue;
+      if (auto.mode === 'off' || auto.mode === 'write') continue;
+      const key = envelopeKey(auto.target_kind, auto.target_id, auto.param);
+      if (this.touchedEnvelopes.has(key)) continue;
       const panvol = auto.target_kind === 'track'
         ? this.tracks.get(auto.target_id)?.panvol
         : this.buses.get(auto.target_id)?.panvol;
@@ -1085,6 +1104,27 @@ export class StudioEngine {
       const param: AutomatableParam = auto.param === 'volume_db' ? panvol.volume : panvol.pan;
       this.automationCancellers.push(scheduleAutomation(param, auto.points, fromSeconds));
     }
+  }
+
+  /** Mark an envelope as being physically manipulated by the user. While
+   *  touched, applyAutomation() skips it so the mixer's live fader/pan
+   *  updateStrip ramps win uncontested. Re-runs applyAutomation from
+   *  the current position so any OTHER envelopes reschedule cleanly
+   *  from the new "now" instead of drifting from the last play() time. */
+  touchAutomation(kind: 'track' | 'bus', id: string, param: 'volume_db' | 'pan'): void {
+    const key = envelopeKey(kind, id, param);
+    if (this.touchedEnvelopes.has(key)) return;
+    this.touchedEnvelopes.add(key);
+    if (this.state.isPlaying) this.applyAutomation(this.state.positionSeconds);
+  }
+
+  /** Release a previously touched envelope; the read/touch ramp resumes
+   *  from the current transport position. */
+  releaseAutomation(kind: 'track' | 'bus', id: string, param: 'volume_db' | 'pan'): void {
+    const key = envelopeKey(kind, id, param);
+    if (!this.touchedEnvelopes.has(key)) return;
+    this.touchedEnvelopes.delete(key);
+    if (this.state.isPlaying) this.applyAutomation(this.state.positionSeconds);
   }
 
   /** Clear every scheduled automation ramp — called on pause / stop /

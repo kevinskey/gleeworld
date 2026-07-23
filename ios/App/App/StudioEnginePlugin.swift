@@ -88,6 +88,12 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "updateSendLevel", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setTrackOutput", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setBusOutput", returnType: CAPPluginReturnPromise),
+        // Automation touch/release — while touched, the native
+        // AutomationScheduler skips this envelope so the mixer's live
+        // fader/pan writes are uncontested. Mirror of the web engine's
+        // touchAutomation / releaseAutomation.
+        CAPPluginMethod(name: "touchAutomation", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "releaseAutomation", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getTrackPeakDbStereo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getBusPeakDbStereo", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "setFxParam", returnType: CAPPluginReturnPromise),
@@ -418,6 +424,39 @@ public class StudioEnginePlugin: CAPPlugin, CAPBridgedPlugin {
         case .unknownTarget:   call.resolve(["ok": false, "error": "unknown_target"])
         case .cycle(let path): call.resolve(["ok": false, "error": "cycle", "cycle": path])
         }
+    }
+
+    // Automation touch/release — while touched, the native
+    // AutomationScheduler skips the envelope so live fader/pan writes
+    // are uncontested. JS calls:
+    //   NativeStudio.touchAutomation({ kind, id, param })
+    //   NativeStudio.releaseAutomation({ kind, id, param })
+    // Params: kind ∈ {"track", "bus"}, param ∈ {"volume_db", "pan"}.
+    @objc func touchAutomation(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let (kind, id, param) = parseAutomationTarget(call) else { return }
+        engine.touchAutomation(kind: kind, id: id, param: param)
+        call.resolve()
+    }
+
+    @objc func releaseAutomation(_ call: CAPPluginCall) {
+        wireEngineEvents()
+        guard let (kind, id, param) = parseAutomationTarget(call) else { return }
+        engine.releaseAutomation(kind: kind, id: id, param: param)
+        call.resolve()
+    }
+
+    private func parseAutomationTarget(_ call: CAPPluginCall)
+        -> (Studio.AutomationTargetKind, String, Studio.AutomationParam)?
+    {
+        guard let kindRaw = call.getString("kind"),
+              let kind = Studio.AutomationTargetKind(rawValue: kindRaw)
+        else { call.reject("missing or invalid kind"); return nil }
+        guard let id = call.getString("id") else { call.reject("missing id"); return nil }
+        guard let paramRaw = call.getString("param"),
+              let param = Studio.AutomationParam(rawValue: paramRaw)
+        else { call.reject("missing or invalid param"); return nil }
+        return (kind, id, param)
     }
 
     // Live FX-parameter update. `trackId` omitted → master bus. `fx` is the

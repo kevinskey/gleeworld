@@ -43,11 +43,11 @@ export default function StudioHome() {
   return (
     <div className="relative min-h-[calc(100vh-4rem)]">
       {/* Studio hero background — singer at a Neumann, mixer through the
-       * glass, piano + sax on the floor. 20% opacity so it sits behind
-       * the page without overpowering the light theme. */}
+       * glass, piano + sax on the floor. 60% opacity so the photo reads
+       * clearly through the page's light theme. */}
       <div
         aria-hidden
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-60"
         style={{ backgroundImage: 'url(/studio-bg.png)' }}
       />
       <div className="relative px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-5">
