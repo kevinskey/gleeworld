@@ -248,8 +248,13 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
         />
       )}
       {hasImage && showUnderlay && (
+        // The image is `w-full` inside the section's px-4/sm:px-6 padding, so
+        // it's 24px narrower than the section on each side. Matching the
+        // underlay's inset to that padding keeps the dark tint pinned to the
+        // image bounds — was `inset-0` (fills the whole section), which
+        // spilled the tint into the empty gutters beside the image.
         <div
-          className="absolute inset-0"
+          className="absolute inset-y-0 inset-x-4 sm:inset-x-6 pointer-events-none"
           style={{ backgroundColor: config.underlayColor || '#000000', opacity: 0.45 }}
         />
       )}
