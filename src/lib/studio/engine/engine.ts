@@ -239,15 +239,22 @@ export class StudioEngine {
     // bypass wiring (masterFx.output straight to Destination).
     this.wireMasterOutput();
 
+    // Metronome baselines were 0 dB / -4 dB — a square wave at unity is
+    // ~0 dBFS peak, so the click drowned every track sample even with the
+    // volume slider dragged well below zero. Baseline drop of 12 dB makes
+    // "slider at 0" a moderate click that sits under an unmastered sample
+    // playback; slider still travels -40 → +6 so users who want a hotter
+    // click can still push it up. Keep accent 4 dB above tick so beat 1
+    // still lifts out.
     this.metronomeAccent = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.03 },
-      volume: 0,
+      volume: -12,
     }).toDestination();
     this.metronome = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.001, decay: 0.03, sustain: 0, release: 0.03 },
-      volume: -4,
+      volume: -16,
     }).toDestination();
 
     this.state = {
@@ -421,11 +428,14 @@ export class StudioEngine {
 
   // ── Metronome ─────────────────────────────────────────────────────
 
-  /** Adjust click loudness without disturbing accent/tick balance. */
+  /** Adjust click loudness without disturbing accent/tick balance.
+   *  Baselines (-12 accent / -16 tick) match the synth constructor above
+   *  so slider=0 lands at a moderate click that sits under sample
+   *  playback; see comment near the synth creation for the history. */
   setMetronomeVolume(db: number): void {
     this.state.metronomeVolumeDb = db;
-    this.metronomeAccent.volume.value = 0 + db;
-    this.metronome.volume.value = -4 + db;
+    this.metronomeAccent.volume.value = -12 + db;
+    this.metronome.volume.value = -16 + db;
     this.emit();
   }
 
