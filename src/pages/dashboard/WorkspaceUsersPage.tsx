@@ -2,7 +2,7 @@
 // tenant admins. List, invite, promote/demote, disable, delete tenant
 // members. Scoped to the caller's tenant via RLS on gw_profiles.
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import {
   Users, UserPlus, Search, Loader2, Shield, GraduationCap, Music, Heart,
-  AlertCircle, MoreVertical, Trash2, Power, Check,
+  AlertCircle, MoreVertical, Trash2, Power, Check, Upload, FileSpreadsheet, X as CloseIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -266,6 +266,55 @@ function PersonRow({
 
 // ── Invite dialog ───────────────────────────────────────────────────────
 
+type CsvRow = { email: string; full_name?: string; role?: 'student' | 'instructor' | 'fan' | 'admin' };
+
+// Naive CSV splitter — no quoted-comma support. Handles the 90% case:
+// spreadsheets exported with no embedded commas in fields. If a real
+// CSV parser becomes necessary (fields with commas, escaped quotes),
+// switch to `papaparse` here without touching callers.
+function splitCsvLine(line: string): string[] {
+  return line.split(/[,;\t]/).map((c) => c.trim().replace(/^"|"$/g, ''));
+}
+
+// Parse a CSV blob into invite rows. Requires a header row with at
+// minimum an `email` column. Optional columns: `full_name` (or `name`,
+// or `first_name` + `last_name`), and `role` (student|teacher|instructor|
+// fan|admin). Rows with invalid emails are silently dropped so a stray
+// header/footer line doesn't kill the import.
+function parseInviteCsv(text: string): { rows: CsvRow[]; skipped: number; error?: string } {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return { rows: [], skipped: 0, error: 'CSV is empty.' };
+  const header = splitCsvLine(lines[0]).map((h) => h.toLowerCase().replace(/[\s_-]/g, ''));
+  const idx = (aliases: string[]) => header.findIndex((h) => aliases.includes(h));
+  const emailIdx = idx(['email', 'emailaddress', 'mail', 'eaddress']);
+  if (emailIdx < 0) return { rows: [], skipped: 0, error: 'CSV needs a header row with an "email" column.' };
+  const nameIdx = idx(['fullname', 'name', 'displayname']);
+  const firstIdx = idx(['firstname', 'first', 'givenname']);
+  const lastIdx = idx(['lastname', 'last', 'surname', 'familyname']);
+  const roleIdx = idx(['role', 'type', 'usertype']);
+  const rows: CsvRow[] = [];
+  let skipped = 0;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitCsvLine(lines[i]);
+    const email = (cols[emailIdx] || '').toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { skipped++; continue; }
+    let full_name: string | undefined;
+    if (nameIdx >= 0 && cols[nameIdx]) full_name = cols[nameIdx];
+    else if (firstIdx >= 0 || lastIdx >= 0) {
+      const composed = [cols[firstIdx] || '', cols[lastIdx] || ''].filter(Boolean).join(' ').trim();
+      if (composed) full_name = composed;
+    }
+    let role: CsvRow['role'];
+    const rawRole = (roleIdx >= 0 ? cols[roleIdx] : '').toLowerCase().trim();
+    if (rawRole === 'teacher' || rawRole === 'instructor') role = 'instructor';
+    else if (rawRole === 'student' || rawRole === 'member') role = 'student';
+    else if (rawRole === 'fan' || rawRole === 'supporter') role = 'fan';
+    else if (rawRole === 'admin') role = 'admin';
+    rows.push({ email, full_name, role });
+  }
+  return { rows, skipped };
+}
+
 function InviteDialog({
   open, onClose, onInvited,
 }: {
@@ -274,32 +323,79 @@ function InviteDialog({
   const [emails, setEmails] = useState('');
   const [role, setRole] = useState<'student' | 'instructor' | 'fan'>('student');
   const [sending, setSending] = useState(false);
+  // CSV-loaded rows take priority over the textarea when non-empty.
+  // Kept as separate state so the user can preview the parsed count
+  // before committing and clear it back out via "Remove CSV".
+  const [csvRows, setCsvRows] = useState<CsvRow[]>([]);
+  const [csvName, setCsvName] = useState<string | null>(null);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const [csvSkipped, setCsvSkipped] = useState(0);
+  const csvInputRef = useRef<HTMLInputElement | null>(null);
+
+  async function onCsvChosen(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-picking the same file after removal
+    if (!file) return;
+    setCsvError(null);
+    const text = await file.text();
+    const { rows, skipped, error } = parseInviteCsv(text);
+    if (error) { setCsvError(error); setCsvRows([]); setCsvName(null); setCsvSkipped(0); return; }
+    if (!rows.length) { setCsvError('No valid emails found in CSV.'); setCsvRows([]); setCsvName(null); setCsvSkipped(skipped); return; }
+    setCsvRows(rows);
+    setCsvName(file.name);
+    setCsvSkipped(skipped);
+  }
+
+  function clearCsv() {
+    setCsvRows([]);
+    setCsvName(null);
+    setCsvError(null);
+    setCsvSkipped(0);
+  }
 
   async function send() {
-    const list = emails.split(/[\s,;\n]+/).map((s) => s.trim().toLowerCase()).filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+    // CSV wins over the textarea when a file is loaded — otherwise
+    // parse the textarea as a plain email list. Per-row `role` from the
+    // CSV overrides the dialog's role picker; rows without a role fall
+    // back to the picker's current value.
+    const list: CsvRow[] = csvRows.length > 0
+      ? csvRows
+      : emails
+          .split(/[\s,;\n]+/)
+          .map((s) => s.trim().toLowerCase())
+          .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))
+          .map((email) => ({ email }));
     if (!list.length) {
-      toast.error('Enter at least one valid email.');
+      toast.error(csvRows.length > 0 ? 'CSV had no valid rows.' : 'Enter at least one valid email.');
       return;
     }
     setSending(true);
     let ok = 0; const fails: string[] = [];
-    for (const email of list) {
+    for (const row of list) {
       try {
-        // gw-invite-student exists and writes a profile + sends a magic-link email.
+        // gw-invite-student writes a profile + sends a magic-link email.
+        // full_name is forwarded when the CSV provides one — the function
+        // ignores unknown body fields, so old deployments still work.
         const { data, error } = await supabase.functions.invoke('gw-invite-student', {
-          body: { email, role, appOrigin: window.location.origin },
+          body: {
+            email: row.email,
+            role: row.role || role,
+            full_name: row.full_name,
+            appOrigin: window.location.origin,
+          },
         });
         if (error) throw new Error(error.message || 'invoke failed');
         if ((data as any)?.error) throw new Error((data as any).error);
         ok++;
       } catch (e: any) {
-        fails.push(`${email} — ${e.message}`);
+        fails.push(`${row.email} — ${e.message}`);
       }
     }
     setSending(false);
     if (ok > 0) {
       toast.success(`Invited ${ok}${fails.length ? ` · ${fails.length} failed` : ''}`);
       setEmails('');
+      clearCsv();
       onInvited();
       if (fails.length === 0) onClose();
     }
@@ -317,7 +413,7 @@ function InviteDialog({
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs">Role</Label>
+            <Label className="text-xs">Default role</Label>
             <Select value={role} onValueChange={(v) => setRole(v as any)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -326,23 +422,74 @@ function InviteDialog({
                 <SelectItem value="fan">Fan</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              CSV rows with a <code>role</code> column override this per-person.
+            </p>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Emails</Label>
-            <Textarea
-              value={emails}
-              onChange={(e) => setEmails(e.target.value)}
-              rows={5}
-              placeholder={"alice@example.com\nben@example.com\ncharlie@example.com"}
-            />
-            <p className="text-sm text-muted-foreground">One per line or comma-separated.</p>
+
+          {csvRows.length === 0 && !csvError && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Emails</Label>
+              <Textarea
+                value={emails}
+                onChange={(e) => setEmails(e.target.value)}
+                rows={5}
+                placeholder={"alice@example.com\nben@example.com\ncharlie@example.com"}
+              />
+              <p className="text-sm text-muted-foreground">One per line or comma-separated.</p>
+            </div>
+          )}
+
+          {/* CSV upload — a full spreadsheet import so a director can
+              onboard a whole roster in one shot. Header row required
+              with `email` at minimum; `full_name` / `name` /
+              `first_name` + `last_name` / `role` are all optional. */}
+          <div className="space-y-1.5 border-t pt-3">
+            <Label className="text-xs">Bulk import from CSV</Label>
+            {csvRows.length > 0 ? (
+              <div className="rounded-lg border bg-muted/40 p-2.5 flex items-center gap-2.5">
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="flex-1 min-w-0 text-xs">
+                  <div className="font-semibold truncate">{csvName}</div>
+                  <div className="text-muted-foreground">
+                    {csvRows.length} email{csvRows.length === 1 ? '' : 's'} ready
+                    {csvSkipped > 0 && ` · ${csvSkipped} skipped (bad email)`}
+                    {csvRows.filter((r) => r.role).length > 0 && ` · ${csvRows.filter((r) => r.role).length} with a role`}
+                  </div>
+                </div>
+                <Button type="button" size="sm" variant="ghost" onClick={clearCsv} className="h-7 px-2 text-xs">
+                  <CloseIcon className="w-3.5 h-3.5 mr-1" /> Remove
+                </Button>
+              </div>
+            ) : (
+              <>
+                <input
+                  ref={csvInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={onCsvChosen}
+                  className="hidden"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => csvInputRef.current?.click()} className="w-full">
+                  <Upload className="w-4 h-4 mr-1.5" /> Choose CSV file
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Header row required. Columns: <code>email</code> (required), <code>full_name</code> or <code>first_name</code>+<code>last_name</code>, <code>role</code> (student/teacher/fan/admin).
+                </p>
+              </>
+            )}
+            {csvError && (
+              <p className="text-xs text-rose-600 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5" /> {csvError}
+              </p>
+            )}
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={send} disabled={sending}>
+          <Button onClick={send} disabled={sending || (csvRows.length === 0 && !emails.trim())}>
             {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <UserPlus className="w-4 h-4 mr-1.5" />}
-            Send invites
+            {csvRows.length > 0 ? `Send ${csvRows.length} invite${csvRows.length === 1 ? '' : 's'}` : 'Send invites'}
           </Button>
         </DialogFooter>
       </DialogContent>
