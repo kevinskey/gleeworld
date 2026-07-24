@@ -30,6 +30,10 @@ const schema = z.object({
   logoUrl: z.string().default('').optional(),
   navLinks: z.array(z.object({ label: z.string(), url: z.string() })).default([]),
   navLinkColor: z.string().default('#ffffff'),
+  // Optional manual override for the header text color (site name + nav).
+  // Wins over the auto-derived black/white pick from readableForeground.
+  // Absent = auto contrast against the current primary color.
+  siteNameColor: z.string().optional(),
   // Logo height in pixels; width auto-scales to maintain aspect.
   logoHeight: z.number().int().min(20).max(120).default(36),
 });
@@ -52,7 +56,11 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   const editable = !!onConfigChange;
   const name = config.siteName || ctx.orgName;
   const logo = ctx.logoUrl;
-  const linkColor = readableForeground(ctx.theme?.primaryColor || '#0f172a');
+  // Auto-picks black or white for contrast against the primary; user can
+  // override via config.siteNameColor if they want a specific brand shade.
+  const linkColor = (config.siteNameColor && /^#[0-9a-fA-F]{6}$/.test(config.siteNameColor))
+    ? config.siteNameColor
+    : readableForeground(ctx.theme?.primaryColor || '#0f172a');
   const logoHeight = config.logoHeight || 36;
   // Header bar height = logo + 16px breathing room each side, with a sensible floor.
   const barHeight = Math.max(56, logoHeight + 16);
@@ -219,6 +227,32 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
       <div className="space-y-1.5">
         <Label>Site name</Label>
         <Input value={config.siteName} onChange={(e) => set({ siteName: e.target.value })} placeholder="Your organization" />
+      </div>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <Label className="text-sm">Text color (site name + nav)</Label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={config.siteNameColor || '#ffffff'}
+              onChange={(e) => set({ siteNameColor: e.target.value })}
+              className="h-8 w-10 rounded border cursor-pointer"
+              title="Header text color"
+            />
+            <button
+              type="button"
+              onClick={() => set({ siteNameColor: undefined })}
+              disabled={!config.siteNameColor}
+              className="text-xs font-medium text-sky-600 hover:text-sky-700 disabled:text-slate-400"
+              title="Clear override — auto black/white based on primary color"
+            >
+              Auto
+            </button>
+          </div>
+        </div>
+        <p className="text-xs text-slate-500">
+          Leave on <strong>Auto</strong> for guaranteed contrast against your primary color, or pick a brand shade.
+        </p>
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">

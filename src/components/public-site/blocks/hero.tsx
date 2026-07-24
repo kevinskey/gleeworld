@@ -46,6 +46,12 @@ const schema = z.object({
   // the original Tailwind defaults via fallback in Render.
   headlineSize: z.number().int().min(16).max(160).default(60),
   subheadlineSize: z.number().int().min(12).max(60).default(22),
+  // Optional mobile-specific caps. When set, fluidPx uses these as the min
+  // of the clamp() instead of its default 55%-of-desktop derivation, so
+  // narrow viewports render at the mobile size rather than the derived
+  // one. Absent = fall back to the auto formula.
+  headlineSizeMobile: z.number().int().min(12).max(80).optional(),
+  subheadlineSizeMobile: z.number().int().min(10).max(48).optional(),
   ctaSize: z.number().int().min(12).max(36).default(18),
   // Optional list of additional buttons. The first button is still controlled
   // by the legacy ctaLabel/ctaUrl/ctaColor/ctaSize for backward compat.
@@ -86,12 +92,15 @@ function contrastText(bg: string): string {
 
 // Turn a fixed px size into a fluid `clamp(min, vw-formula, max)` so the
 // hero text scales with the viewport instead of staying massive on phones
-// and tiny on 4K displays. The user's chosen size is treated as the
-// DESKTOP target; mobile floors at ~55% (with a 14px absolute floor so
-// nothing becomes illegible).
-function fluidPx(px: number): string {
+// and tiny on 4K displays. Desktop = `px`. Mobile = `mobilePx` when the
+// user set one; otherwise auto-derives at ~55% of desktop (14px absolute
+// floor so nothing becomes illegible).
+function fluidPx(px: number, mobilePx?: number): string {
   const max = Math.max(12, Math.round(px));
-  const min = Math.max(14, Math.round(max * 0.55));
+  const autoMin = Math.max(14, Math.round(max * 0.55));
+  const min = typeof mobilePx === 'number'
+    ? Math.max(12, Math.min(max, Math.round(mobilePx)))
+    : autoMin;
   // Slope chosen so the size reaches `max` around a 1280px viewport.
   const vw = (max / 12).toFixed(2);
   return `clamp(${min}px, ${vw}vw, ${max}px)`;
@@ -304,7 +313,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
               className="normal-case font-bold mb-4 leading-tight drop-shadow"
               style={{
                 color: config.headlineColor || '#ffffff',
-                fontSize: fluidPx(config.headlineSize ?? 60),
+                fontSize: fluidPx(config.headlineSize ?? 60, config.headlineSizeMobile),
               }}
             />
           )}
@@ -320,7 +329,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
               style={{
                 color: config.subheadlineColor || '#ffffff',
                 opacity: 0.9,
-                fontSize: fluidPx(config.subheadlineSize ?? 22),
+                fontSize: fluidPx(config.subheadlineSize ?? 22, config.subheadlineSizeMobile),
               }}
             />
           )}
@@ -550,6 +559,7 @@ function ButtonsEditor({
 function TextOverItem({
   label, hint, checked, onCheck, color, onColor,
   size, onSize, sizeMin = 12, sizeMax = 120,
+  mobileSize, onMobileSize, mobileSizeMin = 12, mobileSizeMax = 80,
   children,
 }: {
   label: string;
@@ -562,6 +572,12 @@ function TextOverItem({
   onSize?: (n: number) => void;
   sizeMin?: number;
   sizeMax?: number;
+  /** Optional per-item override for the size to render at on mobile (below
+   *  ~640px). When undefined, mobile auto-derives at 55% of desktop size. */
+  mobileSize?: number;
+  onMobileSize?: (n: number | undefined) => void;
+  mobileSizeMin?: number;
+  mobileSizeMax?: number;
   children?: React.ReactNode;
 }) {
   return (
@@ -585,6 +601,7 @@ function TextOverItem({
       {hint && <p className="text-xs text-slate-500 pl-6">{hint}</p>}
       {checked && size !== undefined && onSize && (
         <div className="pl-6 flex items-center gap-2">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 w-14">Desktop</span>
           <input
             type="range"
             min={sizeMin}
@@ -595,6 +612,34 @@ function TextOverItem({
             className="flex-1 accent-sky-600"
           />
           <span className="text-xs text-slate-500 tabular-nums w-12 text-right">{size}px</span>
+        </div>
+      )}
+      {checked && size !== undefined && onMobileSize && (
+        // Mobile size is optional — the small "Auto" button clears the override
+        // so the fluidPx auto-derivation takes back over (~55% of desktop).
+        <div className="pl-6 flex items-center gap-2">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 w-14">Mobile</span>
+          <input
+            type="range"
+            min={mobileSizeMin}
+            max={Math.min(mobileSizeMax, size)}
+            step={1}
+            value={mobileSize ?? Math.max(mobileSizeMin, Math.round(size * 0.55))}
+            onChange={(e) => onMobileSize(Number(e.target.value))}
+            className="flex-1 accent-sky-600"
+          />
+          <span className="text-xs text-slate-500 tabular-nums w-12 text-right">
+            {mobileSize ?? Math.round(size * 0.55)}px
+          </span>
+          <button
+            type="button"
+            onClick={() => onMobileSize(undefined)}
+            className="text-[10px] font-medium text-sky-600 hover:text-sky-700 disabled:text-slate-400"
+            disabled={mobileSize === undefined}
+            title="Clear mobile override — auto-scale from desktop size"
+          >
+            Auto
+          </button>
         </div>
       )}
       {checked && children && <div className="pl-6">{children}</div>}
@@ -668,6 +713,10 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
                 onSize={(n) => set({ headlineSize: n })}
                 sizeMin={16}
                 sizeMax={160}
+                mobileSize={config.headlineSizeMobile}
+                onMobileSize={(n) => set({ headlineSizeMobile: n })}
+                mobileSizeMin={12}
+                mobileSizeMax={80}
               >
                 <Input
                   value={config.headline}
@@ -685,6 +734,10 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
                 onSize={(n) => set({ subheadlineSize: n })}
                 sizeMin={12}
                 sizeMax={60}
+                mobileSize={config.subheadlineSizeMobile}
+                onMobileSize={(n) => set({ subheadlineSizeMobile: n })}
+                mobileSizeMin={10}
+                mobileSizeMax={48}
               >
                 <Textarea
                   rows={2}

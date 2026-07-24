@@ -870,13 +870,23 @@ export default function PublicPageEditor() {
             </DialogContent>
           </Dialog>
           {site.is_published && site.slug && (
-            // /sites/<slug> is the canonical public-only route (the tenant root
-            // redirects logged-in admins to control center, which isn't what
-            // "view site" means). Uses Link so it opens in-app with nav.
-            <Button variant="outline" asChild title="Open your live site">
-              <Link to={`/sites/${site.slug}`}>
+            // Open the tenant's actual site (subdomain or custom domain), not
+            // the /sites/<slug> platform route — that route only exists as a
+            // preview surface and is confusing when the tenant has a real
+            // subdomain. Falls back to <slug>.gleeworld.org when the tenant
+            // row doesn't yet declare a subdomain (matches tenantHostFromRow).
+            <Button variant="outline" asChild title="Open your live site in a new tab">
+              <a
+                href={`https://${
+                  site.slug === 'main'
+                    ? 'gleeworld.org'
+                    : `${site.slug}.gleeworld.org`
+                }/`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <ExternalLink className="w-4 h-4 mr-1.5" /> View site
-              </Link>
+              </a>
             </Button>
           )}
           {site.is_published && (
@@ -1097,6 +1107,13 @@ export default function PublicPageEditor() {
             <div
               ref={previewInnerRef}
               className="gw-site bg-white"
+              // Sibling styling hook. Tailwind's `sm:` media queries fire
+              // against the real editor viewport, not the previewed 390px
+              // frame, so the site's `hidden sm:flex` desktop nav still
+              // appears when previewing on phone. index.css forces the
+              // header block into mobile behavior when this attribute is
+              // "mobile", using selectors scoped to `.gw-site`.
+              data-preview-device={device}
               style={{
                 width: deviceWidth,
                 transform: 'scale(var(--gw-preview-scale))',
