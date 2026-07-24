@@ -14,6 +14,8 @@ import { PitchPipe } from '@/components/audioTools/PitchPipe';
 import { Tuner } from '@/components/audioTools/Tuner';
 import { InstrumentPlayer } from '@/components/audioTools/InstrumentPlayer';
 import { StandalonePiano } from '@/components/audioTools/StandalonePiano';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export default function MusicToolsPage() {
   const [pianoExpanded, setPianoExpanded] = useState(false);
@@ -37,6 +39,22 @@ export default function MusicToolsPage() {
               <h1 className="!text-[1.4rem] sm:!text-[2rem] font-bold tracking-tight">Music Tools</h1>
               <p className="text-xs text-muted-foreground">Stage mode — scroll the keyboard to reach any octave.</p>
             </div>
+            {/* Explicit exit affordance — Stage Mode hides the dashboard
+                sidebar to let the keyboard take the width, and users
+                reported "no nav" not realizing the piano's "Collapse"
+                button was what to click. This button matches what they
+                actually mean and puts it in the page header where they'd
+                look for navigation. */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPianoExpanded(false)}
+              className="rounded-full"
+              title="Return to normal layout with the sidebar"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1.5" />
+              Exit stage mode
+            </Button>
           </div>
           {/* Tools collapsed into a horizontal strip. Each one occupies
               about a third of the width so the keyboard still gets the
