@@ -85,16 +85,26 @@ function LibraryTabAdmin() {
                   className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                   onClick={async () => {
                     if (!confirm(`Delete "${row.title}"? This cannot be undone.`)) return;
-                    // Optimistic remove — pop from state first, roll back on error.
+                    // Optimistic remove — pop from state first, roll back on
+                    // error OR on RLS silent no-op. .select() returns the
+                    // actually-deleted rows so we can distinguish "you don't
+                    // have permission" (empty array, no error) from a real
+                    // failure (error object).
                     const prev = rows;
                     setRows((r) => r.filter((x) => x.id !== row.id));
-                    const { error } = await supabase
+                    const { data, error } = await supabase
                       .from('gw_sight_reading_exercises')
                       .delete()
-                      .eq('id', row.id);
+                      .eq('id', row.id)
+                      .select('id');
                     if (error) {
                       setRows(prev);
                       toast.error('Could not delete', { description: error.message });
+                    } else if (!data || data.length === 0) {
+                      setRows(prev);
+                      toast.error('Could not delete', {
+                        description: "You aren't the owner of this exercise. Only its author or an admin can remove it.",
+                      });
                     } else {
                       toast.success('Deleted');
                     }
