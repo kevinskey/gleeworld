@@ -734,6 +734,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
 
 function BrandingTabPanel({ canManage }: { canManage: boolean }) {
   const { settings, refetch } = useBrandingSettings();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({
     org_name: '',
     short_name: '',
@@ -797,6 +798,14 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Branding saved.');
+    // refetch() only updates THIS instance of useBrandingSettings; every
+    // other page/component using the hook keeps stale data until its
+    // 5-minute staleTime expires — that's the "doesn't work immediately"
+    // bug. Invalidating the base query key wakes ALL consumers so the new
+    // colors, logo, font, etc. propagate app-wide without a reload. Also
+    // bump the tenant-public-site theme so UniversalLayout re-tints.
+    void queryClient.invalidateQueries({ queryKey: ['gw_branding_settings'] });
+    void queryClient.invalidateQueries({ queryKey: ['tenant-public-site'] });
     refetch?.();
   }
 
