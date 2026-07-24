@@ -219,7 +219,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section
       ref={sectionRef}
       id="top"
-      className={`relative overflow-hidden text-white max-w-6xl mx-auto px-4 sm:px-6 ${hasImage ? '' : 'min-h-[40vh]'}`}
+      className={`relative overflow-hidden text-white max-w-6xl mx-auto w-full ${hasImage ? '' : 'min-h-[40vh]'}`}
       style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the
@@ -248,13 +248,11 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
         />
       )}
       {hasImage && showUnderlay && (
-        // The image is `w-full` inside the section's px-4/sm:px-6 padding, so
-        // it's 24px narrower than the section on each side. Matching the
-        // underlay's inset to that padding keeps the dark tint pinned to the
-        // image bounds — was `inset-0` (fills the whole section), which
-        // spilled the tint into the empty gutters beside the image.
+        // Section no longer has inner padding, so the image is w-full = section
+        // width. Underlay uses inset-0 to match — full section coverage,
+        // no gutters to worry about.
         <div
-          className="absolute inset-y-0 inset-x-4 sm:inset-x-6 pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
           style={{ backgroundColor: config.underlayColor || '#000000', opacity: 0.45 }}
         />
       )}

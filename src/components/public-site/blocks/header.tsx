@@ -112,21 +112,18 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
 
   return (
     <header
-      // Outer matches the sections' outer wrapper — max-w-6xl mx-auto with
-      // px-4 / sm:px-6 gutters — so the colored bar (moved to the inner
-      // div) starts and ends where every section's content starts and
-      // ends. Was `max-w-6xl mx-auto w-full` with the bg on the outer,
-      // which made the bar 32–48px WIDER than the visible content edge of
-      // every other block on the page.
-      className="sticky top-0 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6"
-      style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor }}
+      // Header fills its 1152 (max-w-6xl) block bounds edge-to-edge, same
+      // footprint as the hero and every other block. Colored bar IS the
+      // outer <header>; nav content is padded from inside. On viewports
+      // narrower than 1152 mx-auto degrades to full-width so header, hero,
+      // and sections all hit the viewport edges together — consistent
+      // widths from mobile through desktop, per the sizing rule.
+      className="sticky top-0 z-40 max-w-6xl mx-auto w-full"
+      style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor, background: 'var(--site-primary)' }}
     >
-      {/* Colored bar. Padded inside so nav items get breathing room from the
-          bar edges; the outer's px-4/sm:px-6 already aligns the bar with
-          section content, so this is purely inside-the-bar spacing. */}
       <div
         className="flex items-center justify-between gap-4 px-4 sm:px-6"
-        style={{ height: barHeight, background: 'var(--site-primary)' }}
+        style={{ height: barHeight }}
       >
         {/* In the editor, unwrap the <a href="#top"> so clicking the site
             name places a caret instead of jump-scrolling. The placeholder is
