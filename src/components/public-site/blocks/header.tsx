@@ -160,7 +160,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
-            className="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-white/10 transition-colors"
+            className="sm:hidden inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-white/10 transition-colors"
             style={{ color: linkColor }}
           >
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
