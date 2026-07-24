@@ -3,13 +3,13 @@
 // PlannerPage; this file is just the list).
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { FileText, Plus, Star } from 'lucide-react';
+import { FileText, Plus, Star, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { createNote } from '@/lib/planner/notesApi';
+import { createNote, trashNote } from '@/lib/planner/notesApi';
 import type { NoteType } from '@/lib/planner/types';
 import { useNotesList } from '../hooks';
 import { EmptyState } from './TasksView';
@@ -36,6 +36,18 @@ export default function NotesListView({ scope, title, onOpenNote }: NotesListVie
     onSettled: () => setCreating(false),
   });
 
+  // Soft-delete via trashNote (sets deleted_at). Notes stay in Trash and
+  // can be restored — matches the planner's existing two-step delete
+  // (Trash → Delete forever) rather than nuking them from the row.
+  const trash = useMutation({
+    mutationFn: (id: string) => trashNote(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['planner'] });
+      toast.success('Moved to Trash');
+    },
+    onError: () => toast.error('Could not delete the note'),
+  });
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
@@ -58,31 +70,55 @@ export default function NotesListView({ scope, title, onOpenNote }: NotesListVie
         <EmptyState icon={FileText} title="No notes here yet" body="Create a note, or apply a template from the Templates view." />
       ) : (
         <div className="flex flex-col gap-2">
-          {notes.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => onOpenNote(n.id)}
-              className="flex items-start gap-3 rounded-md border border-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-accent"
-            >
-              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-1.5">
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {noteDisplayTitle(n.title, n.note_type as NoteType, n.date_key)}
+          {notes.map((n) => {
+            const noteTitle = noteDisplayTitle(n.title, n.note_type as NoteType, n.date_key);
+            // Row is a positioned container so the trash button can sit
+            // as a SIBLING of the open-note button (nesting buttons is
+            // invalid HTML). Trash fades in on hover / keyboard focus on
+            // md+ and stays visible on touch, matching the messenger
+            // pattern. Right padding on the button keeps text from
+            // colliding with the trash zone.
+            return (
+              <div key={n.id} className="group relative">
+                <button
+                  onClick={() => onOpenNote(n.id)}
+                  className="flex w-full items-start gap-3 rounded-md border border-border bg-card px-3 py-2.5 pr-12 text-left transition-colors hover:bg-accent"
+                >
+                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {noteTitle}
+                      </span>
+                      {n.is_favorite && <Star className="h-3.5 w-3.5 shrink-0 fill-warning text-warning" aria-label="Favorite" />}
+                    </span>
+                    <span className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      <span className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(n.updated_at), { addSuffix: true })}
+                      </span>
+                      {n.tags.slice(0, 4).map((t) => (
+                        <Badge key={t} variant="outline" className="text-[11px] font-normal text-muted-foreground">#{t}</Badge>
+                      ))}
+                    </span>
                   </span>
-                  {n.is_favorite && <Star className="h-3.5 w-3.5 shrink-0 fill-warning text-warning" aria-label="Favorite" />}
-                </span>
-                <span className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(n.updated_at), { addSuffix: true })}
-                  </span>
-                  {n.tags.slice(0, 4).map((t) => (
-                    <Badge key={t} variant="outline" className="text-[11px] font-normal text-muted-foreground">#{t}</Badge>
-                  ))}
-                </span>
-              </span>
-            </button>
-          ))}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!confirm(`Move "${noteTitle}" to Trash?`)) return;
+                    trash.mutate(n.id);
+                  }}
+                  disabled={trash.isPending}
+                  className="absolute top-1/2 right-2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10 disabled:opacity-40 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition-opacity"
+                  aria-label={`Delete ${noteTitle}`}
+                  title="Move to Trash"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
