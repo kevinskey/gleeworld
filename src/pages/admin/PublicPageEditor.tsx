@@ -231,33 +231,24 @@ export default function PublicPageEditor() {
   const themeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Preview device + auto-fit scaling. The published site is rendered at
-  // a fixed "device" width (1280 desktop / 390 phone) inside a scaling
-  // wrapper so the layout stays authentic even when the preview column
-  // is much narrower.
+  // a fixed "device" width (1280 desktop / 390 phone). The scale factor
+  // that shrinks that to fit the preview column is computed by the
+  // BROWSER via a CSS container query (100cqi = 100% of the container's
+  // inline size), so it's pixel-perfect on first paint — no JS timing
+  // race where the initial render used scale=1 and overflowed before a
+  // ResizeObserver could set the real width.
   //
-  // Uses `transform: scale` — was `zoom`, but Firefox doesn't support
-  // `zoom` at all and older Safari versions rendered it inconsistently,
-  // so the desktop site would spill out of the column with no visible
-  // fix. `transform: scale` is universal, at the cost of not
-  // participating in layout — we manually measure the unscaled inner
-  // height and set the outer wrapper's height to scale*innerHeight so
-  // vertical scroll still tracks visible content.
+  // The transformed inner still needs its unscaled height measured (CSS
+  // container queries can't do that yet) so we set the outer wrapper's
+  // `--inner-h` var from a JS observer; the wrapper's height is a CSS
+  // `calc(var(--inner-h) * var(--scale))` so vertical scroll tracks the
+  // scaled content.
   const [device, setDevice] = useState<'desktop' | 'mobile'>(() => {
     if (typeof window === 'undefined') return 'desktop';
     return window.matchMedia('(max-width: 768px)').matches ? 'mobile' : 'desktop';
   });
-  const previewOuterRef = useRef<HTMLDivElement | null>(null);
   const previewInnerRef = useRef<HTMLDivElement | null>(null);
-  const [previewOuterWidth, setPreviewOuterWidth] = useState(0);
   const [previewInnerHeight, setPreviewInnerHeight] = useState(0);
-  useLayoutEffect(() => {
-    const el = previewOuterRef.current;
-    if (!el) return;
-    setPreviewOuterWidth(el.getBoundingClientRect().width);
-    const ro = new ResizeObserver(([entry]) => setPreviewOuterWidth(entry.contentRect.width));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
   useLayoutEffect(() => {
     const el = previewInnerRef.current;
     if (!el) return;
@@ -267,13 +258,6 @@ export default function PublicPageEditor() {
     return () => ro.disconnect();
   }, []);
   const deviceWidth = device === 'desktop' ? 1280 : 390;
-  // Only scale down — if the outer column happens to be wider than the
-  // device width (rare, e.g. desktop preview on a huge monitor), we
-  // center the unscaled preview rather than blow it up.
-  const previewScale = previewOuterWidth > 0
-    ? Math.min(1, previewOuterWidth / deviceWidth)
-    : 1;
-  const scaledHeight = previewInnerHeight * previewScale;
 
   const theme: SiteTheme = useMemo(() => {
     // Palette + font come from Workspace Settings → Branding (single source
@@ -1082,33 +1066,40 @@ export default function PublicPageEditor() {
               the preview hits its end. Slate wash makes the device frame
               visible when the scaled site is narrower than the column. */}
           <div
-            ref={previewOuterRef}
             className="bg-slate-100 max-h-[70dvh] overflow-y-auto overflow-x-hidden overscroll-contain relative"
+            // `container-type: inline-size` turns this element into a query
+            // container so descendants can size themselves off its width via
+            // `100cqi`. Named it so nested containers don't accidentally
+            // resolve up to it.
+            style={{ containerType: 'inline-size', containerName: 'gw-preview' } as React.CSSProperties}
             // Clicking the wash around the device frame deselects. Clicks on
             // a BlockFrame stop propagation so they don't accidentally
             // deselect while trying to interact with a block.
             onClick={() => setSelectedId(null)}
           >
-            {/* Scaling wrapper: fixed to deviceWidth * scale × innerHeight *
-                scale so the outer scrollbar tracks the visible (scaled)
-                area rather than the raw 1280px content. overflow-hidden
-                on the wrapper clips the transformed child, which is
-                laid-out at deviceWidth but visually rendered smaller. */}
+            {/* Scaling wrapper: width fills the container (100cqi), height
+                is scale × unscaled-inner-height so vertical scroll tracks
+                the scaled result. --scale is min(1, 100cqi / deviceWidth)
+                — never scales up, only down. Computed entirely in CSS so
+                it's right on first paint, no JS timing race. */}
             <div
               className="mx-auto"
               style={{
-                width: deviceWidth * previewScale,
-                height: scaledHeight || undefined,
+                ['--gw-preview-scale' as any]: `min(1, calc(100cqi / ${deviceWidth}px))`,
+                width: '100cqi',
+                height: previewInnerHeight
+                  ? `calc(${previewInnerHeight}px * var(--gw-preview-scale))`
+                  : undefined,
                 overflow: 'hidden',
                 position: 'relative',
-              }}
+              } as React.CSSProperties}
             >
             <div
               ref={previewInnerRef}
               className="gw-site bg-white"
               style={{
                 width: deviceWidth,
-                transform: `scale(${previewScale})`,
+                transform: 'scale(var(--gw-preview-scale))',
                 transformOrigin: 'top left',
                 ...themeCssVars(theme),
                 fontFamily: fontStack(theme.fontFamily),
