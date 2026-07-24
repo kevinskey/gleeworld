@@ -391,17 +391,38 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   }, []); // No dependencies - stable listener
 
   // Hardware MIDI input — Web MIDI on desktop, GWMidi plugin on iPad.
+  // Opt-in via the MIDI button in the header (was auto-subscribing on mount,
+  // which either silently failed on browsers that never granted permission,
+  // or ate the permission prompt at page-load time when no user gesture had
+  // fired yet). Explicit opt-in surfaces errors and matches how Studio works.
+  const [midiOn, setMidiOn] = useState(false);
+  const [midiError, setMidiError] = useState<string | null>(null);
+  const [midiInputName, setMidiInputName] = useState<string>('');
+  const midiSupported = useMemo(() => getMidiInputSource().supported, []);
+
   useEffect(() => {
+    if (!midiOn) return;
     const source = getMidiInputSource();
-    if (!source.supported) return;
+    if (!source.supported) {
+      setMidiError('This browser has no MIDI support.');
+      setMidiOn(false);
+      return;
+    }
     let cancelled = false;
     let unsub: (() => void) | null = null;
-
+    // Snapshot the first connected input's name so the tooltip can show it —
+    // updated again on statechange when a device hotplugs.
+    const refreshName = () => {
+      source.listInputs().then((ins) => {
+        if (cancelled) return;
+        setMidiInputName(ins[0]?.name ?? '');
+      }).catch(() => { /* leave name empty */ });
+    };
+    const unsubState = source.onStateChange(refreshName);
     source
       .subscribe('', (data) => {
         const [status, note, velocity] = data;
         const command = status & 0xf0;
-        // Note On (144) or Note Off (128); note-on with velocity 0 is a release.
         if (command === 144 && velocity > 0) {
           const { name, frequency } = midiNoteToName(note);
           playNote(name, frequency, velocity);
@@ -410,14 +431,23 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           stopNote(name);
         }
       })
-      .then((u) => { if (cancelled) u(); else unsub = u; })
-      .catch(() => { /* MIDI access denied — piano still works by touch */ });
-
+      .then((u) => {
+        if (cancelled) { u(); return; }
+        unsub = u;
+        setMidiError(null);
+        refreshName();
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setMidiError(e instanceof Error ? e.message : 'MIDI access denied.');
+        setMidiOn(false);
+      });
     return () => {
       cancelled = true;
       unsub?.();
+      unsubState?.();
     };
-  }, [playNote, stopNote]);
+  }, [midiOn, playNote, stopNote]);
 
   // Cleanup on unmount - don't close shared audio context
   useEffect(() => {
@@ -490,6 +520,34 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           <div className="w-10 sm:w-24 hidden xs:block">
             <Slider value={volume} onValueChange={setVolume} max={1} min={0} step={0.1} className="w-full" />
           </div>
+          {midiSupported && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMidiOn((prev) => !prev);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              // Rose when armed = live and listening (matches the NoteEditor
+              // MIDI convention); slate when off. Fixed w-14 keeps the header
+              // from reflowing on toggle.
+              className={`h-6 sm:h-9 w-12 sm:w-14 rounded-md px-1 text-[10px] sm:text-xs font-semibold text-center transition-colors no-drag ${
+                midiOn
+                  ? 'bg-rose-600 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+              title={
+                midiError
+                  ? `MIDI: ${midiError}`
+                  : midiOn
+                    ? `MIDI on — ${midiInputName || 'no device detected — plug one in'}`
+                    : 'Enable MIDI keyboard input'
+              }
+              aria-label={midiOn ? 'Disable MIDI input' : 'Enable MIDI input'}
+            >
+              MIDI
+            </button>
+          )}
           {onClose && <Button 
             variant="ghost" 
             size="sm" 
