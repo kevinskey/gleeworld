@@ -6,7 +6,19 @@ import { Plus, Minus, Maximize2, Minimize2 } from 'lucide-react';
 import * as Tone from 'tone';
 import { holdPianoNote, preloadPianoSampler, isPianoSamplerLoaded } from '@/lib/audioTools/pianoSampler';
 import { forceAudioUnlock } from '@/lib/audioTools/unlock';
+import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import { useIsPhone } from '@/hooks/use-mobile';
+
+// Sharp-spelling map (matches Tone's note format the sampler expects) so
+// we can turn a raw MIDI note number into a "C4" / "F#3" fullName the
+// sampler already understands. Black keys default to sharps — enough for
+// hardware keyboard input where the user's spelling intent isn't known.
+const MIDI_NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
+function midiToFullName(midi: number): string {
+  const pc = ((midi % 12) + 12) % 12;
+  const octave = Math.floor(midi / 12) - 1;
+  return `${MIDI_NOTE_NAMES[pc]}${octave}`;
+}
 
 interface StandalonePianoProps {
   className?: string;
@@ -134,6 +146,69 @@ export function StandalonePiano({
     });
   }, []);
 
+  // Hardware MIDI input — opt-in via the MIDI button in the header. Was
+  // absent entirely on this piano ("works in Studio but not here"). The
+  // permission prompt needs a user gesture, so we don't auto-subscribe.
+  const [midiOn, setMidiOn] = useState(false);
+  const [midiError, setMidiError] = useState<string | null>(null);
+  const [midiInputName, setMidiInputName] = useState<string>('');
+  const midiSupported = useMemo(() => getMidiInputSource().supported, []);
+  // Fake keys built on the fly for MIDI input — the note might sit outside
+  // the currently rendered octave range, but the sampler handles any note
+  // in its loaded range regardless of what's visually on screen.
+  const midiKeyFor = useCallback((midi: number): PianoKey => {
+    const fullName = midiToFullName(midi);
+    return {
+      note: fullName.replace(/\d+$/, ''),
+      octave: parseInt(fullName.match(/\d+$/)?.[0] ?? '4', 10),
+      fullName,
+      isBlack: fullName.includes('#'),
+    };
+  }, []);
+  useEffect(() => {
+    if (!midiOn) return;
+    const source = getMidiInputSource();
+    if (!source.supported) {
+      setMidiError('This browser has no MIDI support.');
+      setMidiOn(false);
+      return;
+    }
+    let cancelled = false;
+    let unsub: (() => void) | null = null;
+    const refreshName = () => {
+      source.listInputs().then((ins) => {
+        if (!cancelled) setMidiInputName(ins[0]?.name ?? '');
+      }).catch(() => { /* leave name empty */ });
+    };
+    const unsubState = source.onStateChange(refreshName);
+    source
+      .subscribe('', (data) => {
+        const [status, note, velocity] = data;
+        const command = status & 0xf0;
+        if (command === 144 && velocity > 0) {
+          void startNote(midiKeyFor(note));
+        } else if (command === 128 || (command === 144 && velocity === 0)) {
+          stopNote(midiKeyFor(note));
+        }
+      })
+      .then((u) => {
+        if (cancelled) { u(); return; }
+        unsub = u;
+        setMidiError(null);
+        refreshName();
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setMidiError(e instanceof Error ? e.message : 'MIDI access denied.');
+        setMidiOn(false);
+      });
+    return () => {
+      cancelled = true;
+      unsub?.();
+      unsubState?.();
+    };
+  }, [midiOn, startNote, stopNote, midiKeyFor]);
+
   const whiteCount = whiteKeys.length;
   const whitePct = 100 / whiteCount;
 
@@ -185,6 +260,27 @@ export function StandalonePiano({
               <span className="italic ml-2 text-muted-foreground">(loading samples…)</span>
             )}
           </div>
+          {midiSupported && (
+            <button
+              type="button"
+              onClick={() => setMidiOn((p) => !p)}
+              className={`h-8 px-3 rounded-md text-xs font-semibold transition-colors ${
+                midiOn
+                  ? 'bg-rose-600 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+              title={
+                midiError
+                  ? `MIDI: ${midiError}`
+                  : midiOn
+                    ? `MIDI on — ${midiInputName || 'no device — plug one in'}`
+                    : 'Enable MIDI keyboard input'
+              }
+              aria-label={midiOn ? 'Disable MIDI input' : 'Enable MIDI input'}
+            >
+              MIDI
+            </button>
+          )}
         </div>
         {/* Stage-mode keyboard. All visuals via inline `style` (no
             Tailwind arbitrary values) so iOS WKWebView + any downstream
