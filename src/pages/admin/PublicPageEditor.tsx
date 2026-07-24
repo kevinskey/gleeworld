@@ -230,26 +230,39 @@ export default function PublicPageEditor() {
   const [pendingTheme, setPendingTheme] = useState<SiteTheme | null>(null);
   const themeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Preview device + auto-fit scaling. The published site can be many
-  // logical viewport widths (a hero at 1280px, an events grid at 3 cols)
-  // that don't fit the editor's preview column — especially on a phone
-  // where the whole column is ~360px. We render the blocks at a fixed
-  // "device" width (1280 desktop / 390 phone) inside a CSS `zoom` box so
-  // the layout stays authentic and the outer container clips + scrolls
-  // the scaled result. zoom (unlike `transform: scale`) also updates the
-  // parent's layout height, so the outer scrollbar tracks visible content
-  // and the site's `sticky` header still pins to the outer viewport.
+  // Preview device + auto-fit scaling. The published site is rendered at
+  // a fixed "device" width (1280 desktop / 390 phone) inside a scaling
+  // wrapper so the layout stays authentic even when the preview column
+  // is much narrower.
+  //
+  // Uses `transform: scale` — was `zoom`, but Firefox doesn't support
+  // `zoom` at all and older Safari versions rendered it inconsistently,
+  // so the desktop site would spill out of the column with no visible
+  // fix. `transform: scale` is universal, at the cost of not
+  // participating in layout — we manually measure the unscaled inner
+  // height and set the outer wrapper's height to scale*innerHeight so
+  // vertical scroll still tracks visible content.
   const [device, setDevice] = useState<'desktop' | 'mobile'>(() => {
     if (typeof window === 'undefined') return 'desktop';
     return window.matchMedia('(max-width: 768px)').matches ? 'mobile' : 'desktop';
   });
   const previewOuterRef = useRef<HTMLDivElement | null>(null);
+  const previewInnerRef = useRef<HTMLDivElement | null>(null);
   const [previewOuterWidth, setPreviewOuterWidth] = useState(0);
+  const [previewInnerHeight, setPreviewInnerHeight] = useState(0);
   useLayoutEffect(() => {
     const el = previewOuterRef.current;
     if (!el) return;
     setPreviewOuterWidth(el.getBoundingClientRect().width);
     const ro = new ResizeObserver(([entry]) => setPreviewOuterWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  useLayoutEffect(() => {
+    const el = previewInnerRef.current;
+    if (!el) return;
+    setPreviewInnerHeight(el.getBoundingClientRect().height);
+    const ro = new ResizeObserver(([entry]) => setPreviewInnerHeight(entry.contentRect.height));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -260,6 +273,7 @@ export default function PublicPageEditor() {
   const previewScale = previewOuterWidth > 0
     ? Math.min(1, previewOuterWidth / deviceWidth)
     : 1;
+  const scaledHeight = previewInnerHeight * previewScale;
 
   const theme: SiteTheme = useMemo(() => {
     // Palette + font come from Workspace Settings → Branding (single source
@@ -1069,20 +1083,33 @@ export default function PublicPageEditor() {
               visible when the scaled site is narrower than the column. */}
           <div
             ref={previewOuterRef}
-            className="bg-slate-100 max-h-[70dvh] overflow-y-auto overscroll-contain relative"
+            className="bg-slate-100 max-h-[70dvh] overflow-y-auto overflow-x-hidden overscroll-contain relative"
             // Clicking the wash around the device frame deselects. Clicks on
             // a BlockFrame stop propagation so they don't accidentally
             // deselect while trying to interact with a block.
             onClick={() => setSelectedId(null)}
           >
+            {/* Scaling wrapper: fixed to deviceWidth * scale × innerHeight *
+                scale so the outer scrollbar tracks the visible (scaled)
+                area rather than the raw 1280px content. overflow-hidden
+                on the wrapper clips the transformed child, which is
+                laid-out at deviceWidth but visually rendered smaller. */}
             <div
-              className="gw-site bg-white mx-auto"
+              className="mx-auto"
+              style={{
+                width: deviceWidth * previewScale,
+                height: scaledHeight || undefined,
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+            <div
+              ref={previewInnerRef}
+              className="gw-site bg-white"
               style={{
                 width: deviceWidth,
-                // `zoom` participates in layout (transform: scale does not),
-                // so the outer scrollbar reflects the scaled height and any
-                // nested `position: sticky` still pins to previewOuterRef.
-                zoom: previewScale,
+                transform: `scale(${previewScale})`,
+                transformOrigin: 'top left',
                 ...themeCssVars(theme),
                 fontFamily: fontStack(theme.fontFamily),
                 letterSpacing: `${theme.letterSpacing ?? 0}em`,
@@ -1177,6 +1204,7 @@ export default function PublicPageEditor() {
               {blocks.length === 0 && (
                 <div className="p-16 text-center text-muted-foreground">Add blocks to see a preview.</div>
               )}
+            </div>
             </div>
           </div>
         </Card>

@@ -72,6 +72,15 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   const geoLine = ctx.geo
     ? `Approximate location: lat ${ctx.geo.lat.toFixed(4)}, lng ${ctx.geo.lng.toFixed(4)} (browser Geolocation).`
     : 'Approximate location: unknown (user has not granted geolocation permission — ask for a city / zip / "near X" when using find_nearby_place).';
+  const newsNote = [
+    'News:',
+    '- read_news_feeds returns the tenant\'s current headlines (same rail their dashboard shows).',
+    '- DEFAULT reply is a spoken SUMMARY: one or two sentences distilling the top 3–5 items, grouped by theme where useful. Do not read every headline verbatim — replies may be spoken aloud.',
+    '- "Read them all" / "go through each one" / "read the headlines": switch to VERBATIM mode. Go in order, one item per short paragraph, saying "Number 1, from {source}: {title}. {one-sentence summary}." No preamble between items. Number them so the user can interrupt with "number 3" or "the second one".',
+    '- "Read the third one" / "read the one about X": pick that single item and read its title, source, and the summary field. If ambiguous, ask which of the matches they mean.',
+    '- If the user asks to "open" or "read the full article", hand back the item\'s link — this app does not fetch article bodies.',
+    '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
+  ].join('\n');
   const placesNote = [
     'Places + preferences (real-world hand-off):',
     '- Use find_nearby_place for any "where is the nearest X" or "order me Y" ask. Pass the lat/lng from the location line above when present; otherwise ask the user for a `near` string first. Do NOT invent coordinates.',
@@ -88,6 +97,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     memoryNote,
     ...(courseBuilderNote ? [courseBuilderNote] : []),
     dateCardNote,
+    newsNote,
     placesNote,
     'Rules:',
     '- Prefer calling a tool over describing how to do something manually.',

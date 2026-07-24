@@ -20,6 +20,7 @@ export async function executeServerTool(
       case 'find_user': return await findUser(args, deps);
       case 'search_youtube': return await searchYoutube(args, deps);
       case 'get_date_card': return await getDateCard(deps);
+      case 'read_news_feeds': return await readNewsFeeds(args, deps);
       case 'find_nearby_place': return await findNearbyPlace(args, deps);
       case 'get_preference': return await getPreference(args, deps);
       default: return JSON.stringify({ error: `Unknown tool: ${name}` });
@@ -95,6 +96,31 @@ async function getDateCard({ supabase }: Deps): Promise<string> {
     ? raw
     : { v: 1, type: 'plain', config: {} };
   return JSON.stringify({ setting, available_types: DATE_CARD_TYPES });
+}
+
+async function readNewsFeeds(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+  const raw = Number(args.limit);
+  const limit = Math.max(1, Math.min(30, Number.isFinite(raw) ? Math.trunc(raw) : 8));
+  if (!supabase.functions) return JSON.stringify({ error: 'news fetch unavailable in this context' });
+  // Server infers tenant from the caller's JWT when tenant is absent — see
+  // fetch-news-feeds/index.ts. We deliberately don't pass one so member and
+  // admin sessions land on the same rail their dashboard shows.
+  const { data, error } = await supabase.functions.invoke('fetch-news-feeds', {
+    body: { offset: 0, limit },
+  });
+  if (error) return JSON.stringify({ error: error.message ?? 'fetch-news-feeds failed' });
+  const items = Array.isArray(data?.items) ? data.items : [];
+  // Trim to the fields useful for a spoken reply — the model doesn't need
+  // pubDate ISOs or source icons; a short { title, source, description }
+  // per item keeps the tool result under a few kilobytes.
+  const trimmed = items.slice(0, limit).map((it: any) => ({
+    title: it?.title,
+    source: it?.source,
+    published: it?.pubDate,
+    summary: typeof it?.description === 'string' ? it.description.slice(0, 240) : '',
+    link: it?.link,
+  }));
+  return JSON.stringify({ items: trimmed, count: trimmed.length });
 }
 
 async function findNearbyPlace(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {

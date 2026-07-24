@@ -291,6 +291,17 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'admin', execution: 'client', confirm: true,
   },
   {
+    name: 'read_news_feeds',
+    description: "Fetch the tenant's current news headlines — same feed the dashboard's News rail shows (fetch-news-feeds edge function). Returns up to `limit` items with title, source, description, published date, and link. Use for any 'what's in the news', 'read me today's headlines', or 'what's new in choral music' question. Server infers the tenant from the caller's JWT; no need to pass it.",
+    parameters: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'How many headlines to return (default 8, max 30). Keep small for spoken replies.' },
+      },
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'find_nearby_place',
     description: "Find real-world places near the user via Google Places text search. `query` is what to search for ('starbucks', 'vietnamese restaurant', 'open pharmacy', 'gas station'). Provide EITHER lat/lng (when the system prompt lists the user's live location) OR `near` as a plain-text location ('30303', 'downtown Atlanta', 'my hotel'). Returns places with name, address, mapsUrl (one-tap to open in Maps), website, phone, rating, isOpen.",
     parameters: {
