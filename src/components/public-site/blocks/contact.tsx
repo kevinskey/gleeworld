@@ -71,8 +71,15 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   ].filter((s) => s.href);
   const { fg, subFg, mutedFg } = readableOn(ctx.theme?.primaryColor || '#0f172a');
   return (
-    <footer id="contact" className="mt-10 max-w-6xl mx-auto w-full" style={{ background: 'var(--site-primary)', color: fg }}>
-      <div className="px-4 sm:px-6 py-5 text-center space-y-4">
+    <footer
+      id="contact"
+      // Same inset-alignment as the header: outer keeps sections' 6xl +
+      // px gutters, colored bar moved to the inner div so it aligns with
+      // the visible content edge of every other block on the page.
+      className="mt-10 max-w-6xl mx-auto w-full px-4 sm:px-6"
+      style={{ color: fg }}
+    >
+      <div className="py-5 text-center space-y-4" style={{ background: 'var(--site-primary)' }}>
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm" style={{ color: subFg }}>
           {/* In edit mode, drop the mailto/tel anchors so clicking a field
               places a caret instead of prompting the browser to open a mail

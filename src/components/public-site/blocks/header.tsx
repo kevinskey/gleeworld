@@ -97,12 +97,18 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
 
   return (
     <header
-      className="sticky top-0 z-40 max-w-6xl mx-auto w-full"
-      style={{ background: 'var(--site-primary)', paddingTop: 'env(safe-area-inset-top)', color: linkColor }}
+      // Outer matches the sections' outer wrapper — max-w-6xl mx-auto with
+      // px-4 / sm:px-6 gutters — so the colored bar (moved to the inner
+      // div) starts and ends where every section's content starts and
+      // ends. Was `max-w-6xl mx-auto w-full` with the bg on the outer,
+      // which made the bar 32–48px WIDER than the visible content edge of
+      // every other block on the page.
+      className="sticky top-0 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6"
+      style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor }}
     >
       <div
-        className="px-4 sm:px-6 flex items-center justify-between gap-4"
-        style={{ height: barHeight }}
+        className="flex items-center justify-between gap-4"
+        style={{ height: barHeight, background: 'var(--site-primary)' }}
       >
         {/* In the editor, unwrap the <a href="#top"> so clicking the site
             name places a caret instead of jump-scrolling. The placeholder is
