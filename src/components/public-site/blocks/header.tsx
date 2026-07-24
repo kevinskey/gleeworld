@@ -36,6 +36,10 @@ const schema = z.object({
   siteNameColor: z.string().optional(),
   // Logo height in pixels; width auto-scales to maintain aspect.
   logoHeight: z.number().int().min(20).max(120).default(36),
+  // Optional manual header bar height. When set, wins over the auto-
+  // derived Math.max(72, logoHeight + 16). Absent = auto so the bar
+  // grows with the logo. Range keeps it usable but bounded.
+  headerHeight: z.number().int().min(48).max(160).optional(),
 });
 type Config = z.infer<typeof schema>;
 
@@ -62,8 +66,11 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
     ? config.siteNameColor
     : readableForeground(ctx.theme?.primaryColor || '#0f172a');
   const logoHeight = config.logoHeight || 36;
-  // Header bar height = logo + 16px breathing room each side, with a sensible floor.
-  const barHeight = Math.max(56, logoHeight + 16);
+  // Manual override wins; otherwise auto-derive as logo + 32px breathing
+  // room with a 72px floor (was 56 — that looked cramped on desktop).
+  const barHeight = typeof config.headerHeight === 'number'
+    ? Math.max(48, Math.min(160, config.headerHeight))
+    : Math.max(72, logoHeight + 32);
   const [menuOpen, setMenuOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   // Auto-close the mobile menu if the viewport grows past the sm breakpoint so
@@ -270,6 +277,37 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
         />
         <p className="text-xs text-slate-500">
           Logo image, brand colors, and font live in <strong>Workspace Settings → Branding</strong>.
+        </p>
+      </div>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <Label className="text-sm">Header height</Label>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 tabular-nums">
+              {config.headerHeight ?? Math.max(72, (config.logoHeight || 36) + 32)}px
+            </span>
+            <button
+              type="button"
+              onClick={() => set({ headerHeight: undefined })}
+              disabled={config.headerHeight === undefined}
+              className="text-xs font-medium text-sky-600 hover:text-sky-700 disabled:text-slate-400"
+              title="Clear override — auto-scale with logo"
+            >
+              Auto
+            </button>
+          </div>
+        </div>
+        <input
+          type="range"
+          min={48}
+          max={160}
+          step={2}
+          value={config.headerHeight ?? Math.max(72, (config.logoHeight || 36) + 32)}
+          onChange={(e) => set({ headerHeight: Number(e.target.value) })}
+          className="w-full accent-sky-600"
+        />
+        <p className="text-xs text-slate-500">
+          Bar height in pixels. <strong>Auto</strong> derives it from the logo size (~logo + 32px), with a 72px floor.
         </p>
       </div>
       <div className="space-y-2">
