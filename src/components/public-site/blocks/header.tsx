@@ -106,8 +106,11 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       className="sticky top-0 z-40 max-w-6xl mx-auto w-full px-4 sm:px-6"
       style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor }}
     >
+      {/* Colored bar. Padded inside so nav items get breathing room from the
+          bar edges; the outer's px-4/sm:px-6 already aligns the bar with
+          section content, so this is purely inside-the-bar spacing. */}
       <div
-        className="flex items-center justify-between gap-4"
+        className="flex items-center justify-between gap-4 px-4 sm:px-6"
         style={{ height: barHeight, background: 'var(--site-primary)' }}
       >
         {/* In the editor, unwrap the <a href="#top"> so clicking the site
@@ -157,7 +160,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
-            className="sm:hidden inline-flex items-center justify-center w-10 h-10 -mr-2 rounded-md hover:bg-white/10 transition-colors"
+            className="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-white/10 transition-colors"
             style={{ color: linkColor }}
           >
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

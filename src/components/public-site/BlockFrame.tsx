@@ -66,7 +66,7 @@ function TB({
       }}
       disabled={disabled}
       title={title}
-      className={`p-1.5 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+      className={`p-2 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
         danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-700 hover:bg-slate-100'
       }`}
     >
@@ -153,7 +153,11 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
           the outline so its buttons stay clickable. */}
       {showChrome && (
         <div
-          className="absolute top-2 right-2 z-20 inline-flex items-center gap-0.5 rounded-full border border-slate-200 bg-white/95 backdrop-blur px-1 py-1 shadow-lg"
+          // Bumped padding + gap so the pill reads at the size of the icons
+          // it holds rather than crowding them. Prior px-1 py-1 gap-0.5
+          // wrapped everything into a cramped ~26px strip that was hard
+          // to hit on touch.
+          className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 backdrop-blur px-1.5 py-1 shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Drag handle — spreads the dnd-kit sortable listeners so grabbing

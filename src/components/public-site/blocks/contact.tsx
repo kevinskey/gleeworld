@@ -79,7 +79,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       className="mt-10 max-w-6xl mx-auto w-full px-4 sm:px-6"
       style={{ color: fg }}
     >
-      <div className="py-5 text-center space-y-4" style={{ background: 'var(--site-primary)' }}>
+      <div className="py-5 px-4 sm:px-6 text-center space-y-4" style={{ background: 'var(--site-primary)' }}>
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm" style={{ color: subFg }}>
           {/* In edit mode, drop the mailto/tel anchors so clicking a field
               places a caret instead of prompting the browser to open a mail
