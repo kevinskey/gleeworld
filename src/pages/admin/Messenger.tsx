@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Send, Users, Plus, MessageSquare, X, Loader2, Image as ImageIcon,
   Sparkles, Megaphone, SmilePlus, BarChart3, Calendar, Mail, Video, Zap, Smartphone,
-  ChevronLeft, Bell, BellOff, Newspaper, User as UserIcon, Search,
+  ChevronLeft, Bell, BellOff, Newspaper, User as UserIcon, Search, Trash2,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useActiveMeeting } from '@/contexts/ActiveMeetingContext';
@@ -335,6 +335,38 @@ export default function Messenger() {
     setSelectedGroupId(data.id);
   }
 
+  // Delete a group + its messages + its memberships. Children are wiped
+  // explicitly because different deploys have different CASCADE settings on
+  // gw_message_groups' FKs — the ones without a cascade would fail the
+  // parent row's delete with a FK constraint. RLS scopes the operation to
+  // the group's creator or a tenant admin; if the caller isn't authorized,
+  // the delete silently no-ops (Supabase returns no error but zero rows),
+  // so we re-select the id afterward and surface a real "not allowed"
+  // message when the row survives.
+  async function deleteGroup(g: Group) {
+    if (!confirm(`Delete "${g.name}"? This removes the group and every message in it. This can't be undone.`)) return;
+    await supabase.from('gw_group_messages').delete().eq('group_id', g.id);
+    await supabase.from('gw_group_members').delete().eq('group_id', g.id);
+    const { error } = await supabase.from('gw_message_groups').delete().eq('id', g.id);
+    if (error) {
+      toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    const { data: stillThere } = await supabase
+      .from('gw_message_groups').select('id').eq('id', g.id).maybeSingle();
+    if (stillThere) {
+      toast({
+        title: 'Not allowed',
+        description: 'Only the group creator or a tenant admin can delete this group.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: 'Group deleted' });
+    if (selectedGroupId === g.id) setSelectedGroupId(null);
+    qc.invalidateQueries({ queryKey: ['messenger-groups'] });
+  }
+
   async function createSectionGroups() {
     if (!user) return;
     setShowNewGroup(false);
@@ -599,44 +631,59 @@ export default function Messenger() {
               const isActive = g.id === selectedGroupId;
               const isDM = g.group_type === 'direct' || g.group_type === 'dm';
               const initial = (g.name || '?').charAt(0).toUpperCase();
+              // Wrap the row in a positioned div so the trash button can
+              // sit as a SIBLING of the select-group button (nesting
+              // buttons is invalid HTML). On touch the trash stays
+              // visible because there's no hover; on md+ it fades in on
+              // hover / keyboard focus so it doesn't compete with the
+              // group name for attention until you go looking for it.
               return (
-                <button
-                  key={g.id}
-                  onClick={() => setSelectedGroupId(g.id)}
-                  className={`w-full text-left px-3 py-3 rounded-xl flex items-start gap-3 transition-colors ${
-                    isActive ? 'bg-primary/10' : 'hover:bg-muted/60'
-                  }`}
-                >
-                  {/* Avatar */}
-                  <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-semibold ${
-                    isDM ? 'bg-cyan-100 text-cyan-700' : 'bg-primary/15 text-primary'
-                  }`}>
-                    {isDM ? initial : <Users className="w-5 h-5" />}
-                  </div>
-
-                  {/* Middle: name + preview */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-sm truncate ${meta.unread > 0 ? 'font-bold text-foreground' : 'font-semibold text-foreground'}`}>
-                        {g.name}
-                      </span>
-                      {meta.muted && <BellOff className="w-3 h-3 text-muted-foreground shrink-0" />}
+                <div key={g.id} className="group relative">
+                  <button
+                    onClick={() => setSelectedGroupId(g.id)}
+                    className={`w-full text-left px-3 py-3 pr-11 rounded-xl flex items-start gap-3 transition-colors ${
+                      isActive ? 'bg-primary/10' : 'hover:bg-muted/60'
+                    }`}
+                  >
+                    {/* Avatar */}
+                    <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-sm font-semibold ${
+                      isDM ? 'bg-cyan-100 text-cyan-700' : 'bg-primary/15 text-primary'
+                    }`}>
+                      {isDM ? initial : <Users className="w-5 h-5" />}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate mt-0.5">
-                      {g.description || g.group_type}
-                    </div>
-                  </div>
 
-                  {/* Right: timestamp + unread badge */}
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="text-sm text-muted-foreground">{/* timestamp slot */}</span>
-                    {meta.unread > 0 && (
-                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center">
-                        {meta.unread > 99 ? '99+' : meta.unread}
-                      </span>
-                    )}
-                  </div>
-                </button>
+                    {/* Middle: name + preview */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-sm truncate ${meta.unread > 0 ? 'font-bold text-foreground' : 'font-semibold text-foreground'}`}>
+                          {g.name}
+                        </span>
+                        {meta.muted && <BellOff className="w-3 h-3 text-muted-foreground shrink-0" />}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate mt-0.5">
+                        {g.description || g.group_type}
+                      </div>
+                    </div>
+
+                    {/* Right: timestamp + unread badge */}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-sm text-muted-foreground">{/* timestamp slot */}</span>
+                      {meta.unread > 0 && (
+                        <span className="min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center">
+                          {meta.unread > 99 ? '99+' : meta.unread}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteGroup(g); }}
+                    className="absolute top-1/2 -translate-y-1/2 right-2 h-8 w-8 rounded-full inline-flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 focus-visible:text-destructive focus-visible:bg-destructive/10 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition-opacity"
+                    aria-label={`Delete ${g.name}`}
+                    title="Delete group"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               );
             });
           })()}
