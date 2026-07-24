@@ -14,6 +14,10 @@ const schema = z.object({
     title: z.string().default(''),
     artist: z.string().default(''),
   })).default([]),
+  // Default playback volume for every visitor (0–100). Applied on
+  // loadedmetadata; visitors can still adjust it via the native audio
+  // controls. Absent = 100 (browser default, unchanged from prior behavior).
+  defaultVolume: z.number().int().min(0).max(100).default(100),
 });
 type Config = z.infer<typeof schema>;
 
@@ -37,7 +41,16 @@ function Render({ config }: BlockRenderProps<Config>) {
                 {t.artist && <span className="text-sm text-muted-foreground">— {t.artist}</span>}
               </div>
             )}
-            <audio src={t.url} controls preload="none" className="w-full" />
+            <audio
+              src={t.url}
+              controls
+              preload="none"
+              className="w-full"
+              onLoadedMetadata={(e) => {
+                const v = Math.max(0, Math.min(100, config.defaultVolume ?? 100)) / 100;
+                (e.currentTarget as HTMLAudioElement).volume = v;
+              }}
+            />
           </div>
         ))}
       </div>
@@ -60,6 +73,31 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
       <div className="space-y-1.5">
         <Label>Section heading</Label>
         <Input value={config.heading} onChange={(e) => set({ heading: e.target.value })} placeholder="Listen" />
+      </div>
+
+      {/* Default playback volume for every visitor. Applied on
+          loadedmetadata; visitors can still adjust via native controls,
+          but the starting level is yours to set (100% autoplays can be
+          jarring on tracks mastered hot). */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label className="text-sm">Default volume</Label>
+          <span className="text-xs text-slate-500 tabular-nums w-10 text-right">
+            {config.defaultVolume ?? 100}%
+          </span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={config.defaultVolume ?? 100}
+          onChange={(e) => set({ defaultVolume: Number(e.target.value) })}
+          className="w-full accent-sky-600"
+        />
+        <p className="text-xs text-slate-500">
+          Sets the starting level for every visitor. They can adjust further via the player's own controls.
+        </p>
       </div>
 
       <div className="space-y-2">

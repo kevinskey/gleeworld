@@ -635,6 +635,9 @@ function Editor({
   // reload — happens once, on release. Committing per drag-tick would
   // rebuild the native audio graph dozens of times per second.
   const [tempoDraft, setTempoDraft] = useState<number | null>(null);
+  // Rolling window of tap-tempo timestamps; the transport's "Tap" button
+  // pushes into this and derives BPM from the average interval.
+  const tapTempoTimesRef = useRef<number[]>([]);
   // Controlled so the phone tools row's BPM chip can open the settings
   // sheet directly — the bare sliders icon wasn't discoverable enough
   // ("no way to set tempo on mobile").
@@ -1957,17 +1960,25 @@ function Editor({
         </DialogContent>
       </Dialog>
 
-      {/* Transport bar — single dense row */}
-      <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 flex items-center gap-0.5 sm:gap-2 flex-wrap">
-        {/* Go to start */}
+      {/* Transport bar — three-cell grid keeps the LCD dead-center at every
+       *  breakpoint. Row 1: primary transport | LCD | secondary actions.
+       *  Row 2 (md+): tempo, punch, snap, grid, end chips. Row 3: engine
+       *  status. On phones the chip row lives inside the settings sheet. */}
+      <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 space-y-1.5">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
+
+        {/* LEFT — transport controls. Play/Pause/Stop/Rec/Metro are
+         *  visible on every breakpoint; nav (skip start/end + scrub) and
+         *  markers appear on wider screens where there's room. */}
+        <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
         <button
           onClick={() => engineState.seek?.(0)}
-          className="flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Go to beginning (Home)">
           <SkipBack className="w-4 h-4" />
         </button>
-        {/* Rewind — hold to scrub backwards (no bar snap) */}
         <ScrubButton
+          className="hidden sm:flex"
           direction={-1}
           getPosition={() => state?.positionSeconds ?? 0}
           max={session.length_seconds}
@@ -1975,8 +1986,8 @@ function Editor({
           icon={<Rewind className="w-4 h-4" />}
           title="Rewind — click to nudge, hold to scrub"
         />
-        {/* Fast forward — hold to scrub forwards */}
         <ScrubButton
+          className="hidden sm:flex"
           direction={+1}
           getPosition={() => state?.positionSeconds ?? 0}
           max={session.length_seconds}
@@ -1984,17 +1995,16 @@ function Editor({
           icon={<FastForward className="w-4 h-4" />}
           title="Forward — click to nudge, hold to scrub"
         />
-        {/* Skip to end */}
         <button
           onClick={() => engineState.seek?.(session.length_seconds)}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Skip to end">
           <SkipForward className="w-4 h-4" />
         </button>
 
         <div className="hidden sm:block w-px h-7 bg-border mx-0.5" />
 
-        {/* Transport buttons */}
+        {/* Primary transport — always visible */}
         <button onClick={async () => {
             try {
               await start();
@@ -2085,59 +2095,217 @@ function Editor({
           <Repeat className="w-4 h-4" />
         </button>
 
-        {/* Markers — drop a flag at the playhead, hop between flags. */}
+        {/* Markers — drop a flag at the playhead, hop between flags.
+         *  Flag on sm+, prev/next on md+ (they only help once markers exist). */}
         <button
           onClick={addMarkerAtPlayhead}
-          className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Add marker at playhead (K)">
           <Flag className="w-4 h-4 text-amber-500" />
         </button>
         <button
           onClick={jumpPrevMarker}
           disabled={markers.length === 0}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Previous marker (,)">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <button
           onClick={jumpNextMarker}
           disabled={markers.length === 0}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Next marker (.)">
           <ChevronRight className="w-4 h-4" />
         </button>
-
-        {/* LCD timecode — click to cycle Bars|Beats → Min:Sec → Samples. */}
-        <button
-          onClick={() => setCounterMode(nextCounterMode(counterMode))}
-          className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1.5 hover:bg-zinc-800"
-          title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
-          <span className="text-emerald-400 text-sm sm:text-lg">
-            {counterMode === 'bars' && formatBarBeat(state?.positionSeconds ?? 0, session.tempo_bpm, session.time_signature.numerator)}
-            {counterMode === 'time' && formatTime(state?.positionSeconds ?? 0)}
-            {counterMode === 'samples' && formatSamples(state?.positionSeconds ?? 0, state?.sampleRate ?? 48000)}
-          </span>
-          <span className="text-emerald-700 text-xs font-semibold">
-            {counterMode === 'bars' ? 'BAR' : counterMode === 'time' ? 'SEC' : 'SMP'}
-          </span>
-        </button>
-        <div className="hidden sm:block text-muted-foreground text-sm tabular-nums font-mono">
-          {formatTime(state?.positionSeconds ?? 0)} / {formatTime(session.length_seconds)}
         </div>
 
-        {/* Mobile-only: open a bottom sheet with all the secondary
-         * controls (count-in, tempo, snap, grid, end) so the transport
-         * bar can fit on a single phone-width row. */}
-        <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <SheetTrigger asChild>
+        {/* CENTER — LCD timecode. Anchored to the middle grid cell so it
+         *  reads dead-center at every breakpoint regardless of how many
+         *  buttons occupy the left cell. Position/length text stacks below
+         *  on phones and sits beside the counter on md+ where there's room. */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-3 shrink-0">
+          <button
+            onClick={() => setCounterMode(nextCounterMode(counterMode))}
+            className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1.5 hover:bg-zinc-800"
+            title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
+            <span className="text-emerald-400 text-sm sm:text-lg">
+              {counterMode === 'bars' && formatBarBeat(state?.positionSeconds ?? 0, session.tempo_bpm, session.time_signature.numerator)}
+              {counterMode === 'time' && formatTime(state?.positionSeconds ?? 0)}
+              {counterMode === 'samples' && formatSamples(state?.positionSeconds ?? 0, state?.sampleRate ?? 48000)}
+            </span>
+            <span className="text-emerald-700 text-xs font-semibold">
+              {counterMode === 'bars' ? 'BAR' : counterMode === 'time' ? 'SEC' : 'SMP'}
+            </span>
+          </button>
+          <div className="hidden md:block text-muted-foreground text-xs tabular-nums font-mono">
+            {formatTime(state?.positionSeconds ?? 0)} / {formatTime(session.length_seconds)}
+          </div>
+        </div>
+
+        {/* RIGHT — secondary actions. Count-in is a first-class pill here
+         *  (used before every take, so pushing it into a sheet slowed
+         *  mobile users down). Undo has no keyboard shortcut on iPad, so
+         *  a persistent button is the only way to reach it there. The
+         *  More button opens the settings sheet with tempo/TS/snap/grid/
+         *  end/punch — the same controls that live in Row 2's chip row on
+         *  desktop, so nothing is ever exclusively phone- or desktop-only. */}
+        <div className="flex items-center gap-1 sm:gap-1.5 justify-end min-w-0">
+          <button
+            onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
+            className={`h-8 sm:h-9 px-2 sm:px-3 rounded border text-xs sm:text-sm font-bold whitespace-nowrap ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+            title={countInBars === 0 ? 'Count-in OFF — tap to cycle 1 bar → 2 bars → off' : `Count-in: ${countInBars} bar${countInBars > 1 ? 's' : ''}`}>
+            <span className="hidden md:inline">Count-in </span>{countInBars === 0 ? 'Off' : `${countInBars}`}
+          </button>
+          {countInBeat !== null && (
+            <span className="text-xs sm:text-sm font-bold px-2 py-0.5 rounded bg-rose-500 text-white tabular-nums animate-pulse">
+              {countInBeat}
+            </span>
+          )}
+          <button
+            onClick={undo}
+            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
+            aria-label="Undo" title="Undo (⌘Z)">
+            <Undo2 className="w-4 h-4" />
+            <span className="hidden lg:inline text-sm font-semibold">Undo</span>
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
+            aria-label="Session settings" title="Session — tempo, time signature, snap, grid, punch, end">
+            <SlidersHorizontal className="w-4 h-4" />
+            <span className="hidden lg:inline text-sm font-semibold">More</span>
+          </button>
+          <div className="hidden lg:block ml-1">
+            <VuMeter peakDbL={state?.peakDbL ?? -Infinity} peakDbR={state?.peakDbR ?? -Infinity} />
+          </div>
+        </div>
+        </div>
+
+        {/* Row 2 — desktop chip row (md+). Tempo + Tap + TS, Punch,
+         *  Snap/Grid/End. On phones these live inside the settings sheet
+         *  (accessible from the More button) — this row disappears
+         *  entirely so the transport can fit in one clean line. */}
+        <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1.5 border-t border-border/60 text-sm">
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground">BPM</span>
+            <input type="number" min={20} max={300} value={session.tempo_bpm}
+              onChange={(e) => {
+                const bpm = Number(e.target.value) || 120;
+                update((s) => ({ ...s, tempo_bpm: bpm }));
+                updateTempo(bpm);
+              }}
+              className="w-14 h-7 bg-background border border-border rounded text-center" />
             <button
-              className="sm:hidden ml-auto h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
-              title="Session settings"
-              aria-label="Session settings">
-              <SlidersHorizontal className="w-4 h-4" />
+              type="button"
+              onClick={() => {
+                const now = performance.now();
+                const taps = tapTempoTimesRef.current;
+                taps.push(now);
+                while (taps.length > 5 && taps[0] < now - 3000) taps.shift();
+                if (taps.length < 2) return;
+                const intervals: number[] = [];
+                for (let i = 1; i < taps.length; i++) intervals.push(taps[i] - taps[i - 1]);
+                const avgMs = intervals.reduce((s, n) => s + n, 0) / intervals.length;
+                const detected = Math.round(60000 / avgMs);
+                if (detected >= 30 && detected <= 300) {
+                  update((s) => ({ ...s, tempo_bpm: detected }));
+                  updateTempo(detected);
+                }
+              }}
+              className="h-7 px-2 rounded border border-border bg-muted text-xs font-semibold hover:bg-muted/70"
+              title="Tap Tempo — tap along with a beat 2+ times to detect the BPM">
+              Tap
             </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="dark bg-card text-foreground border-border">
+            <CompactTimeSignaturePicker
+              numerator={session.time_signature.numerator}
+              denominator={session.time_signature.denominator}
+              onChange={(n, d) => {
+                update((s) => ({ ...s, time_signature: { numerator: n, denominator: d } }));
+                updateTimeSignature(n, d);
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground">Punch</span>
+            <button
+              onClick={() => {
+                if (!punchEnabled && !loopRegion) {
+                  toast.info('Drag across the bar ruler to set the punch range first.');
+                  return;
+                }
+                setPunchEnabled((v) => !v);
+              }}
+              className={`h-7 px-2 rounded border text-sm font-bold ${punchEnabled ? 'bg-rose-500 border-rose-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+              title={punchEnabled ? 'Punch is ON — Record rolls the pre-roll, drops in at the range start and out at the end' : 'Punch — auto drop in/out over the marked ruler range'}>
+              {punchEnabled ? 'On' : 'Off'}
+            </button>
+            {punchEnabled && (
+              <>
+                <select value={preRollBars} onChange={(e) => setPreRollBars(Number(e.target.value))}
+                  className="h-7 bg-background border border-border rounded text-sm px-1"
+                  title="Pre-roll — bars of playback before the punch-in point">
+                  <option value={0}>Pre 0</option>
+                  <option value={1}>Pre 1</option>
+                  <option value={2}>Pre 2</option>
+                  <option value={4}>Pre 4</option>
+                </select>
+                <select value={postRollBars} onChange={(e) => setPostRollBars(Number(e.target.value))}
+                  className="h-7 bg-background border border-border rounded text-sm px-1"
+                  title="Post-roll — bars of playback after the punch-out point">
+                  <option value={0}>Post 0</option>
+                  <option value={1}>Post 1</option>
+                  <option value={2}>Post 2</option>
+                </select>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1 ml-auto">
+            <span className="text-muted-foreground" title={`Snap quantum at current tempo: ${snapSeconds > 0 ? `${(snapSeconds * 1000).toFixed(0)} ms` : 'off'}`}>Snap</span>
+            <select value={snapMode} onChange={(e) => setSnapMode(e.target.value as SnapMode)}
+              className="h-7 bg-background border border-border rounded text-sm px-1 min-w-[68px]"
+              title="Musical snap — quantum is derived from tempo + time signature">
+              <option value="free">Free</option>
+              <option value="bar">Bar</option>
+              <option value="1/2">1/2 note</option>
+              <option value="1/4">1/4 note</option>
+              <option value="1/8">1/8 note</option>
+              <option value="1/16">1/16</option>
+              <option value="1/32">1/32</option>
+            </select>
+            <span className="text-muted-foreground ml-1" title="Visual grid subdivision — independent of snap">Grid</span>
+            <select value={gridLevel} onChange={(e) => setGridLevel(e.target.value as GridLevel)}
+              className="h-7 bg-background border border-border rounded text-sm px-1 min-w-[80px]"
+              title="Finest subdivision rendered as grid lines">
+              <option value="auto">Auto</option>
+              <option value="off">Bars only</option>
+              <option value="1/2">1/2 note</option>
+              <option value="beat">1/4 note</option>
+              <option value="1/8">1/8 note</option>
+              <option value="1/16">1/16</option>
+              <option value="1/32">1/32</option>
+            </select>
+            <span className="text-muted-foreground ml-1" title="Project length in seconds — sets where the timeline ends">End</span>
+            <input type="number" min={4} max={3600} value={session.length_seconds}
+              onChange={(e) => update((s) => ({ ...s, length_seconds: Number(e.target.value) || 60 }))}
+              title="Project length in seconds"
+              className="w-14 h-7 bg-background border border-border rounded text-center" />
+            <span className="text-muted-foreground text-xs">s</span>
+          </div>
+        </div>
+
+        {/* Native engine status + error panel (full-width so it never
+         *  crowds the transport row). */}
+        <div className="w-full"><StudioEngineStatus /></div>
+      </div>
+
+      {/* Session settings sheet — hoisted so it's independent of the
+       *  transport grid's layout. Same sheet on every breakpoint (opened
+       *  from the More button in Row 1 right cell); on phones this is the
+       *  primary access point for tempo/snap/grid/end/punch. */}
+      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <SheetContent side="bottom" className="dark bg-card text-foreground border-border">
             <SheetHeader className="mb-3">
               <SheetTitle className="text-base">Session</SheetTitle>
             </SheetHeader>
@@ -2269,169 +2437,6 @@ function Editor({
             </div>
           </SheetContent>
         </Sheet>
-
-        {/* Native engine status + error panel (renders only when not "ready",
-         * and only in the app). Full-width line so it never crowds the bar. */}
-        <div className="w-full"><StudioEngineStatus /></div>
-
-        {/* Phone tools row — always its own full-width line under the
-         * transport controls. Tempo, count-in, and undo were reported
-         * as unreachable on mobile: tempo/count-in hid behind an
-         * unlabeled icon and undo was keyboard-only. */}
-        <div className="sm:hidden w-full flex items-center gap-1.5 pt-1">
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="h-10 px-3 rounded border border-border bg-muted hover:bg-muted/70 text-sm font-semibold tabular-nums"
-            aria-label="Set tempo"
-          >
-            {tempoDraft ?? session.tempo_bpm} BPM
-          </button>
-          <button
-            onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
-            className={`h-10 px-3 rounded border text-sm font-semibold ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground'}`}
-            aria-label="Count-in bars"
-          >
-            Count-in {countInBars === 0 ? 'off' : `${countInBars}`}
-          </button>
-          <button
-            onClick={undo}
-            className="h-10 px-3 rounded border border-border bg-muted hover:bg-muted/70 text-sm font-semibold inline-flex items-center gap-1.5 ml-auto"
-            aria-label="Undo"
-          >
-            <Undo2 className="w-4 h-4" /> Undo
-          </button>
-        </div>
-
-        {/* Count-in cycle button: Off → 1 bar → 2 bars → Off. Lives in
-         * the transport bar so it sits with the other recording controls. */}
-        <div className="hidden sm:inline-flex ml-2 items-center gap-1.5">
-          <span className="text-sm text-muted-foreground">Count-in</span>
-          <button
-            onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
-            className={`h-9 px-2 rounded border text-sm font-bold ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
-            title={countInBars === 0 ? 'Count-in OFF — tap to cycle 1 bar → 2 bars → off' : `Count-in: ${countInBars} bar${countInBars > 1 ? 's' : ''} of click before recording`}
-          >
-            {countInBars === 0 ? 'Off' : `${countInBars} bar${countInBars > 1 ? 's' : ''}`}
-          </button>
-          {/* Live countdown badge — visible only during the pre-roll. */}
-          {countInBeat !== null && (
-            <span className="text-sm font-bold px-2 py-0.5 rounded bg-rose-500 text-white tabular-nums animate-pulse">
-              {countInBeat}
-            </span>
-          )}
-        </div>
-
-        {/* Undo — tablet/desktop otherwise has no on-screen undo (⌘Z is
-         * keyboard-only and unreachable on an iPad; the phone tools row's
-         * undo is sm:hidden). */}
-        <button
-          onClick={undo}
-          className="hidden sm:inline-flex ml-2 h-9 px-3 rounded border border-border bg-muted hover:bg-muted/70 text-sm font-semibold items-center gap-1.5"
-          aria-label="Undo"
-          title="Undo (⌘Z)"
-        >
-          <Undo2 className="w-4 h-4" /> Undo
-        </button>
-
-        {/* Punch in/out — auto drop in/out of record over the marked
-         * range (drag the bar ruler to set it). Pre/post-roll pickers
-         * appear only while punch is armed to keep the bar tight. */}
-        <div className="hidden sm:inline-flex ml-2 items-center gap-1.5">
-          <span className="text-sm text-muted-foreground">Punch</span>
-          <button
-            onClick={() => {
-              if (!punchEnabled && !loopRegion) {
-                toast.info('Drag across the bar ruler to set the punch range first.');
-                return;
-              }
-              setPunchEnabled((v) => !v);
-            }}
-            className={`h-9 px-2 rounded border text-sm font-bold ${punchEnabled ? 'bg-rose-500 border-rose-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
-            title={punchEnabled
-              ? 'Punch is ON — Record rolls the pre-roll, drops in at the range start and out at the range end'
-              : 'Punch — auto drop in/out of record over the marked ruler range'}
-          >
-            {punchEnabled ? 'On' : 'Off'}
-          </button>
-          {punchEnabled && (
-            <>
-              <select value={preRollBars} onChange={(e) => setPreRollBars(Number(e.target.value))}
-                className="h-9 bg-background border border-border rounded text-sm px-1"
-                title="Pre-roll — bars of playback before the punch-in point">
-                <option value={0}>Pre 0</option>
-                <option value={1}>Pre 1</option>
-                <option value={2}>Pre 2</option>
-                <option value={4}>Pre 4</option>
-              </select>
-              <select value={postRollBars} onChange={(e) => setPostRollBars(Number(e.target.value))}
-                className="h-9 bg-background border border-border rounded text-sm px-1"
-                title="Post-roll — bars of playback after the punch-out point before the transport stops (0 keeps rolling)">
-                <option value={0}>Post 0</option>
-                <option value={1}>Post 1</option>
-                <option value={2}>Post 2</option>
-              </select>
-            </>
-          )}
-        </div>
-
-        {/* Tempo / time sig */}
-        <div className="hidden sm:flex items-center gap-1 ml-2 text-sm">
-          <span className="text-muted-foreground">BPM</span>
-          <input type="number" min={20} max={300} value={session.tempo_bpm}
-            onChange={(e) => {
-              const bpm = Number(e.target.value) || 120;
-              update((s) => ({ ...s, tempo_bpm: bpm }));
-              updateTempo(bpm);
-            }}
-            className="w-14 h-7 bg-background border border-border rounded text-center" />
-          <CompactTimeSignaturePicker
-            numerator={session.time_signature.numerator}
-            denominator={session.time_signature.denominator}
-            onChange={(n, d) => {
-              update((s) => ({ ...s, time_signature: { numerator: n, denominator: d } }));
-              updateTimeSignature(n, d);
-            }}
-          />
-        </div>
-
-        <div className="hidden sm:flex items-center gap-1 ml-2 text-sm">
-          <span className="text-muted-foreground" title={`Snap quantum at current tempo: ${snapSeconds > 0 ? `${(snapSeconds * 1000).toFixed(0)} ms` : 'off'}`}>Snap</span>
-          <select value={snapMode} onChange={(e) => setSnapMode(e.target.value as SnapMode)}
-            className="h-7 bg-background border border-border rounded text-sm px-1 min-w-[68px]"
-            title="Musical snap — quantum is derived from tempo + time signature">
-            <option value="free">Free</option>
-            <option value="bar">Bar</option>
-            <option value="1/2">1/2 note</option>
-            <option value="1/4">1/4 note</option>
-            <option value="1/8">1/8 note</option>
-            <option value="1/16">1/16</option>
-            <option value="1/32">1/32</option>
-          </select>
-          <span className="text-muted-foreground ml-1" title="Visual grid subdivision — independent of snap">Grid</span>
-          <select value={gridLevel} onChange={(e) => setGridLevel(e.target.value as GridLevel)}
-            className="h-7 bg-background border border-border rounded text-sm px-1 min-w-[80px]"
-            title="Finest subdivision rendered as grid lines on the ruler + lanes">
-            <option value="auto">Auto</option>
-            <option value="off">Bars only</option>
-            <option value="1/2">1/2 note</option>
-            <option value="beat">1/4 note</option>
-            <option value="1/8">1/8 note</option>
-            <option value="1/16">1/16</option>
-            <option value="1/32">1/32</option>
-          </select>
-          <span className="text-muted-foreground ml-1" title="Total project length in seconds (where the timeline ends)">End</span>
-          <input type="number" min={4} max={3600} value={session.length_seconds}
-            onChange={(e) => update((s) => ({ ...s, length_seconds: Number(e.target.value) || 60 }))}
-            title="Project length in seconds — sets where the timeline ends"
-            className="w-14 h-7 bg-background border border-border rounded text-center" />
-          <span className="text-muted-foreground text-xs">s</span>
-        </div>
-
-        {/* Master VU at the far right */}
-        <div className="hidden sm:block ml-auto">
-          <VuMeter peakDbL={state?.peakDbL ?? -Infinity} peakDbR={state?.peakDbR ?? -Infinity} />
-        </div>
-      </div>
 
       {/* Mix toggle swaps this whole block for MixerView — the header +
        * transport bar above stay mounted either way, so playback/record/
@@ -5853,7 +5858,7 @@ export function getPreferredInputDeviceId(): string {
 // time (smooth, controllable). Release to stop.
 
 function ScrubButton({
-  direction, getPosition, max, onSeek, icon, title,
+  direction, getPosition, max, onSeek, icon, title, className,
 }: {
   direction: 1 | -1;
   getPosition: () => number;
@@ -5861,6 +5866,7 @@ function ScrubButton({
   onSeek: (s: number) => void;
   icon: React.ReactNode;
   title: string;
+  className?: string;
 }) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -5897,7 +5903,7 @@ function ScrubButton({
       onPointerUp={(e) => { try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ } stopScrub(); }}
       onPointerCancel={stopScrub}
       onPointerLeave={stopScrub}
-      className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+      className={`h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center ${className ?? ''}`}
       title={title}
     >
       {icon}
