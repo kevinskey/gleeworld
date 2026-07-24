@@ -13,6 +13,11 @@ export interface EditorScore {
   clef: 'treble' | 'bass' | 'alto';
   tempo: number;
   elements: EditorElement[];
+  /** Zero-based measure indices AFTER which to force a system break. The
+   *  auto-packing in NotationView respects each entry — so a user who wants
+   *  measure 4 on its own line adds `3` here. Optional; when absent, the
+   *  auto-packer decides breaks on its own. */
+  systemBreaks?: number[];
 }
 
 export function emptyScore(): EditorScore {

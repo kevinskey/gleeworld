@@ -102,7 +102,13 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
     if (s.elements.length === 0) return;
     setSelected((cur) => {
       const next = cur == null ? (dir === 1 ? 0 : s.elements.length - 1) : cur + dir;
-      return Math.max(0, Math.min(s.elements.length - 1, next));
+      const clamped = Math.max(0, Math.min(s.elements.length - 1, next));
+      // Sound the note the cursor just landed on — matches how nudgePitch
+      // already plays the note when arrows move its pitch. Rests are
+      // skipped (no pitch to sound).
+      const el = s.elements[clamped];
+      if (el?.kind === 'note') playPitch(midiOf(el.pitch));
+      return clamped;
     });
   }, []);
 
@@ -338,6 +344,14 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
           onLyricChange={(v) => selected != null && dispatch(setLyric(selected, v))}
           onLyricAdvance={() => selected != null && advanceToNextNote(selected)}
           onLyricExit={() => setLyricMode(false)}
+          onToggleSystemBreak={(mi) => {
+            // Toggle the given measure index in the score's systemBreaks list.
+            // Sorted so the array is diff-friendly and predictable when it
+            // round-trips through the exercise save/load path.
+            const cur = new Set(scoreRef.current.systemBreaks ?? []);
+            if (cur.has(mi)) cur.delete(mi); else cur.add(mi);
+            onChange({ ...scoreRef.current, systemBreaks: [...cur].sort((a, b) => a - b) });
+          }}
         />
       </div>
     </div>

@@ -11,6 +11,10 @@ export function scoreToRow(score: EditorScore) {
     params: {
       key: score.keyFifths, mode: score.mode, timeSig: score.timeSig,
       clef: score.clef, tempo: score.tempo, ir: editorScoreToIR(score),
+      // MusicXML round-trip drops layout hints like user-forced system
+      // breaks, so we mirror them in params.systemBreaks. Load merges
+      // them back onto the parsed score.
+      systemBreaks: score.systemBreaks ?? [],
     },
   };
 }
@@ -34,7 +38,17 @@ export async function saveExercise(score: EditorScore, existingId?: string): Pro
 }
 
 export async function loadExercise(id: string): Promise<EditorScore> {
-  const { data, error } = await supabase.from('gw_sight_reading_exercises').select('musicxml').eq('id', id).single();
+  const { data, error } = await supabase
+    .from('gw_sight_reading_exercises')
+    .select('musicxml, params')
+    .eq('id', id)
+    .single();
   if (error) throw error;
-  return musicXmlToEditorScore(data!.musicxml as string);
+  const score = musicXmlToEditorScore(data!.musicxml as string);
+  // Merge layout hints back in — MusicXML dropped them on save.
+  const paramsBreaks = (data as any)?.params?.systemBreaks;
+  if (Array.isArray(paramsBreaks)) {
+    score.systemBreaks = paramsBreaks.filter((n: unknown): n is number => typeof n === 'number');
+  }
+  return score;
 }

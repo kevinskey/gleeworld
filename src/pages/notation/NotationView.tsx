@@ -35,19 +35,32 @@ const SELECTED_COLOR = '#ea580c'; // orange-600
 export function NotationView({
   score, width, onNoteClick, selectedIndex,
   editingLyric, lyricValue, onLyricChange, onLyricAdvance, onLyricExit,
+  onToggleSystemBreak,
 }: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void; selectedIndex?: number | null;
   // Inline lyric editing: when on, a text cursor sits under the selected note (no dialog).
   editingLyric?: boolean; lyricValue?: string;
   onLyricChange?: (v: string) => void; onLyricAdvance?: () => void; onLyricExit?: () => void;
+  /** Click-a-barline handler: fires with the measure index AFTER which the
+   *  user wants to force a system break (or unforce, if already set). Only
+   *  the editor wires this — read-only surfaces (result cards, previews)
+   *  leave it undefined and the overlays don't render. */
+  onToggleSystemBreak?: (measureIndex: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const onNoteClickRef = useRef(onNoteClick);
+  const onToggleSystemBreakRef = useRef(onToggleSystemBreak);
+  useEffect(() => { onToggleSystemBreakRef.current = onToggleSystemBreak; }, [onToggleSystemBreak]);
   // Responsive: fill the container. Measured from the host; re-renders on container resize
   // (sidebar toggle, window resize) so the staff never strands at a fixed 720px.
   const [measuredW, setMeasuredW] = useState(width ?? 720);
   // Pixel position (under the staff) of the selected note, for the inline lyric cursor.
   const [lyricPos, setLyricPos] = useState<{ x: number; y: number } | null>(null);
+  // Positions of every bar line in CSS pixel space, so the wrapping div can
+  // render invisible click targets on top of them. Each entry maps a
+  // measure's ENDING bar line to that measure's index. Recomputed on every
+  // render.
+  const [barTargets, setBarTargets] = useState<Array<{ x: number; y: number; h: number; measureIndex: number }>>([]);
 
   useEffect(() => { onNoteClickRef.current = onNoteClick; }, [onNoteClick]);
 
@@ -128,10 +141,13 @@ export function NotationView({
     });
 
     // Row-packing pass. Greedily fill each system with as many measures
-    // as their combined minW allows, using maxPerRow as a readability cap
-    // (whole notes could otherwise stretch a dozen bars across a monitor).
+    // as their combined minW allows, using maxPerRow as a readability cap.
     // Rows always contain at least one measure — a bar wider than
     // availableW just overflows its own row rather than being dropped.
+    // User-authored breaks (score.systemBreaks) take precedence over the
+    // width heuristic: an entry `k` forces a new row starting at measure
+    // k+1 regardless of remaining width.
+    const forcedBreaks = new Set(score.systemBreaks ?? []);
     const rowsPacked: { start: number; end: number }[] = [];
     {
       let start = 0;
@@ -141,7 +157,8 @@ export function NotationView({
         const inRow = i - start;
         const wouldOverflow = inRow > 0 && acc + w > availableW;
         const atCap = inRow >= maxPerRow;
-        if (wouldOverflow || atCap) {
+        const userBreak = inRow > 0 && forcedBreaks.has(i - 1);
+        if (wouldOverflow || atCap || userBreak) {
           rowsPacked.push({ start, end: i });
           start = i;
           acc = 0;
@@ -159,6 +176,10 @@ export function NotationView({
     // Pass 2 — lay out each system with proportional bar widths, then draw.
     let globalIndex = 0;
     let selPos: { x: number; y: number } | null = null;
+    // Accumulate a clickable target per bar line (measure end). We render
+    // invisible divs at these positions in the returned JSX so the user
+    // can click a bar line to force/unforce a system break.
+    const barTargetsBuf: Array<{ x: number; y: number; h: number; measureIndex: number }> = [];
     for (let r = 0; r < rowsPacked.length; r++) {
       const rowItems = built.slice(rowsPacked[r].start, rowsPacked[r].end);
       const weights = rowItems.map((b) => b.minW + 20);
@@ -213,15 +234,59 @@ export function NotationView({
           } catch { /* tie rendering is cosmetic; never let it break the score render */ }
         }
         x += w;
+        // Record the ending bar line as a click target — but only for
+        // interior bar lines. Skip the very last measure of the score
+        // (there's nothing to break onto a new line after) and skip the
+        // end of a system that's already the last row (same reason).
+        if (mi < measures.length - 1) {
+          barTargetsBuf.push({
+            x: x * SCALE,
+            y: (TOP + r * SYSTEM_H - 4) * SCALE,
+            h: 50 * SCALE,
+            measureIndex: mi,
+          });
+        }
         globalIndex += b.m.elements.length;
       });
     }
     setLyricPos(selPos);
+    setBarTargets(barTargetsBuf);
   }, [score, width, measuredW, selectedIndex]);
 
+  const forcedBreakSet = new Set(score.systemBreaks ?? []);
   return (
     <div className="relative w-full overflow-x-auto">
       <div ref={ref} className="w-full" />
+      {/* Clickable bar-line overlays. Only rendered when the editor
+          passed onToggleSystemBreak (read-only surfaces get nothing).
+          Invisible by default; a subtle blue tint appears on hover so
+          the user can find the click target. Bar lines with a forced
+          break already applied get a persistent purple pill so the
+          user can see which breaks are theirs vs. auto. */}
+      {onToggleSystemBreak && barTargets.map(({ x, y, h, measureIndex }) => {
+        const forced = forcedBreakSet.has(measureIndex);
+        return (
+          <button
+            key={measureIndex}
+            type="button"
+            onClick={() => onToggleSystemBreakRef.current?.(measureIndex)}
+            style={{ position: 'absolute', left: x - 10, top: y, width: 20, height: h }}
+            className={`group flex items-center justify-center rounded ${
+              forced
+                ? 'bg-primary/25 hover:bg-primary/40'
+                : 'bg-transparent hover:bg-sky-500/20'
+            }`}
+            aria-label={forced ? `Remove line break after measure ${measureIndex + 1}` : `Break line after measure ${measureIndex + 1}`}
+            title={forced ? 'Click to remove this line break' : 'Break line here'}
+          >
+            <span
+              className={`pointer-events-none text-[10px] font-semibold ${
+                forced ? 'text-primary' : 'text-sky-700 opacity-0 group-hover:opacity-100'
+              }`}
+            >↩</span>
+          </button>
+        );
+      })}
       {editingLyric && lyricPos && (
         <input
           key={selectedIndex}
