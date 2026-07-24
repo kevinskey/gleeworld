@@ -265,24 +265,38 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
         />
       )}
       {embed && (
-        <div
-          className={`text-center ${hasImage ? 'absolute' : 'relative py-20 sm:py-28 max-w-5xl mx-auto px-4 sm:px-6'}`}
-          style={
-            hasImage
-              ? {
-                  left: `${config.textX ?? 50}%`,
-                  top: `${config.textY ?? 50}%`,
-                  transform: 'translate(-50%, -50%)',
-                  width: 'max-content',
-                  maxWidth: '100%',
-                }
-              : undefined
-          }
-        >
-          <div className="aspect-video max-w-3xl mx-auto rounded-xl overflow-hidden shadow-2xl">
-            <iframe src={embed} className="w-full h-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+        // When the hero variant is Video (no background image), the embed IS
+        // the hero — fill the section width at 16:9, same footprint an image
+        // would take. Was max-w-3xl mx-auto with padding all around, which
+        // rendered as a small centered card in a sea of primary color.
+        // When an image is also present (rare — variant=image but videoUrl
+        // set), keep the draggable centered overlay behavior so the video
+        // sits over the image like a play card.
+        hasImage ? (
+          <div
+            className="absolute text-center"
+            style={{
+              left: `${config.textX ?? 50}%`,
+              top: `${config.textY ?? 50}%`,
+              transform: 'translate(-50%, -50%)',
+              width: 'max-content',
+              maxWidth: '100%',
+            }}
+          >
+            <div className="aspect-video w-[min(90vw,48rem)] rounded-xl overflow-hidden shadow-2xl">
+              <iframe src={embed} className="w-full h-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="block w-full aspect-video">
+            <iframe
+              src={embed}
+              className="w-full h-full block"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        )
       )}
       {(showHeadline || showSubheadline) && (
         <div
