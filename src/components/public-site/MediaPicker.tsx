@@ -61,58 +61,67 @@ export function MediaPicker({ open, onOpenChange, accept, onPick }: Props) {
       return;
     }
     setUploading(true);
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'bin';
-    const path = `${accept}-${Date.now()}.${ext}`;
-    const { error: uploadErr } = await supabase
-      .storage
-      .from('media-library')
-      .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
-    if (uploadErr) {
-      toast.error(`Upload failed: ${uploadErr.message}`);
-      setUploading(false);
-      return;
-    }
-    const publicUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
-    // Wait for the public path to actually serve before we hand the URL back —
-    // Storage 1.48 + flatten cron means there's a 5-10s window where the URL
-    // still 404s. Without this the music/video block briefly shows a broken
-    // file before the cron catches up.
-    {
-      const start = Date.now();
-      const delays = [500, 800, 1500, 2500, 3500, 5000];
-      let attempt = 0;
-      while (Date.now() - start < 30000) {
-        try {
-          const res = await fetch(publicUrl, { method: 'HEAD', cache: 'no-store' });
-          if (res.ok) break;
-        } catch { /* retry */ }
-        await new Promise((r) => setTimeout(r, delays[Math.min(attempt, delays.length - 1)]));
-        attempt += 1;
+    // try/finally: without this, ANY throw between setUploading(true) and the
+    // success/error setUploading(false) paths leaves the button stuck on
+    // "Uploading…" — which is exactly the "can't upload a second time"
+    // symptom users report, because the first upload succeeds+closes but
+    // the second upload trips a throw and the state never resets.
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'bin';
+      const path = `${accept}-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase
+        .storage
+        .from('media-library')
+        .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+      if (uploadErr) {
+        toast.error(`Upload failed: ${uploadErr.message}`);
+        return;
       }
+      const publicUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
+      // Wait for the public path to actually serve before we hand the URL back —
+      // Storage 1.48 + flatten cron means there's a 5-10s window where the URL
+      // still 404s. Without this the music/video block briefly shows a broken
+      // file before the cron catches up.
+      {
+        const start = Date.now();
+        const delays = [500, 800, 1500, 2500, 3500, 5000];
+        let attempt = 0;
+        while (Date.now() - start < 30000) {
+          try {
+            const res = await fetch(publicUrl, { method: 'HEAD', cache: 'no-store' });
+            if (res.ok) break;
+          } catch { /* retry */ }
+          await new Promise((r) => setTimeout(r, delays[Math.min(attempt, delays.length - 1)]));
+          attempt += 1;
+        }
+      }
+      const title = file.name.replace(/\.[^.]+$/, '');
+      const { data: row, error: insertErr } = await supabase
+        .from('gw_media_library')
+        .insert({
+          title,
+          file_url: publicUrl,
+          file_path: path,
+          file_type: file.type || `${accept}/*`,
+          file_size: file.size,
+          bucket_id: 'media-library',
+          is_public: true,
+          category: accept,
+        })
+        .select('id, title, file_url, file_type')
+        .single();
+      if (insertErr || !row) {
+        toast.error(`Couldn't index file: ${insertErr?.message ?? 'no row returned'}`);
+        return;
+      }
+      toast.success('Uploaded to media library');
+      onPick(row as MediaItem);
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(`Upload failed: ${e instanceof Error ? e.message : 'unknown error'}`);
+    } finally {
+      setUploading(false);
     }
-    const title = file.name.replace(/\.[^.]+$/, '');
-    const { data: row, error: insertErr } = await supabase
-      .from('gw_media_library')
-      .insert({
-        title,
-        file_url: publicUrl,
-        file_path: path,
-        file_type: file.type || `${accept}/*`,
-        file_size: file.size,
-        bucket_id: 'media-library',
-        is_public: true,
-        category: accept,
-      })
-      .select('id, title, file_url, file_type')
-      .single();
-    setUploading(false);
-    if (insertErr || !row) {
-      toast.error(`Couldn't index file: ${insertErr?.message ?? 'no row returned'}`);
-      return;
-    }
-    toast.success('Uploaded to media library');
-    onPick(row as MediaItem);
-    onOpenChange(false);
   };
 
   const filtered = items?.filter((i) =>
