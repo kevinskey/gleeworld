@@ -11,9 +11,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Tone from 'tone';
 import { Soundfont } from 'smplr';
+import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { forceAudioUnlock } from '@/lib/audioTools/unlock';
 import { DrumsPlayer } from './DrumsPlayer';
+
+// Playback attenuation defaults. The FluidR3_GM/FatBoy soundfont samples
+// are normalized hot, so routing them straight to `destination` at
+// velocity 100 (as we used to) was ear-splitting on first press. We now
+// route every voice through a shared GainNode with a conservative default
+// and knock the hard-coded velocity down. Users can push the volume back
+// to 1.0 (0 dB) via the slider if they want the old level.
+const DEFAULT_VOLUME = 0.6;   // 60% linear → ≈ −4.4 dB attenuation
+const NOTE_VELOCITY = 80;     // was 100; still a solid mf-forte press
 
 interface InstrumentPlayerProps {
   className?: string;
@@ -89,7 +99,13 @@ export function InstrumentPlayer({ className }: InstrumentPlayerProps) {
   const [instrument, setInstrument] = useState<InstrumentKey>('flute');
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const sampleRef = useRef<Soundfont | null>(null);
+  // Shared attenuator between smplr and the speakers. Reused across
+  // instrument changes so the current slider position survives when the
+  // user switches voice; the node is created lazily on the first
+  // Soundfont mount (needs an active AudioContext).
+  const gainRef = useRef<GainNode | null>(null);
   const noteStopRefs = useRef<Map<string, () => void>>(new Map());
 
   const drumKit = DRUM_KIT_FOR[instrument];
@@ -118,15 +134,24 @@ export function InstrumentPlayer({ className }: InstrumentPlayerProps) {
     let player: Soundfont | null = null;
     try {
       const ctx = Tone.getContext().rawContext as AudioContext;
-      // Route the voice straight to the context's speakers via the
-      // constructor `destination`. The old code connected `player.output`
-      // to Tone's master AFTER load, but smplr's player has no such
-      // AudioNode `.output` (`player.output.connect is not a function`),
-      // so the throw left the voice unconnected and silent.
+      // Lazily wire the shared attenuator: created once, reused across
+      // instrument swaps so switching voice doesn't reset the volume
+      // slider. Slider position is applied to `.gain.value` in a
+      // separate effect below.
+      if (!gainRef.current) {
+        const g = ctx.createGain();
+        g.gain.value = volume;
+        g.connect(ctx.destination);
+        gainRef.current = g;
+      }
+      // Route the voice into the shared attenuator instead of straight
+      // to the speakers. The old code went straight to `ctx.destination`
+      // with no attenuation and every note at velocity 100 → the raw
+      // soundfont amplitude blew ears out on the first press.
       player = new Soundfont(ctx, {
         instrument: instrument,
         instrumentUrl: `${SOUNDFONT_BASE}${instrument}-mp3.js`,
-        destination: ctx.destination,
+        destination: gainRef.current,
       });
       sampleRef.current = player;
     } catch (err) {
@@ -172,12 +197,19 @@ export function InstrumentPlayer({ className }: InstrumentPlayerProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Push the slider value at the shared attenuator whenever it changes.
+  // Skipped when the gain node hasn't been created yet (first paint,
+  // before an instrument mounts).
+  useEffect(() => {
+    if (gainRef.current) gainRef.current.gain.value = volume;
+  }, [volume]);
+
   const start = (note: string) => {
     forceAudioUnlock();
     Tone.start().catch(() => {});
     const player = sampleRef.current;
     if (!player) return;
-    const stop = player.start({ note, velocity: 100 });
+    const stop = player.start({ note, velocity: NOTE_VELOCITY });
     if (typeof stop === 'function') noteStopRefs.current.set(note, stop);
     setActiveNotes((prev) => new Set(prev).add(note));
   };
@@ -242,6 +274,27 @@ export function InstrumentPlayer({ className }: InstrumentPlayerProps) {
           ))}
         </select>
       </label>
+
+      {/* Volume — attenuates every voice through a shared gain node so
+          the raw FluidR3_GM sample amplitude doesn't slam the speakers.
+          Drum kits have their own per-zone velocities and route through
+          DrumsPlayer's own audio graph, so this slider is only meaningful
+          for the melodic voices. */}
+      {!isDrumMode && (
+        <label className="block">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Volume</span>
+            <span className="text-[11px] text-muted-foreground tabular-nums">{Math.round(volume * 100)}%</span>
+          </div>
+          <Slider
+            value={[Math.round(volume * 100)]}
+            min={0}
+            max={100}
+            step={1}
+            onValueChange={(v) => setVolume(v[0] / 100)}
+          />
+        </label>
+      )}
 
       {isDrumMode && drumKit && (
         <DrumsPlayer key={drumKit} kit={drumKit} embedded />
