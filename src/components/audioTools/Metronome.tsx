@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Play, Pause, Plus, Minus, Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { startMetronome, stopMetronome, setMetronomeBpm, type Subdivision } from '@/lib/audioTools/metronome';
+import { startMetronome, stopMetronome, setMetronomeBpm, type Subdivision, type ClickSound } from '@/lib/audioTools/metronome';
 import * as Tone from 'tone';
 import { forceAudioUnlock } from '@/lib/audioTools/unlock';
 import { PracticeRecorder } from './PracticeRecorder';
@@ -62,6 +62,7 @@ export function Metronome({ className }: MetronomeProps) {
   const [running, setRunning] = useState(false);
   const [accent, setAccent] = useState(true);
   const [subdivision, setSubdivision] = useState<Subdivision>(1);
+  const [sound, setSound] = useState<ClickSound>('beep');
   const [beatNote, setBeatNote] = useState<string>('quarter');
   const beatGlyph = BEAT_NOTES.find((n) => n.key === beatNote)?.glyph ?? '♩';
   const [currentBeat, setCurrentBeat] = useState(-1);
@@ -72,11 +73,11 @@ export function Metronome({ className }: MetronomeProps) {
   useEffect(() => {
     if (!running) return;
     startMetronome({
-      bpm, beatsPerBar, accentFirstBeat: accent, subdivision,
+      bpm, beatsPerBar, accentFirstBeat: accent, subdivision, sound,
       onTick: (b) => setCurrentBeat(b),
     });
     return () => { stopMetronome(); setCurrentBeat(-1); };
-  }, [running, bpm, beatsPerBar, accent, subdivision]);
+  }, [running, bpm, beatsPerBar, accent, subdivision, sound]);
 
   // Live BPM updates without restarting the schedule.
   useEffect(() => { if (running) setMetronomeBpm(bpm); }, [bpm, running]);
@@ -202,6 +203,34 @@ export function Metronome({ className }: MetronomeProps) {
             className={cn(
               'h-7 min-w-[28px] px-2 rounded border text-xs transition-colors',
               subdivision === v
+                ? 'border-primary bg-primary/10 text-primary font-semibold'
+                : 'border-border hover:bg-muted text-muted-foreground',
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Sound picker — beep (default pitched square wave), click
+          (mechanical non-pitched high-pass), wood (bandpass wood-knock),
+          cowbell (808 cowbell voice). */}
+      <div className="flex items-center gap-1.5 text-xs">
+        <span className="text-muted-foreground shrink-0">Sound:</span>
+        {([
+          { v: 'beep' as ClickSound,      label: 'Beep',  title: 'Pitched square-wave tone' },
+          { v: 'click' as ClickSound,     label: 'Click', title: 'Mechanical metronome click (non-pitched)' },
+          { v: 'woodblock' as ClickSound, label: 'Wood',  title: 'Wood-block knock' },
+          { v: 'cowbell' as ClickSound,   label: 'Bell',  title: 'Cowbell' },
+        ]).map(({ v, label, title }) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => setSound(v)}
+            title={title}
+            className={cn(
+              'h-7 px-2.5 rounded border text-xs transition-colors',
+              sound === v
                 ? 'border-primary bg-primary/10 text-primary font-semibold'
                 : 'border-border hover:bg-muted text-muted-foreground',
             )}

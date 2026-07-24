@@ -12,6 +12,13 @@ import * as Tone from 'tone';
 
 export type Subdivision = 1 | 2 | 3 | 4 | 8;
 
+/** Click voice.
+ *  - beep      → the historical square-wave pitch (1000/1500 Hz)
+ *  - click     → mechanical-metronome high-pass noise burst, non-pitched
+ *  - woodblock → bandpass-filtered noise ~800 Hz, wooden knock feel
+ *  - cowbell   → two-oscillator ratio (dampened cowbell) */
+export type ClickSound = 'beep' | 'click' | 'woodblock' | 'cowbell';
+
 export interface MetronomeOptions {
   bpm: number;
   beatsPerBar: number;
@@ -20,6 +27,8 @@ export interface MetronomeOptions {
    *  4 = sixteenths, 6 = compound 6/8 feel. Subdivisions sound at a
    *  quieter, higher pitch so they sit underneath the downbeat. */
   subdivision?: Subdivision;
+  /** Which voice to synthesize. Defaults to 'beep' for backward compat. */
+  sound?: ClickSound;
   onTick?: (beat: number) => void;
 }
 
@@ -78,36 +87,95 @@ function getCtx(): AudioContext {
 
 type ClickKind = 'accent' | 'beat';
 
-function scheduleClick(when: number, kind: ClickKind, fireTick: boolean, onTick?: (b: number) => void, beat = 0) {
-  const c = getCtx();
-  // Only two sound profiles now — the accent (downbeat) and the beat.
-  // Subdivisions reuse the beat profile so every pulse in a bar sounds
-  // the same except beat 1, which the conductor wants to hear lift out.
-  const profile = kind === 'accent'
-    ? { freq: 1500, peak: 0.5,  decay: 0.06 }
-    : { freq: 1000, peak: 0.35, decay: 0.06 };
-  const osc = c.createOscillator();
-  const gain = c.createGain();
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(profile.freq, when);
-  gain.gain.setValueAtTime(0.0001, when);
-  gain.gain.exponentialRampToValueAtTime(profile.peak, when + 0.001);
-  gain.gain.exponentialRampToValueAtTime(0.0001, when + profile.decay);
-  osc.connect(gain);
-  // Speakers go through a shared adjustable gain so the recorder can
-  // duck the audible click to almost zero (eliminating mic bleed) while
-  // the tap branch keeps the precise click in the recording.
-  gain.connect(ensureSpeakerGain(c));
-  // Mirror into the tap (recording) through its own gain knob.
+// Short one-channel noise buffer, ~200ms of white noise. Reused across
+// clicks (BufferSource can only start once, but the AudioBuffer itself is
+// cheap and safe to share between BufferSourceNodes).
+let sharedNoiseBuffer: AudioBuffer | null = null;
+function getNoiseBuffer(c: AudioContext): AudioBuffer {
+  if (sharedNoiseBuffer && sharedNoiseBuffer.sampleRate === c.sampleRate) return sharedNoiseBuffer;
+  const len = Math.floor(c.sampleRate * 0.2);
+  const buf = c.createBuffer(1, len, c.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  sharedNoiseBuffer = buf;
+  return buf;
+}
+
+function connectClick(node: AudioNode, c: AudioContext) {
+  // Speakers go through a shared adjustable gain so the recorder can duck
+  // the audible click to almost zero (eliminating mic bleed) while the tap
+  // branch keeps the precise click in the recording.
+  node.connect(ensureSpeakerGain(c));
   if (tapNode) {
     const tg = ensureTapGain(c);
-    gain.connect(tg);
-    // Re-wire the tap gain → tapNode each click in case the recorder
-    // swapped destinations (gain.connect is idempotent for the same target).
+    node.connect(tg);
     try { tg.connect(tapNode); } catch { /* already connected */ }
   }
-  osc.start(when);
-  osc.stop(when + profile.decay + 0.02);
+}
+
+function scheduleClick(
+  when: number, kind: ClickKind, fireTick: boolean,
+  sound: ClickSound = 'beep',
+  onTick?: (b: number) => void, beat = 0,
+) {
+  const c = getCtx();
+  const isAccent = kind === 'accent';
+  const peak = isAccent ? 0.5 : 0.35;
+  const decay = 0.06;
+  const stopAt = when + decay + 0.05;
+
+  if (sound === 'beep') {
+    // Square wave at 1000/1500 Hz — the historical default.
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(isAccent ? 1500 : 1000, when);
+    gain.gain.setValueAtTime(0.0001, when);
+    gain.gain.exponentialRampToValueAtTime(peak, when + 0.001);
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + decay);
+    osc.connect(gain);
+    connectClick(gain, c);
+    osc.start(when); osc.stop(stopAt);
+  } else if (sound === 'click' || sound === 'woodblock') {
+    // Non-pitched percussive click: short noise burst, bandpass-filtered
+    // to a sweet spot (click = high crack, woodblock = mid knock). Accent
+    // moves the center up so the downbeat still lifts out.
+    const src = c.createBufferSource();
+    src.buffer = getNoiseBuffer(c);
+    const filter = c.createBiquadFilter();
+    filter.type = sound === 'click' ? 'highpass' : 'bandpass';
+    filter.frequency.value = sound === 'click'
+      ? (isAccent ? 4000 : 3200)
+      : (isAccent ? 1100 : 800);
+    filter.Q.value = sound === 'woodblock' ? 8 : 0.7;
+    const gain = c.createGain();
+    const shortDecay = sound === 'click' ? 0.02 : 0.05;
+    gain.gain.setValueAtTime(0.0001, when);
+    gain.gain.exponentialRampToValueAtTime(peak * (sound === 'click' ? 0.9 : 1), when + 0.001);
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + shortDecay);
+    src.connect(filter).connect(gain);
+    connectClick(gain, c);
+    src.start(when); src.stop(stopAt);
+  } else if (sound === 'cowbell') {
+    // Two square oscillators at cowbell frequency ratio (~800 Hz + 540 Hz)
+    // with a sharp exponential decay — the classic 808 cowbell voice.
+    const gain = c.createGain();
+    const highOsc = c.createOscillator();
+    const lowOsc = c.createOscillator();
+    highOsc.type = 'square';
+    lowOsc.type = 'square';
+    highOsc.frequency.setValueAtTime(isAccent ? 960 : 800, when);
+    lowOsc.frequency.setValueAtTime(isAccent ? 645 : 540, when);
+    gain.gain.setValueAtTime(0.0001, when);
+    gain.gain.exponentialRampToValueAtTime(peak * 0.6, when + 0.001);
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.08);
+    highOsc.connect(gain);
+    lowOsc.connect(gain);
+    connectClick(gain, c);
+    highOsc.start(when); lowOsc.start(when);
+    highOsc.stop(stopAt); lowOsc.stop(stopAt);
+  }
+
   // UI tick lamps only flash on real downbeats — subdivisions share the
   // sound but not the lamp, so the visual count stays clear.
   if (onTick && fireTick) {
@@ -126,12 +194,12 @@ function scheduler() {
     const beatInBar = beatIndex % opts.beatsPerBar;
     const isDownbeat = opts.accentFirstBeat && beatInBar === 0;
     // Fire the main beat — accent only on bar 1, regular beat tone otherwise.
-    scheduleClick(nextBeatTime, isDownbeat ? 'accent' : 'beat', true, opts.onTick, beatInBar);
+    scheduleClick(nextBeatTime, isDownbeat ? 'accent' : 'beat', true, opts.sound, opts.onTick, beatInBar);
     // Subdivision pulses use the SAME beat tone (no accent, no
     // pitch/gain difference), so the user just hears a steady stream of
     // identical clicks with beat 1 lifted out.
     for (let p = 1; p < subdivision; p++) {
-      scheduleClick(nextBeatTime + p * secondsPerPulse, 'beat', false);
+      scheduleClick(nextBeatTime + p * secondsPerPulse, 'beat', false, opts.sound);
     }
     nextBeatTime += secondsPerBeat;
     beatIndex += 1;
