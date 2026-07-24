@@ -781,7 +781,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
     // per-tenant UNIQUE constraint instead. Do NOT "simplify" this back to
     // a bare upsert, and never add tenant_id/id to the payload — the column
     // DEFAULT + trg_set_tenant_id trigger supply tenant_id server-side.
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('gw_branding_settings')
       .upsert({
         org_name: form.org_name,
@@ -794,9 +794,19 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         assistant_voice_id: form.assistant_voice_id || null,
         youtube_channel_handle: form.youtube_channel_handle.trim().replace(/^@/, '') || null,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'tenant_id' });
+      }, { onConflict: 'tenant_id' })
+      .select('id');
     setSaving(false);
     if (error) { toast.error(error.message); return; }
+    // Silent-noop guard: an upsert with a missing UPDATE policy returns 0
+    // rows and no error. Without this the toast lied to the user ("Saved")
+    // while the next page load reverted their changes. Root cause is
+    // per-migration (see 20260724113345_branding_admin_update_policy); this
+    // is defense in depth.
+    if (!data || data.length === 0) {
+      toast.error("Save didn't land — you may not have permission to edit branding on this workspace.");
+      return;
+    }
     toast.success('Branding saved.');
     // refetch() only updates THIS instance of useBrandingSettings; every
     // other page/component using the hook keeps stale data until its

@@ -1264,6 +1264,28 @@ export default function PublicPageEditor() {
                     />
                   )}
                 </div>
+                {/* Sticky Republish CTA at the bottom of the sheet — draft
+                    changes made here don't hit the live site until publish,
+                    and users kept expecting the settings sheet itself to
+                    push them out. Only shown when there's a published site
+                    (nothing to republish otherwise). */}
+                {site?.is_published && (
+                  <div
+                    className="sticky bottom-0 -mx-6 mt-6 border-t bg-background/95 px-6 py-3 backdrop-blur"
+                  >
+                    <Button
+                      className="w-full"
+                      onClick={publish}
+                      disabled={publishing}
+                    >
+                      <Rocket className="w-4 h-4 mr-1.5" />
+                      {publishing ? 'Publishing…' : 'Republish changes'}
+                    </Button>
+                    <p className="mt-2 text-xs text-muted-foreground text-center">
+                      Draft changes won't appear on your live site until you republish.
+                    </p>
+                  </div>
+                )}
               </>
             );
           })()}
