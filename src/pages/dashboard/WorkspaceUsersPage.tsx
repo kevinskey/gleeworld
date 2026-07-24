@@ -20,11 +20,15 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
   Users, UserPlus, Search, Loader2, Shield, GraduationCap, Music, Heart,
-  AlertCircle, MoreVertical, Trash2, Power, Check, Upload, FileSpreadsheet, X as CloseIcon,
+  AlertCircle, MoreVertical, Trash2, Power, Check, Upload, FileSpreadsheet,
+  ChevronDown, Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -70,6 +74,13 @@ export default function WorkspaceUsersPage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editing, setEditing] = useState<Person | null>(null);
+  // CSV import lives outside the Invite dialog: the "Add by CSV"
+  // dropdown left of Invite fires the hidden file input, and the parsed
+  // rows land in csvImport for a preview → send confirmation dialog.
+  const csvFileRef = useRef<HTMLInputElement | null>(null);
+  const [csvImport, setCsvImport] = useState<{
+    fileName: string; rows: CsvRow[]; skipped: number;
+  } | null>(null);
 
   const canManage = isSuperAdmin() || isAdmin();
 
@@ -127,9 +138,47 @@ export default function WorkspaceUsersPage() {
       subtitle="Everyone in this workspace — teachers, students, fans."
       actions={
         canManage && (
-          <Button size="sm" onClick={() => setInviteOpen(true)}>
-            <UserPlus className="w-4 h-4 mr-1.5" /> Invite
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Hidden file input driven by the dropdown's Upload item.
+                Kept adjacent to its trigger so `.value = ''` reliably
+                lets the same file be re-picked after a preview cancel. */}
+            <input
+              ref={csvFileRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                if (!file) return;
+                const text = await file.text();
+                const parsed = parseInviteCsv(text);
+                if (parsed.error) { toast.error(parsed.error); return; }
+                if (!parsed.rows.length) { toast.error('No valid emails found in CSV.'); return; }
+                setCsvImport({ fileName: file.name, rows: parsed.rows, skipped: parsed.skipped });
+              }}
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+                  Add by CSV
+                  <ChevronDown className="w-3.5 h-3.5 ml-1.5 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[200px]">
+                <DropdownMenuItem onClick={() => csvFileRef.current?.click()}>
+                  <Upload className="w-4 h-4 mr-2" /> Upload CSV file
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={downloadExampleCsv}>
+                  <Download className="w-4 h-4 mr-2" /> Download example CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" onClick={() => setInviteOpen(true)}>
+              <UserPlus className="w-4 h-4 mr-1.5" /> Invite
+            </Button>
+          </div>
         )
       }
     >
@@ -183,6 +232,15 @@ export default function WorkspaceUsersPage() {
         open={inviteOpen}
         onClose={() => setInviteOpen(false)}
         onInvited={() => qc.invalidateQueries({ queryKey: ['workspace-users'] })}
+      />
+
+      <CsvImportDialog
+        payload={csvImport}
+        onClose={() => setCsvImport(null)}
+        onInvited={() => {
+          qc.invalidateQueries({ queryKey: ['workspace-users'] });
+          setCsvImport(null);
+        }}
       />
 
       <EditUserDialog
@@ -323,63 +381,137 @@ function InviteDialog({
   const [emails, setEmails] = useState('');
   const [role, setRole] = useState<'student' | 'instructor' | 'fan'>('student');
   const [sending, setSending] = useState(false);
-  // CSV-loaded rows take priority over the textarea when non-empty.
-  // Kept as separate state so the user can preview the parsed count
-  // before committing and clear it back out via "Remove CSV".
-  const [csvRows, setCsvRows] = useState<CsvRow[]>([]);
-  const [csvName, setCsvName] = useState<string | null>(null);
-  const [csvError, setCsvError] = useState<string | null>(null);
-  const [csvSkipped, setCsvSkipped] = useState(0);
-  const csvInputRef = useRef<HTMLInputElement | null>(null);
-
-  async function onCsvChosen(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ''; // allow re-picking the same file after removal
-    if (!file) return;
-    setCsvError(null);
-    const text = await file.text();
-    const { rows, skipped, error } = parseInviteCsv(text);
-    if (error) { setCsvError(error); setCsvRows([]); setCsvName(null); setCsvSkipped(0); return; }
-    if (!rows.length) { setCsvError('No valid emails found in CSV.'); setCsvRows([]); setCsvName(null); setCsvSkipped(skipped); return; }
-    setCsvRows(rows);
-    setCsvName(file.name);
-    setCsvSkipped(skipped);
-  }
-
-  function clearCsv() {
-    setCsvRows([]);
-    setCsvName(null);
-    setCsvError(null);
-    setCsvSkipped(0);
-  }
 
   async function send() {
-    // CSV wins over the textarea when a file is loaded — otherwise
-    // parse the textarea as a plain email list. Per-row `role` from the
-    // CSV overrides the dialog's role picker; rows without a role fall
-    // back to the picker's current value.
-    const list: CsvRow[] = csvRows.length > 0
-      ? csvRows
-      : emails
-          .split(/[\s,;\n]+/)
-          .map((s) => s.trim().toLowerCase())
-          .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))
-          .map((email) => ({ email }));
+    const list = emails
+      .split(/[\s,;\n]+/)
+      .map((s) => s.trim().toLowerCase())
+      .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
     if (!list.length) {
-      toast.error(csvRows.length > 0 ? 'CSV had no valid rows.' : 'Enter at least one valid email.');
+      toast.error('Enter at least one valid email.');
       return;
     }
     setSending(true);
     let ok = 0; const fails: string[] = [];
-    for (const row of list) {
+    for (const email of list) {
       try {
-        // gw-invite-student writes a profile + sends a magic-link email.
-        // full_name is forwarded when the CSV provides one — the function
-        // ignores unknown body fields, so old deployments still work.
+        const { data, error } = await supabase.functions.invoke('gw-invite-student', {
+          body: { email, role, appOrigin: window.location.origin },
+        });
+        if (error) throw new Error(error.message || 'invoke failed');
+        if ((data as any)?.error) throw new Error((data as any).error);
+        ok++;
+      } catch (e: any) {
+        fails.push(`${email} — ${e.message}`);
+      }
+    }
+    setSending(false);
+    if (ok > 0) {
+      toast.success(`Invited ${ok}${fails.length ? ` · ${fails.length} failed` : ''}`);
+      setEmails('');
+      onInvited();
+      if (fails.length === 0) onClose();
+    }
+    if (fails.length > 0) toast.error(fails[0], { description: fails.length > 1 ? `${fails.length - 1} more failed` : undefined });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Invite people</DialogTitle>
+          <DialogDescription>
+            New emails get an account + a sign-in link automatically. For a whole roster, use
+            {' '}<span className="font-semibold">Add by CSV</span> instead.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Role</Label>
+            <Select value={role} onValueChange={(v) => setRole(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="instructor">Teacher</SelectItem>
+                <SelectItem value="fan">Fan</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Emails</Label>
+            <Textarea
+              value={emails}
+              onChange={(e) => setEmails(e.target.value)}
+              rows={5}
+              placeholder={"alice@example.com\nben@example.com\ncharlie@example.com"}
+            />
+            <p className="text-sm text-muted-foreground">One per line or comma-separated.</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={send} disabled={sending}>
+            {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <UserPlus className="w-4 h-4 mr-1.5" />}
+            Send invites
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── CSV import ─────────────────────────────────────────────────────────
+
+// Example CSV content shown by the "Download example CSV" dropdown item.
+// Small enough to see the shape at a glance: header + one row per role
+// so directors can copy it into Numbers/Sheets and edit in place.
+const EXAMPLE_CSV = `email,full_name,role
+alice@example.com,Alice Anderson,student
+brian@example.com,Brian Brooks,student
+carol.chen@example.com,Carol Chen,teacher
+david@example.com,David Diaz,fan
+`;
+
+function downloadExampleCsv() {
+  const blob = new Blob([EXAMPLE_CSV], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'gleeworld-people-example.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Preview + confirm dialog that opens once a CSV is parsed. Keeps the
+// role fallback picker close to the send button so a director who
+// forgot to include a `role` column can still push the whole file to a
+// single role in one click. Rows that DO carry a role keep theirs.
+function CsvImportDialog({
+  payload, onClose, onInvited,
+}: {
+  payload: { fileName: string; rows: CsvRow[]; skipped: number } | null;
+  onClose: () => void;
+  onInvited: () => void;
+}) {
+  const [fallbackRole, setFallbackRole] = useState<'student' | 'instructor' | 'fan'>('student');
+  const [sending, setSending] = useState(false);
+
+  if (!payload) return null;
+  const { fileName, rows, skipped } = payload;
+  const roleCount = rows.filter((r) => r.role).length;
+  const nameCount = rows.filter((r) => r.full_name).length;
+
+  async function send() {
+    setSending(true);
+    let ok = 0; const fails: string[] = [];
+    for (const row of rows) {
+      try {
         const { data, error } = await supabase.functions.invoke('gw-invite-student', {
           body: {
             email: row.email,
-            role: row.role || role,
+            role: row.role || fallbackRole,
             full_name: row.full_name,
             appOrigin: window.location.origin,
           },
@@ -394,27 +526,36 @@ function InviteDialog({
     setSending(false);
     if (ok > 0) {
       toast.success(`Invited ${ok}${fails.length ? ` · ${fails.length} failed` : ''}`);
-      setEmails('');
-      clearCsv();
       onInvited();
-      if (fails.length === 0) onClose();
     }
     if (fails.length > 0) toast.error(fails[0], { description: fails.length > 1 ? `${fails.length - 1} more failed` : undefined });
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={!!payload} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Invite people</DialogTitle>
-          <DialogDescription>
-            New emails get an account + a sign-in link automatically.
-          </DialogDescription>
+          <DialogTitle>Import from CSV</DialogTitle>
+          <DialogDescription>Review before sending — every row triggers a real invite email.</DialogDescription>
         </DialogHeader>
+
         <div className="space-y-3">
+          <div className="rounded-lg border bg-muted/40 p-3 flex items-center gap-3">
+            <FileSpreadsheet className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div className="flex-1 min-w-0 text-sm">
+              <div className="font-semibold truncate">{fileName}</div>
+              <div className="text-xs text-muted-foreground">
+                {rows.length} email{rows.length === 1 ? '' : 's'} ready
+                {skipped > 0 && ` · ${skipped} skipped (bad email)`}
+                {nameCount > 0 && ` · ${nameCount} named`}
+                {roleCount > 0 && ` · ${roleCount} with a role`}
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
-            <Label className="text-xs">Default role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as any)}>
+            <Label className="text-xs">Fallback role</Label>
+            <Select value={fallbackRole} onValueChange={(v) => setFallbackRole(v as any)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="student">Student</SelectItem>
@@ -423,73 +564,42 @@ function InviteDialog({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              CSV rows with a <code>role</code> column override this per-person.
+              Used for rows that don't include a <code>role</code> column. Per-row roles win.
             </p>
           </div>
 
-          {csvRows.length === 0 && !csvError && (
-            <div className="space-y-1.5">
-              <Label className="text-xs">Emails</Label>
-              <Textarea
-                value={emails}
-                onChange={(e) => setEmails(e.target.value)}
-                rows={5}
-                placeholder={"alice@example.com\nben@example.com\ncharlie@example.com"}
-              />
-              <p className="text-sm text-muted-foreground">One per line or comma-separated.</p>
+          {/* Compact preview of the first few rows so directors can
+              spot a bad parse (wrong column order, header misspelling)
+              before firing 50 emails. */}
+          <div className="rounded-lg border overflow-hidden">
+            <div className="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide bg-muted/60 text-muted-foreground">
+              Preview
             </div>
-          )}
-
-          {/* CSV upload — a full spreadsheet import so a director can
-              onboard a whole roster in one shot. Header row required
-              with `email` at minimum; `full_name` / `name` /
-              `first_name` + `last_name` / `role` are all optional. */}
-          <div className="space-y-1.5 border-t pt-3">
-            <Label className="text-xs">Bulk import from CSV</Label>
-            {csvRows.length > 0 ? (
-              <div className="rounded-lg border bg-muted/40 p-2.5 flex items-center gap-2.5">
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
-                <div className="flex-1 min-w-0 text-xs">
-                  <div className="font-semibold truncate">{csvName}</div>
-                  <div className="text-muted-foreground">
-                    {csvRows.length} email{csvRows.length === 1 ? '' : 's'} ready
-                    {csvSkipped > 0 && ` · ${csvSkipped} skipped (bad email)`}
-                    {csvRows.filter((r) => r.role).length > 0 && ` · ${csvRows.filter((r) => r.role).length} with a role`}
-                  </div>
-                </div>
-                <Button type="button" size="sm" variant="ghost" onClick={clearCsv} className="h-7 px-2 text-xs">
-                  <CloseIcon className="w-3.5 h-3.5 mr-1" /> Remove
-                </Button>
-              </div>
-            ) : (
-              <>
-                <input
-                  ref={csvInputRef}
-                  type="file"
-                  accept=".csv,text/csv"
-                  onChange={onCsvChosen}
-                  className="hidden"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={() => csvInputRef.current?.click()} className="w-full">
-                  <Upload className="w-4 h-4 mr-1.5" /> Choose CSV file
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Header row required. Columns: <code>email</code> (required), <code>full_name</code> or <code>first_name</code>+<code>last_name</code>, <code>role</code> (student/teacher/fan/admin).
-                </p>
-              </>
-            )}
-            {csvError && (
-              <p className="text-xs text-rose-600 flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5" /> {csvError}
-              </p>
-            )}
+            <ul className="max-h-40 overflow-y-auto text-xs divide-y">
+              {rows.slice(0, 8).map((r, i) => (
+                <li key={`${r.email}-${i}`} className="px-2.5 py-1.5 flex items-center gap-2">
+                  <span className="text-muted-foreground w-4 tabular-nums text-right shrink-0">{i + 1}</span>
+                  <span className="truncate flex-1">{r.email}</span>
+                  {r.full_name && <span className="text-muted-foreground truncate max-w-[8rem]">{r.full_name}</span>}
+                  <Badge variant="outline" className="text-[10px] shrink-0">
+                    {r.role || fallbackRole}
+                  </Badge>
+                </li>
+              ))}
+              {rows.length > 8 && (
+                <li className="px-2.5 py-1.5 text-muted-foreground text-center">
+                  + {rows.length - 8} more
+                </li>
+              )}
+            </ul>
           </div>
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={send} disabled={sending || (csvRows.length === 0 && !emails.trim())}>
+          <Button variant="outline" onClick={onClose} disabled={sending}>Cancel</Button>
+          <Button onClick={send} disabled={sending}>
             {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <UserPlus className="w-4 h-4 mr-1.5" />}
-            {csvRows.length > 0 ? `Send ${csvRows.length} invite${csvRows.length === 1 ? '' : 's'}` : 'Send invites'}
+            Send {rows.length} invite{rows.length === 1 ? '' : 's'}
           </Button>
         </DialogFooter>
       </DialogContent>
