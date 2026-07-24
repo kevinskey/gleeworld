@@ -1817,17 +1817,22 @@ function Editor({
      * without leaking dark surfaces anywhere else in the app. */}
     <div className="dark bg-background text-foreground min-h-[calc(100vh-5rem)] -mt-2 overflow-x-hidden">
     <div className="px-2 sm:px-3 py-2 sm:py-3 max-w-[1400px] mx-auto space-y-1.5 sm:space-y-2">
-      {/* Top bar */}
-      <div className="flex items-center gap-2 text-sm">
-        <Link to="/studio" className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-          <ArrowLeft className="w-4 h-4" /> Sessions
+      {/* Top bar — wraps to a second line when the action buttons run
+       *  out of horizontal room (was overflowing behind the surface's
+       *  overflow-x-hidden, clipping "Export" to "Expo…" on iPad). Right
+       *  cluster stays anchored via `ml-auto`; on phones the buttons
+       *  collapse to icon-only so they never crowd the title input. */}
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm">
+        <Link to="/studio" className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 shrink-0">
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Sessions</span>
         </Link>
         <Input
           value={session.title}
           onChange={(e) => update((s) => ({ ...s, title: e.target.value }))}
-          className="text-sm font-semibold bg-transparent border-0 px-2 h-6 focus-visible:ring-1 max-w-xs"
+          className="text-sm font-semibold bg-transparent border-0 px-2 h-6 focus-visible:ring-1 flex-1 min-w-[8rem] max-w-xs"
         />
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2 flex-wrap justify-end">
           {/* Music Tools — left slide-out with metronome, pitch pipe,
               tuner, and the instrument-voice player, so a director can
               grab a reference pitch or set a tempo without leaving the
@@ -1835,8 +1840,9 @@ function Editor({
               Tools page. */}
           <Sheet open={toolsOpen} onOpenChange={setToolsOpen}>
             <SheetTrigger asChild>
-              <Button size="sm" variant="outline" title="Music tools — metronome, pitch pipe, tuner, instruments" className="h-7 text-sm">
-                <Wrench className="w-4 h-4 mr-1" /> Tools
+              <Button size="sm" variant="outline" title="Music tools — metronome, pitch pipe, tuner, instruments" className="h-7 text-sm px-2 sm:px-3">
+                <Wrench className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Tools</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="dark bg-card text-foreground border-border w-[320px] sm:w-[360px] overflow-y-auto">
@@ -1870,13 +1876,14 @@ function Editor({
             variant={view === 'mix' ? 'default' : 'outline'}
             onClick={() => setView(view === 'mix' ? 'tracks' : 'mix')}
             title="Switch between the timeline and the mixer"
-            className="h-7 text-sm"
+            className="h-7 text-sm px-2 sm:px-3"
           >
-            <SlidersHorizontal className="w-4 h-4 mr-1" /> Mix
+            <SlidersHorizontal className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Mix</span>
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setExportOpen(true)} title="Export MP3 320 / WAV / stems" className="h-7 text-sm">
-            <Download className="w-4 h-4 mr-1" />
-            Export
+          <Button size="sm" variant="outline" onClick={() => setExportOpen(true)} title="Export MP3 320 / WAV / stems" className="h-7 text-sm px-2 sm:px-3">
+            <Download className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Export</span>
           </Button>
           {/* Region export — enabled only when a loop region is set (drag
               across the bar ruler). Bounces the selected tracks over just
@@ -1887,10 +1894,10 @@ function Editor({
             onClick={() => setRegionExportOpen(true)}
             disabled={!loopRegion || loopRegion.end <= loopRegion.start}
             title={loopRegion ? 'Export the selected region (tracks → stereo mix or mono stems)' : 'Drag across the bar ruler to select a region first'}
-            className="h-7 text-sm"
+            className="h-7 text-sm px-2 sm:px-3"
           >
-            <Scissors className="w-4 h-4 mr-1" />
-            Region
+            <Scissors className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Region</span>
           </Button>
           <Button size="sm" variant="outline" onClick={() => exportSessionJson(session)} title="Download session JSON" className="h-7 w-7 p-0">
             <FileJson className="w-4 h-4" />
@@ -2261,6 +2268,32 @@ function Editor({
             )}
           </div>
 
+          {/* Timeline zoom — moved up here from the add-track row so it
+              sits next to Punch, right in the transport's control cluster.
+              Slider is log-scaled (px range 8→240 spans ~5 octaves, so
+              linear travel would bunch the useful zoom levels into the
+              rightmost sliver); double-click resets to the default. No px
+              readout on purpose — the slider position IS the affordance. */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Zoom</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={Math.round(100 * Math.log(pxPerSecond / PX_PER_SECOND_MIN) / Math.log(PX_PER_SECOND_MAX / PX_PER_SECOND_MIN))}
+              onChange={(e) => {
+                const pos = Number(e.target.value) / 100;
+                const px = PX_PER_SECOND_MIN * Math.pow(PX_PER_SECOND_MAX / PX_PER_SECOND_MIN, pos);
+                setPxPerSecond(px);
+              }}
+              onDoubleClick={() => setPxPerSecond(PX_PER_SECOND_DEFAULT)}
+              className="w-28 h-6 accent-primary cursor-pointer"
+              aria-label="Timeline zoom"
+              title="Timeline zoom — drag to widen or narrow clips. Double-click to reset."
+            />
+          </div>
+
           <div className="flex items-center gap-1 ml-auto">
             <span className="text-muted-foreground" title={`Snap quantum at current tempo: ${snapSeconds > 0 ? `${(snapSeconds * 1000).toFixed(0)} ms` : 'off'}`}>Snap</span>
             <select value={snapMode} onChange={(e) => setSnapMode(e.target.value as SnapMode)}
@@ -2512,26 +2545,11 @@ function Editor({
             <button onClick={addMidiTrack} className="h-7 px-2 bg-card border border-border rounded hover:bg-muted inline-flex items-center gap-1">
               <Plus className="w-4 h-4" /> MIDI
             </button>
-            {/* Timeline zoom — affects every track lane + ruler. */}
-            <div className="inline-flex items-center gap-0.5 border border-border rounded bg-background">
-              <button
-                onClick={() => zoomBy(1 / 1.4)}
-                disabled={pxPerSecond <= PX_PER_SECOND_MIN + 0.01}
-                title="Zoom out (clips render narrower)"
-                className="h-7 w-7 inline-flex items-center justify-center hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-base leading-none"
-              >−</button>
-              <button
-                onClick={() => setPxPerSecond(PX_PER_SECOND_DEFAULT)}
-                title={`Reset zoom (${Math.round(pxPerSecond)} px/sec)`}
-                className="h-7 px-2 text-xs font-mono tabular-nums hover:bg-muted"
-              >{Math.round(pxPerSecond)}px/s</button>
-              <button
-                onClick={() => zoomBy(1.4)}
-                disabled={pxPerSecond >= PX_PER_SECOND_MAX - 0.01}
-                title="Zoom in (clips render wider)"
-                className="h-7 w-7 inline-flex items-center justify-center hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed text-base leading-none"
-              >+</button>
-            </div>
+            {/* Timeline zoom lives in the transport's Row 2 chip row now
+                (next to Punch) — a single slider replaces the ±/label
+                trio and reads cleaner without px measurements. Removed
+                from here to keep the add-track row focused on the two
+                actions it still owns (Audio, MIDI, Snap). */}
             {/* One-tap Snap on/off. On = clips snap to the grid
                 subdivision; off = drag/trim freely to any position.
                 Grid choice still lives in Settings → Snap; this just
