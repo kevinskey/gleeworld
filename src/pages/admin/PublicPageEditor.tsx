@@ -870,18 +870,21 @@ export default function PublicPageEditor() {
             </DialogContent>
           </Dialog>
           {site.is_published && site.slug && (
-            // Open the tenant's actual site (subdomain or custom domain), not
-            // the /sites/<slug> platform route — that route only exists as a
-            // preview surface and is confusing when the tenant has a real
-            // subdomain. Falls back to <slug>.gleeworld.org when the tenant
-            // row doesn't yet declare a subdomain (matches tenantHostFromRow).
+            // "View site" opens the URL a visitor would use to see the built
+            // blocks. Two cases:
+            //   - main tenant: gleeworld.org root is the marketing page
+            //     (GleeWorldLanding). The built blocks only render at
+            //     /sites/main. Link there.
+            //   - any other tenant: subdomain root renders TenantLanding,
+            //     which mounts PublicSiteView for the tenant's published
+            //     blocks. Link to <slug>.gleeworld.org.
             <Button variant="outline" asChild title="Open your live site in a new tab">
               <a
-                href={`https://${
+                href={
                   site.slug === 'main'
-                    ? 'gleeworld.org'
-                    : `${site.slug}.gleeworld.org`
-                }/`}
+                    ? `https://gleeworld.org/sites/main`
+                    : `https://${site.slug}.gleeworld.org/`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
               >
