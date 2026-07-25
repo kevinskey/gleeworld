@@ -8,30 +8,89 @@ import { toast } from 'sonner';
 // photo can be 8 MB, taking 30 s+ over a home upload and getting cut off
 // by nginx/proxy body limits. Max dimension 1920px, JPEG Q0.85; PNGs
 // stay PNG if they're small enough already.
+// Downscale large images client-side before upload. Max dim 1920px,
+// JPEG Q0.85. Loud on console so we can see what's happening in the
+// wild when uploads fail — silent shrinks make diagnostics impossible.
 async function shrinkForUpload(file: File): Promise<File> {
-  if (!file.type.startsWith('image/')) return file;
-  if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
-  // Only shrink if the file is already big enough to be worth it; small
-  // logos stay untouched so we don't degrade quality unnecessarily.
-  if (file.size < 500 * 1024) return file;
+  const startKB = Math.round(file.size / 1024);
+  console.log(`[upload/shrink] input: ${file.name} · ${startKB} KB · ${file.type}`);
+  if (!file.type.startsWith('image/')) {
+    console.log('[upload/shrink] skipped: not an image');
+    return file;
+  }
+  if (file.type === 'image/gif' || file.type === 'image/svg+xml') {
+    console.log('[upload/shrink] skipped: GIF/SVG passes through');
+    return file;
+  }
+  if (file.size < 500 * 1024) {
+    console.log('[upload/shrink] skipped: under 500 KB');
+    return file;
+  }
   try {
     const bitmap = await createImageBitmap(file);
     const maxDim = 1920;
     const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
     const w = Math.round(bitmap.width * scale);
     const h = Math.round(bitmap.height * scale);
+    console.log(`[upload/shrink] decoded: ${bitmap.width}×${bitmap.height} → target ${w}×${h}`);
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return file;
+    if (!ctx) {
+      console.warn('[upload/shrink] canvas.getContext(2d) returned null; sending original');
+      return file;
+    }
     ctx.drawImage(bitmap, 0, 0, w, h);
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, 'image/jpeg', 0.85);
     });
-    if (!blob || blob.size >= file.size) return file;
+    if (!blob) {
+      console.warn('[upload/shrink] canvas.toBlob returned null; sending original');
+      return file;
+    }
+    if (blob.size >= file.size) {
+      console.log(`[upload/shrink] shrunk (${Math.round(blob.size / 1024)} KB) not smaller than source (${startKB} KB); sending original`);
+      return file;
+    }
+    console.log(`[upload/shrink] output: ${Math.round(blob.size / 1024)} KB (${Math.round((1 - blob.size / file.size) * 100)}% smaller)`);
     return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
-  } catch {
-    return file; // any decode failure → send the original
+  } catch (err) {
+    // Big camera PNGs sometimes trip createImageBitmap on Chromium; the
+    // resulting fallback is the original file which is exactly the case
+    // that fails to upload. Try a second decode via HTMLImageElement.
+    console.warn('[upload/shrink] createImageBitmap failed, trying <img> fallback:', err);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(String(r.result));
+        r.onerror = () => reject(r.error || new Error('FileReader failed'));
+        r.readAsDataURL(file);
+      });
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = () => reject(new Error('image decode failed'));
+        el.src = dataUrl;
+      });
+      const maxDim = 1920;
+      const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.round(img.naturalWidth * scale);
+      const h = Math.round(img.naturalHeight * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return file;
+      ctx.drawImage(img, 0, 0, w, h);
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/jpeg', 0.85);
+      });
+      if (!blob) return file;
+      console.log(`[upload/shrink] fallback output: ${Math.round(blob.size / 1024)} KB`);
+      return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
+    } catch (err2) {
+      console.error('[upload/shrink] both decode paths failed; sending original:', err2);
+      return file;
+    }
   }
 }
 
