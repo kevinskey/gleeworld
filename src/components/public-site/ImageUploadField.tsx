@@ -4,7 +4,39 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Downscale large images client-side before upload — a 4000×3000 hero
+// photo can be 8 MB, taking 30 s+ over a home upload and getting cut off
+// by nginx/proxy body limits. Max dimension 1920px, JPEG Q0.85; PNGs
+// stay PNG if they're small enough already.
+async function shrinkForUpload(file: File): Promise<File> {
+  if (!file.type.startsWith('image/')) return file;
+  if (file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
+  // Only shrink if the file is already big enough to be worth it; small
+  // logos stay untouched so we don't degrade quality unnecessarily.
+  if (file.size < 500 * 1024) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxDim = 1920;
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.85);
+    });
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
+  } catch {
+    return file; // any decode failure → send the original
+  }
+}
+
 async function uploadToSiteBranding(file: File, prefix: string): Promise<string | null> {
+  file = await shrinkForUpload(file);
   if (file.size > 10 * 1024 * 1024) {
     toast.error('Image must be 10 MB or smaller.');
     return null;
@@ -160,20 +192,30 @@ export function ImageUploadField({
               // blob: URLs so this never leaks into saved state.
               onChange(blobUrl);
               setUploading(true);
-              const url = await uploadToSiteBranding(file, prefix);
-              if (url) {
-                // Wait until the public URL actually serves (typically 5-10s
-                // on self-hosted Supabase Storage 1.48 due to the stub/ → flat
-                // path flatten cron), then swap blob for real URL.
-                await waitForUrlReachable(url);
-                onChange(url);
-                // Clear the blob preview now that we have a real URL.
-                // Otherwise the <img> keeps showing the blob and if the
-                // blob was revoked (page nav, tab suspend, HMR replay
-                // etc.) the thumbnail renders as a broken icon.
-                setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
+              try {
+                const url = await uploadToSiteBranding(file, prefix);
+                if (url) {
+                  // Wait until the public URL actually serves (typically 5-10s
+                  // on self-hosted Supabase Storage 1.48 due to the stub/ → flat
+                  // path flatten cron), then swap blob for real URL.
+                  await waitForUrlReachable(url);
+                  onChange(url);
+                  // Clear the blob preview now that we have a real URL —
+                  // otherwise the <img> keeps showing the blob and if it
+                  // gets revoked (page nav, tab suspend, HMR replay etc.)
+                  // the thumbnail renders as a broken icon.
+                  setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
+                }
+              } catch (err) {
+                // Fetch-level failure (dropped connection, nginx reject,
+                // etc.). Without this catch the promise rejects, and
+                // setUploading(false) never runs — user gets a stuck
+                // spinner forever.
+                console.error('[upload] fatal', err);
+                toast.error(`Upload failed: ${err instanceof Error ? err.message : 'network error'}`);
+              } finally {
+                setUploading(false);
               }
-              setUploading(false);
             }}
           />
         </label>
