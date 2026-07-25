@@ -67,7 +67,7 @@ import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
-import { useMyTenants, tenantHomeUrl } from '@/hooks/useMyTenants';
+import { useMyTenants, tenantHomeUrl, tenantSwitchUrl, performTenantSwitch } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -943,21 +943,21 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                     window.location.reload();
                     return;
                   }
-                  // Web: bare cross-subdomain nav. The earlier "pivot
-                  // JWT tenant then transfer session" path flipped the
-                  // user's gw_profiles.tenant_id server-side (via
-                  // set_active_tenant), which meant every FUTURE JWT
-                  // for that user pointed at the last-switched-to
-                  // tenant — so signing back in on gleeworld.org
-                  // rendered the marketing landing (JWT-tenant vs
-                  // URL-tenant mismatch). Reverted to the simple
-                  // subdomain hop: user lands on the target tenant's
-                  // login screen, signs in fresh, gets a session
-                  // scoped to that tenant. Extra password entry per
-                  // switch is the acceptable cost until we design a
-                  // per-session active-tenant signal that doesn't
-                  // corrupt the profile row.
-                  window.location.href = tenantHomeUrl(t.slug);
+                  // Web: pivot the JWT via set_active_tenant (writes
+                  // active_tenant_id, NOT tenant_id — home tenant is
+                  // preserved), refresh the session so the new JWT
+                  // carries the target tenant_slug, then transfer
+                  // through /auth/callback so the destination lands
+                  // signed-in with a correctly-scoped session. On
+                  // failure fall back to plain nav so the user still
+                  // reaches the target's login screen.
+                  try {
+                    const refreshed = await performTenantSwitch(supabase, t.slug);
+                    window.location.href = tenantSwitchUrl(t.slug, refreshed);
+                  } catch (e) {
+                    console.warn('[tenant-switch] pivot failed, falling back to login', e);
+                    window.location.href = tenantHomeUrl(t.slug);
+                  }
                 };
                 return (
                   <DropdownMenuItem

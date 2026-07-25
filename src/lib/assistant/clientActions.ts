@@ -348,12 +348,19 @@ export async function executeClientAction(
           } catch { /* private mode — reload will re-derive */ }
           window.location.reload();
         } else {
-          // Web: bare subdomain hop. See DashboardShell for why the
-          // profile-pivot flow was ripped out — same reason applies
-          // here. User lands on target tenant's login screen and
-          // signs in fresh with a correctly-scoped session.
-          const { tenantHomeUrl } = await import('@/hooks/useMyTenants');
-          window.location.href = tenantHomeUrl(target.slug);
+          // Web: same active-tenant pivot as the avatar-dropdown
+          // switcher — see DashboardShell for details. Writes
+          // active_tenant_id (not tenant_id, which stays as home) so
+          // switching between worlds doesn't break sign-in on the home
+          // tenant.
+          const { tenantHomeUrl, tenantSwitchUrl, performTenantSwitch } = await import('@/hooks/useMyTenants');
+          try {
+            const refreshed = await performTenantSwitch(deps.supabase as any, target.slug);
+            window.location.href = tenantSwitchUrl(target.slug, refreshed);
+          } catch (e) {
+            console.warn('[assistant] tenant switch pivot failed', e);
+            window.location.href = tenantHomeUrl(target.slug);
+          }
         }
         return { ok: true, message: `Switching to ${target.name || target.slug}…` };
       }
