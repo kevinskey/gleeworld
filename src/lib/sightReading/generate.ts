@@ -1,6 +1,19 @@
 import type { ExerciseIR, IRNote } from './ir';
 import { midiToSolfege, KEY_TO_MIDI } from './ir';
 
+// Voice ranges — comfortable middle-of-range spans so an exercise sits
+// centrally on the voice's tessitura rather than pushed to the extremes.
+// Bass/tenor MIDI numbers are the actual sounding pitch; NotationView
+// auto-picks bass clef when the median is below A3 so the score renders
+// on the right staff without an explicit clef prop.
+export type Voice = 'soprano' | 'alto' | 'tenor' | 'bass';
+const VOICE_RANGE: Record<Voice, { lo: number; hi: number }> = {
+  soprano: { lo: 60, hi: 81 }, // C4 – A5
+  alto:    { lo: 55, hi: 76 }, // G3 – E5
+  tenor:   { lo: 48, hi: 67 }, // C3 – G4
+  bass:    { lo: 40, hi: 60 }, // E2 – C4
+};
+
 // Motive-driven, phrase-structured tonal melody generator. Works in
 // SCALE-DEGREE-INDEX space: a "step" is ±1 index in the mode's scale, a
 // diatonic sequence up a step is "+1 to every note". Seeded determinism is
@@ -144,10 +157,9 @@ function chooseTransform(
 }
 
 export function generateExercise(
-  opts: { level: number; key: string; seed: number; bars?: number; mode?: Mode },
+  opts: { level: number; key: string; seed: number; bars?: number; mode?: Mode; voice?: Voice },
 ): ExerciseIR {
   const lv = LEVELS[opts.level] ?? LEVELS[1];
-  const tonic = KEY_TO_MIDI[opts.key] ?? 60;
   const mode: Mode = opts.mode ?? 'major';
   const rand = rng(opts.seed);
   const pick = <T,>(xs: T[]) => xs[Math.floor(rand() * xs.length)];
@@ -158,16 +170,34 @@ export function generateExercise(
   const chords = mode === 'minor' ? CHORDS_MINOR : CHORDS_MAJOR;
   const N = scale.length;
 
-  // bars → phrases
-  const phraseLen = bars <= 2 ? bars : bars <= 4 ? 2 : 4;
-  const numPhrases = Math.max(1, Math.round(bars / phraseLen));
-  // Any bars beyond numPhrases*phraseLen become one final tail phrase.
-  const climaxPhrase = numPhrases === 1 ? 0 : numPhrases === 2 ? 1 : numPhrases - 2;
-  const climaxBarInPhrase = Math.min(1, phraseLen - 2);
-
-  // ambitus tonic−5 .. tonic+12 (in MIDI). clampDeg folds by ±N octaves.
-  const AMBITUS_LO = tonic - 5;
-  const AMBITUS_HI = tonic + 12;
+  // Tonic + ambitus. When a voice is specified, shift the tonic into the
+  // voice's range and use that range as the ambitus so the line sits in
+  // the voice's actual tessitura (bass in E — the exercise should live
+  // around E3, not scream up at E5). Without a voice, keep the legacy
+  // tonic−5..tonic+12 span centered on C4.
+  const baseTonic = KEY_TO_MIDI[opts.key] ?? 60;
+  let tonic = baseTonic;
+  let AMBITUS_LO: number;
+  let AMBITUS_HI: number;
+  if (opts.voice) {
+    const range = VOICE_RANGE[opts.voice];
+    // Shift the tonic by whole octaves to land closest to the range midpoint.
+    const mid = (range.lo + range.hi) / 2;
+    let bestTonic = baseTonic;
+    let bestDist = Math.abs(baseTonic - mid);
+    for (let oct = -4; oct <= 4; oct++) {
+      const cand = baseTonic + oct * 12;
+      if (cand < range.lo || cand > range.hi) continue;
+      const dist = Math.abs(cand - mid);
+      if (dist < bestDist) { bestDist = dist; bestTonic = cand; }
+    }
+    tonic = bestTonic;
+    AMBITUS_LO = range.lo;
+    AMBITUS_HI = range.hi;
+  } else {
+    AMBITUS_LO = tonic - 5;
+    AMBITUS_HI = tonic + 12;
+  }
   const clampDeg = (deg: number): number => {
     let d = deg;
     let guard = 0;

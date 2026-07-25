@@ -6,7 +6,7 @@ import { Music, Plus, Pencil, Trash2, Play, Loader2 } from 'lucide-react';
 import { SingFlow } from './SingFlow';
 import { ProgressTab } from './ProgressTab';
 import { ClassProgressTab } from './ClassProgressTab';
-import { generateExercise } from '@/lib/sightReading/generate';
+import { generateExercise, type Voice } from '@/lib/sightReading/generate';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
@@ -178,6 +178,18 @@ export default function SightReadingStudio() {
   const [musicKey, setMusicKey] = useState('C');
   const [measures, setMeasures] = useState(8);
   const [priming, setPriming] = useState(false);
+  // Voice choice constrains the generator's ambitus (and by extension
+  // whether NotationView auto-picks bass clef) so an exercise sits on
+  // the singer's actual tessitura. Persisted so a bass user doesn't
+  // have to re-pick every session. Default soprano — matches the
+  // legacy behavior most closely (treble clef, C4-A5 range).
+  const [voice, setVoice] = useState<Voice>(() => {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('gw_sr_voice') : null;
+    return stored === 'alto' || stored === 'tenor' || stored === 'bass' ? stored : 'soprano';
+  });
+  useEffect(() => {
+    try { localStorage.setItem('gw_sr_voice', voice); } catch { /* private mode */ }
+  }, [voice]);
   const { isAdmin } = useUserRole();
   const [searchParams] = useSearchParams();
   // Open on the Library tab when arrived from the notation editor's "← Library" button.
@@ -210,7 +222,7 @@ export default function SightReadingStudio() {
   }, [academyExerciseId]);
 
   const start = () =>
-    setExercise(generateExercise({ level, key: musicKey, seed: Math.floor(Math.random() * 1e9), bars: measures }));
+    setExercise(generateExercise({ level, key: musicKey, seed: Math.floor(Math.random() * 1e9), bars: measures, voice }));
 
   // The pitch pipe is a chip, not a tab: it sounds the current key's tonic so a
   // student can find their footing before starting.
@@ -224,7 +236,7 @@ export default function SightReadingStudio() {
       if (!AC) return;
       const ctx = new AC();
       if (ctx.state !== 'running') await ctx.resume();
-      const ir = generateExercise({ level, key: musicKey, seed: 1 });
+      const ir = generateExercise({ level, key: musicKey, seed: 1, voice });
       const hz = 440 * Math.pow(2, (ir.tonicMidi - 69) / 12);
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
@@ -263,7 +275,28 @@ export default function SightReadingStudio() {
       </Button>
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <label className="text-slate-600" htmlFor="sr-key">
+        {/* Voice — anchors the exercise to a singer's actual tessitura:
+            Soprano C4–A5, Alto G3–E5, Tenor C3–G4, Bass E2–C4. The
+            generator shifts the tonic octave into that range and caps
+            the ambitus, and NotationView auto-picks bass clef when the
+            median pitch drops below A3. Placed first because it's the
+            hardest to change mid-session (memorization is voice-anchored)
+            while Key/Level/Measures are all one-tap. */}
+        <label className="text-slate-600" htmlFor="sr-voice">
+          Voice
+        </label>
+        <select
+          id="sr-voice"
+          className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+          value={voice}
+          onChange={(e) => setVoice(e.target.value as Voice)}
+        >
+          <option value="soprano">Soprano</option>
+          <option value="alto">Alto</option>
+          <option value="tenor">Tenor</option>
+          <option value="bass">Bass</option>
+        </select>
+        <label className="ml-2 text-slate-600" htmlFor="sr-key">
           Key
         </label>
         <select
