@@ -117,19 +117,23 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // JWT tenant is 'main' or null — look at all the tenants this email
+      // JWT tenant is 'main' or null — look up the tenants this email
       // belongs to via my_tenants (SECURITY DEFINER, scoped to auth.uid()).
-      // If exactly one non-main membership exists, drop them straight into
-      // it — the whole point of the native app is "sign in, land in your
-      // choir", not "sign in, pick your choir from a list."
+      // The picker screen was rejected as a user experience: the app should
+      // drop straight into a tenant based on the email alone. So we
+      // auto-open the FIRST non-main membership the RPC returns even when
+      // there are several — the RPC already sorts by tenant name (see
+      // 20260717040000_my_tenants_rpc.sql), giving each user a
+      // deterministic choir. Multi-tenant admins who need to switch can do
+      // it from the account menu after landing.
       try {
         const { data: myTenantsRaw, error: rpcErr } = await supabase.rpc('my_tenants' as never);
         if (!rpcErr) {
           const myTenants = (myTenantsRaw ?? []) as Array<{ slug: string; name: string | null }>;
           const nonMain = myTenants.filter((t) => t.slug && t.slug !== 'main');
-          if (nonMain.length === 1) {
-            const only = nonMain[0];
-            localStorage.setItem(KEY, JSON.stringify({ tenant: only.slug, org: only.name ?? undefined }));
+          if (nonMain.length >= 1) {
+            const pick = nonMain[0];
+            localStorage.setItem(KEY, JSON.stringify({ tenant: pick.slug, org: pick.name ?? undefined }));
             window.location.reload();
             return;
           }
@@ -140,9 +144,10 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
         console.warn('[native-login] my_tenants lookup failed', rpcErr);
       }
 
-      // Zero non-main memberships OR ambiguous (multiple) — user genuinely
-      // needs to pick. The session persists, so picking an org below
-      // reloads straight into that choir already signed in.
+      // Genuinely zero non-main memberships — a rare edge (typically a
+      // user only registered against 'main'). The picker stays as a
+      // recovery path so they can still enter a demo/public choir rather
+      // than getting stuck on the sign-in screen.
       setSigningIn(false);
       setMode('orgs');
     } catch (err) {
