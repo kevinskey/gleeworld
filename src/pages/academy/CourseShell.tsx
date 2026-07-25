@@ -921,14 +921,14 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
         if (user && rows.length > 0) {
           const ids = rows.map((r: any) => r.id);
           const { data: subs } = await supabase
-            .from("gw_assignment_submissions" as any)
-            .select("assignment_id, status, score_value, submitted_at")
-            .eq("user_id", user.id)
+            .from("gw_course_submissions")
+            .select("assignment_id, status, points_earned, submitted_at")
+            .eq("student_id", user.id)
             .in("assignment_id", ids);
           if (c) return;
           const map: Record<string, { status: string; score_value: number | null; submitted_at: string | null }> = {};
           for (const s of (subs as any[] | null) ?? []) {
-            map[s.assignment_id] = { status: s.status, score_value: s.score_value, submitted_at: s.submitted_at };
+            map[s.assignment_id] = { status: s.status, score_value: s.points_earned, submitted_at: s.submitted_at };
           }
           setSubsByAssignment(map);
         }
@@ -940,16 +940,16 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   async function refreshMySubmission(assignmentId: string) {
     if (!user) return;
     const { data } = await supabase
-      .from("gw_assignment_submissions" as any)
-      .select("assignment_id, status, score_value, submitted_at")
-      .eq("user_id", user.id)
+      .from("gw_course_submissions")
+      .select("assignment_id, status, points_earned, submitted_at")
+      .eq("student_id", user.id)
       .eq("assignment_id", assignmentId)
       .maybeSingle();
     if (data) {
       const s = data as any;
       setSubsByAssignment((prev) => ({
         ...prev,
-        [assignmentId]: { status: s.status, score_value: s.score_value, submitted_at: s.submitted_at },
+        [assignmentId]: { status: s.status, score_value: s.points_earned, submitted_at: s.submitted_at },
       }));
     }
   }

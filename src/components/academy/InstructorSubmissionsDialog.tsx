@@ -26,12 +26,13 @@ interface EnrollmentRow {
 interface SubmissionRow {
   id: string;
   assignment_id: string;
-  user_id: string;
+  student_id: string;
   status: string;
   submitted_at: string | null;
-  notes: string | null;
-  recording_url: string | null;
-  score_value: number | null;
+  content: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  points_earned: number | null;
   feedback: string | null;
   graded_at: string | null;
 }
@@ -45,8 +46,10 @@ interface InstructorSubmissionsDialogProps {
 
 // Instructor grading view for one assignment. Shows every enrolled
 // student, their submission (or "Not submitted"), and an expandable
-// inline row for entering score + feedback. Uses the existing
-// gw_assignment_submissions row (upsert on assignment_id + user_id).
+// inline row for entering score + feedback. Uses gw_course_submissions
+// (upsert on assignment_id + student_id) — the general-purpose table
+// FK'd to gw_assignments. gw_assignment_submissions is a separate
+// sight-reading table with its own FK to gw_sight_reading_assignments.
 export function InstructorSubmissionsDialog({
   open,
   assignment,
@@ -73,10 +76,10 @@ export function InstructorSubmissionsDialog({
         .select('student_id, user_id, gw_profiles:gw_profiles_directory!gw_course_enrollments_user_id_fkey(full_name, email)')
         .eq('course_id', courseId)
         .eq('enrollment_status', 'enrolled');
-      // Submissions for this assignment.
+      // Submissions for this assignment — general-purpose table.
       const { data: subs } = await supabase
-        .from('gw_assignment_submissions' as any)
-        .select('id, assignment_id, user_id, status, submitted_at, notes, recording_url, score_value, feedback, graded_at')
+        .from('gw_course_submissions')
+        .select('id, assignment_id, student_id, status, submitted_at, content, file_url, file_name, points_earned, feedback, graded_at')
         .eq('assignment_id', assignment.id);
       if (cancelled) return;
 
@@ -91,7 +94,7 @@ export function InstructorSubmissionsDialog({
 
       const submap: Record<string, SubmissionRow> = {};
       for (const s of ((subs as unknown as SubmissionRow[]) ?? [])) {
-        submap[s.user_id] = s;
+        submap[s.student_id] = s;
       }
       setSubmissions(submap);
       setLoading(false);
@@ -128,7 +131,7 @@ export function InstructorSubmissionsDialog({
     const sub = submissions[userId];
     return (
       drafts[userId] ?? {
-        score: sub?.score_value != null ? String(sub.score_value) : '',
+        score: sub?.points_earned != null ? String(sub.points_earned) : '',
         feedback: sub?.feedback ?? '',
       }
     );
@@ -154,18 +157,33 @@ export function InstructorSubmissionsDialog({
     setSavingUser(userId);
     try {
       const existing = submissions[userId];
-      const payload = {
+      // Also fetch the assignment's tenant_id and pin it on the insert
+      // to bypass the tenant_isolation_restrict WITH CHECK failing when
+      // the instructor's gw_tenant_members row doesn't match the tenant
+      // (super-admins operating in tenants they don't belong to).
+      let tenantId: string | null = null;
+      if (!existing) {
+        const { data: asnTenant } = await supabase
+          .from('gw_assignments')
+          .select('tenant_id')
+          .eq('id', assignment.id)
+          .maybeSingle();
+        tenantId = (asnTenant as { tenant_id: string | null } | null)?.tenant_id ?? null;
+      }
+      const payload: Record<string, unknown> = {
         assignment_id: assignment.id,
-        user_id: userId,
+        student_id: userId,
         status: 'graded',
-        score_value: scoreNum,
+        points_earned: scoreNum,
+        grade: scoreNum,
         feedback: d.feedback.trim() || null,
         graded_at: new Date().toISOString(),
         graded_by: currentUser.id,
       };
+      if (tenantId) payload.tenant_id = tenantId;
       if (existing?.id) {
         const { error } = await supabase
-          .from('gw_assignment_submissions' as any)
+          .from('gw_course_submissions')
           .update(payload)
           .eq('id', existing.id);
         if (error) throw error;
@@ -173,9 +191,9 @@ export function InstructorSubmissionsDialog({
         // No prior submission — record the grade anyway (teacher entering
         // an offline/in-person grade). Row becomes their gradebook entry.
         const { data, error } = await supabase
-          .from('gw_assignment_submissions' as any)
+          .from('gw_course_submissions')
           .insert(payload)
-          .select('id, assignment_id, user_id, status, submitted_at, notes, recording_url, score_value, feedback, graded_at')
+          .select('id, assignment_id, student_id, status, submitted_at, content, file_url, file_name, points_earned, feedback, graded_at')
           .single();
         if (error) throw error;
         if (data) {
@@ -185,8 +203,8 @@ export function InstructorSubmissionsDialog({
       // Refresh local state so the row badge flips.
       setSubmissions((prev) => {
         const next = { ...prev };
-        const base = next[userId] ?? { id: '', assignment_id: assignment.id, user_id: userId, status: 'graded', submitted_at: null, notes: null, recording_url: null, score_value: null, feedback: null, graded_at: null } as SubmissionRow;
-        next[userId] = { ...base, status: 'graded', score_value: scoreNum, feedback: d.feedback.trim() || null, graded_at: new Date().toISOString() };
+        const base = next[userId] ?? { id: '', assignment_id: assignment.id, student_id: userId, status: 'graded', submitted_at: null, content: null, file_url: null, file_name: null, points_earned: null, feedback: null, graded_at: null } as SubmissionRow;
+        next[userId] = { ...base, status: 'graded', points_earned: scoreNum, feedback: d.feedback.trim() || null, graded_at: new Date().toISOString() };
         return next;
       });
       toast.success('Grade saved');
@@ -259,8 +277,8 @@ export function InstructorSubmissionsDialog({
                         {sub?.submitted_at
                           ? `Submitted ${formatDistanceToNow(new Date(sub.submitted_at), { addSuffix: true })}`
                           : 'Not submitted'}
-                        {sub?.notes && ' · text response'}
-                        {sub?.recording_url && ' · attachment'}
+                        {sub?.content && ' · text response'}
+                        {sub?.file_url && ' · attachment'}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -271,7 +289,7 @@ export function InstructorSubmissionsDialog({
                       )}
                       {isGraded && !needsReview && (
                         <Badge className="bg-green-600 hover:bg-green-600 gap-1">
-                          <CheckCircle className="h-3 w-3" /> {sub!.score_value}/{assignment.points ?? '?'}
+                          <CheckCircle className="h-3 w-3" /> {sub!.points_earned}/{assignment.points ?? '?'}
                         </Badge>
                       )}
                       {sub?.status === 'submitted' && (
@@ -284,28 +302,28 @@ export function InstructorSubmissionsDialog({
 
                   {isExpanded && (
                     <div className="mt-1 ml-12 mr-2 rounded-lg border bg-muted/20 p-4 space-y-4">
-                      {sub?.notes && (
+                      {sub?.content && (
                         <div>
                           <Label className="text-xs uppercase tracking-wider text-muted-foreground">Response</Label>
                           <div className="mt-1.5 text-sm whitespace-pre-wrap rounded-md border bg-background p-3">
-                            {sub.notes}
+                            {sub.content}
                           </div>
                         </div>
                       )}
-                      {sub?.recording_url && (
+                      {sub?.file_url && (
                         <div>
                           <Label className="text-xs uppercase tracking-wider text-muted-foreground">Attachment</Label>
                           <a
-                            href={sub.recording_url}
+                            href={sub.file_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
                           >
-                            {sub.recording_url.split('/').pop() || 'Open link'} <ExternalLink className="h-3.5 w-3.5" />
+                            {sub.file_name || sub.file_url.split('/').pop() || 'Open link'} <ExternalLink className="h-3.5 w-3.5" />
                           </a>
                         </div>
                       )}
-                      {!sub?.notes && !sub?.recording_url && sub && (
+                      {!sub?.content && !sub?.file_url && sub && (
                         <div className="text-sm text-muted-foreground italic">Empty submission.</div>
                       )}
                       {!sub && (

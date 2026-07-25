@@ -36,15 +36,19 @@ interface AssignmentLite {
   tenant_id?: string | null;
 }
 
+// Row shape returned from gw_course_submissions. We use varchar `status`
+// (not the sight-reading enum), `student_id`, `content` for text,
+// `file_url` for attachments, and `points_earned` for grades.
 interface SubmissionRow {
   id: string;
   assignment_id: string;
-  user_id: string;
+  student_id: string;
   status: string;
   submitted_at: string | null;
-  notes: string | null;
-  recording_url: string | null;
-  score_value: number | null;
+  content: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  points_earned: number | null;
   feedback: string | null;
   graded_at: string | null;
 }
@@ -122,25 +126,28 @@ export function StudentAssignmentDialog({
     setUploadedName(null);
   }
 
-  // Reset on assignment change / open.
+  // Reset on assignment change / open. Reads from gw_course_submissions —
+  // gw_assignment_submissions is the sight-reading table with a FK to
+  // gw_sight_reading_assignments and cannot hold rows for general
+  // assignments.
   useEffect(() => {
     if (!open || !assignment || !user) return;
     setLoading(true);
     supabase
-      .from('gw_assignment_submissions' as any)
-      .select('id, assignment_id, user_id, status, submitted_at, notes, recording_url, score_value, feedback, graded_at')
+      .from('gw_course_submissions')
+      .select('id, assignment_id, student_id, status, submitted_at, content, file_url, file_name, points_earned, feedback, graded_at')
       .eq('assignment_id', assignment.id)
-      .eq('user_id', user.id)
+      .eq('student_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
         const row = (data as unknown as SubmissionRow | null) ?? null;
         setSubmission(row);
-        setNotes(row?.notes ?? '');
-        setLink(row?.recording_url ?? '');
-        // If the URL points at our submissions bucket, treat it as a
-        // previously-uploaded file for the "current file" indicator.
-        const isOurs = !!row?.recording_url?.includes(`/${SUBMISSIONS_BUCKET}/`);
-        setUploadedName(isOurs ? decodeURIComponent(row!.recording_url!.split('/').pop() || 'file') : null);
+        setNotes(row?.content ?? '');
+        setLink(row?.file_url ?? '');
+        // If a file was uploaded before, use its saved name (or derive
+        // one from the URL) as the "current file" indicator.
+        const isOurs = !!row?.file_url?.includes(`/${SUBMISSIONS_BUCKET}/`);
+        setUploadedName(row?.file_name || (isOurs ? decodeURIComponent(row!.file_url!.split('/').pop() || 'file') : null));
         setLoading(false);
       });
   }, [open, assignment, user]);
@@ -170,7 +177,7 @@ export function StudentAssignmentDialog({
       // so the instructor sees "needs re-grade". Otherwise plain submitted.
       const wasGraded = submission?.status === 'graded' || submission?.status === 'ai_graded';
 
-      // tenant_id lookup. gw_assignment_submissions.tenant_id defaults to
+      // tenant_id lookup. gw_course_submissions.tenant_id defaults to
       // current_tenant_id() which returns NULL when the student isn't a
       // gw_tenant_members row for the current tenant — RLS then rejects
       // the INSERT with a WITH CHECK violation. Fetching the assignment's
@@ -186,25 +193,32 @@ export function StudentAssignmentDialog({
         tenantId = (asnTenant as { tenant_id: string | null } | null)?.tenant_id ?? null;
       }
 
+      // Try to derive a filename from an uploaded file URL so the
+      // instructor grading UI can show something readable in place of
+      // the raw storage path.
+      const derivedFileName = uploadedName
+        || (link.includes(`/${SUBMISSIONS_BUCKET}/`) ? decodeURIComponent(link.split('/').pop() || '') : null);
+
       const payload: Record<string, unknown> = {
         assignment_id: assignment.id,
-        user_id: user.id,
+        student_id: user.id,
         status: wasGraded ? 'revision_submitted' : 'submitted',
         submitted_at: new Date().toISOString(),
-        notes: notes.trim() || null,
-        recording_url: link.trim() || null,
+        content: notes.trim() || null,
+        file_url: link.trim() || null,
+        file_name: derivedFileName || null,
       };
       if (tenantId) payload.tenant_id = tenantId;
 
       if (submission?.id) {
         const { error } = await supabase
-          .from('gw_assignment_submissions' as any)
+          .from('gw_course_submissions')
           .update(payload)
           .eq('id', submission.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('gw_assignment_submissions' as any)
+          .from('gw_course_submissions')
           .insert(payload);
         if (error) throw error;
       }
@@ -250,10 +264,10 @@ export function StudentAssignmentDialog({
                 {assignment.points} pts
               </Badge>
             )}
-            {isGraded && submission?.score_value != null && (
+            {isGraded && submission?.points_earned != null && (
               <Badge className="gap-1 bg-green-600 hover:bg-green-600">
                 <CheckCircle className="h-3 w-3" />
-                Graded {submission.score_value}/{assignment.points ?? '?'}
+                Graded {submission.points_earned}/{assignment.points ?? '?'}
               </Badge>
             )}
             {isSubmitted && !isGraded && (

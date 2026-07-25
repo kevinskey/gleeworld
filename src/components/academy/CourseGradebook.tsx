@@ -113,35 +113,26 @@ export const CourseGradebook: React.FC<CourseGradebookProps> = ({ courseId, isEn
       const oldIds = new Set(((oldAsn.data as AsnRow[] | null) ?? []).map((a) => a.id));
       const newIds = new Set(((newAsn.data as AsnRow[] | null) ?? []).map((a) => a.id));
 
-      // 3. Submissions from both tables, keyed by assignment_id.
-      const [oldSubs, newSubs] = await Promise.all([
-        oldIds.size > 0
-          ? supabase
-              .from('gw_course_submissions')
-              .select('assignment_id, grade, status')
-              .eq('student_id', user?.id)
-              .in('assignment_id', Array.from(oldIds))
-          : Promise.resolve({ data: [] as any[] }),
-        newIds.size > 0
-          ? supabase
-              .from('gw_assignment_submissions' as any)
-              .select('assignment_id, score_value, status')
-              .eq('user_id', user?.id)
-              .in('assignment_id', Array.from(newIds))
-          : Promise.resolve({ data: [] as any[] }),
-      ]);
+      // 3. Submissions. Since migration 20260725250000 repointed
+      // gw_course_submissions.assignment_id at gw_assignments, both
+      // assignment sources land in a single submissions table now.
+      const allIds = [...oldIds, ...newIds];
+      const { data: subsData } = allIds.length > 0
+        ? await supabase
+            .from('gw_course_submissions')
+            .select('assignment_id, points_earned, grade, status')
+            .eq('student_id', user?.id)
+            .in('assignment_id', allIds)
+        : { data: [] as any[] };
+
       type SubmissionRow = { assignment_id: string; grade: number | null; status: string | null };
       const submissionMap = new Map<string, SubmissionRow>();
-      for (const s of ((oldSubs.data as any[]) ?? [])) {
-        submissionMap.set(s.assignment_id, { assignment_id: s.assignment_id, grade: s.grade, status: s.status });
-      }
-      // gw_assignment_submissions.score_value → grade for the formula.
-      for (const s of ((newSubs.data as any[]) ?? [])) {
-        submissionMap.set(s.assignment_id, {
-          assignment_id: s.assignment_id,
-          grade: s.score_value != null ? Number(s.score_value) : null,
-          status: s.status,
-        });
+      for (const s of ((subsData as any[]) ?? [])) {
+        // Prefer points_earned; some legacy rows only populated `grade`.
+        const grade = s.points_earned != null ? Number(s.points_earned)
+          : s.grade != null ? Number(s.grade)
+          : null;
+        submissionMap.set(s.assignment_id, { assignment_id: s.assignment_id, grade, status: s.status });
       }
 
       // 4. Build per-assignment view + parallel formula input.
