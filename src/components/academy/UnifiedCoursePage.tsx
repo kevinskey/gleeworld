@@ -44,6 +44,10 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { MobileCourseLanding } from '@/components/course/MobileCourseLanding';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCourseVisibilitySettings, getHiddenTabs } from '@/hooks/useCourseVisibilitySettings';
+import { getCourseTheme } from '@/lib/academy/courseTheme';
+import { CourseIdentityBackground } from './CourseIdentityBackground';
+import { CourseHeroHeader } from './CourseHeroHeader';
+import { CourseHomeDashboard } from './CourseHomeDashboard';
 
 const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager'));
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
@@ -341,29 +345,16 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
     );
   }
 
-  const isMus070Page = course.courseCode === 'MUS 070';
-  
+  // Per-course visual identity. Every course gets its own palette,
+  // orbs, and hero-chip gradient via getCourseTheme(). MUS 070's
+  // deep-sea look is preserved verbatim in the theme registry — no
+  // more one-off special-casing here.
+  const theme = getCourseTheme(course.courseCode);
+
   return <div className="academy-neutral">
       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
         <DashboardShell>
-        <div
-          className={`flex ${isMus070Page ? '' : 'bg-background'}`}
-          style={isMus070Page ? {
-            background: 'linear-gradient(160deg, #0a1628, #0d1f3c, #081430, #060e1f, #030812)',
-            position: 'relative',
-          } : undefined}
-        >
-          {/* Deep-sea glow orbs & grain for MUS 070 */}
-          {isMus070Page && (
-            <>
-              <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full opacity-20" style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%)' }} />
-                <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[50%] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.12) 0%, transparent 70%)' }} />
-                <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%)' }} />
-              </div>
-              <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
-            </>
-          )}
+        <CourseIdentityBackground theme={theme} className="flex">
         {/* Left Sidebar - Navigation - Visible on tablet (md) and up */}
         <div className="w-[216px] md:w-[240px] lg:w-[264px] min-w-[216px] md:min-w-[240px] lg:min-w-[264px] bg-card border-r border-border flex-shrink-0 hidden md:flex md:flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
           {/* Course Grade Stat - Above Navigation */}
@@ -415,18 +406,31 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Breadcrumb Navigation */}
-          <div className="px-3 sm:px-4 md:px-6 py-2 border-b border-border/50 bg-muted/30 flex items-center gap-2 text-sm">
-            <button 
+          {/* Breadcrumb — theme-aware so it reads over the themed shell. */}
+          <div
+            className="px-3 sm:px-4 md:px-6 py-2 border-b flex items-center gap-2 text-sm"
+            style={{
+              borderColor: theme.tone === 'light' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)',
+              background: theme.tone === 'light' ? 'rgba(0,0,0,0.20)' : 'rgba(255,255,255,0.50)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+          >
+            <button
               onClick={() => navigate('/course-selection')}
-              className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              className={`transition-colors flex items-center gap-1 ${theme.tone === 'light' ? 'text-white/70 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               <span>My Courses</span>
             </button>
-            <span className="text-muted-foreground/50">/</span>
-            <span className="text-foreground font-medium truncate">{course.title}</span>
+            <span className={theme.tone === 'light' ? 'text-white/40' : 'text-slate-400'}>/</span>
+            <span className={`font-medium truncate ${theme.tone === 'light' ? 'text-white' : 'text-slate-900'}`}>{course.title}</span>
           </div>
+
+          {/* Hero header — universal course identity block. Shows course
+              code chip, title, description, instructor, and (optionally)
+              a "next up" event. Every class page now leads with this. */}
+          <CourseHeroHeader course={course} theme={theme} />
 
           {/* Course Practice Bar - Integrated Listening & Practice Engine */}
           <CoursePracticeBar
@@ -518,31 +522,25 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
 
             {/* Content Sections */}
-            {activeTab === 'home' && (course.courseCode === 'MUS 240' ? <TeachingFirstHome courseId={course.id} isAdmin={isAdmin} /> : course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'LH 100' ? <div className="space-y-6">{course.courseCode === 'LH 100' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}><LiturgicalPlanner isAdmin={isAdmin} /></React.Suspense>}<StudentDossierHome courseId={course.id} isAdmin={isAdmin} /></div> : <div className="space-y-4">
-                  {/* Enrollment Card */}
-                  {!isEnrolled && !enrollmentLoading && <Card className="border-primary/50 bg-primary/5">
-                      
-                    </Card>}
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-end gap-3">
-                    <Button variant="default" className="gap-2 rounded-full px-6 bg-primary hover:bg-primary/90" onClick={() => navigate('/qr-scanner')}>
-                      <QrCode className="h-4 w-4" />
-                      Check In
-                    </Button>
-                    {isExecutiveBoard && <Button variant="outline" className="gap-2 rounded-full px-6" onClick={() => navigate('/admin/calendar')}>
-                        <Plus className="h-4 w-4" />
-                        Add Event
-                      </Button>}
-                    <Button variant="outline" className="gap-2 rounded-full px-6" onClick={() => navigate('/booking')}>
-                      <Calendar className="h-4 w-4" />
-                      Book Appointment
-                    </Button>
+            {activeTab === 'home' && (course.courseCode === 'MUS 240'
+              ? <TeachingFirstHome courseId={course.id} isAdmin={isAdmin} />
+              : (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'LH 100')
+                ? <div className="space-y-6">
+                    {course.courseCode === 'LH 100' && (
+                      <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}>
+                        <LiturgicalPlanner isAdmin={isAdmin} />
+                      </React.Suspense>
+                    )}
+                    <StudentDossierHome courseId={course.id} isAdmin={isAdmin} />
                   </div>
-
-                  {/* Full Calendar */}
-                  <CourseCalendarView courseId={course.id} />
-                </div>)}
+                : <CourseHomeDashboard
+                    course={course}
+                    theme={theme}
+                    isEnrolled={isEnrolled}
+                    isAdmin={isAdmin}
+                    isExecutiveBoard={isExecutiveBoard}
+                    onTabChange={setActiveTab}
+                  />)}
 
             {activeTab === 'syllabus' && <StudentSyllabusView course={course} />}
 
@@ -713,7 +711,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
           </div>
         </div>
-      </div>
+        </CourseIdentityBackground>
         </DashboardShell>
     </UniversalLayout>
   </div>;
