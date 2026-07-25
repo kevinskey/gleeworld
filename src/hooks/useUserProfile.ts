@@ -95,47 +95,29 @@ export const useUserProfile = (user: User | null) => {
           display_name: displayName
         });
       } else {
-        // SELECT returned null — usually means "profile not created yet"
-        // (fresh account, trigger hasn't fired yet), but on a tenant
-        // subdomain it can ALSO mean "profile exists but is scoped to a
-        // different tenant so RLS hides it from this reader" (multi-
-        // tenant users hit this on non-home subdomains). A raw INSERT
-        // would then 409 on the user_id unique constraint every single
-        // page load — the red flood the user was seeing in devtools.
-        // Upsert on user_id turns the hidden-but-existing case into a
-        // silent no-op update, and still creates the row for genuinely
-        // new users.
-        const { data: newProfile, error: insertError } = await supabase
-          .from('gw_profiles')
-          .upsert({
-            user_id: user.id,
-            email: user.email || '',
-            full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-            first_name: user.user_metadata?.first_name || null,
-            last_name: user.user_metadata?.last_name || null,
-          }, { onConflict: 'user_id' })
-          .select()
-          .maybeSingle();
-          
-        if (insertError) throw insertError;
-        
-        if (newProfile) {
-          const displayName = newProfile.full_name || 
-                             user?.user_metadata?.full_name || 
-                             user?.user_metadata?.name || 
-                             user?.email || 
-                             'User';
-                             
-          setUserProfile({
-            ...newProfile,
-            display_name: displayName
-          });
-        }
+        // SELECT returned null. Two reasons this happens:
+        //   1. Genuinely-new user whose signup trigger hasn't run yet.
+        //      Almost never; handle_new_user_profile is synchronous
+        //      with auth.users insert.
+        //   2. Multi-tenant user on a subdomain that doesn't match
+        //      their profile's tenant_id — RLS hides the row from
+        //      SELECT. Also blocks any INSERT/UPSERT we'd try (403),
+        //      which was flooding devtools with red errors every
+        //      page load.
+        // A client-side write can't fix case 2 (RLS says no) and
+        // isn't needed for case 1 (trigger is authoritative). So we
+        // stop trying to write — just leave userProfile null and let
+        // downstream components degrade to auth.user metadata.
+        // Log at debug level (not error) so devtools stays clean.
+        setUserProfile(null);
+        console.debug('[useUserProfile] no visible profile row for', user.id, '— likely tenant-scoped away, letting caller degrade.');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error fetching profile';
       setError(errorMessage);
-      console.error('Error fetching user profile:', {
+      // debug not error — SELECT failures on tenant-scoped RLS aren't
+      // actionable and flooding red is the noise we're trying to fix.
+      console.debug('[useUserProfile] fetch failed', {
         error: err,
         userId: user?.id,
         errorMessage
