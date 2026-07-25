@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useEffectivePreviewRole } from "@/hooks/useEffectivePreviewRole";
 import { StudentAssignmentDialog } from "@/components/academy/StudentAssignmentDialog";
+import { InstructorSubmissionsDialog } from "@/components/academy/InstructorSubmissionsDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1059,12 +1060,14 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
       <AssignmentEditDialog
         open={!!editing}
         assignment={editing}
+        courseId={course.id}
         onClose={() => setEditing(null)}
         onChanged={() => { reload(); setEditing(null); }}
       />
       <StudentAssignmentDialog
         open={!!studentViewing}
         assignment={studentViewing}
+        courseId={course.id}
         onClose={() => setStudentViewing(null)}
         onSubmitted={() => { if (studentViewing) void refreshMySubmission(studentViewing.id); }}
       />
@@ -1077,16 +1080,18 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
 // instructor edit title/description/points/due, toggle publish, or delete.
 
 function AssignmentEditDialog({
-  open, assignment, onClose, onChanged,
+  open, assignment, courseId, onClose, onChanged,
 }: {
   open: boolean;
   assignment: any | null;
+  courseId: string;
   onClose: () => void;
   onChanged: () => void;
 }) {
   const [form, setForm] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [gradingOpen, setGradingOpen] = useState(false);
 
   useEffect(() => {
     if (assignment) {
@@ -1181,6 +1186,23 @@ function AssignmentEditDialog({
             </label>
           </div>
 
+          {/* Grade submissions — opens the per-student grading dialog.
+              Kept in the same modal flow so instructors do not have to
+              hunt for a separate route. Disabled while the assignment
+              is a draft (nobody would have submitted yet). */}
+          <div className="pt-3 border-t">
+            <Button
+              variant="outline"
+              className="w-full gap-1.5"
+              onClick={() => setGradingOpen(true)}
+              disabled={!form.is_published}
+              title={form.is_published ? undefined : 'Publish before grading'}
+            >
+              <FileText className="w-4 h-4" />
+              Grade student submissions
+            </Button>
+          </div>
+
           <div className="flex items-center justify-between pt-3 border-t">
             <Button variant="destructive" size="sm" onClick={del} disabled={deleting}>
               {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
@@ -1196,6 +1218,12 @@ function AssignmentEditDialog({
           </div>
         </div>
       </div>
+      <InstructorSubmissionsDialog
+        open={gradingOpen}
+        assignment={form}
+        courseId={courseId}
+        onClose={() => setGradingOpen(false)}
+      />
     </div>
   );
 }
