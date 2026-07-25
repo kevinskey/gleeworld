@@ -360,6 +360,18 @@ export const TOOL_CATALOG: ToolDef[] = [
     },
     minRole: 'admin', execution: 'client', confirm: true,
   },
+  {
+    name: 'switch_world',
+    description: "Switch to one of the user's other tenants ('worlds'). Pass `query` as the name or slug (or a partial match — 'kevinsworld', 'spelman', 'main'). Leave `query` empty to have the tool list the user's available worlds so you can ask which one. If the user is only in one world, this tool is a no-op. On web this cross-navigates to the tenant's subdomain; on native it swaps the cached tenant and reloads in place. Same underlying mechanism as the avatar dropdown's Switch organization list.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str("Name or slug fragment of the target world, e.g. 'kevinsworld' or 'spelman'. Optional — omit to get a list."),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
 ];
 
 export function toolsForRole(role: AssistantRole): ToolDef[] {

@@ -286,6 +286,73 @@ export async function executeClientAction(
         if (error) return { ok: false, message: `Couldn't update the date card: ${error.message}` };
         return { ok: true, message: `Date card set to ${mod.name}.` };
       }
+      case 'switch_world': {
+        // Fetch memberships (same RPC the avatar switcher uses). RLS is
+        // fine on native + web since it's SECURITY DEFINER scoped to
+        // auth.uid(). Returns null on RPC error so we can surface a
+        // clean message rather than crash.
+        const { data: rawTenants, error: rpcErr } = await deps.supabase.rpc('my_tenants', {});
+        if (rpcErr) return { ok: false, message: `Couldn't look up your worlds: ${rpcErr.message ?? 'unknown error'}` };
+        const tenants = (rawTenants ?? []) as Array<{ slug: string; name: string | null }>;
+        if (tenants.length <= 1) {
+          return { ok: false, message: "You're only in one world — there's nothing to switch to." };
+        }
+        // Current tenant lives in window.__TENANT_CONFIG__.tenant on
+        // both web and native. Filter it out so we never "switch" the
+        // user to the tenant they're already on.
+        const current = (typeof window !== 'undefined'
+          && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
+        const others = tenants.filter((t) => t.slug !== current);
+        if (others.length === 0) {
+          return { ok: false, message: "You're already in your only other-world slot." };
+        }
+
+        const query = String(a.query ?? '').trim().toLowerCase();
+        let target: { slug: string; name: string | null } | null = null;
+        if (query) {
+          // Exact slug/name match wins over substring so 'main' doesn't
+          // fuzzily hit 'kevinsworld' or 'gleeworld-main-choir'.
+          target =
+            others.find((t) => t.slug.toLowerCase() === query || (t.name ?? '').toLowerCase() === query) ??
+            others.find((t) =>
+              t.slug.toLowerCase().includes(query) ||
+              (t.name ?? '').toLowerCase().includes(query)) ??
+            null;
+        }
+        if (!target) {
+          // No query, or nothing matched — hand the list back through the
+          // reply so the assistant can ask which one. Not an error state.
+          const list = others.map((t) => t.name || t.slug).join(', ');
+          return {
+            ok: true,
+            message: query
+              ? `I couldn't find a world matching "${a.query}". Your options: ${list}. Which one?`
+              : `Your other worlds are ${list}. Which one?`,
+          };
+        }
+
+        // Detect native without importing @capacitor/core here (client
+        // action bundle stays lean — the check pattern matches the one
+        // native-boot.js and isNativeApp() share).
+        const isNative = typeof window !== 'undefined' && (
+          window.location.protocol === 'capacitor:' ||
+          window.location.protocol === 'ionic:' ||
+          !!(window as any).Capacitor?.isNativePlatform?.()
+        );
+        if (isNative) {
+          try {
+            const payload = target.slug === 'main'
+              ? { tenant: 'main' }
+              : { tenant: target.slug, org: target.name ?? undefined };
+            localStorage.setItem('gw_native_tenant', JSON.stringify(payload));
+          } catch { /* private mode — reload will re-derive */ }
+          window.location.reload();
+        } else {
+          const host = target.slug === 'main' ? 'https://gleeworld.org' : `https://${target.slug}.gleeworld.org`;
+          window.location.href = host;
+        }
+        return { ok: true, message: `Switching to ${target.name || target.slug}…` };
+      }
       case 'create_course_draft': {
         const spec = a.spec;
         if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
