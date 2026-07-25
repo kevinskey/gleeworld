@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image as ImageIcon, Upload, Loader2, X } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,15 +68,31 @@ export function ImageUploadField({
   // Local blob preview avoids the DO Spaces CDN propagation race that can
   // briefly 404 a just-uploaded URL and cache it as a broken image.
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  // Blob URL cleanup: track the current URL in a ref and revoke only on
+  // unmount. A useEffect cleanup keyed on [localPreview] would fire under
+  // React.StrictMode's double-invoke of mount effects and revoke the
+  // just-created URL before the <img> tag can load it — which shows up
+  // as a spurious "Couldn't load the saved image" error during upload.
+  // The setLocalPreview updater below handles rotating out the previous
+  // URL when a new one is picked.
+  const currentBlobRef = useRef<string | null>(null);
+  useEffect(() => { currentBlobRef.current = localPreview; }, [localPreview]);
+  useEffect(() => () => {
+    if (currentBlobRef.current) URL.revokeObjectURL(currentBlobRef.current);
+  }, []);
   // When a stored URL fails to load (CDN race, deleted file, browser cached a
   // 404), fall back to the empty placeholder instead of leaving a broken-image
   // icon in the form. Reset whenever the previewSrc changes.
   const [imgError, setImgError] = useState(false);
-  useEffect(() => () => { if (localPreview) URL.revokeObjectURL(localPreview); }, [localPreview]);
 
   const previewSrc = localPreview ?? value;
   useEffect(() => { setImgError(false); }, [previewSrc]);
-  const showImage = !!previewSrc && !imgError;
+  // Don't surface imgError while an upload is in flight — the blob may
+  // still be loading and a spurious "Couldn't load" during upload is
+  // just noise. Also don't complain about blob: URLs: those come from
+  // the browser itself and can't legitimately 404.
+  const isBlob = previewSrc?.startsWith('blob:');
+  const showImage = !!previewSrc && (uploading || isBlob || !imgError);
 
   return (
     <div className="space-y-2">
@@ -104,7 +120,7 @@ export function ImageUploadField({
             <ImageIcon className="w-7 h-7" />
           </div>
         )}
-        {imgError && previewSrc && (
+        {imgError && previewSrc && !uploading && !isBlob && (
           <p className="text-sm text-amber-700 max-w-[180px]">
             Couldn&apos;t load the saved image. Try uploading it again.
           </p>
