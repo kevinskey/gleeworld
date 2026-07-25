@@ -967,7 +967,15 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                     className="flex items-center gap-2"
                   >
                     <Building2 className="w-4 h-4 shrink-0" />
-                    <span className="flex-1 truncate">{t.name || t.slug}</span>
+                    {/* Label override for main: gw_tenants.name for the
+                        main tenant is "GW Preview" (leftover seed data)
+                        which reads as an internal debug string. Show
+                        the platform name so the switcher reads as a
+                        real destination. Non-main tenants use their
+                        actual name. */}
+                    <span className="flex-1 truncate">
+                      {t.slug === 'main' ? 'GleeWorld' : (t.name || t.slug)}
+                    </span>
                     {isCurrent && <Check className="w-4 h-4 shrink-0 text-muted-foreground" />}
                   </DropdownMenuItem>
                 );
