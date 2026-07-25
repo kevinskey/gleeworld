@@ -56,6 +56,14 @@ export function tenantHomeUrl(slug: string): string {
 export function tenantSwitchUrl(slug: string, session: Session | null): string {
   const base = tenantHomeUrl(slug);
   if (!session?.access_token || !session.refresh_token) return base;
+  // Route through the app's /auth/callback page instead of the root.
+  // AuthCallback.tsx manually parses the hash and calls setSession()
+  // — the comment on that file spells out that supabase-js's
+  // detectSessionInUrl fires unreliably on our self-hosted GoTrue,
+  // which is exactly why our earlier landing-on-login report happened.
+  // ?next= tells AuthCallback where to route after the setSession
+  // succeeds; /dashboard drops the user into the tenant's home page
+  // matching what the manual sign-in flow does.
   const fragment = new URLSearchParams({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
@@ -63,5 +71,5 @@ export function tenantSwitchUrl(slug: string, session: Session | null): string {
     token_type: 'bearer',
     type: 'magiclink',
   }).toString();
-  return `${base}/#${fragment}`;
+  return `${base}/auth/callback?next=%2Fdashboard#${fragment}`;
 }
