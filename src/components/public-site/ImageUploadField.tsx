@@ -102,39 +102,50 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
   }
   // Route through an edge fn instead of a direct browser -> storage POST.
   // The direct path was reliably failing net::ERR_TIMED_OUT for some
-  // clients (ISP middleboxes / MTU issues) even for tiny (<10 KB) files,
-  // while every other Supabase request on the same session succeeded.
-  // The edge fn hits Storage server-side, so the client only ever POSTs
-  // to the edge runtime — which is battle-tested and works for those
-  // same clients.
-  const fileBase64 = await new Promise<string>((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => {
-      const s = String(r.result);
-      // strip the "data:<mime>;base64," prefix — server wants raw base64
-      const comma = s.indexOf(',');
-      resolve(comma >= 0 ? s.slice(comma + 1) : s);
-    };
-    r.onerror = () => reject(r.error || new Error('FileReader failed'));
-    r.readAsDataURL(file);
-  });
-  console.log(`[upload] invoking edge fn (base64 length ${fileBase64.length})`);
-  const { data, error } = await supabase.functions.invoke('upload-site-branding', {
-    body: {
-      file_base64: fileBase64,
-      filename: file.name,
-      prefix,
-      content_type: file.type || 'image/png',
-    },
-  });
+  // clients (ISP middleboxes / MTU issues) even for tiny (<10 KB) files.
+  console.log(`[upload] reading file as base64 (${file.size} bytes)…`);
+  let fileBase64: string;
+  try {
+    fileBase64 = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = String(r.result);
+        const comma = s.indexOf(',');
+        resolve(comma >= 0 ? s.slice(comma + 1) : s);
+      };
+      r.onerror = () => reject(r.error || new Error('FileReader failed'));
+      r.readAsDataURL(file);
+    });
+  } catch (err) {
+    console.error('[upload] FileReader failed:', err);
+    toast.error(`Couldn't read the file: ${err instanceof Error ? err.message : 'unknown'}`);
+    return null;
+  }
+  console.log(`[upload] base64 ready (${fileBase64.length} chars); invoking edge fn…`);
+  let invokeRes: { data: { url?: string; error?: string } | null; error: Error | null };
+  try {
+    invokeRes = await supabase.functions.invoke('upload-site-branding', {
+      body: {
+        file_base64: fileBase64,
+        filename: file.name,
+        prefix,
+        content_type: file.type || 'image/png',
+      },
+    });
+  } catch (err) {
+    console.error('[upload] edge fn threw:', err);
+    toast.error(`Upload failed (edge fn): ${err instanceof Error ? err.message : 'unknown'}`);
+    return null;
+  }
+  const { data, error } = invokeRes;
+  console.log('[upload] edge fn returned', { hasUrl: !!data?.url, error, data });
   if (error || !data?.url) {
-    const msg = (data && (data as { error?: string }).error) || error?.message || 'Unknown error';
-    console.error('[upload] edge fn failed', { error, data });
+    const msg = data?.error || error?.message || 'Unknown error';
     toast.error(`Upload failed: ${msg}`);
     return null;
   }
   console.log(`[upload] success: ${data.url}`);
-  return data.url as string;
+  return data.url;
 }
 
 // Self-hosted Supabase Storage 1.48 writes objects to a stub/ path that takes
