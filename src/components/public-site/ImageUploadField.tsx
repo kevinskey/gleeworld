@@ -158,6 +158,11 @@ export function ImageUploadField({
                 // path flatten cron), then swap blob for real URL.
                 await waitForUrlReachable(url);
                 onChange(url);
+                // Clear the blob preview now that we have a real URL.
+                // Otherwise the <img> keeps showing the blob and if the
+                // blob was revoked (page nav, tab suspend, HMR replay
+                // etc.) the thumbnail renders as a broken icon.
+                setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
               }
               setUploading(false);
             }}
