@@ -154,6 +154,11 @@ export const PhysicalInventoryManager = () => {
           donor_name: newScoreForm.donor_name.trim() || null,
           last_inventory_date: new Date().toISOString().split('T')[0],
           is_public: false,
+          // Even physical-only inventory entries need to be visible in
+          // the Scores tab so a member can find "we own this — see the
+          // librarian" without an admin having to remember to toggle
+          // sharing after every add.
+          shared_with_members: true,
         });
 
       if (error) throw error;
