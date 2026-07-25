@@ -7,11 +7,12 @@
 //   • tsb-store-sso — mints a short-lived JWT + admin URL for one-click login
 
 import { useCallback, useEffect, useState } from 'react';
-import { Store, ExternalLink, Loader2, Sparkles, AlertCircle, Palette, Clock, Check, XCircle } from 'lucide-react';
+import { Store, ExternalLink, Loader2, Sparkles, AlertCircle, Palette, Clock, Check, XCircle, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
+import { ImageUploadField } from '@/components/public-site/ImageUploadField';
 
 interface StoreState {
   slug: string | null;
@@ -32,6 +33,19 @@ interface Draft {
   created_at: string;
 }
 
+interface BrandJson {
+  hero_url?: string;
+  tagline?: string;
+  logo_url?: string;
+  footer_note?: string;
+}
+interface FundraiserJson {
+  headline?: string;
+  description?: string;
+  goal_cents?: number;
+  ends_at?: string;
+}
+
 export function FundraisingStoreSection() {
   const { isSuperAdmin, isAdmin } = useUserRole();
   const canManage = isSuperAdmin() || isAdmin();
@@ -43,6 +57,9 @@ export function FundraisingStoreSection() {
   const [openingDesign, setOpeningDesign] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Draft[] | null>(null);
+  const [brand, setBrand] = useState<BrandJson>({});
+  const [fundraiser, setFundraiser] = useState<FundraiserJson>({});
+  const [editOpen, setEditOpen] = useState(false);
 
   const loadState = useCallback(async () => {
     setLoading(true);
@@ -89,6 +106,8 @@ export function FundraisingStoreSection() {
       const { data, error } = await supabase.functions.invoke('tsb-store-drafts', {});
       if (error) throw error;
       setDrafts(Array.isArray(data?.drafts) ? data.drafts : []);
+      setBrand((data?.brand ?? {}) as BrandJson);
+      setFundraiser((data?.fundraiser ?? {}) as FundraiserJson);
     } catch {
       setDrafts([]); // silent — the store might just have no drafts yet
     }
@@ -200,6 +219,14 @@ export function FundraisingStoreSection() {
                 )}
               </Button>
               <Button
+                onClick={() => setEditOpen(true)}
+                disabled={!canManage}
+                variant="outline"
+                size="sm"
+              >
+                <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit storefront
+              </Button>
+              <Button
                 onClick={openAdmin}
                 disabled={!canManage || openingAdmin}
                 size="sm"
@@ -244,6 +271,153 @@ export function FundraisingStoreSection() {
           </div>
         )}
       </div>
+
+      {editOpen && (
+        <EditStorefrontModal
+          initialBrand={brand}
+          initialFundraiser={fundraiser}
+          onClose={() => setEditOpen(false)}
+          onSaved={(nextBrand, nextFund) => {
+            setBrand(nextBrand);
+            setFundraiser(nextFund);
+            setEditOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditStorefrontModal({ initialBrand, initialFundraiser, onClose, onSaved }: {
+  initialBrand: BrandJson;
+  initialFundraiser: FundraiserJson;
+  onClose: () => void;
+  onSaved: (brand: BrandJson, fundraiser: FundraiserJson) => void;
+}) {
+  const [heroUrl, setHeroUrl] = useState(initialBrand.hero_url ?? '');
+  const [tagline, setTagline] = useState(initialBrand.tagline ?? '');
+  const [footer, setFooter] = useState(initialBrand.footer_note ?? '');
+  const [headline, setHeadline] = useState(initialFundraiser.headline ?? '');
+  const [description, setDescription] = useState(initialFundraiser.description ?? '');
+  const [goalUsd, setGoalUsd] = useState(
+    initialFundraiser.goal_cents ? (initialFundraiser.goal_cents / 100).toFixed(2) : '',
+  );
+  const [saving, setSaving] = useState(false);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const goalCents = goalUsd ? Math.round(parseFloat(goalUsd) * 100) : null;
+      const body = {
+        brand: {
+          hero_url: heroUrl || null,
+          tagline: tagline || null,
+          footer_note: footer || null,
+        },
+        fundraiser: {
+          headline: headline || null,
+          description: description || null,
+          goal_cents: goalCents,
+        },
+      };
+      const { data, error } = await supabase.functions.invoke('tsb-store-update', { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success('Storefront updated');
+      onSaved(
+        (data?.brand_json ?? {}) as BrandJson,
+        (data?.fundraiser_json ?? {}) as FundraiserJson,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={save}
+        className="bg-card rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Edit storefront</h3>
+          <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <ImageUploadField
+          label="Hero image (behind the store title on the storefront)"
+          value={heroUrl}
+          onChange={setHeroUrl}
+          prefix="tsb-hero"
+          thumbClass="w-24 h-24"
+        />
+
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Tagline</label>
+          <input
+            value={tagline} onChange={(e) => setTagline(e.target.value)}
+            placeholder="Short line under the store name"
+            maxLength={140}
+            className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
+          />
+        </div>
+
+        <div className="pt-2 border-t border-border">
+          <div className="text-xs font-semibold text-muted-foreground mb-3">Fundraiser copy</div>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Headline</label>
+              <input
+                value={headline} onChange={(e) => setHeadline(e.target.value)}
+                placeholder={`Every purchase supports ${initialBrand.tagline || 'us'}.`}
+                maxLength={180}
+                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Description</label>
+              <textarea
+                value={description} onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                placeholder="What's the money for? Trip, uniforms, retreat, etc."
+                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background resize-y"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Goal ($)</label>
+              <input
+                type="number" step="0.01" min="0"
+                value={goalUsd} onChange={(e) => setGoalUsd(e.target.value)}
+                placeholder="Optional"
+                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Footer note</label>
+          <input
+            value={footer} onChange={(e) => setFooter(e.target.value)}
+            placeholder='e.g. "Powered by T-Shirt Brothers — Fulfilled by TSB"'
+            maxLength={200}
+            className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
+          />
+        </div>
+
+        <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving…</>) : 'Save changes'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

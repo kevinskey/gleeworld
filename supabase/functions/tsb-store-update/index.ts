@@ -1,13 +1,10 @@
-// tsb-store-drafts
+// tsb-store-update
 //
-// Server-side proxy that fetches the tenant's design drafts from TSB
-// using the shared GLEEWORLD_SERVICE_KEY (never exposed to the browser).
-// Returns { drafts: [...] } — each draft has status pending/approved/
-// rejected + optional review_notes.
-//
-// The GleeWorld Fundraising card uses this to show "your submitted
-// designs" so a tenant admin can see what they've submitted and where
-// TSB is with it, without leaving GleeWorld.
+// Proxies tenant storefront edits (hero image, tagline, fundraiser
+// headline/description/goal) to TSB's PATCH /api/gleeworld/stores/:slug
+// using the shared GLEEWORLD_SERVICE_KEY. TSB whitelists which fields
+// this endpoint can touch; the edge fn just adds authn on the GleeWorld
+// side (tenant admin only) and forwards.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -33,7 +30,6 @@ serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       global: { headers: { Authorization: authHeader } },
     });
-
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return jsonError(401, "Not signed in");
 
@@ -50,7 +46,7 @@ serve(async (req: Request) => {
       || profile.role === "super_admin"
       || profile.role === "super-admin"
       || profile.role === "owner";
-    if (!canManage) return jsonError(403, "Only tenant admins can view drafts");
+    if (!canManage) return jsonError(403, "Only tenant admins can edit the storefront");
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
     const { data: tenant } = await admin
@@ -58,31 +54,25 @@ serve(async (req: Request) => {
       .select("tsb_store_slug")
       .eq("id", profile.tenant_id)
       .maybeSingle();
-    if (!tenant?.tsb_store_slug) return jsonOk({ drafts: [] });
+    if (!tenant?.tsb_store_slug) return jsonError(404, "Tenant has no linked store");
 
-    // Fetch drafts + current storefront settings in parallel — the
-    // Fundraising card uses both. Keeping them in one fn saves the
-    // client a round trip and one fn cold-start.
-    const [draftsResp, storeResp] = await Promise.all([
-      fetch(
-        `${tsbOrigin}/api/gleeworld/stores/${encodeURIComponent(tenant.tsb_store_slug)}/design-drafts`,
-        { headers: { "x-gleeworld-service-key": gwServiceKey } },
-      ),
-      fetch(
-        `${tsbOrigin}/api/gleeworld/stores/${encodeURIComponent(tenant.tsb_store_slug)}`,
-        { headers: { "x-gleeworld-service-key": gwServiceKey } },
-      ),
-    ]);
-    const draftsBody = await draftsResp.json().catch(() => ({}));
-    const storeBody = await storeResp.json().catch(() => ({}));
-    if (!draftsResp.ok) return jsonError(502, draftsBody?.error || `TSB drafts ${draftsResp.status}`);
-    return jsonOk({
-      drafts: draftsBody.drafts ?? [],
-      brand: storeResp.ok ? (storeBody.brand_json ?? {}) : {},
-      fundraiser: storeResp.ok ? (storeBody.fundraiser_json ?? {}) : {},
-    });
+    const body = await req.json().catch(() => ({}));
+    const resp = await fetch(
+      `${tsbOrigin}/api/gleeworld/stores/${encodeURIComponent(tenant.tsb_store_slug)}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "x-gleeworld-service-key": gwServiceKey,
+        },
+        body: JSON.stringify(body),
+      },
+    );
+    const j = await resp.json().catch(() => ({}));
+    if (!resp.ok) return jsonError(502, j?.error || `TSB responded ${resp.status}`);
+    return jsonOk(j);
   } catch (err) {
-    console.error("[tsb-store-drafts] unhandled", err);
+    console.error("[tsb-store-update] unhandled", err);
     return jsonError(500, err instanceof Error ? err.message : "Unknown error");
   }
 });
