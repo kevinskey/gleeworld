@@ -29,6 +29,11 @@ interface AssignmentLite {
   due_at: string | null;
   points: number | null;
   is_active: boolean;
+  /** Optional — when present, inserted onto the submission so the
+   * tenant_isolation RLS check on gw_assignment_submissions passes for
+   * students who aren't in gw_tenant_members (they got in via
+   * gw_course_enrollments only). */
+  tenant_id?: string | null;
 }
 
 interface SubmissionRow {
@@ -164,7 +169,24 @@ export function StudentAssignmentDialog({
       // If a graded submission is being edited, flag as revision_submitted
       // so the instructor sees "needs re-grade". Otherwise plain submitted.
       const wasGraded = submission?.status === 'graded' || submission?.status === 'ai_graded';
-      const payload = {
+
+      // tenant_id lookup. gw_assignment_submissions.tenant_id defaults to
+      // current_tenant_id() which returns NULL when the student isn't a
+      // gw_tenant_members row for the current tenant — RLS then rejects
+      // the INSERT with a WITH CHECK violation. Fetching the assignment's
+      // tenant_id and setting it explicitly bypasses the default and
+      // passes the tenant_isolation_restrict check.
+      let tenantId = assignment.tenant_id ?? null;
+      if (!tenantId) {
+        const { data: asnTenant } = await supabase
+          .from('gw_assignments')
+          .select('tenant_id')
+          .eq('id', assignment.id)
+          .maybeSingle();
+        tenantId = (asnTenant as { tenant_id: string | null } | null)?.tenant_id ?? null;
+      }
+
+      const payload: Record<string, unknown> = {
         assignment_id: assignment.id,
         user_id: user.id,
         status: wasGraded ? 'revision_submitted' : 'submitted',
@@ -172,6 +194,8 @@ export function StudentAssignmentDialog({
         notes: notes.trim() || null,
         recording_url: link.trim() || null,
       };
+      if (tenantId) payload.tenant_id = tenantId;
+
       if (submission?.id) {
         const { error } = await supabase
           .from('gw_assignment_submissions' as any)
@@ -188,7 +212,12 @@ export function StudentAssignmentDialog({
       onSubmitted?.();
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to submit';
+      // Supabase errors are plain objects, not Error instances. Pull
+      // message + hint + code so the toast is diagnosable in the wild
+      // instead of silently reading "Failed to submit".
+      const e = err as { message?: string; hint?: string; code?: string; details?: string } | undefined;
+      const parts = [e?.message, e?.details, e?.hint].filter(Boolean);
+      const msg = parts.length > 0 ? parts.join(' — ') : 'Failed to submit';
       toast.error(msg);
     } finally {
       setSaving(false);

@@ -893,7 +893,7 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   function reload() {
     supabase
       .from("gw_assignments")
-      .select("id, title, description, due_at, points, is_active")
+      .select("id, title, description, due_at, points, is_active, tenant_id")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
       .then(({ data }) => setItems((data || []).map((r: any) => ({
@@ -905,7 +905,7 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
     let c = false;
     supabase
       .from("gw_assignments")
-      .select("id, title, description, due_at, points, is_active")
+      .select("id, title, description, due_at, points, is_active, tenant_id")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
       .then(async ({ data }) => {
