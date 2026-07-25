@@ -11,10 +11,19 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
   }
   const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
   const path = `${prefix}-${Date.now()}.${ext}`;
-  const { error } = await supabase
+  // Hard 60s ceiling on the storage upload itself — the underlying
+  // fetch has no built-in timeout, so a stalled connection would
+  // pin the UI at "Uploading…" forever. Race an AbortController
+  // against the upload; whoever finishes first wins.
+  const abortAfter = new Promise<{ error: Error }>((resolve) => {
+    setTimeout(() => resolve({ error: new Error('Upload timed out after 60s — check your connection and try again.') }), 60_000);
+  });
+  const uploadPromise = supabase
     .storage
     .from('site-branding')
-    .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+    .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type })
+    .then((r: { error: Error | null }) => ({ error: r.error }));
+  const { error } = await Promise.race([uploadPromise, abortAfter]);
   if (error) {
     const detail = (error as { statusCode?: string | number; error?: string; message: string });
     const status = detail.statusCode ?? detail.error ?? '';
