@@ -94,6 +94,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'box-office', to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     section: 'money', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-box-office', gate: { module: 'box_office', adminOnly: true } },
   { key: 'finance',    to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, section: 'money', tone: 'bg-emerald-50 text-emerald-600', tourId: 'nav-finance', gridIcon: Wallet, gate: { module: 'finance' } },
   { key: 'tickets',    to: '/box-office',           label: 'Tickets',    icon: Ticket,     section: 'money', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-tickets-grid', surfaces: ['grid'], gate: { module: 'box_office' } },
+  { key: 'fundraising', to: '/dashboard/fundraising', label: 'Fundraising Store', icon: Shirt, section: 'money', tone: 'bg-amber-50 text-amber-600', tourId: 'nav-fundraising', gate: { adminOnly: true } },
   // People — tenant user management (invite / promote / disable / CSV
   // bulk import). adminOnly is now authoritative in the code, not just
   // via gw_tenant_nav_prefs — a fresh tenant with no prefs seeded would
