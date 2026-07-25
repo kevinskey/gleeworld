@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Music, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Music, Plus, Pencil, Trash2, Play, Loader2 } from 'lucide-react';
 import { SingFlow } from './SingFlow';
 import { ProgressTab } from './ProgressTab';
 import { ClassProgressTab } from './ClassProgressTab';
@@ -21,10 +21,39 @@ interface LibraryRow {
 
 // Admin-only: create/edit entry points for teacher-authored notation exercises.
 // Non-admins keep the plain empty state — they can't author exercises.
-function LibraryTabAdmin() {
+function LibraryTabAdmin({ onOpenExercise }: { onOpenExercise: (ir: ExerciseIR) => void }) {
   const navigate = useNavigate();
   const [rows, setRows] = useState<LibraryRow[]>([]);
   const [loading, setLoading] = useState(true);
+  // Row currently being fetched (Open button spinner). Only one at a time —
+  // clicking Open on a second row while the first is still loading just
+  // reassigns; the earlier fetch's result is ignored on arrival because
+  // the ref no longer matches.
+  const [openingId, setOpeningId] = useState<string | null>(null);
+
+  const openExercise = async (row: LibraryRow) => {
+    setOpeningId(row.id);
+    // params.ir is the same shape SingFlow expects — pre-baked at save
+    // time by scoreToRow → editorScoreToIR. No conversion needed on open.
+    const { data, error } = await supabase
+      .from('gw_sight_reading_exercises')
+      .select('params')
+      .eq('id', row.id)
+      .maybeSingle();
+    setOpeningId((cur) => (cur === row.id ? null : cur));
+    if (error || !data) {
+      toast.error('Could not open exercise', { description: error?.message ?? 'not found' });
+      return;
+    }
+    const ir = (data as any)?.params?.ir;
+    if (!isValidIr(ir)) {
+      toast.error('This exercise is missing playable notes.', {
+        description: 'Edit it to add or fix the notation, then try again.',
+      });
+      return;
+    }
+    onOpenExercise(ir as ExerciseIR);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -70,6 +99,21 @@ function LibraryTabAdmin() {
             <li key={row.id} className="flex items-center justify-between gap-2 px-4 py-3">
               <span className="text-sm text-slate-900">{row.title}</span>
               <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="rounded-full"
+                  disabled={openingId === row.id}
+                  onClick={() => openExercise(row)}
+                  aria-label={`Open ${row.title} for practice`}
+                >
+                  {openingId === row.id ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Play className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  Open
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -299,7 +343,7 @@ export default function SightReadingStudio() {
 
         <TabsContent value="library" className="pt-4">
           {isAdmin() ? (
-            <LibraryTabAdmin />
+            <LibraryTabAdmin onOpenExercise={setExercise} />
           ) : (
             <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
               <p className="text-sm text-slate-600">Your teacher hasn’t added any scores yet.</p>
