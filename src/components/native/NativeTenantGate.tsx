@@ -119,17 +119,29 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
 
       // JWT tenant is 'main' or null — look up the tenants this email
       // belongs to via my_tenants (SECURITY DEFINER, scoped to auth.uid()).
-      // The picker screen was rejected as a user experience: the app should
-      // drop straight into a tenant based on the email alone. So we
-      // auto-open the FIRST non-main membership the RPC returns even when
-      // there are several — the RPC already sorts by tenant name (see
-      // 20260717040000_my_tenants_rpc.sql), giving each user a
-      // deterministic choir. Multi-tenant admins who need to switch can do
-      // it from the account menu after landing.
+      // The picker screen was rejected as a user experience: the app
+      // should drop straight into a tenant based on the email alone.
+      //
+      // Preference order:
+      //   1. If the user has a 'main' membership (platform admin), land
+      //      on 'main' — the platform site is their home even when they
+      //      also own tenants. Fixes a specific super-admin's report:
+      //      "kpj64110@gmail.com should login to gleeworld.org but still
+      //      owns kevinsworld."
+      //   2. Otherwise, open the FIRST non-main membership the RPC
+      //      returns. The RPC sorts alphabetically by tenant name (see
+      //      migration 20260717040000_my_tenants_rpc.sql), so each user
+      //      lands in the same tenant deterministically.
       try {
         const { data: myTenantsRaw, error: rpcErr } = await supabase.rpc('my_tenants' as never);
         if (!rpcErr) {
           const myTenants = (myTenantsRaw ?? []) as Array<{ slug: string; name: string | null }>;
+          const hasMain = myTenants.some((t) => t.slug === 'main');
+          if (hasMain) {
+            localStorage.setItem(KEY, JSON.stringify({ tenant: 'main' }));
+            window.location.reload();
+            return;
+          }
           const nonMain = myTenants.filter((t) => t.slug && t.slug !== 'main');
           if (nonMain.length >= 1) {
             const pick = nonMain[0];

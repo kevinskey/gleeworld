@@ -33,14 +33,20 @@ export async function syncNativeTenant(session: Session): Promise<void> {
   // stored {tenant, org} — refresh to get shortName + logoUrl too).
   if (current?.tenant === slug && current?.shortName && current?.logoUrl) return;
 
-  // 'main' is the platform/marketing tenant — it has no member app on native.
-  // Do NOT force it: a platform admin (super-admin on 'main') signing into the
-  // native app has no single "home" choir, so forcing tenant='main' dropped
-  // them on the marketing site (looked like login bouncing back). Leave the
-  // cache untouched so NativeTenantGate can offer the org picker to choose a
-  // choir. If the admin already picked a choir, this preserves that choice
-  // (previously it was wiped back to 'main' on every token refresh).
-  if (slug === 'main') return;
+  // 'main' is the platform/marketing tenant. syncNativeTenant used to
+  // refuse to cache it (a JWT with tenant_slug='main' was treated as an
+  // ambiguous platform-admin who needed to pick a choir). That's now
+  // wrong: NativeTenantGate explicitly wants to LAND a super-admin on
+  // main when their memberships include it, so respect the slug either
+  // way. Skipping the branding fetch below is still fine — the main
+  // tenant has no tenant_row/branding of its own (it's the platform
+  // shell) — so we cache the minimal payload and reload.
+  if (slug === 'main') {
+    if (current?.tenant === 'main') return; // already there, no reload needed
+    localStorage.setItem(KEY, JSON.stringify({ tenant: 'main' }));
+    window.location.reload();
+    return;
+  }
 
   // Seed with the existing cache so a failed DB fetch can't wipe a valid
   // org/shortName/logoUrl that the picker (or a previous sync) wrote.

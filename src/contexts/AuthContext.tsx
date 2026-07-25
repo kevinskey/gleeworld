@@ -250,10 +250,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             localStorage.removeItem(key);
           }
         });
-        // On the native app, also drop the cached tenant so the user lands
-        // on the org picker instead of being silently kept in their last
-        // tenant's branding.
-        localStorage.removeItem('gw_native_tenant');
+        // NOTE: `gw_native_tenant` is deliberately NOT cleared here.
+        // The picker is now a one-time step per install — subsequent
+        // sign-ins re-run the my_tenants lookup and overwrite the cache
+        // if the new email maps to a different tenant, so the branding
+        // never gets "stuck" on the wrong account. Wiping on every
+        // logout forced platform admins (whose memberships put them in
+        // an ambiguous spot) to re-pick every session even after they'd
+        // chosen a home.
       } catch (e) {
         console.warn('Failed to clear localStorage:', e);
       }
