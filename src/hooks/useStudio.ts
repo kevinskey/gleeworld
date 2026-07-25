@@ -379,6 +379,24 @@ export function useStudioEngine(session: Session | null) {
         return () => { cancelled = true; };
       }
       const needsFullReload = skeleton !== lastSkeletonRef.current || !nativeCloseRef.current;
+
+      // Skip full reloads while a take is armed and rolling — same reason
+      // as the web branch below, but the cost is higher on iOS: a full
+      // reload here tears down AVAudioEngine, closes the native bridge,
+      // and openNativeStudio re-downloads every asset + re-decodes every
+      // AVAudioFile ("easily multi-second" per the header comment above).
+      // Each MIDI note commit during a take was firing this because
+      // midiContentSig hashes into skeletonSig — so overdubbing on an
+      // existing MIDI track would stutter for seconds per keystroke on
+      // iOS. Only skip when we DO have a running engine (nativeCloseRef
+      // set) — a first-load reload during an already-armed take is
+      // impossible in practice but we bail rather than skip a needed
+      // open. When recordingActive flips off, this effect re-runs and
+      // one clean reload picks up the finalized take clip.
+      if (state?.recordingActive && needsFullReload && nativeCloseRef.current) {
+        return;
+      }
+
       if (!needsFullReload) {
         setWarming(true);
         (async () => {
