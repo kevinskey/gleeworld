@@ -22,7 +22,7 @@ export default function DocsApp() {
       </header>
       <div className="container flex gap-8 px-4 py-8">
         <aside className="hidden w-64 shrink-0 lg:block">
-          <ScrollArea className="h-[calc(100vh-8rem)] pr-4"><DocsSidebar /></ScrollArea>
+          <ScrollArea className="h-[calc(100dvh-8rem)] pr-4"><DocsSidebar /></ScrollArea>
         </aside>
         <main className="min-w-0 flex-1">
           <div className="mb-6 md:hidden"><DocsSearch /></div>

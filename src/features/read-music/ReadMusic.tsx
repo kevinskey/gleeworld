@@ -270,7 +270,7 @@ function ExercisePage() {
 export default function ReadMusic() {
   const { enabled: theoryV2, isLoading: flagLoading } = useFeatureFlag("THEORY_V2");
   return (
-    <div className="read-music-root flex flex-col min-h-[calc(100vh-4rem)]">
+    <div className="read-music-root flex flex-col min-h-[calc(100dvh-4rem)]">
       <Routes>
         <Route index element={<Home />} />
         {theoryV2 && (

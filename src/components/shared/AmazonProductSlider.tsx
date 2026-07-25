@@ -107,7 +107,8 @@ export const AmazonProductSlider: React.FC<AmazonProductSliderProps> = ({ classN
           {products.length > 3 && (
             <button
               onClick={() => scrollContainer('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/90 rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2"
+              aria-label="Scroll products left"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/90 rounded-full h-11 w-11 lg:h-9 lg:w-9 flex items-center justify-center shadow-md opacity-80 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity -translate-x-2"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -153,7 +154,8 @@ export const AmazonProductSlider: React.FC<AmazonProductSliderProps> = ({ classN
           {products.length > 3 && (
             <button
               onClick={() => scrollContainer('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/90 rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity translate-x-2"
+              aria-label="Scroll products right"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/90 rounded-full h-11 w-11 lg:h-9 lg:w-9 flex items-center justify-center shadow-md opacity-80 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity translate-x-2"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

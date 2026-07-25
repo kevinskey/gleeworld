@@ -103,8 +103,40 @@ body.gw-tenant-themed {
 
   /* Borders that were going to be brand-accent */
   .border-sky-500, .border-sky-600,
-  .border-blue-500, .border-blue-600 {
+  .border-blue-500, .border-blue-600,
+  .border-purple-500, .border-purple-600, .border-purple-700 {
     border-color: var(--site-accent, hsl(var(--primary))) !important;
+  }
+
+  /* Purple family — GleeWorld's default brand accent, hardcoded across
+     many dashboards as "primary action" (bg-purple-500/600/700). Retarget
+     to the tenant accent so Lyke House / Kevin's World / etc. don't look
+     like GleeWorld inside the app. Light shades (purple-50/100/200) are
+     LEFT ALONE because they're role/status badges (super-admin, module
+     categories) and carry semantic meaning. */
+  .bg-purple-500, .bg-purple-600, .bg-purple-700 {
+    background-color: var(--site-accent, hsl(var(--primary))) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+  .hover\:bg-purple-500:hover, .hover\:bg-purple-600:hover, .hover\:bg-purple-700:hover {
+    background-color: var(--site-accent, hsl(var(--primary))) !important;
+    filter: brightness(1.08);
+  }
+  /* Standalone purple-500+ text (link hover, action label) → tenant accent.
+     Purple-100/200/300/400 stay as semantic badge text. */
+  .text-purple-500, .text-purple-600, .text-purple-700 {
+    color: var(--site-accent, hsl(var(--primary))) !important;
+  }
+
+  /* Gradient stops using purple — most "brand gradient" buttons/hero
+     backgrounds use from-purple-* to-* patterns. Reroute the purple stop
+     to the accent so the gradient reads as tenant-brand. */
+  .from-purple-500, .from-purple-600, .from-purple-700,
+  .via-purple-500, .via-purple-600, .via-purple-700,
+  .to-purple-500, .to-purple-600, .to-purple-700 {
+    --tw-gradient-from: var(--site-accent, hsl(var(--primary))) !important;
+    --tw-gradient-via: var(--site-accent, hsl(var(--primary))) !important;
+    --tw-gradient-to: var(--site-accent, hsl(var(--primary))) !important;
   }
 
   /* ─── Dark "panel" surfaces in legacy modules ─────────────────────── */

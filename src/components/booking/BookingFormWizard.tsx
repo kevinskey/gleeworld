@@ -254,7 +254,7 @@ export const BookingFormWizard: React.FC = () => {
   // Success screen after submission
   if (isSubmitted) {
     return (
-      <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-muted/30 to-background py-6 px-4">
+      <div className="min-h-[calc(100dvh-64px)] bg-gradient-to-b from-muted/30 to-background py-6 px-4">
         <div className="max-w-2xl mx-auto">
           <Card className="border-0 shadow-lg bg-card">
             <CardContent className="p-8 md:p-12 text-center">
@@ -295,7 +295,7 @@ export const BookingFormWizard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-b from-muted/30 to-background py-4 md:py-8 px-4 relative">
+    <div className="min-h-[calc(100dvh-64px)] bg-gradient-to-b from-muted/30 to-background py-4 md:py-8 px-4 relative">
       {/* Subtle gradient fade at the bottom */}
       <div className="pointer-events-none fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
       <div className="max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto">

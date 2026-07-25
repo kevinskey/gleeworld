@@ -455,6 +455,7 @@ function emptyAvailability(): AvailabilityRow[] {
 function BookingsPanel() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'upcoming' | 'pending' | 'past'>('upcoming');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['workshop-bookings'],

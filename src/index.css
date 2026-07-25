@@ -66,6 +66,26 @@
     }
   }
 
+  /* Card overlays that expose actions (play, quick-view, delete) on top of
+     media thumbnails. Historically these were `opacity-0 group-hover:opacity-100`
+     patterns which are invisible on touch. Rule: visible by default on touch
+     tiers (iPad, iPhone, native app WKWebView), hover-reveal only for
+     fine-pointer devices (mouse-driven desktop). Applies inside a `.group`
+     ancestor so page markup patterns don't change. */
+  .gw-card-overlay {
+    opacity: 1;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .gw-card-overlay {
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    .group:hover .gw-card-overlay,
+    .group:focus-within .gw-card-overlay {
+      opacity: 1;
+    }
+  }
+
   /* Apple "Headline" — list/card item titles: body size, semibold. */
   .font-headline {
     font-size: 17px; line-height: 22px; font-weight: 600; letter-spacing: -0.43px;

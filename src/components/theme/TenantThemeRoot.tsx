@@ -69,7 +69,7 @@ export function TenantThemeRoot() {
   });
 
   const primary = data?.theme?.primaryColor || branding.primary_color || null;
-  const accent = data?.theme?.accentColor || null;
+  const accent = data?.theme?.accentColor || branding.accent_color || null;
 
   useEffect(() => {
     const root = document.documentElement;

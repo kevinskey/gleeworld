@@ -333,7 +333,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                 <p className="text-white/50 text-sm">No {adminTab} appointments.</p>
               </div>
             ) : (
-              <ScrollArea className="h-[calc(100vh-380px)]">
+              <ScrollArea className="h-[calc(100dvh-380px)]">
                 <div className="space-y-1.5 pr-1">
                   {adminFilteredList
                     .sort((a: any, b: any) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime())

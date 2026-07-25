@@ -603,7 +603,7 @@ export const ProductManager = () => {
                   </Badge>
                 </button>
                 {/* Action buttons on hover */}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="gw-card-overlay absolute top-2 right-2 flex gap-1 transition-opacity">
                   <Button size="icon" variant="secondary" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(product); }}>
                     <Edit className="h-4 w-4" />
                   </Button>

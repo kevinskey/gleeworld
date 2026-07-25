@@ -85,7 +85,7 @@ export const CalendarDayDetail: React.FC<CalendarDayDetailProps> = ({
       </CardHeader>
       
       <CardContent className="p-0">
-        <ScrollArea className="h-[calc(100vh-400px)] min-h-[300px]">
+        <ScrollArea className="h-[calc(100dvh-400px)] min-h-[300px]">
           <div className="p-4 space-y-4">
             {/* Holiday Warning */}
             {isHoliday && (

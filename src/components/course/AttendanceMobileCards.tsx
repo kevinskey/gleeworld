@@ -167,7 +167,7 @@ export const AttendanceMobileCards: React.FC<AttendanceMobileCardsProps> = ({
 
       {/* Sticky save footer for mobile */}
       {isInstructor && hasDirtyRecords && onSave && (
-        <div className="sticky bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-sm border-t shadow-lg z-20">
+        <div className="sticky bottom-0 left-0 right-0 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-background/95 backdrop-blur-sm border-t shadow-lg z-20">
           <Button
             className="w-full gap-2"
             onClick={onSave}

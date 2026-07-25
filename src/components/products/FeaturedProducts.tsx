@@ -277,7 +277,7 @@ export const FeaturedProducts = ({
         
         {/* Hover overlay with quick view */}
         {settings.featured_show_quick_view && (
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <div className="gw-card-overlay absolute inset-0 bg-black/60 transition-opacity duration-300 flex items-center justify-center">
             <Button size="sm" className="bg-white text-primary hover:bg-white/90 animate-fade-in">
               Quick View
             </Button>

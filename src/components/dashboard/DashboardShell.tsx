@@ -365,7 +365,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   if (inStudioSession || inViewerReader) return null;
 
   return (
-    <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 bg-card self-stretch min-h-screen gw-collapsible-sidebar">
+    <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 bg-card self-stretch min-h-[100dvh] gw-collapsible-sidebar">
       {/* Site brand — tenant logo when set; if the logo image fails to
           load (broken URL / wrong tenant settings), fall back to a
           colored monogram so the brand block never disappears. Larger
@@ -1031,7 +1031,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           sidebar rail stays put — each <main> scrolls INSIDE its column
           instead of pushing the whole document (which used to drag the
           sidebar off-screen with it). */}
-      <div className="flex h-screen w-full bg-background overflow-hidden">
+      <div className="flex h-[100dvh] w-full bg-background overflow-hidden">
         {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Trial countdown — self-gates on trial state so it renders null

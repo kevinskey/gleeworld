@@ -252,7 +252,7 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[calc(100vh-200px)]">
+        <ScrollArea className="h-[calc(100dvh-200px)]">
           <div className="space-y-2">
             {discussions.map(disc => (
               <div key={disc.id} className="group relative">
@@ -278,7 +278,7 @@ export const DiscussionModule: React.FC<DiscussionModuleProps> = ({
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="absolute top-2 right-8 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                    className="gw-card-overlay absolute top-2 right-8 h-9 w-9 lg:h-8 lg:w-8 transition-opacity text-destructive hover:text-destructive"
                     onClick={(e) => {
                       e.stopPropagation();
                       setDeleteTarget({ id: disc.id, title: disc.title });

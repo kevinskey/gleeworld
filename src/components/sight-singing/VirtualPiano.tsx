@@ -582,9 +582,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             <div className={`flex gap-0.5 ${
               isFullScreen 
                 ? isMobile && isLandscape 
-                  ? "h-[calc(100vh-120px)]" // Landscape mobile: use most of screen height
-                  : isMobile 
-                    ? "h-[50vh]" // Portrait mobile: half screen
+                  ? "h-[calc(100dvh-120px)]" // Landscape mobile: use most of screen height
+                  : isMobile
+                    ? "h-[50dvh]" // Portrait mobile: half screen
                     : "h-[384px] md:h-[480px]" // Desktop
                 : "h-[260px] sm:h-[340px]"
             }`}>

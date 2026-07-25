@@ -341,7 +341,7 @@ export const TourManagerDashboard = ({
   // full-height self-scrolling layout: header and sidebar sit in flow and
   // only the content pane scrolls. Height fills the viewport minus demo
   // bar + topbar; DashboardShell zeroes its main padding for tour routes.
-  return <div className="h-[calc(100vh-var(--gw-demo-bar-h,0px)-3.5rem)] md:h-[calc(100vh-var(--gw-demo-bar-h,0px)-5rem)] bg-background flex flex-col overflow-hidden">
+  return <div className="h-[calc(100dvh-var(--gw-demo-bar-h,0px)-3.5rem)] md:h-[calc(100dvh-var(--gw-demo-bar-h,0px)-5rem)] bg-background flex flex-col overflow-hidden">
       <header className="flex-shrink-0 z-20 bg-background border-b border-border">
         <div className="flex items-center justify-between px-3 lg:px-4 h-12 bg-brand-900">
           <div className="flex items-center gap-2 min-w-0">

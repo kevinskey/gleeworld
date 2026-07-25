@@ -16,7 +16,14 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
     .from('site-branding')
     .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
   if (error) {
-    toast.error(`Upload failed: ${error.message}`);
+    const detail = (error as { statusCode?: string | number; error?: string; message: string });
+    const status = detail.statusCode ?? detail.error ?? '';
+    console.error('[hero-upload] failed', { status, detail });
+    if (String(status) === '403' || /permission|denied|policy/i.test(detail.message)) {
+      toast.error('Upload denied by permissions — sign out, sign back in, and try again. If it still fails, tell Kevin the tenant slug you\'re on.');
+    } else {
+      toast.error(`Upload failed (${status || 'unknown'}): ${detail.message}`);
+    }
     return null;
   }
   return supabase.storage.from('site-branding').getPublicUrl(path).data.publicUrl;

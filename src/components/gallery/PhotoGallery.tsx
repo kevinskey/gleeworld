@@ -398,7 +398,7 @@ export const PhotoGallery: React.FC = () => {
           )}
           
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="gw-card-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity">
             <div className="absolute bottom-0 left-0 right-0 p-3">
               <p className="text-white text-sm font-medium truncate">
                 {photo.title || 'Untitled'}
@@ -635,7 +635,7 @@ export const PhotoGallery: React.FC = () => {
       </div>
 
       {/* Photo Grid/List */}
-      <ScrollArea className="h-[calc(100vh-350px)] min-h-[400px]">
+      <ScrollArea className="h-[calc(100dvh-350px)] min-h-[400px]">
         <div className="space-y-8">
           {Object.entries(organizedPhotos).map(([group, groupPhotos]) => (
             <div key={group}>

@@ -358,7 +358,7 @@ function AuditionFormContent() {
         </Card>
 
         {/* Fixed bottom navigation for mobile */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 md:hidden z-40">
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden z-40">
           <div className="flex justify-between gap-3">
             <Button
               type="button"

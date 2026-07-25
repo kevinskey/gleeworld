@@ -17,10 +17,10 @@ export const PersistentMeetingOverlay: React.FC = () => {
       >
         <Video className="h-5 w-5 animate-pulse" />
         <span className="text-sm font-medium">Meeting in progress</span>
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary-foreground hover:bg-white/20" onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}>
+        <Button variant="ghost" size="icon-sm" aria-label="Maximize meeting" className="text-primary-foreground hover:bg-white/20" onClick={(e) => { e.stopPropagation(); toggleMinimize(); }}>
           <Maximize2 className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-primary-foreground hover:bg-destructive/80" onClick={(e) => { e.stopPropagation(); endMeeting(); }}>
+        <Button variant="ghost" size="icon-sm" aria-label="End meeting" className="text-primary-foreground hover:bg-destructive/80" onClick={(e) => { e.stopPropagation(); endMeeting(); }}>
           <X className="h-4 w-4" />
         </Button>
       </div>

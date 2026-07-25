@@ -36,9 +36,9 @@ const sheetVariants = cva(
         top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top max-h-[85vh] overflow-y-auto",
         bottom:
           "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom max-h-[85vh] overflow-y-auto rounded-t-lg",
-        left: "inset-y-0 left-0 h-full w-[85vw] max-w-sm border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left overflow-y-auto",
+        left: "inset-y-0 left-0 h-full w-[85vw] max-w-sm md:max-w-md lg:max-w-lg border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left overflow-y-auto",
         right:
-          "inset-y-0 right-0 h-full w-[85vw] max-w-sm border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right overflow-y-auto",
+          "inset-y-0 right-0 h-full w-[85vw] max-w-sm md:max-w-md lg:max-w-lg border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right overflow-y-auto",
       },
     },
     defaultVariants: {
@@ -77,7 +77,7 @@ const SheetContent = React.forwardRef<
           notch; bottom sheets never touch the top edge and keep top-3.
           env() is 0 outside the app, so desktop is unchanged. */}
       <SheetPrimitive.Close className={cn(
-        "absolute right-3 z-50 flex items-center justify-center h-10 w-10 sm:h-8 sm:w-8 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary",
+        "absolute right-3 z-50 flex items-center justify-center h-11 w-11 sm:h-10 sm:w-10 lg:h-9 lg:w-9 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary",
         side === "bottom" ? "top-3" : "top-[calc(env(safe-area-inset-top,0px)+0.75rem)]",
       )}>
         <X className="h-5 w-5 sm:h-4 sm:w-4" />

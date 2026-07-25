@@ -365,7 +365,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </>
           )}
         {/* Left Sidebar - Navigation - Visible on tablet (md) and up */}
-        <div className="w-[216px] md:w-[240px] lg:w-[264px] min-w-[216px] md:min-w-[240px] lg:min-w-[264px] bg-card border-r border-border flex-shrink-0 hidden md:flex md:flex-col h-[calc(100vh-var(--gw-header-h,4rem))]">
+        <div className="w-[216px] md:w-[240px] lg:w-[264px] min-w-[216px] md:min-w-[240px] lg:min-w-[264px] bg-card border-r border-border flex-shrink-0 hidden md:flex md:flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
           {/* Course Grade Stat - Above Navigation */}
           <CourseGradeStat courseId={course.id} onNavigateToGrades={() => setActiveTab('grades')} />
           

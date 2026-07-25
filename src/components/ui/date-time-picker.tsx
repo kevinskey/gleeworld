@@ -82,7 +82,7 @@ export function DateTimePicker({
             month: "space-y-2",
             caption: "flex justify-center pt-1 relative items-center mb-2",
             caption_label: "text-sm font-medium",
-            nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+            nav_button: "h-9 w-9 lg:h-7 lg:w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
             table: "w-full border-collapse",
             head_row: "flex",
             head_cell: "text-muted-foreground rounded-md w-8 font-normal text-xs",
