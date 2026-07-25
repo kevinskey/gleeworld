@@ -22,7 +22,7 @@ import { Tuner } from '@/components/audioTools/Tuner';
 import { InstrumentPlayer } from '@/components/audioTools/InstrumentPlayer';
 import {
   Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download, Scissors,
-  Volume2, Headphones, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
+  Volume2, MoveHorizontal, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
   ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
   Magnet, Wrench,
@@ -563,10 +563,27 @@ function Editor({
     midiPedalRef.current = false;
   }, [midiInputTrack, midiHeld]);
 
-  // Write finished presses into the take clip (one session update per event —
-  // a pedal-up can commit a whole chord at once).
-  const commitMidiPresses = (presses: HeldPress[], upAbs: number) => {
-    if (presses.length === 0 || !midiInputTrack) return;
+  // Pending press queue + coalesce timer for MIDI-take commits. Every
+  // released note used to trigger its own update() → the whole session
+  // subtree re-rendered per keystroke and the engine-reload effect saw
+  // a new skeleton per keystroke. Even after deferring reloads mid-take
+  // (useStudio.ts), the React-render pressure alone still glitched
+  // longer takes. Batch releases into a ref and flush every 250 ms so
+  // one update lands per quarter-second of playing instead of per
+  // finger. Immediate-flush path is used when NOT recording (single
+  // notes need to land in state right away) and from stopRecording so
+  // the take fully commits before setRecordingActive(false).
+  const pendingMidiCommitsRef = useRef<Array<{ presses: HeldPress[]; upAbs: number }>>([]);
+  const pendingFlushTimerRef = useRef<number | null>(null);
+
+  const flushPendingMidiCommits = () => {
+    if (pendingFlushTimerRef.current !== null) {
+      window.clearTimeout(pendingFlushTimerRef.current);
+      pendingFlushTimerRef.current = null;
+    }
+    const items = pendingMidiCommitsRef.current;
+    if (items.length === 0 || !midiInputTrack) return;
+    pendingMidiCommitsRef.current = [];
     const trackId = midiInputTrack.id;
     const freshClipId = crypto.randomUUID();
     update((s) => ({
@@ -574,18 +591,39 @@ function Editor({
       tracks: s.tracks.map((t) => {
         if (t.id !== trackId || !isMidiTrack(t)) return t;
         let clips = t.clips;
-        for (const press of presses) {
-          const committed = appendTakeNote(
-            clips, midiTakeClipRef.current,
-            { pitch: press.pitch, velocity: press.velocity, downAbsSeconds: press.downAbsSeconds, upAbsSeconds: upAbs },
-            freshClipId,
-          );
-          clips = committed.clips;
-          midiTakeClipRef.current = committed.takeClipId;
+        for (const { presses, upAbs } of items) {
+          for (const press of presses) {
+            const committed = appendTakeNote(
+              clips, midiTakeClipRef.current,
+              { pitch: press.pitch, velocity: press.velocity, downAbsSeconds: press.downAbsSeconds, upAbsSeconds: upAbs },
+              freshClipId,
+            );
+            clips = committed.clips;
+            midiTakeClipRef.current = committed.takeClipId;
+          }
         }
         return { ...t, clips } as Track;
       }),
     }));
+  };
+
+  // Write finished presses into the take clip. Coalesces to ~4 updates/
+  // second during recording; commits immediately outside a take or when
+  // the caller passes `immediate=true` (used at stopRecording so the
+  // final held-note flush lands in state synchronously).
+  const commitMidiPresses = (presses: HeldPress[], upAbs: number, immediate = false) => {
+    if (presses.length === 0 || !midiInputTrack) return;
+    pendingMidiCommitsRef.current.push({ presses, upAbs });
+    if (immediate || !state?.recordingActive) {
+      flushPendingMidiCommits();
+      return;
+    }
+    if (pendingFlushTimerRef.current === null) {
+      pendingFlushTimerRef.current = window.setTimeout(() => {
+        pendingFlushTimerRef.current = null;
+        flushPendingMidiCommits();
+      }, 250);
+    }
   };
 
   const handleMidiNoteOn = (pitch: number, velocity: number, timeStampMs?: number) => {
@@ -1315,7 +1353,7 @@ function Editor({
     if (recording.midiOnly) {
       const midiElapsed = (performance.now() - recording.startWallMs) / 1000;
       const takeEndSec = state?.positionSeconds ?? recording.startSeconds;
-      commitMidiPresses(midiHeld.flush(), takeEndSec);
+      commitMidiPresses(midiHeld.flush(), takeEndSec, true);
       commitTakeCc();
       // Grow the grid to cover a take that ran past it, like the audio
       // path does — otherwise playback stops at the old length_seconds
@@ -1329,8 +1367,9 @@ function Editor({
     }
 
     // MIDI notes riding along an audio take: commit anything still held or
-    // pedal-sustained before the transport gets parked.
-    commitMidiPresses(midiHeld.flush(), state?.positionSeconds ?? recording.startSeconds);
+    // pedal-sustained before the transport gets parked. immediate=true so
+    // any coalesced-mid-take presses land in state before we tear down.
+    commitMidiPresses(midiHeld.flush(), state?.positionSeconds ?? recording.startSeconds, true);
     commitTakeCc();
 
     const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, transportStartWallMs, armedTrackIds: armed } = recording;
@@ -5103,8 +5142,13 @@ function ChannelStrip({
       <input type="range" min={-40} max={6} step={0.5} value={volumeDb}
         onChange={(e) => onVolume(Number(e.target.value))} className="w-full h-1 accent-primary" />
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Headphones className="w-4 h-4" />
-        <span className="w-10 tabular-nums text-right">{pan.toFixed(2)}</span>
+        {/* Pan (stereo balance), NOT a separate headphones output. Was a
+            Headphones icon that misled users into thinking there was a
+            second output; there isn't — everything routes to the single
+            destination. -1 = hard left, 0 = center, +1 = hard right. */}
+        <MoveHorizontal className="w-4 h-4" />
+        <span className="text-[10px] font-semibold uppercase tracking-wider">Pan</span>
+        <span className="w-10 tabular-nums text-right ml-auto">{pan.toFixed(2)}</span>
       </div>
       <input type="range" min={-1} max={1} step={0.05} value={pan}
         onChange={(e) => onPan(Number(e.target.value))} className="w-full h-1 accent-primary" />
