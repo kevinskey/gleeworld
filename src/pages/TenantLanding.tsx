@@ -156,7 +156,10 @@ export default function TenantLanding() {
     return (
       <>
         <DemoBackToGleeWorldBanner />
-        <div className="min-h-screen bg-background" />
+        <div
+          className="min-h-screen bg-background"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        />
       </>
     );
   }
@@ -172,7 +175,11 @@ export default function TenantLanding() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <DemoBackToGleeWorldBanner />
-      {/* Header strip */}
+      {/* Header strip. paddingTop pushes the header's content below
+          the notch. Background paints THROUGH the padding so the
+          notch area is filled with the header color. Sticky top-0
+          keeps that behavior when scrolled — header pins to
+          viewport top and its safe-area padding still applies. */}
       <header
         className="sticky top-0 z-50 bg-[hsl(var(--brand-navy))] text-white border-b border-white/10 backdrop-blur-md"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
