@@ -306,6 +306,13 @@ function EditStorefrontModal({ initialBrand, initialFundraiser, onClose, onSaved
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Guard: a blob: URL means the ImageUploadField is still uploading
+    // (or the upload failed). Persisting it would break the storefront
+    // in every browser but this tab. Ask the user to wait.
+    if (heroUrl.startsWith('blob:')) {
+      toast.error('Hero image is still uploading — wait a moment, then click Save again.');
+      return;
+    }
     setSaving(true);
     try {
       const goalCents = goalUsd ? Math.round(parseFloat(goalUsd) * 100) : null;
