@@ -7,7 +7,7 @@
 //   • tsb-store-sso — mints a short-lived JWT + admin URL for one-click login
 
 import { useCallback, useEffect, useState } from 'react';
-import { Store, ExternalLink, Loader2, Sparkles, AlertCircle, Palette } from 'lucide-react';
+import { Store, ExternalLink, Loader2, Sparkles, AlertCircle, Palette, Clock, Check, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -21,6 +21,17 @@ interface StoreState {
   admin_url: string | null;
 }
 
+interface Draft {
+  id: number;
+  name: string;
+  image_url: string;
+  status: 'pending' | 'approved' | 'rejected';
+  review_notes: string | null;
+  reviewed_at: string | null;
+  approved_product_id: number | null;
+  created_at: string;
+}
+
 export function FundraisingStoreSection() {
   const { isSuperAdmin, isAdmin } = useUserRole();
   const canManage = isSuperAdmin() || isAdmin();
@@ -31,6 +42,7 @@ export function FundraisingStoreSection() {
   const [openingAdmin, setOpeningAdmin] = useState(false);
   const [openingDesign, setOpeningDesign] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Draft[] | null>(null);
 
   const loadState = useCallback(async () => {
     setLoading(true);
@@ -71,6 +83,20 @@ export function FundraisingStoreSection() {
   }, []);
 
   useEffect(() => { void loadState(); }, [loadState]);
+
+  const loadDrafts = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('tsb-store-drafts', {});
+      if (error) throw error;
+      setDrafts(Array.isArray(data?.drafts) ? data.drafts : []);
+    } catch {
+      setDrafts([]); // silent — the store might just have no drafts yet
+    }
+  }, []);
+
+  useEffect(() => {
+    if (state?.slug) void loadDrafts();
+  }, [state?.slug, loadDrafts]);
 
   const enableStore = async () => {
     setProvisioning(true);
@@ -188,6 +214,33 @@ export function FundraisingStoreSection() {
             <p className="text-xs text-muted-foreground">
               Design merch opens TSB&apos;s design studio; anything you submit goes to TSB for review before it appears on your storefront.
             </p>
+
+            {drafts && drafts.length > 0 && (
+              <div className="pt-2 border-t border-border">
+                <div className="text-xs font-semibold text-muted-foreground mb-2">Your submitted designs</div>
+                <ul className="space-y-2">
+                  {drafts.map((d) => {
+                    const Icon = d.status === 'approved' ? Check : d.status === 'rejected' ? XCircle : Clock;
+                    const tone = d.status === 'approved' ? 'text-emerald-700' : d.status === 'rejected' ? 'text-red-700' : 'text-amber-700';
+                    const label = d.status === 'approved' ? 'Published' : d.status === 'rejected' ? 'Rejected' : 'Pending review';
+                    return (
+                      <li key={d.id} className="flex items-center gap-3 text-sm">
+                        <img src={d.image_url} alt={d.name} className="w-10 h-10 object-contain bg-white border border-border rounded" />
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate">{d.name}</div>
+                          <div className={`text-xs inline-flex items-center gap-1 ${tone}`}>
+                            <Icon className="w-3 h-3" /> {label}
+                            {d.review_notes && d.status !== 'pending' && (
+                              <span className="text-muted-foreground italic ml-1">— {d.review_notes}</span>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>
