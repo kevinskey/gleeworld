@@ -4,6 +4,7 @@ import { DollarSign, CreditCard, TrendingUp, FileText } from "lucide-react";
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { FundraisingStoreSection } from '@/components/finance/FundraisingStoreSection';
 
 // Spreadsheet-style finance dashboard. Stats sit in compact rows of a
 // dense table — easier to scan when the numbers are what matter, and
@@ -85,6 +86,11 @@ const FinancialManagement = () => {
           <Button variant="outline" size="sm">Generate</Button>
         </div>
       </div>
+
+      {/* Fundraising storefront — TSB group store keyed to this tenant.
+          Lives in Finance because the tenant's cut on every sale is
+          the main revenue signal, not an operational tool. */}
+      <FundraisingStoreSection />
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>
