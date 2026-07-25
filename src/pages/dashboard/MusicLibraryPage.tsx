@@ -23,7 +23,11 @@ import {
   Music, Upload, Search, Loader2, FileMusic, ListMusic,
   PencilLine, Headphones, Youtube, X, Pencil, Library as LibraryIcon,
   Maximize2, Minimize2, LayoutGrid, List as ListIcon, Share2,
+  Users as UsersIcon, GraduationCap, Check as CheckIcon,
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
 import { useSheetMusicTracks } from '@/hooks/useSheetMusicTracks';
@@ -79,6 +83,8 @@ interface ScoreRow {
   // setlist flows still open unshared scores (server-side hardening is a
   // phase-2 follow-up).
   shared_with_members: boolean | null;
+  shared_with_users: string[] | null;
+  shared_with_courses: string[] | null;
 }
 
 export default function MusicLibraryPage() {
@@ -87,6 +93,27 @@ export default function MusicLibraryPage() {
   const { active: scope, setActive: setScope, options, courses, applyFilter } = useScopeFilter();
   const { canEditMusicLibrary } = useUserRole();
   const canEdit = canEditMusicLibrary();
+
+  // Non-admin visibility rule: a score is visible if
+  //   shared_with_members = true
+  //   OR the current user is in shared_with_users
+  //   OR the current user is enrolled in one of shared_with_courses
+  // Course enrollments are pre-fetched once and folded into the scores
+  // query's OR filter as an array-overlap predicate. Admins bypass all
+  // of this via the canEdit branch below.
+  const { data: enrolledCourseIds = [] } = useQuery<string[]>({
+    queryKey: ['my-enrolled-courses', user?.id],
+    enabled: !!user && !canEdit,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_course_enrollments')
+        .select('course_id')
+        .or(`user_id.eq.${user!.id},student_profile_id.eq.${user!.id}`)
+        .eq('enrollment_status', 'enrolled');
+      return Array.from(new Set((data ?? []).map((r: any) => r.course_id).filter(Boolean)));
+    },
+  });
   const [topTab, setTopTab] = useState<TopTab>('scores');
   const [search, setSearch] = useState('');
   // Scores layout: card grid (default) or compact list. Persisted so the
@@ -103,6 +130,11 @@ export default function MusicLibraryPage() {
   // Annotation viewer state — when set, opens a full-screen dialog with the
   // annotated PDF viewer so the user can mark up the score.
   const [viewing, setViewing] = useState<{ id: string; title: string; pdfUrl: string } | null>(null);
+
+  // Share dialog state — the row currently being reviewed for sharing.
+  // Opened via the row's Share button (canEdit only). Setting to null
+  // closes the dialog without saving.
+  const [sharing, setSharing] = useState<ScoreRow | null>(null);
 
   // A score is served either from a public pdf_url (legacy/tenant uploads) or
   // from a PRIVATE storage object (personal scores published to this tenant —
@@ -165,20 +197,39 @@ export default function MusicLibraryPage() {
   const toggleViewerFullscreen = () => setIsViewerFullscreen((v) => !v);
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
-    queryKey: ['music-library-scores', scope, canEdit],
+    queryKey: ['music-library-scores', scope, canEdit, enrolledCourseIds.join(',')],
     queryFn: async () => {
       let q = supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members, shared_with_users, shared_with_courses')
         .eq('is_archived', false)
         .order('title')
         .limit(200);
-      // Browse filter only: the Scores tab hides unflagged scores from
-      // members, but this is NOT an access control — RLS is unchanged and
+      // Browse filter only: the Scores tab hides unshared scores from
+      // members. NOT an access control — RLS is unchanged and
       // deep-link/setlist flows still open unshared scores (server-side
-      // hardening is a phase-2 follow-up). Editors see everything and can
-      // toggle the flag.
-      if (!canEdit) q = q.eq('shared_with_members', true);
+      // hardening is a phase-2 follow-up). Editors see everything.
+      //
+      // Sharing shape (2026-07-25):
+      //   shared_with_members = true             → visible to all members
+      //   auth.uid() ∈ shared_with_users         → visible to that user
+      //   auth.uid() enrolled in a course whose
+      //     id ∈ shared_with_courses            → visible to that student
+      // Combined via a PostgREST `.or(...)` clause; `cs` = contains,
+      // `ov` = overlaps. Curly-brace UUID literals are the PG array
+      // syntax the operator expects.
+      if (!canEdit && user) {
+        const clauses: string[] = ['shared_with_members.eq.true'];
+        clauses.push(`shared_with_users.cs.{${user.id}}`);
+        if (enrolledCourseIds.length > 0) {
+          clauses.push(`shared_with_courses.ov.{${enrolledCourseIds.join(',')}}`);
+        }
+        q = q.or(clauses.join(','));
+      } else if (!canEdit) {
+        // Signed out or user missing — mimic legacy "shared_with_members
+        // only" so nothing leaks while auth is still resolving.
+        q = q.eq('shared_with_members', true);
+      }
       q = applyFilter(q as any);
       const { data } = await q;
       return (data ?? []) as ScoreRow[];
@@ -201,26 +252,11 @@ export default function MusicLibraryPage() {
     );
   }, [rows, search]);
 
-  // Editor-only toggle: flips shared_with_members so the score does/doesn't
-  // show up in members' (non-editors') filtered query above. `shared_with_members`
-  // isn't in the generated Supabase types yet (Task 1 column), hence the cast.
-  const handleToggleShare = async (row: ScoreRow) => {
-    const next = !row.shared_with_members;
-    // .select() so RLS-silenced writes are detectable: restrictive policies
-    // (e.g. the demo tenant's read-only guard) make the UPDATE match 0 rows
-    // without erroring, which previously produced a false success toast.
-    const { data, error } = await (supabase as any)
-      .from('gw_sheet_music')
-      .update({ shared_with_members: next })
-      .eq('id', row.id)
-      .select('id');
-    if (error || !data?.length) {
-      toast.error("Sharing couldn't be updated — your role may not have permission.");
-      return;
-    }
-    qc.invalidateQueries({ queryKey: ['music-library-scores'] });
-    toast.success(next ? 'Shared with members' : 'No longer shared');
-  };
+  // Row's Share button — opens the granular share dialog rather than
+  // toggling in place. The dialog handles the actual write; passing the
+  // row through state gives it access to the current sharing state
+  // (shared_with_members/users/courses) as initial values.
+  const handleOpenShare = (row: ScoreRow) => setSharing(row);
 
   return (
     <UniversalLayout showHeader={false} showFooter={false}>
@@ -341,7 +377,7 @@ export default function MusicLibraryPage() {
                   onAnnotate={() => { void openScoreRow(r); }}
                   onAttachAudio={() => setAttachingAudio(r)}
                   onEdit={() => setEditing(r)}
-                  onToggleShare={() => handleToggleShare(r)}
+                  onToggleShare={() => handleOpenShare(r)}
                 />
               ))}
             </div>
@@ -357,7 +393,7 @@ export default function MusicLibraryPage() {
                     onAnnotate={() => { void openScoreRow(r); }}
                     onAttachAudio={() => setAttachingAudio(r)}
                     onEdit={() => setEditing(r)}
-                    onToggleShare={() => handleToggleShare(r)}
+                    onToggleShare={() => handleOpenShare(r)}
                   />
                 ))}
               </div>
@@ -411,6 +447,15 @@ export default function MusicLibraryPage() {
         onSaved={() => {
           qc.invalidateQueries({ queryKey: ['music-library-scores'] });
           setEditing(null);
+        }}
+      />
+
+      <ShareScoreDialog
+        score={sharing}
+        onOpenChange={(open) => !open && setSharing(null)}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ['music-library-scores'] });
+          setSharing(null);
         }}
       />
 
@@ -1476,6 +1521,267 @@ function EditScoreDialog({
           <Button onClick={handleSave} disabled={submitting || !title.trim()}>
             {submitting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Pencil className="w-4 h-4 mr-1.5" />}
             Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Share dialog ────────────────────────────────────────────────────────
+//
+// Combines three sharing lanes in one place:
+//   1. "Everyone in this workspace" — the tenant-wide shared_with_members
+//      flag (kept for the ~thousand-row broadcast case).
+//   2. "Specific people" — shared_with_users uuid[] on the score. Members
+//      whose auth.uid() lands in the array see the row in Scores.
+//   3. "Classes" — shared_with_courses uuid[] on the score. Anyone
+//      currently enrolled (gw_course_enrollments) in a listed course
+//      sees the row. Removing a student from the class immediately
+//      revokes access on the next Scores refresh.
+//
+// One Save writes all three arrays back in a single update. On failure
+// (RLS silent no-op, network, etc.) we toast and leave the dialog open
+// so the librarian can retry rather than lose their selections.
+function ShareScoreDialog({
+  score, onOpenChange, onSaved,
+}: {
+  score: ScoreRow | null;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const open = !!score;
+  const [everyone, setEveryone] = useState(false);
+  const [users, setUsers] = useState<Set<string>>(new Set());
+  const [coursesSel, setCoursesSel] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
+  const [peopleFilter, setPeopleFilter] = useState('');
+
+  // Reset draft state whenever the dialog opens for a different score.
+  useEffect(() => {
+    if (!score) return;
+    setEveryone(!!score.shared_with_members);
+    setUsers(new Set(score.shared_with_users ?? []));
+    setCoursesSel(new Set(score.shared_with_courses ?? []));
+    setPeopleFilter('');
+  }, [score]);
+
+  // Tenant members — used for the individual-share picker. Fetched only
+  // when the dialog is open to avoid pulling every profile at page load.
+  const { data: people = [], isLoading: peopleLoading } = useQuery<Array<{ user_id: string; full_name: string | null; email: string | null; role: string | null }>>({
+    queryKey: ['share-dialog-people'],
+    enabled: open,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email, role')
+        .eq('disabled', false)
+        .order('full_name', { ascending: true, nullsFirst: false });
+      return (data ?? []) as any[];
+    },
+  });
+
+  // Tenant classes — pulled from gw_courses; only active ones surface
+  // because sharing to a dormant/archived class would be surprising.
+  const { data: classes = [], isLoading: classesLoading } = useQuery<Array<{ id: string; title: string; course_code: string | null }>>({
+    queryKey: ['share-dialog-courses'],
+    enabled: open,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_courses')
+        .select('id, title, course_code, is_active')
+        .eq('is_active', true)
+        .order('title');
+      return ((data ?? []) as any[]).map((c) => ({ id: c.id, title: c.title, course_code: c.course_code }));
+    },
+  });
+
+  const filteredPeople = useMemo(() => {
+    const q = peopleFilter.trim().toLowerCase();
+    if (!q) return people;
+    return people.filter((p) =>
+      (p.full_name || '').toLowerCase().includes(q) ||
+      (p.email || '').toLowerCase().includes(q),
+    );
+  }, [people, peopleFilter]);
+
+  const toggleUser = (uid: string) => {
+    setUsers((prev) => {
+      const next = new Set(prev);
+      if (next.has(uid)) next.delete(uid); else next.add(uid);
+      return next;
+    });
+  };
+  const toggleCourse = (cid: string) => {
+    setCoursesSel((prev) => {
+      const next = new Set(prev);
+      if (next.has(cid)) next.delete(cid); else next.add(cid);
+      return next;
+    });
+  };
+
+  const save = async () => {
+    if (!score) return;
+    setSaving(true);
+    // `.select()` after update so an RLS-silenced no-op surfaces as a real
+    // failure (row_count === 0) instead of a lying success toast.
+    const { data, error } = await (supabase as any)
+      .from('gw_sheet_music')
+      .update({
+        shared_with_members: everyone,
+        shared_with_users: Array.from(users),
+        shared_with_courses: Array.from(coursesSel),
+      })
+      .eq('id', score.id)
+      .select('id');
+    setSaving(false);
+    if (error || !data?.length) {
+      toast.error("Sharing couldn't be updated — your role may not have permission.");
+      return;
+    }
+    const summary = everyone
+      ? 'Shared with everyone in this workspace'
+      : (users.size + coursesSel.size === 0
+        ? 'Not shared — visible only to you and other admins'
+        : `Shared with ${users.size} person${users.size === 1 ? '' : 's'} · ${coursesSel.size} class${coursesSel.size === 1 ? '' : 'es'}`);
+    toast.success(summary);
+    onSaved();
+  };
+
+  if (!score) return null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="truncate">Share “{score.title}”</DialogTitle>
+          <DialogDescription>
+            Choose who can see this score in their Scores tab. Sharing is additive — any
+            of the three lanes below is enough for a member to see the row.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5 overflow-y-auto flex-1 -mx-1 px-1">
+          {/* Lane 1 — everyone */}
+          <div className="flex items-start justify-between gap-3 rounded-lg border p-3">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold">Everyone in this workspace</div>
+              <div className="text-xs text-muted-foreground">
+                Every member of your tenant can see the score. Turn this off to share only with the specific people and classes below.
+              </div>
+            </div>
+            <Switch checked={everyone} onCheckedChange={setEveryone} />
+          </div>
+
+          {/* Lane 2 — specific people */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm inline-flex items-center gap-1.5">
+                <UsersIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                Specific people
+                {users.size > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{users.size}</Badge>}
+              </Label>
+              {users.size > 0 && (
+                <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setUsers(new Set())}>
+                  Clear
+                </Button>
+              )}
+            </div>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={peopleFilter}
+                onChange={(e) => setPeopleFilter(e.target.value)}
+                placeholder="Search by name or email…"
+                className="pl-7 h-8 text-sm"
+              />
+            </div>
+            <ScrollArea className="h-40 rounded-lg border">
+              <div className="p-1">
+                {peopleLoading ? (
+                  <div className="p-3 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading people…
+                  </div>
+                ) : filteredPeople.length === 0 ? (
+                  <div className="p-3 text-xs text-muted-foreground">No people match.</div>
+                ) : filteredPeople.map((p) => {
+                  const selected = users.has(p.user_id);
+                  return (
+                    <button
+                      key={p.user_id}
+                      type="button"
+                      onClick={() => toggleUser(p.user_id)}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/60 text-left"
+                    >
+                      <Checkbox checked={selected} onCheckedChange={() => toggleUser(p.user_id)} className="pointer-events-none" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm truncate">{p.full_name || p.email || '(no name)'}</div>
+                        {p.full_name && p.email && (
+                          <div className="text-xs text-muted-foreground truncate">{p.email}</div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Lane 3 — classes */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm inline-flex items-center gap-1.5">
+                <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
+                Classes
+                {coursesSel.size > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{coursesSel.size}</Badge>}
+              </Label>
+              {coursesSel.size > 0 && (
+                <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setCoursesSel(new Set())}>
+                  Clear
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground -mt-1">
+              Every currently-enrolled student in a selected class sees this score. Access follows the class roster — removing a student from the class also removes their access here.
+            </p>
+            <ScrollArea className="h-32 rounded-lg border">
+              <div className="p-1">
+                {classesLoading ? (
+                  <div className="p-3 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading classes…
+                  </div>
+                ) : classes.length === 0 ? (
+                  <div className="p-3 text-xs text-muted-foreground">No active classes in this workspace.</div>
+                ) : classes.map((c) => {
+                  const selected = coursesSel.has(c.id);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggleCourse(c.id)}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/60 text-left"
+                    >
+                      <Checkbox checked={selected} onCheckedChange={() => toggleCourse(c.id)} className="pointer-events-none" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm truncate">{c.title}</div>
+                        {c.course_code && (
+                          <div className="text-xs text-muted-foreground truncate">{c.course_code}</div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+
+        <DialogFooter className="pt-2 border-t">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={save} disabled={saving}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <CheckIcon className="w-4 h-4 mr-1.5" />}
+            Save sharing
           </Button>
         </DialogFooter>
       </DialogContent>
