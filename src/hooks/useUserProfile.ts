@@ -95,18 +95,27 @@ export const useUserProfile = (user: User | null) => {
           display_name: displayName
         });
       } else {
-        // Create basic profile if doesn't exist
+        // SELECT returned null — usually means "profile not created yet"
+        // (fresh account, trigger hasn't fired yet), but on a tenant
+        // subdomain it can ALSO mean "profile exists but is scoped to a
+        // different tenant so RLS hides it from this reader" (multi-
+        // tenant users hit this on non-home subdomains). A raw INSERT
+        // would then 409 on the user_id unique constraint every single
+        // page load — the red flood the user was seeing in devtools.
+        // Upsert on user_id turns the hidden-but-existing case into a
+        // silent no-op update, and still creates the row for genuinely
+        // new users.
         const { data: newProfile, error: insertError } = await supabase
           .from('gw_profiles')
-          .insert({
+          .upsert({
             user_id: user.id,
             email: user.email || '',
             full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
             first_name: user.user_metadata?.first_name || null,
             last_name: user.user_metadata?.last_name || null,
-          })
+          }, { onConflict: 'user_id' })
           .select()
-          .single();
+          .maybeSingle();
           
         if (insertError) throw insertError;
         
