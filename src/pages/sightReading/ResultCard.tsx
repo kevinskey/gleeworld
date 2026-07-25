@@ -29,7 +29,7 @@ export function ResultCard({
   onExit: () => void;
 }) {
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6 space-y-6">
+    <div className="mx-auto w-full max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl px-4 py-6 space-y-6">
       <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
         <p className="text-xs uppercase tracking-widest text-slate-500">Your take</p>
         <p className={`mt-1 text-5xl font-bold ${band(result.overall)}`}>{result.overall}</p>

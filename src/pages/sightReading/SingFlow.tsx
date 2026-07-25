@@ -271,7 +271,7 @@ export function SingFlow({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6 space-y-6">
+    <div className="mx-auto w-full max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Sing the line</h1>
         <div className="flex items-center gap-1">

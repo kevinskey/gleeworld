@@ -48,6 +48,16 @@ const MORE_SECTIONS: NavSectionKey[] = ['music', 'teach', 'make', 'plan', 'reach
 // per app, still bigger than the original 20px icon, just calmer.
 const DEFAULT_TONE = 'bg-muted text-foreground';
 
+// Chip/icon/label sizes scale up at breakpoints because the grid's column
+// count grows too slowly for the viewport (4→6→8) — desktop tiles end up
+// ~170px wide, so a fixed 36px chip reads as a tiny blob in the middle of
+// a big white card. Roughly: mobile 36px chip, iPad 56px, laptop 64px,
+// desktop 80px. Icon and label track proportionally so tiles read as
+// intentionally-designed cards at every width.
+const CHIP_SIZE = 'w-9 h-9 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20';
+const ICON_SIZE = 'w-5 h-5 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10';
+const LABEL_SIZE = 'text-xs md:text-sm lg:text-base';
+
 function KeycapFace({ tile, editing }: { tile: Destination; editing: boolean }) {
   const Icon = tile.icon;
   return (
@@ -56,8 +66,8 @@ function KeycapFace({ tile, editing }: { tile: Destination; editing: boolean }) 
         'w-full aspect-square bg-card border border-border shadow-[0_2px_0_hsl(var(--border))] flex items-center justify-center'
         + (editing ? '' : ' transition-transform motion-reduce:transition-none group-active:translate-y-px group-active:shadow-none')
       }>
-        <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${tile.tone || DEFAULT_TONE}`}>
-          <Icon className="w-5 h-5" />
+        <span className={`${CHIP_SIZE} rounded-xl md:rounded-2xl flex items-center justify-center ${tile.tone || DEFAULT_TONE}`}>
+          <Icon className={ICON_SIZE} />
         </span>
       </span>
       {tile.label}
@@ -75,7 +85,7 @@ function SortableTile({ tile, index, onRemove }: {
       className="relative touch-none">
       <button type="button" onClick={() => onRemove(tile.key)}
         aria-label={`Remove ${tile.label} from grid`}
-        className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
+        className={`w-full flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none`}
         style={{ animationDelay: `${(index % 4) * 75}ms` }}>
         <KeycapFace tile={tile} editing />
       </button>
@@ -97,7 +107,7 @@ function AddTile({ tile, index, onAdd }: { tile: Destination; index: number; onA
       <button type="button"
         onClick={() => onAdd(tile.key)}
         aria-label={`Add ${tile.label} to grid`}
-        className="w-full flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none"
+        className={`w-full flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none`}
         style={{ animationDelay: `${(index % 4) * 75}ms` }}>
         <KeycapFace tile={tile} editing />
       </button>
@@ -268,7 +278,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
                   onPointerUp={clearPress}
                   onPointerCancel={clearPress}
                   onContextMenu={(e) => e.preventDefault()}
-                  className="flex flex-col items-center gap-1 text-xs text-muted-foreground group min-h-[44px]">
+                  className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground group min-h-[44px]`}>
                   <KeycapFace tile={t} editing={false} />
                 </Link>
               ))}
@@ -282,10 +292,10 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
               <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2 pt-2">
                 {overflow.map((t) => (
                   <Link key={t.key} to={t.to}
-                    className="flex flex-col items-center gap-1 text-xs text-muted-foreground min-h-[44px]">
+                    className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground min-h-[44px]`}>
                     <span className="w-full aspect-square bg-card border border-border flex items-center justify-center">
-                      <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${t.tone || DEFAULT_TONE}`}>
-                        <t.icon className="w-5 h-5" />
+                      <span className={`${CHIP_SIZE} rounded-xl md:rounded-2xl flex items-center justify-center ${t.tone || DEFAULT_TONE}`}>
+                        <t.icon className={ICON_SIZE} />
                       </span>
                     </span>
                     {t.label}
