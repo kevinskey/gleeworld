@@ -67,7 +67,7 @@ import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
-import { useMyTenants, tenantHomeUrl } from '@/hooks/useMyTenants';
+import { useMyTenants, tenantSwitchUrl } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -926,7 +926,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
               </DropdownMenuLabel>
               {myTenants.map((t) => {
                 const isCurrent = t.slug === currentTenantSlug;
-                const onSwitch = () => {
+                const onSwitch = async () => {
                   if (isCurrent) return;
                   if (isNativeApp()) {
                     // In-place tenant swap: update the cached brand +
@@ -943,7 +943,15 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                     window.location.reload();
                     return;
                   }
-                  window.location.href = tenantHomeUrl(t.slug);
+                  // Web: cross-subdomain nav loses localStorage-scoped
+                  // sessions, so pull the current session and pass its
+                  // tokens in the URL fragment. detectSessionInUrl on
+                  // the destination client picks them up, persists to
+                  // that origin, and clears the hash — landing the user
+                  // signed-in in the target world instead of on the
+                  // auth screen.
+                  const { data: { session } } = await supabase.auth.getSession();
+                  window.location.href = tenantSwitchUrl(t.slug, session);
                 };
                 return (
                   <DropdownMenuItem

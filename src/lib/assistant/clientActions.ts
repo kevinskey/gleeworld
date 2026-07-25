@@ -348,8 +348,14 @@ export async function executeClientAction(
           } catch { /* private mode — reload will re-derive */ }
           window.location.reload();
         } else {
-          const host = target.slug === 'main' ? 'https://gleeworld.org' : `https://${target.slug}.gleeworld.org`;
-          window.location.href = host;
+          // Web: pass the current session through the URL hash so the
+          // user lands signed-in in the target world instead of on the
+          // auth screen. tenantSwitchUrl matches Supabase's magic-link
+          // callback format; detectSessionInUrl on the destination
+          // picks it up and clears the hash on first paint.
+          const { tenantSwitchUrl } = await import('@/hooks/useMyTenants');
+          const { data: { session } } = await (deps.supabase as any).auth?.getSession?.() ?? { data: { session: null } };
+          window.location.href = tenantSwitchUrl(target.slug, session);
         }
         return { ok: true, message: `Switching to ${target.name || target.slug}…` };
       }
