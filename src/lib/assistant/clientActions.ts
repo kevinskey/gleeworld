@@ -348,14 +348,20 @@ export async function executeClientAction(
           } catch { /* private mode — reload will re-derive */ }
           window.location.reload();
         } else {
-          // Web: pass the current session through the URL hash so the
-          // user lands signed-in in the target world instead of on the
-          // auth screen. tenantSwitchUrl matches Supabase's magic-link
-          // callback format; detectSessionInUrl on the destination
-          // picks it up and clears the hash on first paint.
-          const { tenantSwitchUrl } = await import('@/hooks/useMyTenants');
-          const { data: { session } } = await (deps.supabase as any).auth?.getSession?.() ?? { data: { session: null } };
-          window.location.href = tenantSwitchUrl(target.slug, session);
+          // Web: pivot the JWT tenant claim first (set_active_tenant +
+          // refreshSession) so the transferred session's tenant matches
+          // the destination URL — otherwise the target boots with a
+          // mismatched JWT and reads leak from the source tenant. Fall
+          // back to a plain subdomain URL on failure so the user still
+          // reaches the target's login screen.
+          const { tenantSwitchUrl, performTenantSwitch } = await import('@/hooks/useMyTenants');
+          try {
+            const refreshed = await performTenantSwitch(deps.supabase as any, target.slug);
+            window.location.href = tenantSwitchUrl(target.slug, refreshed);
+          } catch (e) {
+            console.warn('[assistant] tenant switch pivot failed', e);
+            window.location.href = tenantSwitchUrl(target.slug, null);
+          }
         }
         return { ok: true, message: `Switching to ${target.name || target.slug}…` };
       }

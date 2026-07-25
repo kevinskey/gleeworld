@@ -39,31 +39,20 @@ export function tenantHomeUrl(slug: string): string {
   return slug === 'main' ? 'https://gleeworld.org' : `https://${slug}.gleeworld.org`;
 }
 
-/** Cross-subdomain tenant switch URL that CARRIES the session so the user
- *  lands signed-in on the target world instead of the auth screen.
+/** Cross-subdomain tenant switch URL that CARRIES a fresh session so
+ *  the user lands signed-in on the target world with the right JWT.
  *
- *  Supabase sessions live in localStorage under the current origin, so a
- *  bare cross-subdomain navigation drops the user on the destination
- *  with no session → the tenant's login screen. Solution: append the
- *  session tokens to the URL hash in the same format Supabase's own
- *  magic-link callback uses. The client on the destination has
- *  `detectSessionInUrl: true` (see integrations/supabase/client.ts) and
- *  reads the fragment on boot, persisting the session to that origin's
- *  localStorage and clearing the hash. The token exposure window is a
- *  single page load and matches the trust model Supabase already
- *  ships for magic-link recovery — the tokens belong to the user
- *  triggering the switch anyway. */
+ *  Callers MUST call set_active_tenant RPC + refreshSession() FIRST so
+ *  the session's JWT tenant_slug matches the target tenant — otherwise
+ *  the destination boot-errors on the JWT/URL tenant mismatch. See
+ *  performTenantSwitch() below for the coordinated flow. */
 export function tenantSwitchUrl(slug: string, session: Session | null): string {
   const base = tenantHomeUrl(slug);
   if (!session?.access_token || !session.refresh_token) return base;
-  // Route through the app's /auth/callback page instead of the root.
-  // AuthCallback.tsx manually parses the hash and calls setSession()
-  // — the comment on that file spells out that supabase-js's
-  // detectSessionInUrl fires unreliably on our self-hosted GoTrue,
-  // which is exactly why our earlier landing-on-login report happened.
-  // ?next= tells AuthCallback where to route after the setSession
-  // succeeds; /dashboard drops the user into the tenant's home page
-  // matching what the manual sign-in flow does.
+  // Route through /auth/callback so the destination's manual setSession
+  // (AuthCallback.tsx) picks up the tokens reliably — supabase-js's
+  // detectSessionInUrl fires unreliably on our self-hosted GoTrue per
+  // that file's header comment.
   const fragment = new URLSearchParams({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
@@ -72,4 +61,25 @@ export function tenantSwitchUrl(slug: string, session: Session | null): string {
     type: 'magiclink',
   }).toString();
   return `${base}/auth/callback?next=%2Fdashboard#${fragment}`;
+}
+
+/** Full switch flow: update the caller's profile.tenant_id via the
+ *  set_active_tenant RPC (SECURITY DEFINER, membership-checked), refresh
+ *  the session so the new JWT reflects the change, and hand back the
+ *  refreshed session for tenantSwitchUrl to transfer. Throws on
+ *  RPC failure so callers can toast + bail. */
+export async function performTenantSwitch(
+  supabase: {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>;
+    auth: { refreshSession: () => Promise<{ data: { session: Session | null }; error: unknown }> };
+  },
+  targetSlug: string,
+): Promise<Session | null> {
+  const { error: rpcErr } = await supabase.rpc('set_active_tenant', { target_slug: targetSlug });
+  if (rpcErr) throw new Error(String((rpcErr as { message?: string })?.message ?? 'set_active_tenant failed'));
+  // refreshSession re-fires custom_access_token_hook, which now sees the
+  // updated profile.tenant_id and mints a JWT with the correct tenant_slug.
+  const { data, error: refreshErr } = await supabase.auth.refreshSession();
+  if (refreshErr) throw new Error(String((refreshErr as { message?: string })?.message ?? 'refreshSession failed'));
+  return data.session;
 }

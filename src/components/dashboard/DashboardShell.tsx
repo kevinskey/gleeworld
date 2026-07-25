@@ -67,7 +67,7 @@ import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
-import { useMyTenants, tenantSwitchUrl } from '@/hooks/useMyTenants';
+import { useMyTenants, tenantSwitchUrl, performTenantSwitch } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -943,15 +943,22 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                     window.location.reload();
                     return;
                   }
-                  // Web: cross-subdomain nav loses localStorage-scoped
-                  // sessions, so pull the current session and pass its
-                  // tokens in the URL fragment. detectSessionInUrl on
-                  // the destination client picks them up, persists to
-                  // that origin, and clears the hash — landing the user
-                  // signed-in in the target world instead of on the
-                  // auth screen.
-                  const { data: { session } } = await supabase.auth.getSession();
-                  window.location.href = tenantSwitchUrl(t.slug, session);
+                  // Web: pivot the JWT tenant BEFORE crossing subdomains
+                  // (set_active_tenant RPC + refreshSession) so the
+                  // transferred session's tenant_slug claim matches the
+                  // destination URL. Otherwise the destination boots
+                  // with a mismatched JWT — wrong branding, wrong RLS
+                  // scope, cross-tenant data bleed. On failure fall back
+                  // to the plain subdomain URL so the user at least
+                  // reaches the target's login screen instead of getting
+                  // stuck in the source tenant.
+                  try {
+                    const refreshedSession = await performTenantSwitch(supabase, t.slug);
+                    window.location.href = tenantSwitchUrl(t.slug, refreshedSession);
+                  } catch (e) {
+                    console.warn('[tenant-switch] pivot failed, falling back to login flow', e);
+                    window.location.href = tenantSwitchUrl(t.slug, null);
+                  }
                 };
                 return (
                   <DropdownMenuItem
