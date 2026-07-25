@@ -194,6 +194,136 @@ export function setLyric(at: number, lyric: string): Command {
   };
 }
 
+// Toggle a staccato dot on/off. No-op on a rest. Capture-and-restore
+// invert pattern, same shape as toggleTie / setAccidental.
+export function toggleStaccato(at: number): Command {
+  let prev: 'staccato' | undefined;
+  let hadPrev = false;
+  return {
+    label: 'staccato',
+    apply: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note') return e;
+      prev = e.articulation; hadPrev = true;
+      const next = e.articulation === 'staccato' ? undefined : ('staccato' as const);
+      const { articulation: _drop, ...rest } = e;
+      return next ? { ...rest, articulation: next } : rest;
+    })),
+    invert: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (i !== at || e.kind !== 'note' || !hadPrev) return e;
+      const { articulation: _drop, ...rest } = e;
+      return prev ? { ...rest, articulation: prev } : rest;
+    })),
+  };
+}
+
+// Toggle a slur (legato mark) starting at `at`. If the note at `at`
+// isn't yet a slur start, this marks it `start` and marks the next
+// N-1 notes as inside/stop. If it's already a slur start, unslurs
+// every note in the group. No-op on rests or when there's no
+// following note to bond with. `groupSize` is at least 2.
+export function toggleSlur(at: number, groupSize = 2): Command {
+  interface PrevMark { index: number; slur: EditorNote['slur'] }
+  let touched: PrevMark[] = [];
+  return {
+    label: 'slur',
+    apply: (s) => {
+      const el = s.elements[at];
+      if (!el || el.kind !== 'note') return s;
+      touched = [];
+      // Already a slur start → clear this run of slur marks. Walk from
+      // `at` forward, dropping the slur field until (and including) the
+      // first 'stop' — otherwise a later independent slur would get
+      // unmarked too.
+      if (el.slur === 'start') {
+        let seenStop = false;
+        return replaceElements(s, s.elements.map((e, i) => {
+          if (seenStop || i < at || e.kind !== 'note' || !e.slur) return e;
+          const prev = e.slur;
+          if (prev === 'stop') seenStop = true;
+          touched.push({ index: i, slur: prev });
+          const { slur: _drop, ...rest } = e;
+          return rest as EditorNote;
+        }));
+      }
+      // Fresh slur: mark this note + next (groupSize-1) notes.
+      const noteIndices: number[] = [];
+      for (let i = at; i < s.elements.length && noteIndices.length < groupSize; i++) {
+        if (s.elements[i].kind === 'note') noteIndices.push(i);
+      }
+      if (noteIndices.length < 2) return s; // nothing to bond with
+      return replaceElements(s, s.elements.map((e, i) => {
+        if (e.kind !== 'note') return e;
+        const pos = noteIndices.indexOf(i);
+        if (pos < 0) return e;
+        touched.push({ index: i, slur: e.slur });
+        const mark: EditorNote['slur'] =
+          pos === 0 ? 'start' : pos === noteIndices.length - 1 ? 'stop' : 'inside';
+        return { ...e, slur: mark };
+      }));
+    },
+    invert: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (e.kind !== 'note') return e;
+      const hit = touched.find((t) => t.index === i);
+      if (!hit) return e;
+      const { slur: _drop, ...rest } = e;
+      return hit.slur ? { ...rest, slur: hit.slur } as EditorNote : rest as EditorNote;
+    })),
+  };
+}
+
+// Group `at`, and the next 2 notes, as a triplet. If already a triplet
+// starting at `at`, ungroups them. No-op on rests or when fewer than 3
+// following notes exist. All three notes must share the same base value
+// — mixed-duration tuplets exist in real music but not in this MVP.
+export function toggleTriplet(at: number): Command {
+  interface Prev { index: number; triplet: EditorNote['triplet'] }
+  let touched: Prev[] = [];
+  return {
+    label: 'triplet',
+    apply: (s) => {
+      const el = s.elements[at];
+      if (!el || el.kind !== 'note') return s;
+      touched = [];
+      // Already a triplet start → clear all three.
+      if (el.triplet === 'start') {
+        let seenStop = false;
+        return replaceElements(s, s.elements.map((e, i) => {
+          if (seenStop || i < at || e.kind !== 'note' || !e.triplet) return e;
+          if (e.triplet === 'stop') seenStop = true;
+          touched.push({ index: i, triplet: e.triplet });
+          const { triplet: _drop, ...rest } = e;
+          return rest as EditorNote;
+        }));
+      }
+      // Fresh triplet: mark this note + next 2 notes, all same base.
+      const noteIndices: number[] = [];
+      for (let i = at; i < s.elements.length && noteIndices.length < 3; i++) {
+        if (s.elements[i].kind === 'note') noteIndices.push(i);
+      }
+      if (noteIndices.length < 3) return s;
+      const baseOf = (idx: number) => (s.elements[idx] as EditorNote).base;
+      if (baseOf(noteIndices[1]) !== baseOf(noteIndices[0]) || baseOf(noteIndices[2]) !== baseOf(noteIndices[0])) {
+        return s; // mixed durations — reject silently; caller can toast if desired
+      }
+      return replaceElements(s, s.elements.map((e, i) => {
+        if (e.kind !== 'note') return e;
+        const pos = noteIndices.indexOf(i);
+        if (pos < 0) return e;
+        touched.push({ index: i, triplet: e.triplet });
+        const mark: EditorNote['triplet'] = pos === 0 ? 'start' : pos === 2 ? 'stop' : 'inside';
+        return { ...e, triplet: mark };
+      }));
+    },
+    invert: (s) => replaceElements(s, s.elements.map((e, i) => {
+      if (e.kind !== 'note') return e;
+      const hit = touched.find((t) => t.index === i);
+      if (!hit) return e;
+      const { triplet: _drop, ...rest } = e;
+      return hit.triplet ? { ...rest, triplet: hit.triplet } as EditorNote : rest as EditorNote;
+    })),
+  };
+}
+
 export class CommandStack {
   private undoStack: Command[] = [];
   private redoStack: Command[] = [];

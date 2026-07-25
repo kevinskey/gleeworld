@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam, Annotation } from 'vexflow';
+// VexFlow's TS shim doesn't declare Articulation / Tuplet / Curve as named
+// exports (they exist at runtime — the shim is just incomplete), so pull
+// them via a cast on the module namespace rather than a `named import` that
+// would TS2305 in the typecheck baseline forever. Kept in a separate import
+// from the rest so the older baselined imports don't churn.
+import * as VexFlowExt from 'vexflow';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { Articulation, Tuplet, Curve } = VexFlowExt as any;
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
@@ -123,12 +131,38 @@ export function NotationView({
             ann.setVerticalJustification(Annotation.VerticalJustify.BOTTOM);
             sn.addModifier(ann, 0);
           }
+          // Staccato dot — VexFlow 'a.' glyph. Position ABOVE by default so
+          // it clears the stem side; VexFlow flips it below when the note
+          // is already up-stem, so we don't need to compute stem direction.
+          if (el.articulation === 'staccato') {
+            sn.addModifier(new Articulation('a.').setPosition(3 /* ABOVE */), 0);
+          }
         }
         return sn;
       });
       let voice: Voice | null = null;
       let beams: Beam[] = [];
       let minW = 40;
+      // Build tuplet groupings for this measure — every note tagged with
+      // triplet === 'start' opens a run; the matching 'stop' closes it.
+      // Passed to VexFlow's Tuplet class so the "3" bracket renders once
+      // per group and the note spacing gets the 2:3 correction.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tuplets: any[] = [];
+      {
+        let runStart = -1;
+        m.elements.forEach((el, k) => {
+          if (el.kind !== 'note') return;
+          if (el.triplet === 'start') runStart = k;
+          if (el.triplet === 'stop' && runStart >= 0) {
+            const group = notes.slice(runStart, k + 1);
+            try {
+              tuplets.push(new Tuplet(group, { num_notes: group.length, notes_occupied: group.length - 1 }));
+            } catch { /* malformed group — skip rather than crash the score */ }
+            runStart = -1;
+          }
+        });
+      }
       if (notes.length) {
         voice = new Voice({ numBeats: score.timeSig.beats, beatValue: score.timeSig.beatType }).setMode(VoiceMode.SOFT);
         voice.addTickables(notes);
@@ -137,7 +171,7 @@ export function NotationView({
         try { minW = new Formatter().joinVoices([voice]).preCalculateMinTotalWidth([voice]); }
         catch { minW = 44 * notes.length; }
       }
-      return { m, notes, voice, beams, minW };
+      return { m, notes, voice, beams, tuplets, minW };
     });
 
     // Row-packing pass. Greedily fill each system with as many measures
@@ -232,6 +266,20 @@ export function NotationView({
               }
             });
           } catch { /* tie rendering is cosmetic; never let it break the score render */ }
+          try {   // slurs (legato) — curved line from slur='start' to matching 'stop'
+            let slurStart = -1;
+            b.m.elements.forEach((el, k) => {
+              if (el.kind !== 'note') return;
+              if (el.slur === 'start') slurStart = k;
+              if (el.slur === 'stop' && slurStart >= 0 && b.notes[slurStart] && b.notes[k]) {
+                new Curve(b.notes[slurStart], b.notes[k], {}).setContext(ctx).draw();
+                slurStart = -1;
+              }
+            });
+          } catch { /* slur rendering is cosmetic; never let it break the score render */ }
+          try {   // triplet brackets — draw after beams so numbers sit above
+            b.tuplets.forEach((t) => t.setContext(ctx).draw());
+          } catch { /* tuplet rendering is cosmetic; never let it break the score render */ }
         }
         x += w;
         // Record the ending bar line as a click target — but only for

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { EditorScore, noteOf, restOf, Pitch } from '@/lib/notation/model';
 import { BaseDur } from '@/lib/notation/duration';
-import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, respellEnharmonic, setLyric, CommandStack } from '@/lib/notation/commands';
+import { insertElement, deleteElement, transpose, changeDuration, tieToNext, setAccidental, respellEnharmonic, setLyric, toggleStaccato, toggleSlur, toggleTriplet, CommandStack } from '@/lib/notation/commands';
 import { playPitch } from '@/lib/notation/pitchAudio';
 import { useMidiInput, midiToPitch } from '@/lib/notation/useMidiInput';
 import { NotationView } from './NotationView';
@@ -258,6 +258,64 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
           }`}
           aria-label="Flat"
         >♭</button>
+        <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
+        {/* Articulation cluster — staccato / slur (legato) / triplet.
+            All three operate on the currently-selected note; buttons are
+            disabled when nothing (or a rest) is selected. Active state
+            is derived from the selected note's model fields so a click
+            visibly toggles. Slur bonds selected + next note; triplet
+            groups selected + next 2 notes (requires all three to share
+            the same base duration). */}
+        {(() => {
+          const selEl = selected != null ? score.elements[selected] : null;
+          const selNote = selEl && selEl.kind === 'note' ? selEl : null;
+          const canApply = !!selNote;
+          const isStacc = !!selNote?.articulation;
+          const isSlurred = selNote?.slur === 'start';
+          const isTriplet = selNote?.triplet === 'start';
+          const btnClass = (active: boolean) =>
+            `rounded-md px-2.5 py-1.5 text-sm font-semibold min-w-[2.25rem] text-center leading-none transition-colors ${
+              !canApply
+                ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                : active
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`;
+          return (
+            <>
+              <button
+                type="button"
+                disabled={!canApply}
+                onClick={() => selected != null && dispatch(toggleStaccato(selected))}
+                className={btnClass(isStacc)}
+                title="Staccato (dot above/below the note)"
+                aria-label="Staccato"
+              >
+                <span className="text-lg">•</span>
+              </button>
+              <button
+                type="button"
+                disabled={!canApply}
+                onClick={() => selected != null && dispatch(toggleSlur(selected, 2))}
+                className={btnClass(isSlurred)}
+                title="Legato — slur this note to the next"
+                aria-label="Slur"
+              >
+                <span className="text-base">⌒</span>
+              </button>
+              <button
+                type="button"
+                disabled={!canApply}
+                onClick={() => selected != null && dispatch(toggleTriplet(selected))}
+                className={btnClass(isTriplet)}
+                title="Triplet — group this note and the next 2 as a triplet (all three must be the same duration)"
+                aria-label="Triplet"
+              >
+                <span className="font-serif italic">3</span>
+              </button>
+            </>
+          );
+        })()}
         <span className="mx-1 h-6 w-px bg-slate-200" aria-hidden />
         {/* Lyrics + MIDI live in a nested flex group so they wrap together
             as one unit when the toolbar runs out of width — MIDI never

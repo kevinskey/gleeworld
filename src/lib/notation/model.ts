@@ -1,7 +1,25 @@
 import { BaseDur, dottedTicks } from './duration';
 
 export interface Pitch { step: 'A'|'B'|'C'|'D'|'E'|'F'|'G'; octave: number; alter: number }
-export interface EditorNote { kind: 'note'; pitch: Pitch; base: BaseDur; dots: number; tie: 'start'|'stop'|'none'; lyric?: string }
+export interface EditorNote {
+  kind: 'note';
+  pitch: Pitch;
+  base: BaseDur;
+  dots: number;
+  tie: 'start'|'stop'|'none';
+  lyric?: string;
+  /** Articulation glyph attached above/below the note. 'staccato' draws
+   *  a small dot; extended later with 'accent' / 'tenuto' as needed. */
+  articulation?: 'staccato';
+  /** Slur (legato) grouping — `'start'` on the first note under the slur,
+   *  `'stop'` on the last. Notes in between with `'inside'` sit under the
+   *  same curve. Undefined = not slurred. */
+  slur?: 'start' | 'inside' | 'stop';
+  /** Triplet grouping — first note is `'start'`, middle notes `'inside'`,
+   *  last is `'stop'`. Ticks for a triplet-tagged note are 2/3 of the
+   *  base value (three triplet eighths fit in two normal eighths). */
+  triplet?: 'start' | 'inside' | 'stop';
+}
 export interface EditorRest { kind: 'rest'; base: BaseDur; dots: number }
 export type EditorElement = EditorNote | EditorRest;
 
@@ -41,5 +59,13 @@ export function restOf(base: BaseDur, dots = 0): EditorRest {
 }
 
 export function elementTicks(el: EditorElement): number {
-  return dottedTicks(el.base, el.dots);
+  const base = dottedTicks(el.base, el.dots);
+  // Triplet notes occupy 2/3 of their base value so 3 of them fit in the
+  // space of 2. DIVISIONS = 480 was chosen partly for this — 480, 240,
+  // 120, 60 all divide by 3 cleanly, so triplet ticks stay integer at
+  // every subdivision from whole to 32nd. Rests can't be triplet-tagged
+  // (rests inside a triplet are still just rests in the model; the
+  // grouping is a property of the surrounding notes only).
+  if (el.kind === 'note' && el.triplet) return (base * 2) / 3;
+  return base;
 }
