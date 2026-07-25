@@ -131,15 +131,15 @@ export const BulkPDFUploader = () => {
         const uploadResult = await uploadFileAndGetUrl(item.file, 'sheet-music', 'pdfs');
         if (!uploadResult) throw new Error('Storage upload failed');
 
-        // 2. Insert record into gw_sheet_music. shared_with_members=true
-        // so members see the row immediately in the Scores tab (matches
-        // the migration's server default; explicit here too so this
-        // works on tenants that haven't run the migration yet).
+        // 2. Insert record into gw_sheet_music. Left unshared by default
+        // (`shared_with_members` unset → server default false) — the
+        // Scores tab is a curated directory of *shared* PDFs, not a
+        // dumping ground for every bulk upload. Sharing is an explicit
+        // action from the Music Library share dialog.
         const { error } = await supabase.from('gw_sheet_music').insert({
           title: item.title.trim() || cleanTitle(item.file.name),
           pdf_url: uploadResult.url,
           is_public: true,
-          shared_with_members: true,
           created_by: user?.id,
         });
 
