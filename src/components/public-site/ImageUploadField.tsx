@@ -100,33 +100,41 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
     toast.error('Image must be 10 MB or smaller.');
     return null;
   }
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
-  const path = `${prefix}-${Date.now()}.${ext}`;
-  // Hard 60s ceiling on the storage upload itself — the underlying
-  // fetch has no built-in timeout, so a stalled connection would
-  // pin the UI at "Uploading…" forever. Race an AbortController
-  // against the upload; whoever finishes first wins.
-  const abortAfter = new Promise<{ error: Error }>((resolve) => {
-    setTimeout(() => resolve({ error: new Error('Upload timed out after 60s — check your connection and try again.') }), 60_000);
+  // Route through an edge fn instead of a direct browser -> storage POST.
+  // The direct path was reliably failing net::ERR_TIMED_OUT for some
+  // clients (ISP middleboxes / MTU issues) even for tiny (<10 KB) files,
+  // while every other Supabase request on the same session succeeded.
+  // The edge fn hits Storage server-side, so the client only ever POSTs
+  // to the edge runtime — which is battle-tested and works for those
+  // same clients.
+  const fileBase64 = await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const s = String(r.result);
+      // strip the "data:<mime>;base64," prefix — server wants raw base64
+      const comma = s.indexOf(',');
+      resolve(comma >= 0 ? s.slice(comma + 1) : s);
+    };
+    r.onerror = () => reject(r.error || new Error('FileReader failed'));
+    r.readAsDataURL(file);
   });
-  const uploadPromise = supabase
-    .storage
-    .from('site-branding')
-    .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type })
-    .then((r: { error: Error | null }) => ({ error: r.error }));
-  const { error } = await Promise.race([uploadPromise, abortAfter]);
-  if (error) {
-    const detail = (error as { statusCode?: string | number; error?: string; message: string });
-    const status = detail.statusCode ?? detail.error ?? '';
-    console.error('[hero-upload] failed', { status, detail });
-    if (String(status) === '403' || /permission|denied|policy/i.test(detail.message)) {
-      toast.error('Upload denied by permissions — sign out, sign back in, and try again. If it still fails, tell Kevin the tenant slug you\'re on.');
-    } else {
-      toast.error(`Upload failed (${status || 'unknown'}): ${detail.message}`);
-    }
+  console.log(`[upload] invoking edge fn (base64 length ${fileBase64.length})`);
+  const { data, error } = await supabase.functions.invoke('upload-site-branding', {
+    body: {
+      file_base64: fileBase64,
+      filename: file.name,
+      prefix,
+      content_type: file.type || 'image/png',
+    },
+  });
+  if (error || !data?.url) {
+    const msg = (data && (data as { error?: string }).error) || error?.message || 'Unknown error';
+    console.error('[upload] edge fn failed', { error, data });
+    toast.error(`Upload failed: ${msg}`);
     return null;
   }
-  return supabase.storage.from('site-branding').getPublicUrl(path).data.publicUrl;
+  console.log(`[upload] success: ${data.url}`);
+  return data.url as string;
 }
 
 // Self-hosted Supabase Storage 1.48 writes objects to a stub/ path that takes
