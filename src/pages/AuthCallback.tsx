@@ -28,23 +28,24 @@ export default function AuthCallback() {
       routedRef.current = true;
       const next = params.get('next') || '/academy';
       console.log('[AuthCallback] routing to', next, 'user', userId);
-      supabase
-        .from('gw_profiles_directory')
-        .select('user_id')
-        .eq('user_id', userId)
-        .maybeSingle()
-        .then(({ data: profile }) => {
-          if (cancelled) return;
-          if (profile) {
-            navigate(next, { replace: true });
-          } else {
-            navigate(`/onboarding?next=${encodeURIComponent(next)}`, { replace: true });
-          }
-        })
-        .catch(() => {
-          if (cancelled) return;
-          navigate(next, { replace: true });
-        });
+      // Just route to `next`. The old profile-directory gate here
+      // shunted users to /onboarding whenever the SELECT returned null,
+      // which fires for two reasons:
+      //   1. Genuinely-new signup with no profile row (handle_new_user
+      //      trigger hasn't run) — rare, and /onboarding IS the right
+      //      landing for them.
+      //   2. Existing multi-tenant user whose profile row is currently
+      //      RLS-scoped away, or a race between setSession() and the
+      //      first authenticated query — the profile exists, it's just
+      //      not visible to THIS query in THIS instant. Sending them to
+      //      /onboarding was wrong: they already have an account and
+      //      shouldn't be asked to onboard again.
+      // For case 1 the downstream flow (ProtectedRoute + role-based
+      // redirect) still surfaces the missing profile via useUserProfile,
+      // which now degrades gracefully to auth metadata rather than
+      // insisting on onboarding. Net: no more phantom /onboarding
+      // redirects after a tenant switch.
+      navigate(next, { replace: true });
     }
 
     async function run() {

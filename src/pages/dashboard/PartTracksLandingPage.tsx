@@ -171,7 +171,7 @@ function ProjectsList({ onOpen }: { onOpen: (projectId: string) => void }) {
                     cancel: { label: 'Cancel', onClick: () => { /* dismiss */ } },
                   });
                 }}
-                className="absolute top-2 right-2 inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity touch-manipulation"
+                className="absolute top-2 right-2 inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 focus-visible:text-rose-500 focus-visible:bg-rose-500/10 transition-colors touch-manipulation"
                 title="Delete project"
                 aria-label={`Delete project ${p.title}`}
               >
