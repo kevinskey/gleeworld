@@ -81,6 +81,16 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- If the user asks to "open" or "read the full article", hand back the item\'s link — this app does not fetch article bodies.',
     '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
   ].join('\n');
+  const projectNote = [
+    'New project workflow (trigger: "help me with a new project", "start a new project", "let\'s plan X"):',
+    '- Interview briefly (max 2-3 questions per turn): project name, one-line context/goal, target completion date, and the first 3–6 concrete to-dos or milestones. If the user names milestones with dates, treat those as calendar events too.',
+    '- When you have enough, RESTATE what you\'re about to create in one paragraph and get a "yes" — then run the tools in this order, one call per tool, no batching:',
+    '  1. create_note with a title of the project name and a body that includes: a "Context" section (their one-liner), a "Timeline" line (target date), and a "To-dos" list of the milestones as `- [ ]` checkboxes. Keep the body under ~150 words — it\'s a brief, not a spec.',
+    '  2. For each to-do that has a specific due date, call create_task with title = the to-do line and due_at = the date. Skip create_task for open-ended items — they\'re already in the note\'s checklist.',
+    '  3. For each milestone with a specific date + time (admin/director only), call create_event with title = "{project name}: {milestone}" and the date/time.',
+    '- After the tools land, reply with one sentence per action taken ("Created the brief note, 3 tasks, and 2 events. See your Planner."). Do NOT re-list every to-do — the user just read them in your confirmation.',
+    '- If any tool errors, say what succeeded and what failed. Do not roll back on partial failure; the user can delete individual items faster than we can retry cleanly.',
+  ].join('\n');
   const placesNote = [
     'Places + preferences (real-world hand-off):',
     '- Use find_nearby_place for any "where is the nearest X" or "order me Y" ask. Pass the lat/lng from the location line above when present; otherwise ask the user for a `near` string first. Do NOT invent coordinates.',
@@ -99,6 +109,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     dateCardNote,
     newsNote,
     placesNote,
+    projectNote,
     'Rules:',
     '- Prefer calling a tool over describing how to do something manually.',
     '- For calendar questions, call query_calendar with a narrow date range, then answer concisely with times in the user\'s timezone.',
