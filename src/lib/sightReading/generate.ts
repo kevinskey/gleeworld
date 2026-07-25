@@ -170,6 +170,13 @@ export function generateExercise(
   const chords = mode === 'minor' ? CHORDS_MINOR : CHORDS_MAJOR;
   const N = scale.length;
 
+  // bars → phrases
+  const phraseLen = bars <= 2 ? bars : bars <= 4 ? 2 : 4;
+  const numPhrases = Math.max(1, Math.round(bars / phraseLen));
+  // Any bars beyond numPhrases*phraseLen become one final tail phrase.
+  const climaxPhrase = numPhrases === 1 ? 0 : numPhrases === 2 ? 1 : numPhrases - 2;
+  const climaxBarInPhrase = Math.min(1, phraseLen - 2);
+
   // Tonic + ambitus. When a voice is specified, shift the tonic into the
   // voice's range and use that range as the ambitus so the line sits in
   // the voice's actual tessitura (bass in E — the exercise should live
