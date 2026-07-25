@@ -68,11 +68,21 @@ export function NoteEditor({ score, onChange }: { score: EditorScore; onChange: 
 
   // MIDI note-on → insert a note at the exact pitch the keyboard played.
   // Uses the currently-armed duration/dots so the "arm quarter, play notes"
-  // rhythm matches every other DAW/scoring app. armedAlter only affects
-  // the choice of enharmonic spelling for black keys: sharp by default
-  // (matches Sibelius Fast Note Input), flat when the user armed ♭.
+  // rhythm matches every other DAW/scoring app. Enharmonic spelling for
+  // black keys goes in priority order:
+  //   1. armed ♭ / ♯ toolbar button (explicit user override)
+  //   2. key signature — negative fifths (Bb, Eb, Ab, Db, Gb, Cb keys) →
+  //      prefer flats so C minor gets "Eb" not "D#"; positive fifths
+  //      (G, D, A, E, B, F#, C# keys) → prefer sharps.
+  //   3. fall through to sharp (matches Sibelius Fast Note Input default
+  //      for C major / A minor where either is defensible).
   const addPitchFromMidi = useCallback((midi: number) => {
-    const prefer = armedAlter === -1 ? 'flat' : 'sharp';
+    const keyFifths = scoreRef.current.keyFifths ?? 0;
+    const prefer: 'sharp' | 'flat' =
+      armedAlter === -1 ? 'flat'
+      : armedAlter === 1 ? 'sharp'
+      : keyFifths < 0 ? 'flat'
+      : 'sharp';
     const pitch = midiToPitch(midi, prefer);
     playPitch(midi);
     const s = scoreRef.current;
