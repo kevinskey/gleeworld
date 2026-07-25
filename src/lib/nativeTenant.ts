@@ -29,24 +29,29 @@ export async function syncNativeTenant(session: Session): Promise<void> {
   if (!slug) return;
 
   const current = (window as any).__TENANT_CONFIG__;
-  // Re-sync if we don't have full branding cached yet (older builds only
-  // stored {tenant, org} — refresh to get shortName + logoUrl too).
-  if (current?.tenant === slug && current?.shortName && current?.logoUrl) return;
 
-  // 'main' is the platform/marketing tenant. syncNativeTenant used to
-  // refuse to cache it (a JWT with tenant_slug='main' was treated as an
-  // ambiguous platform-admin who needed to pick a choir). That's now
-  // wrong: NativeTenantGate explicitly wants to LAND a super-admin on
-  // main when their memberships include it, so respect the slug either
-  // way. Skipping the branding fetch below is still fine — the main
-  // tenant has no tenant_row/branding of its own (it's the platform
-  // shell) — so we cache the minimal payload and reload.
-  if (slug === 'main') {
-    if (current?.tenant === 'main') return; // already there, no reload needed
-    localStorage.setItem(KEY, JSON.stringify({ tenant: 'main' }));
-    window.location.reload();
-    return;
+  // Preserve the user's explicit tenant pick. Once a tenant is cached
+  // (whether from the initial post-login auto-open or a later swap via
+  // the avatar dropdown's "Switch organization" list), sync must not
+  // overwrite it just because the JWT's tenant_slug differs. Otherwise
+  // a token refresh would silently yank Kevin out of kevinsworld and
+  // back to main every ~1 hour. The switcher explicitly writes the
+  // cache when the user picks a different world; leave that alone.
+  if (current?.tenant) {
+    // Refresh branding only if we're STILL on the same tenant the JWT
+    // says (i.e., token refreshed on the same tenant) and we don't have
+    // full brand data cached yet. Skip the branding refresh entirely
+    // for cross-tenant JWTs — the cached tenant wins.
+    if (current.tenant !== slug) return;
+    if (current.shortName && current.logoUrl) return;
   }
+
+  // 'main' is the platform/marketing tenant. Never AUTO-cache main from
+  // a JWT — a super-admin's JWT often has tenant_slug='main' but the
+  // user wants their real tenant to be home. NativeTenantGate's login
+  // path handles the "no cached tenant" case via my_tenants → first
+  // non-main. If they want to visit main, they use the switcher.
+  if (slug === 'main') return;
 
   // Seed with the existing cache so a failed DB fetch can't wipe a valid
   // org/shortName/logoUrl that the picker (or a previous sync) wrote.

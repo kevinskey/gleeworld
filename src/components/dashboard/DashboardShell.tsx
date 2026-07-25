@@ -68,6 +68,7 @@ import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
 import { useMyTenants, tenantHomeUrl } from '@/hooks/useMyTenants';
+import { isNativeApp } from '@/lib/nativeTenant';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -909,9 +910,14 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
               <Settings className="w-4 h-4" /> Settings
             </Link>
           </DropdownMenuItem>
-          {/* Switch organization — only for users who belong to more than one
-              tenant. Navigating crosses subdomains, so it's a full-page load.
-              Single-tenant members never see this and stay in their world. */}
+          {/* Switch organization — every tenant this user belongs to.
+              On web, navigation crosses subdomains (full-page load into
+              the target tenant's own domain). On native (iOS), cross-
+              subdomain navigation would bounce out of the WKWebView, so
+              we rewrite the cached tenant + reload in place — same
+              mechanism NativeTenantGate uses on first login. Shown
+              whenever the user has 2+ memberships (single-tenant users
+              stay in their world). */}
           {myTenants.length > 1 && (
             <>
               <DropdownMenuSeparator />
@@ -920,11 +926,30 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
               </DropdownMenuLabel>
               {myTenants.map((t) => {
                 const isCurrent = t.slug === currentTenantSlug;
+                const onSwitch = () => {
+                  if (isCurrent) return;
+                  if (isNativeApp()) {
+                    // In-place tenant swap: update the cached brand +
+                    // reload. main gets a minimal payload (no branding
+                    // fetch — it's the platform shell); real tenants
+                    // carry their org name too so the sidebar picks it
+                    // up on first paint after reload.
+                    try {
+                      const payload = t.slug === 'main'
+                        ? { tenant: 'main' }
+                        : { tenant: t.slug, org: t.name ?? undefined };
+                      localStorage.setItem('gw_native_tenant', JSON.stringify(payload));
+                    } catch { /* private mode — reload will fall back to picker */ }
+                    window.location.reload();
+                    return;
+                  }
+                  window.location.href = tenantHomeUrl(t.slug);
+                };
                 return (
                   <DropdownMenuItem
                     key={t.tenant_id}
                     disabled={isCurrent}
-                    onClick={() => { if (!isCurrent) window.location.href = tenantHomeUrl(t.slug); }}
+                    onClick={onSwitch}
                     className="flex items-center gap-2"
                   >
                     <Building2 className="w-4 h-4 shrink-0" />
