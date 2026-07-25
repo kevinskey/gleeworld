@@ -65,15 +65,17 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
       // table, so PostgREST implicit joins return zero rows silently.
       const { data: enr, error } = await supabase
         .from('gw_course_enrollments')
-        .select('user_id, student_id, enrolled_at')
+        .select('user_id, enrolled_at')
         .eq('course_id', courseId)
         .in('enrollment_status', ['enrolled', 'active', 'in_progress', 'registered'])
         .order('enrolled_at', { ascending: true });
       if (error) throw error;
-      const rows = ((enr as any[]) ?? []).map((e) => ({
-        student_id: e.user_id || e.student_id,
-        enrolled_at: e.enrolled_at,
-      }));
+      const rows = ((enr as any[]) ?? [])
+        .filter((e) => !!e.user_id)
+        .map((e) => ({
+          student_id: e.user_id as string,
+          enrolled_at: e.enrolled_at,
+        }));
       const userIds = Array.from(new Set(rows.map((r) => r.student_id).filter(Boolean)));
       const { data: profiles } = userIds.length > 0
         ? await supabase

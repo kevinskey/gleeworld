@@ -78,7 +78,7 @@ export function InstructorSubmissionsDialog({
       const [enrRes, subsRes] = await Promise.all([
         supabase
           .from('gw_course_enrollments')
-          .select('user_id, student_id')
+          .select('user_id')
           .eq('course_id', courseId)
           .in('enrollment_status', ['enrolled', 'active', 'in_progress', 'registered']),
         supabase
@@ -86,11 +86,11 @@ export function InstructorSubmissionsDialog({
           .select('id, assignment_id, student_id, status, submitted_at, content, file_url, file_name, points_earned, feedback, graded_at')
           .eq('assignment_id', assignment.id),
       ]);
-      const enr = (enrRes.data as { user_id: string | null; student_id: string | null }[] | null) ?? [];
+      const enr = (enrRes.data as { user_id: string | null }[] | null) ?? [];
       const subs = subsRes.data as unknown as SubmissionRow[] | null;
 
       // Load display names for those enrolled users from the directory.
-      const userIds = Array.from(new Set(enr.map((e) => e.user_id || e.student_id).filter(Boolean))) as string[];
+      const userIds = Array.from(new Set(enr.map((e) => e.user_id).filter(Boolean))) as string[];
       const { data: profiles } = userIds.length > 0
         ? await supabase
             .from('gw_profiles_directory' as any)
@@ -104,15 +104,17 @@ export function InstructorSubmissionsDialog({
         profileMap.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null });
       }
 
-      const rows: EnrollmentRow[] = enr.map((e) => {
-        const uid = (e.user_id || e.student_id) as string;
-        const p = profileMap.get(uid);
-        return {
-          user_id: uid,
-          full_name: p?.full_name ?? null,
-          email: p?.email ?? null,
-        };
-      });
+      const rows: EnrollmentRow[] = enr
+        .filter((e) => !!e.user_id)
+        .map((e) => {
+          const uid = e.user_id as string;
+          const p = profileMap.get(uid);
+          return {
+            user_id: uid,
+            full_name: p?.full_name ?? null,
+            email: p?.email ?? null,
+          };
+        });
       rows.sort((a, b) => (a.full_name || a.email || '').localeCompare(b.full_name || b.email || ''));
       setEnrollments(rows);
 
