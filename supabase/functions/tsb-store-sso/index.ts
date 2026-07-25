@@ -94,9 +94,14 @@ serve(async (req: Request) => {
     );
 
     const tsbOrigin = Deno.env.get("TSB_API_BASE") ?? "https://tshirtbrothers.com";
+    const enc = encodeURIComponent(jwt);
     return jsonOk({
       token: jwt,
-      admin_url: `${tsbOrigin}/stores/${tenant.tsb_store_slug}/admin?gwsso=${encodeURIComponent(jwt)}`,
+      admin_url: `${tsbOrigin}/stores/${tenant.tsb_store_slug}/admin?gwsso=${enc}`,
+      // Whitelabel design studio, pre-branded via ?store=<slug>, plus the
+      // same one-click JWT handoff so the tenant admin can submit
+      // designs without an email code.
+      design_url: `${tsbOrigin}/design?store=${encodeURIComponent(tenant.tsb_store_slug)}&gwsso=${enc}`,
     });
   } catch (err) {
     console.error("[tsb-store-sso] unhandled", err);

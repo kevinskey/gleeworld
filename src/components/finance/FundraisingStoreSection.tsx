@@ -7,7 +7,7 @@
 //   • tsb-store-sso — mints a short-lived JWT + admin URL for one-click login
 
 import { useCallback, useEffect, useState } from 'react';
-import { Store, ExternalLink, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Store, ExternalLink, Loader2, Sparkles, AlertCircle, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -29,6 +29,7 @@ export function FundraisingStoreSection() {
   const [loading, setLoading] = useState(true);
   const [provisioning, setProvisioning] = useState(false);
   const [openingAdmin, setOpeningAdmin] = useState(false);
+  const [openingDesign, setOpeningDesign] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadState = useCallback(async () => {
@@ -100,6 +101,20 @@ export function FundraisingStoreSection() {
     }
   };
 
+  const openDesign = async () => {
+    setOpeningDesign(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('tsb-store-sso', {});
+      if (error) throw error;
+      if (!data?.design_url) throw new Error('SSO returned no design URL');
+      window.open(data.design_url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not open designer');
+    } finally {
+      setOpeningDesign(false);
+    }
+  };
+
   return (
     <div className="border border-border rounded-lg bg-card divide-y divide-border">
       <div className="px-3 py-2 bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-2">
@@ -147,6 +162,18 @@ export function FundraisingStoreSection() {
                 </a>
               </Button>
               <Button
+                onClick={openDesign}
+                disabled={!canManage || openingDesign}
+                variant="outline"
+                size="sm"
+              >
+                {openingDesign ? (
+                  <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Opening…</>
+                ) : (
+                  <><Palette className="w-3.5 h-3.5 mr-1.5" /> Design merch</>
+                )}
+              </Button>
+              <Button
                 onClick={openAdmin}
                 disabled={!canManage || openingAdmin}
                 size="sm"
@@ -158,6 +185,9 @@ export function FundraisingStoreSection() {
                 )}
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Design merch opens TSB&apos;s design studio; anything you submit goes to TSB for review before it appears on your storefront.
+            </p>
           </div>
         )}
       </div>
