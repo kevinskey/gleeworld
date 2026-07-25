@@ -268,13 +268,18 @@ export default function SightReadingStudio() {
     <DashboardPageShell
       title="Sight Reading"
       subtitle="Sing a line, get instant feedback. No grades — just practice."
-      maxWidth="4xl"
+      maxWidth="6xl"
     >
       <Button size="lg" className="w-full rounded-full" onClick={start}>
         Start practice
       </Button>
 
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+      {/* Toolbar — each label+control pair lives in its own inline-flex
+          group so the row wraps as coherent units on narrow screens
+          rather than splitting a label from its control across lines.
+          On phones the groups stack vertically (via wrap); on desktop
+          the whole row fits with the Pitch pipe pushed to the right. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
         {/* Voice — anchors the exercise to a singer's actual tessitura:
             Soprano C4–A5, Alto G3–E5, Tenor C3–G4, Bass E2–C4. The
             generator shifts the tonic octave into that range and caps
@@ -282,67 +287,75 @@ export default function SightReadingStudio() {
             median pitch drops below A3. Placed first because it's the
             hardest to change mid-session (memorization is voice-anchored)
             while Key/Level/Measures are all one-tap. */}
-        <label className="text-slate-600" htmlFor="sr-voice">
-          Voice
-        </label>
-        <select
-          id="sr-voice"
-          className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
-          value={voice}
-          onChange={(e) => setVoice(e.target.value as Voice)}
-        >
-          <option value="soprano">Soprano</option>
-          <option value="alto">Alto</option>
-          <option value="tenor">Tenor</option>
-          <option value="bass">Bass</option>
-        </select>
-        <label className="ml-2 text-slate-600" htmlFor="sr-key">
-          Key
-        </label>
-        <select
-          id="sr-key"
-          className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
-          value={musicKey}
-          onChange={(e) => setMusicKey(e.target.value)}
-        >
-          {['C', 'D', 'Eb', 'E', 'F', 'G', 'A', 'Bb'].map((k) => (
-            <option key={k}>{k}</option>
+        <div className="inline-flex items-center gap-2">
+          <label className="text-slate-600" htmlFor="sr-voice">Voice</label>
+          <select
+            id="sr-voice"
+            className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+            value={voice}
+            onChange={(e) => setVoice(e.target.value as Voice)}
+          >
+            <option value="soprano">Soprano</option>
+            <option value="alto">Alto</option>
+            <option value="tenor">Tenor</option>
+            <option value="bass">Bass</option>
+          </select>
+        </div>
+
+        <div className="inline-flex items-center gap-2">
+          <label className="text-slate-600" htmlFor="sr-key">Key</label>
+          <select
+            id="sr-key"
+            className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+            value={musicKey}
+            onChange={(e) => setMusicKey(e.target.value)}
+          >
+            {['C', 'D', 'Eb', 'E', 'F', 'G', 'A', 'Bb'].map((k) => (
+              <option key={k}>{k}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="inline-flex items-center gap-1.5">
+          <span className="text-slate-600 mr-1">Level</span>
+          {[1, 2, 3, 4, 5, 6].map((l) => (
+            <button
+              key={l}
+              type="button"
+              aria-label={`Level ${l}`}
+              aria-pressed={level === l}
+              onClick={() => setLevel(l)}
+              className={`h-8 w-8 rounded-full text-sm font-semibold ${
+                level === l ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+              }`}
+            >
+              {l}
+            </button>
           ))}
-        </select>
-        <span className="ml-2 text-slate-600">Level</span>
-        {[1, 2, 3, 4, 5, 6].map((l) => (
-          <button
-            key={l}
-            type="button"
-            aria-label={`Level ${l}`}
-            aria-pressed={level === l}
-            onClick={() => setLevel(l)}
-            className={`h-8 w-8 rounded-full text-sm font-semibold ${
-              level === l ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
-            }`}
-          >
-            {l}
-          </button>
-        ))}
-        <span className="ml-2 text-slate-600">Measures</span>
-        {[4, 8, 16].map((m) => (
-          <button
-            key={m}
-            type="button"
-            aria-label={`${m} measures`}
-            aria-pressed={measures === m}
-            onClick={() => setMeasures(m)}
-            className={`h-8 min-w-[2rem] rounded-full px-2 text-sm font-semibold ${
-              measures === m ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
-            }`}
-          >
-            {m}
-          </button>
-        ))}
+        </div>
+
+        <div className="inline-flex items-center gap-1.5">
+          <span className="text-slate-600 mr-1">Measures</span>
+          {[4, 8, 16].map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-label={`${m} measures`}
+              aria-pressed={measures === m}
+              onClick={() => setMeasures(m)}
+              className={`h-8 min-w-[2rem] rounded-full px-2 text-sm font-semibold ${
+                measures === m ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+
         <Button
           variant="outline"
           size="sm"
-          className="ml-auto rounded-full"
+          className="sm:ml-auto rounded-full"
           onClick={soundPitchPipe}
           disabled={priming}
         >
