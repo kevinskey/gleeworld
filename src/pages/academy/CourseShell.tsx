@@ -17,6 +17,8 @@ import { useQuery as useQueryReactQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useEffectivePreviewRole } from "@/hooks/useEffectivePreviewRole";
+import { StudentAssignmentDialog } from "@/components/academy/StudentAssignmentDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -127,7 +129,14 @@ export default function CourseShell() {
 
   const isAdmin = !!(profile?.is_super_admin || profile?.is_admin || profile?.role === "super-admin" || profile?.role === "admin");
   const isInstructor = course?.instructor_id === user?.id;
-  const canEdit = isAdmin || isInstructor;
+  // Preview-as-role gate: when a super-admin opens "Preview as Students"
+  // (Workspace Settings → Navigation), collapse canEdit so the assignment
+  // list opens the student submission dialog instead of the instructor
+  // editor. Preview is sessionStorage-only, so refreshing or opening a
+  // new tab restores full instructor capability.
+  const previewRole = useEffectivePreviewRole();
+  const previewingAsStudent = previewRole && previewRole !== 'admin' && previewRole !== 'super_admin';
+  const canEdit = (isAdmin || isInstructor) && !previewingAsStudent;
 
   // Guards against a late-resolving fetch from a previous `code` clobbering
   // fresher state: this route (/academy/c/:code) has no key prop, so React
@@ -855,6 +864,11 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   const [newDue, setNewDue] = useState("");
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  // Student view: dialog + per-assignment submission state so each row
+  // can show a "Submitted" / "Graded 85/100" badge and open a submission
+  // view instead of the instructor edit form.
+  const [studentViewing, setStudentViewing] = useState<any | null>(null);
+  const [subsByAssignment, setSubsByAssignment] = useState<Record<string, { status: string; score_value: number | null; submitted_at: string | null }>>({});
 
   // Pivoted from gw_course_assignments → gw_assignments so the
   // calendar-sync trigger (gw_assignment_sync_event) fires and new
@@ -879,16 +893,51 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
       .select("id, title, description, due_at, points, is_active")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
-      .then(({ data }) => {
-        if (!c) {
-          setItems((data || []).map((r: any) => ({
-            ...r, due_date: r.due_at, is_published: r.is_active,
-          })));
-          setLoading(false);
+      .then(async ({ data }) => {
+        if (c) return;
+        const rows = (data || []).map((r: any) => ({
+          ...r, due_date: r.due_at, is_published: r.is_active,
+        }));
+        setItems(rows);
+        setLoading(false);
+
+        // Load the current user's submissions for these assignments so
+        // rows can show status badges without opening the dialog first.
+        if (user && rows.length > 0) {
+          const ids = rows.map((r: any) => r.id);
+          const { data: subs } = await supabase
+            .from("gw_assignment_submissions" as any)
+            .select("assignment_id, status, score_value, submitted_at")
+            .eq("user_id", user.id)
+            .in("assignment_id", ids);
+          if (c) return;
+          const map: Record<string, { status: string; score_value: number | null; submitted_at: string | null }> = {};
+          for (const s of (subs as any[] | null) ?? []) {
+            map[s.assignment_id] = { status: s.status, score_value: s.score_value, submitted_at: s.submitted_at };
+          }
+          setSubsByAssignment(map);
         }
       });
     return () => { c = true; };
-  }, [course.id]);
+  }, [course.id, user]);
+
+  // Callback so the dialog can bump the row badge without a full reload.
+  async function refreshMySubmission(assignmentId: string) {
+    if (!user) return;
+    const { data } = await supabase
+      .from("gw_assignment_submissions" as any)
+      .select("assignment_id, status, score_value, submitted_at")
+      .eq("user_id", user.id)
+      .eq("assignment_id", assignmentId)
+      .maybeSingle();
+    if (data) {
+      const s = data as any;
+      setSubsByAssignment((prev) => ({
+        ...prev,
+        [assignmentId]: { status: s.status, score_value: s.score_value, submitted_at: s.submitted_at },
+      }));
+    }
+  }
 
   async function submit() {
     if (!newTitle.trim()) return;
@@ -968,21 +1017,37 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
           {items.map((a) => {
             const due = a.due_date ? new Date(a.due_date) : null;
             const overdue = due && due < new Date();
+            const mySub = subsByAssignment[a.id];
+            const isGraded = mySub?.status === 'graded' || mySub?.status === 'ai_graded';
+            const isSubmitted = mySub?.status === 'submitted' || mySub?.status === 'revision_submitted' || isGraded;
+            const rowClickable = canEdit || (a.is_published && !!user);
             return (
               <li
                 key={a.id}
-                className="py-3 flex items-center justify-between gap-2 hover:bg-slate-50 px-2 -mx-2 rounded cursor-pointer"
-                onClick={() => canEdit ? setEditing(a) : null}
+                className={`py-3 flex items-center justify-between gap-2 hover:bg-slate-50 px-2 -mx-2 rounded ${rowClickable ? 'cursor-pointer' : ''}`}
+                onClick={() => {
+                  if (canEdit) setEditing(a);
+                  else if (a.is_published) setStudentViewing(a);
+                }}
               >
                 <div className="min-w-0">
-                  <div className="font-medium text-slate-900 flex items-center gap-2">
+                  <div className="font-medium text-slate-900 flex items-center gap-2 flex-wrap">
                     {a.title}
                     {!a.is_published && <Badge variant="outline" className="text-xs">Draft</Badge>}
+                    {/* Student submission-state pills — instructors ignore these. */}
+                    {!canEdit && isGraded && mySub?.score_value != null && (
+                      <Badge className="text-xs bg-green-600 hover:bg-green-600">
+                        Graded {mySub.score_value}/{a.points ?? '?'}
+                      </Badge>
+                    )}
+                    {!canEdit && isSubmitted && !isGraded && (
+                      <Badge className="text-xs bg-blue-600 hover:bg-blue-600">Submitted</Badge>
+                    )}
                   </div>
                   <div className="text-xs text-slate-500">
                     {due ? `Due ${format(due, "EEE MMM d, h:mm a")}` : "No due date"}
                     {" · "}{a.points || 0} pts
-                    {overdue && <span className="text-red-600 font-semibold"> · OVERDUE</span>}
+                    {overdue && !isSubmitted && <span className="text-red-600 font-semibold"> · OVERDUE</span>}
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -996,6 +1061,12 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
         assignment={editing}
         onClose={() => setEditing(null)}
         onChanged={() => { reload(); setEditing(null); }}
+      />
+      <StudentAssignmentDialog
+        open={!!studentViewing}
+        assignment={studentViewing}
+        onClose={() => setStudentViewing(null)}
+        onSubmitted={() => { if (studentViewing) void refreshMySubmission(studentViewing.id); }}
       />
     </SectionCard>
   );

@@ -77,30 +77,72 @@ export const CourseGradebook: React.FC<CourseGradebookProps> = ({ courseId, isEn
           : FALLBACK_CATEGORIES;
       const validKeys = new Set(categories.map((c) => c.key));
 
-      // 2. Assignments (include assignment_type so we can bucket into categories).
-      const { data: assignments } = await supabase
-        .from('gw_course_assignments')
-        .select('id, title, points, assignment_type')
-        .eq('course_id', courseId)
-        .eq('is_published', true);
+      // 2. Assignments — dual-source. Two live paths in the codebase:
+      //   a) gw_course_assignments + gw_course_submissions (older ACADEMY_COURSES flow)
+      //   b) gw_assignments + gw_assignment_submissions (newer CourseShell flow,
+      //      syncs to calendar via trigger)
+      // We union both so the widget shows a coherent gradebook regardless
+      // of which flow the course was built with. Both tables are keyed by
+      // (course_id, assignment_id, user_id) so there's no conflict.
+      const [oldAsn, newAsn] = await Promise.all([
+        supabase
+          .from('gw_course_assignments')
+          .select('id, title, points, assignment_type')
+          .eq('course_id', courseId)
+          .eq('is_published', true),
+        supabase
+          .from('gw_assignments')
+          .select('id, title, points, assignment_type')
+          .eq('course_id', courseId)
+          .eq('is_active', true),
+      ]);
+      type AsnRow = { id: string; title: string; points: number | null; assignment_type: string | null };
+      const assignments: AsnRow[] = [
+        ...((oldAsn.data as AsnRow[] | null) ?? []),
+        ...((newAsn.data as AsnRow[] | null) ?? []),
+      ];
 
-      if (!assignments || assignments.length === 0) {
+      if (assignments.length === 0) {
         setGradeData(null);
         setLoading(false);
         return;
       }
 
-      // 3. Current student's submissions.
-      const { data: submissions } = await supabase
-        .from('gw_course_submissions')
-        .select('assignment_id, grade, status')
-        .eq('student_id', user?.id)
-        .in('assignment_id', assignments.map((a) => a.id));
+      // Track which table each assignment came from so we query the
+      // right submission table for it. Overlap is fine — same key wins.
+      const oldIds = new Set(((oldAsn.data as AsnRow[] | null) ?? []).map((a) => a.id));
+      const newIds = new Set(((newAsn.data as AsnRow[] | null) ?? []).map((a) => a.id));
 
+      // 3. Submissions from both tables, keyed by assignment_id.
+      const [oldSubs, newSubs] = await Promise.all([
+        oldIds.size > 0
+          ? supabase
+              .from('gw_course_submissions')
+              .select('assignment_id, grade, status')
+              .eq('student_id', user?.id)
+              .in('assignment_id', Array.from(oldIds))
+          : Promise.resolve({ data: [] as any[] }),
+        newIds.size > 0
+          ? supabase
+              .from('gw_assignment_submissions' as any)
+              .select('assignment_id, score_value, status')
+              .eq('user_id', user?.id)
+              .in('assignment_id', Array.from(newIds))
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
       type SubmissionRow = { assignment_id: string; grade: number | null; status: string | null };
-      const submissionMap = new Map<string, SubmissionRow>(
-        ((submissions ?? []) as SubmissionRow[]).map((s) => [s.assignment_id, s]),
-      );
+      const submissionMap = new Map<string, SubmissionRow>();
+      for (const s of ((oldSubs.data as any[]) ?? [])) {
+        submissionMap.set(s.assignment_id, { assignment_id: s.assignment_id, grade: s.grade, status: s.status });
+      }
+      // gw_assignment_submissions.score_value → grade for the formula.
+      for (const s of ((newSubs.data as any[]) ?? [])) {
+        submissionMap.set(s.assignment_id, {
+          assignment_id: s.assignment_id,
+          grade: s.score_value != null ? Number(s.score_value) : null,
+          status: s.status,
+        });
+      }
 
       // 4. Build per-assignment view + parallel formula input.
       const gradeItems = assignments.map((assignment) => {
