@@ -105,7 +105,7 @@ export default function PlannerPage() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl px-2 sm:px-4">
+    <div className="mx-auto flex w-full max-w-none px-2 sm:px-4">
       {/* Desktop sidebar. lg+ only — at md (iPad portrait) the dashboard nav
           is already showing, and a second inline sidebar squeezed the actual
           content into a sliver. Tablets use the Menu sheet like phones. */}
