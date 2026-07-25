@@ -20,6 +20,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useEffectivePreviewRole } from "@/hooks/useEffectivePreviewRole";
 import { StudentAssignmentDialog } from "@/components/academy/StudentAssignmentDialog";
 import { InstructorSubmissionsDialog } from "@/components/academy/InstructorSubmissionsDialog";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -193,25 +195,35 @@ export default function CourseShell() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(40,10%,96%)]">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-      </div>
+      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+        <DashboardShell>
+          <div className="min-h-screen flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+          </div>
+        </DashboardShell>
+      </UniversalLayout>
     );
   }
   if (!course) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(40,10%,96%)]">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">Class not found.</p>
-          <Button onClick={() => navigate("/control-center?module=glee-academy")}>Back to Glee Academy</Button>
-        </div>
-      </div>
+      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+        <DashboardShell>
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-slate-600 mb-4">Class not found.</p>
+              <Button onClick={() => navigate("/control-center?module=glee-academy")}>Back to Glee Academy</Button>
+            </div>
+          </div>
+        </DashboardShell>
+      </UniversalLayout>
     );
   }
 
   const tabProps = { course, canEdit, isInstructor, isAdmin };
 
   return (
+    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+      <DashboardShell>
     <div className="min-h-screen bg-[hsl(40,10%,96%)]">
       {/* Top bar */}
       <div className="bg-slate-900 text-white">
@@ -378,6 +390,8 @@ export default function CourseShell() {
         </main>
       </div>
     </div>
+      </DashboardShell>
+    </UniversalLayout>
   );
 }
 
