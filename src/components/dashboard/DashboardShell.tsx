@@ -67,7 +67,7 @@ import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
-import { useMyTenants, tenantSwitchUrl, performTenantSwitch } from '@/hooks/useMyTenants';
+import { useMyTenants, tenantHomeUrl } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -943,22 +943,21 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                     window.location.reload();
                     return;
                   }
-                  // Web: pivot the JWT tenant BEFORE crossing subdomains
-                  // (set_active_tenant RPC + refreshSession) so the
-                  // transferred session's tenant_slug claim matches the
-                  // destination URL. Otherwise the destination boots
-                  // with a mismatched JWT — wrong branding, wrong RLS
-                  // scope, cross-tenant data bleed. On failure fall back
-                  // to the plain subdomain URL so the user at least
-                  // reaches the target's login screen instead of getting
-                  // stuck in the source tenant.
-                  try {
-                    const refreshedSession = await performTenantSwitch(supabase, t.slug);
-                    window.location.href = tenantSwitchUrl(t.slug, refreshedSession);
-                  } catch (e) {
-                    console.warn('[tenant-switch] pivot failed, falling back to login flow', e);
-                    window.location.href = tenantSwitchUrl(t.slug, null);
-                  }
+                  // Web: bare cross-subdomain nav. The earlier "pivot
+                  // JWT tenant then transfer session" path flipped the
+                  // user's gw_profiles.tenant_id server-side (via
+                  // set_active_tenant), which meant every FUTURE JWT
+                  // for that user pointed at the last-switched-to
+                  // tenant — so signing back in on gleeworld.org
+                  // rendered the marketing landing (JWT-tenant vs
+                  // URL-tenant mismatch). Reverted to the simple
+                  // subdomain hop: user lands on the target tenant's
+                  // login screen, signs in fresh, gets a session
+                  // scoped to that tenant. Extra password entry per
+                  // switch is the acceptable cost until we design a
+                  // per-session active-tenant signal that doesn't
+                  // corrupt the profile row.
+                  window.location.href = tenantHomeUrl(t.slug);
                 };
                 return (
                   <DropdownMenuItem

@@ -348,20 +348,12 @@ export async function executeClientAction(
           } catch { /* private mode — reload will re-derive */ }
           window.location.reload();
         } else {
-          // Web: pivot the JWT tenant claim first (set_active_tenant +
-          // refreshSession) so the transferred session's tenant matches
-          // the destination URL — otherwise the target boots with a
-          // mismatched JWT and reads leak from the source tenant. Fall
-          // back to a plain subdomain URL on failure so the user still
-          // reaches the target's login screen.
-          const { tenantSwitchUrl, performTenantSwitch } = await import('@/hooks/useMyTenants');
-          try {
-            const refreshed = await performTenantSwitch(deps.supabase as any, target.slug);
-            window.location.href = tenantSwitchUrl(target.slug, refreshed);
-          } catch (e) {
-            console.warn('[assistant] tenant switch pivot failed', e);
-            window.location.href = tenantSwitchUrl(target.slug, null);
-          }
+          // Web: bare subdomain hop. See DashboardShell for why the
+          // profile-pivot flow was ripped out — same reason applies
+          // here. User lands on target tenant's login screen and
+          // signs in fresh with a correctly-scoped session.
+          const { tenantHomeUrl } = await import('@/hooks/useMyTenants');
+          window.location.href = tenantHomeUrl(target.slug);
         }
         return { ok: true, message: `Switching to ${target.name || target.slug}…` };
       }
