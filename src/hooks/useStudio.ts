@@ -539,6 +539,23 @@ export function useStudioEngine(session: Session | null) {
     const skeleton = skeletonSig(session);
     const needsFullReload = skeleton !== lastSkeletonRef.current;
 
+    // Skip full reloads while a take is armed and rolling. Every MIDI
+    // note-on/off during recording appends to the take clip → the clip
+    // content is hashed into skeletonSig → this effect would fire a full
+    // engine.loadSession() PER KEYSTROKE, tearing down every sampler +
+    // clip player and glitching whatever samples were mid-playback. The
+    // user hears their live keys via LiveVoices (not scheduled clips),
+    // so deferring is safe. The engine state itself doesn't invalidate:
+    // the pre-existing scheduled MIDI clips + audio clips loaded before
+    // the take keep playing unmolested. When recordingActive flips off
+    // this effect re-runs (deps include it), the take clip is now
+    // finalized, and one loadSession picks it up cleanly.
+    if (state?.recordingActive && needsFullReload) {
+      // Warming stays false — the engine is fully live, just not yet
+      // aware of the growing take clip.
+      return;
+    }
+
     setWarming(true);
     (async () => {
       // Pre-warm every signed URL — needed by both paths. Recording flow
@@ -607,7 +624,11 @@ export function useStudioEngine(session: Session | null) {
       setWarming(false);
     })();
     return () => { cancelled = true; };
-  }, [session, native]);
+    // state?.recordingActive is in the deps so the deferred reload above
+    // fires the moment a take ends. Without it, stopping a recording
+    // would leave the engine unaware of the new take clip until the next
+    // unrelated session edit.
+  }, [session, native, state?.recordingActive]);
 
   const api = useMemo(() => {
     if (native) {
