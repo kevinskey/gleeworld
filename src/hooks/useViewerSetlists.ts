@@ -16,7 +16,20 @@ export interface SetlistScore {
   order_index: number;
   title: string;
   composer: string | null;
+  // Direct URL (legacy) OR a storage_bucket+storage_path pair (newer
+  // uploads via Supabase Storage 1.48 → DO Spaces). Callers gate
+  // openability on `hasSource(sc)` — the reader will sign the storage
+  // path on demand when it opens the score.
   pdf_url: string | null;
+  storage_path: string | null;
+  storage_bucket: string | null;
+}
+
+/** True when this setlist row points at either a direct URL or a
+ *  storage_bucket+storage_path — the two conventions the reader can
+ *  actually open. */
+export function hasSource(sc: Pick<SetlistScore, 'pdf_url' | 'storage_path'>): boolean {
+  return !!(sc.pdf_url || sc.storage_path);
 }
 
 // All published setlists visible to this tenant. RLS handles scoping;
@@ -52,7 +65,7 @@ export function useSetlistScores(setlistId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_setlist_items')
-        .select('id, music_id, order_index, score:gw_sheet_music(title, composer, pdf_url)')
+        .select('id, music_id, order_index, score:gw_sheet_music(title, composer, pdf_url, storage_path, storage_bucket)')
         .eq('setlist_id', setlistId!)
         .order('order_index');
       if (error) throw error;
@@ -63,6 +76,8 @@ export function useSetlistScores(setlistId: string | undefined) {
         title: it.score?.title ?? '(untitled)',
         composer: it.score?.composer ?? null,
         pdf_url: it.score?.pdf_url ?? null,
+        storage_path: it.score?.storage_path ?? null,
+        storage_bucket: it.score?.storage_bucket ?? null,
       }));
     },
   });

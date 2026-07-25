@@ -17,6 +17,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getSignedUrl } from '@/utils/storage';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -64,7 +65,7 @@ import { PDFViewerWithAnnotations, type PDFViewerHandle } from '@/components/PDF
 import { useSheetMusicBookmarks } from '@/hooks/useSheetMusicBookmarks';
 import { BookmarksMenu } from '@/components/music-library/BookmarksMenu';
 import { AudioCompanionControls } from '@/components/music-library/AudioCompanionControls';
-import { useSetlistScores, useViewerSetlists } from '@/hooks/useViewerSetlists';
+import { useSetlistScores, useViewerSetlists, hasSource } from '@/hooks/useViewerSetlists';
 import { useRecordScoreOpen } from '@/hooks/useRecordScoreOpen';
 import { useNavigate } from 'react-router-dom';
 
@@ -81,7 +82,12 @@ interface ScoreMeta {
   id: string;
   title: string;
   composer: string | null;
+  // Direct URL (legacy). Newer uploads (Supabase Storage 1.48 → DO Spaces)
+  // leave pdf_url null and reference the file via storage_bucket +
+  // storage_path; the effective URL is signed on demand.
   pdf_url: string | null;
+  storage_path: string | null;
+  storage_bucket: string | null;
 }
 
 // Bottom-bar auto-hide. Top bar is always visible (forScore-style) so we
@@ -223,12 +229,30 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
       if (!scoreId) return null;
       const { data } = await supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, pdf_url')
+        .select('id, title, composer, pdf_url, storage_path, storage_bucket')
         .eq('id', scoreId)
         .maybeSingle();
       return (data as ScoreMeta) ?? null;
     },
     enabled: !!scoreId,
+  });
+
+  // Effective PDF URL: prefer the legacy `pdf_url` when present,
+  // otherwise sign a URL from storage_bucket + storage_path. Signed URLs
+  // expire in 1h; the reader typically re-opens the same file within
+  // that window, and re-signing on the next mount is cheap.
+  const { data: effectivePdfUrl } = useQuery<string | null>({
+    queryKey: ['viewer-pdf-url', scoreId, meta?.pdf_url, meta?.storage_bucket, meta?.storage_path],
+    queryFn: async () => {
+      if (!meta) return null;
+      if (meta.pdf_url) return meta.pdf_url;
+      if (meta.storage_bucket && meta.storage_path) {
+        return await getSignedUrl(meta.storage_bucket, meta.storage_path, 3600, false);
+      }
+      return null;
+    },
+    enabled: !!meta,
+    staleTime: 30 * 60 * 1000, // 30 min — well within the 1h signature TTL
   });
 
   // Optional setlist context — when present we surface Next/Prev-score
@@ -279,7 +303,13 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
     );
   }
 
-  if (scoreId && (!meta || !meta.pdf_url)) {
+  // "Has a PDF" now covers both the legacy pdf_url column and the
+  // storage_bucket+storage_path pair (DO Spaces via Supabase Storage).
+  // Meta loads before the signed URL resolves, so we key the failure
+  // guard off the source columns rather than effectivePdfUrl — otherwise
+  // the error page flashes for a beat between meta and signing.
+  const hasSource = !!(meta?.pdf_url || (meta?.storage_bucket && meta?.storage_path));
+  if (scoreId && meta && !hasSource) {
     return (
       <div className="fixed inset-0 bg-background flex flex-col items-center justify-center gap-3">
         <p className="text-sm text-muted-foreground">Score not found or has no PDF.</p>
@@ -294,8 +324,10 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
   // the landing state we fabricate a placeholder so the chrome (title
   // pill, bookmarks menu, audio companion) all keep their prop contracts
   // without hundreds of conditional checks downstream.
-  const m = meta ?? { id: '', title: 'No score selected', composer: null, pdf_url: null };
-  const hasScore = !!meta?.pdf_url;
+  const m = meta
+    ? { ...meta, pdf_url: effectivePdfUrl ?? meta.pdf_url }
+    : { id: '', title: 'No score selected', composer: null, pdf_url: null, storage_path: null, storage_bucket: null };
+  const hasScore = !!m.pdf_url;
 
   const callTool = (fn: (h: PDFViewerHandle) => void) => {
     if (pdfRef.current) fn(pdfRef.current);
@@ -1451,12 +1483,12 @@ function LibraryDrawerContent({
 }) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'title' | 'composer' | 'recent'>('title');
-  const { data: rows = [], isLoading } = useQuery<Array<{ id: string; title: string; composer: string | null; pdf_url: string | null; created_at: string | null }>>({
+  const { data: rows = [], isLoading } = useQuery<Array<{ id: string; title: string; composer: string | null; pdf_url: string | null; storage_path: string | null; storage_bucket: string | null; created_at: string | null }>>({
     queryKey: ['viewer-library-drawer'],
     queryFn: async () => {
       const { data } = await supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, pdf_url, created_at')
+        .select('id, title, composer, pdf_url, storage_path, storage_bucket, created_at')
         .eq('is_archived', false)
         .order('title')
         .limit(1000);
@@ -1466,7 +1498,9 @@ function LibraryDrawerContent({
   });
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let list = rows.filter((r) => !!r.pdf_url);
+    // Same visibility rule as ViewerPage: a row is openable if either
+    // the legacy pdf_url is set or it's stored via storage_bucket+path.
+    let list = rows.filter((r) => !!(r.pdf_url || r.storage_path));
     if (q) {
       list = list.filter((r) =>
         r.title?.toLowerCase().includes(q) ||
@@ -1720,22 +1754,25 @@ function SetlistDrawerRow({
           ) : scores.length === 0 ? (
             <div className="py-3 text-xs text-muted-foreground text-center italic">Empty.</div>
           ) : (
-            scores.map((sc) => (
+            scores.map((sc) => {
+              const openable = hasSource(sc);
+              return (
               <button
                 key={sc.id}
                 type="button"
-                disabled={!sc.pdf_url}
-                onClick={() => sc.pdf_url && onPick(sc.sheet_music_id)}
+                disabled={!openable}
+                onClick={() => openable && onPick(sc.sheet_music_id)}
                 className={cn(
                   'w-full px-5 py-1.5 text-left flex items-center gap-2 text-xs hover:bg-accent/40',
-                  !sc.pdf_url && 'opacity-50 cursor-not-allowed',
+                  !openable && 'opacity-50 cursor-not-allowed',
                   sc.sheet_music_id === currentScoreId && 'bg-primary/10',
                 )}
               >
                 <span className="tabular-nums text-muted-foreground w-5">{sc.order_index + 1}.</span>
                 <span className="flex-1 truncate">{sc.title}</span>
               </button>
-            ))
+              );
+            })
           )}
         </div>
       )}

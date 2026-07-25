@@ -48,7 +48,15 @@ interface ScoreRow {
   key_signature: string | null;
   time_signature: string | null;
   tags: string[] | null;
+  // pdf_url is the legacy direct-URL column. Newer uploads (Supabase
+  // Storage 1.48 → DO Spaces) leave pdf_url null and record the file via
+  // storage_bucket + storage_path instead, signed on demand by the
+  // reader. Music Library already treats a row as "has PDF" if either
+  // is set; the Viewer used to only check pdf_url, which is why DO
+  // Spaces uploads were invisible here.
   pdf_url: string | null;
+  storage_path: string | null;
+  storage_bucket: string | null;
   audio_url: string | null;
   created_at: string | null;
 }
@@ -114,7 +122,7 @@ function ViewerLanding({
     queryFn: async () => {
       const { data } = await supabase
         .from('gw_sheet_music')
-        .select('id, title, composer, voicing, key_signature, time_signature, tags, pdf_url, audio_url, created_at')
+        .select('id, title, composer, voicing, key_signature, time_signature, tags, pdf_url, storage_path, storage_bucket, audio_url, created_at')
         .eq('is_archived', false)
         .order('title')
         .limit(500);
@@ -126,7 +134,11 @@ function ViewerLanding({
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
-    let list = rows.filter((r) => !!r.pdf_url);
+    // A row is viewable if EITHER the legacy pdf_url is set OR it points
+    // at a storage_bucket+storage_path (DO Spaces via Supabase Storage) —
+    // matches Music Library's `hasPdf` semantics so the same row is
+    // visible in both places.
+    let list = rows.filter((r) => !!(r.pdf_url || r.storage_path));
     if (s) {
       list = list.filter((r) =>
         r.title?.toLowerCase().includes(s) ||
