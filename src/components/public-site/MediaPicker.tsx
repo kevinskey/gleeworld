@@ -78,21 +78,33 @@ export function MediaPicker({ open, onOpenChange, accept, onPick }: Props) {
         return;
       }
       const publicUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
-      // Wait for the public path to actually serve before we hand the URL back —
-      // Storage 1.48 + flatten cron means there's a 5-10s window where the URL
-      // still 404s. Without this the music/video block briefly shows a broken
-      // file before the cron catches up.
+      // Wait for the public path to actually serve before we hand the URL
+      // back — Storage 1.48 + flatten cron means there's a 3-10s window
+      // where the URL still 404s. Without this the music/video block
+      // briefly shows a broken file before the cron catches up.
+      //
+      // Poll delayed 3s and paced to keep console spam down: every HEAD
+      // that hits a 404 gets logged by the browser regardless of how the
+      // code handles it, so front-loading the wait past the typical
+      // propagation window means most uploads produce zero console noise
+      // instead of 2-3 red lines. Timeout still 30s; user gets a toast
+      // if we're still 404ing after that (real failure, not propagation).
       {
+        await new Promise((r) => setTimeout(r, 3000));
         const start = Date.now();
-        const delays = [500, 800, 1500, 2500, 3500, 5000];
+        const delays = [2000, 3000, 4000, 5000];
         let attempt = 0;
-        while (Date.now() - start < 30000) {
+        let ok = false;
+        while (Date.now() - start < 27000) {
           try {
             const res = await fetch(publicUrl, { method: 'HEAD', cache: 'no-store' });
-            if (res.ok) break;
+            if (res.ok) { ok = true; break; }
           } catch { /* retry */ }
           await new Promise((r) => setTimeout(r, delays[Math.min(attempt, delays.length - 1)]));
           attempt += 1;
+        }
+        if (!ok) {
+          toast.warning('Upload finished but storage is still processing — the file may take a moment to appear.');
         }
       }
       const title = file.name.replace(/\.[^.]+$/, '');
