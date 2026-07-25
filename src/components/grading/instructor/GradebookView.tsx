@@ -15,6 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  computeCourseGrade,
+  formatGradePct,
+  letterGrade,
+  type GradeCategory,
+  type GradeSubmission,
+} from '@/lib/grading/computeCourseGrade';
 
 interface GradebookViewProps {
   courseId: string;
@@ -88,7 +95,7 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
     queryKey: ['gw-course-grades', courseId],
     queryFn: async () => {
       if (!assignments || assignments.length === 0) return [];
-      
+
       const assignmentIds = assignments.map(a => a.id);
       const { data, error } = await supabase
         .from('gw_grades' as any)
@@ -101,14 +108,50 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
     enabled: !!assignments && assignments.length > 0,
   });
 
+  // Grade categories with per-course weights. Drives both the per-
+  // category subtotal columns and the weighted final.
+  const { data: gradeCategories } = useQuery<GradeCategory[]>({
+    queryKey: ['gw-course-grade-categories', courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_course_grade_categories' as any)
+        .select('key, label, weight_pct, drop_lowest, sort_order')
+        .eq('course_id', courseId)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      const rows = (data as unknown as Array<{ key: string; label: string; weight_pct: number; drop_lowest: number }>) ?? [];
+      return rows.map((r) => ({
+        key: r.key,
+        label: r.label,
+        weightPct: Number(r.weight_pct) || 0,
+        dropLowest: Number(r.drop_lowest) || 0,
+      }));
+    },
+  });
+
+  // Assignment id → category key. `assignment_type` values that don't
+  // match a configured category default to 'assignments' so legacy
+  // rows (created before this system existed) still contribute rather
+  // than silently disappearing from the final calc.
+  const categoryByAssignment = useMemo(() => {
+    const map = new Map<string, string>();
+    const validKeys = new Set((gradeCategories ?? []).map((c) => c.key));
+    for (const a of assignments ?? []) {
+      const raw = (a.assignment_type as string | null) ?? '';
+      map.set(a.id, validKeys.has(raw) ? raw : 'assignments');
+    }
+    return map;
+  }, [assignments, gradeCategories]);
+
   // Calculate gradebook data
   const gradebookData = useMemo(() => {
     if (!enrollments || !assignments || !submissions || !gradeRecords) return [];
+    const categories = gradeCategories ?? [];
 
     return enrollments.map(enrollment => {
       const studentId = enrollment.student_id;
       const studentName = enrollment.gw_profiles?.full_name || enrollment.gw_profiles?.email || 'Unknown';
-      
+
       const assignmentGrades = assignments.map(assignment => {
         const submission = (submissions as any[] || []).find(
           (s: any) => s.user_id === studentId && s.assignment_id === assignment.id
@@ -125,24 +168,28 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
           grade: gradeValue,
           status,
           submittedAt: submission?.submitted_at,
+          excused: gradeRec?.excused === true,
+          categoryKey: categoryByAssignment.get(assignment.id) ?? 'assignments',
         };
       });
 
-      const totalPoints = assignments.reduce((sum, a) => sum + (a.points || 100), 0);
-      const earnedPoints = assignmentGrades.reduce((sum, g) => sum + (g.grade || 0), 0);
-      const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
+      const submissionsForFormula: GradeSubmission[] = assignmentGrades.map((g) => ({
+        categoryKey: g.categoryKey,
+        earned: g.grade,
+        possible: g.assignmentPoints,
+        excused: g.excused,
+      }));
+      const weighted = computeCourseGrade(submissionsForFormula, categories);
 
       return {
         studentId,
         studentName,
         studentEmail: enrollment.gw_profiles?.email,
         grades: assignmentGrades,
-        totalPoints,
-        earnedPoints,
-        percentage,
+        weighted,
       };
     });
-  }, [enrollments, assignments, submissions, gradeRecords]);
+  }, [enrollments, assignments, submissions, gradeRecords, gradeCategories, categoryByAssignment]);
 
   const getGradeColor = (status: string) => {
     switch (status) {
@@ -157,15 +204,32 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
 
   const exportToCSV = () => {
     if (!gradebookData || gradebookData.length === 0) return;
+    const categories = gradeCategories ?? [];
 
-    const headers = ['Student', 'Email', ...assignments.map(a => a.title), 'Total Points', 'Percentage'];
-    const rows = gradebookData.map(student => [
-      student.studentName,
-      student.studentEmail,
-      ...student.grades.map(g => g.grade !== null ? g.grade : '-'),
-      student.earnedPoints,
-      student.percentage.toFixed(2) + '%',
-    ]);
+    const headers = [
+      'Student',
+      'Email',
+      ...assignments.map(a => a.title),
+      ...categories.map(c => `${c.label} (${c.weightPct}%)`),
+      'Final %',
+      'Final Letter',
+    ];
+    const rows = gradebookData.map(student => {
+      const catScores = categories.map((c) => {
+        const summary = student.weighted.categories.find((cs) => cs.key === c.key);
+        return summary?.score !== null && summary?.score !== undefined
+          ? summary.score.toFixed(2) + '%'
+          : '-';
+      });
+      return [
+        student.studentName,
+        student.studentEmail,
+        ...student.grades.map(g => g.grade !== null ? g.grade : '-'),
+        ...catScores,
+        student.weighted.finalScore !== null ? student.weighted.finalScore.toFixed(2) + '%' : '-',
+        letterGrade(student.weighted.finalScore),
+      ];
+    });
 
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -233,8 +297,22 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
                       </div>
                     </TableHead>
                   ))}
-                  <TableHead className="text-center min-w-[100px]">Total</TableHead>
-                  <TableHead className="text-center min-w-[100px]">%</TableHead>
+                  {/* Per-category subtotal columns — one for each weighted category. */}
+                  {(gradeCategories ?? []).map((c) => (
+                    <TableHead key={`cat-${c.key}`} className="text-center min-w-[110px] border-l bg-muted/30">
+                      <div className="space-y-1">
+                        <div className="font-semibold text-xs">{c.label}</div>
+                        <div className="text-[10px] text-muted-foreground">{c.weightPct}% weight</div>
+                      </div>
+                    </TableHead>
+                  ))}
+                  <TableHead className="text-center min-w-[110px] border-l bg-primary/10">
+                    <div className="space-y-1">
+                      <div className="font-semibold">Final %</div>
+                      <div className="text-[10px] text-muted-foreground">weighted</div>
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-center min-w-[80px] bg-primary/10">Letter</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -261,13 +339,42 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
                         )}
                       </TableCell>
                     ))}
-                    <TableCell className="text-center font-semibold">
-                      {student.earnedPoints}/{student.totalPoints}
-                    </TableCell>
-                    <TableCell className="text-center font-semibold">
-                      <Badge variant={student.percentage >= 90 ? 'default' : student.percentage >= 70 ? 'secondary' : 'destructive'}>
-                        {student.percentage.toFixed(1)}%
+                    {/* Per-category subtotals — null score renders as em dash. */}
+                    {(gradeCategories ?? []).map((c) => {
+                      const summary = student.weighted.categories.find((s) => s.key === c.key);
+                      return (
+                        <TableCell key={`cat-${c.key}`} className="text-center border-l bg-muted/20">
+                          <div className="font-semibold">{formatGradePct(summary?.score ?? null)}</div>
+                          {summary && summary.droppedSubmissions > 0 && (
+                            <div className="text-[10px] text-muted-foreground">
+                              drop {summary.droppedSubmissions}
+                            </div>
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                    <TableCell className="text-center font-semibold border-l bg-primary/5">
+                      <Badge
+                        variant={
+                          student.weighted.finalScore === null
+                            ? 'outline'
+                            : student.weighted.finalScore >= 90
+                            ? 'default'
+                            : student.weighted.finalScore >= 70
+                            ? 'secondary'
+                            : 'destructive'
+                        }
+                      >
+                        {formatGradePct(student.weighted.finalScore)}
                       </Badge>
+                      {student.weighted.finalScore !== null && student.weighted.activeWeightPct < 100 && (
+                        <div className="text-[10px] text-muted-foreground mt-1">
+                          of {student.weighted.activeWeightPct}% graded
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center font-bold bg-primary/5">
+                      {letterGrade(student.weighted.finalScore)}
                     </TableCell>
                   </TableRow>
                 ))}

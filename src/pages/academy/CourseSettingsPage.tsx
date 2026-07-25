@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { CourseGradeWeightsSection } from '@/components/course/CourseGradeWeightsSection';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -382,6 +383,13 @@ export default function CourseSettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Weighted final-grade categories. Rendered above the delete
+          dialog so it's part of the course-owner workflow, not tucked
+          away in an unrelated tab. */}
+      <div className="mt-6">
+        <CourseGradeWeightsSection courseId={course.id} readOnly={!canManage} />
+      </div>
 
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent>
