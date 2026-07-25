@@ -27,7 +27,13 @@ serve(async (req) => {
 
   const apiKey = Deno.env.get('DEEPSEEK_API_KEY');
   const apiUrl = Deno.env.get('ASSISTANT_API_URL') ?? 'https://api.deepseek.com/chat/completions';
-  const model = Deno.env.get('ASSISTANT_MODEL') ?? 'deepseek-chat';
+  // DeepSeek renamed `deepseek-chat` → `deepseek-v4-pro` / `deepseek-v4-flash`
+  // and returns HTTP 400 on the old name, so any container still defaulting
+  // to `deepseek-chat` fails every request with "Model API 400: The
+  // supported API model names are deepseek-v4-pro or deepseek-v4-flash".
+  // Default to `-pro` here for tool-calling quality; tenants can override
+  // to `-flash` (cheaper/faster) via the ASSISTANT_MODEL env var.
+  const model = Deno.env.get('ASSISTANT_MODEL') ?? 'deepseek-v4-pro';
   if (!apiKey) return json({ error: 'Assistant is not configured' }, 500);
 
   let body: {
