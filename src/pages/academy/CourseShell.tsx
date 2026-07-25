@@ -943,6 +943,10 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   async function submit() {
     if (!newTitle.trim()) return;
     setSaving(true);
+    // Publish by default. The old behaviour (is_active: false) surprised
+    // teachers who then couldn't understand why the assignment did not
+    // reach students. If a teacher wants a draft, they can toggle
+    // Published off from the row's edit dialog before students see it.
     const { data, error } = await supabase
       .from("gw_assignments")
       .insert({
@@ -950,7 +954,7 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
         title: newTitle.trim(),
         points: Number(newPoints) || 0,
         due_at: newDue ? new Date(newDue).toISOString() : null,
-        is_active: false,                 // draft until published
+        is_active: true,
         assignment_type: 'standard',
         category: 'general',
         created_by: user?.id,
@@ -966,7 +970,7 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
     setItems((prev) => [...prev, ui].sort((a, b) => (a.due_date || "z").localeCompare(b.due_date || "z")));
     setNewTitle(""); setNewPoints("100"); setNewDue("");
     setAddOpen(false);
-    toast.success(`Added "${data.title}" (draft)`);
+    toast.success(`Published "${data.title}" — visible to students`);
   }
 
   return (
