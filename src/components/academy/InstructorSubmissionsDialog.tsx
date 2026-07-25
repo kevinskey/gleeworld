@@ -70,25 +70,49 @@ export function InstructorSubmissionsDialog({
     let cancelled = false;
     setLoading(true);
     (async () => {
-      // Enrolled students — same shape as GradebookView's query.
-      const { data: enr } = await supabase
-        .from('gw_course_enrollments')
-        .select('student_id, user_id, gw_profiles:gw_profiles_directory!gw_course_enrollments_user_id_fkey(full_name, email)')
-        .eq('course_id', courseId)
-        .eq('enrollment_status', 'enrolled');
-      // Submissions for this assignment — general-purpose table.
-      const { data: subs } = await supabase
-        .from('gw_course_submissions')
-        .select('id, assignment_id, student_id, status, submitted_at, content, file_url, file_name, points_earned, feedback, graded_at')
-        .eq('assignment_id', assignment.id);
+      // Enrolled students. Two-step lookup because
+      // gw_course_enrollments has no FK to a profile table (its declared
+      // FKs are course_id, tenant_id, student_profile_id) — PostgREST
+      // implicit joins therefore silently return zero rows, which is
+      // why the dialog was showing "0 enrolled" for populated courses.
+      const [enrRes, subsRes] = await Promise.all([
+        supabase
+          .from('gw_course_enrollments')
+          .select('user_id, student_id')
+          .eq('course_id', courseId)
+          .in('enrollment_status', ['enrolled', 'active', 'in_progress', 'registered']),
+        supabase
+          .from('gw_course_submissions')
+          .select('id, assignment_id, student_id, status, submitted_at, content, file_url, file_name, points_earned, feedback, graded_at')
+          .eq('assignment_id', assignment.id),
+      ]);
+      const enr = (enrRes.data as { user_id: string | null; student_id: string | null }[] | null) ?? [];
+      const subs = subsRes.data as unknown as SubmissionRow[] | null;
+
+      // Load display names for those enrolled users from the directory.
+      const userIds = Array.from(new Set(enr.map((e) => e.user_id || e.student_id).filter(Boolean))) as string[];
+      const { data: profiles } = userIds.length > 0
+        ? await supabase
+            .from('gw_profiles_directory' as any)
+            .select('user_id, full_name, email')
+            .in('user_id', userIds)
+        : { data: [] as any[] };
       if (cancelled) return;
 
-      const rows: EnrollmentRow[] = ((enr as any[]) ?? []).map((e) => ({
-        // gw_course_enrollments has both student_id (older) and user_id — use user_id first.
-        user_id: e.user_id || e.student_id,
-        full_name: e.gw_profiles?.full_name ?? null,
-        email: e.gw_profiles?.email ?? null,
-      }));
+      const profileMap = new Map<string, { full_name: string | null; email: string | null }>();
+      for (const p of ((profiles as any[]) ?? [])) {
+        profileMap.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null });
+      }
+
+      const rows: EnrollmentRow[] = enr.map((e) => {
+        const uid = (e.user_id || e.student_id) as string;
+        const p = profileMap.get(uid);
+        return {
+          user_id: uid,
+          full_name: p?.full_name ?? null,
+          email: p?.email ?? null,
+        };
+      });
       rows.sort((a, b) => (a.full_name || a.email || '').localeCompare(b.full_name || b.email || ''));
       setEnrollments(rows);
 

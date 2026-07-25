@@ -61,15 +61,34 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery({
     queryKey: ['gw-course-enrollments', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Two-step lookup: gw_course_enrollments has no FK to a profile
+      // table, so PostgREST implicit joins return zero rows silently.
+      const { data: enr, error } = await supabase
         .from('gw_course_enrollments')
-        .select('*, gw_profiles:gw_profiles_directory!gw_course_enrollments_user_id_fkey(full_name, email)')
+        .select('user_id, student_id, enrolled_at')
         .eq('course_id', courseId)
-        .eq('enrollment_status', 'enrolled')
+        .in('enrollment_status', ['enrolled', 'active', 'in_progress', 'registered'])
         .order('enrolled_at', { ascending: true });
-
       if (error) throw error;
-      return data as any[];
+      const rows = ((enr as any[]) ?? []).map((e) => ({
+        student_id: e.user_id || e.student_id,
+        enrolled_at: e.enrolled_at,
+      }));
+      const userIds = Array.from(new Set(rows.map((r) => r.student_id).filter(Boolean)));
+      const { data: profiles } = userIds.length > 0
+        ? await supabase
+            .from('gw_profiles_directory' as any)
+            .select('user_id, full_name, email')
+            .in('user_id', userIds)
+        : { data: [] as any[] };
+      const pMap = new Map<string, { full_name: string | null; email: string | null }>();
+      for (const p of ((profiles as any[]) ?? [])) {
+        pMap.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null });
+      }
+      return rows.map((r) => ({
+        ...r,
+        gw_profiles: pMap.get(r.student_id) ?? { full_name: null, email: null },
+      }));
     },
   });
 
@@ -77,12 +96,14 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
     queryKey: ['gw-course-submissions', courseId],
     queryFn: async () => {
       if (!assignments || assignments.length === 0) return [];
-      
+
       const assignmentIds = assignments.map(a => a.id);
-      
-      // Fetch all submissions for these assignments
+
+      // Fetch all submissions for these assignments (general-purpose
+      // table paired with gw_assignments; gw_assignment_submissions is
+      // sight-reading-only and would return empty here).
       const { data: submissions } = await supabase
-        .from('gw_assignment_submissions' as any)
+        .from('gw_course_submissions')
         .select('*')
         .in('assignment_id', assignmentIds);
 
@@ -153,13 +174,16 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
       const studentName = enrollment.gw_profiles?.full_name || enrollment.gw_profiles?.email || 'Unknown';
 
       const assignmentGrades = assignments.map(assignment => {
+        // gw_course_submissions uses student_id (not user_id) and stores
+        // the grade in points_earned (fallback to grade); gw_grades keeps
+        // its own total_score for pre-formula legacy rows.
         const submission = (submissions as any[] || []).find(
-          (s: any) => s.user_id === studentId && s.assignment_id === assignment.id
+          (s: any) => s.student_id === studentId && s.assignment_id === assignment.id
         );
         const gradeRec = (gradeRecords as any[] || []).find(
           (g: any) => g.student_id === studentId && g.assignment_id === assignment.id
         );
-        const gradeValue = gradeRec?.total_score ?? null;
+        const gradeValue = gradeRec?.total_score ?? submission?.points_earned ?? submission?.grade ?? null;
         const status = gradeRec ? 'graded' : (submission ? (submission.status || 'submitted') : 'not_submitted');
         return {
           assignmentId: assignment.id,
