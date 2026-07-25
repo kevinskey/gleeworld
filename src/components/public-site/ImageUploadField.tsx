@@ -126,8 +126,11 @@ export function ImageUploadField({
           </p>
         )}
         <label
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-white text-xs font-medium cursor-pointer transition-opacity hover:opacity-90 whitespace-nowrap"
-          style={{ backgroundColor: buttonColor || '#0f172a' }}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium cursor-pointer transition-opacity hover:opacity-90 whitespace-nowrap"
+          // Inline `color: white` so a global button/label color override
+          // (or a tenant-theme override targeting text-white) can't win
+          // and leave the label unreadable on its dark background.
+          style={{ backgroundColor: buttonColor || '#0f172a', color: '#ffffff' }}
         >
           {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
           {uploading ? 'Uploading…' : previewSrc ? 'Replace' : 'Upload'}
