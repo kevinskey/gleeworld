@@ -120,7 +120,13 @@ serve(async (req: Request) => {
       return jsonError(502, `Storage failed: ${upErr.message}`);
     }
 
-    const publicUrl = admin.storage.from("site-branding").getPublicUrl(path).data.publicUrl;
+    // getPublicUrl builds off the client's base URL, which inside the edge
+    // runtime is the container-internal http://kong:8000 — useless to a
+    // browser, and blocked by the app's CSP before it can even 404. Swap in
+    // the externally-reachable origin the runtime already hands us.
+    const publicOrigin = (Deno.env.get("SUPABASE_PUBLIC_URL") ?? supabaseUrl).replace(/\/+$/, "");
+    const rawUrl = admin.storage.from("site-branding").getPublicUrl(path).data.publicUrl;
+    const publicUrl = rawUrl.replace(/^https?:\/\/[^/]+/, publicOrigin);
     return jsonOk({ path, url: publicUrl });
   } catch (err) {
     console.error("[upload-site-branding] unhandled", err);
