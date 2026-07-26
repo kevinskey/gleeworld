@@ -103,22 +103,45 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
   // Route through an edge fn instead of a direct browser -> storage POST.
   // The direct path was reliably failing net::ERR_TIMED_OUT for some
   // clients (ISP middleboxes / MTU issues) even for tiny (<10 KB) files.
-  console.log(`[upload] reading file as base64 (${file.size} bytes)…`);
+  console.log(`[upload] reading file bytes (${file.size} bytes)…`);
   let fileBase64: string;
   try {
-    fileBase64 = await new Promise<string>((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => {
-        const s = String(r.result);
-        const comma = s.indexOf(',');
-        resolve(comma >= 0 ? s.slice(comma + 1) : s);
-      };
-      r.onerror = () => reject(r.error || new Error('FileReader failed'));
-      r.readAsDataURL(file);
-    });
+    // Prefer file.arrayBuffer() — FileReader intermittently throws
+    // NotReadableError on macOS Chrome when the source is on iCloud
+    // Drive or another cloud-backed folder where the file is visible
+    // but not physically local. arrayBuffer() usually forces the
+    // sync-on-demand and works. If it still fails, try FileReader as
+    // a fallback so we're not worse than before.
+    let bytes: Uint8Array;
+    try {
+      const buf = await file.arrayBuffer();
+      bytes = new Uint8Array(buf);
+    } catch (primaryErr) {
+      console.warn('[upload] arrayBuffer failed, trying FileReader:', primaryErr);
+      bytes = await new Promise<Uint8Array>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const buf = r.result as ArrayBuffer;
+          resolve(new Uint8Array(buf));
+        };
+        r.onerror = () => reject(r.error || new Error('FileReader failed'));
+        r.readAsArrayBuffer(file);
+      });
+    }
+    // btoa can't handle large binary strings directly — chunk it.
+    let bin = '';
+    const chunk = 8192;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    fileBase64 = btoa(bin);
   } catch (err) {
-    console.error('[upload] FileReader failed:', err);
-    toast.error(`Couldn't read the file: ${err instanceof Error ? err.message : 'unknown'}`);
+    console.error('[upload] file read failed:', err);
+    toast.error(
+      err instanceof Error && err.name === 'NotReadableError'
+        ? 'Couldn\'t read the image — if it\'s on iCloud Drive, download it locally first (Finder → right-click → Download Now), then try again.'
+        : `Couldn't read the file: ${err instanceof Error ? err.message : 'unknown'}`,
+    );
     return null;
   }
   console.log(`[upload] base64 ready (${fileBase64.length} chars); invoking edge fn…`);
@@ -259,8 +282,12 @@ export function ImageUploadField({
             className="hidden"
             disabled={uploading}
             onChange={async (e) => {
-              const file = e.target.files?.[0];
-              e.target.value = '';
+              const input = e.target;
+              const file = input.files?.[0];
+              // Don't clear the input until AFTER we're done reading the
+              // file. Chrome+macOS sometimes drops the underlying File
+              // reference the instant the input clears, which trips
+              // NotReadableError inside FileReader / arrayBuffer.
               if (!file) return;
               const blobUrl = URL.createObjectURL(file);
               setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return blobUrl; });
@@ -293,6 +320,10 @@ export function ImageUploadField({
                 toast.error(`Upload failed: ${err instanceof Error ? err.message : 'network error'}`);
               } finally {
                 setUploading(false);
+                // Clear the input NOW that we're done reading the file, so
+                // the user can pick the same filename again to retry after
+                // a failure.
+                try { input.value = ''; } catch { /* noop */ }
               }
             }}
           />
