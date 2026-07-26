@@ -287,26 +287,35 @@ export function InstructorSubmissionsDialog({
               const needsReview = sub?.status === 'revision_submitted';
               const d = draftFor(e.user_id);
               return (
+                // Row wrapper is a plain div — NOT a button. When it was
+                // a button, focusing inputs in the expanded panel below
+                // fired weird focus-related state changes that closed the
+                // form. Only the specifically-interactive parts of the
+                // row are real buttons now.
                 <li key={e.user_id} className="py-2">
-                  <button
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-muted/50 text-left"
-                    onClick={() => setExpandedUser(isExpanded ? null : e.user_id)}
-                  >
-                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <UserIcon className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">
-                        {e.full_name || e.email || 'Unknown student'}
+                  <div className="w-full flex items-center gap-3 px-2 py-2 rounded-md hover:bg-muted/50">
+                    <button
+                      type="button"
+                      className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                      onClick={() => setExpandedUser(isExpanded ? null : e.user_id)}
+                      aria-expanded={isExpanded}
+                    >
+                      <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <UserIcon className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {sub?.submitted_at
-                          ? `Submitted ${formatDistanceToNow(new Date(sub.submitted_at), { addSuffix: true })}`
-                          : 'Not submitted'}
-                        {sub?.content && ' · text response'}
-                        {sub?.file_url && ' · attachment'}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {e.full_name || e.email || 'Unknown student'}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {sub?.submitted_at
+                            ? `Submitted ${formatDistanceToNow(new Date(sub.submitted_at), { addSuffix: true })}`
+                            : 'Not submitted'}
+                          {sub?.content && ' · text response'}
+                          {sub?.file_url && ' · attachment'}
+                        </div>
                       </div>
-                    </div>
+                    </button>
                     <div className="flex items-center gap-2 shrink-0">
                       {needsReview && (
                         <Badge className="bg-amber-500 hover:bg-amber-500 gap-1">
@@ -319,28 +328,25 @@ export function InstructorSubmissionsDialog({
                         </Badge>
                       )}
                       {sub?.status === 'submitted' && (
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          className="cursor-pointer inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                          onClick={(ev) => {
-                            ev.stopPropagation();
-                            setExpandedUser(isExpanded ? null : e.user_id);
-                          }}
-                          onKeyDown={(ev) => {
-                            if (ev.key === 'Enter' || ev.key === ' ') {
-                              ev.preventDefault();
-                              setExpandedUser(isExpanded ? null : e.user_id);
-                            }
-                          }}
+                        <button
+                          type="button"
+                          className="inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                          onClick={() => setExpandedUser(isExpanded ? null : e.user_id)}
                         >
                           {isExpanded ? 'Close' : 'To grade'}
-                        </span>
+                        </button>
                       )}
                       {!sub && <Badge variant="outline">Missing</Badge>}
-                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      <button
+                        type="button"
+                        aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
+                        onClick={() => setExpandedUser(isExpanded ? null : e.user_id)}
+                        className="inline-flex items-center justify-center h-6 w-6 text-muted-foreground hover:text-foreground"
+                      >
+                        {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
                     </div>
-                  </button>
+                  </div>
 
                   {isExpanded && (
                     <div
