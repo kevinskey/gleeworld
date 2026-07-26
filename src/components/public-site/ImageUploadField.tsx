@@ -329,7 +329,25 @@ export function ImageUploadField({
           />
         </label>
       </div>
-      <UrlPasteRow value={value} onChange={onChange} disabled={uploading} />
+      {uploading && (
+        <button
+          type="button"
+          onClick={() => {
+            // Force-reset uploading state if the file path is stuck. The
+            // underlying fetch/read may still resolve later but the UI
+            // stops blocking the user from trying the URL path instead.
+            setUploading(false);
+            setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
+          }}
+          className="text-xs text-slate-500 hover:text-red-600 underline"
+        >
+          Cancel upload
+        </button>
+      )}
+      {/* URL path is independent of the file-upload state on purpose —
+          the file upload can be stuck reading an iCloud-locked file
+          while the URL path still works perfectly fine. */}
+      <UrlPasteRow value={value} onChange={onChange} disabled={false} />
     </div>
   );
 }
