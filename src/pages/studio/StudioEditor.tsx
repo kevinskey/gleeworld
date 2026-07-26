@@ -42,7 +42,8 @@ import {
   type HeldPress, type CapturedCc,
 } from '@/lib/studio/midiRecord';
 import { MidiTimebase } from '@/lib/studio/midiTimebase';
-import { useStudioSession, useStudioEngine, useUploadAudioAsset } from '@/hooks/useStudio';
+import { useStudioSession, useStudioEngine, useUploadAudioAsset, type TransportTickStore } from '@/hooks/useStudio';
+import { useTransportPosition, useTransportTick } from './useTransportTick';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
@@ -398,8 +399,13 @@ function Editor({
   const { update } = sessionState;
   const {
     state, start, play, pause, stop, updateTrackStrip, updateTempo,
-    updateTimeSignature, setMetronome,
+    updateTimeSignature, setMetronome, transportTick,
   } = engineState;
+  // Live transport position for event handlers. Render-time consumers
+  // (playhead, counter, meters) subscribe via useTransportTick leaves
+  // instead — `state` deliberately does NOT update per position tick
+  // (see TransportTickStore in useStudio.ts).
+  const posNow = () => transportTick.get().positionSeconds;
   // Export sheet (B1 Task 7) — MP3 320 / WAV / Stems. Owned here (not
   // inside MixerView) so the header's Export button AND the MasterStrip's
   // Export button (inside MixerView, a different component subtree) open
@@ -468,7 +474,7 @@ function Editor({
   const [midiSyncOutputId, setMidiSyncOutputId] = useState<string>(() =>
     localStorage.getItem('studio.midiSyncOutputId') || '');
   useEffect(() => { localStorage.setItem('studio.midiSyncOutputId', midiSyncOutputId); }, [midiSyncOutputId]);
-  useMidiClockSync(engineState.state, midiSyncEnabled && !engineState.native, midiSyncOutputId);
+  useMidiClockSync(engineState.state, engineState.transportTick, midiSyncEnabled && !engineState.native, midiSyncOutputId);
 
   // ── USB/Web MIDI keyboard INPUT: play the armed MIDI track's instrument live,
   // and capture notes into its clip while the transport is recording. ──────────
@@ -507,10 +513,10 @@ function Editor({
   useEffect(() => { midiTimebase.reset(); }, [state?.recordingActive, midiTimebase]);
   // Transport position minus recording compensation — the musical moment
   // the player MEANT, given they play in time with late-by-outputLatency audio.
-  const compNow = () => Math.max(0, (state?.positionSeconds ?? 0) - midiCompSecRef.current);
+  const compNow = () => Math.max(0, posNow() - midiCompSecRef.current);
   // Same, but placed by the event's hardware timestamp when it has one.
   const compAt = (timeStampMs?: number) => Math.max(0,
-    midiTimebase.toTransportSeconds(timeStampMs, state?.positionSeconds ?? 0) - midiCompSecRef.current);
+    midiTimebase.toTransportSeconds(timeStampMs, posNow()) - midiCompSecRef.current);
   // The single clip owned by the current recording take — every note of a
   // take appends here so one take never sprays one-clip-per-note.
   const midiTakeClipRef = useRef<string | null>(null);
@@ -732,7 +738,7 @@ function Editor({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const c0 = t0 && (t0 as any).clips?.find((x: any) => x.id === selectedClip.clipId);
     if (!c0) return;
-    const ph = state?.positionSeconds ?? 0;
+    const ph = posNow();
     const inside0 = ph > c0.start_seconds && ph < c0.start_seconds + c0.duration_seconds;
     const pos = inside0 ? ph : c0.start_seconds + c0.duration_seconds / 2;
     pushHistory(session);
@@ -792,15 +798,17 @@ function Editor({
 
   /** True when the playhead currently intersects the selected clip —
    * gates the Split button the same way the B handler's guard does. */
-  const playheadInsideSelectedClip = (() => {
+  // Reads the live tick, so evaluated at render time it reflects the
+  // last render's moment — only used for a tooltip, where that's fine.
+  const playheadInsideSelectedClip = () => {
     if (!selectedClip) return false;
     const t = session?.tracks.find((x) => x.id === selectedClip.trackId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const c = t && (t as any).clips?.find((x: any) => x.id === selectedClip.clipId);
     if (!c) return false;
-    const pos = state?.positionSeconds ?? 0;
+    const pos = posNow();
     return pos > c.start_seconds && pos < c.start_seconds + c.duration_seconds;
-  })();
+  };
 
   const { user: authUser } = useAuth();
   const [exportingClip, setExportingClip] = useState(false);
@@ -1014,16 +1022,22 @@ function Editor({
   // When the playhead nears the right edge (or is left of view after a
   // seek/loop), page the timeline forward so the playhead sits ~15% from
   // the left, giving some lookahead. Runs on each position tick; cheap.
-  useEffect(() => {
+  // Driven by the tick store (not React state, which no longer updates
+  // per position tick). Latest-ref pattern: the handler is refreshed
+  // every render so it always sees current pxPerSecond/scrollSync,
+  // while the subscription itself is mounted once.
+  const followPlayheadRef = useRef<() => void>(() => {});
+  followPlayheadRef.current = () => {
     if (!state?.isPlaying) return;
     const vp = scrollSync.getViewport();
     if (!vp || vp.clientWidth <= 0) return;
-    const playheadX = (state.positionSeconds ?? 0) * pxPerSecond;
+    const playheadX = transportTick.get().positionSeconds * pxPerSecond;
     const margin = Math.min(80, vp.clientWidth * 0.15);
     if (playheadX > vp.scrollLeft + vp.clientWidth - margin || playheadX < vp.scrollLeft) {
       scrollSync.scrollToX(playheadX - vp.clientWidth * 0.15);
     }
-  }, [state?.positionSeconds, state?.isPlaying, pxPerSecond, scrollSync]);
+  };
+  useEffect(() => transportTick.subscribe(() => followPlayheadRef.current()), [transportTick]);
 
   // Track row height — uniform across all rows. Drag the bottom edge
   // of any row to resize them all.
@@ -1077,7 +1091,7 @@ function Editor({
   // ── Markers — named navigation points on the timeline ─────────────
   const markers = session.markers ?? [];
   const addMarkerAtPlayhead = () => {
-    const seconds = state?.positionSeconds ?? 0;
+    const seconds = posNow();
     const marker: SessionMarker = { id: newId(), name: defaultMarkerName(markers), seconds };
     update((s) => ({ ...s, markers: [...(s.markers ?? []), marker] }));
     toast.success(`${marker.name} set at ${formatBarBeat(seconds, session.tempo_bpm, session.time_signature.numerator)}`);
@@ -1089,11 +1103,11 @@ function Editor({
     update((s) => ({ ...s, markers: (s.markers ?? []).filter((mk) => mk.id !== id) }));
   };
   const jumpPrevMarker = () => {
-    const mk = prevMarker(markers, state?.positionSeconds ?? 0);
+    const mk = prevMarker(markers, posNow());
     if (mk) engineState.seek?.(mk.seconds); else engineState.seek?.(0);
   };
   const jumpNextMarker = () => {
-    const mk = nextMarker(markers, state?.positionSeconds ?? 0);
+    const mk = nextMarker(markers, posNow());
     if (mk) engineState.seek?.(mk.seconds);
   };
   // Marker being renamed/deleted via the ruler-flag double-click dialog.
@@ -1164,7 +1178,7 @@ function Editor({
       // count-in. Doing it inside nativeRecordStart put a 100-500 ms
       // category transition between the last count-in click and beat 1,
       // so the metronome grid started late on recording runs.
-      const startSec = state?.positionSeconds ?? 0;
+      const startSec = posNow();
       const pressWallMs = performance.now();
 
       // iOS: the ENTIRE count-in → recorder → transport sequence runs
@@ -1352,7 +1366,7 @@ function Editor({
     // park at the take's start like the audio path does.
     if (recording.midiOnly) {
       const midiElapsed = (performance.now() - recording.startWallMs) / 1000;
-      const takeEndSec = state?.positionSeconds ?? recording.startSeconds;
+      const takeEndSec = posNow() || recording.startSeconds;
       commitMidiPresses(midiHeld.flush(), takeEndSec, true);
       commitTakeCc();
       // Grow the grid to cover a take that ran past it, like the audio
@@ -1369,7 +1383,7 @@ function Editor({
     // MIDI notes riding along an audio take: commit anything still held or
     // pedal-sustained before the transport gets parked. immediate=true so
     // any coalesced-mid-take presses land in state before we tear down.
-    commitMidiPresses(midiHeld.flush(), state?.positionSeconds ?? recording.startSeconds, true);
+    commitMidiPresses(midiHeld.flush(), posNow() || recording.startSeconds, true);
     commitTakeCc();
 
     const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, transportStartWallMs, armedTrackIds: armed } = recording;
@@ -1636,9 +1650,12 @@ function Editor({
   };
 
   // Position watcher — fires the punch transitions off the engine's
-  // ~30Hz position stream.
-  useEffect(() => {
-    const cur = state?.positionSeconds ?? 0;
+  // ~30Hz tick stream. Latest-ref pattern (like followPlayheadRef): the
+  // body must close over the CURRENT loopRegion/stopRecording/etc., but
+  // the tick subscription mounts once.
+  const punchWatchRef = useRef<() => void>(() => {});
+  punchWatchRef.current = () => {
+    const cur = transportTick.get().positionSeconds;
     const prev = prevPosRef.current;
     prevPosRef.current = cur;
     const p = punchRef.current;
@@ -1668,8 +1685,8 @@ function Editor({
         stop();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state?.positionSeconds]);
+  };
+  useEffect(() => transportTick.subscribe(() => punchWatchRef.current()), [transportTick]);
 
   /** One handler for every Stop surface (button, S, Space) so a punch
    * pass in any phase is cleaned up alongside the recording itself. */
@@ -1784,11 +1801,11 @@ function Editor({
         // for those who want the old behavior.
         e.preventDefault();
         const step = e.shiftKey ? (60 / session.tempo_bpm) * session.time_signature.numerator : 0.25;
-        engineState.seek?.(Math.max(0, (state?.positionSeconds ?? 0) - step));
+        engineState.seek?.(Math.max(0, posNow() - step));
       } else if (e.key === 'ArrowRight' && !hasMod) {
         e.preventDefault();
         const step = e.shiftKey ? (60 / session.tempo_bpm) * session.time_signature.numerator : 0.25;
-        engineState.seek?.(Math.min(session.length_seconds, (state?.positionSeconds ?? 0) + step));
+        engineState.seek?.(Math.min(session.length_seconds, posNow() + step));
       } else if (e.key === 'Home' && !hasMod) {
         e.preventDefault();
         engineState.seek?.(0);
@@ -1833,6 +1850,21 @@ function Editor({
   // space. Extend to the furthest clip end, keep a few bars of runway
   // ahead of the live playhead while recording, and round up to a whole
   // bar so the last measure is always bookended.
+  // While recording, the grid extends ahead of the playhead — but the
+  // editor no longer re-renders per position tick, so track the take's
+  // leading edge in state, advanced at most once per bar (one cheap
+  // re-render per bar instead of thirty per second).
+  const [recordingHeadSec, setRecordingHeadSec] = useState(0);
+  useEffect(() => {
+    if (!recording) { setRecordingHeadSec(0); return; }
+    const secondsPerBar = (60 / session.tempo_bpm) * session.time_signature.numerator;
+    setRecordingHeadSec(transportTick.get().positionSeconds);
+    return transportTick.subscribe(() => {
+      const sec = transportTick.get().positionSeconds;
+      setRecordingHeadSec((prev) => (sec - prev >= secondsPerBar || sec < prev ? sec : prev));
+    });
+  }, [recording, transportTick, session.tempo_bpm, session.time_signature.numerator]);
+
   const timelineEndSeconds = (() => {
     const secondsPerBar = (60 / session.tempo_bpm) * session.time_signature.numerator;
     let end = session.length_seconds;
@@ -1840,7 +1872,7 @@ function Editor({
       if (!isAudioTrack(t) && !isMidiTrack(t)) continue;
       for (const c of t.clips) end = Math.max(end, c.start_seconds + c.duration_seconds);
     }
-    if (recording) end = Math.max(end, (state?.positionSeconds ?? 0) + secondsPerBar * 4);
+    if (recording) end = Math.max(end, recordingHeadSec + secondsPerBar * 4);
     return Math.ceil(end / secondsPerBar - 1e-6) * secondsPerBar;
   })();
 
@@ -2026,7 +2058,7 @@ function Editor({
         <ScrubButton
           className="hidden sm:flex"
           direction={-1}
-          getPosition={() => state?.positionSeconds ?? 0}
+          getPosition={posNow}
           max={session.length_seconds}
           onSeek={(s) => engineState.seek?.(s)}
           icon={<Rewind className="w-4 h-4" />}
@@ -2035,7 +2067,7 @@ function Editor({
         <ScrubButton
           className="hidden sm:flex"
           direction={+1}
-          getPosition={() => state?.positionSeconds ?? 0}
+          getPosition={posNow}
           max={session.length_seconds}
           onSeek={(s) => engineState.seek?.(s)}
           icon={<FastForward className="w-4 h-4" />}
@@ -2170,22 +2202,15 @@ function Editor({
          *  buttons occupy the left cell. Position/length text stacks below
          *  on phones and sits beside the counter on md+ where there's room. */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-3 shrink-0">
-          <button
-            onClick={() => setCounterMode(nextCounterMode(counterMode))}
-            className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1.5 hover:bg-zinc-800"
-            title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
-            <span className="text-emerald-400 text-sm sm:text-lg">
-              {counterMode === 'bars' && formatBarBeat(state?.positionSeconds ?? 0, session.tempo_bpm, session.time_signature.numerator)}
-              {counterMode === 'time' && formatTime(state?.positionSeconds ?? 0)}
-              {counterMode === 'samples' && formatSamples(state?.positionSeconds ?? 0, state?.sampleRate ?? 48000)}
-            </span>
-            <span className="text-emerald-700 text-xs font-semibold">
-              {counterMode === 'bars' ? 'BAR' : counterMode === 'time' ? 'SEC' : 'SMP'}
-            </span>
-          </button>
-          <div className="hidden md:block text-muted-foreground text-xs tabular-nums font-mono">
-            {formatTime(state?.positionSeconds ?? 0)} / {formatTime(session.length_seconds)}
-          </div>
+          <TransportCounter
+            store={transportTick}
+            counterMode={counterMode}
+            onCycleMode={() => setCounterMode(nextCounterMode(counterMode))}
+            tempoBpm={session.tempo_bpm}
+            numerator={session.time_signature.numerator}
+            sampleRate={state?.sampleRate ?? 48000}
+            lengthSeconds={session.length_seconds}
+          />
         </div>
 
         {/* RIGHT — secondary actions. Count-in is a first-class pill here
@@ -2222,7 +2247,7 @@ function Editor({
             <span className="hidden lg:inline text-sm font-semibold">More</span>
           </button>
           <div className="hidden lg:block ml-1">
-            <VuMeter peakDbL={state?.peakDbL ?? -Infinity} peakDbR={state?.peakDbR ?? -Infinity} />
+            <LiveVuMeter store={transportTick} />
           </div>
         </div>
         </div>
@@ -2546,7 +2571,7 @@ function Editor({
               <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate pl-2">Clip selected</span>
               <button
                 onClick={splitSelectedClipAtPlayhead}
-                title={playheadInsideSelectedClip ? 'Split at playhead (B)' : 'Split at clip center (move the playhead into the clip to cut there)'}
+                title={playheadInsideSelectedClip() ? 'Split at playhead (B)' : 'Split at clip center (move the playhead into the clip to cut there)'}
                 className="h-10 px-3 rounded-full border border-border inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--tint)] hover:bg-muted disabled:opacity-40 shrink-0"
               >
                 <Scissors className="w-4 h-4" /> Split
@@ -2632,7 +2657,7 @@ function Editor({
                 lengthSeconds={timelineEndSeconds}
                 tempoBpm={session.tempo_bpm}
                 numerator={session.time_signature.numerator}
-                positionSeconds={state?.positionSeconds ?? 0}
+                transportTick={transportTick}
                 loopRegion={loopRegion}
                 loopEnabled={loopEnabled}
                 onLoopRegionChange={setLoopRegion}
@@ -2672,7 +2697,7 @@ function Editor({
               index={i + 1}
               session={session}
               track={t}
-              positionSeconds={state?.positionSeconds ?? 0}
+              transportTick={transportTick}
               snapSeconds={snapSeconds}
               endSeconds={timelineEndSeconds}
               selectedClip={selectedClip}
@@ -2723,7 +2748,7 @@ function Editor({
             session={session}
             trackId={selectedClip.trackId}
             clipId={selectedClip.clipId}
-            positionSeconds={state?.positionSeconds ?? 0}
+            transportTick={transportTick}
             update={update}
             pushHistory={() => pushHistory(session)}
             onSeek={(s) => engineState.seek?.(s)}
@@ -3513,6 +3538,88 @@ function TimeSignaturePicker({
 
 // ── VU meter (post-master-FX, stereo bars) ───────────────────────────
 
+// ── Transport-tick leaf components ───────────────────────────────────
+// The ONLY components that re-render per ~30Hz transport tick — they
+// subscribe to the tick store directly so the editor tree above them
+// stays still while the transport rolls (see TransportTickStore in
+// useStudio.ts).
+
+function TransportCounter({
+  store, counterMode, onCycleMode, tempoBpm, numerator, sampleRate, lengthSeconds,
+}: {
+  store: TransportTickStore;
+  counterMode: 'bars' | 'time' | 'samples';
+  onCycleMode: () => void;
+  tempoBpm: number;
+  numerator: number;
+  sampleRate: number;
+  lengthSeconds: number;
+}) {
+  const pos = useTransportPosition(store);
+  return (
+    <>
+      <button
+        onClick={onCycleMode}
+        className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1.5 hover:bg-zinc-800"
+        title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
+        <span className="text-emerald-400 text-sm sm:text-lg">
+          {counterMode === 'bars' && formatBarBeat(pos, tempoBpm, numerator)}
+          {counterMode === 'time' && formatTime(pos)}
+          {counterMode === 'samples' && formatSamples(pos, sampleRate)}
+        </span>
+        <span className="text-emerald-700 text-xs font-semibold">
+          {counterMode === 'bars' ? 'BAR' : counterMode === 'time' ? 'SEC' : 'SMP'}
+        </span>
+      </button>
+      <div className="hidden md:block text-muted-foreground text-xs tabular-nums font-mono">
+        {formatTime(pos)} / {formatTime(lengthSeconds)}
+      </div>
+    </>
+  );
+}
+
+function LiveVuMeter({ store }: { store: TransportTickStore }) {
+  const tick = useTransportTick(store);
+  return <VuMeter peakDbL={tick.peakDbL} peakDbR={tick.peakDbR} />;
+}
+
+/** The vertical playhead line inside a track lane. */
+function LanePlayhead({ store }: { store: TransportTickStore }) {
+  const pxPerSecond = usePxPerSecond();
+  const pos = useTransportPosition(store);
+  return (
+    <div
+      className="absolute top-0 bottom-0 pointer-events-none"
+      style={{
+        left: pos * pxPerSecond - 1,
+        width: 2,
+        background: 'rgb(244 63 94)',
+        boxShadow: '0 0 6px rgba(244,63,94,0.8)',
+        zIndex: 50,
+      }}
+    />
+  );
+}
+
+/** The playhead chevron on the bar ruler. */
+function RulerPlayheadChevron({ store }: { store: TransportTickStore }) {
+  const pxPerSecond = usePxPerSecond();
+  const pos = useTransportPosition(store);
+  return (
+    <div
+      className="absolute top-0 pointer-events-none"
+      style={{
+        left: pos * pxPerSecond - 5,
+        width: 0, height: 0,
+        borderLeft: '5px solid transparent',
+        borderRight: '5px solid transparent',
+        borderTop: '7px solid rgb(244 63 94)',
+      }}
+      aria-label="playhead"
+    />
+  );
+}
+
 function VuMeter({ peakDbL, peakDbR }: { peakDbL: number; peakDbR: number }) {
   // Map -60..0 dB to 0..100%. Tone.Meter sometimes reports +N dB on
   // peaks — clamp the visual at 0 dB (top) and color red for >-1.
@@ -4242,12 +4349,12 @@ function CompactTimeSignaturePicker({
 // ── Bar/beat ruler ───────────────────────────────────────────────────
 
 function BarRuler({
-  lengthSeconds, tempoBpm, numerator, positionSeconds = 0,
+  lengthSeconds, tempoBpm, numerator, transportTick,
   loopRegion = null, loopEnabled = false, onLoopRegionChange, onSeek,
   markers = [], onMarkerJump, onMarkerEdit,
 }: {
   lengthSeconds: number; tempoBpm: number; numerator: number;
-  positionSeconds?: number;
+  transportTick: TransportTickStore;
   loopRegion?: { start: number; end: number } | null;
   loopEnabled?: boolean;
   onLoopRegionChange?: (r: { start: number; end: number } | null) => void;
@@ -4262,7 +4369,6 @@ function BarRuler({
   const secondsPerBar = secondsPerBeat * numerator;
   const totalBars = Math.ceil(lengthSeconds / secondsPerBar);
   const width = lengthSeconds * pxPerSecond;
-  const playheadX = positionSeconds * pxPerSecond;
 
   // Logic-style ruler behavior:
   //   • Tap (no drag) → set playhead.
@@ -4378,17 +4484,7 @@ function BarRuler({
         </button>
       ))}
       {/* Playhead chevron on the ruler — moves with transport position. */}
-      <div
-        className="absolute top-0 pointer-events-none"
-        style={{
-          left: playheadX - 5,
-          width: 0, height: 0,
-          borderLeft: '5px solid transparent',
-          borderRight: '5px solid transparent',
-          borderTop: '7px solid rgb(244 63 94)',
-        }}
-        aria-label="playhead"
-      />
+      <RulerPlayheadChevron store={transportTick} />
     </div>
   );
 }
@@ -4542,14 +4638,14 @@ function ClickTrackRow({
 // with M/S/R inline + a thin volume slider + live mini-meter.
 
 function DarkTrackRow({
-  index, session, track, positionSeconds, snapSeconds, endSeconds, selectedClip, recording,
+  index, session, track, transportTick, snapSeconds, endSeconds, selectedClip, recording,
   stripWidth, onStripWidthChange,
   onSelectClip, onUpdate, onRemove, onStripChange, onSeek, onHeightChange, onOpenPianoRoll,
 }: {
   index: number;
   session: Session;
   track: Track;
-  positionSeconds: number;
+  transportTick: TransportTickStore;
   snapSeconds: number;
   /** Timeline extent (>= session.length_seconds) — see timelineEndSeconds. */
   endSeconds: number;
@@ -4736,7 +4832,7 @@ function DarkTrackRow({
       {/* Timeline lane */}
       <div className="flex-1 overflow-x-auto bg-background relative [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" ref={scrollSync?.register}>
         <DarkTimeline
-          session={session} track={track} positionSeconds={positionSeconds}
+          session={session} track={track}
           snapSeconds={snapSeconds}
           endSeconds={endSeconds}
           selectedClip={selectedClip}
@@ -4750,16 +4846,7 @@ function DarkTrackRow({
         )}
         {/* Playhead — rendered after the timeline AND the live waveform so it
          * sits visually on top of both regardless of DOM order tricks. */}
-        <div
-          className="absolute top-0 bottom-0 pointer-events-none"
-          style={{
-            left: positionSeconds * pxPerSecond - 1,
-            width: 2,
-            background: 'rgb(244 63 94)',
-            boxShadow: '0 0 6px rgba(244,63,94,0.8)',
-            zIndex: 50,
-          }}
-        />
+        <LanePlayhead store={transportTick} />
       </div>
       {/* Row resize handle — drag down/up to set every row's height. */}
       <div
@@ -4820,9 +4907,9 @@ function MidiInstrumentDropdown({
 // ── Dark timeline lane (clips + playhead) ────────────────────────────
 
 function DarkTimeline({
-  session, track, positionSeconds, snapSeconds, endSeconds, selectedClip, onSelectClip, onUpdate, onSeek,
+  session, track, snapSeconds, endSeconds, selectedClip, onSelectClip, onUpdate, onSeek,
 }: {
-  session: Session; track: Track; positionSeconds: number;
+  session: Session; track: Track;
   snapSeconds: number;
   /** Timeline extent (>= session.length_seconds) — see timelineEndSeconds. */
   endSeconds: number;
@@ -5551,7 +5638,7 @@ function SmartControls({
 
 const midiAccessSupported = typeof navigator !== 'undefined' && 'requestMIDIAccess' in navigator;
 
-function useMidiClockSync(state: EngineState | null, enabled: boolean, outputId: string) {
+function useMidiClockSync(state: EngineState | null, transportTick: TransportTickStore, enabled: boolean, outputId: string) {
   const senderRef = useRef<MidiClockSender | null>(null);
 
   useEffect(() => {
@@ -5579,9 +5666,11 @@ function useMidiClockSync(state: EngineState | null, enabled: boolean, outputId:
     const sender = senderRef.current;
     if (!sender) return;
     if (state?.tempoBpm) sender.setBpm(state.tempoBpm);
-    if (state?.isPlaying && !sender.running) sender.start(state.positionSeconds);
+    // Live position comes from the tick store — `state` is discrete-only
+    // now, and isPlaying/tempo flips are exactly when we need to act.
+    if (state?.isPlaying && !sender.running) sender.start(transportTick.get().positionSeconds);
     else if (!state?.isPlaying && sender.running) sender.stop();
-  }, [state?.isPlaying, state?.tempoBpm, state?.positionSeconds, enabled]);
+  }, [state?.isPlaying, state?.tempoBpm, enabled, transportTick]);
 }
 
 interface MidiSyncProps {

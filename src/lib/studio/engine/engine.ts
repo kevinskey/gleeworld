@@ -5,10 +5,17 @@
 //
 // Design notes (post-cleanup):
 //   • Clip playback is driven exclusively by Tone.Transport.
-//   • The metronome is driven by setInterval — Tone.Transport.scheduleRepeat
-//     was unreliable in this setup, and a wall-clock timer is plenty
-//     accurate for a human-feel click. The interval only runs while
-//     state.isPlaying is true (so toggling the click alone is silent).
+//   • The metronome is ALSO transport-scheduled (scheduleRepeat, clicks
+//     fired at the callback's `time`), so the click is phase-locked to
+//     the same clock recordings are stamped against. It used to be a
+//     wall-clock setInterval, which jittered with main-thread load and
+//     drifted off the transport grid over a take — the click players
+//     recorded to was not the grid their notes landed on. The repeat is
+//     re-anchored on every play/seek/loop-wrap/tempo change (the same
+//     stop→reschedule discipline the clip schedules use), which is what
+//     the old "scheduleRepeat was unreliable" note was missing. It only
+//     runs while state.isPlaying is true (toggling the click alone is
+//     silent).
 //   • The "double-wired master destination" (both .toDestination() AND a
 //     direct Tone.connect to rawContext.destination) is belt-and-suspenders
 //     for Tone version quirks we've hit before. Looks redundant, isn't.
@@ -169,7 +176,9 @@ export class StudioEngine {
   // Metronome — two short pitched square clicks. Accent on beat 1.
   private metronome: Tone.Synth;
   private metronomeAccent: Tone.Synth;
-  private metronomeIntervalId: ReturnType<typeof setInterval> | null = null;
+  // Tone.Transport event id for the click's scheduleRepeat, null = not
+  // ticking. Cleared + re-anchored on play/seek/loop-wrap/tempo change.
+  private metronomeEventId: number | null = null;
   // Manual loop wrap timer. A setInterval (not the display RAF, which
   // pauses in a backgrounded tab) so a looped region keeps wrapping even
   // when the tab isn't focused.
@@ -453,31 +462,40 @@ export class StudioEngine {
   }
 
   /** Fire one click tick on demand. Used by the count-in pre-roll so
-   * the user gets audible beats BEFORE play() starts the transport. */
-  triggerMetronomeClick(accent: boolean): void {
+   * the user gets audible beats BEFORE play() starts the transport.
+   * `time` (AudioContext seconds) makes the click sample-accurate when
+   * called from a transport callback; omitted = sound now. */
+  triggerMetronomeClick(accent: boolean, time?: number): void {
     const synth = accent ? this.metronomeAccent : this.metronome;
     const note = accent ? 'A5' : 'E5';
-    try { synth.triggerAttackRelease(note, 0.05); } catch { /* ignore */ }
+    try { synth.triggerAttackRelease(note, 0.05, time); } catch { /* ignore */ }
   }
 
   private startMetronomeInterval(): void {
-    if (this.metronomeIntervalId !== null) return;
+    if (this.metronomeEventId !== null) return;
+    const transport = Tone.getTransport();
     const numerator = this.session?.time_signature.numerator ?? 4;
     this.metronomeBeatInBar = 0;
     // Fire beat 1 immediately so the first click aligns with playback.
     this.triggerMetronomeClick(true);
     this.metronomeBeatInBar = 1 % numerator;
-    const periodMs = (60 / this.state.tempoBpm) * 1000;
-    this.metronomeIntervalId = setInterval(() => {
-      this.triggerMetronomeClick(this.metronomeBeatInBar === 0);
+    // Later beats ride the transport clock: scheduleRepeat anchored one
+    // beat past the current position, click fired at the callback's
+    // `time` — sample-accurate regardless of main-thread load, and
+    // phase-locked to the grid recorded notes are stamped on. A numeric
+    // interval (not '4n') keeps the beat length explicit; tempo changes
+    // re-anchor via updateTransport's stop/start of this repeat.
+    const beatSeconds = 60 / this.state.tempoBpm;
+    this.metronomeEventId = transport.scheduleRepeat((time) => {
+      this.triggerMetronomeClick(this.metronomeBeatInBar === 0, time);
       this.metronomeBeatInBar = (this.metronomeBeatInBar + 1) % numerator;
-    }, periodMs);
+    }, beatSeconds, transport.seconds + beatSeconds);
   }
 
   private stopMetronomeInterval(): void {
-    if (this.metronomeIntervalId !== null) {
-      clearInterval(this.metronomeIntervalId);
-      this.metronomeIntervalId = null;
+    if (this.metronomeEventId !== null) {
+      Tone.getTransport().clear(this.metronomeEventId);
+      this.metronomeEventId = null;
     }
   }
 
@@ -687,7 +705,7 @@ export class StudioEngine {
       this.state.tempoBpm = args.tempo;
       // Metronome period depends on tempo — restart so the new BPM
       // takes effect immediately.
-      if (this.metronomeIntervalId !== null) {
+      if (this.metronomeEventId !== null) {
         this.stopMetronomeInterval();
         this.startMetronomeInterval();
       }
@@ -698,7 +716,7 @@ export class StudioEngine {
         numerator: args.timeSignature[0], denominator: args.timeSignature[1],
       };
       // Restart so beat 1 (accent) aligns to the new numerator.
-      if (this.metronomeIntervalId !== null) {
+      if (this.metronomeEventId !== null) {
         this.stopMetronomeInterval();
         this.startMetronomeInterval();
       }
@@ -738,13 +756,12 @@ export class StudioEngine {
     for (const track of this.tracks.values()) {
       for (const pb of track.playbacks) this.schedulePlayback(pb, seconds);
     }
-    // Re-phase the click. The metronome is a wall-clock interval that
-    // knows nothing about transport jumps, so a loop wrap would leave it
-    // on its old phase — and each repeat overshoots loopEnd by up to one
-    // 25ms watchdog tick, so the click drifts further off the downbeat
-    // on every pass. Restarting here fires beat 1 at the new position,
-    // matching what play() does when starting a looped region.
-    if (this.metronomeIntervalId !== null) {
+    // Re-anchor the click. The repeat was scheduled against the old
+    // transport position; after the jump its next fire would land on the
+    // old timeline (silent until the head re-reaches it, or off the
+    // downbeat). Restarting fires beat 1 at the new position and anchors
+    // the repeat there, matching what play() does for a looped region.
+    if (this.metronomeEventId !== null) {
       this.stopMetronomeInterval();
       this.startMetronomeInterval();
     }
@@ -1281,6 +1298,12 @@ export class StudioEngine {
       // playhead resumes mid-clip if applicable.
       for (const track of this.tracks.values()) {
         for (const pb of track.playbacks) this.schedulePlayback(pb, where);
+      }
+      // Re-anchor the click at the new position for the same reason —
+      // its repeat was scheduled against the pre-seek timeline.
+      if (this.metronomeEventId !== null) {
+        this.stopMetronomeInterval();
+        this.startMetronomeInterval();
       }
     }
     this.emit();

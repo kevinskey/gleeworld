@@ -19,6 +19,8 @@ import {
   hitTestNote, notesInRect, xToTime, yToPitch,
 } from './rollGeometry';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
+import type { TransportTickStore } from '@/hooks/useStudio';
+import { useTransportPosition } from '../useTransportTick';
 import { midiClipToMusicXml } from './midiToMusicXml';
 import { ScoreView } from './ScoreView';
 
@@ -44,7 +46,7 @@ export interface PianoRollPanelProps {
   session: Session;
   trackId: string;
   clipId: string;
-  positionSeconds: number;
+  transportTick: TransportTickStore;
   update: (mut: (s: Session) => Session) => void;
   pushHistory: () => void;         // snapshot BEFORE the first mutation of a gesture
   onSeek: (seconds: number) => void;
@@ -53,6 +55,10 @@ export interface PianoRollPanelProps {
 
 export function PianoRollPanel(props: PianoRollPanelProps) {
   const { session, trackId, clipId } = props;
+  // Subscribing here re-renders the PANEL per transport tick (as the old
+  // positionSeconds prop did) without the parent editor re-rendering —
+  // the every-render scheduleDraw() effect below keeps the playhead moving.
+  const positionSeconds = useTransportPosition(props.transportTick);
   const track = session.tracks.find((t) => t.id === trackId);
   const clip = track && isMidiTrack(track)
     ? track.clips.find((c) => c.id === clipId) ?? null : null;
@@ -751,7 +757,7 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
       g.setLineDash([]); g.globalAlpha = 1;
     }
     // Playhead (clip-relative).
-    const ph = props.positionSeconds - clip.start_seconds;
+    const ph = positionSeconds - clip.start_seconds;
     if (ph >= 0 && ph <= clip.duration_seconds) {
       const x = timeToX(metrics, ph);
       g.strokeStyle = cFg; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, totalH); g.stroke();

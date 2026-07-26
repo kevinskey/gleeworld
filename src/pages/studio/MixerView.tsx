@@ -22,7 +22,7 @@
 // (Logic-for-iPad's portrait answer) instead of cramming a full fader +
 // knob into a ~90px-wide column.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -211,11 +211,14 @@ export function MixerView({
     isPlaying: false, positionSeconds: 0,
   });
   useEffect(() => {
-    transportRef.current = {
-      isPlaying: !!state?.isPlaying,
-      positionSeconds: state?.positionSeconds ?? 0,
-    };
-  }, [state?.isPlaying, state?.positionSeconds]);
+    // Position rides the tick store now — React `state` no longer
+    // updates per tick (see TransportTickStore in useStudio.ts).
+    transportRef.current.isPlaying = !!state?.isPlaying;
+    transportRef.current.positionSeconds = engineState.transportTick.get().positionSeconds;
+    return engineState.transportTick.subscribe(() => {
+      transportRef.current.positionSeconds = engineState.transportTick.get().positionSeconds;
+    });
+  }, [state?.isPlaying, engineState.transportTick]);
 
   // Automation touch/latch state — refs (not state) so a pointer-down
   // during a fader drag doesn't blow up ChannelStrip's memo. `touched`
@@ -269,6 +272,15 @@ export function MixerView({
   const [fxTarget, setFxTarget] = useState<{ kind: 'track' | 'bus'; id: string } | null>(null);
   // Phase 8b: automation panel target.
   const [autoTarget, setAutoTarget] = useState<{ kind: 'track' | 'bus'; id: string } | null>(null);
+  // Live playhead for the automation panel. Subscribes to the ~30Hz tick
+  // store ONLY while the panel is open — when it's closed the subscribe
+  // is a no-op, so the mixer doesn't re-render per tick just in case.
+  const autoPanelOpen = autoTarget !== null;
+  const tickStore = engineState.transportTick;
+  const autoPlayheadSeconds = useSyncExternalStore(
+    useCallback((cb: () => void) => (autoPanelOpen ? tickStore.subscribe(cb) : () => {}), [autoPanelOpen, tickStore]),
+    () => (autoPanelOpen ? tickStore.get().positionSeconds : 0),
+  );
 
   // ── Meter rAF loop — polls engineState.getTrackPeakDb per track + the
   // existing master peakDbL/R off `state`, applies PPM release
@@ -312,11 +324,11 @@ export function MixerView({
             applyStereo(b.id, engineState.getBusPeakDbStereo?.(b.id) ?? { L: -Infinity, R: -Infinity });
           }
           // Master reuses the engine's existing peakDbL/R (already
-          // stereo since the mastering chain reports both sides).
-          applyStereo('master', {
-            L: state?.peakDbL ?? -Infinity,
-            R: state?.peakDbR ?? -Infinity,
-          });
+          // stereo since the mastering chain reports both sides) — read
+          // live off the tick store, since React `state` no longer
+          // carries per-tick meter values.
+          const masterTick = engineState.transportTick.get();
+          applyStereo('master', { L: masterTick.peakDbL, R: masterTick.peakDbR });
           return next;
         });
       }
@@ -325,7 +337,7 @@ export function MixerView({
     rafId = requestAnimationFrame(tick);
     return () => { if (rafId !== null) cancelAnimationFrame(rafId); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.tracks, session.buses, engineState, state?.peakDbL, state?.peakDbR]);
+  }, [session.tracks, session.buses, engineState]);
 
   const resetHold = useCallback((id: string) => {
     setMeters((prev) => {
@@ -644,7 +656,7 @@ export function MixerView({
             ownerKind={autoTarget.kind}
             ownerLabel={label}
             automation={session.automation ?? []}
-            playheadSeconds={state?.positionSeconds ?? 0}
+            playheadSeconds={autoPlayheadSeconds}
             sessionLengthSeconds={session.length_seconds}
             currentStripValue={(param: AutomationParam) => {
               const strip = autoTarget.kind === 'track'

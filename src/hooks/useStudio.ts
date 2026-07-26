@@ -270,6 +270,47 @@ export function mapNativeEngineState(s: NativeEngineState, recordingActive: bool
   };
 }
 
+// ── Transport tick store ─────────────────────────────────────────────
+// The engine emits full EngineState ~30Hz while playing (position +
+// master peaks ride along). Pushing every tick through setState
+// re-rendered the ENTIRE editor subtree 30×/sec for the whole duration
+// of playback/recording — on large sessions that main-thread pressure
+// competed with Tone.Transport's per-note callbacks and the MIDI input
+// handlers ("input midi overloads the system"). The fix: tick-only
+// fields live in this store, read via useSyncExternalStore by the few
+// leaf components that actually draw them (playhead, counter, meters);
+// React state only changes on discrete transport changes.
+export interface TransportTick {
+  positionSeconds: number;
+  peakDbL: number;
+  peakDbR: number;
+}
+export interface TransportTickStore {
+  /** Latest tick. The object is replaced (not mutated) per tick, so it
+   *  is a valid useSyncExternalStore snapshot. */
+  get(): TransportTick;
+  subscribe(cb: () => void): () => void;
+}
+
+/** True when `next` differs from `prev` only in tick fields (position/
+ * meters) DURING playback — the case React state must not churn on. A
+ * position change while NOT playing is a seek of a parked playhead and
+ * must render. */
+function isTickOnlyChange(prev: EngineState, next: EngineState): boolean {
+  if (!next.isPlaying && prev.positionSeconds !== next.positionSeconds) return false;
+  return prev.isReady === next.isReady
+    && prev.isPlaying === next.isPlaying
+    && prev.tempoBpm === next.tempoBpm
+    && prev.loopEnabled === next.loopEnabled
+    && prev.loopStartSeconds === next.loopStartSeconds
+    && prev.loopEndSeconds === next.loopEndSeconds
+    && prev.metronomeOn === next.metronomeOn
+    && prev.metronomeVolumeDb === next.metronomeVolumeDb
+    && prev.sampleRate === next.sampleRate
+    && prev.masterChain === next.masterChain
+    && prev.recordingActive === next.recordingActive;
+}
+
 export function useStudioEngine(session: Session | null) {
   const native = isNativeStudioAvailable();
   const engineRef = useRef<StudioEngine | null>(null);
@@ -285,6 +326,25 @@ export function useStudioEngine(session: Session | null) {
   const nativeRecordingActiveRef = useRef(false);
   const [state, setState] = useState<EngineState | null>(null);
   const [warming, setWarming] = useState(false);
+  // Tick store (see TransportTickStore above). tickRef is REPLACED per
+  // publish so useSyncExternalStore snapshots compare by identity.
+  const tickRef = useRef<TransportTick>({ positionSeconds: 0, peakDbL: -Infinity, peakDbR: -Infinity });
+  const tickListenersRef = useRef<Set<() => void>>(new Set());
+  const transportTick = useMemo<TransportTickStore>(() => ({
+    get: () => tickRef.current,
+    subscribe: (cb) => {
+      tickListenersRef.current.add(cb);
+      return () => { tickListenersRef.current.delete(cb); };
+    },
+  }), []);
+  // Single funnel for engine state from BOTH engines (web subscribe,
+  // native onState): always publish the tick; only touch React state
+  // when a discrete field changed (returning `prev` bails the render).
+  const publishEngineState = useCallback((s: EngineState) => {
+    tickRef.current = { positionSeconds: s.positionSeconds, peakDbL: s.peakDbL, peakDbR: s.peakDbR };
+    for (const cb of tickListenersRef.current) cb();
+    setState((prev) => (prev && isTickOnlyChange(prev, s) ? prev : s));
+  }, []);
   // Last skeleton signature we built the engine for. Stays constant
   // across clip edits — only structural changes (tracks, FX, tempo)
   // bump it. Compared against the incoming session to decide between
@@ -324,7 +384,7 @@ export function useStudioEngine(session: Session | null) {
       },
     });
     engineRef.current = engine;
-    const unsub = engine.subscribe((s) => setState(s));
+    const unsub = engine.subscribe(publishEngineState);
     return () => {
       unsub();
       engine.dispose();
@@ -345,6 +405,26 @@ export function useStudioEngine(session: Session | null) {
   useEffect(() => {
     if (!session) return;
     let cancelled = false;
+
+    // Defer ALL engine convergence while a take is armed and rolling —
+    // and bail BEFORE the signature computation below, which hashes
+    // every MIDI note of every clip in the session (midiContentSig).
+    // During a MIDI take the 250ms note-flush lands the session here
+    // 4×/sec, so that hashing sat directly on the take's critical path
+    // and grew with session size. Both branches already deferred the
+    // expensive reloads mid-take (a full loadSession per keystroke tears
+    // down every sampler; on iOS it re-downloads + re-decodes every
+    // asset, multi-second) — this hoists the deferral above the hashing
+    // too. The user hears live keys via LiveVoices, not scheduled clips,
+    // so the engine staying briefly unaware of the growing take clip is
+    // safe. Guarded on a live engine so a first-load open is never
+    // skipped; recordingActive is in the deps, so when the take ends
+    // this effect re-runs and one clean pass converges everything —
+    // including any FX/clip edit made mid-take, which now also waits
+    // for take end (the web branch already deferred those).
+    if (state?.recordingActive && (native ? nativeCloseRef.current !== null : engineRef.current !== null)) {
+      return;
+    }
 
     if (native) {
       // Native diff path. If the skeleton hasn't changed (just clip /
@@ -379,23 +459,8 @@ export function useStudioEngine(session: Session | null) {
         return () => { cancelled = true; };
       }
       const needsFullReload = skeleton !== lastSkeletonRef.current || !nativeCloseRef.current;
-
-      // Skip full reloads while a take is armed and rolling — same reason
-      // as the web branch below, but the cost is higher on iOS: a full
-      // reload here tears down AVAudioEngine, closes the native bridge,
-      // and openNativeStudio re-downloads every asset + re-decodes every
-      // AVAudioFile ("easily multi-second" per the header comment above).
-      // Each MIDI note commit during a take was firing this because
-      // midiContentSig hashes into skeletonSig — so overdubbing on an
-      // existing MIDI track would stutter for seconds per keystroke on
-      // iOS. Only skip when we DO have a running engine (nativeCloseRef
-      // set) — a first-load reload during an already-armed take is
-      // impossible in practice but we bail rather than skip a needed
-      // open. When recordingActive flips off, this effect re-runs and
-      // one clean reload picks up the finalized take clip.
-      if (state?.recordingActive && needsFullReload && nativeCloseRef.current) {
-        return;
-      }
+      // (Mid-take deferral happens at the top of this effect, before the
+      // signatures above are ever computed.)
 
       if (!needsFullReload) {
         setWarming(true);
@@ -474,7 +539,7 @@ export function useStudioEngine(session: Session | null) {
               metOnType: typeof s.metronomeOn,
               pos: s.positionSeconds,
             }));
-            setState(mapNativeEngineState(s, nativeRecordingActiveRef.current));
+            publishEngineState(mapNativeEngineState(s, nativeRecordingActiveRef.current));
             livePlayRef.current = { playing: !!s.isPlaying, pos: s.positionSeconds ?? 0 };
             // Surface any engine-side error as a toast so device users
             // can report the failure without needing Mac + Safari console.
@@ -556,23 +621,8 @@ export function useStudioEngine(session: Session | null) {
 
     const skeleton = skeletonSig(session);
     const needsFullReload = skeleton !== lastSkeletonRef.current;
-
-    // Skip full reloads while a take is armed and rolling. Every MIDI
-    // note-on/off during recording appends to the take clip → the clip
-    // content is hashed into skeletonSig → this effect would fire a full
-    // engine.loadSession() PER KEYSTROKE, tearing down every sampler +
-    // clip player and glitching whatever samples were mid-playback. The
-    // user hears their live keys via LiveVoices (not scheduled clips),
-    // so deferring is safe. The engine state itself doesn't invalidate:
-    // the pre-existing scheduled MIDI clips + audio clips loaded before
-    // the take keep playing unmolested. When recordingActive flips off
-    // this effect re-runs (deps include it), the take clip is now
-    // finalized, and one loadSession picks it up cleanly.
-    if (state?.recordingActive && needsFullReload) {
-      // Warming stays false — the engine is fully live, just not yet
-      // aware of the growing take clip.
-      return;
-    }
+    // (Mid-take deferral happens at the top of this effect, before
+    // skeletonSig is ever computed.)
 
     setWarming(true);
     (async () => {
@@ -856,7 +906,7 @@ export function useStudioEngine(session: Session | null) {
     };
   }, [native]);
 
-  return { engine: engineRef.current, state, warming, native, ...api };
+  return { engine: engineRef.current, state, warming, native, transportTick, ...api };
 }
 
 // ── Mixdown to WAV ───────────────────────────────────────────────────
