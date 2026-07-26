@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,12 +43,13 @@ interface InstructorSubmissionsDialogProps {
   onClose: () => void;
 }
 
-// Instructor grading view for one assignment. Two dialogs:
-//   • Outer list dialog — enrolled students + status badges
-//   • Nested per-student grade dialog — response, attachment, score,
-//     feedback, save. Kept as a separate Dialog (not inline expand)
-//     because expand-inside-list caused focus wars with the score
-//     input and users saw the panel "disappear" when clicked.
+// Instructor grading view for one assignment. Two stacked overlays:
+//   • Submissions list — enrolled students + status badges
+//   • Per-student grader — response, attachment, score, feedback, save.
+// Both are plain fixed-position divs, deliberately NOT Radix Dialogs:
+// this component mounts inside AssignmentEditDialog's hand-rolled
+// backdrop (onClick=close), and Radix portals re-bubble React events
+// through the component tree into that backdrop, closing everything.
 export function InstructorSubmissionsDialog({
   open,
   assignment,
@@ -163,17 +163,43 @@ export function InstructorSubmissionsDialog({
     });
   }
 
+  if (!open) return null;
+
   return (
     <>
-      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="md:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="pr-6">Submissions · {assignment.title}</DialogTitle>
-            <DialogDescription>
+      {/* Plain fixed overlay, NOT a Radix Dialog. This component is
+          mounted inside AssignmentEditDialog's hand-rolled overlay,
+          whose root div has onClick={onClose}. A Radix Dialog portals
+          its DOM to <body>, but React synthetic events still bubble
+          through the COMPONENT tree — so every click inside the portal
+          bubbled up to that backdrop handler and closed the whole
+          stack before the grader could open. A plain nested div lets
+          stopPropagation actually contain clicks. */}
+      <div
+        className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+      >
+        <div
+          className="w-full md:max-w-3xl bg-card text-card-foreground rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="pb-3">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-lg font-semibold pr-6">Submissions · {assignment.title}</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground text-2xl leading-none"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
               {assignment.points != null && `${assignment.points} pts · `}
               {enrollments.length} enrolled · {counts.graded} graded · {counts.submitted} awaiting · {counts.revision} needs re-grade · {counts.missing} missing
-            </DialogDescription>
-          </DialogHeader>
+            </p>
+          </div>
 
           <div className="flex flex-wrap gap-1.5 pb-2 border-b shrink-0">
             {(['all', 'submitted', 'revision', 'graded', 'missing'] as const).map((k) => (
@@ -248,22 +274,19 @@ export function InstructorSubmissionsDialog({
               })}
             </ul>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
 
-      {/* Fallback inline grader — rendered outside any Dialog so it
-          cannot be lost to Portal / focus-trap conflicts. When a
-          gradingUserId is set, this fixed-position card overlays the
-          screen with the same score/feedback UI the nested Dialog was
-          trying to show. Cheap-to-implement diagnostic that also acts
-          as the actual grader if the Dialog path is broken. */}
+      {/* Per-student grader overlays the submissions list. Same plain
+          overlay pattern; stopPropagation keeps backdrop clicks from
+          reaching the parent dialogs' close handlers. */}
       {gradingRow && (
         <div
           className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4"
-          onClick={() => setGradingUserId(null)}
+          onClick={(e) => { e.stopPropagation(); setGradingUserId(null); }}
         >
           <div
-            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-2xl bg-card text-card-foreground rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <InlineGrader
