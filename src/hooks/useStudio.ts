@@ -14,6 +14,7 @@ import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { renderSessionToWav } from '@/lib/studio/engine/mixdown';
 import type { Session, MidiClip } from '@/lib/studio/session';
+import { decodeJwtClaims } from '@/lib/demoSession';
 import {
   isNativeStudioAvailable, openNativeStudio, NativeStudio,
   type NativeEngineState, type RoutingEditResult,
@@ -25,8 +26,22 @@ export function useStudioOwner() {
   return useQuery({
     queryKey: ['studio-owner'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('not signed in');
+      const { data: { session }, error: sessErr } = await supabase.auth.getSession();
+      if (sessErr) throw sessErr;
+      const user = session?.user;
+      if (!user || !session?.access_token) throw new Error('not signed in');
+      // The RESTRICTIVE RLS on gw_studio_sessions checks tenant_id
+      // against current_tenant_id() — the JWT's tenant_id CLAIM. Since
+      // the tenant switcher (active_tenant_id, 2026-07-25) the JWT
+      // tenant can legitimately differ from gw_profiles.tenant_id (the
+      // user's HOME tenant), and inserting the profile tenant 403s —
+      // "can't start a session" for anyone who has ever switched. Use
+      // the claim, same as songwriting's recordingsApi.tenantAndUser.
+      const claimTenant = decodeJwtClaims(session.access_token)?.tenant_id;
+      if (typeof claimTenant === 'string' && claimTenant) {
+        return { userId: user.id, tenantId: claimTenant };
+      }
+      // Pre-hook JWTs (or a hook hiccup) — fall back to the profile row.
       const { data: profile, error } = await supabase
         .from('gw_profiles').select('tenant_id').eq('user_id', user.id).maybeSingle();
       if (error) throw error;
