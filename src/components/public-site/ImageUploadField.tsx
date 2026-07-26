@@ -381,7 +381,7 @@ export function ImageUploadField({
       {/* URL path is independent of the file-upload state on purpose —
           the file upload can be stuck reading an iCloud-locked file
           while the URL path still works perfectly fine. */}
-      <UrlPasteRow value={value} onChange={onChange} disabled={false} />
+      <UrlPasteRow value={value} onChange={onChange} prefix={prefix} disabled={false} />
     </div>
   );
 }
@@ -391,9 +391,11 @@ export function ImageUploadField({
 // weirdness can't block a user from setting an image. The edge fn
 // FETCHES the URL server-side and stores its own copy in site-branding,
 // so the storefront isn't tied to the external URL living forever.
-function UrlPasteRow({ value, onChange, disabled }: {
+function UrlPasteRow({ value, onChange, prefix, disabled }: {
   value: string;
   onChange: (v: string) => void;
+  /** Same filename prefix the file-upload path uses — keep the two in sync. */
+  prefix: string;
   disabled: boolean;
 }) {
   const [draft, setDraft] = useState('');
@@ -412,7 +414,7 @@ function UrlPasteRow({ value, onChange, disabled }: {
       // validates it's an image, and stores in site-branding — returns
       // our own permanent URL.
       const { data, error } = await supabase.functions.invoke('upload-site-branding', {
-        body: { source_url: url, prefix: 'tsb-hero' },
+        body: { source_url: url, prefix },
       });
       if (error || !data?.url) {
         const msg = (data && (data as { error?: string }).error) || error?.message || 'Download failed';

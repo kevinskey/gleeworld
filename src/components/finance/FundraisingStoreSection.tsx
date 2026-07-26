@@ -295,6 +295,7 @@ function EditStorefrontModal({ initialBrand, initialFundraiser, onClose, onSaved
   onSaved: (brand: BrandJson, fundraiser: FundraiserJson) => void;
 }) {
   const [heroUrl, setHeroUrl] = useState(initialBrand.hero_url ?? '');
+  const [logoUrl, setLogoUrl] = useState(initialBrand.logo_url ?? '');
   const [tagline, setTagline] = useState(initialBrand.tagline ?? '');
   const [footer, setFooter] = useState(initialBrand.footer_note ?? '');
   const [headline, setHeadline] = useState(initialFundraiser.headline ?? '');
@@ -313,12 +314,17 @@ function EditStorefrontModal({ initialBrand, initialFundraiser, onClose, onSaved
       toast.error('Hero image is still uploading — wait a moment, then click Save again.');
       return;
     }
+    if (logoUrl.startsWith('blob:')) {
+      toast.error('Logo is still uploading — wait a moment, then click Save again.');
+      return;
+    }
     setSaving(true);
     try {
       const goalCents = goalUsd ? Math.round(parseFloat(goalUsd) * 100) : null;
       const body = {
         brand: {
           hero_url: heroUrl || null,
+          logo_url: logoUrl || null,
           tagline: tagline || null,
           footer_note: footer || null,
         },
@@ -356,6 +362,14 @@ function EditStorefrontModal({ initialBrand, initialFundraiser, onClose, onSaved
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        <ImageUploadField
+          label="Logo (store header, and the hero fallback when no hero image is set)"
+          value={logoUrl}
+          onChange={setLogoUrl}
+          prefix="tsb-logo"
+          thumbClass="w-24 h-24"
+        />
 
         <ImageUploadField
           label="Hero image (behind the store title on the storefront)"
