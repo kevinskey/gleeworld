@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { markTenantSwitchInFlight, clearTenantSwitchInFlight } from '@/lib/tenantSwitchFlag';
 
 export interface MyTenant {
   tenant_id: string;
@@ -75,11 +76,21 @@ export async function performTenantSwitch(
   },
   targetSlug: string,
 ): Promise<Session | null> {
-  const { error: rpcErr } = await supabase.rpc('set_active_tenant', { target_slug: targetSlug });
-  if (rpcErr) throw new Error(String((rpcErr as { message?: string })?.message ?? 'set_active_tenant failed'));
-  // refreshSession re-fires custom_access_token_hook, which now sees the
-  // updated profile.tenant_id and mints a JWT with the correct tenant_slug.
-  const { data, error: refreshErr } = await supabase.auth.refreshSession();
-  if (refreshErr) throw new Error(String((refreshErr as { message?: string })?.message ?? 'refreshSession failed'));
-  return data.session;
+  // Mark BEFORE the pivot. refreshSession() below re-mints the JWT with the
+  // target tenant while this page is still on the old subdomain, which trips
+  // AuthContext's mismatch guard; the mark tells the guard this is us.
+  markTenantSwitchInFlight(targetSlug);
+  try {
+    const { error: rpcErr } = await supabase.rpc('set_active_tenant', { target_slug: targetSlug });
+    if (rpcErr) throw new Error(String((rpcErr as { message?: string })?.message ?? 'set_active_tenant failed'));
+    // refreshSession re-fires custom_access_token_hook, which now sees the
+    // updated profile.tenant_id and mints a JWT with the correct tenant_slug.
+    const { data, error: refreshErr } = await supabase.auth.refreshSession();
+    if (refreshErr) throw new Error(String((refreshErr as { message?: string })?.message ?? 'refreshSession failed'));
+    return data.session;
+  } catch (err) {
+    // Never leave the guard disarmed on a switch that isn't happening.
+    clearTenantSwitchInFlight();
+    throw err;
+  }
 }

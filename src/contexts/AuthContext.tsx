@@ -3,6 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { isNativeApp, syncNativeTenant } from "@/lib/nativeTenant";
 import { resolveTenantHost, buildTenantHandoffUrl } from "@/lib/auth/tenantRedirect";
+import { tenantSwitchInFlight } from "@/lib/tenantSwitchFlag";
 
 interface AuthContextType {
   user: User | null;
@@ -153,7 +154,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     claims.tenant_slug === 'main' &&
                     (claims.is_super_admin === true || claims.role === 'super-admin' || claims.role === 'super_admin');
                   const isDemoViewer = claims.demo_viewer === true;
-                  if (claims.tenant_slug && claims.tenant_slug !== expectedTenant && !isPlatformOwner && !isDemoViewer) {
+                  // A tenant switch the user just asked for. performTenantSwitch
+                  // pivots the JWT here and navigates a beat later, so for that
+                  // beat the claim legitimately disagrees with this subdomain.
+                  // Redirecting would race — and beat — the switcher's own
+                  // navigation, which is why switching appeared to do nothing.
+                  // Only stand down for the exact tenant being switched to.
+                  const switchingTo = tenantSwitchInFlight();
+                  if (switchingTo && switchingTo === claims.tenant_slug) {
+                    console.info(`[auth] tenant switch to ${switchingTo} in flight — leaving navigation to the switcher`);
+                  } else if (claims.tenant_slug && claims.tenant_slug !== expectedTenant && !isPlatformOwner && !isDemoViewer) {
                     console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Redirecting to their tenant.`);
                     // Capture the tokens BEFORE tearing the session down —
                     // they're what lets the user land signed in instead of
