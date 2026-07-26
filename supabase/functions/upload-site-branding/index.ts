@@ -53,22 +53,61 @@ serve(async (req: Request) => {
     if (!canManage) return jsonError(403, "Only tenant admins can upload");
 
     const body = await req.json().catch(() => ({}));
-    const { file_base64, filename, prefix, content_type } = body as {
-      file_base64?: string; filename?: string; prefix?: string; content_type?: string;
+    const { file_base64, filename, prefix, content_type, source_url } = body as {
+      file_base64?: string; filename?: string; prefix?: string;
+      content_type?: string; source_url?: string;
     };
-    if (!file_base64) return jsonError(400, "file_base64 required");
     if (!prefix || typeof prefix !== "string") return jsonError(400, "prefix required");
     if (!/^[a-z0-9-]+$/.test(prefix)) return jsonError(400, "prefix must match [a-z0-9-]+");
-
-    // Decode base64 → bytes. Cap at 10 MB after decode.
-    const bytes = Uint8Array.from(atob(file_base64), (c) => c.charCodeAt(0));
-    if (bytes.length > 10 * 1024 * 1024) {
-      return jsonError(413, "Image must be 10 MB or smaller");
+    if (!file_base64 && !source_url) {
+      return jsonError(400, "file_base64 or source_url required");
     }
 
-    const ext = (filename?.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 6) || "png";
+    let bytes: Uint8Array;
+    let ct: string;
+    let ext: string;
+
+    if (source_url) {
+      // Server-side download. Bypasses browser CORS/permission issues
+      // and gives the tenant an independent copy so their storefront
+      // doesn't break if the source URL rot.
+      if (!/^https:\/\//i.test(source_url)) {
+        return jsonError(400, "source_url must be https://");
+      }
+      let fetched: Response;
+      try {
+        fetched = await fetch(source_url, {
+          redirect: "follow",
+          headers: { "User-Agent": "GleeWorld-hero-download/1.0" },
+        });
+      } catch (err) {
+        return jsonError(502, `Couldn't fetch source URL: ${err instanceof Error ? err.message : "network error"}`);
+      }
+      if (!fetched.ok) {
+        return jsonError(502, `Source URL returned ${fetched.status}`);
+      }
+      const buf = await fetched.arrayBuffer();
+      bytes = new Uint8Array(buf);
+      if (bytes.length > 10 * 1024 * 1024) {
+        return jsonError(413, "Downloaded image is over 10 MB");
+      }
+      ct = fetched.headers.get("content-type")?.split(";")[0]?.trim() || "image/png";
+      if (!ct.startsWith("image/")) {
+        return jsonError(415, `Source URL did not return an image (${ct})`);
+      }
+      const guessExt = ct.split("/")[1]?.replace("jpeg", "jpg") || "png";
+      ext = guessExt.replace(/[^a-z0-9]/g, "").slice(0, 6) || "png";
+    } else {
+      // Base64 upload path (original behavior).
+      bytes = Uint8Array.from(atob(file_base64!), (c) => c.charCodeAt(0));
+      if (bytes.length > 10 * 1024 * 1024) {
+        return jsonError(413, "Image must be 10 MB or smaller");
+      }
+      ext = (filename?.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 6) || "png";
+      ct = content_type || "image/png";
+    }
+
     const path = `${prefix}-${Date.now()}.${ext}`;
-    const ct = content_type || "image/png";
 
     // Service-role client: writes bypass RLS. We already gated the caller
     // above, so this is safe.

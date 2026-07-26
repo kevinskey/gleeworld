@@ -329,6 +329,74 @@ export function ImageUploadField({
           />
         </label>
       </div>
+      <UrlPasteRow value={value} onChange={onChange} disabled={uploading} />
+    </div>
+  );
+}
+
+// "Or paste an image URL" — bypasses the local file picker entirely
+// so a broken/iCloud-locked file, network trouble, or macOS permission
+// weirdness can't block a user from setting an image. The edge fn
+// FETCHES the URL server-side and stores its own copy in site-branding,
+// so the storefront isn't tied to the external URL living forever.
+function UrlPasteRow({ value: _value, onChange, disabled }: {
+  value: string;
+  onChange: (v: string) => void;
+  disabled: boolean;
+}) {
+  void _value;
+  const [draft, setDraft] = useState('');
+  const [downloading, setDownloading] = useState(false);
+  const apply = async () => {
+    const url = draft.trim();
+    if (!url) return;
+    if (!/^https:\/\//i.test(url)) {
+      toast.error('Only https:// URLs are allowed.');
+      return;
+    }
+    setDownloading(true);
+    try {
+      // Route through the same edge fn that handles file uploads,
+      // just with source_url instead of file_base64. Edge fn downloads,
+      // validates it's an image, and stores in site-branding — returns
+      // our own permanent URL.
+      const { data, error } = await supabase.functions.invoke('upload-site-branding', {
+        body: { source_url: url, prefix: 'tsb-hero' },
+      });
+      if (error || !data?.url) {
+        const msg = (data && (data as { error?: string }).error) || error?.message || 'Download failed';
+        toast.error(`Download failed: ${msg}`);
+        return;
+      }
+      onChange(data.url as string);
+      setDraft('');
+      toast.success('Image downloaded and set.');
+    } catch (err) {
+      toast.error(`Download failed: ${err instanceof Error ? err.message : 'network error'}`);
+    } finally {
+      setDownloading(false);
+    }
+  };
+  return (
+    <div className="flex items-stretch gap-2">
+      <input
+        type="url"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder={value ? 'Or paste a different image URL…' : 'Or paste an image URL (https://…)'}
+        disabled={disabled}
+        className="flex-1 min-w-0 border border-slate-300 rounded-md px-3 py-1.5 text-xs bg-white"
+      />
+      <button
+        type="button"
+        onClick={apply}
+        disabled={disabled || downloading || !draft.trim()}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap disabled:opacity-50"
+        style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+      >
+        {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+        {downloading ? 'Downloading…' : 'Download & use'}
+      </button>
     </div>
   );
 }
