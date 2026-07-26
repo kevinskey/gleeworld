@@ -25,9 +25,12 @@ import {
 
 interface GradebookViewProps {
   courseId: string;
+  // Rendered inside another page (e.g. CourseShell's Grades tab):
+  // hides the standalone page chrome (container, back button, title).
+  embedded?: boolean;
 }
 
-export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
+export const GradebookView: React.FC<GradebookViewProps> = ({ courseId, embedded = false }) => {
   const navigate = useNavigate();
 
   const { data: course, isLoading: courseLoading } = useQuery({
@@ -47,14 +50,25 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ['gw-course-assignments', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_course_assignments')
-        .select('*')
-        .eq('course_id', courseId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return data as any[];
+      // Dual-source, same as CourseGradebook: older courses used
+      // gw_course_assignments, the CourseShell flow uses gw_assignments.
+      // Submissions for both live in gw_course_submissions.
+      const [oldAsn, newAsn] = await Promise.all([
+        supabase
+          .from('gw_course_assignments')
+          .select('*')
+          .eq('course_id', courseId)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('gw_assignments')
+          .select('*')
+          .eq('course_id', courseId)
+          .eq('is_active', true)
+          .order('created_at', { ascending: true }),
+      ]);
+      if (oldAsn.error) throw oldAsn.error;
+      if (newAsn.error) throw newAsn.error;
+      return [...((oldAsn.data as any[]) ?? []), ...((newAsn.data as any[]) ?? [])];
     },
   });
 
@@ -283,25 +297,34 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/grading/instructor/course/${courseId}`)}>
-            <ArrowLeft className="h-5 w-5" />
+    <div className={embedded ? 'space-y-6' : 'container mx-auto py-8 space-y-6'}>
+      {embedded ? (
+        <div className="flex justify-end">
+          <Button onClick={exportToCSV} variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <BookOpen className="h-8 w-8" />
-              Gradebook
-            </h1>
-            <p className="text-muted-foreground">{course?.code} - {course?.title}</p>
-          </div>
         </div>
-        <Button onClick={exportToCSV} variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Export CSV
-        </Button>
-      </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/grading/instructor/course/${courseId}`)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                <BookOpen className="h-8 w-8" />
+                Gradebook
+              </h1>
+              <p className="text-muted-foreground">{course?.code} - {course?.title}</p>
+            </div>
+          </div>
+          <Button onClick={exportToCSV} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+      )}
 
       <Card>
         <CardHeader>

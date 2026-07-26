@@ -76,6 +76,9 @@ const CoursePracticeTab = lazy(() => import("@/components/academy/CoursePractice
 const ExistingGradebook = lazy(() =>
   import("@/components/academy/CourseGradebook").then((m) => ({ default: m.CourseGradebook }))
 );
+const InstructorGradebook = lazy(() =>
+  import("@/components/grading/instructor/GradebookView").then((m) => ({ default: m.GradebookView }))
+);
 const ExistingAttendance = lazy(() =>
   import("@/components/academy/CourseAttendance").then((m) => ({ default: m.CourseAttendance }))
 );
@@ -2177,10 +2180,18 @@ function ResendInviteButton({ email, courseId }: { email: string; courseId: stri
 // ─── Grades ───────────────────────────────────────────────────────────────
 
 function GradesTab({ course, isInstructor, isAdmin }: TabProps) {
+  // Instructors see the whole-roster gradebook; students see their own
+  // grades. CourseGradebook filters submissions by the signed-in user,
+  // so for an instructor it would always render "No grades yet".
+  const roster = isInstructor || isAdmin;
   return (
     <SectionCard title="Gradebook" icon={<BarChart3 className="w-4 h-4" />}>
       <Suspense fallback={<Loader />}>
-        <ExistingGradebook courseId={course.id} isEnrolled={true} />
+        {roster ? (
+          <InstructorGradebook courseId={course.id} embedded />
+        ) : (
+          <ExistingGradebook courseId={course.id} isEnrolled={true} />
+        )}
       </Suspense>
     </SectionCard>
   );
