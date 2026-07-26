@@ -339,12 +339,11 @@ export function ImageUploadField({
 // weirdness can't block a user from setting an image. The edge fn
 // FETCHES the URL server-side and stores its own copy in site-branding,
 // so the storefront isn't tied to the external URL living forever.
-function UrlPasteRow({ value: _value, onChange, disabled }: {
+function UrlPasteRow({ value, onChange, disabled }: {
   value: string;
   onChange: (v: string) => void;
   disabled: boolean;
 }) {
-  void _value;
   const [draft, setDraft] = useState('');
   const [downloading, setDownloading] = useState(false);
   const apply = async () => {
