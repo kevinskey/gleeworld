@@ -356,17 +356,33 @@ export function InstructorSubmissionsDialog({
                   {isExpanded && (
                     <div
                       ref={(el) => {
-                        // Auto-scroll expanded row into view — the grading
-                        // form is tall enough that on smaller viewports it
-                        // rendered below the fold and looked like nothing
-                        // happened when clicking the row.
+                        // Auto-scroll + auto-focus the score input on
+                        // open so the instructor can start typing right
+                        // away. Without both, users kept reporting the
+                        // panel "wasn't there" — it was, just below the
+                        // fold, and the flow required an extra click.
                         if (el && expandedUser === e.user_id) {
                           requestAnimationFrame(() => {
                             el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            const scoreInput = el.querySelector<HTMLInputElement>(`#score-${e.user_id}`);
+                            scoreInput?.focus();
                           });
                         }
                       }}
-                      className="mt-1 ml-12 mr-2 rounded-lg border bg-muted/20 p-4 space-y-4">
+                      className="mt-2 ml-12 mr-2 rounded-xl border-2 border-primary bg-primary/5 p-5 space-y-4 shadow-lg"
+                    >
+                      <div className="flex items-center justify-between border-b border-primary/20 pb-2 mb-1">
+                        <div className="text-sm font-bold uppercase tracking-wider text-primary">
+                          Grade {e.full_name || e.email || 'this student'}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedUser(null)}
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          Close ✕
+                        </button>
+                      </div>
                       {sub?.content && (
                         <div>
                           <Label className="text-xs uppercase tracking-wider text-muted-foreground">Response</Label>
