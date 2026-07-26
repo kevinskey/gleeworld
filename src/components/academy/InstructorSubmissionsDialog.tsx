@@ -319,7 +319,23 @@ export function InstructorSubmissionsDialog({
                         </Badge>
                       )}
                       {sub?.status === 'submitted' && (
-                        <Badge className="bg-blue-600 hover:bg-blue-600">To grade</Badge>
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          className="cursor-pointer inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            setExpandedUser(isExpanded ? null : e.user_id);
+                          }}
+                          onKeyDown={(ev) => {
+                            if (ev.key === 'Enter' || ev.key === ' ') {
+                              ev.preventDefault();
+                              setExpandedUser(isExpanded ? null : e.user_id);
+                            }
+                          }}
+                        >
+                          {isExpanded ? 'Close' : 'To grade'}
+                        </span>
                       )}
                       {!sub && <Badge variant="outline">Missing</Badge>}
                       {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -327,7 +343,19 @@ export function InstructorSubmissionsDialog({
                   </button>
 
                   {isExpanded && (
-                    <div className="mt-1 ml-12 mr-2 rounded-lg border bg-muted/20 p-4 space-y-4">
+                    <div
+                      ref={(el) => {
+                        // Auto-scroll expanded row into view — the grading
+                        // form is tall enough that on smaller viewports it
+                        // rendered below the fold and looked like nothing
+                        // happened when clicking the row.
+                        if (el && expandedUser === e.user_id) {
+                          requestAnimationFrame(() => {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                          });
+                        }
+                      }}
+                      className="mt-1 ml-12 mr-2 rounded-lg border bg-muted/20 p-4 space-y-4">
                       {sub?.content && (
                         <div>
                           <Label className="text-xs uppercase tracking-wider text-muted-foreground">Response</Label>
