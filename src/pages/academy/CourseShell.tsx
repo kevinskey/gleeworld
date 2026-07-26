@@ -353,6 +353,13 @@ export default function CourseShell() {
           {canEdit && (
             <>
               <button
+                onClick={() => navigate('/academy/grading')}
+                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-card hover:bg-accent hover:text-accent-foreground text-foreground border border-border text-sm font-semibold transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                Grading queue
+              </button>
+              <button
                 onClick={() => navigate(`/academy/c/${code}/addons`)}
                 className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -886,6 +893,9 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   // can show a "Submitted" / "Graded 85/100" badge and open a submission
   // view instead of the instructor edit form.
   const [studentViewing, setStudentViewing] = useState<any | null>(null);
+  // Direct grading entry — per-row "Grade" button, so instructors don't
+  // have to go through the Edit assignment dialog to reach the grader.
+  const [gradingAsn, setGradingAsn] = useState<any | null>(null);
   const [subsByAssignment, setSubsByAssignment] = useState<Record<string, { status: string; score_value: number | null; submitted_at: string | null }>>({});
 
   // Pivoted from gw_course_assignments → gw_assignments so the
@@ -1072,12 +1082,30 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
                     {overdue && !isSubmitted && <span className="text-red-600 font-semibold"> · OVERDUE</span>}
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {canEdit && a.is_published && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2.5 text-xs"
+                      onClick={(e) => { e.stopPropagation(); setGradingAsn(a); }}
+                    >
+                      Grade
+                    </Button>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </div>
               </li>
             );
           })}
         </ul>
       )}
+      <InstructorSubmissionsDialog
+        open={!!gradingAsn}
+        assignment={gradingAsn}
+        courseId={course.id}
+        onClose={() => setGradingAsn(null)}
+      />
       <AssignmentEditDialog
         open={!!editing}
         assignment={editing}

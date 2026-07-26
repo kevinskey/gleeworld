@@ -45,10 +45,13 @@ export default function TeacherAcademyDashboard() {
   const { data: gradingQueue = [], isLoading: queueLoading } = useQuery({
     queryKey: ['teacher-grading-queue'],
     queryFn: async () => {
+      // gw_course_submissions is the live table for academy assignment
+      // work (gw_assignment_submissions is sight-reading-only).
       const { data } = await supabase
-        .from('gw_assignment_submissions')
-        .select('id, submitted_at, status, assignment_id, user_id, gw_assignments!inner(id, title, course_id)')
-        .or('status.eq.submitted,graded_at.is.null')
+        .from('gw_course_submissions')
+        .select('id, submitted_at, status, assignment_id, student_id, gw_assignments!inner(id, title, course_id)')
+        .not('submitted_at', 'is', null)
+        .is('graded_at', null)
         .order('submitted_at', { ascending: true })
         .limit(10);
       return data ?? [];

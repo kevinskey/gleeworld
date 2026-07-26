@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
-  ClipboardCheck, ChevronRight, Loader2, Check, FileText, Music, Link as LinkIcon, ExternalLink, Filter, Zap, X,
+  ClipboardCheck, ChevronRight, Loader2, Check, FileText, Link as LinkIcon, ExternalLink, Filter, Zap, X,
 } from 'lucide-react';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
@@ -29,18 +29,24 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
 };
 
+// Reads gw_course_submissions — the live submissions table for academy
+// assignments (gw_assignment_submissions is sight-reading-only and empty
+// for course work; this page was originally wired to it and showed
+// nothing to grade).
 type Submission = {
   id: string;
   status: string | null;
   submitted_at: string | null;
   graded_at: string | null;
-  score_value: number | null;
+  points_earned: number | null;
   feedback: string | null;
-  notes: string | null;
-  recording_url: string | null;
-  user_id: string;
+  content: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  student_id: string;
   assignment_id: string;
   gw_assignments?: { id: string; title: string; points: number | null; course_id: string };
+  student_name?: string | null;
 };
 
 export default function GradingQueuePage() {
@@ -68,15 +74,32 @@ export default function GradingQueuePage() {
     queryKey: ['grading-queue', filter],
     queryFn: async () => {
       let q = supabase
-        .from('gw_assignment_submissions')
-        .select('id, status, submitted_at, graded_at, score_value, feedback, notes, recording_url, user_id, assignment_id, gw_assignments!inner(id, title, points, course_id)')
+        .from('gw_course_submissions')
+        .select('id, status, submitted_at, graded_at, points_earned, feedback, content, file_url, file_name, student_id, assignment_id, gw_assignments!inner(id, title, points, course_id)')
+        .not('submitted_at', 'is', null)
         .order('submitted_at', { ascending: true })
         .limit(50);
       if (filter === 'pending') q = q.is('graded_at', null);
       if (filter === 'graded')  q = q.not('graded_at', 'is', null);
       const { data, error } = await q;
       if (error) throw error;
-      return (data ?? []) as Submission[];
+      const rows = ((data ?? []) as unknown) as Submission[];
+
+      // Attach student names — gw_course_submissions has no FK to a
+      // profile table, so PostgREST can't join it implicitly.
+      const studentIds = Array.from(new Set(rows.map((r) => r.student_id).filter(Boolean)));
+      if (studentIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('gw_profiles_directory' as any)
+          .select('user_id, full_name, email')
+          .in('user_id', studentIds);
+        const pMap = new Map<string, string>();
+        for (const p of ((profiles as any[]) ?? [])) {
+          pMap.set(p.user_id, p.full_name || p.email || '');
+        }
+        for (const r of rows) r.student_name = pMap.get(r.student_id) ?? null;
+      }
+      return rows;
     },
   });
 
@@ -223,9 +246,10 @@ function BulkGradeDialog({
         finalScore = Number.isFinite(n) ? n : 0;
       }
       const { error } = await supabase
-        .from('gw_assignment_submissions')
+        .from('gw_course_submissions')
         .update({
-          score_value: finalScore,
+          points_earned: finalScore,
+          grade: finalScore,
           feedback: feedback.trim() || null,
           graded_at: new Date().toISOString(),
           status: 'graded',
@@ -359,15 +383,19 @@ function SubmissionRow({
         {isGraded ? <Check className="w-4 h-4" /> : <ClipboardCheck className="w-4 h-4" />}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold truncate">{s.gw_assignments?.title || 'Assignment'}</div>
+        <div className="text-sm font-semibold truncate">
+          {s.gw_assignments?.title || 'Assignment'}
+          {s.student_name && <span className="font-normal text-muted-foreground"> · {s.student_name}</span>}
+        </div>
         <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
           <span>{submitted ? `Submitted ${formatDistanceToNow(submitted, { addSuffix: true })}` : 'Submitted'}</span>
-          {s.recording_url && <><span>•</span><span className="inline-flex items-center gap-1"><Music className="w-3 h-3" />Recording</span></>}
+          {s.content && <><span>•</span><span className="inline-flex items-center gap-1"><FileText className="w-3 h-3" />Text response</span></>}
+          {s.file_url && <><span>•</span><span className="inline-flex items-center gap-1"><LinkIcon className="w-3 h-3" />Attachment</span></>}
         </div>
       </div>
       {isGraded && (
         <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-          {s.score_value ?? '?'} / {s.gw_assignments?.points ?? '?'}
+          {s.points_earned ?? '?'} / {s.gw_assignments?.points ?? '?'}
         </Badge>
       )}
       <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -381,12 +409,13 @@ function GradingDialog({
 }: {
   open: boolean; onClose: () => void; submission: Submission | null; onGraded: () => void;
 }) {
+  const { user } = useAuth();
   const [score, setScore] = useState<string>('');
   const [feedback, setFeedback] = useState('');
 
   useMemo(() => {
     if (submission) {
-      setScore(submission.score_value?.toString() ?? '');
+      setScore(submission.points_earned?.toString() ?? '');
       setFeedback(submission.feedback ?? '');
     }
   }, [submission]);
@@ -396,11 +425,13 @@ function GradingDialog({
       if (!submission) return;
       const numeric = parseFloat(score);
       const { error } = await supabase
-        .from('gw_assignment_submissions')
+        .from('gw_course_submissions')
         .update({
-          score_value: Number.isFinite(numeric) ? numeric : null,
+          points_earned: Number.isFinite(numeric) ? numeric : null,
+          grade: Number.isFinite(numeric) ? numeric : null,
           feedback: feedback || null,
           graded_at: new Date().toISOString(),
+          graded_by: user?.id ?? null,
           status: 'graded',
         })
         .eq('id', submission.id);
@@ -427,19 +458,30 @@ function GradingDialog({
           <div className="rounded-xl border p-3 space-y-1">
             <div className="text-xs text-muted-foreground">Assignment</div>
             <div className="font-semibold">{submission.gw_assignments?.title}</div>
+            {submission.student_name && (
+              <div className="text-xs text-muted-foreground">Student: {submission.student_name}</div>
+            )}
             {points && <div className="text-xs text-muted-foreground">Out of {points} points</div>}
           </div>
 
-          {submission.recording_url && (
+          {submission.file_url && (
             <div>
-              <Label className="text-xs">Submitted recording</Label>
-              <audio src={submission.recording_url} controls className="w-full mt-1.5" />
+              <Label className="text-xs">Attachment</Label>
+              <a
+                href={submission.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1.5 flex items-center gap-1.5 text-sm text-primary hover:underline"
+              >
+                {submission.file_name || submission.file_url.split('/').pop() || 'Open link'}
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
           )}
-          {submission.notes && (
+          {submission.content && (
             <div>
-              <Label className="text-xs">Student notes</Label>
-              <p className="text-sm bg-muted/40 rounded-md p-3 mt-1">{submission.notes}</p>
+              <Label className="text-xs">Response</Label>
+              <p className="text-sm bg-muted/40 rounded-md p-3 mt-1 whitespace-pre-wrap max-h-48 overflow-y-auto">{submission.content}</p>
             </div>
           )}
 
