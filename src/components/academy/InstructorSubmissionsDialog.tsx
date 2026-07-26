@@ -251,29 +251,42 @@ export function InstructorSubmissionsDialog({
         </DialogContent>
       </Dialog>
 
-      {/* Nested per-student grading dialog. Opens on top of the list. */}
+      {/* Fallback inline grader — rendered outside any Dialog so it
+          cannot be lost to Portal / focus-trap conflicts. When a
+          gradingUserId is set, this fixed-position card overlays the
+          screen with the same score/feedback UI the nested Dialog was
+          trying to show. Cheap-to-implement diagnostic that also acts
+          as the actual grader if the Dialog path is broken. */}
       {gradingRow && (
-        <GradeStudentDialog
-          open={!!gradingUserId}
-          assignment={assignment}
-          student={gradingRow}
-          submission={gradingSub}
-          gradedBy={currentUser?.id ?? null}
-          onClose={() => setGradingUserId(null)}
-          onSaved={(updated) => {
-            afterGradeSaved(gradingRow.user_id, updated);
-            setGradingUserId(null);
-          }}
-        />
+        <div
+          className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setGradingUserId(null)}
+        >
+          <div
+            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <InlineGrader
+              assignment={assignment}
+              student={gradingRow}
+              submission={gradingSub}
+              gradedBy={currentUser?.id ?? null}
+              onClose={() => setGradingUserId(null)}
+              onSaved={(updated) => {
+                afterGradeSaved(gradingRow.user_id, updated);
+                setGradingUserId(null);
+              }}
+            />
+          </div>
+        </div>
       )}
     </>
   );
 }
 
-// ─── Grade a single student ──────────────────────────────────────────
+// ─── Grade a single student (inline body — no Dialog wrapper) ────────
 
-interface GradeStudentDialogProps {
-  open: boolean;
+interface InlineGraderProps {
   assignment: AssignmentLite;
   student: EnrollmentRow;
   submission: SubmissionRow | null;
@@ -282,22 +295,19 @@ interface GradeStudentDialogProps {
   onSaved: (updated: Partial<SubmissionRow>) => void;
 }
 
-function GradeStudentDialog({
-  open, assignment, student, submission, gradedBy, onClose, onSaved,
-}: GradeStudentDialogProps) {
+function InlineGrader({
+  assignment, student, submission, gradedBy, onClose, onSaved,
+}: InlineGraderProps) {
   const [score, setScore] = useState<string>(
     submission?.points_earned != null ? String(submission.points_earned) : ''
   );
   const [feedback, setFeedback] = useState<string>(submission?.feedback ?? '');
   const [saving, setSaving] = useState(false);
 
-  // Reset local state whenever we open for a different student.
   useEffect(() => {
-    if (open) {
-      setScore(submission?.points_earned != null ? String(submission.points_earned) : '');
-      setFeedback(submission?.feedback ?? '');
-    }
-  }, [open, submission?.id]);
+    setScore(submission?.points_earned != null ? String(submission.points_earned) : '');
+    setFeedback(submission?.feedback ?? '');
+  }, [submission?.id]);
 
   async function save() {
     const scoreNum = score.trim() === '' ? null : Number(score);
@@ -366,21 +376,30 @@ function GradeStudentDialog({
   const isGraded = submission?.status === 'graded' || submission?.status === 'ai_graded';
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="md:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="pr-6 flex items-center gap-2">
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3 border-b pb-3">
+        <div>
+          <div className="text-lg font-semibold flex items-center gap-2">
             <UserIcon className="h-5 w-5 text-primary" />
-            <span className="min-w-0 truncate">Grade {displayName}</span>
-          </DialogTitle>
-          <DialogDescription>
+            Grade {displayName}
+          </div>
+          <div className="text-sm text-muted-foreground mt-0.5">
             {assignment.title}
             {assignment.points != null && ` · ${assignment.points} pts`}
             {submission?.submitted_at && ` · Submitted ${formatDistanceToNow(new Date(submission.submitted_at), { addSuffix: true })}`}
-          </DialogDescription>
-        </DialogHeader>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-muted-foreground hover:text-foreground text-2xl leading-none"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
 
-        <div className="space-y-4">
+      <div className="space-y-4">
           {/* What the student submitted */}
           {submission?.content && (
             <div>
@@ -462,7 +481,7 @@ function GradeStudentDialog({
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
