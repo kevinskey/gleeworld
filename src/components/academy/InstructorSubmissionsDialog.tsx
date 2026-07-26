@@ -236,7 +236,12 @@ export function InstructorSubmissionsDialog({
       toast.success('Grade saved');
       setExpandedUser(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save grade');
+      // Supabase errors are plain objects, not Error instances. Read
+      // message + details + hint so the toast is diagnosable instead
+      // of a generic string.
+      const e = err as { message?: string; hint?: string; code?: string; details?: string } | undefined;
+      const parts = [e?.message, e?.details, e?.hint].filter(Boolean);
+      toast.error(parts.length > 0 ? parts.join(' — ') : 'Failed to save grade');
     } finally {
       setSavingUser(null);
     }
