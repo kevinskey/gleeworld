@@ -106,27 +106,61 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
   console.log(`[upload] reading file bytes (${file.size} bytes)…`);
   let fileBase64: string;
   try {
-    // Prefer file.arrayBuffer() — FileReader intermittently throws
-    // NotReadableError on macOS Chrome when the source is on iCloud
-    // Drive or another cloud-backed folder where the file is visible
-    // but not physically local. arrayBuffer() usually forces the
-    // sync-on-demand and works. If it still fails, try FileReader as
-    // a fallback so we're not worse than before.
-    let bytes: Uint8Array;
+    // Three decode paths, tried in order. Different iCloud-Drive /
+    // sandbox states break different APIs; whichever works, wins.
+    //
+    // 1. <img src=blob:> → canvas → toBlob. The <img> load path
+    //    triggers the browser's image-loading pipeline which usually
+    //    forces iCloud to materialize the file even when
+    //    arrayBuffer() throws NotReadableError. Bonus: we get a clean
+    //    re-encoded blob that's independent of the source file's
+    //    filesystem state.
+    // 2. file.arrayBuffer() — direct byte read.
+    // 3. FileReader.readAsArrayBuffer() — legacy last resort.
+    let bytes: Uint8Array | null = null;
     try {
-      const buf = await file.arrayBuffer();
-      bytes = new Uint8Array(buf);
-    } catch (primaryErr) {
-      console.warn('[upload] arrayBuffer failed, trying FileReader:', primaryErr);
-      bytes = await new Promise<Uint8Array>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => {
-          const buf = r.result as ArrayBuffer;
-          resolve(new Uint8Array(buf));
-        };
-        r.onerror = () => reject(r.error || new Error('FileReader failed'));
-        r.readAsArrayBuffer(file);
-      });
+      const blobUrl = URL.createObjectURL(file);
+      try {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const el = new Image();
+          el.onload = () => resolve(el);
+          el.onerror = () => reject(new Error('img decode failed'));
+          el.src = blobUrl;
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('canvas ctx null');
+        ctx.drawImage(img, 0, 0);
+        // Use JPEG for photos, PNG for anything with transparency-y
+        // extensions. Doesn't matter much — edge fn accepts any image/*.
+        const isPng = file.type === 'image/png' || file.name.endsWith('.png');
+        const blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((b) => b ? resolve(b) : reject(new Error('toBlob null')), isPng ? 'image/png' : 'image/jpeg', 0.9);
+        });
+        const buf = await blob.arrayBuffer();
+        bytes = new Uint8Array(buf);
+        console.log(`[upload] path 1 (img+canvas) ok: ${bytes.length} bytes`);
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+    } catch (path1Err) {
+      console.warn('[upload] path 1 (img+canvas) failed, trying arrayBuffer:', path1Err);
+      try {
+        const buf = await file.arrayBuffer();
+        bytes = new Uint8Array(buf);
+        console.log(`[upload] path 2 (arrayBuffer) ok: ${bytes.length} bytes`);
+      } catch (path2Err) {
+        console.warn('[upload] path 2 (arrayBuffer) failed, trying FileReader:', path2Err);
+        bytes = await new Promise<Uint8Array>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(new Uint8Array(r.result as ArrayBuffer));
+          r.onerror = () => reject(r.error || new Error('FileReader failed'));
+          r.readAsArrayBuffer(file);
+        });
+        console.log(`[upload] path 3 (FileReader) ok: ${bytes.length} bytes`);
+      }
     }
     // btoa can't handle large binary strings directly — chunk it.
     let bin = '';
@@ -136,11 +170,11 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
     }
     fileBase64 = btoa(bin);
   } catch (err) {
-    console.error('[upload] file read failed:', err);
+    console.error('[upload] all read paths failed:', err);
     toast.error(
       err instanceof Error && err.name === 'NotReadableError'
-        ? 'Couldn\'t read the image — if it\'s on iCloud Drive, download it locally first (Finder → right-click → Download Now), then try again.'
-        : `Couldn't read the file: ${err instanceof Error ? err.message : 'unknown'}`,
+        ? 'macOS blocked the file read — try dragging it to Desktop first, or paste the image URL instead using the field below.'
+        : `Couldn't read the file: ${err instanceof Error ? err.message : 'unknown'} — try the URL paste below.`,
     );
     return null;
   }
