@@ -252,6 +252,9 @@ export function ImageUploadField({
   // The setLocalPreview updater below handles rotating out the previous
   // URL when a new one is picked.
   const currentBlobRef = useRef<string | null>(null);
+  // Value as it stood before the optimistic blob swap, so a failed or
+  // cancelled upload can restore it instead of stranding a dead blob: URL.
+  const prevValueRef = useRef<string>('');
   useEffect(() => { currentBlobRef.current = localPreview; }, [localPreview]);
   useEffect(() => () => {
     if (currentBlobRef.current) URL.revokeObjectURL(currentBlobRef.current);
@@ -323,6 +326,13 @@ export function ImageUploadField({
               // reference the instant the input clears, which trips
               // NotReadableError inside FileReader / arrayBuffer.
               if (!file) return;
+              // Remember what was here before the optimistic blob swap. If
+              // the upload fails we put this back — otherwise the field is
+              // left pointing at a blob: URL that dies with the failure,
+              // which renders as "Couldn't load the saved image" over a
+              // perfectly good stored image the user can no longer see.
+              const prevValue = value;
+              prevValueRef.current = prevValue;
               const blobUrl = URL.createObjectURL(file);
               setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return blobUrl; });
               // Push the blob URL through onChange immediately so the LIVE
@@ -344,6 +354,11 @@ export function ImageUploadField({
                   // gets revoked (page nav, tab suspend, HMR replay etc.)
                   // the thumbnail renders as a broken icon.
                   setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
+                } else {
+                  // uploadToSiteBranding already toasted why. Roll the field
+                  // back to what it held before the optimistic blob swap.
+                  setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
+                  onChange(prevValue);
                 }
               } catch (err) {
                 // Fetch-level failure (dropped connection, nginx reject,
@@ -352,6 +367,8 @@ export function ImageUploadField({
                 // spinner forever.
                 console.error('[upload] fatal', err);
                 toast.error(`Upload failed: ${err instanceof Error ? err.message : 'network error'}`);
+                setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
+                onChange(prevValue);
               } finally {
                 setUploading(false);
                 // Clear the input NOW that we're done reading the file, so
@@ -372,6 +389,9 @@ export function ImageUploadField({
             // stops blocking the user from trying the URL path instead.
             setUploading(false);
             setLocalPreview((old) => { if (old) URL.revokeObjectURL(old); return null; });
+            // Same rollback as the failure path — cancelling must not leave
+            // the field holding the blob: URL of the abandoned upload.
+            if (value.startsWith('blob:')) onChange(prevValueRef.current);
           }}
           className="text-xs text-slate-500 hover:text-red-600 underline"
         >
