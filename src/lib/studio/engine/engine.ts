@@ -1349,6 +1349,16 @@ export class StudioEngine {
 
   // Internal — exposed so the recorder can tap the mix bus if desired.
   getMasterIn(): Tone.Gain { return this.masterIn; }
+
+  /** Output latency of the engine's LIVE AudioContext in ms (0 when the
+   * browser doesn't report one). This is the number recordings must
+   * compensate by — players time themselves to what they hear — and it
+   * must come from the RUNNING context: a freshly constructed context
+   * reports 0. Tracks device switches (e.g. to Bluetooth) live. */
+  getOutputLatencyMs(): number {
+    const raw = Tone.getContext().rawContext as AudioContext;
+    return ((raw.outputLatency || raw.baseLatency) ?? 0) * 1000;
+  }
 }
 
 export function dbToGain(db: number): number {

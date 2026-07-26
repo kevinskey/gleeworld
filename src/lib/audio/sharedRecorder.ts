@@ -506,16 +506,27 @@ export function getConfiguredInputLatencyMs(
  * throwaway context solely to read this value and never closed it).
  * Preserved verbatim per the "bit-identical" constraint; revisit if it
  * becomes a measurable resource concern. */
-export function getOutputLatencyMs(): number {
-  // No try/catch here on purpose: the original inline version in
-  // StudioEditor's finalizeRecordingBlob didn't guard the `new
-  // AudioContext()` call either, so a construction failure propagated
-  // as an uncaught rejection out of finalizeRecordingBlob (surfaced to
-  // the user as the existing "Could not finalize recording" toast).
-  // Matching that keeps this bit-identical for Studio.
+export function getOutputLatencyMs(liveCtx?: AudioContext): number {
+  // Prefer a LIVE (running) context when the caller has one — players
+  // time themselves to what they HEAR, and only a running context
+  // reports a meaningful outputLatency. A freshly constructed context
+  // is not running yet and reports 0, which silently disabled the
+  // "auto" MIDI compensation ("auto 0" in the settings panel) and made
+  // takes land late by the real output latency.
+  if (liveCtx) {
+    const ms = ((liveCtx.outputLatency || liveCtx.baseLatency) ?? 0) * 1000;
+    if (ms > 0) return ms;
+  }
+  // Fallback: throwaway context, best-effort. No try/catch on the
+  // construction on purpose: the original inline version in
+  // StudioEditor's finalizeRecordingBlob didn't guard it either, so a
+  // construction failure propagated as an uncaught rejection (surfaced
+  // to the user as the existing "Could not finalize recording" toast).
   if (typeof AudioContext === 'undefined') return 0;
   const ctx = new AudioContext();
-  return (ctx.outputLatency || 0) * 1000;
+  const ms = ((ctx.outputLatency || ctx.baseLatency) ?? 0) * 1000;
+  void ctx.close().catch(() => { /* best effort — previously leaked */ });
+  return ms;
 }
 
 // ── Sample-accurate head trim ──────────────────────────────────────────

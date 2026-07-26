@@ -1154,8 +1154,11 @@ function Editor({
     // subtracts this value, so a negative comp SHIFTS captured times
     // later, and compNow's own `Math.max(0, position - comp)` still floors
     // the result at 0.
+    // Measure off the ENGINE'S running context — the one actually
+    // playing the click. A throwaway context reports outputLatency 0
+    // ("auto 0"), which left takes uncompensated and audibly late.
     midiCompSecRef.current = engineState.native ? 0
-      : (getOutputLatencyMs() + getMidiTrimMs()) / 1000;
+      : ((engineState.engine?.getOutputLatencyMs() || getOutputLatencyMs()) + getMidiTrimMs()) / 1000;
   };
 
   const startRecording = async () => {
@@ -1419,8 +1422,9 @@ function Editor({
         const align = computeTakeAlignment({
           pressWallMs, captureStartWallMs, transportStartWallMs,
           // Live output latency (tracks Bluetooth device switches) +
-          // configured residual for the input side.
-          deviceLatencyMs: getConfiguredDeviceLatencyMs() + getOutputLatencyMs(),
+          // configured residual for the input side. Read from the
+          // engine's RUNNING context — a throwaway one reports 0.
+          deviceLatencyMs: getConfiguredDeviceLatencyMs() + (engineState.engine?.getOutputLatencyMs() || getOutputLatencyMs()),
         });
         trimOverrideMs = align.trimMs;
         clipStartOffsetSec = align.clipStartOffsetSec;
