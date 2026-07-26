@@ -17,6 +17,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { resolveStoreTenant } from "../_shared/tsbTenant.ts";
 import { create, getNumericDate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 const corsHeaders = {
@@ -50,21 +51,14 @@ serve(async (req: Request) => {
       .maybeSingle();
     if (!profile) return jsonError(403, "Profile not found");
 
-    const canAdmin = profile.is_super_admin === true
-      || profile.is_admin === true
-      || profile.role === "admin"
-      || profile.role === "super_admin"
-      || profile.role === "super-admin"
-      || profile.role === "owner";
-    if (!canAdmin) return jsonError(403, "Only tenant admins can access the store");
+    const body = await req.json().catch(() => ({}));
 
-    // Look up the tenant's linked store slug.
+    // Look up the linked store for the tenant whose site the caller is on.
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    const { data: tenant } = await admin
-      .from("gw_tenants")
-      .select("slug, tsb_store_slug")
-      .eq("id", profile.tenant_id)
-      .maybeSingle();
+    const { tenant, error: scopeErr } = await resolveStoreTenant<
+      { id: string; slug: string; tsb_store_slug: string | null }
+    >(admin, profile, body?.tenant_slug, "id, slug, tsb_store_slug");
+    if (scopeErr) return jsonError(scopeErr.status, scopeErr.message);
     if (!tenant?.tsb_store_slug) {
       return jsonError(404, "This tenant does not have a TSB store enabled");
     }

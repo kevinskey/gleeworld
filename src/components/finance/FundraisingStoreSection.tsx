@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Store, ExternalLink, Loader2, Sparkles, AlertCircle, Palette, Clock, Check, XCircle, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { ImageUploadField } from '@/components/public-site/ImageUploadField';
@@ -67,16 +67,14 @@ export function FundraisingStoreSection() {
     try {
       const { data: userRes } = await supabase.auth.getUser();
       if (!userRes.user) throw new Error('Not signed in');
-      const { data: profile } = await supabase
-        .from('gw_profiles')
-        .select('tenant_id')
-        .eq('user_id', userRes.user.id)
-        .maybeSingle();
-      if (!profile?.tenant_id) throw new Error('Profile has no tenant');
+      // Scope by the SITE's tenant, not the caller's profile tenant. A
+      // super-admin on lykehouse.gleeworld.org must see The Lyke House's
+      // store — resolving by profile is how one admin's personal store got
+      // rendered (and edited) as another tenant's storefront.
       const { data: tenant } = await supabase
         .from('gw_tenants')
         .select('tsb_store_slug, tsb_store_subdomain, name')
-        .eq('id', profile.tenant_id)
+        .eq('slug', getTenantSlug())
         .maybeSingle();
       if (!tenant?.tsb_store_slug) {
         setState({ slug: null, subdomain: null, name: null, storefront_url: null, admin_url: null });
@@ -103,7 +101,7 @@ export function FundraisingStoreSection() {
 
   const loadDrafts = useCallback(async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('tsb-store-drafts', {});
+      const { data, error } = await supabase.functions.invoke('tsb-store-drafts', { body: { tenant_slug: getTenantSlug() } });
       if (error) throw error;
       setDrafts(Array.isArray(data?.drafts) ? data.drafts : []);
       setBrand((data?.brand ?? {}) as BrandJson);
@@ -120,7 +118,7 @@ export function FundraisingStoreSection() {
   const enableStore = async () => {
     setProvisioning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('provision-tsb-store', {});
+      const { data, error } = await supabase.functions.invoke('provision-tsb-store', { body: { tenant_slug: getTenantSlug() } });
       if (error) throw error;
       if (!data || data.error) throw new Error(data?.error || 'Provisioning returned no data');
       toast.success(data.created ? 'Fundraising store enabled.' : 'Store already existed — linked back.');
@@ -135,7 +133,7 @@ export function FundraisingStoreSection() {
   const openAdmin = async () => {
     setOpeningAdmin(true);
     try {
-      const { data, error } = await supabase.functions.invoke('tsb-store-sso', {});
+      const { data, error } = await supabase.functions.invoke('tsb-store-sso', { body: { tenant_slug: getTenantSlug() } });
       if (error) throw error;
       if (!data?.admin_url) throw new Error('SSO returned no admin URL');
       window.open(data.admin_url, '_blank', 'noopener,noreferrer');
@@ -149,7 +147,7 @@ export function FundraisingStoreSection() {
   const openDesign = async () => {
     setOpeningDesign(true);
     try {
-      const { data, error } = await supabase.functions.invoke('tsb-store-sso', {});
+      const { data, error } = await supabase.functions.invoke('tsb-store-sso', { body: { tenant_slug: getTenantSlug() } });
       if (error) throw error;
       if (!data?.design_url) throw new Error('SSO returned no design URL');
       window.open(data.design_url, '_blank', 'noopener,noreferrer');
@@ -322,6 +320,7 @@ function EditStorefrontModal({ initialBrand, initialFundraiser, onClose, onSaved
     try {
       const goalCents = goalUsd ? Math.round(parseFloat(goalUsd) * 100) : null;
       const body = {
+        tenant_slug: getTenantSlug(),
         brand: {
           hero_url: heroUrl || null,
           logo_url: logoUrl || null,

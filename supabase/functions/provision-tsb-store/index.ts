@@ -18,6 +18,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { resolveStoreTenant } from "../_shared/tsbTenant.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,25 +69,21 @@ serve(async (req: Request) => {
 
     if (!profile) return jsonError(403, "Profile not found");
 
-    // Admins/super-admins can provision. Regular members can't.
-    const canProvision = profile.is_super_admin === true
-      || profile.is_admin === true
-      || profile.role === "admin"
-      || profile.role === "super_admin"
-      || profile.role === "super-admin"
-      || profile.role === "owner";
-    if (!canProvision) return jsonError(403, "Only tenant admins can enable a store");
+    const body = await req.json().catch(() => ({}));
 
-    // Fetch tenant slug + branding using the service-role client (RLS
-    // shouldn't get in the way here — we already confirmed the caller
-    // is an admin of tenant_id via the RLS-scoped read above).
+    // Provision for the tenant whose SITE the caller is on, not whichever
+    // tenant their own profile belongs to — resolveStoreTenant also does the
+    // admin check (home tenant: any admin; another tenant: super-admin only).
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    const { data: tenant, error: tenantErr } = await admin
-      .from("gw_tenants")
-      .select("id, slug, name, tsb_store_slug, tsb_store_subdomain")
-      .eq("id", profile.tenant_id)
-      .maybeSingle();
-    if (tenantErr || !tenant) return jsonError(404, "Tenant not found");
+    const { tenant, error: scopeErr } = await resolveStoreTenant<{
+      id: string;
+      slug: string;
+      name: string | null;
+      tsb_store_slug: string | null;
+      tsb_store_subdomain: string | null;
+    }>(admin, profile, body?.tenant_slug, "id, slug, name, tsb_store_slug, tsb_store_subdomain");
+    if (scopeErr) return jsonError(scopeErr.status, scopeErr.message);
+    if (!tenant) return jsonError(404, "Tenant not found");
 
     const { data: branding } = await admin
       .from("gw_branding_settings")

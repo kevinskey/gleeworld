@@ -8,6 +8,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { resolveStoreTenant } from "../_shared/tsbTenant.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,23 +41,14 @@ serve(async (req: Request) => {
       .maybeSingle();
     if (!profile) return jsonError(403, "Profile not found");
 
-    const canManage = profile.is_super_admin === true
-      || profile.is_admin === true
-      || profile.role === "admin"
-      || profile.role === "super_admin"
-      || profile.role === "super-admin"
-      || profile.role === "owner";
-    if (!canManage) return jsonError(403, "Only tenant admins can edit the storefront");
+    const body = await req.json().catch(() => ({}));
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    const { data: tenant } = await admin
-      .from("gw_tenants")
-      .select("tsb_store_slug")
-      .eq("id", profile.tenant_id)
-      .maybeSingle();
+    const { tenant, error: scopeErr } = await resolveStoreTenant<
+      { id: string; tsb_store_slug: string | null }
+    >(admin, profile, body?.tenant_slug, "id, tsb_store_slug");
+    if (scopeErr) return jsonError(scopeErr.status, scopeErr.message);
     if (!tenant?.tsb_store_slug) return jsonError(404, "Tenant has no linked store");
-
-    const body = await req.json().catch(() => ({}));
     const resp = await fetch(
       `${tsbOrigin}/api/gleeworld/stores/${encodeURIComponent(tenant.tsb_store_slug)}`,
       {
@@ -65,7 +57,9 @@ serve(async (req: Request) => {
           "Content-Type": "application/json",
           "x-gleeworld-service-key": gwServiceKey,
         },
-        body: JSON.stringify(body),
+        // tenant_slug is ours for scoping — TSB whitelists brand/fundraiser
+        // and would ignore it anyway, but don't forward internal routing.
+        body: JSON.stringify({ brand: body?.brand, fundraiser: body?.fundraiser }),
       },
     );
     const j = await resp.json().catch(() => ({}));
