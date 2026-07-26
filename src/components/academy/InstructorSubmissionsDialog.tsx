@@ -482,6 +482,5 @@ function InlineGrader({
           </div>
         </div>
       </div>
-    </div>
   );
 }
