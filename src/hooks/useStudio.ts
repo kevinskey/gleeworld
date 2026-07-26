@@ -31,17 +31,24 @@ export function useStudioOwner() {
       const user = session?.user;
       if (!user || !session?.access_token) throw new Error('not signed in');
       // The RESTRICTIVE RLS on gw_studio_sessions checks tenant_id
-      // against current_tenant_id() — the JWT's tenant_id CLAIM. Since
-      // the tenant switcher (active_tenant_id, 2026-07-25) the JWT
-      // tenant can legitimately differ from gw_profiles.tenant_id (the
-      // user's HOME tenant), and inserting the profile tenant 403s —
-      // "can't start a session" for anyone who has ever switched. Use
-      // the claim, same as songwriting's recordingsApi.tenantAndUser.
+      // against current_tenant_id(), which resolves (in order) the
+      // x-tenant-slug REQUEST HEADER, the JWT tenant claim, then the
+      // profile row. Any client-side guess can disagree with that —
+      // e.g. on gleeworld.org the header says 'main' while a switched
+      // user's JWT claims another tenant, and gw_profiles.tenant_id is
+      // the HOME tenant, distinct from both — and a mismatch 403s the
+      // insert ("can't start a session"). So ask the server: the RPC
+      // runs with the same headers + JWT the insert will use, so its
+      // answer is BY CONSTRUCTION the tenant RLS enforces.
+      const { data: rpcTenant, error: rpcErr } = await supabase.rpc('current_tenant_id');
+      if (!rpcErr && typeof rpcTenant === 'string' && rpcTenant) {
+        return { userId: user.id, tenantId: rpcTenant };
+      }
+      // RPC unavailable — approximate with the JWT claim, then profile.
       const claimTenant = decodeJwtClaims(session.access_token)?.tenant_id;
       if (typeof claimTenant === 'string' && claimTenant) {
         return { userId: user.id, tenantId: claimTenant };
       }
-      // Pre-hook JWTs (or a hook hiccup) — fall back to the profile row.
       const { data: profile, error } = await supabase
         .from('gw_profiles').select('tenant_id').eq('user_id', user.id).maybeSingle();
       if (error) throw error;
