@@ -361,6 +361,7 @@ const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
 const PartnersAdmin = lazy(() => import("./pages/admin/PartnersAdmin"));
+const PartnerInviteRedeem = lazy(() => import("./pages/partner/PartnerInviteRedeem"));
 const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
@@ -1352,6 +1353,16 @@ const App = () => {
                            <DashboardShell><PartnersAdmin /></DashboardShell>
                          </UniversalLayout>
                        </AdminOnlyRoute>
+                     </ProtectedRoute>
+                   }
+                 />
+                 <Route
+                   path="/partner/invite/:token"
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><PartnerInviteRedeem /></DashboardShell>
+                       </UniversalLayout>
                      </ProtectedRoute>
                    }
                  />
