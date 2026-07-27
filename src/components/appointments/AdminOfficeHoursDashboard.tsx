@@ -286,7 +286,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
         {activeSection === 'appointments' && (
           <>
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-1.5 mb-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
               {[
                 { label: 'Today', value: todayAppointments.length, color: 'text-cyan-300' },
                 { label: 'Pending', value: pendingAppointments.length, color: 'text-amber-300' },
@@ -296,7 +296,7 @@ export const AdminOfficeHoursDashboard: React.FC = () => {
                 <Card key={stat.label} className="border-white/10 bg-white/10 backdrop-blur-md">
                   <CardContent className="p-2 sm:p-3 text-center">
                     <div className={cn("text-xl sm:text-2xl font-bold", stat.color)}>{stat.value}</div>
-                    <div className="text-[9px] sm:text-xs uppercase tracking-wider text-white/50">{stat.label}</div>
+                    <div className="text-xs uppercase tracking-wider text-white/50">{stat.label}</div>
                   </CardContent>
                 </Card>
               ))}

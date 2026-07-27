@@ -692,12 +692,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
   return <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 text-xs sm:text-sm">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="pricing">Pricing & Stock</TabsTrigger>
-          <TabsTrigger value="variants">Variants</TabsTrigger>
-          <TabsTrigger value="images">Images</TabsTrigger>
-        </TabsList>
+        {/* 4-col grid crushed "Pricing & Stock" at 390px; horizontal-scroll
+            on mobile, keep the equal-width grid at sm+. */}
+        <div className="-mx-4 sm:mx-0 overflow-x-auto sm:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+          <TabsList className="mx-4 sm:mx-0 flex w-max gap-1 text-xs sm:text-sm sm:w-full sm:grid sm:grid-cols-4">
+            <TabsTrigger value="basic" className="shrink-0 whitespace-nowrap">Basic Info</TabsTrigger>
+            <TabsTrigger value="pricing" className="shrink-0 whitespace-nowrap">Pricing & Stock</TabsTrigger>
+            <TabsTrigger value="variants" className="shrink-0 whitespace-nowrap">Variants</TabsTrigger>
+            <TabsTrigger value="images" className="shrink-0 whitespace-nowrap">Images</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="basic" className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

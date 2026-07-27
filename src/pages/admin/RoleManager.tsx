@@ -47,7 +47,7 @@ const RoleManager = () => {
   return (
     <UniversalLayout showHeader={false} showFooter={false}>
       <DashboardShell>
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
       <PageHeader
         title="Role Manager"
         description="Transition roles, promote auditioners, and review role change history"

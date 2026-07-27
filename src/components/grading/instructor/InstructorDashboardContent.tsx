@@ -39,7 +39,7 @@ export const InstructorDashboardContent: React.FC = () => {
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Instructor Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Instructor Dashboard</h1>
           <p className="text-muted-foreground">Manage your courses, assignments, and student submissions</p>
         </div>
         {isAdmin && (
@@ -54,7 +54,7 @@ export const InstructorDashboardContent: React.FC = () => {
         {courses?.map((course) => (
           <Card key={course.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-3xl">
+              <CardTitle className="flex items-center gap-2 text-xl md:text-3xl">
                 <BookOpen className="h-6 w-6" />
                 {course.code}
               </CardTitle>

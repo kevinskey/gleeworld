@@ -108,7 +108,7 @@ export default function Prospects() {
           <CardContent className="space-y-2">
             {g.items.length === 0 && <p className="text-sm text-muted-foreground">No prospects in this stage.</p>}
             {g.items.map((p: any) => (
-              <div key={p.id} className="border rounded p-3 flex items-center justify-between gap-3">
+              <div key={p.id} className="border rounded p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold truncate">{p.full_name}</div>
                   <div className="text-xs text-muted-foreground truncate">
@@ -116,7 +116,7 @@ export default function Prospects() {
                   </div>
                 </div>
                 <Select value={p.status} onValueChange={(s) => updateStatus.mutate({ id: p.id, status: s })}>
-                  <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[140px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
                   </SelectContent>
