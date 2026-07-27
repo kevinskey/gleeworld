@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { LinkIcon } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import DashboardPageShell from '@/components/dashboard/DashboardPageShell';
 import {
@@ -16,12 +18,14 @@ import {
 } from '@/components/repertoire/RepertoireSearchBar';
 import { RepertoireResultCard } from '@/components/repertoire/RepertoireResultCard';
 import { RepertoireBrowseShelf } from '@/components/repertoire/RepertoireBrowseShelf';
+import { ImportUrlDialog } from '@/components/repertoire/ImportUrlDialog';
 
 const DEFAULTS: RepertoireFilters = { query: '', ensemble: '', voicing: '', source: '' };
 
 export default function RepertoirePage() {
   const [filters, setFilters] = useState<RepertoireFilters>(DEFAULTS);
   const [tab, setTab] = useState<'browse' | 'search'>('browse');
+  const [importOpen, setImportOpen] = useState(false);
 
   const featuredChoral = useRepertoireFeatured('choral', 12);
   const featuredBand = useRepertoireFeatured('band', 12);
@@ -89,10 +93,16 @@ export default function RepertoirePage() {
       subtitle="Browse and search choral & band repertoire across CPDL, IMSLP and more"
     >
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'browse' | 'search')}>
-        <TabsList>
-          <TabsTrigger value="browse">Browse</TabsTrigger>
-          <TabsTrigger value="search">Search</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between gap-2">
+          <TabsList>
+            <TabsTrigger value="browse">Browse</TabsTrigger>
+            <TabsTrigger value="search">Search</TabsTrigger>
+          </TabsList>
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <LinkIcon className="w-4 h-4 mr-1" />
+            Import from URL
+          </Button>
+        </div>
 
         <TabsContent value="browse" className="space-y-6 mt-4">
           <RepertoireBrowseShelf
@@ -144,6 +154,7 @@ export default function RepertoirePage() {
           )}
         </TabsContent>
       </Tabs>
+      <ImportUrlDialog open={importOpen} onOpenChange={setImportOpen} />
     </DashboardPageShell>
   );
 }
