@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Mic, Check, X, Flame, Timer, Sparkles, TrendingUp, Music2, Zap } from 'lucide-react';
+import { Play, Mic, Check, X, Flame, Timer, Sparkles, TrendingUp, Music2, Zap, ListMusic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import type { Voice } from '@/lib/sightReading/generate';
 import { useMicPitch } from '@/lib/sightReading/useMicPitch';
 import { supabase } from '@/integrations/supabase/client';
+import { PitchSetPlayer } from './PitchSetPlayer';
 
 // Voice tessituras. MIDI note numbers (C4 = 60).
 const VOICE_RANGE: Record<Voice, [number, number]> = {
@@ -26,7 +27,7 @@ const TIME_ATTACK_MS = 60_000;
 const TONE_GAIN = 0.14;
 const CLARITY_MIN = 0.7;
 
-type Mode = 'random' | 'interval' | 'scale' | 'time_attack' | 'precision';
+type Mode = 'random' | 'interval' | 'scale' | 'time_attack' | 'precision' | 'sets';
 type Phase = 'idle' | 'listening' | 'result';
 type Outcome = 'correct' | 'missed';
 
@@ -37,6 +38,7 @@ interface ModeInfo {
   blurb: string;
 }
 const MODES: ModeInfo[] = [
+  { id: 'sets',        label: 'Sets',         icon: ListMusic,  blurb: 'Curated multi-note challenges — pick a set and see your progress fill in.' },
   { id: 'random',      label: 'Random',       icon: Music2,     blurb: 'A note from your range each round.' },
   { id: 'interval',    label: 'Intervals',    icon: TrendingUp, blurb: 'Next note jumps m2 – octave from the last correct.' },
   { id: 'scale',       label: 'Scale Climber',icon: TrendingUp, blurb: 'Climb the major scale one step at a time. Miss = restart.' },
@@ -491,6 +493,12 @@ export function PitchMatchTab({ voice }: Props) {
         <p className="text-xs text-slate-500 mt-2">{activeMode.blurb}</p>
       </div>
 
+      {/* Sets mode owns its own catalog + player surface; single-note modes
+          fall through to the game panel below. */}
+      {mode === 'sets' ? (
+        <PitchSetPlayer voice={voice} />
+      ) : (
+      <>
       {/* Main game panel */}
       <div className="rounded-2xl bg-white p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -677,6 +685,8 @@ export function PitchMatchTab({ voice }: Props) {
             ))}
           </ul>
         </div>
+      )}
+      </>
       )}
     </div>
   );
