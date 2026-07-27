@@ -21,9 +21,13 @@ export function useMyPlacement(): UseQueryResult<PlacementRow | null> {
   return useQuery({
     queryKey: ['reading-music-placement'],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user.id;
+      if (!uid) return null;
       const { data, error } = await supabase
         .from('gw_reading_music_placement')
         .select('user_id, level, taken_at')
+        .eq('user_id', uid)
         .limit(1)
         .maybeSingle();
       if (error) throw error;
@@ -53,9 +57,13 @@ export function useDomainSummary(): UseQueryResult<DomainSummaryRow[]> {
   return useQuery({
     queryKey: ['reading-music-domain-summary'],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user.id;
+      if (!uid) return [];
       const { data, error } = await supabase
         .from('reading_music_domain_summary')
-        .select('user_id, domain, attempts, matched, accuracy_pct, last_activity_at');
+        .select('user_id, domain, attempts, matched, accuracy_pct, last_activity_at')
+        .eq('user_id', uid);
       if (error) throw error;
       return (data ?? []) as DomainSummaryRow[];
     },

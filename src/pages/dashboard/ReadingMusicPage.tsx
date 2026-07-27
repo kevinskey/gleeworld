@@ -10,12 +10,56 @@ import { PitchIntervalsTab } from '@/pages/readingMusic/PitchIntervalsTab';
 import { SightSingingTab } from '@/pages/readingMusic/SightSingingTab';
 import { PlaceholderTab } from '@/pages/readingMusic/PlaceholderTab';
 import { DomainProgressTab } from '@/pages/readingMusic/DomainProgressTab';
+import { SingFlow } from '@/pages/sightReading/SingFlow';
+import { isValidIr } from '@/lib/sightReading/irValidate';
+import type { ExerciseIR } from '@/lib/sightReading/ir';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+// Legacy ?tab= values from old SightReadingStudio that need remapping.
+const RAW_TO_TAB: Record<string, string> = {
+  library: 'continue',
+  practice: 'sight_singing',
+  'pitch-match': 'pitch_intervals',
+};
+const VALID_TABS = new Set(['continue', 'progress', 'class', ...DOMAINS.map((d) => d.id)]);
+
+const ACTIVITY_KEY = 'gw_sight_reading_activity';
 
 export default function ReadingMusicPage() {
   const { isAdmin } = useUserRole();
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') ?? 'continue';
+
+  // C3/I7: whitelist known tab values; map legacy values into new taxonomy.
+  const raw = searchParams.get('tab');
+  const initialTab = raw && VALID_TABS.has(raw) ? raw : (raw && RAW_TO_TAB[raw]) || 'continue';
   const [tab, setTab] = useState<string>(initialTab);
+
+  // C2: ?academyExercise=<id> deep-link — load exercise from academy and launch SingFlow.
+  const academyExerciseId = searchParams.get('academyExercise');
+  const [academyExercise, setAcademyExercise] = useState<ExerciseIR | null>(null);
+
+  useEffect(() => {
+    if (!academyExerciseId) return;
+    let cancelled = false;
+    supabase
+      .from('gw_academy_exercises')
+      .select('id, data')
+      .eq('id', academyExerciseId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        const ir = (data?.data as { ir?: unknown } | null)?.ir;
+        if (error || !isValidIr(ir)) {
+          toast.error('Could not load that exercise — opening Reading Music instead.');
+          return;
+        }
+        setAcademyExercise(ir as ExerciseIR);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [academyExerciseId]);
 
   // Shared voice control — persisted so bass students don't re-pick each
   // session. Matches the key the old SightReadingStudio wrote to.
@@ -26,6 +70,17 @@ export default function ReadingMusicPage() {
   useEffect(() => {
     try { localStorage.setItem('gw_sr_voice', voice); } catch { /* private mode */ }
   }, [voice]);
+
+  // C2: Early-return into SingFlow when academy exercise deep-link resolved successfully.
+  if (academyExercise) {
+    return (
+      <SingFlow
+        exercise={academyExercise}
+        onExit={() => setAcademyExercise(null)}
+        activityKey={ACTIVITY_KEY}
+      />
+    );
+  }
 
   return (
     <DashboardPageShell

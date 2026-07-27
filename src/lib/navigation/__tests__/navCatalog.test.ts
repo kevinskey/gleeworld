@@ -17,7 +17,7 @@ describe('NAV_CATALOG integrity', () => {
       ['music', '/dashboard/viewer', 'Music'],
       ['tracks', '/dashboard/part-tracks', 'Tracks'],
       ['studio', '/studio', 'Studio'],
-      ['sight', '/dashboard/sight-reading', 'Sight Reading'],
+      ['sight', '/dashboard/reading-music', 'Reading Music'],
       ['attendance', '/attendance', 'Attendance'],
       ['academy', '/dashboard/academy', 'Academy'],
       ['tickets', '/box-office', 'Tickets'],
