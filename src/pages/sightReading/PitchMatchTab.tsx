@@ -130,6 +130,16 @@ export function PitchMatchTab({ voice }: Props) {
   const listenTimeoutRef = useRef<number | null>(null);
   const holdCheckRef = useRef<number | null>(null);
   const stopToneRef = useRef<null | (() => Promise<void>)>(null);
+  // Mirror mic.live into a ref so the setInterval closure — scheduled
+  // once at start of listening — always reads the LATEST pitch value.
+  // Reading `mic.live` directly would give the stale render-scoped
+  // value forever (useMicPitch returns a fresh object each render).
+  const micLiveRef = useRef<typeof mic.live>(null);
+  useEffect(() => { micLiveRef.current = mic.live; }, [mic.live]);
+  // Same story for target: finish() needs the current target when called
+  // by the setTimeout fired 4s after schedule.
+  const targetRef = useRef<number | null>(null);
+  useEffect(() => { targetRef.current = target; }, [target]);
 
   const stopEverything = useCallback(() => {
     if (listenTimeoutRef.current) { clearTimeout(listenTimeoutRef.current); listenTimeoutRef.current = null; }
@@ -140,7 +150,13 @@ export function PitchMatchTab({ voice }: Props) {
     setHeldMs(0);
   }, [mic]);
 
-  useEffect(() => stopEverything, [stopEverything]);
+  // Unmount cleanup only. stopEverything's identity changes when `mic`
+  // does — but since useMicPitch returns a fresh object every render,
+  // running cleanup on every mic-change would tear down the mic mid-
+  // round. Empty deps: cleanup runs at unmount, which is exactly what
+  // we want.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => () => { stopEverything(); }, []);
 
   const persistAttempt = useCallback(async (a: Attempt) => {
     const { error } = await supabase.from('gw_pitch_match_attempts').insert({
@@ -157,15 +173,20 @@ export function PitchMatchTab({ voice }: Props) {
     }
   }, [voice]);
 
-  const finish = useCallback((outcome: Outcome, heldMsFinal: number) => {
-    if (target == null) return;
-    const l = mic.live;
+  // Reads targetRef/micLiveRef so late-firing timers (setTimeout, setInterval)
+  // see current state rather than the closure-frozen state from when they
+  // were scheduled. finish's identity is deliberately empty-deps stable — the
+  // setTimeout captured at start of listening must be able to call it 4s
+  // later without needing the freshest closure.
+  const finishRef = useRef<((outcome: Outcome, heldMsFinal: number) => void) | null>(null);
+  finishRef.current = (outcome: Outcome, heldMsFinal: number) => {
+    const currentTarget = targetRef.current;
+    if (currentTarget == null) return;
+    const l = micLiveRef.current;
     const sungMidi = l ? l.midi : null;
-    const centsOff = l ? Math.round(l.midi + l.cents / 100 - target) * 100 + (l ? Math.round(l.cents) : 0) : null;
-    // Simpler: prefer the raw signed distance from target in cents when live at moment of finish.
-    const rawCentsOff = l ? Math.round((l.midi - target) * 100 + l.cents) : null;
+    const rawCentsOff = l ? Math.round((l.midi - currentTarget) * 100 + l.cents) : null;
     const attempt: Attempt = {
-      targetMidi: target,
+      targetMidi: currentTarget,
       sungMidi,
       centsOff: rawCentsOff,
       outcome,
@@ -178,9 +199,10 @@ export function PitchMatchTab({ voice }: Props) {
     setPhase('result');
     stopEverything();
     void persistAttempt(attempt);
-    // Suppress unused-var lint on centsOff which is derived above but unused.
-    void centsOff;
-  }, [target, mic.live, stopEverything, persistAttempt]);
+  };
+  const finish = useCallback((outcome: Outcome, heldMsFinal: number) => {
+    finishRef.current?.(outcome, heldMsFinal);
+  }, []);
 
   const startRound = useCallback(async (toneCtx: AudioContext | null) => {
     if (busy) return;
@@ -225,11 +247,12 @@ export function PitchMatchTab({ voice }: Props) {
       setBusy(false);
       return;
     }
-    // Poll live pitch and check hold.
+    // Poll live pitch and check hold. Reads micLiveRef (updated by the
+    // mirror effect above) so this interval sees FRESH pitch data — not
+    // the null-at-schedule-time snapshot from mic.live's closure.
     heldStartRef.current = null;
-    const started = performance.now();
     holdCheckRef.current = window.setInterval(() => {
-      const l = mic.live;
+      const l = micLiveRef.current;
       if (!l || l.clarity < CLARITY_MIN) {
         heldStartRef.current = null;
         setHeldMs(0);
@@ -247,7 +270,6 @@ export function PitchMatchTab({ voice }: Props) {
         heldStartRef.current = null;
         setHeldMs(0);
       }
-      void started;
     }, 80);
     listenTimeoutRef.current = window.setTimeout(() => {
       finish('missed', 0);
@@ -316,6 +338,14 @@ export function PitchMatchTab({ voice }: Props) {
                   'Waiting for a clear tone…'
                 )}
               </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full mt-4"
+                onClick={() => { stopEverything(); setPhase('idle'); setTarget(null); setBusy(false); }}
+              >
+                Stop
+              </Button>
             </>
           )}
 
