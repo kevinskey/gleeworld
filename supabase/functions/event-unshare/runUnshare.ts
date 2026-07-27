@@ -18,7 +18,7 @@ export async function runUnshare(input: RunUnshareInput): Promise<RunUnshareResu
     .delete()
     .eq('id', shared_event_id)
     .eq('origin_user_id', user_id)
-    .eq('external_source', 'google_calendar')
+    .in('external_source', ['google_calendar', 'ios_calendar'])
     .select('id');
   if (error) return { error: 'save_failed', detail: error.message };
   return { ok: true, deleted: (data ?? []).length };
