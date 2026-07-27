@@ -159,6 +159,37 @@ function stopElevenLabs(): void {
   } catch { /* already torn down */ }
 }
 
+/**
+ * Strip markdown and URLs from assistant reply text before it hits TTS.
+ * The browser SpeechSynthesis engine (and ElevenLabs) read raw text —
+ * markdown links `[label](url)` become "open square bracket, label,
+ * close square bracket, open paren, h, t, t, p, s, colon, slash, slash..."
+ * and bare URLs get spelled out letter-by-letter. This helper produces
+ * the prose a human would speak from the same message.
+ */
+export function sanitizeForSpeech(text: string): string {
+  return text
+    // Fenced code blocks — drop the contents entirely, they're not prose.
+    .replace(/```[\s\S]*?```/g, ' ')
+    // Markdown link → the label. Do this BEFORE the bare-URL sweep so the
+    // trailing "(url)" doesn't leak through.
+    .replace(/\[([^\]]+)\]\(([^)]*)\)/g, '$1')
+    // Images → their alt text (rare in assistant replies, but cheap).
+    .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '$1')
+    // Bare URLs — drop them; the sentence usually still reads.
+    .replace(/\bhttps?:\/\/\S+/gi, '')
+    // Inline code — keep the contents, drop the backticks.
+    .replace(/`([^`]+)`/g, '$1')
+    // Bold / italic emphasis — leave the words, drop the asterisks/underscores.
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    // Collapse runs of whitespace introduced by the stripping.
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function speak(
   text: string,
   opts?: {
@@ -182,6 +213,10 @@ export function speak(
   },
 ): void {
   const muted = opts?.muted ?? isMuted();
+  // Strip markdown/URLs BEFORE muted-skip check so the mute-then-unmute path
+  // doesn't accidentally speak the raw text on retry — every path from here
+  // uses `text` as the spoken content.
+  text = sanitizeForSpeech(text);
   if (muted || !text.trim()) return;
   const volume = typeof opts?.volume === 'number'
     ? Math.max(0, Math.min(1, opts.volume))
