@@ -157,3 +157,35 @@ export function useListPartners(): UseQueryResult<Partner[]> {
     },
   });
 }
+
+export function useStartConnectOnboarding(): UseMutationResult<{ onboarding_url: string }, Error, void> {
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke(
+        'partner-connect-onboarding', { body: {} });
+      if (error) throw error;
+      if (!data) throw new Error('empty response');
+      return data as { onboarding_url: string };
+    },
+  });
+}
+
+interface ConnectRefreshResult {
+  status: string;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  express_dashboard_url: string | null;
+}
+export function useRefreshConnectStatus(): UseMutationResult<ConnectRefreshResult, Error, void> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke(
+        'partner-connect-refresh', { body: {} });
+      if (error) throw error;
+      if (!data) throw new Error('empty response');
+      return data as ConnectRefreshResult;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-partner'] }),
+  });
+}
