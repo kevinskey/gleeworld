@@ -2,24 +2,25 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTenantCalendars, useShareGoogleEvent } from '@/hooks/useEventSharing';
+import { useTenantCalendars, useShareEvent } from '@/hooks/useEventSharing';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  googleEventId: string;
+  source: 'google_calendar' | 'ios_calendar';
+  sourceEventId: string;
   onPublished?: (sharedEventId: string) => void;
 }
 
-export function PublishToCalendarPicker({ open, onOpenChange, googleEventId, onPublished }: Props) {
+export function PublishToCalendarPicker({ open, onOpenChange, source, sourceEventId, onPublished }: Props) {
   const { data: calendars, isLoading } = useTenantCalendars();
-  const { mutateAsync, isPending } = useShareGoogleEvent();
+  const { mutateAsync, isPending } = useShareEvent();
   const [pickingId, setPickingId] = useState<string | null>(null);
 
   const pick = async (calendarId: string) => {
     setPickingId(calendarId);
     try {
-      const res = await mutateAsync({ google_event_id: googleEventId, calendar_id: calendarId });
+      const res = await mutateAsync({ source, source_event_id: sourceEventId, calendar_id: calendarId });
       onPublished?.(res.shared_event_id);
       onOpenChange(false);
     } finally {

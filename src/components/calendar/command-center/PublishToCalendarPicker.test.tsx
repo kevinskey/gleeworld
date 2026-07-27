@@ -13,7 +13,7 @@ vi.mock('@/hooks/useEventSharing', () => ({
     ],
     isLoading: false,
   }),
-  useShareGoogleEvent: () => ({ mutateAsync: shareMock, isPending: false }),
+  useShareEvent: () => ({ mutateAsync: shareMock, isPending: false }),
 }));
 
 const shareMock = vi.fn(async (input: any) => ({ shared_event_id: 'ev-99' }));
@@ -27,7 +27,7 @@ function wrap(children: React.ReactNode) {
 
 describe('PublishToCalendarPicker', () => {
   it('lists tenant calendars sorted by is_default DESC, name ASC', () => {
-    render(wrap(<PublishToCalendarPicker open={true} onOpenChange={() => {}} googleEventId="g-1" />));
+    render(wrap(<PublishToCalendarPicker open={true} onOpenChange={() => {}} source="google_calendar" sourceEventId="g-1" />));
     const buttons = screen.getAllByRole('button', { name: /Choir Main|Rehearsals/ });
     expect(buttons[0]).toHaveTextContent('Choir Main');
     expect(buttons[1]).toHaveTextContent('Rehearsals');
@@ -35,9 +35,15 @@ describe('PublishToCalendarPicker', () => {
 
   it('shares the event with the picked calendar_id and fires onPublished with the returned id', async () => {
     const onPublished = vi.fn();
-    render(wrap(<PublishToCalendarPicker open={true} onOpenChange={() => {}} googleEventId="g-1" onPublished={onPublished} />));
+    render(wrap(<PublishToCalendarPicker open={true} onOpenChange={() => {}} source="google_calendar" sourceEventId="g-1" onPublished={onPublished} />));
     fireEvent.click(screen.getByRole('button', { name: /Rehearsals/ }));
-    await waitFor(() => expect(shareMock).toHaveBeenCalledWith({ google_event_id: 'g-1', calendar_id: 'cal-b' }));
+    await waitFor(() => expect(shareMock).toHaveBeenCalledWith({ source: 'google_calendar', source_event_id: 'g-1', calendar_id: 'cal-b' }));
     await waitFor(() => expect(onPublished).toHaveBeenCalledWith('ev-99'));
+  });
+
+  it('publishes an iOS-sourced event via the same picker', async () => {
+    render(wrap(<PublishToCalendarPicker open={true} onOpenChange={() => {}} source="ios_calendar" sourceEventId="ek-1" onPublished={vi.fn()} />));
+    fireEvent.click(screen.getByRole('button', { name: /Choir Main/ }));
+    await waitFor(() => expect(shareMock).toHaveBeenCalledWith({ source: 'ios_calendar', source_event_id: 'ek-1', calendar_id: 'cal-a' }));
   });
 });
