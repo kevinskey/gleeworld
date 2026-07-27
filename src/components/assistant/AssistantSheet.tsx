@@ -57,13 +57,16 @@ export const AssistantSheet = () => {
             sheet only approaches 85vh once the conversation fills it. */}
         <SheetContent side="bottom" className="max-h-[85vh] rounded-t-2xl flex flex-col p-0">
           {resultsPanel && (
-            <div className="max-h-[45vh] border-b flex-shrink-0">
-              <AssistantResultsPanel
-                result={resultsPanel}
-                onClose={() => setResultsPanel(null)}
-                className="h-full border-l-0"
-              />
-            </div>
+            // max-h + flex-none + overflow-hidden go on the panel itself.
+            // The prior wrapper had max-h alone without a definite height,
+            // so the inner h-full didn't constrain and the last place card
+            // spilled out past the panel's border, drawing over the chat
+            // header and response bubble below it (Kevin's Starbucks pic).
+            <AssistantResultsPanel
+              result={resultsPanel}
+              onClose={() => setResultsPanel(null)}
+              className="max-h-[45vh] flex-none border-b border-l-0 overflow-hidden"
+            />
           )}
           <SheetHeader className="px-4 py-2.5 border-b flex-row items-center justify-between space-y-0">
             <SheetTitle className="text-sm font-semibold">GleeWorld Assistant</SheetTitle>
