@@ -158,6 +158,7 @@ serve(async (req) => {
     ...history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
   ];
   const actions: Array<{ tool: string; args: Record<string, unknown>; confirm: boolean }> = [];
+  let resultsPanel: unknown = undefined;
 
   // Persist the user's turn immediately so we don't lose it if the model
   // call fails downstream. The assistant reply is saved once we have it.
@@ -197,7 +198,7 @@ serve(async (req) => {
       if (toolCalls.length === 0) {
         const reply = message.content ?? '';
         await persistAssistantReply(reply);
-        return json({ reply, actions, thread_id: threadId });
+        return json({ reply, actions, resultsPanel, thread_id: threadId });
       }
       messages.push({ role: 'assistant', content: message.content ?? null, tool_calls: toolCalls });
       for (const tc of toolCalls) {
@@ -208,10 +209,12 @@ serve(async (req) => {
         if (!def) {
           result = JSON.stringify({ error: `Tool not available: ${tc.function.name}` });
         } else if (def.execution === 'server') {
-          result = await executeServerTool(def.name, args, {
+          const toolOut = await executeServerTool(def.name, args, {
             supabase: userClient,
             youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ?? undefined,
           });
+          result = toolOut.replyJson;
+          if (toolOut.resultsPanel) resultsPanel = toolOut.resultsPanel;
         } else {
           // Client-executed: queue it for the browser and tell the model it's underway.
           if (def.name === 'create_course_draft') {
@@ -235,7 +238,7 @@ serve(async (req) => {
     }
     const timeoutReply = 'That took too many steps — try breaking the request into smaller pieces.';
     await persistAssistantReply(timeoutReply);
-    return json({ reply: timeoutReply, actions, thread_id: threadId });
+    return json({ reply: timeoutReply, actions, resultsPanel, thread_id: threadId });
   } catch (e) {
     console.error('assistant-chat error:', e);
     return json({ error: "I couldn't reach the assistant right now. Please try again." }, 502);

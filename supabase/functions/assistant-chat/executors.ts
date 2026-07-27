@@ -8,25 +8,35 @@ type SupabaseLike = {
 
 interface Deps { supabase: SupabaseLike; youtubeApiKey?: string }
 
+export type ConciergeResult =
+  | { kind: 'ride'; query: string; resolvedAddress: string; uberUrl: string; lyftUrl: string; preferred?: 'uber' | 'lyft' }
+  | { kind: 'food'; query: string; services: Array<{ name: 'DoorDash' | 'Uber Eats' | 'Grubhub'; deepLinkUrl: string }>; preferred?: 'doordash' | 'ubereats' | 'grubhub' }
+  | { kind: 'web';  query: string; answer?: string; results: Array<{ title: string; url: string; snippet: string }> };
+
+export interface ToolResult {
+  replyJson: string;
+  resultsPanel?: ConciergeResult;
+}
+
 export async function executeServerTool(
   name: string,
   args: Record<string, unknown>,
   deps: Deps,
-): Promise<string> {
+): Promise<ToolResult> {
   try {
     switch (name) {
-      case 'query_calendar': return await queryCalendar(args, deps);
-      case 'search_music': return await searchMusic(args, deps);
-      case 'find_user': return await findUser(args, deps);
-      case 'search_youtube': return await searchYoutube(args, deps);
-      case 'get_date_card': return await getDateCard(deps);
-      case 'read_news_feeds': return await readNewsFeeds(args, deps);
-      case 'find_nearby_place': return await findNearbyPlace(args, deps);
-      case 'get_preference': return await getPreference(args, deps);
-      default: return JSON.stringify({ error: `Unknown tool: ${name}` });
+      case 'query_calendar': return { replyJson: await queryCalendar(args, deps) };
+      case 'search_music': return { replyJson: await searchMusic(args, deps) };
+      case 'find_user': return { replyJson: await findUser(args, deps) };
+      case 'search_youtube': return { replyJson: await searchYoutube(args, deps) };
+      case 'get_date_card': return { replyJson: await getDateCard(deps) };
+      case 'read_news_feeds': return { replyJson: await readNewsFeeds(args, deps) };
+      case 'find_nearby_place': return { replyJson: await findNearbyPlace(args, deps) };
+      case 'get_preference': return { replyJson: await getPreference(args, deps) };
+      default: return { replyJson: JSON.stringify({ error: `Unknown tool: ${name}` }) };
     }
   } catch (e) {
-    return JSON.stringify({ error: e instanceof Error ? e.message : 'tool failed' });
+    return { replyJson: JSON.stringify({ error: e instanceof Error ? e.message : 'tool failed' }) };
   }
 }
 
