@@ -164,11 +164,11 @@ export const PRCoordinatorHub = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Media Management</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Media Management</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Organize, manage, and distribute member photos for publicity campaigns
           </p>
@@ -213,18 +213,19 @@ export const PRCoordinatorHub = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Stats Cards — mobile: tight 2-up grid with compact number/padding.
+          Desktop: 4-up cards with larger numbers. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-base">Total Images</h2>
-              <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <h2 className="font-semibold text-sm md:text-base">Total Images</h2>
+              <div className="inline-flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
                 <Upload className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-foreground">{images.length}</div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-xl md:text-3xl font-bold text-foreground">{images.length}</div>
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               +{images.filter(img => {
                 const today = new Date();
                 const imgDate = new Date(img.created_at);
@@ -235,89 +236,96 @@ export const PRCoordinatorHub = () => {
         </Card>
 
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-base">Selected</h2>
-              <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <h2 className="font-semibold text-sm md:text-base">Selected</h2>
+              <div className="inline-flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
                 <Filter className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-foreground">{selectedImages.length}</div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-xl md:text-3xl font-bold text-foreground">{selectedImages.length}</div>
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               {selectedImages.length > 0 ? 'Ready for bulk actions' : 'No selection'}
             </p>
           </CardContent>
         </Card>
 
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-base">Featured</h2>
-              <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <h2 className="font-semibold text-sm md:text-base">Featured</h2>
+              <div className="inline-flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 shrink-0">
                 <Star className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-foreground">
+            <div className="text-xl md:text-3xl font-bold text-foreground">
               {images.filter(img => img.is_featured).length}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               Highlighted content
             </p>
           </CardContent>
         </Card>
 
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-base">Available Tags</h2>
-              <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+          <CardContent className="p-3 md:p-6">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <h2 className="font-semibold text-sm md:text-base">Available Tags</h2>
+              <div className="inline-flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
                 <TrendingUp className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-foreground">{tags.length}</div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-xl md:text-3xl font-bold text-foreground">{tags.length}</div>
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               Organization tools
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Enhanced Tabs */}
+      {/* Enhanced Tabs — mobile: horizontal scroll (fixed-column grid crushed
+          8-11 tabs into 30-40px slivers on 390px). Desktop: equal-width grid. */}
       <Tabs defaultValue="gallery" className="space-y-6">
-        <TabsList className="grid w-full gap-1 bg-muted/50 p-1" style={{ gridTemplateColumns: `repeat(${4 + 
-          (hasPermission('pr_manager') ? 2 : 0) + 
-          (hasPermission('press_kits') ? 1 : 0) + 
-          (hasPermission('ai_tools') ? 1 : 0) + 
-          (hasPermission('hero_manager') ? 1 : 0) + 
-          (hasPermission('media_library') ? 2 : 0)
-        }, 1fr)` }}>
-          <TabsTrigger value="gallery" className="flex items-center gap-2 text-xs md:text-sm">
+        <TabsList
+          className="flex w-full gap-1 bg-muted/50 p-1 overflow-x-auto md:grid md:overflow-visible h-auto justify-start md:justify-stretch"
+          style={{
+            scrollbarWidth: 'none',
+            gridTemplateColumns: `repeat(${4 +
+              (hasPermission('pr_manager') ? 2 : 0) +
+              (hasPermission('press_kits') ? 1 : 0) +
+              (hasPermission('ai_tools') ? 1 : 0) +
+              (hasPermission('hero_manager') ? 1 : 0) +
+              (hasPermission('media_library') ? 2 : 0)
+            }, 1fr)`,
+          }}
+        >
+          <TabsTrigger value="gallery" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
             <Grid className="w-4 h-4" />
             Gallery
           </TabsTrigger>
           
-          <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs md:text-sm">
+          <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
             <BarChart3 className="w-4 h-4" />
             Analytics
           </TabsTrigger>
           
-          <TabsTrigger value="social" className="flex items-center gap-2 text-xs md:text-sm">
+          <TabsTrigger value="social" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
             <Share className="w-4 h-4" />
             Social Media
           </TabsTrigger>
           
-          <TabsTrigger value="press-releases" className="flex items-center gap-2 text-xs md:text-sm">
+          <TabsTrigger value="press-releases" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
             <FileText className="w-4 h-4" />
             Press Releases
           </TabsTrigger>
           
           {hasPermission('pr_manager') && (
             <>
-              <TabsTrigger value="data-manager" className="flex items-center gap-2 text-xs md:text-sm">
+              <TabsTrigger value="data-manager" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
                 <TrendingUp className="w-4 h-4" />
                 Analytics
               </TabsTrigger>
-              <TabsTrigger value="export" className="flex items-center gap-2 text-xs md:text-sm">
+              <TabsTrigger value="export" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
                 <Download className="w-4 h-4" />
                 Export
               </TabsTrigger>
@@ -325,33 +333,33 @@ export const PRCoordinatorHub = () => {
           )}
           
           {hasPermission('press_kits') && (
-            <TabsTrigger value="press-kits" className="flex items-center gap-2 text-xs md:text-sm">
+            <TabsTrigger value="press-kits" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
               <Zap className="w-4 h-4" />
               Press Kits
             </TabsTrigger>
           )}
           
           {hasPermission('ai_tools') && (
-            <TabsTrigger value="ai-templates" className="flex items-center gap-2 text-xs md:text-sm">
+            <TabsTrigger value="ai-templates" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
               <Sparkles className="w-4 h-4" />
               AI Tools
             </TabsTrigger>
           )}
           
-          <TabsTrigger value="tags" className="flex items-center gap-2 text-xs md:text-sm">
+          <TabsTrigger value="tags" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
             <Filter className="w-4 h-4" />
             Tags
           </TabsTrigger>
           
           {hasPermission('media_library') && (
-            <TabsTrigger value="bulk" className="flex items-center gap-2 text-xs md:text-sm">
+            <TabsTrigger value="bulk" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
               <Upload className="w-4 h-4" />
               Bulk Actions
             </TabsTrigger>
           )}
           
           {hasPermission('hero_manager') && (
-            <TabsTrigger value="hero-manager" className="flex items-center gap-2 text-xs md:text-sm">
+            <TabsTrigger value="hero-manager" className="flex items-center gap-2 text-xs md:text-sm shrink-0 whitespace-nowrap px-3 md:px-2">
               <Star className="w-4 h-4" />
               Hero Manager
             </TabsTrigger>
