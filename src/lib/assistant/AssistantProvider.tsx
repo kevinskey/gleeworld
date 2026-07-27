@@ -10,6 +10,7 @@ import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
 import { useAssistantVoice } from './voices';
 import type { AssistantAction, ThreadState } from './types';
+import type { ConciergeResult } from './conciergeTypes';
 
 export interface AssistantContextValue {
   state: ThreadState;
@@ -28,6 +29,8 @@ export interface AssistantContextValue {
   stopSpeaking: () => void;
   videoRoom: string | null;
   setVideoRoom: (room: string | null) => void;
+  resultsPanel: ConciergeResult | null;
+  setResultsPanel: (r: ConciergeResult | null) => void;
   captionReply: { id: string; text: string } | null;
   /** Tenant-configured assistant voice from Workspace Settings → Branding.
    *  Null while loading, or if the tenant hasn't picked one (app default). */
@@ -66,6 +69,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   const [muted, setMutedState] = useState(isMuted());
   const [speaking, setSpeaking] = useState(false);
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
+  const [resultsPanel, setResultsPanel] = useState<ConciergeResult | null>(null);
   const [captionReply, setCaptionReply] = useState<{ id: string; text: string } | null>(null);
   const { voiceId } = useAssistantVoice();
   const voiceIdRef = useRef<string | null>(voiceId);
@@ -248,6 +252,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
         return;
       }
+      if (data.resultsPanel && typeof data.resultsPanel === 'object' && 'kind' in data.resultsPanel) {
+        setResultsPanel(data.resultsPanel as ConciergeResult);
+      }
       const replyId = crypto.randomUUID();
       const actions: AssistantAction[] = data.actions ?? [];
       const { first: confirmAction, autoRun } = confirmQueueRef.current.register(replyId, actions);
@@ -301,6 +308,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       muted, toggleMute,
       speaking, stopSpeaking: stopSpeakingNow,
       videoRoom, setVideoRoom,
+      resultsPanel, setResultsPanel,
       captionReply,
       voiceId,
     }}>
