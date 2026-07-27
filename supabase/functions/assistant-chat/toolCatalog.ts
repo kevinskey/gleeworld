@@ -73,6 +73,20 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'order_food',
+    description:
+      "Prepare food-delivery deep links. Pass an optional query like 'donuts' or 'thai near me' and the user gets DoorDash, Uber Eats, and Grubhub buttons pre-loaded with that search. No query is fine — the panel then opens each service's homepage.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str('What the user wants to order (optional)'),
+        preferred: str("'doordash', 'ubereats', or 'grubhub' if the user has a preference (optional)"),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'open_page',
     description: 'Navigate the user to a GleeWorld page. Valid keys: home, calendar, planner, music-library, studio, video, messenger, academy, sight-reading, part-tracks, media-library, songwriting, concert-planner, tour-manager, attendance, users, analytics.',
     parameters: {

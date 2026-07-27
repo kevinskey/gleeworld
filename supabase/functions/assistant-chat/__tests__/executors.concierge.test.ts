@@ -54,3 +54,32 @@ describe('get_ride executor', () => {
     expect(JSON.parse(out.replyJson).error).toContain("don't have your home address");
   });
 });
+
+describe('order_food executor', () => {
+  it('returns three service deep links with the query in each URL', async () => {
+    const out = await executeServerTool('order_food', { query: 'donuts' }, { supabase: stubSupabase });
+    const panel = out.resultsPanel as any;
+    expect(panel.kind).toBe('food');
+    expect(panel.query).toBe('donuts');
+    const names = panel.services.map((s: any) => s.name).sort();
+    expect(names).toEqual(['DoorDash', 'Grubhub', 'Uber Eats']);
+    for (const svc of panel.services) {
+      expect(svc.deepLinkUrl).toMatch(/donuts/i);
+      expect(svc.deepLinkUrl).toMatch(/^https:\/\//);
+    }
+  });
+
+  it('with no query, returns homepage URLs (no query fragment)', async () => {
+    const out = await executeServerTool('order_food', {}, { supabase: stubSupabase });
+    const panel = out.resultsPanel as any;
+    expect(panel.query).toBe('');
+    for (const svc of panel.services) {
+      expect(svc.deepLinkUrl).not.toMatch(/donuts/);
+    }
+  });
+
+  it('preserves preferred service in payload', async () => {
+    const out = await executeServerTool('order_food', { query: 'pizza', preferred: 'grubhub' }, { supabase: stubSupabase });
+    expect((out.resultsPanel as any).preferred).toBe('grubhub');
+  });
+});

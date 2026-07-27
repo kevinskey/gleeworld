@@ -35,6 +35,7 @@ export async function executeServerTool(
       case 'find_user': return { replyJson: await findUser(args, deps) };
       case 'search_youtube': return { replyJson: await searchYoutube(args, deps) };
       case 'get_ride': return await getRide(args, deps);
+      case 'order_food': return await orderFood(args);
       case 'get_date_card': return { replyJson: await getDateCard(deps) };
       case 'read_news_feeds': return { replyJson: await readNewsFeeds(args, deps) };
       case 'find_nearby_place': return { replyJson: await findNearbyPlace(args, deps) };
@@ -247,5 +248,30 @@ async function getRide(args: Record<string, unknown>, deps: Deps): Promise<ToolR
   return {
     replyJson: JSON.stringify({ resolvedAddress: address, preferred }),
     resultsPanel: { kind: 'ride', query: rawDest, resolvedAddress: address, uberUrl, lyftUrl, preferred },
+  };
+}
+
+async function orderFood(args: Record<string, unknown>): Promise<ToolResult> {
+  const q = String(args.query ?? '').trim();
+  const rawPref = String(args.preferred ?? '').toLowerCase();
+  const preferred: 'doordash' | 'ubereats' | 'grubhub' | undefined =
+    rawPref === 'doordash' || rawPref === 'ubereats' || rawPref === 'grubhub' ? rawPref : undefined;
+  const enc = encodeURIComponent(q);
+
+  // Homepage URLs when the query is empty — the panel still shows three
+  // buttons the user can tap.
+  const services = q ? [
+    { name: 'DoorDash' as const, deepLinkUrl: `https://www.doordash.com/search/store/${enc}` },
+    { name: 'Uber Eats' as const, deepLinkUrl: `https://www.ubereats.com/search?q=${enc}` },
+    { name: 'Grubhub'  as const, deepLinkUrl: `https://www.grubhub.com/search?queryText=${enc}` },
+  ] : [
+    { name: 'DoorDash' as const, deepLinkUrl: 'https://www.doordash.com/' },
+    { name: 'Uber Eats' as const, deepLinkUrl: 'https://www.ubereats.com/' },
+    { name: 'Grubhub'  as const, deepLinkUrl: 'https://www.grubhub.com/' },
+  ];
+
+  return {
+    replyJson: JSON.stringify({ query: q, preferred, count: services.length }),
+    resultsPanel: { kind: 'food', query: q, services, preferred },
   };
 }

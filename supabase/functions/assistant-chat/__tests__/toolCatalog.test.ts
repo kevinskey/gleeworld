@@ -33,6 +33,7 @@ describe('toolCatalog', () => {
       'get_date_card',
       'get_preference',
       'get_ride',
+      'order_food',
       'query_calendar',
       'read_news_feeds',
       'search_music',
