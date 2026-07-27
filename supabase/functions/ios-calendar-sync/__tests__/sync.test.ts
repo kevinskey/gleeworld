@@ -20,12 +20,24 @@ function stubSupabase(opts: {
     };
     return chain;
   };
+  const mkUpdateChain = (table: string, body: any) => {
+    const filters: any[] = [];
+    const chain: any = {
+      eq:  (c: string, v: any) => { filters.push({ eq: [c, v] });  return chain; },
+      gte: (c: string, v: any) => { filters.push({ gte: [c, v] }); return chain; },
+      lte: (c: string, v: any) => { filters.push({ lte: [c, v] }); return chain; },
+      not: (c: string, op: string, v: any) => { filters.push({ not: [c, op, v] }); return chain; },
+      select: () => { calls.push({ table, op: 'update', body, filters }); return Promise.resolve({ data: [], error: null }); },
+    };
+    return chain;
+  };
   const supabase: any = {
     from: (table: string) => ({
       upsert: (body: any, _opts: any) => {
         calls.push({ table, op: 'upsert', body, filters: [] });
         return Promise.resolve(upsertResult);
       },
+      update: (body: any) => mkUpdateChain(table, body),
       delete: () => mkDeleteChain(table),
     }),
   };

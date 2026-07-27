@@ -1,3 +1,5 @@
+import { propagateIosUpdates, propagateIosDeletes, type PropagatedIosEvent } from './propagate.ts';
+
 export interface GWCalendarEvent {
   ekId: string;
   calendarTitle: string | null;
@@ -72,6 +74,19 @@ export async function runSync(input: RunSyncInput): Promise<RunSyncResult> {
     .not('apple_event_id', 'in', `(${idList.map(id => `"${id}"`).join(',')})`)
     .select('id');
   if (delErr) return { error: 'save_failed', detail: delErr.message };
+
+  // Propagate updates and deletes to gw_events.
+  const propagatedEvents: PropagatedIosEvent[] = events.map(e => ({
+    apple_event_id: e.ekId,
+    title:          e.title,
+    description:    e.description,
+    location:       e.location,
+    start_at:       e.startAt,
+    end_at:         e.endAt,
+    all_day:        e.allDay,
+  }));
+  await propagateIosUpdates(supabase, user_id, tenant_id, propagatedEvents);
+  await propagateIosDeletes(supabase, user_id, tenant_id, propagatedEvents.map(e => e.apple_event_id), { start: fromIso, end: toIso });
 
   return { ok: true, upserted, deleted: (deletedRows ?? []).length };
 }
