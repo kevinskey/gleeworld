@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import DashboardPageShell from '@/components/dashboard/DashboardPageShell';
 import {
   useRepertoireSearch,
   useRepertoireFeatured,
+  useAddToMyMusic,
+  useAddToTenantLibrary,
   type RepertoireItem,
 } from '@/lib/repertoire/api';
 import {
@@ -41,10 +44,44 @@ export default function RepertoirePage() {
     { enabled: searchEnabled },
   );
 
-  const onAddToMyMusic = (item: RepertoireItem) =>
-    toast.info(`"${item.title}" — saving to My Music (coming in Phase 3)`);
-  const onAddToTenant = (item: RepertoireItem) =>
-    toast.info(`"${item.title}" — saving to tenant library (coming in Phase 3)`);
+  const addMine = useAddToMyMusic();
+  const addTenant = useAddToTenantLibrary();
+
+  const onAddToMyMusic = (item: RepertoireItem) => {
+    addMine.mutate(item, {
+      onSuccess: (res) => {
+        if (res.alreadyExisted) {
+          toast.info(`"${item.title}" is already in My Music`);
+        } else {
+          toast.success(`"${item.title}" saved to My Music`, {
+            action: {
+              label: 'Open',
+              onClick: () => { window.location.href = '/dashboard/music-library'; },
+            },
+          });
+        }
+      },
+      onError: (err) => toast.error(`Couldn't save "${item.title}": ${err.message}`),
+    });
+  };
+
+  const onAddToTenant = (item: RepertoireItem) => {
+    addTenant.mutate(item, {
+      onSuccess: (res) => {
+        if (res.alreadyExisted) {
+          toast.info(`"${item.title}" is already in your library`);
+        } else {
+          toast.success(`"${item.title}" added to library`, {
+            action: {
+              label: 'Open',
+              onClick: () => { window.location.href = '/dashboard/music-library'; },
+            },
+          });
+        }
+      },
+      onError: (err) => toast.error(`Couldn't add "${item.title}": ${err.message}`),
+    });
+  };
 
   return (
     <DashboardPageShell
@@ -76,7 +113,8 @@ export default function RepertoirePage() {
             (featuredChoral.data ?? []).length === 0 &&
             (featuredBand.data ?? []).length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Featured selections will appear once the IMSLP crawler has ingested content. Try the Search tab in the meantime — CPDL's full catalog is already available.
+                Featured selections will appear once the IMSLP crawler has ingested content. Try the Search tab in the meantime — CPDL's full catalog is already available.{' '}
+                <Link to="/dashboard/music-library" className="text-primary hover:underline">Go to Music Library</Link>
               </p>
             )}
         </TabsContent>
