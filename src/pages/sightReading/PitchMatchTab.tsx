@@ -224,7 +224,10 @@ interface Props {
 
 export function PitchMatchTab({ voice }: Props) {
   const mic = useMicPitch();
-  const [mode, setMode] = useState<Mode>('random');
+  // Sets is the primary gamified experience. Free-play modes (random,
+  // interval, scale, time_attack, precision) live in a collapsible below.
+  const [mode, setMode] = useState<Mode>('sets');
+  const [freePlayOpen, setFreePlayOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [target, setTarget] = useState<number | null>(null);
   const [lastCorrect, setLastCorrect] = useState<number | null>(null);
@@ -452,52 +455,77 @@ export function PitchMatchTab({ voice }: Props) {
 
   const inTimeAttack = mode === 'time_attack' && taRemaining != null && taRemaining > 0;
 
+  // Free-play modes (all except 'sets') — shown inside the collapsible.
+  const freePlayModes = MODES.filter((m) => m.id !== 'sets');
+  const isFreePlay = mode !== 'sets';
+
   return (
     <div className="space-y-4">
-      {/* Mode picker */}
-      <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Mode</p>
-        <div className="flex flex-wrap gap-2">
-          {MODES.map((m) => {
-            const Icon = m.icon;
-            const selected = mode === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => {
-                  if (busy || phase === 'listening') return;
-                  setMode(m.id);
-                  setStreak(0);
-                  setScaleStep(0);
-                  setLastCorrect(null);
-                  setTarget(null);
-                  setTaScore(null);
-                  setTaRemaining(null);
-                  if (taTickRef.current) { clearInterval(taTickRef.current); taTickRef.current = null; }
-                  taEndAtRef.current = null;
-                }}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
-                  selected
-                    ? 'bg-slate-900 text-white border-slate-900'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
-                }`}
-                disabled={busy || phase === 'listening'}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {m.label}
-              </button>
-            );
-          })}
-        </div>
-        <p className="text-xs text-slate-500 mt-2">{activeMode.blurb}</p>
+      {/* Sets is the primary experience — its own catalog + player. */}
+      {mode === 'sets' && <PitchSetPlayer voice={voice} />}
+
+      {/* Free-play drawer: collapsed by default. When expanded and a
+          free-play mode is selected, the single-note game panel below
+          renders that mode. */}
+      <div className="rounded-2xl bg-white shadow-sm">
+        <button
+          type="button"
+          className="w-full flex items-center justify-between px-4 py-3"
+          onClick={() => {
+            const next = !freePlayOpen;
+            setFreePlayOpen(next);
+            // If closing, snap back to Sets. If opening while on Sets,
+            // pre-select Random so the user sees something meaningful.
+            if (!next) setMode('sets');
+            else if (mode === 'sets') setMode('random');
+          }}
+        >
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Free play {isFreePlay ? '· ' + MODES.find((m) => m.id === mode)?.label : ''}
+          </span>
+          <span className="text-xs text-slate-500">{freePlayOpen ? '▾' : '▸'}</span>
+        </button>
+        {freePlayOpen && (
+          <div className="px-4 pb-4 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {freePlayModes.map((m) => {
+                const Icon = m.icon;
+                const selected = mode === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      if (busy || phase === 'listening') return;
+                      setMode(m.id);
+                      setStreak(0);
+                      setScaleStep(0);
+                      setLastCorrect(null);
+                      setTarget(null);
+                      setTaScore(null);
+                      setTaRemaining(null);
+                      if (taTickRef.current) { clearInterval(taTickRef.current); taTickRef.current = null; }
+                      taEndAtRef.current = null;
+                    }}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
+                      selected
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
+                    }`}
+                    disabled={busy || phase === 'listening'}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-slate-500">{activeMode.blurb}</p>
+          </div>
+        )}
       </div>
 
-      {/* Sets mode owns its own catalog + player surface; single-note modes
-          fall through to the game panel below. */}
-      {mode === 'sets' ? (
-        <PitchSetPlayer voice={voice} />
-      ) : (
+      {isFreePlay && (
       <>
       {/* Main game panel */}
       <div className="rounded-2xl bg-white p-6 shadow-sm space-y-4">

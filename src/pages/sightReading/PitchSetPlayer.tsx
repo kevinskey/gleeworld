@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Play, Mic, Check, X, ArrowLeft, Sparkles, RotateCcw } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Play, Mic, Check, X, ArrowLeft, Sparkles, RotateCcw, Star, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -72,6 +72,20 @@ const SETS: SetDef[] = [
 
 const TIER_LABEL: Record<Tier, string> = { warmup: 'Warm-ups', intervals: 'Intervals', melody: 'Melodies', advanced: 'Advanced' };
 const TIER_ORDER: Tier[] = ['warmup', 'intervals', 'melody', 'advanced'];
+// Each tier is a "Level" gated by earning ≥1 star in every set of the
+// previous tier. Level 1 (Warm-ups) is always unlocked.
+const TIER_LEVEL: Record<Tier, number> = { warmup: 1, intervals: 2, melody: 3, advanced: 4 };
+const MAX_STARS_PER_SET = 3;
+
+// Star rating from all-time accuracy on a set.
+function starsFromAccuracy(correct: number, total: number): number {
+  if (total === 0) return 0;
+  const acc = correct / total;
+  if (acc >= 0.95) return 3;
+  if (acc >= 0.70) return 2;
+  if (correct >= 1) return 1;
+  return 0;
+}
 
 // --- Audio ---
 function primeToneCtx(): AudioContext | null {
@@ -141,6 +155,53 @@ export function PitchSetPlayer({ voice }: Props) {
   const [heldMs, setHeldMs] = useState(0);
   const [finished, setFinished] = useState(false);
   const [runId, setRunId] = useState(0);
+  // { [set_id]: { correct, total } } from all past attempts. Refreshed on
+  // mount and after each finished set so stars stay current.
+  const [setScores, setSetScores] = useState<Record<string, { correct: number; total: number }>>({});
+  const [scoresLoaded, setScoresLoaded] = useState(false);
+
+  const loadScores = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('gw_pitch_match_attempts')
+      .select('set_id, matched')
+      .eq('mode', 'sets')
+      .not('set_id', 'is', null)
+      .limit(2000);
+    if (error) { setScoresLoaded(true); return; }
+    const agg: Record<string, { correct: number; total: number }> = {};
+    for (const row of (data ?? []) as { set_id: string | null; matched: boolean | null }[]) {
+      if (!row.set_id) continue;
+      const s = agg[row.set_id] ?? { correct: 0, total: 0 };
+      s.total += 1;
+      if (row.matched) s.correct += 1;
+      agg[row.set_id] = s;
+    }
+    setSetScores(agg);
+    setScoresLoaded(true);
+  }, []);
+  useEffect(() => { void loadScores(); }, [loadScores]);
+
+  // Per-set star map + level unlock derivation.
+  const starMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const set of SETS) {
+      const s = setScores[set.id];
+      m[set.id] = s ? starsFromAccuracy(s.correct, s.total) : 0;
+    }
+    return m;
+  }, [setScores]);
+  const totalStars = Object.values(starMap).reduce((a, b) => a + b, 0);
+  const possibleStars = SETS.length * MAX_STARS_PER_SET;
+  const tierUnlocked = useMemo(() => {
+    const map: Record<Tier, boolean> = { warmup: true, intervals: false, melody: false, advanced: false };
+    for (let i = 1; i < TIER_ORDER.length; i++) {
+      const prevTier = TIER_ORDER[i - 1];
+      const prevSets = SETS.filter((s) => s.tier === prevTier);
+      const allEarned = prevSets.every((s) => (starMap[s.id] ?? 0) >= 1);
+      map[TIER_ORDER[i]] = allEarned;
+    }
+    return map;
+  }, [starMap]);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const stopToneRef = useRef<null | (() => void)>(null);
@@ -252,6 +313,9 @@ export function PitchSetPlayer({ voice }: Props) {
       setCurrentIdx(-1);
       mic.stop();
       if (audioCtxRef.current) { try { void audioCtxRef.current.close(); } catch { /* noop */ } audioCtxRef.current = null; }
+      // Refresh star scores from the DB so the catalog shows updated stars
+      // next time we return. Fire-and-forget — UI already updated locally.
+      void loadScores();
       return;
     }
     // brief gap between notes for feedback
@@ -304,38 +368,139 @@ export function PitchSetPlayer({ voice }: Props) {
     setCurrentIdx(-1);
   }, [cleanup]);
 
-  // --- CATALOG VIEW ---
+  // --- CATALOG VIEW (gamified level map) ---
   if (!selectedSet) {
+    // Suggest next challenge: first set in the highest-unlocked tier
+    // where the player hasn't earned 3 stars yet.
+    const suggested = (() => {
+      for (const tier of TIER_ORDER) {
+        if (!tierUnlocked[tier]) break;
+        for (const s of SETS.filter((x) => x.tier === tier)) {
+          if ((starMap[s.id] ?? 0) < 3) return s;
+        }
+      }
+      return null;
+    })();
+
     return (
       <div className="space-y-4">
-        <div className="rounded-2xl bg-white p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Sets</p>
-          <p className="text-sm text-slate-600">
-            Pick a challenge. Each set is a sequence of notes — nail them in order. Rounds auto-advance and you'll see your progress fill in as you go.
-          </p>
+        {/* HUD */}
+        <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white p-5 shadow-md">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-slate-300">Your journey</p>
+              <p className="text-2xl font-bold mt-0.5">{totalStars} <span className="text-slate-300 text-base font-normal">/ {possibleStars} stars</span></p>
+              {scoresLoaded && totalStars === 0 && (
+                <p className="text-xs text-slate-300 mt-1">Warm up with Home Tone to earn your first star.</p>
+              )}
+            </div>
+            <div className="text-right">
+              <div className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-sm">
+                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                <span className="font-semibold">{totalStars}</span>
+              </div>
+            </div>
+          </div>
+          {/* Progress bar */}
+          <div className="mt-3 h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full bg-amber-400 transition-[width] duration-300" style={{ width: `${Math.round((totalStars / possibleStars) * 100)}%` }} />
+          </div>
         </div>
+
+        {/* Suggested next challenge */}
+        {suggested && (
+          <button
+            type="button"
+            onClick={() => { const ctx = primeToneCtx(); void startSet(suggested, ctx); }}
+            className="w-full text-left rounded-2xl bg-white p-5 shadow-sm border-2 border-emerald-200 hover:border-emerald-400 transition-colors"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-widest text-emerald-700">Play next</p>
+                <p className="text-lg font-semibold text-slate-900 mt-0.5 truncate">{suggested.label}</p>
+                <p className="text-xs text-slate-600 mt-1">{suggested.blurb}</p>
+                <div className="flex items-center gap-1 mt-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Star key={i} className={`w-4 h-4 ${i < (starMap[suggested.id] ?? 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+                  ))}
+                  <span className="text-xs text-slate-500 ml-1">{suggested.degrees.length} notes</span>
+                </div>
+              </div>
+              <div className="shrink-0 w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg">
+                <Play className="w-6 h-6 text-white fill-white" />
+              </div>
+            </div>
+          </button>
+        )}
+
+        {/* Level tracks */}
         {TIER_ORDER.map((tier) => {
           const inTier = SETS.filter((s) => s.tier === tier);
           if (inTier.length === 0) return null;
+          const level = TIER_LEVEL[tier];
+          const unlocked = tierUnlocked[tier];
+          const tierStars = inTier.reduce((sum, s) => sum + (starMap[s.id] ?? 0), 0);
+          const tierMax = inTier.length * MAX_STARS_PER_SET;
           return (
-            <div key={tier} className="rounded-2xl bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">{TIER_LABEL[tier]}</p>
+            <div key={tier} className={`rounded-2xl bg-white p-4 shadow-sm ${!unlocked ? 'opacity-70' : ''}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${unlocked ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                    {unlocked ? level : <Lock className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 leading-none">Level {level}</p>
+                    <p className="text-sm font-semibold text-slate-900 leading-tight">{TIER_LABEL[tier]}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-slate-600">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  {tierStars} / {tierMax}
+                </div>
+              </div>
+              {!unlocked && (
+                <p className="text-xs text-slate-500 mb-2">Earn at least 1 star in every Level {level - 1} set to unlock.</p>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {inTier.map((set) => (
-                  <button
-                    key={set.id}
-                    type="button"
-                    onClick={() => {
-                      const ctx = primeToneCtx();
-                      void startSet(set, ctx);
-                    }}
-                    className="text-left rounded-xl border border-slate-200 hover:border-slate-400 bg-white p-3 transition-colors"
-                  >
-                    <p className="text-sm font-medium text-slate-900">{set.label}</p>
-                    <p className="text-xs text-slate-600 mt-0.5">{set.blurb}</p>
-                    <p className="text-xs text-slate-500 mt-1">{set.degrees.length} notes</p>
-                  </button>
-                ))}
+                {inTier.map((set) => {
+                  const stars = starMap[set.id] ?? 0;
+                  const disabled = !unlocked;
+                  return (
+                    <button
+                      key={set.id}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => {
+                        if (disabled) return;
+                        const ctx = primeToneCtx();
+                        void startSet(set, ctx);
+                      }}
+                      className={`text-left rounded-xl border p-3 transition-colors ${
+                        disabled
+                          ? 'border-slate-100 bg-slate-50 cursor-not-allowed'
+                          : stars === 3
+                            ? 'border-amber-300 bg-amber-50 hover:border-amber-500'
+                            : 'border-slate-200 hover:border-slate-400 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={`text-sm font-medium ${disabled ? 'text-slate-400' : 'text-slate-900'} truncate`}>{set.label}</p>
+                        {stars === 3 && !disabled && (
+                          <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                        )}
+                      </div>
+                      <p className={`text-xs mt-0.5 ${disabled ? 'text-slate-400' : 'text-slate-600'}`}>{set.blurb}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <Star key={i} className={`w-3.5 h-3.5 ${i < stars && !disabled ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+                          ))}
+                        </div>
+                        <span className={`text-[11px] ${disabled ? 'text-slate-400' : 'text-slate-500'}`}>{set.degrees.length} notes</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );
@@ -440,21 +605,33 @@ export function PitchSetPlayer({ voice }: Props) {
 
         {finished && (
           <>
-            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-2">
-              {correctCount === total ? (
-                <Sparkles className="w-7 h-7 text-amber-500" />
-              ) : correctCount >= Math.ceil(total * 0.7) ? (
-                <Check className="w-7 h-7 text-emerald-600" />
-              ) : (
-                <X className="w-7 h-7 text-rose-600" />
-              )}
-            </div>
-            <p className="text-lg font-semibold text-slate-900">
-              {correctCount === total ? 'Perfect!' : correctCount >= Math.ceil(total * 0.7) ? 'Nice run' : 'Try again'}
-            </p>
-            <p className="text-sm text-slate-600">
-              {correctCount} of {total} correct
-            </p>
+            {(() => {
+              const runStars = starsFromAccuracy(correctCount, total);
+              const perfect = correctCount === total;
+              return (
+                <>
+                  <div className="flex items-center gap-1 mb-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-8 h-8 ${i < runStars ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-lg font-semibold text-slate-900">
+                    {perfect ? 'Perfect!' : runStars === 2 ? 'Nice run' : runStars === 1 ? 'Keep at it' : 'Try again'}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    {correctCount} of {total} correct
+                  </p>
+                  {perfect && (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" /> All 3 stars earned
+                    </p>
+                  )}
+                </>
+              );
+            })()}
             <div className="flex gap-2 mt-4">
               <Button
                 className="rounded-full"
