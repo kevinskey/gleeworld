@@ -50,7 +50,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'bad_request' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  const result = await runSync({ supabase, user_id: user.id, tenant_id, events, fromIso, toIso });
+  const result = await runSync({ supabase, admin, user_id: user.id, tenant_id, events, fromIso, toIso });
   const status = 'ok' in result ? 200 : (result.error === 'save_failed' ? 500 : 400);
   return new Response(JSON.stringify(result), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 });

@@ -51,7 +51,7 @@ describe('runSync', () => {
   it('upserts every event and returns count', async () => {
     const { supabase, calls } = stubSupabase({ upsertResult: { data: [], count: 2, error: null } });
     const res = await runSync({
-      supabase, user_id: uid, tenant_id: 'tenant-a',
+      supabase, admin: supabase, user_id: uid, tenant_id: 'tenant-a',
       events: [
         { ekId: 'e1', calendarTitle: 'Personal', title: 'A', description: null, location: null, startAt: '2026-07-15T10:00:00Z', endAt: '2026-07-15T11:00:00Z', allDay: false, isPrivate: false },
         { ekId: 'e2', calendarTitle: 'Work',     title: 'B', description: null, location: null, startAt: '2026-07-16T10:00:00Z', endAt: '2026-07-16T11:00:00Z', allDay: false, isPrivate: true  },
@@ -68,7 +68,7 @@ describe('runSync', () => {
   it('sweeps rows within window not in the seen list', async () => {
     const { supabase, calls } = stubSupabase({ upsertResult: { data: [], count: 1, error: null }, deleteResult: { data: [{ id: 'd1' }], error: null } });
     const res = await runSync({
-      supabase, user_id: uid, tenant_id: 'tenant-a',
+      supabase, admin: supabase, user_id: uid, tenant_id: 'tenant-a',
       events: [{ ekId: 'e1', calendarTitle: 'p', title: 'A', description: null, location: null, startAt: '2026-07-15T10:00:00Z', endAt: '2026-07-15T11:00:00Z', allDay: false, isPrivate: false }],
       ...win,
     });
@@ -85,20 +85,20 @@ describe('runSync', () => {
 
   it('with empty events, still runs the delete-in-window (sentinel)', async () => {
     const { supabase, calls } = stubSupabase();
-    await runSync({ supabase, user_id: uid, tenant_id: 'tenant-a', events: [], ...win });
+    await runSync({ supabase, admin: supabase, user_id: uid, tenant_id: 'tenant-a', events: [], ...win });
     expect(calls.find(c => c.op === 'delete')).toBeDefined();
   });
 
   it('rejects oversize event lists', async () => {
     const { supabase } = stubSupabase();
     const events = Array.from({ length: 501 }, (_, i) => ({ ekId: `e${i}`, calendarTitle: 'p', title: 'x', description: null, location: null, startAt: '2026-07-15T10:00:00Z', endAt: '2026-07-15T11:00:00Z', allDay: false, isPrivate: false }));
-    const res = await runSync({ supabase, user_id: uid, tenant_id: 'tenant-a', events, ...win });
+    const res = await runSync({ supabase, admin: supabase, user_id: uid, tenant_id: 'tenant-a', events, ...win });
     expect((res as any).error).toBe('too_many_events');
   });
 
   it('rejects oversized sync windows', async () => {
     const { supabase } = stubSupabase();
-    const res = await runSync({ supabase, user_id: uid, tenant_id: 'tenant-a', events: [], fromIso: '2020-01-01T00:00:00Z', toIso: '2027-01-01T00:00:00Z' });
+    const res = await runSync({ supabase, admin: supabase, user_id: uid, tenant_id: 'tenant-a', events: [], fromIso: '2020-01-01T00:00:00Z', toIso: '2027-01-01T00:00:00Z' });
     expect((res as any).error).toBe('window_too_large');
   });
 });

@@ -14,6 +14,7 @@ export interface GWCalendarEvent {
 
 export interface RunSyncInput {
   supabase: any;
+  admin: any;
   user_id: string;
   tenant_id: string;
   events: GWCalendarEvent[];
@@ -29,7 +30,7 @@ const MAX_EVENTS = 500;
 const MAX_WINDOW_MS = 180 * 24 * 60 * 60 * 1000;
 
 export async function runSync(input: RunSyncInput): Promise<RunSyncResult> {
-  const { supabase, user_id, tenant_id, events, fromIso, toIso } = input;
+  const { supabase, admin, user_id, tenant_id, events, fromIso, toIso } = input;
 
   if (events.length > MAX_EVENTS) return { error: 'too_many_events' };
   const from = new Date(fromIso).getTime();
@@ -85,8 +86,8 @@ export async function runSync(input: RunSyncInput): Promise<RunSyncResult> {
     end_at:         e.endAt,
     all_day:        e.allDay,
   }));
-  await propagateIosUpdates(supabase, user_id, tenant_id, propagatedEvents);
-  await propagateIosDeletes(supabase, user_id, tenant_id, propagatedEvents.map(e => e.apple_event_id), { start: fromIso, end: toIso });
+  await propagateIosUpdates(admin, user_id, tenant_id, propagatedEvents);
+  await propagateIosDeletes(admin, user_id, tenant_id, propagatedEvents.map(e => e.apple_event_id), { start: fromIso, end: toIso });
 
   return { ok: true, upserted, deleted: (deletedRows ?? []).length };
 }
