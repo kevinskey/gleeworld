@@ -102,7 +102,10 @@ export const LibrarianDashboard = () => {
     return (
       <div className={cn("min-h-[100dvh] bg-background", isMobile ? "pb-24" : "")}>
         {/* Sticky header */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div
+          className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        >
           <div className="flex items-center gap-3 px-4 py-3 max-w-5xl mx-auto">
             <Button
               variant="ghost"

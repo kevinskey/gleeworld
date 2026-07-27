@@ -21,7 +21,7 @@ export const AssistantVideoOverlay = ({ roomName, userName, userEmail, userId, o
     <button
       type="button"
       onClick={onClose}
-      className="absolute top-3 right-3 z-[61] h-8 w-8 rounded-full bg-card border flex items-center justify-center"
+      className="absolute top-[calc(env(safe-area-inset-top,0px)+0.75rem)] right-3 z-[61] h-8 w-8 rounded-full bg-card border flex items-center justify-center"
     >
       <X className="w-4 h-4" />
     </button>

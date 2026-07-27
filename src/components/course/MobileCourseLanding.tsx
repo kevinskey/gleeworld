@@ -207,7 +207,10 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   if (isMus240) {
     return (
       <div className="min-h-screen bg-background text-foreground">
-        <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div
+          className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        >
           <div className="px-4 py-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <button
