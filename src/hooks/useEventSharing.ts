@@ -1,13 +1,8 @@
-// Client hooks for publishing a Google event onto a shared GleeWorld
-// calendar and un-publishing it later. Backed by two edge functions
-// (google-event-share, google-event-unshare) that scope every write to
-// the caller's JWT.
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 const CAL_KEY = ['tenant-calendars'];
-const EVENTS_KEYS = [['events'], ['google-events']];
+const EVENTS_KEYS: readonly (readonly string[])[] = [['events'], ['google-events'], ['ios-events']];
 
 export interface TenantCalendar {
   id: string;
@@ -32,35 +27,37 @@ export function useTenantCalendars() {
   });
 }
 
-export function useShareGoogleEvent() {
+export type ShareableSource = 'google_calendar' | 'ios_calendar';
+
+export function useShareEvent() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { google_event_id: string; calendar_id: string }) => {
-      const { data, error } = await supabase.functions.invoke('google-event-share', { body: input });
+    mutationFn: async (input: { source: ShareableSource; source_event_id: string; calendar_id: string }) => {
+      const { data, error } = await supabase.functions.invoke('event-share', { body: input });
       if (error) throw error;
       const body = data as { ok?: boolean; shared_event_id?: string; error?: string };
       if (body?.error) throw new Error(body.error);
       if (!body?.shared_event_id) throw new Error('no_shared_id');
       return { shared_event_id: body.shared_event_id };
     },
-    onSuccess: () => {
-      EVENTS_KEYS.forEach(k => qc.invalidateQueries({ queryKey: k }));
-    },
+    onSuccess: () => { EVENTS_KEYS.forEach(k => qc.invalidateQueries({ queryKey: [...k] })); },
   });
 }
 
-export function useUnshareGoogleEvent() {
+export function useUnshareEvent() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { shared_event_id: string }) => {
-      const { data, error } = await supabase.functions.invoke('google-event-unshare', { body: input });
+      const { data, error } = await supabase.functions.invoke('event-unshare', { body: input });
       if (error) throw error;
       const body = data as { ok?: boolean; deleted?: number; error?: string };
       if (body?.error) throw new Error(body.error);
       return { deleted: body?.deleted ?? 0 };
     },
-    onSuccess: () => {
-      EVENTS_KEYS.forEach(k => qc.invalidateQueries({ queryKey: k }));
-    },
+    onSuccess: () => { EVENTS_KEYS.forEach(k => qc.invalidateQueries({ queryKey: [...k] })); },
   });
 }
+
+// Deprecated aliases — kept for one branch; delete in a follow-up.
+export const useShareGoogleEvent = useShareEvent;
+export const useUnshareGoogleEvent = useUnshareEvent;
