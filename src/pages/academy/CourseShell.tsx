@@ -228,8 +228,10 @@ export default function CourseShell() {
     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
       <DashboardShell>
     <div className="min-h-screen bg-[hsl(40,10%,96%)]">
-      {/* Top bar */}
-      <div className="bg-slate-900 text-white">
+      {/* Top bar — pt reserves the iOS safe-area inset so the transparent
+          status bar (overlaysWebView) doesn't collide with the back button
+          and title. env() is 0 outside the app; desktop is unchanged. */}
+      <div className="bg-slate-900 text-white" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <button
             onClick={() => navigate("/control-center?module=glee-academy")}

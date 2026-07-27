@@ -86,7 +86,7 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full border-b border-border bg-gradient-to-r from-primary/10 via-background to-secondary/10 backdrop-blur-sm shadow-sm ${hideForAnnotation ? 'hidden' : ''}`}
+      className={`sticky top-0 z-50 w-full border-b border-border bg-gradient-to-r from-primary/10 via-background to-secondary/10 backdrop-blur-sm shadow-sm min-h-[calc(4rem+env(safe-area-inset-top,0px))] ${hideForAnnotation ? 'hidden' : ''}`}
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="flex h-16 items-center justify-between px-6">

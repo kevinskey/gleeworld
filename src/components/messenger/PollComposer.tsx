@@ -57,7 +57,10 @@ export function PollComposer({ groupId, userId, onClose }: { groupId: string; us
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center px-4 pb-4 overflow-y-auto"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+    >
       <Card className="w-full max-w-md my-4 bg-white text-gray-900">
         <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-white text-gray-900 z-10 border-b rounded-t-xl">
           <CardTitle className="text-gray-900">New poll</CardTitle>
