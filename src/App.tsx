@@ -201,6 +201,7 @@ const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
+const ReadingMusicPage = lazy(() => import("./pages/dashboard/ReadingMusicPage"));
 const NotationEditorPage = lazy(() => import("./pages/notation/NotationEditorPage"));
 const BoxOfficePage = lazy(() => import("./pages/dashboard/BoxOfficePage"));
 const BoxOfficeEventPage = lazy(() => import("./pages/dashboard/BoxOfficeEventPage"));
@@ -1528,14 +1529,22 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/sight-reading"
+                  path="/dashboard/reading-music"
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><SightReadingStudio /></DashboardShell>
+                        <DashboardShell><ReadingMusicPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
+                />
+                <Route
+                  path="/dashboard/sight-reading"
+                  element={<RedirectWithSearch to="/dashboard/reading-music" />}
+                />
+                <Route
+                  path="/dashboard/sight-reading/:rest"
+                  element={<RedirectWithSearch to="/dashboard/reading-music" />}
                 />
                 <Route
                   path="/dashboard/sight-reading/editor/:exerciseId?"

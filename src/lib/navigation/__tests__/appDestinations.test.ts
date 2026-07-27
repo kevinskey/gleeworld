@@ -37,7 +37,7 @@ const ROUTE_FLAG: Record<string, keyof ModuleFlags> = {
   '/dashboard/viewer': 'hasViewer',
   '/dashboard/part-tracks': 'hasPartTracks',
   '/studio': 'hasStudio',
-  '/dashboard/sight-reading': 'hasSightReading',
+  '/dashboard/reading-music': 'hasSightReading',
   '/dashboard/academy': 'hasAcademy',
 };
 
@@ -122,7 +122,7 @@ describe('getTabItems', () => {
 // deliberately re-verifies it against App.tsx's <Route path="..."> entries.
 const KNOWN_ROUTES = new Set([
   '/dashboard/viewer', '/dashboard/part-tracks', '/studio',
-  '/dashboard/sight-reading', '/attendance', '/dashboard/academy',
+  '/dashboard/sight-reading', '/dashboard/reading-music', '/attendance', '/dashboard/academy',
   '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
   '/store', '/dashboard/people',
   '/partner', '/admin/partners',

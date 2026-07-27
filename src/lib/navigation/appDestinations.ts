@@ -25,7 +25,7 @@ const D = {
   schedule: { key: 'schedule', to: '/dashboard/calendar',   label: 'Calendar', icon: Calendar } as Destination,
   roster:   { key: 'roster',   to: '/dashboard/people',     label: 'Roster',   icon: Users } as Destination,
   tracks:   { key: 'tracks',   to: '/dashboard/part-tracks',label: 'Tracks',   icon: Mic } as Destination,
-  sight:    { key: 'sight',    to: '/dashboard/sight-reading', label: 'Sight Reading', icon: ScanEye } as Destination,
+  sight:    { key: 'sight',    to: '/dashboard/reading-music', label: 'Reading Music', icon: ScanEye } as Destination,
   academy:  { key: 'academy',  to: '/dashboard/academy',    label: 'Academy',  icon: GraduationCap } as Destination,
   tickets:  { key: 'tickets',  to: '/box-office',           label: 'Tickets',  icon: Ticket } as Destination,
   planner:  { key: 'planner',  to: '/dashboard/concert-planner', label: 'Programs', icon: ListMusic } as Destination,
