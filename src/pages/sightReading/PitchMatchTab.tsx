@@ -64,15 +64,25 @@ function pickTarget(voice: Voice, streak: number, previousTarget: number | null)
   return target;
 }
 
-// Starts a sustained tone at `midi` and returns a stop() function.
-// The caller decides when to end (typically at the end of the listening window
-// OR the moment the student holds a correct match — so the tone doesn't keep
-// playing over the "Correct!" screen).
-async function startSustainedTone(midi: number, durationMs: number): Promise<() => Promise<void>> {
+// Create an AudioContext SYNCHRONOUSLY during a user gesture and pre-resume
+// it. Browsers require ctx creation OR ctx.resume() to happen inside the
+// gesture stack (no awaits between click and creation), otherwise the ctx
+// stays suspended forever and no sound comes out. Called from the button's
+// onClick synchronously, then handed off to startSustainedTone below.
+function primeToneCtx(): AudioContext | null {
   const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AC) return async () => { /* noop */ };
+  if (!AC) return null;
   const ctx = new AC();
-  if (ctx.state !== 'running') await ctx.resume();
+  // Fire-and-forget resume — safe to call even when already running. The
+  // resume() promise never blocks the click handler.
+  if (ctx.state === 'suspended') { void ctx.resume(); }
+  return ctx;
+}
+
+// Schedules a sustained tone at `midi` on a PRE-CREATED ctx. Returns a stop()
+// that fades out + closes the ctx. Never creates a new ctx (which would break
+// the user-gesture chain when called post-await).
+function startSustainedTone(ctx: AudioContext, midi: number, durationMs: number): () => Promise<void> {
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = 'triangle';
@@ -172,7 +182,7 @@ export function PitchMatchTab({ voice }: Props) {
     void centsOff;
   }, [target, mic.live, stopEverything, persistAttempt]);
 
-  const startRound = useCallback(async () => {
+  const startRound = useCallback(async (toneCtx: AudioContext | null) => {
     if (busy) return;
     setBusy(true);
     setLastOutcome(null);
@@ -180,14 +190,23 @@ export function PitchMatchTab({ voice }: Props) {
     setHeldMs(0);
     const newTarget = pickTarget(voice, streak, target);
     setTarget(newTarget);
-    // Mic first so any permission prompt fires before the tone starts —
-    // otherwise the tone plays into an empty listening window while the
-    // browser is still asking for microphone access.
     setPhase('listening');
+    // toneCtx was created synchronously by the click handler so browsers
+    // count it as user-gestured. If we're missing it (unexpected), fail loud.
+    if (!toneCtx) {
+      toast.error('Audio unavailable in this browser.');
+      setPhase('idle');
+      setTarget(null);
+      setBusy(false);
+      return;
+    }
     const outcome = await mic.start(80);
     if (outcome !== 'granted') {
       toast.error(outcome === 'denied' ? 'Microphone permission denied' : 'Could not start microphone');
+      // Close the primed ctx so we don't leak it.
+      try { await toneCtx.close(); } catch { /* already closed */ }
       setPhase('idle');
+      setTarget(null);
       setBusy(false);
       return;
     }
@@ -196,11 +215,13 @@ export function PitchMatchTab({ voice }: Props) {
     // lets finish() cut it early on a successful hold so the tone doesn't
     // keep sounding over the "Correct!" screen.
     try {
-      stopToneRef.current = await startSustainedTone(newTarget, LISTEN_MS);
+      stopToneRef.current = startSustainedTone(toneCtx, newTarget, LISTEN_MS);
     } catch {
       toast.error('Audio blocked. Enable sound and try again.');
       mic.stop();
+      try { await toneCtx.close(); } catch { /* already closed */ }
       setPhase('idle');
+      setTarget(null);
       setBusy(false);
       return;
     }
@@ -262,13 +283,18 @@ export function PitchMatchTab({ voice }: Props) {
         </div>
 
         <div className="rounded-xl bg-slate-50 border p-6 min-h-[10rem] flex flex-col items-center justify-center text-center">
-          {phase === 'idle' && target == null && (
+          {phase === 'idle' && (
             <>
               <p className="text-sm text-slate-600 mb-3">
                 We'll play a note for {LISTEN_MS/1000} seconds — sing along, match it, and hold for {HOLD_MS_REQUIRED/1000} seconds to score. Headphones give the most accurate pitch detection.
               </p>
-              <Button size="lg" className="rounded-full" onClick={startRound} disabled={busy}>
-                <Play className="w-4 h-4 mr-1" /> Start pitch match
+              <Button
+                size="lg"
+                className="rounded-full"
+                onClick={() => { const ctx = primeToneCtx(); void startRound(ctx); }}
+                disabled={busy}
+              >
+                <Play className="w-4 h-4 mr-1" /> {target == null ? 'Start pitch match' : 'Try again'}
               </Button>
             </>
           )}
@@ -313,10 +339,20 @@ export function PitchMatchTab({ voice }: Props) {
                 </>
               )}
               <div className="flex gap-2 mt-4">
-                <Button size="sm" onClick={startRound} disabled={busy} className="rounded-full">
+                <Button
+                  size="sm"
+                  onClick={() => { const ctx = primeToneCtx(); void startRound(ctx); }}
+                  disabled={busy}
+                  className="rounded-full"
+                >
                   <Play className="w-4 h-4 mr-1" /> Next
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => { stopEverything(); setPhase('idle'); setTarget(null); }} className="rounded-full">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { stopEverything(); setPhase('idle'); setTarget(null); setBusy(false); }}
+                  className="rounded-full"
+                >
                   Stop
                 </Button>
               </div>
