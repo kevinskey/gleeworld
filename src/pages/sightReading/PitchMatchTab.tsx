@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Play, Mic, Check, X, Loader2 } from 'lucide-react';
+import { Play, Mic, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -19,10 +19,15 @@ const VOICE_RANGE: Record<Voice, [number, number]> = {
 const CENTS_TOLERANCE = 50;       // ± half a semitone counts as "on pitch"
 const HOLD_MS_REQUIRED = 2000;    // 2 sec of held match
 const LISTEN_MS = 4000;           // 4 sec to try each note
-const PLAY_TONE_MS = 1200;
+// The reference tone plays for the FULL listening window so the student
+// can hear the target while singing (like sing-along-with-piano). Kept a
+// touch quieter than a Web-Audio "loud" so a moderately-close mic isn't
+// overwhelmed by tone bleed on laptop speakers. Wear headphones for best
+// pitch-detection accuracy.
+const TONE_GAIN = 0.14;
 const CLARITY_MIN = 0.7;          // pitch detector confidence threshold
 
-type Phase = 'idle' | 'playing' | 'listening' | 'result';
+type Phase = 'idle' | 'listening' | 'result';
 type Outcome = 'correct' | 'missed';
 
 interface Attempt {
@@ -59,9 +64,13 @@ function pickTarget(voice: Voice, streak: number, previousTarget: number | null)
   return target;
 }
 
-async function playTone(midi: number): Promise<void> {
+// Starts a sustained tone at `midi` and returns a stop() function.
+// The caller decides when to end (typically at the end of the listening window
+// OR the moment the student holds a correct match — so the tone doesn't keep
+// playing over the "Correct!" screen).
+async function startSustainedTone(midi: number, durationMs: number): Promise<() => Promise<void>> {
   const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!AC) return;
+  if (!AC) return async () => { /* noop */ };
   const ctx = new AC();
   if (ctx.state !== 'running') await ctx.resume();
   const osc = ctx.createOscillator();
@@ -70,15 +79,27 @@ async function playTone(midi: number): Promise<void> {
   osc.frequency.value = midiToHz(midi);
   const t = ctx.currentTime;
   g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(0.25, t + 0.02);
-  g.gain.setValueAtTime(0.25, t + (PLAY_TONE_MS - 200) / 1000);
-  g.gain.linearRampToValueAtTime(0, t + PLAY_TONE_MS / 1000);
+  g.gain.linearRampToValueAtTime(TONE_GAIN, t + 0.03);
+  g.gain.setValueAtTime(TONE_GAIN, t + (durationMs - 150) / 1000);
+  g.gain.linearRampToValueAtTime(0, t + durationMs / 1000);
   osc.connect(g);
   g.connect(ctx.destination);
   osc.start(t);
-  osc.stop(t + PLAY_TONE_MS / 1000 + 0.05);
-  await new Promise((r) => setTimeout(r, PLAY_TONE_MS));
-  await ctx.close();
+  osc.stop(t + durationMs / 1000 + 0.1);
+  let stopped = false;
+  return async () => {
+    if (stopped) return;
+    stopped = true;
+    try {
+      const now = ctx.currentTime;
+      g.gain.cancelScheduledValues(now);
+      g.gain.setValueAtTime(g.gain.value, now);
+      g.gain.linearRampToValueAtTime(0, now + 0.08);
+      osc.stop(now + 0.1);
+      await new Promise((r) => setTimeout(r, 120));
+    } catch { /* already stopped */ }
+    try { await ctx.close(); } catch { /* already closed */ }
+  };
 }
 
 interface Props {
@@ -98,10 +119,12 @@ export function PitchMatchTab({ voice }: Props) {
   const heldStartRef = useRef<number | null>(null);
   const listenTimeoutRef = useRef<number | null>(null);
   const holdCheckRef = useRef<number | null>(null);
+  const stopToneRef = useRef<null | (() => Promise<void>)>(null);
 
   const stopEverything = useCallback(() => {
     if (listenTimeoutRef.current) { clearTimeout(listenTimeoutRef.current); listenTimeoutRef.current = null; }
     if (holdCheckRef.current) { clearInterval(holdCheckRef.current); holdCheckRef.current = null; }
+    if (stopToneRef.current) { void stopToneRef.current(); stopToneRef.current = null; }
     mic.stop();
     heldStartRef.current = null;
     setHeldMs(0);
@@ -157,20 +180,26 @@ export function PitchMatchTab({ voice }: Props) {
     setHeldMs(0);
     const newTarget = pickTarget(voice, streak, target);
     setTarget(newTarget);
-    setPhase('playing');
-    try {
-      await playTone(newTarget);
-    } catch {
-      // audio blocked — treat like a missed round
-      toast.error('Audio blocked. Enable sound and try again.');
-      setPhase('idle');
-      setBusy(false);
-      return;
-    }
+    // Mic first so any permission prompt fires before the tone starts —
+    // otherwise the tone plays into an empty listening window while the
+    // browser is still asking for microphone access.
     setPhase('listening');
     const outcome = await mic.start(80);
     if (outcome !== 'granted') {
       toast.error(outcome === 'denied' ? 'Microphone permission denied' : 'Could not start microphone');
+      setPhase('idle');
+      setBusy(false);
+      return;
+    }
+    // Reference tone plays for the full listening window so the student can
+    // hear the target while singing (sing-along-with-piano). stopToneRef
+    // lets finish() cut it early on a successful hold so the tone doesn't
+    // keep sounding over the "Correct!" screen.
+    try {
+      stopToneRef.current = await startSustainedTone(newTarget, LISTEN_MS);
+    } catch {
+      toast.error('Audio blocked. Enable sound and try again.');
+      mic.stop();
       setPhase('idle');
       setBusy(false);
       return;
@@ -236,7 +265,7 @@ export function PitchMatchTab({ voice }: Props) {
           {phase === 'idle' && target == null && (
             <>
               <p className="text-sm text-slate-600 mb-3">
-                We'll play a note. You have {LISTEN_MS/1000} seconds. Match it and hold for {HOLD_MS_REQUIRED/1000} seconds to score.
+                We'll play a note for {LISTEN_MS/1000} seconds — sing along, match it, and hold for {HOLD_MS_REQUIRED/1000} seconds to score. Headphones give the most accurate pitch detection.
               </p>
               <Button size="lg" className="rounded-full" onClick={startRound} disabled={busy}>
                 <Play className="w-4 h-4 mr-1" /> Start pitch match
@@ -244,17 +273,9 @@ export function PitchMatchTab({ voice }: Props) {
             </>
           )}
 
-          {phase === 'playing' && target != null && (
-            <>
-              <p className="text-xs text-slate-500 mb-1">Listen…</p>
-              <p className="text-4xl font-bold text-slate-900">{midiName(target)}</p>
-              <Loader2 className="w-4 h-4 animate-spin text-slate-400 mt-2" />
-            </>
-          )}
-
           {phase === 'listening' && target != null && (
             <>
-              <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><Mic className="w-3 h-3" /> Sing</p>
+              <p className="text-xs text-slate-500 mb-1 flex items-center gap-1"><Mic className="w-3 h-3" /> Sing along with the tone</p>
               <p className="text-4xl font-bold text-slate-900">{midiName(target)}</p>
               <div className="mt-3 h-4 w-full max-w-xs bg-slate-200 rounded-full overflow-hidden">
                 <div
