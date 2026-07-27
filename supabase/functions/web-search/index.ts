@@ -23,13 +23,19 @@ serve(async (req) => {
   }
 
   let body: { query?: string };
-  try { body = await req.json(); } catch { return new Response('bad json', { status: 400, headers: corsHeaders }); }
+  try { body = await req.json(); } catch {
+    return new Response(
+      JSON.stringify({ error: 'Invalid request body.' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
   const query = String(body.query ?? '').trim();
   if (!query) return new Response(JSON.stringify({ results: [] }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+  const deepseekModel = Deno.env.get('ASSISTANT_MODEL') ?? 'deepseek-v4-pro';
   try {
-    const out = await runWebSearch({ query, braveKey, deepseekKey });
+    const out = await runWebSearch({ query, braveKey, deepseekKey, deepseekModel });
     return new Response(JSON.stringify(out),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {

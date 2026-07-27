@@ -211,7 +211,7 @@ serve(async (req) => {
         const def = tools.find((t) => t.name === tc.function.name);
         let args: Record<string, unknown> = {};
         try { args = JSON.parse(tc.function.arguments || '{}'); } catch { /* leave empty */ }
-        let result: string;
+        let result: string = JSON.stringify({ error: `Unhandled execution type for tool ${def?.name ?? 'unknown'}` });
         if (!def) {
           result = JSON.stringify({ error: `Tool not available: ${tc.function.name}` });
         } else if (def.execution === 'server') {
@@ -253,6 +253,9 @@ serve(async (req) => {
     return json({ reply: timeoutReply, actions, resultsPanel, thread_id: threadId });
   } catch (e) {
     console.error('assistant-chat error:', e);
+    // Intentionally no resultsPanel here — the model crashed mid-turn; the
+    // client keeps whatever panel it last showed and moves on with the next
+    // successful turn.
     return json({ error: "I couldn't reach the assistant right now. Please try again." }, 502);
   }
 });

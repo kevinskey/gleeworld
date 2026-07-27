@@ -50,4 +50,18 @@ describe('runWebSearch', () => {
     await expect(runWebSearch({ query: 'x', braveKey: 'b', deepseekKey: 'd' }))
       .rejects.toThrow('Search is unavailable');
   });
+
+  it('uses the provided deepseekModel in the fetch body', async () => {
+    const fetchSpy = vi.fn(async (url: string) => {
+      if (String(url).includes('brave')) return { ok: true, json: async () => ({ web: { results: [] } }) };
+      return { ok: true, json: async () => ({ choices: [{ message: { content: '' } }] }) };
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    await runWebSearch({ query: 'x', braveKey: 'b', deepseekKey: 'd', deepseekModel: 'deepseek-v4-flash' });
+    // Second fetch call is the DeepSeek POST
+    const deepseekCall = fetchSpy.mock.calls.find((c: unknown[]) => String(c[0]).includes('deepseek'));
+    expect(deepseekCall).toBeDefined();
+    const body = JSON.parse((deepseekCall as [string, { body: string }])[1].body);
+    expect(body.model).toBe('deepseek-v4-flash');
+  });
 });

@@ -13,6 +13,7 @@ export async function runWebSearch(opts: {
   query: string;
   braveKey: string;
   deepseekKey: string;
+  deepseekModel?: string;
 }): Promise<WebSearchOutput> {
   const q = opts.query.trim();
   if (!q) return { results: [] };
@@ -31,13 +32,14 @@ export async function runWebSearch(opts: {
 
   // Synthesize a 2-3 sentence answer from the top snippets. Never fabricate:
   // if DeepSeek is unhappy, we just return results without an answer.
+  const model = opts.deepseekModel ?? 'deepseek-v4-pro';
   let answer: string | undefined;
   try {
     const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${opts.deepseekKey}` },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model,
         temperature: 0.2,
         messages: [
           { role: 'system', content: 'Answer briefly (2-3 sentences) based only on the given search snippets. If they do not answer the question, say so plainly. Never invent facts or URLs.' },
