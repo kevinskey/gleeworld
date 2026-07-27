@@ -24,6 +24,9 @@ class MainViewController: CAPBridgeViewController {
         // GWSpeechPlugin — Assistant speech-to-text (iOS WebKit has no
         // SpeechRecognition). Same dead-strip problem, same explicit fix.
         bridge?.registerPluginInstance(GWSpeechPlugin())
+        // GWCalendarPlugin — EventKit bridge so the app can read the user's
+        // local Calendar and surface events alongside the choir schedule.
+        bridge?.registerPluginInstance(GWCalendarPlugin())
         // RecordingLiveActivityPlugin disabled — needs widget extension's
         // GleeWorldRecordingAttributes type that's not in the main target.
     }

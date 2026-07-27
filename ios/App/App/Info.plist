@@ -28,6 +28,10 @@
 	<string>GleeWorld uses Apple Music to play backing tracks during sight-singing and rehearsals.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>GleeWorld uses Bluetooth to connect wireless MIDI keyboards for playing and recording in the Studio.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>GleeWorld shows your iPhone Calendar events alongside your choir schedule.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>GleeWorld shows your iPhone Calendar events alongside your choir schedule.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>GleeWorld uses the camera for video meetings and profile photos.</string>
 	<key>NSMicrophoneUsageDescription</key>
