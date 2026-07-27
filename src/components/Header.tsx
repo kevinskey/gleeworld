@@ -124,12 +124,11 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
 
         {/* Right Section - User Actions */}
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
+          {/* Notifications — no fake count. Real notification wiring lives
+              on the newer PersistentHeader/DashboardShell; this legacy bell
+              is decorative until it's replaced. */}
           <Button variant="ghost" size="sm" className="relative">
             <Bell className="w-5 h-5" />
-            <Badge className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 flex items-center justify-center text-xs">
-              3
-            </Badge>
           </Button>
 
           {/* Messages Toggle */}
@@ -482,8 +481,10 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
             {/* User Avatar and Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-6 w-6 sm:h-8 sm:w-8 rounded-full">
-                  <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
+                {/* h-11 (44px) on mobile meets Apple HIG minimum touch target;
+                    keeps h-8 (32px) at sm+ so the desktop chrome stays dense. */}
+                <Button variant="ghost" className="relative h-11 w-11 sm:h-8 sm:w-8 rounded-full">
+                  <Avatar className="h-8 w-8 sm:h-8 sm:w-8">
                     <AvatarImage 
                       src={userProfile?.avatar_url || undefined} 
                       alt={displayName}

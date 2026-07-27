@@ -38,7 +38,7 @@ export function AcademyShell({ children }: { children: ReactNode }) {
         >
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-1.5 px-2 h-10 text-sm font-medium text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 px-2 h-11 text-sm font-medium text-muted-foreground hover:text-foreground"
             aria-label="Back to Workspace"
           >
             <ArrowLeft className="w-4 h-4" /> Workspace
