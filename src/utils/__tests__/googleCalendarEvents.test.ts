@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isGoogleSyncedEvent } from '../googleCalendarEvents';
+import { isGoogleSyncedEvent, isSharedFromGoogle } from '../googleCalendarEvents';
 
 describe('isGoogleSyncedEvent', () => {
   it('flags synthetic rows by source marker', () => {
@@ -18,5 +18,21 @@ describe('isGoogleSyncedEvent', () => {
   it('handles null/undefined', () => {
     expect(isGoogleSyncedEvent(null)).toBe(false);
     expect(isGoogleSyncedEvent(undefined)).toBe(false);
+  });
+});
+
+describe('isSharedFromGoogle', () => {
+  it('returns true when external_source=google_calendar AND origin_user_id matches', () => {
+    expect(isSharedFromGoogle({ external_source: 'google_calendar', origin_user_id: 'u1' } as any, 'u1')).toBe(true);
+  });
+  it('returns false for a different user_id', () => {
+    expect(isSharedFromGoogle({ external_source: 'google_calendar', origin_user_id: 'u2' } as any, 'u1')).toBe(false);
+  });
+  it('returns false for non-google external_source', () => {
+    expect(isSharedFromGoogle({ external_source: 'ical', origin_user_id: 'u1' } as any, 'u1')).toBe(false);
+  });
+  it('returns false for null/undefined event or user_id', () => {
+    expect(isSharedFromGoogle(null, 'u1')).toBe(false);
+    expect(isSharedFromGoogle({ external_source: 'google_calendar', origin_user_id: 'u1' } as any, null)).toBe(false);
   });
 });

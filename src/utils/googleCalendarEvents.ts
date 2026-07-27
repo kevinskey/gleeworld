@@ -13,3 +13,11 @@ export function isGoogleSyncedEvent(
   if (event.source === 'google') return true;
   return typeof event.id === 'string' && event.id.startsWith(GOOGLE_EVENT_ID_PREFIX);
 }
+
+export function isSharedFromGoogle(
+  event: { external_source?: string | null; origin_user_id?: string | null } | null | undefined,
+  currentUserId: string | null | undefined,
+): boolean {
+  if (!event || !currentUserId) return false;
+  return event.external_source === 'google_calendar' && event.origin_user_id === currentUserId;
+}
