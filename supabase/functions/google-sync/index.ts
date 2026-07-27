@@ -20,6 +20,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { propagateUpdates, propagateDeletes, type PropagatedGoogleEvent } from './propagate.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -114,6 +115,7 @@ serve(async (req) => {
   let fetched = 0;
   let upserts = 0;
   const perCalErrors: Array<{ calendar: string; detail: string }> = [];
+  const seenForPropagation: PropagatedGoogleEvent[] = [];
 
   for (const calId of calendarIds) {
     const listUrl =
@@ -150,6 +152,18 @@ serve(async (req) => {
       };
     });
 
+    for (const r of rows) {
+      seenForPropagation.push({
+        google_event_id: r.google_event_id!,
+        title:           r.title,
+        description:     r.description,
+        location:        r.location,
+        start_at:        r.start_at,
+        end_at:          r.end_at,
+        all_day:         r.all_day,
+      });
+    }
+
     if (rows.length) {
       const { error: upErr, count } = await admin
         .from('gw_google_events')
@@ -173,6 +187,19 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .not('google_calendar_id', 'in', `(${calendarIds.map(id => `"${id}"`).join(',')})`);
   }
+
+  // Propagate to any gw_events rows the caller has published via
+  // google-event-share. Updates happen first so the row reflects the
+  // latest Google state; deletes then wipe rows whose Google source
+  // vanished from THIS sync's response.
+  await propagateUpdates(admin, user.id, conn.tenant_id, seenForPropagation);
+  await propagateDeletes(
+    admin,
+    user.id,
+    conn.tenant_id,
+    seenForPropagation.map(e => e.google_event_id),
+    { start: timeMin, end: timeMax },
+  );
 
   const lastError = perCalErrors.length
     ? perCalErrors.map(e => `${e.calendar}: ${e.detail}`).join(' | ')
