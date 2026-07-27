@@ -104,4 +104,15 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1500,
   },
+  test: {
+    // canvas native module is compiled for x86_64 but dev machines are arm64;
+    // jsdom tries require('canvas') inside the worker, which crashes dlopen.
+    // --require preloads canvas-preload.cjs to stub require.cache before jsdom
+    // utils.js attempts to load it. globalSetup patches the main process too.
+    execArgv: [
+      '--require',
+      path.resolve(__dirname, 'src/__mocks__/canvas-preload.cjs'),
+    ],
+    globalSetup: path.resolve(__dirname, 'src/__mocks__/canvas-preload.mjs'),
+  },
 });
