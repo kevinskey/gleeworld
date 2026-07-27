@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isGoogleSyncedEvent, isSharedFromGoogle } from '../googleCalendarEvents';
+import { isGoogleSyncedEvent, isSharedFromGoogle, isIosSyncedEvent, isSharedFromExternal } from '../googleCalendarEvents';
 
 describe('isGoogleSyncedEvent', () => {
   it('flags synthetic rows by source marker', () => {
@@ -35,4 +35,17 @@ describe('isSharedFromGoogle', () => {
     expect(isSharedFromGoogle(null, 'u1')).toBe(false);
     expect(isSharedFromGoogle({ external_source: 'google_calendar', origin_user_id: 'u1' } as any, null)).toBe(false);
   });
+});
+
+describe('isIosSyncedEvent', () => {
+  it('detects source=ios', () => expect(isIosSyncedEvent({ source: 'ios' } as any)).toBe(true));
+  it('detects id prefix', () => expect(isIosSyncedEvent({ id: 'ios-abc' } as any)).toBe(true));
+  it('returns false otherwise', () => expect(isIosSyncedEvent({ id: 'gcal-abc' } as any)).toBe(false));
+});
+
+describe('isSharedFromExternal', () => {
+  it('true for google_calendar with matching uid', () => expect(isSharedFromExternal({ external_source: 'google_calendar', origin_user_id: 'u1' } as any, 'u1')).toBe(true));
+  it('true for ios_calendar with matching uid',    () => expect(isSharedFromExternal({ external_source: 'ios_calendar',    origin_user_id: 'u1' } as any, 'u1')).toBe(true));
+  it('false for other external_source',            () => expect(isSharedFromExternal({ external_source: 'ical',           origin_user_id: 'u1' } as any, 'u1')).toBe(false));
+  it('false for uid mismatch',                     () => expect(isSharedFromExternal({ external_source: 'ios_calendar',    origin_user_id: 'u2' } as any, 'u1')).toBe(false));
 });
