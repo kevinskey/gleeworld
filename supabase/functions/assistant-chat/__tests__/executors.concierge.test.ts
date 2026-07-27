@@ -22,9 +22,11 @@ describe('get_ride executor', () => {
     expect(panel.kind).toBe('ride');
     expect(panel.resolvedAddress).toContain('Spelman');
     expect(panel.uberUrl).toContain('dropoff%5Blatitude%5D=33.7461');
+    expect(panel.uberUrl).toContain('dropoff%5Blongitude%5D=-84.4128');
     expect(panel.uberUrl).toContain('m.uber.com/ul/');
     expect(panel.lyftUrl).toContain('ride.lyft.com/ride');
     expect(panel.lyftUrl).toContain('destination%5Blatitude%5D=33.7461');
+    expect(panel.lyftUrl).toContain('destination%5Blongitude%5D=-84.4128');
     expect(JSON.parse(out.replyJson).resolvedAddress).toContain('Spelman');
   });
 

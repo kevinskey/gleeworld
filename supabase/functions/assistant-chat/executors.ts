@@ -241,7 +241,8 @@ async function getRide(args: Record<string, unknown>, deps: Deps): Promise<ToolR
     + `&destination%5Blatitude%5D=${lat}`
     + `&destination%5Blongitude%5D=${lng}`;
 
-  const preferred = (String(args.preferred ?? '').toLowerCase() as 'uber' | 'lyft') || undefined;
+  const rawPref = String(args.preferred ?? '').toLowerCase();
+  const preferred: 'uber' | 'lyft' | undefined = rawPref === 'uber' || rawPref === 'lyft' ? rawPref : undefined;
 
   return {
     replyJson: JSON.stringify({ resolvedAddress: address, preferred }),
