@@ -245,12 +245,14 @@ export const EventPeekPopover = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      <PublishToCalendarPicker
-        open={pickerOpen}
-        onOpenChange={setPickerOpen}
-        googleEventId={(event as GleeWorldEvent & { google_event_id?: string }).google_event_id ?? ''}
-        onPublished={() => toast.success('Published — The event is now on the shared calendar.')}
-      />
+      {isGoogleEvent && (
+        <PublishToCalendarPicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          googleEventId={(event as GleeWorldEvent & { google_event_id?: string }).google_event_id ?? ''}
+          onPublished={() => toast.success('Published — The event is now on the shared calendar.')}
+        />
+      )}
     </>
   );
 };

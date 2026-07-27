@@ -48,7 +48,7 @@ export async function runShare(input: RunShareInput): Promise<RunShareResult> {
         external_id:     google_event_id,
         origin_user_id:  user_id,
         created_by:      user_id,
-        event_type:      'personal_google',
+        event_type:      'shared_from_google',
         is_public:       true,
         is_private:      false,
         status:          'scheduled',
