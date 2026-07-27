@@ -118,15 +118,17 @@ serve(async (req) => {
     role?: string | null;
     voice_part?: string | null;
     class_year?: string | null;
+    home_address?: string | null;
   } | null = null;
   try {
     const { data } = await userClient
       .from('gw_profiles')
-      .select('full_name, role, voice_part, class_year')
+      .select('full_name, role, voice_part, class_year, home_address')
       .eq('user_id', caller.userId)
       .maybeSingle();
     profile = (data as typeof profile) ?? null;
   } catch { /* ignore — the assistant still works with fallback context */ }
+  const homeAddress = (profile?.home_address ?? '').trim() || undefined;
 
   const fullName = (profile?.full_name ?? '').trim();
   const inferredFirst = fullName.split(/\s+/)[0] || '';
@@ -212,6 +214,8 @@ serve(async (req) => {
           const toolOut = await executeServerTool(def.name, args, {
             supabase: userClient,
             youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ?? undefined,
+            googleMapsApiKey: Deno.env.get('GOOGLE_MAPS_API_KEY') ?? undefined,
+            homeAddress,
           });
           result = toolOut.replyJson;
           // Multi-tool iterations: last non-undefined panel wins. The panel is a UI

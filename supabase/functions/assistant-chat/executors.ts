@@ -6,7 +6,12 @@ type SupabaseLike = {
   functions?: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> };
 };
 
-interface Deps { supabase: SupabaseLike; youtubeApiKey?: string }
+interface Deps {
+  supabase: SupabaseLike;
+  youtubeApiKey?: string;
+  googleMapsApiKey?: string;
+  homeAddress?: string;
+}
 
 export type ConciergeResult =
   | { kind: 'ride'; query: string; resolvedAddress: string; uberUrl: string; lyftUrl: string; preferred?: 'uber' | 'lyft' }
@@ -29,6 +34,7 @@ export async function executeServerTool(
       case 'search_music': return { replyJson: await searchMusic(args, deps) };
       case 'find_user': return { replyJson: await findUser(args, deps) };
       case 'search_youtube': return { replyJson: await searchYoutube(args, deps) };
+      case 'get_ride': return await getRide(args, deps);
       case 'get_date_card': return { replyJson: await getDateCard(deps) };
       case 'read_news_feeds': return { replyJson: await readNewsFeeds(args, deps) };
       case 'find_nearby_place': return { replyJson: await findNearbyPlace(args, deps) };
@@ -180,4 +186,65 @@ async function searchYoutube(args: Record<string, unknown>, { youtubeApiKey }: D
     url: `https://www.youtube.com/watch?v=${it.id?.videoId}`,
   }));
   return JSON.stringify({ hits });
+}
+
+async function getRide(args: Record<string, unknown>, deps: Deps): Promise<ToolResult> {
+  const rawDest = String(args.destination ?? '').trim();
+  if (!rawDest) {
+    return { replyJson: JSON.stringify({ error: 'Which destination?' }) };
+  }
+  if (!deps.googleMapsApiKey) {
+    return { replyJson: JSON.stringify({ error: 'Rides are not configured on this workspace yet.' }) };
+  }
+
+  // "home" is a first-class shortcut: resolve from the profile, or bail
+  // out with a specific error the model turns into a follow-up question.
+  const isHome = rawDest.toLowerCase() === 'home';
+  const query = isHome ? (deps.homeAddress ?? '') : rawDest;
+  if (isHome && !query) {
+    return { replyJson: JSON.stringify({
+      error: "I don't have your home address saved. Give me the address and I'll remember it for next time.",
+    }) };
+  }
+
+  // Google Places API (New) Text Search — one call gives us both the
+  // canonical address and the coordinates. Fields mask keeps the response tiny.
+  const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': deps.googleMapsApiKey,
+      'X-Goog-FieldMask': 'places.formattedAddress,places.location',
+    },
+    body: JSON.stringify({ textQuery: query, maxResultCount: 1 }),
+  });
+  if (!res.ok) {
+    return { replyJson: JSON.stringify({ error: `Places lookup failed (${res.status}).` }) };
+  }
+  const body = await res.json();
+  const place = body.places?.[0];
+  if (!place?.location) {
+    return { replyJson: JSON.stringify({ error: `I couldn't find "${rawDest}".` }) };
+  }
+  const lat = place.location.latitude;
+  const lng = place.location.longitude;
+  const address = place.formattedAddress ?? rawDest;
+
+  const uberUrl =
+    'https://m.uber.com/ul/?action=setPickup&pickup=my_location'
+    + `&dropoff%5Blatitude%5D=${lat}`
+    + `&dropoff%5Blongitude%5D=${lng}`
+    + `&dropoff%5Bnickname%5D=${encodeURIComponent(address)}`;
+
+  const lyftUrl =
+    'https://ride.lyft.com/ride?id=lyft'
+    + `&destination%5Blatitude%5D=${lat}`
+    + `&destination%5Blongitude%5D=${lng}`;
+
+  const preferred = (String(args.preferred ?? '').toLowerCase() as 'uber' | 'lyft') || undefined;
+
+  return {
+    replyJson: JSON.stringify({ resolvedAddress: address, preferred }),
+    resultsPanel: { kind: 'ride', query: rawDest, resolvedAddress: address, uberUrl, lyftUrl, preferred },
+  };
 }

@@ -59,6 +59,20 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'admin', execution: 'server', confirm: false,
   },
   {
+    name: 'get_ride',
+    description:
+      "Prepare a rideshare deep link to a destination. The user speaks naturally ('take me home', 'ride to the Fox Theatre'); you resolve the destination and hand back a card the user taps to launch Uber or Lyft. 'home' resolves to the user's saved home address; if it's not set, ASK for the address instead of calling this tool blindly.",
+    parameters: {
+      type: 'object',
+      properties: {
+        destination: { type: 'string', description: 'Where the user wants to go. Free text; may be "home", a place name, or an address.' },
+        preferred: { type: 'string', description: "'uber' or 'lyft' if the user has a preference (optional)" },
+      },
+      required: ['destination'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'open_page',
     description: 'Navigate the user to a GleeWorld page. Valid keys: home, calendar, planner, music-library, studio, video, messenger, academy, sight-reading, part-tracks, media-library, songwriting, concert-planner, tour-manager, attendance, users, analytics.',
     parameters: {

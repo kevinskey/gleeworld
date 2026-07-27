@@ -22,12 +22,22 @@ describe('toolCatalog', () => {
 
   it('only send_sms and send_email require confirmation', () => {
     const confirmed = TOOL_CATALOG.filter((t) => t.confirm).map((t) => t.name).sort();
-    expect(confirmed).toEqual(['create_course_draft', 'send_email', 'send_sms']);
+    expect(confirmed).toEqual(['create_course_draft', 'send_email', 'send_sms', 'set_date_card']);
   });
 
   it('server tools are exactly the read-only set', () => {
     const server = TOOL_CATALOG.filter((t) => t.execution === 'server').map((t) => t.name).sort();
-    expect(server).toEqual(['find_user', 'query_calendar', 'search_music', 'search_youtube']);
+    expect(server).toEqual([
+      'find_nearby_place',
+      'find_user',
+      'get_date_card',
+      'get_preference',
+      'get_ride',
+      'query_calendar',
+      'read_news_feeds',
+      'search_music',
+      'search_youtube',
+    ]);
   });
 
   it('converts to OpenAI tool format', () => {
