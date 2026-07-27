@@ -52,12 +52,13 @@ export const EventPeekPopover = ({
     try {
       const r = await unshare.mutateAsync({ shared_event_id: event.id });
       if (r.deleted > 0) {
-        toast.success('Unshared — The published copy was removed.');
+        toast.success('Unshared — the published copy was removed.');
+        onEventDeleted?.();
       } else {
-        toast.message('Nothing to un-share');
+        toast.message('Nothing to un-share.');
       }
     } catch (e: any) {
-      toast.error(`Un-share failed — ${e?.message ?? String(e)}`);
+      toast.error('Un-share failed — ' + (e?.message ?? String(e)));
     }
   };
 
@@ -244,14 +245,12 @@ export const EventPeekPopover = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {pickerOpen && (
-        <PublishToCalendarPicker
-          open={pickerOpen}
-          onOpenChange={setPickerOpen}
-          googleEventId={(event as GleeWorldEvent & { google_event_id?: string }).google_event_id ?? ''}
-          onPublished={() => toast.success('Published — The event is now on the shared calendar.')}
-        />
-      )}
+      <PublishToCalendarPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        googleEventId={(event as GleeWorldEvent & { google_event_id?: string }).google_event_id ?? ''}
+        onPublished={() => toast.success('Published — The event is now on the shared calendar.')}
+      />
     </>
   );
 };
