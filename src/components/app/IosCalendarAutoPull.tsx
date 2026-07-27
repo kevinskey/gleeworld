@@ -1,16 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { Capacitor, registerPlugin } from '@capacitor/core';
-import type { AppPlugin } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import { isNativeCalendarAvailable } from '@/plugins/gwCalendar';
 import { useIosCalendarAccess, useIosCalendarSync } from '@/hooks/useIosCalendar';
 import { useAuth } from '@/contexts/AuthContext';
 
-const CapApp = registerPlugin<AppPlugin>('App');
-
 /**
  * Fires a silent iOS Calendar pull on:
  *   - initial mount (once, only when signed in + permission granted)
- *   - every subsequent app foreground (`App.addListener('appStateChange')`)
+ *   - every subsequent app foreground (via `document.visibilitychange`)
  *
  * Guarded on platform, auth, and permission — no-op elsewhere.
  * No user-visible UI. Failures land in the console; the manual
@@ -39,13 +36,12 @@ export function IosCalendarAutoPull() {
     // Initial pull on mount.
     maybeFire();
 
-    let handle: { remove?: () => void } | null = null;
-    (async () => {
-      handle = await CapApp.addListener('appStateChange', (s) => {
-        if (s.isActive) maybeFire();
-      });
-    })();
-    return () => { handle?.remove?.(); };
+    // Listen for visibility change (app foreground on iOS).
+    const onVis = () => {
+      if (document.visibilityState === 'visible') maybeFire();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { document.removeEventListener('visibilitychange', onVis); };
   // sync.mutateAsync is stable per-hook; we intentionally exclude it.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, status?.granted, Capacitor.getPlatform()]);
