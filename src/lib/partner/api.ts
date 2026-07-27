@@ -1,0 +1,159 @@
+import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+export interface Partner {
+  id: string;
+  user_id: string;
+  display_name: string;
+  bio: string | null;
+  website_url: string | null;
+  contact_email: string | null;
+  logo_storage_path: string | null;
+  stripe_connect_id: string | null;
+  stripe_charges_enabled: boolean;
+  stripe_payouts_enabled: boolean;
+  status: 'invited' | 'onboarding' | 'active' | 'suspended';
+  invited_at: string | null;
+  activated_at: string | null;
+  created_at: string;
+}
+
+export interface PartnerScore {
+  id: string;
+  partner_id: string;
+  title: string;
+  composer: string | null;
+  arranger: string | null;
+  voicing: string | null;
+  ensemble_type: string | null;
+  difficulty_grade: string | null;
+  language: string | null;
+  description: string | null;
+  tags: string[] | null;
+  price_cents: number;
+  currency: string;
+  master_storage_path: string;
+  thumbnail_storage_path: string | null;
+  sample_audio_storage_path: string | null;
+  page_count: number | null;
+  status: 'draft' | 'published' | 'unlisted' | 'removed';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PartnerInvite {
+  id: string;
+  email: string;
+  display_name: string | null;
+  invited_by: string | null;
+  token: string;
+  expires_at: string;
+  redeemed_at: string | null;
+  redeemed_by_user_id: string | null;
+  created_at: string;
+}
+
+// Flat 50% platform fee. Payout absorbs any 1-cent remainder so
+// platform_fee + partner_payout ALWAYS equals price.
+export function platformFeeCents(priceCents: number): number {
+  return Math.floor(priceCents / 2);
+}
+export function partnerPayoutCents(priceCents: number): number {
+  return priceCents - platformFeeCents(priceCents);
+}
+
+export function useMyPartner(): UseQueryResult<Partner | null> {
+  return useQuery({
+    queryKey: ['my-partner'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_partners')
+        .select('*')
+        .maybeSingle();
+      if (error) throw error;
+      return (data as Partner | null) ?? null;
+    },
+  });
+}
+
+export function useMyPartnerScores(status?: PartnerScore['status']): UseQueryResult<PartnerScore[]> {
+  return useQuery({
+    queryKey: ['my-partner-scores', status ?? 'all'],
+    queryFn: async () => {
+      let q = supabase.from('gw_partner_scores').select('*').order('created_at', { ascending: false });
+      if (status) q = q.eq('status', status);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as PartnerScore[];
+    },
+  });
+}
+
+interface UpdateSelfArgs {
+  display_name: string;
+  bio: string | null;
+  website_url: string | null;
+  contact_email: string | null;
+  logo_storage_path: string | null;
+}
+
+export function useUpdateMyPartner(): UseMutationResult<Partner, Error, UpdateSelfArgs> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args) => {
+      const { data, error } = await supabase.rpc('partner_update_self', {
+        p_display_name: args.display_name,
+        p_bio: args.bio,
+        p_website_url: args.website_url,
+        p_contact_email: args.contact_email,
+        p_logo_storage_path: args.logo_storage_path,
+      });
+      if (error) throw error;
+      return data as Partner;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-partner'] }),
+  });
+}
+
+export function useInvitePartner(): UseMutationResult<{ id: string; token: string }, Error, { email: string; display_name?: string }> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args) => {
+      const { data, error } = await supabase.functions.invoke<{ id: string; token: string }>(
+        'partner-invite-send', { body: args }
+      );
+      if (error) throw error;
+      if (!data) throw new Error('empty response');
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['partner-invites'] }),
+  });
+}
+
+export function useListPartnerInvites(): UseQueryResult<PartnerInvite[]> {
+  return useQuery({
+    queryKey: ['partner-invites'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_partner_invites')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as PartnerInvite[];
+    },
+  });
+}
+
+export function useListPartners(): UseQueryResult<Partner[]> {
+  return useQuery({
+    queryKey: ['partners-admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_partners')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Partner[];
+    },
+  });
+}
