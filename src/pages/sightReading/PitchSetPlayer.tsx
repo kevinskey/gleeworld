@@ -215,6 +215,11 @@ export function PitchSetPlayer({ voice }: Props) {
   useEffect(() => { notesRef.current = notes; }, [notes]);
   const micLiveRef = useRef<typeof mic.live>(null);
   useEffect(() => { micLiveRef.current = mic.live; }, [mic.live]);
+  // Ref-mirror for selectedSet so playNote (scheduled via setTimeout) sees
+  // the just-picked set even though React hasn't re-rendered yet with the
+  // new state value.
+  const selectedSetRef = useRef<SetDef | null>(null);
+  useEffect(() => { selectedSetRef.current = selectedSet; }, [selectedSet]);
 
   const cleanup = useCallback(() => {
     cancelledRef.current = true;
@@ -255,7 +260,10 @@ export function PitchSetPlayer({ voice }: Props) {
 
   const playNote = useCallback((idx: number) => {
     if (cancelledRef.current) return;
-    if (!audioCtxRef.current || !selectedSet) return;
+    // Read from refs — state may not have re-rendered yet after the click
+    // that scheduled this call.
+    const currentSet = selectedSetRef.current;
+    if (!audioCtxRef.current || !currentSet) return;
     const target = notesRef.current[idx];
     if (target == null) return;
     setCurrentIdx(idx);
@@ -284,7 +292,7 @@ export function PitchSetPlayer({ voice }: Props) {
           if (stopToneRef.current) { stopToneRef.current(); stopToneRef.current = null; }
           setResults((prev) => prev.map((r, i) => (i === idx ? 'correct' : r)));
           if (audioCtxRef.current) playCorrectChime(audioCtxRef.current, target);
-          void persistAttempt(selectedSet.id, idx, target, sungMidi, cents, true, Math.round(held));
+          void persistAttempt(currentSet.id, idx, target, sungMidi, cents, true, Math.round(held));
           advanceRef.current?.(idx + 1);
         }
       } else {
@@ -300,7 +308,7 @@ export function PitchSetPlayer({ voice }: Props) {
       const sungMidi = l ? l.midi : null;
       const cents = l ? Math.round((l.midi - target) * 100 + l.cents) : null;
       setResults((prev) => prev.map((r, i) => (i === idx ? 'missed' : r)));
-      void persistAttempt(selectedSet.id, idx, target, sungMidi, cents, false, 0);
+      void persistAttempt(currentSet.id, idx, target, sungMidi, cents, false, 0);
       advanceRef.current?.(idx + 1);
     }, LISTEN_MS);
   }, [selectedSet, persistAttempt]);
@@ -574,6 +582,16 @@ export function PitchSetPlayer({ voice }: Props) {
               onClick={() => { const ctx = primeToneCtx(); void startSet(selectedSet, ctx); }}
             >
               <Play className="w-4 h-4 mr-1" /> Start set
+            </Button>
+          </>
+        )}
+
+        {running && currentTarget == null && (
+          <>
+            <p className="text-sm text-slate-600">Starting up the microphone…</p>
+            <p className="text-xs text-slate-500 mt-1">Allow the microphone prompt if it appears.</p>
+            <Button size="sm" variant="outline" className="rounded-full mt-4" onClick={stopSet}>
+              Cancel
             </Button>
           </>
         )}
