@@ -309,6 +309,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
   const { navOrder, saveNavOrder } = useNavItemOrder();
@@ -533,6 +534,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
   // same per-user ordering + section overrides as the desktop sidebar

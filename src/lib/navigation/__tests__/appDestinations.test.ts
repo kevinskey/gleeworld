@@ -23,7 +23,7 @@ const FLAG_MODULE: Record<keyof ModuleFlags, string> = {
 };
 const navFor = (flags: ModuleFlags, over: Partial<NavContext> = {}): NavContext => ({
   hasModule: (k) => Object.entries(FLAG_MODULE).some(([f, m]) => m === k && flags[f as keyof ModuleFlags]),
-  isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false,
+  isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false,
   hiddenRoutes: new Set(), ...over,
 });
 
@@ -166,7 +166,7 @@ describe('getAppTiles', () => {
     // librarian) actually resolve and get their routes pinned by this
     // sweep, instead of silently never appearing.
     const adminNav: NavContext = {
-      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true,
+      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true, isPartner: true,
       hiddenRoutes: new Set(),
     };
     for (const role of ['student', 'faculty'] as const) {
@@ -275,7 +275,7 @@ describe('getAppTiles catalog parity', () => {
     // non-ModuleFlags-gated ones) is a real candidate here, keeping
     // this invariant honest against the full catalog.
     const nav: NavContext = {
-      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true,
+      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true, isPartner: true,
       hiddenRoutes: new Set(),
     };
     const tabRoutes = new Set(getTabItems('faculty', allOn).map((t) => t.to));

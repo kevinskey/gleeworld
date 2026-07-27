@@ -20,6 +20,10 @@ serve(async (req) => {
   const { data: userData, error: userErr } = await supa.auth.getUser(jwt);
   if (userErr || !userData.user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "content-type": "application/json" } });
 
+  if (!userData.user.email_confirmed_at) {
+    return new Response(JSON.stringify({ error: "please verify your email address first" }), { status: 403, headers: { ...corsHeaders, "content-type": "application/json" } });
+  }
+
   const { token } = await req.json().catch(() => ({ token: "" }));
   if (!token) return new Response(JSON.stringify({ error: "token required" }), { status: 400, headers: { ...corsHeaders, "content-type": "application/json" } });
 
@@ -47,7 +51,14 @@ serve(async (req) => {
     })
     .select("id")
     .single();
-  if (pErr) return new Response(JSON.stringify({ error: pErr.message }), { status: 500, headers: { ...corsHeaders, "content-type": "application/json" } });
+  if (pErr) {
+    if (pErr.code === '23505') {
+      // Already a partner — mark invite redeemed to prevent reuse and return 409.
+      await supa.from("gw_partner_invites").update({ redeemed_at: new Date().toISOString(), redeemed_by_user_id: userData.user.id }).eq("id", invite.id);
+      return new Response(JSON.stringify({ error: "already a partner" }), { status: 409, headers: { ...corsHeaders, "content-type": "application/json" } });
+    }
+    return new Response(JSON.stringify({ error: pErr.message }), { status: 500, headers: { ...corsHeaders, "content-type": "application/json" } });
+  }
 
   await supa
     .from("gw_partner_invites")

@@ -13,13 +13,28 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
+  const auth = req.headers.get("Authorization") ?? "";
+  const jwt = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!jwt) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "content-type": "application/json" } });
+
   const supa = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data: userData } = await supa.auth.getUser(jwt);
+  if (!userData.user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "content-type": "application/json" } });
+
   const { score_id } = await req.json().catch(() => ({}));
   if (!score_id) return new Response(JSON.stringify({ error: "score_id required" }), { status: 400, headers: { ...corsHeaders, "content-type": "application/json" } });
 
   const { data: score, error } = await supa
     .from("gw_partner_scores").select("*").eq("id", score_id).single();
   if (error || !score) return new Response(JSON.stringify({ error: "score not found" }), { status: 404, headers: { ...corsHeaders, "content-type": "application/json" } });
+
+  // Verify caller owns the score or is an admin.
+  const { data: partner } = await supa.from("gw_partners").select("id").eq("user_id", userData.user.id).maybeSingle();
+  const { data: prof } = await supa.from("gw_profiles").select("is_admin,is_super_admin").eq("user_id", userData.user.id).single();
+  const isAdmin = !!(prof?.is_admin || prof?.is_super_admin);
+  if (!isAdmin && (!partner || partner.id !== score.partner_id)) {
+    return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "content-type": "application/json" } });
+  }
 
   // Fetch master PDF
   const { data: pdfBlob, error: dlErr } = await supa.storage

@@ -29,6 +29,7 @@ export interface NavGate {
   adminOnly?: boolean;
   platformAdminOnly?: boolean;
   librarianOnly?: boolean;
+  partnerOnly?: boolean;
 }
 
 export interface CatalogEntry {
@@ -61,7 +62,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'tracks',        to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: Mic,      section: 'music', tone: 'bg-indigo-50 text-indigo-600', tourId: 'nav-part-tracks',   gridLabel: 'Tracks', gate: { module: 'part_tracks' } },
   { key: 'media-library', to: '/dashboard/media-library', label: 'Media Library', icon: Images,   section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-media-library' },
   { key: 'librarian',     to: '/dashboard/librarian',     label: 'Librarian',     icon: LibraryBig, section: 'music', tone: 'bg-slate-50 text-slate-600', tourId: 'nav-librarian',    gate: { module: 'librarian', librarianOnly: true } },
-  { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal' },
+  { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal', gate: { partnerOnly: true } },
   // Teach
   { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy', hero: true },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },
@@ -115,6 +116,7 @@ export interface NavContext {
   isTenantAdmin: boolean;
   isPlatformAdmin: boolean;
   canLibrarian: boolean;
+  isPartner: boolean;
   hiddenRoutes: ReadonlySet<string>;
 }
 
@@ -129,6 +131,7 @@ function gateOpen(gate: NavGate | undefined, ctx: NavContext): boolean {
   if (gate.adminOnly && !ctx.isTenantAdmin) return false;
   if (gate.platformAdminOnly && !ctx.isPlatformAdmin) return false;
   if (gate.librarianOnly && !ctx.canLibrarian) return false;
+  if (gate.partnerOnly && !ctx.isPartner) return false;
   return true;
 }
 
@@ -174,10 +177,10 @@ export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
 // Only 'admin' carries privilege; student and member are unprivileged in the
 // nav's eyes. canLibrarian is a per-user grant rather than a role, but no
 // non-admin role implies it, so false is correct.
-const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian'>> = {
-  admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true  },
-  student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
-  member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
+const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian' | 'isPartner'>> = {
+  admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true,  isPartner: false },
+  student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false },
+  member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false },
 };
 
 /**

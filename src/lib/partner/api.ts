@@ -66,9 +66,13 @@ export function useMyPartner(): UseQueryResult<Partner | null> {
   return useQuery({
     queryKey: ['my-partner'],
     queryFn: async () => {
+      const { data: partnerId, error: idErr } = await supabase.rpc('my_partner_id');
+      if (idErr) throw idErr;
+      if (!partnerId) return null;
       const { data, error } = await supabase
         .from('gw_partners')
         .select('*')
+        .eq('id', partnerId as string)
         .maybeSingle();
       if (error) throw error;
       return (data as Partner | null) ?? null;
@@ -80,7 +84,14 @@ export function useMyPartnerScores(status?: PartnerScore['status']): UseQueryRes
   return useQuery({
     queryKey: ['my-partner-scores', status ?? 'all'],
     queryFn: async () => {
-      let q = supabase.from('gw_partner_scores').select('*').order('created_at', { ascending: false });
+      const { data: partnerId, error: idErr } = await supabase.rpc('my_partner_id');
+      if (idErr) throw idErr;
+      if (!partnerId) return [];
+      let q = supabase
+        .from('gw_partner_scores')
+        .select('*')
+        .eq('partner_id', partnerId as string)
+        .order('created_at', { ascending: false });
       if (status) q = q.eq('status', status);
       const { data, error } = await q;
       if (error) throw error;

@@ -67,10 +67,10 @@ export default function PartnerPortal() {
           {isActive && (
             <div className="flex items-center gap-2 flex-wrap">
               <Button variant="outline" size="sm" onClick={openDashboard} disabled={refresh.isPending}>
-                <ExternalLink className="w-3 h-3 mr-1" /> Open Stripe dashboard
+                <ExternalLink className="w-4 h-4 mr-1" /> Open Stripe dashboard
               </Button>
               <Button variant="ghost" size="sm" onClick={() => refresh.mutate()} disabled={refresh.isPending}>
-                <RefreshCw className="w-3 h-3 mr-1" /> Refresh status
+                <RefreshCw className="w-4 h-4 mr-1" /> Refresh status
               </Button>
             </div>
           )}

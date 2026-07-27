@@ -71,7 +71,7 @@ export default function PartnersAdmin() {
               <li key={i.id} className="flex items-center justify-between text-sm">
                 <span>{i.email}{i.display_name ? ` (${i.display_name})` : ''}</span>
                 <Button size="sm" variant="ghost" onClick={() => copyLink(i.token)}>
-                  <Copy className="w-3 h-3 mr-1" /> Copy link
+                  <Copy className="w-4 h-4 mr-1" /> Copy link
                 </Button>
               </li>
             ))}

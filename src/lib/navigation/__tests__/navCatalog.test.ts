@@ -3,7 +3,7 @@ import { NAV_CATALOG, resolveNav, entrySurfaces, hideableNavItems, type NavConte
 
 const openCtx = (over: Partial<NavContext> = {}): NavContext => ({
   hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true,
-  canLibrarian: true, hiddenRoutes: new Set(), ...over,
+  canLibrarian: true, isPartner: true, hiddenRoutes: new Set(), ...over,
 });
 
 describe('NAV_CATALOG integrity', () => {
@@ -72,7 +72,7 @@ describe('resolveNav gates', () => {
     expect(out.find((e) => e.to === '/dashboard/pr-hub')).toBeUndefined();
   });
   it('flagless core (Music Library, People, Video) survives an all-off context', () => {
-    const out = resolveNav({ hasModule: () => false, isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, hiddenRoutes: new Set() });
+    const out = resolveNav({ hasModule: () => false, isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false, hiddenRoutes: new Set() });
     for (const key of ['music-library', 'people', 'video', 'music-tools', 'office-hours', 'analytics', 'settings', 'attendance', 'academy']) {
       expect(out.find((e) => e.key === key), key).toBeDefined();
     }
