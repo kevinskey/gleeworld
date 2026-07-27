@@ -189,3 +189,50 @@ export function useRefreshConnectStatus(): UseMutationResult<ConnectRefreshResul
     onSuccess: () => qc.invalidateQueries({ queryKey: ['my-partner'] }),
   });
 }
+
+export interface CreateScoreArgs {
+  title: string;
+  composer: string | null;
+  arranger: string | null;
+  voicing: string | null;
+  ensemble_type: string | null;
+  difficulty_grade: string | null;
+  description: string | null;
+  tags: string[] | null;
+  price_cents: number;
+  master_storage_path: string;
+}
+
+export function useCreatePartnerScore(): UseMutationResult<{ id: string }, Error, CreateScoreArgs> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args) => {
+      // Partner id resolves via RLS (partner_id = my_partner_id()).
+      // Explicit partner_id fetch avoids the client sending a wrong value.
+      const { data: me } = await supabase.rpc('my_partner_id');
+      const partnerId = me as string | null;
+      if (!partnerId) throw new Error('not a partner');
+
+      const { data, error } = await supabase.from('gw_partner_scores').insert({
+        partner_id: partnerId,
+        title: args.title,
+        composer: args.composer,
+        arranger: args.arranger,
+        voicing: args.voicing,
+        ensemble_type: args.ensemble_type,
+        difficulty_grade: args.difficulty_grade,
+        description: args.description,
+        tags: args.tags,
+        price_cents: args.price_cents,
+        master_storage_path: args.master_storage_path,
+        status: 'draft',
+      }).select('id').single();
+      if (error) throw error;
+
+      // Fire-and-forget postprocess. Errors don't block the create.
+      supabase.functions.invoke('partner-score-postprocess', { body: { score_id: data.id } }).catch(() => {});
+      return { id: data.id };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-partner-scores'] }),
+  });
+}
