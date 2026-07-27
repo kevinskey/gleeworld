@@ -178,13 +178,20 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-3" align="start">
+        <PopoverContent className="w-[92vw] max-w-md p-3" align="start">
           <AudioSourcePickerBody
             youtubeUrl={youtubeUrl}
             setYoutubeUrl={setYoutubeUrl}
             onYouTubeSubmit={handleYouTubeSubmit}
             onUploadClick={() => fileInputRef.current?.click()}
             onPickAppleMusicSong={async (hit) => {
+              // Close the popover BEFORE awaiting loadAppleMusic. When the
+              // user isn't signed in, loadAppleMusic surfaces the "Sign in
+              // to Apple Music" button on the pill — but the pill is under
+              // the still-open popover, so the button was invisible. Closing
+              // first fixes the entire "search finds the song but nothing
+              // plays" mobile confusion.
+              setShowSourcePicker(false);
               await loadAppleMusic({
                 id: hit.id,
                 kind: 'song',
@@ -194,6 +201,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
               });
             }}
             onPickAppleMusicAlbum={async (hit) => {
+              setShowSourcePicker(false);
               await loadAppleMusic({
                 id: hit.id,
                 kind: 'album',
@@ -201,6 +209,11 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
                 title: `${hit.title} · ${hit.artist} (album)`,
                 artworkUrl: hit.artworkUrl,
               });
+            }}
+            onPickYouTubeVideo={(videoId) => {
+              forceUnlockAudio();
+              loadYouTube(`https://www.youtube.com/watch?v=${videoId}`);
+              setShowSourcePicker(false);
             }}
           />
         </PopoverContent>
@@ -448,7 +461,15 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
 };
 
 // Source picker body — Apple Music search (songs + albums toggle),
-// YouTube URL paste, and File upload all stacked in one popover.
+// YouTube search + URL paste, and File upload all stacked in one popover.
+interface YouTubeHit {
+  video_id: string;
+  title: string;
+  channel: string;
+  thumbnail_url?: string;
+  url?: string;
+}
+
 function AudioSourcePickerBody({
   youtubeUrl,
   setYoutubeUrl,
@@ -456,6 +477,7 @@ function AudioSourcePickerBody({
   onUploadClick,
   onPickAppleMusicSong,
   onPickAppleMusicAlbum,
+  onPickYouTubeVideo,
 }: {
   youtubeUrl: string;
   setYoutubeUrl: (v: string) => void;
@@ -463,6 +485,7 @@ function AudioSourcePickerBody({
   onUploadClick: () => void;
   onPickAppleMusicSong: (hit: AppleMusicSongHit) => Promise<void> | void;
   onPickAppleMusicAlbum: (hit: AppleMusicAlbumHit) => Promise<void> | void;
+  onPickYouTubeVideo: (videoId: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [songs, setSongs] = useState<AppleMusicSongHit[]>([]);
@@ -470,6 +493,15 @@ function AudioSourcePickerBody({
   const [tab, setTab] = useState<'songs' | 'albums'>('songs');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+
+  // YouTube search: mirrors the Apple Music pattern — same 300ms debounce,
+  // same result-card interaction. Backed by the `youtube-search` edge fn
+  // that holds the API key server-side.
+  const [ytQuery, setYtQuery] = useState('');
+  const [ytHits, setYtHits] = useState<YouTubeHit[]>([]);
+  const [ytSearching, setYtSearching] = useState(false);
+  const [ytError, setYtError] = useState<string | null>(null);
+  const [showYtPaste, setShowYtPaste] = useState(false);
 
   useEffect(() => {
     if (!query.trim()) { setSongs([]); setAlbums([]); setSearchError(null); return; }
@@ -491,7 +523,33 @@ function AudioSourcePickerBody({
     return () => window.clearTimeout(handle);
   }, [query]);
 
+  useEffect(() => {
+    const term = ytQuery.trim();
+    if (!term) { setYtHits([]); setYtError(null); return; }
+    let cancelled = false;
+    setYtSearching(true);
+    setYtError(null);
+    const handle = window.setTimeout(async () => {
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data, error } = await supabase.functions.invoke('youtube-search', {
+          body: { q: term, maxResults: 8 },
+        });
+        if (error) throw error;
+        const body = data as { hits?: YouTubeHit[]; error?: string };
+        if (body?.error) throw new Error(body.error);
+        if (!cancelled) setYtHits(body?.hits ?? []);
+      } catch (e: any) {
+        if (!cancelled) setYtError(e?.message ?? 'YouTube search failed.');
+      } finally {
+        if (!cancelled) setYtSearching(false);
+      }
+    }, 300);
+    return () => { cancelled = true; window.clearTimeout(handle); };
+  }, [ytQuery]);
+
   const clearResults = () => { setQuery(''); setSongs([]); setAlbums([]); };
+  const clearYtResults = () => { setYtQuery(''); setYtHits([]); setYtError(null); };
 
   return (
     <div className="space-y-3">
@@ -595,23 +653,78 @@ function AudioSourcePickerBody({
         )}
       </div>
 
-      {/* YouTube URL */}
+      {/* YouTube — search first, paste-URL as a fallback toggle. Same
+          debounce + result-list pattern as Apple Music so both surfaces
+          feel like one control. */}
       <div className="space-y-1.5 border-t border-border pt-3">
         <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <Youtube className="h-3 w-3 text-rose-500" /> YouTube
         </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Paste YouTube URL…"
-            value={youtubeUrl}
-            onChange={(e) => setYoutubeUrl(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onYouTubeSubmit()}
-            className="flex-1 h-8 text-sm"
-          />
-          <Button size="sm" onClick={onYouTubeSubmit} disabled={!youtubeUrl} className="h-8 px-2">
-            <Youtube className="h-4 w-4" />
-          </Button>
-        </div>
+        <Input
+          placeholder="Search YouTube…"
+          value={ytQuery}
+          onChange={(e) => setYtQuery(e.target.value)}
+          className="h-8 text-sm"
+        />
+
+        {ytSearching && (
+          <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" /> Searching…
+          </div>
+        )}
+        {ytError && (
+          <div className="text-[11px] text-rose-500">{ytError}</div>
+        )}
+
+        {ytHits.length > 0 && (
+          <div className="max-h-48 overflow-y-auto rounded border border-border divide-y divide-border">
+            {ytHits.map((hit) => (
+              <button
+                key={hit.video_id}
+                type="button"
+                onClick={() => { onPickYouTubeVideo(hit.video_id); clearYtResults(); }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent/40"
+              >
+                {hit.thumbnail_url
+                  ? <img src={hit.thumbnail_url} alt="" className="w-10 h-8 rounded shrink-0 object-cover" />
+                  : <Youtube className="w-6 h-6 text-rose-500 shrink-0" />}
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium truncate">{hit.title}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">{hit.channel}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        {!ytSearching && ytQuery.trim().length > 0 && ytHits.length === 0 && !ytError && (
+          <div className="text-[11px] text-muted-foreground italic">No videos match.</div>
+        )}
+
+        {/* URL paste — collapsed by default. Kept as an option for users
+            who already have a specific video URL in hand. */}
+        {!showYtPaste && (
+          <button
+            type="button"
+            onClick={() => setShowYtPaste(true)}
+            className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          >
+            Or paste a YouTube URL
+          </button>
+        )}
+        {showYtPaste && (
+          <div className="flex gap-2">
+            <Input
+              placeholder="Paste YouTube URL…"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onYouTubeSubmit()}
+              className="flex-1 h-8 text-sm"
+            />
+            <Button size="sm" onClick={onYouTubeSubmit} disabled={!youtubeUrl} className="h-8 px-2">
+              <Youtube className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* File upload */}
