@@ -68,7 +68,7 @@ export async function runSync(input: RunSyncInput): Promise<RunSyncResult> {
     .delete()
     .eq('user_id', user_id)
     .gte('start_at', fromIso)
-    .lte('start_at', toIso)
+    .lt('start_at', toIso)
     .not('apple_event_id', 'in', `(${idList.map(id => `"${id}"`).join(',')})`)
     .select('id');
   if (delErr) return { error: 'save_failed', detail: delErr.message };

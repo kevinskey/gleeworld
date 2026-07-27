@@ -13,6 +13,7 @@ function stubSupabase(opts: {
     const chain: any = {
       eq:  (c: string, v: any) => { filters.push({ eq: [c, v] });  return chain; },
       gte: (c: string, v: any) => { filters.push({ gte: [c, v] }); return chain; },
+      lt:  (c: string, v: any) => { filters.push({ lt: [c, v] });  return chain; },
       lte: (c: string, v: any) => { filters.push({ lte: [c, v] }); return chain; },
       not: (c: string, op: string, v: any) => { filters.push({ not: [c, op, v] }); return chain; },
       select: () => { calls.push({ table, op: 'delete', filters }); return Promise.resolve(deleteResult); },
@@ -65,7 +66,7 @@ describe('runSync', () => {
     expect(del!.filters).toEqual(expect.arrayContaining([
       { eq: ['user_id', uid] },
       { gte: ['start_at', win.fromIso] },
-      { lte: ['start_at', win.toIso] },
+      { lt: ['start_at', win.toIso] },
     ]));
     expect(del!.filters.some((f: any) => f.not?.[0] === 'apple_event_id')).toBe(true);
   });

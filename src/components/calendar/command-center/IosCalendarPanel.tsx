@@ -6,6 +6,10 @@ import { useIosCalendarAccess, useIosCalendarSync } from '@/hooks/useIosCalendar
 
 export function IosCalendarPanel() {
   if (!isNativeCalendarAvailable()) return null;
+  return <IosCalendarPanelInner />;
+}
+
+function IosCalendarPanelInner() {
   const { status, request } = useIosCalendarAccess();
   const sync = useIosCalendarSync();
   const [pulling, setPulling] = useState(false);
@@ -37,7 +41,7 @@ export function IosCalendarPanel() {
         iPhone Calendar (iOS app only)
       </header>
       <p className="text-sm text-muted-foreground">
-        Pull events from your iPhone Calendar so they appear alongside choir events.
+        Pull events from your iPhone Calendar so they appear alongside your GleeWorld schedule.
       </p>
       {!granted && (
         <button
