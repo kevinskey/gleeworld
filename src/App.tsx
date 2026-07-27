@@ -360,6 +360,7 @@ const PeerReviewBrowserPage = lazy(() => import("./pages/mus240/PeerReviewBrowse
 const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
+const PartnersAdmin = lazy(() => import("./pages/admin/PartnersAdmin"));
 const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
@@ -1342,7 +1343,19 @@ const App = () => {
                 } 
                />
                {/* /admin routes — only deep links below, no bare /admin home. */}
-                 <Route 
+                 <Route
+                   path="/admin/partners"
+                   element={
+                     <ProtectedRoute>
+                       <AdminOnlyRoute>
+                         <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                           <DashboardShell><PartnersAdmin /></DashboardShell>
+                         </UniversalLayout>
+                       </AdminOnlyRoute>
+                     </ProtectedRoute>
+                   }
+                 />
+                 <Route
                    path="/admin/academy-courses" 
                    element={
                      <ProtectedRoute>
