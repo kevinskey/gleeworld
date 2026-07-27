@@ -96,7 +96,7 @@ export const GeneralInquiryDialog: React.FC<GeneralInquiryDialogProps> = ({ chil
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name *</Label>
               <Input
@@ -143,7 +143,7 @@ export const GeneralInquiryDialog: React.FC<GeneralInquiryDialogProps> = ({ chil
             />
           </div>
           
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>

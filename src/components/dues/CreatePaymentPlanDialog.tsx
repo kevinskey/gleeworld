@@ -177,7 +177,9 @@ export const CreatePaymentPlanDialog = ({
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
+              {/* w-full on PopoverContent renders as intrinsic content
+                  width (usually too wide/narrow); anchor to trigger width. */}
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                 <Command>
                   <CommandInput placeholder="Search dues records..." />
                   <CommandList>
