@@ -9,13 +9,13 @@ import { toast } from "sonner";
 import { EventQRCode } from "../EventQRCode";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
 import { EditEventDialog } from "../EditEventDialog";
-import { isGoogleSyncedEvent, isSharedFromGoogle } from "@/utils/googleCalendarEvents";
+import { isGoogleSyncedEvent, isIosSyncedEvent, isSharedFromExternal } from "@/utils/googleCalendarEvents";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUnshareGoogleEvent } from "@/hooks/useEventSharing";
+import { useUnshareEvent } from "@/hooks/useEventSharing";
 import { PublishToCalendarPicker } from "./PublishToCalendarPicker";
 
 interface EventPeekPopoverProps {
@@ -45,8 +45,8 @@ export const EventPeekPopover = ({
 
   const { user } = useAuth();
   const currentUserId = user?.id ?? null;
-  const unshare = useUnshareGoogleEvent();
-  const canUnshare = isSharedFromGoogle(event as any, currentUserId);
+  const unshare = useUnshareEvent();
+  const canUnshare = isSharedFromExternal(event as any, currentUserId);
 
   const doUnshare = async () => {
     try {
@@ -62,10 +62,12 @@ export const EventPeekPopover = ({
     }
   };
 
-  // Personal Google Calendar overlay rows aren't gw_events — no edit,
-  // delete, QR, or attendance; they can only be changed in Google.
+  // Personal Google/iOS Calendar overlay rows aren't gw_events — no edit,
+  // delete, QR, or attendance; they can only be changed in the source app.
   const isGoogleEvent = isGoogleSyncedEvent(event);
-  const showActions = canEdit && !isGoogleEvent;
+  const isIosEvent = isIosSyncedEvent(event);
+  const isExternalEvent = isGoogleEvent || isIosEvent;
+  const showActions = canEdit && !isExternalEvent;
 
   const timeRange = `${format(new Date(event.start_date), 'h:mm a')}${
     event.end_date ? ` – ${format(new Date(event.end_date), 'h:mm a')}` : ''
@@ -148,10 +150,10 @@ export const EventPeekPopover = ({
             )}
           </div>
 
-          {isGoogleEvent && (
+          {isExternalEvent && (
             <div className="mt-3 pl-5 space-y-1">
               <p className="text-xs text-muted-foreground">
-                Synced from Google Calendar — edit or delete it there.
+                Synced from personal calendar — edit or delete it there.
               </p>
               <button
                 type="button"
@@ -202,7 +204,7 @@ export const EventPeekPopover = ({
                   disabled={unshare.isPending}
                   className="w-full text-left rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors text-rose-600"
                 >
-                  Unshare from Google
+                  Unshare from personal calendar
                 </button>
               )}
             </div>
@@ -245,12 +247,17 @@ export const EventPeekPopover = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {isGoogleEvent && (
+      {isExternalEvent && (
         <PublishToCalendarPicker
           open={pickerOpen}
           onOpenChange={setPickerOpen}
-          googleEventId={(event as GleeWorldEvent & { google_event_id?: string }).google_event_id ?? ''}
-          onPublished={() => toast.success('Published — The event is now on the shared calendar.')}
+          source={isGoogleEvent ? 'google_calendar' : 'ios_calendar'}
+          sourceEventId={
+            isGoogleEvent
+              ? ((event as any).google_event_id ?? '')
+              : ((event as any).apple_event_id ?? '')
+          }
+          onPublished={() => toast.success('Published — the event is now on the shared calendar.')}
         />
       )}
     </>
