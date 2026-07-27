@@ -196,6 +196,7 @@ const MemberRegistration = lazy(() => import("./pages/MemberRegistration"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MusicLibraryPage = lazy(() => import("./pages/member/MusicLibraryPage"));
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
+const RepertoirePage = lazy(() => import("./pages/dashboard/RepertoirePage"));
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
@@ -1439,6 +1440,16 @@ const App = () => {
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell><NewMusicLibraryPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/repertoire"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><RepertoirePage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
