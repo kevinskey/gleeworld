@@ -210,6 +210,9 @@ export const CommandCenterCalendar = () => {
         // Carry a marker so the rest of the UI knows this row is read-only
         // and external — edit/delete dialogs check this.
         source: 'google' as any,
+        // Carry the real Google event id so EventPeekPopover can pass it
+        // to PublishToCalendarPicker (share edge fn queries by this value).
+        google_event_id: g.google_event_id,
       } as any));
     return [...rawEvents, ...synthetic];
   }, [rawEvents, googleRows]);

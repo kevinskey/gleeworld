@@ -9,11 +9,14 @@ import { toast } from "sonner";
 import { EventQRCode } from "../EventQRCode";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
 import { EditEventDialog } from "../EditEventDialog";
-import { isGoogleSyncedEvent } from "@/utils/googleCalendarEvents";
+import { isGoogleSyncedEvent, isSharedFromGoogle } from "@/utils/googleCalendarEvents";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUnshareGoogleEvent } from "@/hooks/useEventSharing";
+import { PublishToCalendarPicker } from "./PublishToCalendarPicker";
 
 interface EventPeekPopoverProps {
   event: GleeWorldEvent;
@@ -38,6 +41,25 @@ export const EventPeekPopover = ({
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const { user } = useAuth();
+  const currentUserId = user?.id ?? null;
+  const unshare = useUnshareGoogleEvent();
+  const canUnshare = isSharedFromGoogle(event as any, currentUserId);
+
+  const doUnshare = async () => {
+    try {
+      const r = await unshare.mutateAsync({ shared_event_id: event.id });
+      if (r.deleted > 0) {
+        toast.success('Unshared — The published copy was removed.');
+      } else {
+        toast.message('Nothing to un-share');
+      }
+    } catch (e: any) {
+      toast.error(`Un-share failed — ${e?.message ?? String(e)}`);
+    }
+  };
 
   // Personal Google Calendar overlay rows aren't gw_events — no edit,
   // delete, QR, or attendance; they can only be changed in Google.
@@ -126,41 +148,62 @@ export const EventPeekPopover = ({
           </div>
 
           {isGoogleEvent && (
-            <div className="mt-3 pl-5 text-xs text-muted-foreground">
-              Synced from Google Calendar — edit or delete it there.
+            <div className="mt-3 pl-5 space-y-1">
+              <p className="text-xs text-muted-foreground">
+                Synced from Google Calendar — edit or delete it there.
+              </p>
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                className="w-full text-left rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
+              >
+                Publish to calendar…
+              </button>
             </div>
           )}
 
           {showActions && (
-            <div className="flex items-center gap-1.5 mt-3 pl-5">
-              <EventQRCode
-                eventId={event.id}
-                eventTitle={event.title}
-                trigger={
-                  <Button variant="outline" size="sm" data-compact className="h-7 px-2.5 gap-1.5 text-xs font-medium">
-                    QR Check-In
-                  </Button>
-                }
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                data-compact
-                onClick={() => setShowAttendanceDialog(true)}
-                className="h-7 px-2.5 gap-1.5 text-xs font-medium"
-              >
-                <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                Attendance
-              </Button>
-              <button
-                type="button"
-                data-compact
-                onClick={() => setShowDeleteDialog(true)}
-                className="ml-auto h-7 w-7 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
-                title="Delete event"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+            <div className="mt-3 pl-5 space-y-1">
+              <div className="flex items-center gap-1.5">
+                <EventQRCode
+                  eventId={event.id}
+                  eventTitle={event.title}
+                  trigger={
+                    <Button variant="outline" size="sm" data-compact className="h-7 px-2.5 gap-1.5 text-xs font-medium">
+                      QR Check-In
+                    </Button>
+                  }
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  data-compact
+                  onClick={() => setShowAttendanceDialog(true)}
+                  className="h-7 px-2.5 gap-1.5 text-xs font-medium"
+                >
+                  <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                  Attendance
+                </Button>
+                <button
+                  type="button"
+                  data-compact
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="ml-auto h-7 w-7 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors"
+                  title="Delete event"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+              {canUnshare && (
+                <button
+                  type="button"
+                  onClick={doUnshare}
+                  disabled={unshare.isPending}
+                  className="w-full text-left rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors text-rose-600"
+                >
+                  Unshare from Google
+                </button>
+              )}
             </div>
           )}
         </PopoverContent>
@@ -200,6 +243,15 @@ export const EventPeekPopover = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {pickerOpen && (
+        <PublishToCalendarPicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          googleEventId={(event as GleeWorldEvent & { google_event_id?: string }).google_event_id ?? ''}
+          onPublished={() => toast.success('Published — The event is now on the shared calendar.')}
+        />
+      )}
     </>
   );
 };
