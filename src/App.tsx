@@ -362,6 +362,10 @@ const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
 const PartnersAdmin = lazy(() => import("./pages/admin/PartnersAdmin"));
 const PartnerInviteRedeem = lazy(() => import("./pages/partner/PartnerInviteRedeem"));
+const PartnerPortal = lazy(() => import("./pages/partner/PartnerPortal"));
+const PartnerProfile = lazy(() => import("./pages/partner/PartnerProfile"));
+const PartnerScoresList = lazy(() => import("./pages/partner/PartnerScoresList"));
+const PartnerScoreUpload = lazy(() => import("./pages/partner/PartnerScoreUpload"));
 const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
@@ -1366,6 +1370,21 @@ const App = () => {
                      </ProtectedRoute>
                    }
                  />
+                 <Route
+                   path="/partner"
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><PartnerPortal /></DashboardShell>
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                   }
+                 >
+                   <Route index element={<PartnerProfile />} />
+                   <Route path="profile" element={<PartnerProfile />} />
+                   <Route path="scores" element={<PartnerScoresList />} />
+                   <Route path="scores/new" element={<PartnerScoreUpload />} />
+                 </Route>
                  <Route
                    path="/admin/academy-courses" 
                    element={
