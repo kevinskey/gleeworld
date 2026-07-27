@@ -4,6 +4,7 @@
 type SupabaseLike = {
   from: (table: string) => any;
   functions?: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> };
+  rpc?: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 };
 
 interface Deps {
@@ -11,6 +12,8 @@ interface Deps {
   youtubeApiKey?: string;
   googleMapsApiKey?: string;
   homeAddress?: string;
+  webSearchUrl?: string;
+  webSearchAuthHeader?: string;
 }
 
 export type ConciergeResult =
@@ -40,6 +43,7 @@ export async function executeServerTool(
       case 'read_news_feeds': return { replyJson: await readNewsFeeds(args, deps) };
       case 'find_nearby_place': return { replyJson: await findNearbyPlace(args, deps) };
       case 'get_preference': return { replyJson: await getPreference(args, deps) };
+      case 'web_search': return await webSearch(args, deps);
       default: return { replyJson: JSON.stringify({ error: `Unknown tool: ${name}` }) };
     }
   } catch (e) {
@@ -248,6 +252,46 @@ async function getRide(args: Record<string, unknown>, deps: Deps): Promise<ToolR
   return {
     replyJson: JSON.stringify({ resolvedAddress: address, preferred }),
     resultsPanel: { kind: 'ride', query: rawDest, resolvedAddress: address, uberUrl, lyftUrl, preferred },
+  };
+}
+
+const WEB_SEARCH_DAILY_CAP = 100;
+
+async function webSearch(args: Record<string, unknown>, deps: Deps): Promise<ToolResult> {
+  const q = String(args.query ?? '').trim();
+  if (!q) return { replyJson: JSON.stringify({ error: 'What should I search for?' }) };
+  if (!deps.webSearchUrl || !deps.webSearchAuthHeader || !deps.supabase.rpc) {
+    return { replyJson: JSON.stringify({ error: 'Search is not configured.' }) };
+  }
+
+  // Increment first, then check. This is intentional: we want the counter
+  // to advance even if the caller retries — this is the cost meter, not
+  // the request meter.
+  const { data: post, error: rpcErr } = await deps.supabase.rpc('increment_assistant_usage', { p_tool_name: 'web_search' });
+  if (rpcErr) {
+    return { replyJson: JSON.stringify({ error: 'Search rate check failed.' }) };
+  }
+  if (typeof post === 'number' && post > WEB_SEARCH_DAILY_CAP) {
+    return { replyJson: JSON.stringify({
+      error: "You've hit today's daily search limit for this workspace. Try again tomorrow.",
+    }) };
+  }
+
+  const res = await fetch(deps.webSearchUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: deps.webSearchAuthHeader },
+    body: JSON.stringify({ query: q }),
+  });
+  if (!res.ok) {
+    return { replyJson: JSON.stringify({ error: 'Search is unavailable right now. Please try again.' }) };
+  }
+  const body = await res.json();
+  const results = Array.isArray(body.results) ? body.results : [];
+  const answer = typeof body.answer === 'string' ? body.answer : undefined;
+
+  return {
+    replyJson: JSON.stringify({ query: q, answer, resultCount: results.length }),
+    resultsPanel: { kind: 'web', query: q, answer, results },
   };
 }
 

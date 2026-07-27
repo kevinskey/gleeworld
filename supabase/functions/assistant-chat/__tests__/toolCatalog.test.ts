@@ -38,6 +38,7 @@ describe('toolCatalog', () => {
       'read_news_feeds',
       'search_music',
       'search_youtube',
+      'web_search',
     ]);
   });
 

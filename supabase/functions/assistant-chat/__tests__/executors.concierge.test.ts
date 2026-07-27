@@ -83,3 +83,43 @@ describe('order_food executor', () => {
     expect((out.resultsPanel as any).preferred).toBe('grubhub');
   });
 });
+
+describe('web_search executor', () => {
+  it('calls web-search fn and returns results + panel', async () => {
+    const rpcSpy = vi.fn(async () => ({ data: 1, error: null }));
+    const supabaseWithRpc = { from: () => ({}), rpc: rpcSpy } as any;
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ answer: 'An answer.', results: [{ title: 't', url: 'https://x', snippet: 's' }] }),
+    })));
+    const out = await executeServerTool('web_search', { query: 'gospel history' }, {
+      supabase: supabaseWithRpc, webSearchUrl: 'http://ws', webSearchAuthHeader: 'Bearer x',
+    });
+    expect(rpcSpy).toHaveBeenCalledWith('increment_assistant_usage', { p_tool_name: 'web_search' });
+    expect((out.resultsPanel as any).kind).toBe('web');
+    expect((out.resultsPanel as any).answer).toBe('An answer.');
+  });
+
+  it('refuses over the daily cap without hitting web-search', async () => {
+    const rpcSpy = vi.fn(async () => ({ data: 101, error: null }));
+    const supabaseWithRpc = { from: () => ({}), rpc: rpcSpy } as any;
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    const out = await executeServerTool('web_search', { query: 'x' }, {
+      supabase: supabaseWithRpc, webSearchUrl: 'http://ws', webSearchAuthHeader: 'Bearer x',
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(JSON.parse(out.replyJson).error).toMatch(/daily search limit/i);
+    expect(out.resultsPanel).toBeUndefined();
+  });
+
+  it('returns friendly error when web-search is unreachable', async () => {
+    const rpcSpy = vi.fn(async () => ({ data: 1, error: null }));
+    const supabaseWithRpc = { from: () => ({}), rpc: rpcSpy } as any;
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 502, json: async () => ({ error: 'up' }) })));
+    const out = await executeServerTool('web_search', { query: 'x' }, {
+      supabase: supabaseWithRpc, webSearchUrl: 'http://ws', webSearchAuthHeader: 'Bearer x',
+    });
+    expect(JSON.parse(out.replyJson).error).toContain('unavailable');
+  });
+});

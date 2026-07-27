@@ -25,6 +25,10 @@ serve(async (req) => {
   if (!caller || !caller.userId) return unauthorizedResponse(corsHeaders);
   const role: AssistantRole = caller.isAdmin ? 'admin' : 'member';
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const webSearchUrl = supabaseUrl ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1/web-search` : undefined;
+  const webSearchAuthHeader = req.headers.get('Authorization') ?? undefined;
+
   const apiKey = Deno.env.get('DEEPSEEK_API_KEY');
   const apiUrl = Deno.env.get('ASSISTANT_API_URL') ?? 'https://api.deepseek.com/chat/completions';
   // DeepSeek renamed `deepseek-chat` → `deepseek-v4-pro` / `deepseek-v4-flash`
@@ -216,6 +220,8 @@ serve(async (req) => {
             youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ?? undefined,
             googleMapsApiKey: Deno.env.get('GOOGLE_MAPS_API_KEY') ?? undefined,
             homeAddress,
+            webSearchUrl,
+            webSearchAuthHeader,
           });
           result = toolOut.replyJson;
           // Multi-tool iterations: last non-undefined panel wins. The panel is a UI

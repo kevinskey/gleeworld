@@ -389,6 +389,17 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'admin', execution: 'client', confirm: true,
   },
   {
+    name: 'web_search',
+    description:
+      "Search the live web (Brave) and return a short answer plus a list of result URLs. Use for current-events or fact-check questions your own knowledge can't cover. Daily limit is per-tenant — don't chain multiple searches for a single question.",
+    parameters: {
+      type: 'object',
+      properties: { query: str('The search query') },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'switch_world',
     description: "Switch to one of the user's other tenants ('worlds'). Pass `query` as the name or slug (or a partial match — 'kevinsworld', 'spelman', 'main'). Leave `query` empty to have the tool list the user's available worlds so you can ask which one. If the user is only in one world, this tool is a no-op. On web this cross-navigates to the tenant's subdomain; on native it swaps the cached tenant and reloads in place. Same underlying mechanism as the avatar dropdown's Switch organization list.",
     parameters: {
