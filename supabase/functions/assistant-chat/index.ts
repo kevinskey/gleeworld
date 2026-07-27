@@ -4,7 +4,7 @@ import { authenticateCaller, unauthorizedResponse } from '../_shared/auth.ts';
 import { toolsForRole, toOpenAiTools, TOOL_CATALOG, type AssistantRole } from './toolCatalog.ts';
 import { buildSystemPrompt } from './prompt.ts';
 import { buildChatRequest, callModel, type ChatMessage } from './provider.ts';
-import { executeServerTool } from './executors.ts';
+import { executeServerTool, type ConciergeResult } from './executors.ts';
 import { validateCourseSpec } from '../_shared/courseSpec.ts';
 
 const corsHeaders = {
@@ -158,7 +158,7 @@ serve(async (req) => {
     ...history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
   ];
   const actions: Array<{ tool: string; args: Record<string, unknown>; confirm: boolean }> = [];
-  let resultsPanel: unknown = undefined;
+  let resultsPanel: ConciergeResult | undefined = undefined;
 
   // Persist the user's turn immediately so we don't lose it if the model
   // call fails downstream. The assistant reply is saved once we have it.
@@ -214,6 +214,8 @@ serve(async (req) => {
             youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ?? undefined,
           });
           result = toolOut.replyJson;
+          // Multi-tool iterations: last non-undefined panel wins. The panel is a UI
+          // surface, not an accumulator — the client shows one card at a time.
           if (toolOut.resultsPanel) resultsPanel = toolOut.resultsPanel;
         } else {
           // Client-executed: queue it for the browser and tell the model it's underway.
