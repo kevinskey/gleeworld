@@ -456,7 +456,9 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
       {/* Stipend Dialog */}
       <StipendReceiptDialog open={stipendDialogOpen} onOpenChange={setStipendDialogOpen} />
-      <div className="flex gap-6">
+      {/* flex-col on mobile so the sidebar (30%) doesn't get pushed off
+          screen behind the main column at 390px. Side-by-side at lg+. */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
       {/* Main Content Column - 70% */}
       <div className="flex-1 space-y-6 min-w-0">
         

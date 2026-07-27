@@ -128,18 +128,21 @@ export const WardrobeManagementHub = () => {
         <UpcomingAppointmentsCard />
       </div>
 
-      {/* Main Content Tabs */}
+      {/* Main Content Tabs — 8 tabs. On mobile the 2-col grid crushed
+          icon+label so hard the labels overlapped. Horizontal-scroll on
+          mobile; equal-width 8-col grid at lg+. */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8">
-          <TabsTrigger value="inventory" className="flex items-center gap-2">
+        <div className="-mx-4 md:mx-0 overflow-x-auto lg:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+          <TabsList className="mx-4 md:mx-0 flex w-max gap-1 lg:w-full lg:grid lg:grid-cols-8">
+          <TabsTrigger value="inventory" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             <Package className="h-4 w-4" />
             <span className="hidden sm:inline">Inventory</span>
           </TabsTrigger>
-          <TabsTrigger value="checkout" className="flex items-center gap-2">
+          <TabsTrigger value="checkout" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             <ArrowLeftRight className="h-4 w-4" />
             <span className="hidden sm:inline">Check In/Out</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
+          <TabsTrigger value="notifications" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
             {stats.notifications > 0 && (
@@ -148,27 +151,28 @@ export const WardrobeManagementHub = () => {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="dresscode" className="flex items-center gap-2">
+          <TabsTrigger value="dresscode" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             <Shirt className="h-4 w-4" />
             <span className="hidden sm:inline">Dress Code</span>
           </TabsTrigger>
-          <TabsTrigger value="makeup" className="flex items-center gap-2">
+          <TabsTrigger value="makeup" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             <Palette className="h-4 w-4" />
             <span className="hidden sm:inline">Makeup</span>
           </TabsTrigger>
-          <TabsTrigger value="bags" className="flex items-center gap-2">
+          <TabsTrigger value="bags" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Garment Bags</span>
           </TabsTrigger>
-          <TabsTrigger value="hair-nail" className="flex items-center gap-2">
+          <TabsTrigger value="hair-nail" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             <Camera className="h-4 w-4" />
             <span className="hidden sm:inline">Hair/Nail</span>
           </TabsTrigger>
-          <TabsTrigger value="members" className="flex items-center gap-2">
+          <TabsTrigger value="members" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
         </TabsList>
+        </div>
 
         <TabsContent value="inventory" className="space-y-6">
           <WardrobeInventoryManager searchTerm={searchTerm} />
