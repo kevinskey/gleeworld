@@ -181,8 +181,8 @@ export const WardrobeInventoryDashboard = () => {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-card rounded-lg border border-border shadow-sm">
-      <div className="bg-accent/50 p-6 rounded-lg border border-border">
+    <div className="space-y-4 md:space-y-6 p-3 md:p-6 bg-card rounded-lg border border-border shadow-sm">
+      <div className="bg-accent/50 p-3 md:p-6 rounded-lg border border-border">
         <h2 className="text-xl font-semibold text-foreground mb-2">Inventory Management</h2>
         <p className="text-muted-foreground text-sm">
           Manage wardrobe item quantities and track availability

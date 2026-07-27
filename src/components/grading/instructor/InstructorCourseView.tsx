@@ -46,7 +46,7 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">{course?.code}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">{course?.code}</h1>
           <p className="text-muted-foreground">{course?.title}</p>
         </div>
         <div className="flex gap-2">
