@@ -123,3 +123,70 @@ describe('web_search executor', () => {
     expect(JSON.parse(out.replyJson).error).toContain('unavailable');
   });
 });
+
+describe('find_nearby_place executor', () => {
+  const supabaseWithFunctions = (invokeImpl: any) => ({
+    from: () => ({}),
+    functions: { invoke: invokeImpl },
+  }) as any;
+
+  it('returns places panel with normalized entries', async () => {
+    const invoke = vi.fn(async () => ({
+      data: {
+        places: [
+          {
+            name: 'Starbucks',
+            address: '7920 Senoia Rd, Fairburn',
+            rating: 3.7,
+            ratingCount: 1500,
+            isOpen: true,
+            phone: '+14045551212',
+            mapsUrl: 'https://maps.google.com/?cid=1234',
+          },
+        ],
+      },
+      error: null,
+    }));
+    const out = await executeServerTool(
+      'find_nearby_place',
+      { query: 'starbucks', near: 'Fairburn GA' },
+      { supabase: supabaseWithFunctions(invoke) },
+    );
+    const panel = out.resultsPanel as any;
+    expect(panel.kind).toBe('places');
+    expect(panel.query).toBe('starbucks');
+    expect(panel.near).toBe('Fairburn GA');
+    expect(panel.places[0].name).toBe('Starbucks');
+    expect(panel.places[0].mapsUrl).toBe('https://maps.google.com/?cid=1234');
+    expect(panel.places[0].rating).toBe(3.7);
+    expect(panel.places[0].isOpen).toBe(true);
+
+    const reply = JSON.parse(out.replyJson);
+    expect(reply.count).toBe(1);
+    expect(reply.top[0].name).toBe('Starbucks');
+    // replyJson must NOT carry any URL — the model would inline it otherwise.
+    expect(JSON.stringify(reply)).not.toMatch(/https?:\/\//);
+  });
+
+  it('handles missing location gracefully', async () => {
+    const out = await executeServerTool(
+      'find_nearby_place',
+      { query: 'coffee' },
+      { supabase: supabaseWithFunctions(vi.fn()) },
+    );
+    expect(out.resultsPanel).toBeUndefined();
+    expect(JSON.parse(out.replyJson).error).toMatch(/lat\/lng|near/);
+  });
+
+  it('surfaces empty-result set as an empty places panel', async () => {
+    const invoke = vi.fn(async () => ({ data: { places: [] }, error: null }));
+    const out = await executeServerTool(
+      'find_nearby_place',
+      { query: 'unicorn cafe', near: 'nowhere' },
+      { supabase: supabaseWithFunctions(invoke) },
+    );
+    const panel = out.resultsPanel as any;
+    expect(panel.kind).toBe('places');
+    expect(panel.places).toEqual([]);
+  });
+});

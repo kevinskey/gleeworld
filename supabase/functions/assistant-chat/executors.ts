@@ -16,10 +16,21 @@ interface Deps {
   webSearchAuthHeader?: string;
 }
 
+export interface PlaceEntry {
+  name: string;
+  address: string;
+  rating?: number | null;
+  ratingCount?: number;
+  isOpen?: boolean | null;
+  phone?: string | null;
+  mapsUrl?: string | null;
+}
+
 export type ConciergeResult =
   | { kind: 'ride'; query: string; resolvedAddress: string; uberUrl: string; lyftUrl: string; preferred?: 'uber' | 'lyft' }
   | { kind: 'food'; query: string; services: Array<{ name: 'DoorDash' | 'Uber Eats' | 'Grubhub'; deepLinkUrl: string }>; preferred?: 'doordash' | 'ubereats' | 'grubhub' }
-  | { kind: 'web';  query: string; answer?: string; results: Array<{ title: string; url: string; snippet: string }> };
+  | { kind: 'web';  query: string; answer?: string; results: Array<{ title: string; url: string; snippet: string }> }
+  | { kind: 'places'; query: string; near?: string; places: PlaceEntry[] };
 
 export interface ToolResult {
   replyJson: string;
@@ -41,7 +52,7 @@ export async function executeServerTool(
       case 'order_food': return await orderFood(args);
       case 'get_date_card': return { replyJson: await getDateCard(deps) };
       case 'read_news_feeds': return { replyJson: await readNewsFeeds(args, deps) };
-      case 'find_nearby_place': return { replyJson: await findNearbyPlace(args, deps) };
+      case 'find_nearby_place': return await findNearbyPlace(args, deps);
       case 'get_preference': return { replyJson: await getPreference(args, deps) };
       case 'web_search': return await webSearch(args, deps);
       default: return { replyJson: JSON.stringify({ error: `Unknown tool: ${name}` }) };
@@ -144,21 +155,47 @@ async function readNewsFeeds(args: Record<string, unknown>, { supabase }: Deps):
   return JSON.stringify({ items: trimmed, count: trimmed.length });
 }
 
-async function findNearbyPlace(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+async function findNearbyPlace(args: Record<string, unknown>, { supabase }: Deps): Promise<ToolResult> {
   const query = typeof args.query === 'string' ? args.query.trim() : '';
-  if (!query) return JSON.stringify({ error: 'query is required' });
+  if (!query) return { replyJson: JSON.stringify({ error: 'query is required' }) };
   const lat = typeof args.lat === 'number' ? args.lat : undefined;
   const lng = typeof args.lng === 'number' ? args.lng : undefined;
   const near = typeof args.near === 'string' ? args.near.trim() : undefined;
   if (!lat && !lng && !near) {
-    return JSON.stringify({ error: 'Need either lat/lng or a `near` string — ask the user where they are.' });
+    return { replyJson: JSON.stringify({ error: 'Need either lat/lng or a `near` string — ask the user where they are.' }) };
   }
-  if (!supabase.functions) return JSON.stringify({ error: 'places lookup unavailable in this context' });
+  if (!supabase.functions) return { replyJson: JSON.stringify({ error: 'places lookup unavailable in this context' }) };
   const { data, error } = await supabase.functions.invoke('nearby-places', {
     body: { query, lat, lng, near, maxResults: 5 },
   });
-  if (error) return JSON.stringify({ error: error.message ?? 'nearby-places failed' });
-  return JSON.stringify(data ?? { places: [] });
+  if (error) return { replyJson: JSON.stringify({ error: error.message ?? 'nearby-places failed' }) };
+  const raw = Array.isArray(data?.places) ? data.places : [];
+  const places: PlaceEntry[] = raw.map((p: any) => ({
+    name: String(p.name ?? ''),
+    address: String(p.address ?? ''),
+    rating: typeof p.rating === 'number' ? p.rating : null,
+    ratingCount: typeof p.ratingCount === 'number' ? p.ratingCount : undefined,
+    isOpen: typeof p.isOpen === 'boolean' ? p.isOpen : null,
+    phone: p.phone ?? null,
+    mapsUrl: p.mapsUrl ?? null,
+  }));
+  // The panel carries the tappable map link — the reply text stays URL-free
+  // so TTS reads clean prose. Give the model just enough context to
+  // narrate: names + rough locations + whether the top hit is open.
+  return {
+    replyJson: JSON.stringify({
+      query,
+      near,
+      count: places.length,
+      top: places.slice(0, 3).map((p) => ({
+        name: p.name,
+        address: p.address,
+        rating: p.rating,
+        isOpen: p.isOpen,
+      })),
+    }),
+    resultsPanel: { kind: 'places', query, near, places },
+  };
 }
 
 async function getPreference(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {

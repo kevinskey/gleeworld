@@ -58,4 +58,51 @@ describe('AssistantResultsPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /close/i }));
     expect(onClose).toHaveBeenCalledOnce();
   });
+
+  it('renders places card with name, address, rating, open badge, and maps link', () => {
+    const result: ConciergeResult = {
+      kind: 'places',
+      query: 'starbucks',
+      near: 'Fairburn GA',
+      places: [
+        {
+          name: 'Starbucks',
+          address: '7920 Senoia Rd, Fairburn',
+          rating: 3.7,
+          ratingCount: 1500,
+          isOpen: true,
+          mapsUrl: 'https://maps.google.com/?cid=1234',
+        },
+      ],
+    };
+    render(<AssistantResultsPanel result={result} onClose={() => {}} />);
+    // Place name (exact "Starbucks") and the muted query line ("starbucks · near …")
+    // both match /starbucks/i — pin the place name to the address-carrying card.
+    expect(screen.getByText('Starbucks')).toBeInTheDocument();
+    expect(screen.getByText(/7920 Senoia Rd/)).toBeInTheDocument();
+    expect(screen.getByText('3.7')).toBeInTheDocument();
+    expect(screen.getByText(/1,500 reviews/)).toBeInTheDocument();
+    expect(screen.getByText('Open')).toBeInTheDocument();
+    const mapsLink = screen.getByRole('link', { name: /Open in Maps/i });
+    expect(mapsLink).toHaveAttribute('href', 'https://maps.google.com/?cid=1234');
+    expect(mapsLink).toHaveAttribute('target', '_blank');
+    expect(mapsLink).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('places card omits the maps button when mapsUrl is missing', () => {
+    const result: ConciergeResult = {
+      kind: 'places',
+      query: 'coffee',
+      places: [{ name: 'Cafe', address: '1 Main St' }],
+    };
+    render(<AssistantResultsPanel result={result} onClose={() => {}} />);
+    expect(screen.getByText('Cafe')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Open in Maps/i })).toBeNull();
+  });
+
+  it('places card renders empty-state text when no places', () => {
+    const result: ConciergeResult = { kind: 'places', query: 'x', places: [] };
+    render(<AssistantResultsPanel result={result} onClose={() => {}} />);
+    expect(screen.getByText(/no places found/i)).toBeInTheDocument();
+  });
 });

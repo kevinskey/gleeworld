@@ -1,4 +1,4 @@
-import { X, Car, Utensils, Globe, Sparkles } from 'lucide-react';
+import { X, Car, Utensils, Globe, Sparkles, MapPin, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ConciergeResult } from '@/lib/assistant/conciergeTypes';
 
@@ -16,12 +16,14 @@ export function AssistantResultsPanel({ result, onClose, className }: Props) {
     <div className={cn('flex flex-col h-full bg-card border-l border-border', className)}>
       <header className="flex items-center justify-between px-4 py-2.5 border-b">
         <div className="flex items-center gap-2 text-sm font-semibold">
-          {result.kind === 'ride' && <Car className="w-4 h-4 text-amber-600" />}
-          {result.kind === 'food' && <Utensils className="w-4 h-4 text-sky-600" />}
-          {result.kind === 'web'  && <Globe className="w-4 h-4 text-violet-600" />}
-          {result.kind === 'ride' && 'Ride ready'}
-          {result.kind === 'food' && 'Order ready'}
-          {result.kind === 'web'  && 'Search results'}
+          {result.kind === 'ride'   && <Car className="w-4 h-4 text-amber-600" />}
+          {result.kind === 'food'   && <Utensils className="w-4 h-4 text-sky-600" />}
+          {result.kind === 'web'    && <Globe className="w-4 h-4 text-violet-600" />}
+          {result.kind === 'places' && <MapPin className="w-4 h-4 text-rose-600" />}
+          {result.kind === 'ride'   && 'Ride ready'}
+          {result.kind === 'food'   && 'Order ready'}
+          {result.kind === 'web'    && 'Search results'}
+          {result.kind === 'places' && 'Nearby'}
         </div>
         <button
           type="button"
@@ -34,9 +36,10 @@ export function AssistantResultsPanel({ result, onClose, className }: Props) {
       </header>
 
       <div className="flex-1 min-h-0 overflow-y-auto p-4">
-        {result.kind === 'ride' && <RideCard result={result} />}
-        {result.kind === 'food' && <FoodCard result={result} />}
-        {result.kind === 'web'  && <WebCard result={result} />}
+        {result.kind === 'ride'   && <RideCard result={result} />}
+        {result.kind === 'food'   && <FoodCard result={result} />}
+        {result.kind === 'web'    && <WebCard result={result} />}
+        {result.kind === 'places' && <PlacesCard result={result} />}
       </div>
     </div>
   );
@@ -142,6 +145,63 @@ function WebCard({ result }: { result: Extract<ConciergeResult, { kind: 'web' }>
           </a>
         ))}
       </div>
+    </div>
+  );
+}
+
+function PlacesCard({ result }: { result: Extract<ConciergeResult, { kind: 'places' }> }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        {result.query}
+        {result.near ? ` · near ${result.near}` : ''}
+      </p>
+      {result.places.length === 0 && (
+        <p className="text-sm text-muted-foreground">No places found.</p>
+      )}
+      {result.places.map((p, i) => (
+        <div
+          key={`${p.name}-${p.address}-${i}`}
+          className="rounded-md border border-border p-3 space-y-2"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate">{p.name}</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">{p.address}</p>
+            </div>
+            {p.isOpen != null && (
+              <span
+                className={cn(
+                  'shrink-0 text-xs px-2 py-0.5 rounded-full font-medium',
+                  p.isOpen
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {p.isOpen ? 'Open' : 'Closed'}
+              </span>
+            )}
+          </div>
+          {p.rating != null && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <span>{p.rating.toFixed(1)}</span>
+              {p.ratingCount ? <span>· {p.ratingCount.toLocaleString()} reviews</span> : null}
+            </div>
+          )}
+          {p.mapsUrl && (
+            <a
+              href={p.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium border border-border hover:bg-accent transition-colors"
+            >
+              <MapPin className="w-4 h-4" />
+              Open in Maps
+            </a>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

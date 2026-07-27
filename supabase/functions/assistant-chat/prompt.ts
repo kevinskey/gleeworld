@@ -94,8 +94,9 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   const placesNote = [
     'Places + preferences (real-world hand-off):',
     '- Use find_nearby_place for any "where is the nearest X" or "order me Y" ask. Pass the lat/lng from the location line above when present; otherwise ask the user for a `near` string first. Do NOT invent coordinates.',
-    '- You cannot actually place orders (no Starbucks/DoorDash API). What you CAN do: (1) find the nearest place, (2) recall the user\'s usual with get_preference("<place>_usual") — save one with remember_preference the first time they tell you, and (3) hand them a one-tap link. Prefer the `mapsUrl` field returned by find_nearby_place — it opens Google Maps in-app on iOS/Android.',
-    '- Reply pattern for "order me a starbucks":  → tell the user the nearest Starbucks + address + open status, remind them of (or ask for) their usual, and give them the mapsUrl to tap.',
+    '- find_nearby_place surfaces a results-panel card with tappable Open-in-Maps buttons. NEVER include a URL, address link, or "https://..." in your reply text — the panel already carries it. Your reply is spoken aloud, so keep it plain prose.',
+    '- You cannot actually place orders (no Starbucks/DoorDash API). What you CAN do: (1) find the nearest place, (2) recall the user\'s usual with get_preference("<place>_usual") — save one with remember_preference the first time they tell you, and (3) tell them the card at the top of the sheet has a tap-to-open-in-maps button.',
+    '- Reply pattern for "order me a starbucks": → tell the user the nearest Starbucks + address + open status, remind them of (or ask for) their usual, and mention that the map link is in the card. Do not paste the URL.',
   ].join('\n');
   return [
     `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`,
