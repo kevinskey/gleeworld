@@ -124,7 +124,7 @@ const KNOWN_ROUTES = new Set([
   '/dashboard/viewer', '/dashboard/part-tracks', '/studio',
   '/dashboard/sight-reading', '/dashboard/reading-music', '/attendance', '/dashboard/academy',
   '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
-  '/store', '/dashboard/people',
+  '/store', '/store/products', '/dashboard/people',
   '/partner', '/admin/partners',
   '/dashboard/music-library', '/dashboard/repertoire', '/dashboard/media-library', '/dashboard/librarian',
   '/dashboard/office-hours', '/dashboard/practice-recordings', '/video',

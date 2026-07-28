@@ -143,7 +143,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
             <Settings className="h-4 w-4 mr-2" />
             Site setup
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/store')}>
+          <Button variant="outline" size="sm" onClick={() => navigate('/store/products')}>
             <Store className="h-4 w-4 mr-2" />
             Store
           </Button>

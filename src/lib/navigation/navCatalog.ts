@@ -93,7 +93,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // tenant open the editor and hit RLS write failures instead of simply not
   // seeing the entry.
   { key: 'graduates', to: '/dashboard/alumni', label: 'Graduates Page', icon: GraduationCap, section: 'reach', tone: 'bg-teal-50 text-teal-600',       tourId: 'nav-alumni', gate: { module: 'alumni', adminOnly: true } },
-  { key: 'merch',     to: '/store',            label: 'Merch',     icon: Shirt,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-merch-grid', surfaces: ['grid'], gate: { module: 'merch' } },
+  { key: 'merch',     to: '/store/products',   label: 'Merch',     icon: Shirt,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-merch-grid', surfaces: ['grid'], gate: { module: 'merch' } },
   // Money
   { key: 'box-office', to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     section: 'money', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-box-office', gate: { module: 'box_office', adminOnly: true } },
   { key: 'finance',    to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, section: 'money', tone: 'bg-emerald-50 text-emerald-600', tourId: 'nav-finance', gridIcon: Wallet, gate: { module: 'finance' } },

@@ -31,7 +31,7 @@ const D = {
   planner:  { key: 'planner',  to: '/dashboard/concert-planner', label: 'Programs', icon: ListMusic } as Destination,
   attendance: { key: 'attendance', to: '/attendance',       label: 'Attendance', icon: ClipboardList } as Destination,
   finance:  { key: 'finance',  to: '/dashboard/finance',    label: 'Finance',  icon: Wallet } as Destination,
-  merch:    { key: 'merch',    to: '/store',                label: 'Merch',    icon: Shirt } as Destination,
+  merch:    { key: 'merch',    to: '/store/products',       label: 'Merch',    icon: Shirt } as Destination,
 };
 
 // Module flag gating a given destination key, when the destination is
