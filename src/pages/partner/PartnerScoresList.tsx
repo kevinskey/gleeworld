@@ -3,10 +3,11 @@ import { Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useMyPartnerScores } from '@/lib/partner/api';
+import { useMyPartnerScores, useUpdatePartnerScoreStatus } from '@/lib/partner/api';
 
 export default function PartnerScoresList() {
   const { data: scores, isLoading } = useMyPartnerScores();
+  const updateStatus = useUpdatePartnerScoreStatus();
 
   return (
     <div className="space-y-4">
@@ -34,6 +35,13 @@ export default function PartnerScoresList() {
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs">${(s.price_cents / 100).toFixed(2)}</span>
                 <Badge variant={s.status === 'published' ? 'default' : 'outline'} className="text-xs">{s.status}</Badge>
+                <Button
+                  size="sm"
+                  variant={s.status === 'published' ? 'outline' : 'default'}
+                  onClick={() => updateStatus.mutate({ id: s.id, status: s.status === 'published' ? 'draft' : 'published' })}
+                >
+                  {s.status === 'published' ? 'Unpublish' : 'Publish'}
+                </Button>
               </div>
             </CardContent>
           </Card>

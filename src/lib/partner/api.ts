@@ -247,3 +247,20 @@ export function useCreatePartnerScore(): UseMutationResult<{ id: string }, Error
     onSuccess: () => qc.invalidateQueries({ queryKey: ['my-partner-scores'] }),
   });
 }
+
+export function useUpdatePartnerScoreStatus(): UseMutationResult<{ id: string; status: string }, Error, { id: string; status: 'draft' | 'published' | 'unlisted' | 'removed' }> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }) => {
+      const { data, error } = await supabase
+        .from('gw_partner_scores')
+        .update({ status })
+        .eq('id', id)
+        .select('id, status')
+        .single();
+      if (error) throw error;
+      return data as { id: string; status: string };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-partner-scores'] }),
+  });
+}
