@@ -399,6 +399,11 @@ const StudentAssignmentPage = lazy(() => import("./pages/grading/student/Student
 const CourseAudioPage = lazy(() => import("./pages/courses/CourseAudioPage"));
 const GlobalMiniPlayer = lazy(() => import("./components/audio/GlobalMiniPlayer").then((m) => ({ default: m.GlobalMiniPlayer })));
 import { ModuleGate } from "./components/auth/ModuleGate";
+import { CartProvider } from "./components/store/CartContext";
+const StorePage = lazy(() => import("./pages/store/StorePage"));
+const StoreScoreDetail = lazy(() => import("./pages/store/StoreScoreDetail"));
+const StorePartnerPage = lazy(() => import("./pages/store/StorePartnerPage"));
+const StoreThanksPage = lazy(() => import("./pages/store/StoreThanksPage"));
 
 // Legacy MUS240 redirect component
 const LegacyMus240Redirect = () => {
@@ -2728,15 +2733,63 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                                />
-                               <Route 
-                                path="/store" 
+                               <Route
+                                path="/store/products"
                                 element={
                                   <ProtectedRoute>
                                     <ProductManagement />
                                   </ProtectedRoute>
-                                } 
+                                }
                                />
-                               <Route 
+                               <Route
+                                 path="/store"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <CartProvider><StorePage /></CartProvider>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/scores/:id"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <CartProvider><StoreScoreDetail /></CartProvider>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/partners/:id"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <CartProvider><StorePartnerPage /></CartProvider>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/thanks"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <CartProvider><StoreThanksPage /></CartProvider>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
                                  path="/handbook" 
                                  element={
                                    <ProtectedRoute>

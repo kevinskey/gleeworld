@@ -55,8 +55,9 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
   // Music
-  { key: 'music-library', to: '/dashboard/music-library', label: 'Music Library', icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
-  { key: 'repertoire',    to: '/dashboard/repertoire',    label: 'Repertoire',    icon: BookOpen, section: 'music', tone: 'bg-sky-50 text-sky-700',       tourId: 'nav-repertoire' },
+  { key: 'music-library',   to: '/dashboard/music-library', label: 'Music Library',  icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
+  { key: 'composer-store', to: '/store',                   label: 'Composer Store', icon: Store,    section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-composer-store' },
+  { key: 'repertoire',     to: '/dashboard/repertoire',    label: 'Repertoire',     icon: BookOpen, section: 'music', tone: 'bg-sky-50 text-sky-700',       tourId: 'nav-repertoire' },
   { key: 'music',         to: '/dashboard/viewer',        label: 'Viewer',        icon: ScanEye,  section: 'music', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-viewer',        gridLabel: 'Music', gridIcon: Music, gate: { module: 'viewer' } },
   { key: 'sight',         to: '/dashboard/reading-music', label: 'Reading Music', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-reading-music', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
   { key: 'tracks',        to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: Mic,      section: 'music', tone: 'bg-indigo-50 text-indigo-600', tourId: 'nav-part-tracks',   gridLabel: 'Tracks', gate: { module: 'part_tracks' } },
