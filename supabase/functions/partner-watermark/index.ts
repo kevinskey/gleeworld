@@ -66,6 +66,15 @@ serve(async (req) => {
 
   await supa.from("gw_partner_order_items").update({ watermarked_storage_path: path }).eq("id", item.id);
 
+  // Insert personal library row now that the file exists.
+  await supa.from("gw_personal_scores").insert({
+    user_id: order.buyer_user_id,
+    title: score.title,
+    source: "purchase",
+    entitlement_id: null,
+    storage_path: path,
+  });
+
   return new Response(JSON.stringify({ watermarked_storage_path: path }), {
     headers: { ...corsHeaders, "content-type": "application/json" },
   });

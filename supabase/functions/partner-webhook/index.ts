@@ -70,52 +70,37 @@ serve(async (req) => {
       .maybeSingle();
     if (existing) continue;
 
-    // Entitlement row.
-    const downloadToken = crypto.randomUUID().replace(/-/g, "");
-    const { data: ent } = await supa
-      .from("gw_store_entitlements")
-      .insert({ buyer_user_id: buyerUserId, download_token: downloadToken })
-      .select("id")
-      .single();
-
-    // Order item.
+    // Order item (upsert as safety net against Stripe retries).
     const { data: item } = await supa
       .from("gw_partner_order_items")
-      .insert({
+      .upsert({
         order_id: orderId,
         partner_score_id: score.id,
         partner_id: partnerId,
         price_cents: price,
         platform_fee_cents: platformFee,
         partner_payout_cents: payout,
-        entitlement_id: ent?.id ?? null,
-      })
+        entitlement_id: null,
+      }, { onConflict: 'order_id,partner_score_id' })
       .select("id")
       .single();
     if (!item) continue;
 
-    // Trigger watermarking asynchronously — Stripe expects us to return
-    // 200 within 20s. If watermarking is slow, the buyer's Thanks page
-    // polls; when watermarked_storage_path fills, the download unlocks.
-    fetch(`${SUPABASE_URL}/functions/v1/partner-watermark`, {
+    // Trigger watermarking. The watermark fn uploads the stamped PDF and then
+    // inserts the gw_personal_scores row so it only appears once the file
+    // actually exists. Stripe allows 20s; await gives us a chance to catch
+    // failures without a fire-and-forget silent miss.
+    const wmRes = await fetch(`${SUPABASE_URL}/functions/v1/partner-watermark`, {
       method: "POST",
       headers: { "content-type": "application/json", Authorization: `Bearer ${SERVICE_ROLE}` },
       body: JSON.stringify({ order_item_id: item.id }),
-    }).catch(() => {});
+    }).catch(() => null);
 
-    // Personal music row so it appears in My Music. storage_path is filled
-    // later by the watermark fn's update path? No — the watermark fn writes
-    // to gw_partner_order_items, not gw_personal_scores. We write personal
-    // score with external_url=null and storage_path pointing at the
-    // eventual watermarked path (predictable).
-    const watermarkedPath = `${buyerUserId}/store/${item.id}.pdf`;
-    await supa.from("gw_personal_scores").insert({
-      user_id: buyerUserId,
-      title: score.title,
-      source: "purchase",
-      entitlement_id: ent?.id ?? null,
-      storage_path: watermarkedPath, // populated once watermark finishes
-    });
+    if (!wmRes?.ok) {
+      // Watermark failed — skip personal-scores insert. The buyer's ThanksPage
+      // polls watermarked_storage_path; reconciliation happens on next visit.
+      continue;
+    }
   }
 
   return new Response("ok", { status: 200 });

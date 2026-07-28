@@ -30,6 +30,11 @@ serve(async (req) => {
   const items: Item[] = Array.isArray(body.items) ? body.items : [];
   if (items.length === 0) return new Response(JSON.stringify({ error: "cart empty" }), { status: 400, headers: { ...corsHeaders, "content-type": "application/json" } });
 
+  const MAX_CART_ITEMS = 12;  // 12 UUIDs * 37 = 444 chars, safe under Stripe's 500-char metadata cap
+  if (items.length > MAX_CART_ITEMS) {
+    return new Response(JSON.stringify({ error: `cart too large (max ${MAX_CART_ITEMS} items)` }), { status: 400, headers: { ...corsHeaders, "content-type": "application/json" } });
+  }
+
   // Load scores + partner in one query.
   const { data: scores, error: scoresErr } = await supa
     .from("gw_partner_scores")

@@ -399,7 +399,7 @@ const StudentAssignmentPage = lazy(() => import("./pages/grading/student/Student
 const CourseAudioPage = lazy(() => import("./pages/courses/CourseAudioPage"));
 const GlobalMiniPlayer = lazy(() => import("./components/audio/GlobalMiniPlayer").then((m) => ({ default: m.GlobalMiniPlayer })));
 import { ModuleGate } from "./components/auth/ModuleGate";
-import { CartProvider } from "./components/store/CartContext";
+import { StoreShell } from "./pages/store/StoreShell";
 const StorePage = lazy(() => import("./pages/store/StorePage"));
 const StoreScoreDetail = lazy(() => import("./pages/store/StoreScoreDetail"));
 const StorePartnerPage = lazy(() => import("./pages/store/StorePartnerPage"));
@@ -2747,7 +2747,7 @@ const App = () => {
                                    <ProtectedRoute>
                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                                        <DashboardShell>
-                                         <CartProvider><StorePage /></CartProvider>
+                                         <StoreShell><StorePage /></StoreShell>
                                        </DashboardShell>
                                      </UniversalLayout>
                                    </ProtectedRoute>
@@ -2759,7 +2759,7 @@ const App = () => {
                                    <ProtectedRoute>
                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                                        <DashboardShell>
-                                         <CartProvider><StoreScoreDetail /></CartProvider>
+                                         <StoreShell><StoreScoreDetail /></StoreShell>
                                        </DashboardShell>
                                      </UniversalLayout>
                                    </ProtectedRoute>
@@ -2771,7 +2771,7 @@ const App = () => {
                                    <ProtectedRoute>
                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                                        <DashboardShell>
-                                         <CartProvider><StorePartnerPage /></CartProvider>
+                                         <StoreShell><StorePartnerPage /></StoreShell>
                                        </DashboardShell>
                                      </UniversalLayout>
                                    </ProtectedRoute>
@@ -2783,7 +2783,7 @@ const App = () => {
                                    <ProtectedRoute>
                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                                        <DashboardShell>
-                                         <CartProvider><StoreThanksPage /></CartProvider>
+                                         <StoreShell><StoreThanksPage /></StoreShell>
                                        </DashboardShell>
                                      </UniversalLayout>
                                    </ProtectedRoute>
