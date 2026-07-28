@@ -1,4 +1,4 @@
-import { useMutation, useQuery, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query';
+import { useMutation, useQuery, type Query, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface StoreScoreRow {
@@ -115,8 +115,8 @@ export function useOrderStatus(orderId: string | undefined): UseQueryResult<Orde
   return useQuery({
     queryKey: ['order-status', orderId ?? ''],
     enabled: !!orderId,
-    refetchInterval: (data) => {
-      const d = data as unknown as OrderStatusRow | null;
+    refetchInterval: (query: Query<OrderStatusRow | null, Error>) => {
+      const d = query.state.data as OrderStatusRow | null | undefined;
       if (!d) return 3000;
       const allReady = d.status === 'paid' && d.items.every((i) => !!i.watermarked_storage_path);
       return allReady ? false : 3000;
@@ -130,10 +130,11 @@ export function useOrderStatus(orderId: string | undefined): UseQueryResult<Orde
         .maybeSingle();
       if (error) throw error;
       if (!order) return null;
-      const { data: items } = await supabase
+      const { data: items, error: itemsError } = await supabase
         .from('gw_partner_order_items')
         .select('id, partner_score_id, watermarked_storage_path')
         .eq('order_id', orderId);
+      if (itemsError) throw itemsError;
       const enriched = (items ?? []).map((i) => ({ ...i }));
       return {
         id: order.id,
