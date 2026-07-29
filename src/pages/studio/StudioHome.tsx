@@ -29,7 +29,7 @@ export default function StudioHome() {
 
   type Template = 'empty' | 'satb' | 'custom';
 
-  const onCreated = async (i: { title: string; template: Template; accompaniment: Accompaniment | null }) => {
+  const onCreated = async (i: { title: string; template: Template; accompaniment: Accompaniment | null; accompanimentFile?: File | null }) => {
     if (!owner.data) return;
     try {
       const s = await createMut.mutateAsync({
@@ -37,7 +37,11 @@ export default function StudioHome() {
         ownerUserId: owner.data.userId,
         title: i.title || 'Untitled session',
         template: i.template,
-        accompaniment: i.accompaniment,
+        // File variant: pass the raw File so the mutation uploads it at
+        // create time and the manifest gets a real public URL.
+        ...(i.accompanimentFile
+          ? { accompanimentFile: i.accompanimentFile }
+          : { accompaniment: i.accompaniment }),
       });
       setCreateOpen(false);
       navigate(`/studio/sessions/${s.id}`);
@@ -179,14 +183,15 @@ function FeatureChip({ icon: Icon, label }: { icon: typeof Mic; label: string })
 type Template = 'empty' | 'satb' | 'custom';
 type Step = 'pick' | 'backing' | 'title';
 
-/** Maps the picker's internal PickerResult into the session Accompaniment type. */
+/** Maps the picker's internal PickerResult into the session Accompaniment type.
+ * NOTE: 'file' picks must be routed through accompanimentFile (raw File →
+ * upload in mutation) and must NOT pass through here. handlePick enforces this
+ * so this branch should never be reached. */
 function mapPickerResult(r: PickerResult): Accompaniment {
   if (r.kind === 'file') {
-    // File objects can't be stored in the manifest directly — the session
-    // will receive kind:'file' with a placeholder fileUrl; the Studio editor
-    // handles the actual upload when the session first opens. For the creation
-    // flow this sets the type; the editor replaces the URL on first save.
-    return { kind: 'file', title: r.file.name, fileUrl: '' };
+    // Should not be reached — handlePick routes file picks to accompanimentFile.
+    // Guard here so a future refactor can't accidentally regress to fileUrl:''.
+    throw new Error('[mapPickerResult] file picks must use accompanimentFile, not this mapper');
   }
   if (r.kind === 'apple_music') {
     return {
@@ -264,15 +269,25 @@ function CreateSessionDialog({
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  onSubmit: (i: { title: string; template: Template; accompaniment: Accompaniment | null }) => void;
+  onSubmit: (i: { title: string; template: Template; accompaniment: Accompaniment | null; accompanimentFile?: File | null }) => void;
   busy: boolean;
 }) {
   const [step, setStep] = useState<Step>('pick');
   const [template, setTemplate] = useState<Template>('empty');
+  // Non-file accompaniment kinds (apple_music, youtube, etc.) — already
+  // fully mappable to the Accompaniment manifest type at pick time.
   const [accompaniment, setAccompaniment] = useState<Accompaniment | null>(null);
+  // File picks: keep the raw File object here so the mutation can upload
+  // it at create time. Never written as accompaniment (no placeholder URL).
+  const [accompanimentFile, setAccompanimentFile] = useState<File | null>(null);
 
   const handleOpenChange = (o: boolean) => {
-    if (!o) { setStep('pick'); setTemplate('empty'); setAccompaniment(null); }
+    if (!o) {
+      setStep('pick');
+      setTemplate('empty');
+      setAccompaniment(null);
+      setAccompanimentFile(null);
+    }
     onOpenChange(o);
   };
 
@@ -280,6 +295,19 @@ function CreateSessionDialog({
     pick: 'New session',
     backing: 'Choose backing track',
     title: 'Name your session',
+  };
+
+  const handlePick = (r: PickerResult) => {
+    if (r.kind === 'file') {
+      // Keep the raw File; don't map to Accompaniment yet — the mutation
+      // uploads it and writes the real URL into the manifest.
+      setAccompanimentFile(r.file);
+      setAccompaniment(null);
+    } else {
+      setAccompaniment(mapPickerResult(r));
+      setAccompanimentFile(null);
+    }
+    setStep('title');
   };
 
   return (
@@ -316,8 +344,8 @@ function CreateSessionDialog({
           <AccompanimentPicker
             open={true}
             embedded
-            onPick={(r) => { setAccompaniment(mapPickerResult(r)); setStep('title'); }}
-            onSkip={() => { setAccompaniment(null); setStep('title'); }}
+            onPick={handlePick}
+            onSkip={() => { setAccompaniment(null); setAccompanimentFile(null); setStep('title'); }}
           />
         )}
 
@@ -326,7 +354,7 @@ function CreateSessionDialog({
             busy={busy}
             onBack={() => setStep(template === 'empty' ? 'pick' : 'backing')}
             onCancel={() => handleOpenChange(false)}
-            onSubmit={(t) => onSubmit({ title: t, template, accompaniment })}
+            onSubmit={(t) => onSubmit({ title: t, template, accompaniment, accompanimentFile })}
           />
         )}
       </DialogContent>

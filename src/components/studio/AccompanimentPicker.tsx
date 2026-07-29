@@ -125,9 +125,16 @@ export function AccompanimentPicker({
   };
 
   // ── Shared inner form body ─────────────────────────────────────────
+  // When embedded inside a DialogContent (which is bg-white), the dark outer
+  // wrapper would appear as a dark card inside a light dialog. In embedded
+  // mode we use a neutral dark-slate surface (bg-slate-900) that contains the
+  // inner dark content correctly without the full portal chrome (no border,
+  // no extra shadow). In portal mode the full dark card styling is correct.
   const formBody = (
     <div
-      className="bg-[#0b1430] border border-amber-500/30 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-slate-100"
+      className={embedded
+        ? 'bg-slate-900 rounded-xl w-full overflow-hidden text-slate-100'
+        : 'bg-[#0b1430] border border-amber-500/30 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-slate-100'}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="px-4 py-3 border-b border-amber-500/20 flex items-center justify-between">

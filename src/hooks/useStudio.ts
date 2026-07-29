@@ -76,7 +76,13 @@ export interface CreateStudioSessionInput {
   ownerUserId: string;
   title: string;
   template?: 'empty' | 'satb' | 'custom';
+  /** Pre-mapped accompaniment (non-file kinds: apple_music, youtube, etc.). */
   accompaniment?: Accompaniment | null;
+  /** Raw File object from the picker. When present, it is uploaded to storage
+   * BEFORE the manifest is written so the manifest carries a real public URL.
+   * Mutually exclusive with `accompaniment` — if both are provided,
+   * `accompanimentFile` takes precedence and `accompaniment` is ignored. */
+  accompanimentFile?: File;
   customParts?: Array<{ kind: string; label: string; color: string }>;
 }
 
@@ -136,19 +142,44 @@ async function createStudioSessionWithTemplate(input: CreateStudioSessionInput):
     return [];
   })();
 
+  // Build the storage prefix now so the accompaniment upload path uses it.
+  const prefix = `${input.tenantId}/sessions/${id}`;
+
+  // If a raw File was picked, upload it BEFORE writing the manifest so the
+  // manifest carries a real public URL instead of a '' placeholder.
+  // The accompanimentFile path takes precedence over any pre-mapped accompaniment.
+  let resolvedAccompaniment: Accompaniment | null = input.accompaniment ?? null;
+  if (input.accompanimentFile) {
+    const file = input.accompanimentFile;
+    const ext = file.name.includes('.') ? file.name.split('.').pop() ?? 'bin' : 'bin';
+    const assetPath = `${prefix}/audio/accompaniment-${Date.now()}.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from('studio')
+      .upload(assetPath, file, {
+        contentType: file.type || 'application/octet-stream',
+        upsert: true,
+      });
+    if (uploadErr) throw new Error(`Failed to upload accompaniment file: ${uploadErr.message}`);
+    const { data: urlData } = supabase.storage.from('studio').getPublicUrl(assetPath);
+    resolvedAccompaniment = {
+      kind: 'file',
+      title: file.name,
+      fileUrl: urlData.publicUrl,
+    };
+  }
+
   const session: Session = {
     ...base,
     tracks: [...base.tracks, ...templateTracks],
-    accompaniment: input.accompaniment ?? null,
+    accompaniment: resolvedAccompaniment,
   };
 
   // Write the manifest directly (mirrors storage.createSession internals).
-  const prefix = `${input.tenantId}/sessions/${id}`;
   const body = new Blob([JSON.stringify(session)], { type: 'application/json' });
-  const { error: uploadErr } = await supabase.storage
+  const { error: manifestErr } = await supabase.storage
     .from('studio')
     .upload(`${prefix}/manifest.json`, body, { contentType: 'application/json', upsert: true });
-  if (uploadErr) throw uploadErr;
+  if (manifestErr) throw manifestErr;
 
   // Register the DB index row.
   const { error: dbErr } = await supabase.from('gw_studio_sessions').insert({
