@@ -44,6 +44,7 @@ import {
   Sparkles,
   PanelLeft,
   PanelLeftClose,
+  GripVertical,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -115,23 +116,31 @@ function buildNavSections(
   ctx: NavContext,
   userOrder?: string[] | null,
   sectionOverrides?: Record<string, string> | null,
+  userSectionOrder?: string[] | null,
 ): Array<{ key: string; label: string; items: CatalogEntry[] }> {
   const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
-  // users may re-home an item into any section; the override wins over
-  // the catalog's section (invalid section names fall back to catalog)
   const sectionOf = (e: CatalogEntry): string => {
     const override = sectionOverrides?.[e.key];
     return override && (SECTION_ORDER as readonly string[]).includes(override) ? override : e.section;
   };
-  // per-user ordering within each (possibly overridden) section; items
-  // the user hasn't ordered keep catalog order after ordered ones
   const rank = new Map((userOrder ?? []).map((k, i) => [k, i]));
   const sortItems = (items: CatalogEntry[]) =>
     userOrder?.length
       ? [...items].sort((a, b) => (rank.get(a.key) ?? Infinity) - (rank.get(b.key) ?? Infinity))
       : items;
-  return SECTION_ORDER
-    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
+  // Section order: user-preferred sections first (in the order they've
+  // arranged), then any remaining catalog sections that aren't ranked
+  // yet — so newly-shipped sections don't vanish for tenants with an
+  // existing sectionOrder saved.
+  const validSections = new Set(SECTION_ORDER as readonly string[]);
+  const rankedSections = (userSectionOrder ?? []).filter((s) => validSections.has(s));
+  const rankedSet = new Set(rankedSections);
+  const finalOrder = [
+    ...rankedSections,
+    ...SECTION_ORDER.filter((s) => !rankedSet.has(s as string)),
+  ];
+  return finalOrder
+    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s as NavSectionKey], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
     .filter((s) => s.items.length > 0);
 }
 
@@ -170,6 +179,37 @@ function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
       }`}
     >
       {children}
+    </div>
+  );
+}
+
+// Sortable wrapper for a whole section CARD. The drag listeners are
+// exposed via the render prop so callers can attach them to a specific
+// handle (a grip icon in the header) rather than the whole card — this
+// keeps the collapse/expand click on the header text working normally,
+// and prevents the section drag from stealing pointer events from the
+// item-row sortables nested inside.
+function SortableSection({
+  id,
+  children,
+}: {
+  id: string;
+  children: (args: {
+    dragHandleProps: Record<string, unknown>;
+    isDragging: boolean;
+  }) => ReactNode;
+}) {
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 20 : undefined }}
+      className={isDragging ? 'opacity-70' : undefined}
+    >
+      {children({
+        dragHandleProps: { ...attributes, ...listeners },
+        isDragging,
+      })}
     </div>
   );
 }
@@ -322,15 +362,46 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     hiddenRoutes: hiddenNav,
   }, previewRole);
   const { navOrder, saveNavOrder } = useNavItemOrder();
-  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
+  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections, navOrder?.sectionOrder);
   const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  // Distinct id namespaces so onDragEnd can tell what kind of drag
+  // just happened:
+  //   'sec:<key>'     — the section header (whole section is being
+  //                     reordered in the outer SortableContext)
+  //   'section:<key>' — the DroppableSection body (target when an item
+  //                     is dragged INTO a section, not a section drag)
+  //   '<item.key>'    — the bare item row (inner SortableContext)
   const onNavDragEnd = (e: DragEndEvent) => {
     const activeId = String(e.active.id);
     const overId = e.over ? String(e.over.id) : null;
     if (!overId || activeId === overId) return;
+
+    // Section reorder path — active is a section header.
+    if (activeId.startsWith('sec:')) {
+      const fromSec = activeId.slice(4);
+      // Landing on another section header OR the section container.
+      const toSec = overId.startsWith('sec:')
+        ? overId.slice(4)
+        : overId.startsWith('section:')
+          ? overId.slice(8)
+          : null;
+      if (!toSec || toSec === fromSec) return;
+      const currentOrder = sections.map((s) => s.key);
+      const fromIdx = currentOrder.indexOf(fromSec);
+      const toIdx = currentOrder.indexOf(toSec);
+      if (fromIdx < 0 || toIdx < 0) return;
+      const nextSectionOrder = arrayMove(currentOrder, fromIdx, toIdx);
+      void saveNavOrder(
+        navOrder?.order ?? sections.flatMap((s) => s.items.map((i) => i.key)),
+        navOrder?.sections ?? {},
+        nextSectionOrder,
+      );
+      return;
+    }
+
+    // Item reorder path — existing logic.
     const from = sections.find((s) => s.items.some((i) => i.key === activeId));
     if (!from) return;
-    // target: another row, or a section container (id "section:<key>")
     const overSectionKey = overId.startsWith('section:') ? overId.slice(8) : null;
     const to = overSectionKey
       ? sections.find((s) => s.key === overSectionKey)
@@ -359,7 +430,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     const overrides = { ...(navOrder?.sections ?? {}) };
     if (to.key === catalogSection) delete overrides[activeId];
     else if (to.key !== from.key) overrides[activeId] = to.key;
-    void saveNavOrder(flat, overrides);
+    void saveNavOrder(flat, overrides, navOrder?.sectionOrder ?? []);
   };
 
   // Studio session editor needs the full window for clips + mixer.
@@ -422,40 +493,46 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
           brand block instead of glueing flush against the divider. */}
       <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2 space-y-1.5">
         <DndContext sensors={dragSensors} onDragEnd={onNavDragEnd}>
+        <SortableContext items={sections.map((s) => `sec:${s.key}`)} strategy={verticalListSortingStrategy}>
         {sections.map((section, idx) => {
           if (section.items.length === 0) return null;
           const isCollapsible = !!section.label;
-          // Honor the user's manual collapse intent regardless of which
-          // route they're on. The previous `&& !hasActive` override
-          // re-expanded any section containing the current route, which
-          // made the chevron silently no-op on the section you most
-          // wanted to collapse (e.g. clicking "Music" while reading a
-          // score in the viewer).
           const isCollapsed = isCollapsible && collapsed.has(section.label!);
           return (
-            // Each section is its own card-like surface with a muted
-            // background so the long nav reads as grouped sections rather
-            // than one giant flat list. Section labels are bigger and
-            // higher-contrast to give the eye an anchor.
-            <DroppableSection
-              key={section.key ?? `section-${idx}`}
-              sectionKey={section.key}
-              className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
-            >
-              {section.label && (
-                <button
-                  type="button"
-                  onClick={() => toggleSection(section.label!)}
-                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground hover:text-foreground transition-colors"
+            <SortableSection key={section.key ?? `section-${idx}`} id={`sec:${section.key}`}>
+              {({ dragHandleProps }) => (
+                <DroppableSection
+                  sectionKey={section.key}
+                  className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
                 >
-                  <span>{section.label}</span>
-                  {isCollapsed ? (
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5" />
+                  {section.label && (
+                    <div className="flex items-stretch pb-1 pt-1.5">
+                      {/* Grip handle — carries the drag listeners so the
+                          section can be reordered without stealing the
+                          collapse-click on the label. */}
+                      <button
+                        type="button"
+                        {...dragHandleProps}
+                        title="Drag to reorder this section"
+                        aria-label={`Reorder ${section.label}`}
+                        className="touch-none select-none cursor-grab active:cursor-grabbing px-1.5 text-muted-foreground hover:text-foreground transition-colors inline-flex items-center"
+                      >
+                        <GripVertical className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleSection(section.label!)}
+                        className="flex-1 flex items-center justify-between pl-1 pr-2.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground hover:text-foreground transition-colors"
+                      >
+                        <span>{section.label}</span>
+                        {isCollapsed ? (
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
                   )}
-                </button>
-              )}
               {!isCollapsed && (
               <SortableContext items={section.items.map((i) => i.key)} strategy={verticalListSortingStrategy}>
               {section.items.map((item) => (
@@ -497,9 +574,12 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
               ))}
               </SortableContext>
               )}
-            </DroppableSection>
+                </DroppableSection>
+              )}
+            </SortableSection>
           );
         })}
+        </SortableContext>
         </DndContext>
       </nav>
 
