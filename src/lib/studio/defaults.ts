@@ -34,6 +34,21 @@ export function newSession(args: {
   };
 }
 
+/** Factory for test sessions. Like newSession but allows overriding the id. */
+export function blankSession(args: {
+  id: string;
+  ownerUserId: string;
+  tenantId: string;
+  title: string;
+}): Session {
+  const s = newSession({
+    ownerUserId: args.ownerUserId,
+    tenantId: args.tenantId,
+    title: args.title,
+  });
+  return { ...s, id: args.id };
+}
+
 export function newMasterBus(): MasterBus {
   return { volume_db: 0, pan: 0, fx: [] };
 }

@@ -29,6 +29,7 @@ export interface NavGate {
   adminOnly?: boolean;
   platformAdminOnly?: boolean;
   librarianOnly?: boolean;
+  partnerOnly?: boolean;
 }
 
 export interface CatalogEntry {
@@ -54,13 +55,14 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
   // Music
-  { key: 'music-library', to: '/dashboard/music-library', label: 'Music Library', icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
-  { key: 'repertoire',    to: '/dashboard/repertoire',    label: 'Repertoire',    icon: BookOpen, section: 'music', tone: 'bg-sky-50 text-sky-700',       tourId: 'nav-repertoire' },
+  { key: 'music-library',   to: '/dashboard/music-library', label: 'Music Library',  icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
+  { key: 'composer-store', to: '/store',                   label: 'Composer Store', icon: Store,    section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-composer-store' },
+  { key: 'repertoire',     to: '/dashboard/repertoire',    label: 'Repertoire',     icon: BookOpen, section: 'music', tone: 'bg-sky-50 text-sky-700',       tourId: 'nav-repertoire' },
   { key: 'music',         to: '/dashboard/viewer',        label: 'Viewer',        icon: ScanEye,  section: 'music', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-viewer',        gridLabel: 'Music', gridIcon: Music, gate: { module: 'viewer' } },
-  { key: 'sight',         to: '/dashboard/sight-reading', label: 'Sight Reading', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-sight-reading', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
-  { key: 'tracks',        to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: Mic,      section: 'music', tone: 'bg-indigo-50 text-indigo-600', tourId: 'nav-part-tracks',   gridLabel: 'Tracks', gate: { module: 'part_tracks' } },
+  { key: 'sight',         to: '/dashboard/reading-music', label: 'Reading Music', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-reading-music', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
   { key: 'media-library', to: '/dashboard/media-library', label: 'Media Library', icon: Images,   section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-media-library' },
   { key: 'librarian',     to: '/dashboard/librarian',     label: 'Librarian',     icon: LibraryBig, section: 'music', tone: 'bg-slate-50 text-slate-600', tourId: 'nav-librarian',    gate: { module: 'librarian', librarianOnly: true } },
+  { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal', gate: { partnerOnly: true } },
   // Teach
   { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy', hero: true },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },
@@ -90,7 +92,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // tenant open the editor and hit RLS write failures instead of simply not
   // seeing the entry.
   { key: 'graduates', to: '/dashboard/alumni', label: 'Graduates Page', icon: GraduationCap, section: 'reach', tone: 'bg-teal-50 text-teal-600',       tourId: 'nav-alumni', gate: { module: 'alumni', adminOnly: true } },
-  { key: 'merch',     to: '/store',            label: 'Merch',     icon: Shirt,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-merch-grid', surfaces: ['grid'], gate: { module: 'merch' } },
+  { key: 'merch',     to: '/store/products',   label: 'Merch',     icon: Shirt,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-merch-grid', surfaces: ['grid'], gate: { module: 'merch' } },
   // Money
   { key: 'box-office', to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     section: 'money', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-box-office', gate: { module: 'box_office', adminOnly: true } },
   { key: 'finance',    to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, section: 'money', tone: 'bg-emerald-50 text-emerald-600', tourId: 'nav-finance', gridIcon: Wallet, gate: { module: 'finance' } },
@@ -104,6 +106,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'attendance', to: '/attendance',      label: 'Attendance', icon: ClipboardList, section: 'people', tone: 'bg-cyan-50 text-cyan-600', tourId: 'nav-attendance-grid', surfaces: ['grid'] },
   // Admin
   { key: 'site-setup', to: '/admin/public-page',   label: 'Site Setup', icon: Settings,   section: 'admin', tone: 'bg-fuchsia-50 text-fuchsia-700', tourId: 'nav-site-setup', gate: { adminOnly: true } },
+  { key: 'partners',   to: '/admin/partners',      label: 'Partners',   icon: Store,      section: 'admin', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-admin-partners', gate: { adminOnly: true } },
   { key: 'analytics',  to: '/dashboard/analytics', label: 'Analytics',  icon: TrendingUp, section: 'admin', tone: 'bg-purple-50 text-purple-600',   tourId: 'nav-analytics' },
   { key: 'settings',   to: '/dashboard/workspace', label: 'Settings',   icon: Settings,   section: 'admin', tone: 'bg-muted text-muted-foreground', tourId: 'nav-settings' },
   { key: 'tenants',    to: '/admin/tenants',       label: 'Tenants',    icon: Sparkles,   section: 'admin', tone: 'bg-indigo-50 text-indigo-700',   tourId: 'nav-platform-tenants', surfaces: ['sidebar'], gate: { platformAdminOnly: true } },
@@ -114,6 +117,7 @@ export interface NavContext {
   isTenantAdmin: boolean;
   isPlatformAdmin: boolean;
   canLibrarian: boolean;
+  isPartner: boolean;
   hiddenRoutes: ReadonlySet<string>;
 }
 
@@ -128,6 +132,7 @@ function gateOpen(gate: NavGate | undefined, ctx: NavContext): boolean {
   if (gate.adminOnly && !ctx.isTenantAdmin) return false;
   if (gate.platformAdminOnly && !ctx.isPlatformAdmin) return false;
   if (gate.librarianOnly && !ctx.canLibrarian) return false;
+  if (gate.partnerOnly && !ctx.isPartner) return false;
   return true;
 }
 
@@ -173,10 +178,10 @@ export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
 // Only 'admin' carries privilege; student and member are unprivileged in the
 // nav's eyes. canLibrarian is a per-user grant rather than a role, but no
 // non-admin role implies it, so false is correct.
-const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian'>> = {
-  admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true  },
-  student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
-  member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
+const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian' | 'isPartner'>> = {
+  admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true,  isPartner: false },
+  student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false },
+  member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false },
 };
 
 /**

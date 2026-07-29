@@ -172,6 +172,7 @@ export default function HouseHome() {
     canLibrarian: typeof canEditMusicLibrary === 'function'
       ? canEditMusicLibrary()
       : !!(profile?.is_admin || profile?.is_super_admin),
+    isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav, previewRole]);
   const { layout, layoutLoading, save: saveTileLayout } = useHomeTileLayout();

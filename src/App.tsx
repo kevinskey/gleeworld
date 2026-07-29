@@ -11,6 +11,7 @@ import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipCont
 import { QueryClientProvider } from "@tanstack/react-query";
 import { QueryClient } from "@tanstack/query-core";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
@@ -203,6 +204,7 @@ const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
+const ReadingMusicPage = lazy(() => import("./pages/dashboard/ReadingMusicPage"));
 const NotationEditorPage = lazy(() => import("./pages/notation/NotationEditorPage"));
 const BoxOfficePage = lazy(() => import("./pages/dashboard/BoxOfficePage"));
 const BoxOfficeEventPage = lazy(() => import("./pages/dashboard/BoxOfficeEventPage"));
@@ -211,8 +213,6 @@ const BoxOfficeWillCallPage = lazy(() => import("./pages/dashboard/BoxOfficeWill
 const ConcertTicketsPublicPage = lazy(() => import("./pages/public/ConcertTicketsPublicPage"));
 const TicketsOrderPage = lazy(() => import("./pages/public/TicketsOrderPage"));
 const BoxOfficeIndexPage = lazy(() => import("./pages/public/BoxOfficeIndexPage"));
-const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
-const PartTracksLandingPage = lazy(() => import("./pages/dashboard/PartTracksLandingPage"));
 const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
@@ -362,6 +362,12 @@ const PeerReviewBrowserPage = lazy(() => import("./pages/mus240/PeerReviewBrowse
 const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
+const PartnersAdmin = lazy(() => import("./pages/admin/PartnersAdmin"));
+const PartnerInviteRedeem = lazy(() => import("./pages/partner/PartnerInviteRedeem"));
+const PartnerPortal = lazy(() => import("./pages/partner/PartnerPortal"));
+const PartnerProfile = lazy(() => import("./pages/partner/PartnerProfile"));
+const PartnerScoresList = lazy(() => import("./pages/partner/PartnerScoresList"));
+const PartnerScoreUpload = lazy(() => import("./pages/partner/PartnerScoreUpload"));
 const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
@@ -394,6 +400,11 @@ const StudentAssignmentPage = lazy(() => import("./pages/grading/student/Student
 const CourseAudioPage = lazy(() => import("./pages/courses/CourseAudioPage"));
 const GlobalMiniPlayer = lazy(() => import("./components/audio/GlobalMiniPlayer").then((m) => ({ default: m.GlobalMiniPlayer })));
 import { ModuleGate } from "./components/auth/ModuleGate";
+import { StoreShell } from "./pages/store/StoreShell";
+const StorePage = lazy(() => import("./pages/store/StorePage"));
+const StoreScoreDetail = lazy(() => import("./pages/store/StoreScoreDetail"));
+const StorePartnerPage = lazy(() => import("./pages/store/StorePartnerPage"));
+const StoreThanksPage = lazy(() => import("./pages/store/StoreThanksPage"));
 
 // Legacy MUS240 redirect component
 const LegacyMus240Redirect = () => {
@@ -401,6 +412,17 @@ const LegacyMus240Redirect = () => {
   const newPath = location.pathname.replace('/classes/mus240', '/mus-240');
   return <Navigate to={newPath} replace />;
 };
+
+// Redirect /dashboard/part-tracks/* to /studio with a one-time toast
+function PartTracksRedirect() {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !sessionStorage.getItem('pt-redirect-toast-shown')) {
+      sessionStorage.setItem('pt-redirect-toast-shown', '1');
+      toast.message('Part Tracks is now part of Studio.');
+    }
+  }, []);
+  return <Navigate to="/studio" replace />;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1345,7 +1367,44 @@ const App = () => {
                 } 
                />
                {/* /admin routes — only deep links below, no bare /admin home. */}
-                 <Route 
+                 <Route
+                   path="/admin/partners"
+                   element={
+                     <ProtectedRoute>
+                       <AdminOnlyRoute>
+                         <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                           <DashboardShell><PartnersAdmin /></DashboardShell>
+                         </UniversalLayout>
+                       </AdminOnlyRoute>
+                     </ProtectedRoute>
+                   }
+                 />
+                 <Route
+                   path="/partner/invite/:token"
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><PartnerInviteRedeem /></DashboardShell>
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                   }
+                 />
+                 <Route
+                   path="/partner"
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><PartnerPortal /></DashboardShell>
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                   }
+                 >
+                   <Route index element={<PartnerProfile />} />
+                   <Route path="profile" element={<PartnerProfile />} />
+                   <Route path="scores" element={<PartnerScoresList />} />
+                   <Route path="scores/new" element={<PartnerScoreUpload />} />
+                 </Route>
+                 <Route
                    path="/admin/academy-courses" 
                    element={
                      <ProtectedRoute>
@@ -1488,14 +1547,22 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/sight-reading"
+                  path="/dashboard/reading-music"
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><SightReadingStudio /></DashboardShell>
+                        <DashboardShell><ReadingMusicPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
+                />
+                <Route
+                  path="/dashboard/sight-reading"
+                  element={<RedirectWithSearch to="/dashboard/reading-music" />}
+                />
+                <Route
+                  path="/dashboard/sight-reading/:rest"
+                  element={<RedirectWithSearch to="/dashboard/reading-music" />}
                 />
                 <Route
                   path="/dashboard/sight-reading/editor/:exerciseId?"
@@ -1548,28 +1615,8 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/part-tracks"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <PartTracksLandingPage />
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard/part-tracks/:projectId"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <PartTracksLandingPage />
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
+                  path="/dashboard/part-tracks/*"
+                  element={<PartTracksRedirect />}
                 />
                 <Route
                   path="/dashboard/concert-planner"
@@ -2679,15 +2726,63 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                                />
-                               <Route 
-                                path="/store" 
+                               <Route
+                                path="/store/products"
                                 element={
                                   <ProtectedRoute>
                                     <ProductManagement />
                                   </ProtectedRoute>
-                                } 
+                                }
                                />
-                               <Route 
+                               <Route
+                                 path="/store"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StorePage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/scores/:id"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StoreScoreDetail /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/partners/:id"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StorePartnerPage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/thanks"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StoreThanksPage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
                                  path="/handbook" 
                                  element={
                                    <ProtectedRoute>

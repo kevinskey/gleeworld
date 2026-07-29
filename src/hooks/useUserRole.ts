@@ -12,6 +12,7 @@ interface UserProfile {
   is_admin: boolean;
   is_super_admin: boolean;
   is_exec_board?: boolean | null;
+  is_partner?: boolean | null;
   verified?: boolean;
 }
 

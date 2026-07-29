@@ -24,7 +24,6 @@ export const PAGE_ROUTES: Record<string, string> = {
   messenger: '/dashboard/messenger',
   academy: '/dashboard/academy',
   'sight-reading': '/dashboard/sight-reading',
-  'part-tracks': '/dashboard/part-tracks',
   'media-library': '/dashboard/media-library',
   songwriting: '/songwriting',
   'concert-planner': '/dashboard/concert-planner',

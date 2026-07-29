@@ -21,7 +21,7 @@ import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 const SOURCE_LABEL: Record<PersonalScore['source'], string> = {
   upload: 'Upload',
   cpdl: 'CPDL',
-  purchase: 'Lion & Lamb',
+  purchase: 'Composer Store',
 };
 
 type SortKey = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'composer-asc' | 'source';

@@ -25,7 +25,7 @@ import {
   Volume2, MoveHorizontal, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
   ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
-  Magnet, Wrench,
+  Magnet, Wrench, BookOpen, BookX,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -47,7 +47,7 @@ import { useTransportPosition, useTransportTick } from './useTransportTick';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
-import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
+import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioTrack, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
 import {
   formatTime, formatBarBeat, formatSamples, nextCounterMode, type CounterMode,
   preRollStartSeconds, postRollEndSeconds, punchTransition,
@@ -67,9 +67,15 @@ import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
 import { splitAudioClips, sliceClipChannels, duplicateClip } from '@/lib/studio/clipOps';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
 import { exportSession, hasResumableExport, clearExportProgress, type ExportPreset } from '@/lib/studio/engine/exportRender';
-import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
+import { getAssetUrl, saveSession, uploadAudioAsset } from '@/lib/studio/storage';
 import { toast } from 'sonner';
 import { MixerView } from './MixerView';
+import { useStreamingAccompaniment } from '@/lib/studio/streamingBacking/useStreamingAccompaniment';
+import { captureFromPlayback } from '@/lib/studio/streamingBacking/captureFromPlayback';
+import { AccompanimentLane } from '@/components/studio/AccompanimentLane';
+import { AttachScoreDialog } from '@/components/studio/AttachScoreDialog';
+import { FloatingScorePanel } from '@/components/studio/FloatingScorePanel';
+import { useQuery } from '@tanstack/react-query';
 
 const PX_PER_SECOND_DEFAULT = 40;
 const PX_PER_SECOND_MIN = 8;
@@ -243,11 +249,9 @@ function computePeaks(buffer: AudioBuffer, target = 300): number[] {
  * Returns the trimmed AudioBuffer plus a freshly encoded WAV blob.
  * If the recording is shorter than the trim, the original is kept.
  *
- * The latency configuration + ms→samples math are shared with Part
- * Tracks via src/lib/audio/sharedRecorder.ts (see
- * docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md, Task
- * 1); the decode/copy/re-encode steps below are unchanged from before
- * that extraction. */
+ * The latency configuration + ms→samples math live in
+ * src/lib/audio/sharedRecorder.ts; the decode/copy/re-encode steps
+ * below are unchanged from before that extraction. */
 /** Safari / any iOS browser shell reports vendor "Apple Computer, Inc.".
  *  On those engines MediaRecorder emits a fragmented mp4 that
  *  decodeAudioData can't read ("decoding failed" — recorded takes never
@@ -396,7 +400,7 @@ function Editor({
   sessionState, engineState,
 }: { sessionState: ReturnType<typeof useStudioSession>; engineState: ReturnType<typeof useStudioEngine> }) {
   const session = sessionState.session!;
-  const { update } = sessionState;
+  const { update, flushSave } = sessionState;
   const {
     state, start, play, pause, stop, updateTrackStrip, updateTempo,
     updateTimeSignature, setMetronome, transportTick,
@@ -413,6 +417,7 @@ function Editor({
   const [exportOpen, setExportOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [regionExportOpen, setRegionExportOpen] = useState(false);
+  const [attachScoreOpen, setAttachScoreOpen] = useState(false);
 
   // Timeline vs Mixer — same route, transport/header stay mounted; only
   // the main tracks-area block below swaps content (B1 Task 6).
@@ -1068,6 +1073,269 @@ function Editor({
   // unwired in stopRecording().
   const nativePeakSubRef = useRef<{ remove: () => Promise<void> } | null>(null);
 
+  // ── Streaming accompaniment + capture-from-playback ──────────────────
+  const streaming = useStreamingAccompaniment(session.accompaniment);
+  const [capturing, setCapturing] = useState(false);
+  // When a streaming-backed take starts, this ref holds the wall-clock ms
+  // at which the streaming source became audible. stopRecording() uses it
+  // to override transportStartWallMs in computeTakeAlignment so head-trim
+  // measures against the actual backing onset rather than the Studio
+  // transport start (which may lag by hundreds of ms on buffered sources).
+  // Null when the take was started without a streaming backing (file/null).
+  const streamingTransportWallMsRef = useRef<number | null>(null);
+
+  const ACCOMPANIMENT_TRACK_COLOR = '#64748b'; // slate-500
+  const ACCOMPANIMENT_TRACK_NAME = 'Accompaniment';
+
+  // Extract the storage path portion from any studio-bucket URL so we can
+  // match tracks by asset identity rather than by URL string (which
+  // changes every time we re-sign).
+  const storagePathOf = (url: string | undefined | null): string | null => {
+    if (!url) return null;
+    const m =
+      url.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/studio\/(.+?)(?:\?|$)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  };
+
+  // Auto-repair + de-dupe: the earliest cut of the file-upload path used
+  // getPublicUrl on a private bucket, which produced 403 URLs baked into
+  // `accompaniment.fileUrl`. A subsequent auto-repair added a SECOND
+  // Accompaniment track because the seed guard matched by URL and the
+  // URL had just changed. This effect:
+  //   1. re-signs any stale public URL,
+  //   2. collapses duplicate Accompaniment tracks whose clips point at
+  //      the same storage path,
+  //   3. refreshes the assetUrlCache so the audio engine loads the fresh URL.
+  // Runs once per unique fileUrl.
+  const repairedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (session.accompaniment?.kind !== 'file') return;
+    const fileUrl = session.accompaniment.fileUrl;
+    if (!fileUrl) return;
+    if (repairedRef.current === fileUrl) return;
+    repairedRef.current = fileUrl;
+
+    const publicMatch = fileUrl.match(/\/storage\/v1\/object\/public\/studio\/(.+?)(?:\?|$)/);
+    if (!publicMatch) {
+      // URL already signed (or non-repairable). Still de-dupe any leftover
+      // duplicate accompaniment tracks from a previous repair pass.
+      dedupeAccompaniment(fileUrl);
+      return;
+    }
+    const path = decodeURIComponent(publicMatch[1]);
+    void supabase.storage
+      .from('studio')
+      .createSignedUrl(path, 60 * 60 * 24 * 365)
+      .then(({ data, error }) => {
+        if (error || !data?.signedUrl) {
+          console.warn('[studio] accompaniment auto-repair failed', error);
+          return;
+        }
+        // Flip the manifest to the fresh URL AND collapse duplicates in
+        // one update so persistence sees the final state.
+        update((s) => {
+          if (s.accompaniment?.kind !== 'file' || s.accompaniment.fileUrl !== fileUrl) return s;
+          return applyDedupe(
+            { ...s, accompaniment: { ...s.accompaniment, fileUrl: data.signedUrl } },
+            path,
+            data.signedUrl,
+          );
+        });
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.accompaniment?.kind === 'file' ? session.accompaniment.fileUrl : null]);
+
+  // De-dupe helper — collapses redundant Accompaniment tracks by storage
+  // path and refreshes the surviving asset's URL cache.
+  const dedupeAccompaniment = (currentUrl: string) => {
+    const targetPath = storagePathOf(currentUrl);
+    if (!targetPath) return;
+    update((s) => applyDedupe(s, targetPath, currentUrl));
+  };
+
+  // Pure reducer: removes duplicate Accompaniment tracks, keeps the
+  // first one whose clip resolves to `targetPath`, and points its asset
+  // at `newUrl` via the assetUrlCache.
+  const applyDedupe = (s: Session, targetPath: string, newUrl: string): Session => {
+    let firstSeen = false;
+    const kept: typeof s.tracks = [];
+    for (const t of s.tracks) {
+      if (!isAudioTrack(t) || t.name !== ACCOMPANIMENT_TRACK_NAME) {
+        kept.push(t);
+        continue;
+      }
+      // Does this track's first clip belong to the current accompaniment path?
+      const clip = t.clips[0];
+      const asset = clip ? s.assets.find((a) => a.id === clip.asset_id) : undefined;
+      // Determine the track's path either from the cached URL for its
+      // asset id, or from the accompaniment filename fallback.
+      const cachedUrl = clip ? getAssetUrlSync(clip.asset_id) : null;
+      const cachedPath = storagePathOf(cachedUrl);
+      const filename = asset?.filename ?? null;
+      const matchesTarget =
+        cachedPath === targetPath ||
+        (filename !== null && targetPath.endsWith(filename));
+      if (matchesTarget) {
+        if (!firstSeen) {
+          firstSeen = true;
+          if (clip) setAssetUrl(clip.asset_id, newUrl);
+          kept.push(t);
+        }
+        // else drop the duplicate
+        continue;
+      }
+      kept.push(t);
+    }
+    return { ...s, tracks: kept };
+  };
+
+  // Effect: when accompaniment.kind === 'file', ensure a track exists in the
+  // session backed by that URL so it loads in the mixer as a normal audio clip.
+  // Idempotent by ASSET IDENTITY (filename OR storage path) so re-signing
+  // the URL doesn't cause a duplicate seed.
+  useEffect(() => {
+    if (session.accompaniment?.kind !== 'file') return;
+    const fileUrl = session.accompaniment.fileUrl;
+    const title = session.accompaniment.title ?? ACCOMPANIMENT_TRACK_NAME;
+    const targetPath = storagePathOf(fileUrl);
+
+    const alreadySeeded = session.tracks.some(
+      (t) =>
+        isAudioTrack(t) &&
+        t.clips.some((c) => {
+          const asset = session.assets.find((a) => a.id === c.asset_id);
+          if (asset?.filename === title) return true;
+          const cachedPath = storagePathOf(getAssetUrlSync(c.asset_id));
+          return targetPath !== null && cachedPath === targetPath;
+        }),
+    );
+    if (alreadySeeded) {
+      // Refresh the URL cache for the existing asset so the audio engine
+      // picks up the fresh signed URL on next load/play.
+      const track = session.tracks.find(
+        (t) =>
+          isAudioTrack(t) &&
+          t.clips.some((c) => {
+            const asset = session.assets.find((a) => a.id === c.asset_id);
+            return asset?.filename === title;
+          }),
+      );
+      if (track && isAudioTrack(track) && track.clips[0]) {
+        setAssetUrl(track.clips[0].asset_id, fileUrl);
+      }
+      return;
+    }
+    const assetId = `accomp-${newId()}`;
+    const trackId = `accomp-track-${newId()}`;
+    setAssetUrl(assetId, fileUrl);
+    const asset: AudioAsset = {
+      id: assetId,
+      filename: title,
+      format: fileUrl.endsWith('.mp3') ? 'mp3' : fileUrl.endsWith('.m4a') ? 'm4a' : 'wav',
+      duration_seconds: session.length_seconds,
+      sample_rate: 44100,
+      channels: 2,
+      size_bytes: 0,
+    };
+    const clip: AudioClip = {
+      id: newId(), kind: 'audio', asset_id: assetId,
+      start_seconds: 0, duration_seconds: session.length_seconds,
+      offset_seconds: 0, gain_db: 0,
+      fade_in_seconds: 0, fade_out_seconds: 0,
+      reverse: false, pitch_semitones: 0, time_stretch: 1,
+    };
+    const track: AudioTrack = {
+      id: trackId, kind: 'audio', name: ACCOMPANIMENT_TRACK_NAME,
+      color: ACCOMPANIMENT_TRACK_COLOR,
+      volume_db: 0, pan: 0, mute: false, solo: false, arm: false,
+      fx: [], clips: [clip],
+    };
+    update((s) => ({ ...s, tracks: [track, ...s.tracks], assets: [...s.assets, asset] }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.accompaniment?.kind === 'file' ? session.accompaniment.fileUrl : null]);
+
+  const isStreaming =
+    session.accompaniment?.kind === 'apple_music' ||
+    session.accompaniment?.kind === 'apple_music_album' ||
+    session.accompaniment?.kind === 'youtube';
+
+  // Phase 2 gap: on iOS native studio, streaming backing (Apple Music /
+  // YouTube) is not yet coordinated with the native recorder's audio
+  // session. Recording against a streaming backing on device would capture
+  // silence. Disable capture-from-playback and streaming take-start on iOS
+  // until Phase 2 resolves the .mixWithOthers audio session sequencing.
+  const isNativeStreamingBlocked = engineState.native && isStreaming;
+  const captureDisabledReason = isNativeStreamingBlocked
+    ? 'Not yet available on iOS — coming in the next update.'
+    : undefined;
+
+  // C2: Declare captureRecorderRef ABOVE onCapture so the ref allocation
+  // textually precedes the function that writes to it. React's runtime is
+  // unaffected (refs allocate before any handler runs), but this prevents
+  // a linter, code-splitter, or hand-refactor from reordering into a broken state.
+  const captureRecorderRef = useRef<MicRecorder | null>(null);
+
+  const onCapture = async () => {
+    if (!session.accompaniment) return;
+    setCapturing(true);
+    try {
+      // Open the mic (reuse the same openMicRecorder path as a normal take).
+      const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
+      const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
+      const channelIndex = Number(localStorage.getItem('studio.inputChannelIndex') || 0) || 0;
+      // Disable AEC/noise-suppression/AGC for the capture-from-playback
+      // flow: the user is recording the room while a backing track plays,
+      // and the browser would otherwise echo-cancel the very signal being
+      // captured. Normal take recording does NOT pass constraints and keeps
+      // using Tone.UserMedia (which already disables AEC internally) — this
+      // only affects the capture path.
+      const captureRecorder = await openMicRecorder({
+        inputDeviceId, inputGainDb, channelIndex, captureWav: false,
+        constraints: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
+      await captureRecorder.start();
+      // Start the streaming backing from position 0.
+      await streaming.start(0);
+      // Store the recorder for onStopCapture.
+      captureRecorderRef.current = captureRecorder;
+    } catch (e) {
+      setCapturing(false);
+      toast.error(e instanceof Error ? e.message : 'Capture failed to start');
+    }
+  };
+
+  const onStopCapture = async () => {
+    const captureRecorder = captureRecorderRef.current;
+    captureRecorderRef.current = null;
+    try {
+      streaming.stop();
+      if (!captureRecorder) throw new Error('No capture recorder active');
+      const blob = await captureRecorder.stop();
+      captureRecorder.dispose();
+      if (!blob || blob.size < 1024) throw new Error('No audio captured — check mic and speaker volume');
+      const captured = await captureFromPlayback({ blob, sessionId: session.id, tenantId: session.tenant_id });
+      // Flip the session accompaniment to kind='file' with the captured WAV URL.
+      const nextSession = { ...session, accompaniment: { kind: 'file' as const, title: captured.title, fileUrl: captured.url } };
+      update(() => nextSession);
+      // I2: Persist immediately rather than relying on the 800ms autosave
+      // debounce. The captured WAV is already uploaded to storage; if the user
+      // reloads before the debounce fires the manifest would still reference
+      // the old streaming accompaniment and the WAV URL would be orphaned.
+      await saveSession(nextSession).catch((err) => {
+        console.error('[studio] failed to persist accompaniment capture', err);
+      });
+      toast.success('Accompaniment captured — future takes lock to this WAV.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Capture failed');
+    } finally {
+      setCapturing(false);
+    }
+  };
+
   // Undo stack — snapshots of the session taken right before each
   // structural change (recording finalize, track add/remove, etc.).
   // Cap at 30 entries so we don't grow indefinitely.
@@ -1193,6 +1461,19 @@ function Editor({
       // Audio takes only — a MIDI-only take has no mic to open, so it
       // uses the shared JS count-in + transport path below on iOS too.
       if (mode === 'audio' && engineState.native && engineState.nativeRecordStart) {
+        // Phase 2 gap: streaming backing (Apple Music / YouTube) not yet
+        // coordinated with the native recorder's audio session. Sessions
+        // whose accompaniment.kind is streaming will record against silence
+        // on iOS. Block the take here and show a clear error rather than
+        // producing a broken/silent recording.
+        if (isNativeStreamingBlocked) {
+          toast.error(
+            'Streaming backing (Apple Music / YouTube) is not yet supported for recording on iOS. ' +
+            'Use a file backing to record here, or use the web app.',
+          );
+          return;
+        }
+
         const { NativeStudio } = await import('@/plugins/studioEngine');
         await NativeStudio.prepareRecordSession().catch(() => { /* recordWithCountIn will retry */ });
 
@@ -1320,6 +1601,30 @@ function Editor({
         play();
         transportStartWallMs = performance.now();
       }
+      // For streaming backings (Apple Music / YouTube), kick off the backing
+      // source and capture the wall-clock ms when it became audible. This
+      // precise timestamp overrides transportStartWallMs in computeTakeAlignment
+      // (see stopRecording) so the head-trim accounts for streaming buffer
+      // latency rather than the Studio transport's start time (which is only
+      // the Tone.js clock start — not when sound arrived at the listener).
+      // For file or null backings we leave the ref null so the existing
+      // transport-stamp path in stopRecording is used unchanged.
+      streamingTransportWallMsRef.current = null;
+      if (isStreaming) {
+        try {
+          const recordStartOffsetSec = state?.isPlaying ? (posNow() - startSec) : 0;
+          const { backingAudibleWallMs } = await streaming.start(recordStartOffsetSec);
+          streamingTransportWallMsRef.current = backingAudibleWallMs;
+        } catch (streamErr) {
+          // I3: Non-fatal — the take continues without the streaming backing
+          // rather than aborting the whole recording. Toast as error (not
+          // warning) so the user knows the take may drift and can stop + retry.
+          // Continue but surface clearly — same pattern as the retired
+          // Part Tracks startExternalAccompaniment failure path.
+          console.warn('[studio] streaming backing start failed', streamErr);
+          toast.error('Backing failed to start; take may drift. Stop and try again.');
+        }
+      }
       setRecording({
         recorder, native: false,
         startSeconds: startSec, startWallMs: startedAt,
@@ -1389,7 +1694,17 @@ function Editor({
     commitMidiPresses(midiHeld.flush(), posNow() || recording.startSeconds, true);
     commitTakeCc();
 
-    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, transportStartWallMs, armedTrackIds: armed } = recording;
+    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, armedTrackIds: armed } = recording;
+    // If a streaming backing was running during this take, stop it now.
+    // Also grab the streaming-transport override (backingAudibleWallMs) so
+    // computeTakeAlignment measures head-trim against the true backing onset.
+    const streamingBackingWallMs = streamingTransportWallMsRef.current;
+    streamingTransportWallMsRef.current = null;
+    if (isStreaming) { try { streaming.stop(); } catch { /* ignore */ } }
+    // Use the streaming-backing wall-clock as transportStartWallMs when
+    // available (streaming take). Fall back to the Studio transport stamp
+    // (recording.transportStartWallMs) for non-streaming takes.
+    const transportStartWallMs = streamingBackingWallMs ?? recording.transportStartWallMs;
     setRecording(null);
     engineState.setRecordingActive?.(false);
     const elapsed = (performance.now() - startWallMs) / 1000;
@@ -1974,6 +2289,29 @@ function Editor({
             <Scissors className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline">Region</span>
           </Button>
+          {session.scoreId ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => update((s) => ({ ...s, scoreId: null }))}
+              title="Remove attached score"
+              className="h-7 text-sm px-2 sm:px-3"
+            >
+              <BookX className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Remove score</span>
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAttachScoreOpen(true)}
+              title="Attach a score from the music library"
+              className="h-7 text-sm px-2 sm:px-3"
+            >
+              <BookOpen className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Attach score</span>
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => exportSessionJson(session)} title="Download session JSON" className="h-7 w-7 p-0">
             <FileJson className="w-4 h-4" />
           </Button>
@@ -1982,6 +2320,19 @@ function Editor({
 
       <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} engineState={engineState} />
       <RegionExportSheet session={session} region={loopRegion} open={regionExportOpen} onOpenChange={setRegionExportOpen} />
+      {/* Score attach dialog — music library search, picks a scoreId. */}
+      <AttachScoreDialog
+        open={attachScoreOpen}
+        onOpenChange={setAttachScoreOpen}
+        onAttach={(id) => update((s) => ({ ...s, scoreId: id }))}
+      />
+      {/* Floating PDF score panel — mounts whenever a scoreId is set. */}
+      {session.scoreId && (
+        <StudioScorePanel
+          scoreId={session.scoreId}
+          onClose={() => update((s) => ({ ...s, scoreId: null }))}
+        />
+      )}
       {/* Clip MP3 export prompt — name + destination before rendering.
        * `dark` classes forced: DialogContent portals to document.body,
        * outside the Studio's .dark scope (same trap as the old EQ sheet). */}
@@ -2695,6 +3046,21 @@ function Editor({
             onSeek={(s) => engineState.seek?.(s)}
             onHeightChange={setTrackHeightClamped}
           />
+          {/* Accompaniment lane — rendered above all tracks when the session
+           * has an accompaniment set. Decorative for kind='file' (the file
+           * is already loaded as a normal audio track); shows a capture
+           * button for streaming kinds (Apple Music / YouTube). */}
+          {session.accompaniment && (
+            <AccompanimentLane
+              accompaniment={session.accompaniment}
+              capturing={capturing}
+              recordingInProgress={!!recording}
+              ytIframeRef={streaming.ytIframeRef}
+              onCapture={onCapture}
+              onStopCapture={onStopCapture}
+              disabledReason={captureDisabledReason}
+            />
+          )}
           {session.tracks.map((t, i) => (
             <DarkTrackRow
               key={t.id}
@@ -3938,6 +4304,66 @@ function exportSessionJson(session: Session): void {
   a.download = `${session.title.replace(/[^\w]+/g, '_')}.gleewstudio.json`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ── StudioScorePanel — fetches gw_sheet_music row and mounts the
+// floating PDF panel. Handles the prop impedance mismatch between
+// FloatingScorePanel (pdfUrl + musicId + musicTitle + onClose) and the
+// session's stored scoreId (just the row id). ──────────────────────────
+
+function StudioScorePanel({ scoreId, onClose }: { scoreId: string; onClose: () => void }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['studio-score-panel', scoreId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_sheet_music')
+        .select('id, title, composer, voicing, pdf_url')
+        .eq('id', scoreId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Surface the two silent-fail modes with a toast so the user knows why
+  // the panel didn't open. Previously we early-returned null in both
+  // cases and the "Attach score" action looked broken.
+  const notified = useRef(false);
+  useEffect(() => {
+    if (isLoading || notified.current) return;
+    if (error) {
+      notified.current = true;
+      toast.error('Could not load score', {
+        description: error instanceof Error ? error.message : String(error),
+      });
+      return;
+    }
+    if (!data) {
+      notified.current = true;
+      toast.error('Score not found', {
+        description: 'It may have been deleted or you no longer have access.',
+      });
+      onClose();
+      return;
+    }
+    if (!data.pdf_url) {
+      notified.current = true;
+      toast.error('This score has no PDF', {
+        description: `"${data.title ?? 'Untitled'}" has no pdf_url on file. Attach a PDF from the music library editor first.`,
+      });
+      onClose();
+    }
+  }, [isLoading, error, data, onClose]);
+
+  if (!data || !data.pdf_url) return null;
+  return (
+    <FloatingScorePanel
+      pdfUrl={data.pdf_url}
+      musicId={data.id}
+      musicTitle={data.title ?? null}
+      onClose={onClose}
+    />
+  );
 }
 
 // ── Export sheet (B1 Task 7) — MP3 320 / WAV (CD quality) / Stems ────

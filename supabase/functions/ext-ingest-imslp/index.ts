@@ -133,8 +133,17 @@ async function resolvePage(pageid: number): Promise<{
   if (!parse) return null;
   const title = parse.title as string;
   const cats: string[] = (parse.categories ?? []).map((c: any) => (c["*"] ?? "").replace(/_/g, " "));
-  const composerCat = cats.find((c) => /works by /i.test(c) || /composer/i.test(c));
-  const composer = composerCat ? composerCat.replace(/^works by /i, "").trim() : null;
+  // IMSLP work-page titles almost always end with "(Lastname, Firstname)".
+  // Category-based composer lookup often misses because parse.categories
+  // strips the hidden Composer category. Title-suffix parsing is the
+  // reliable fallback, applied first and only overridden by an explicit
+  // "Works by X" category if one appears.
+  const titleSuffix = title.match(/\(([^()]+)\)\s*$/);
+  const titleComposer = titleSuffix ? titleSuffix[1].trim() : null;
+  const composerCat = cats.find((c) => /^works by /i.test(c));
+  const composer = composerCat
+    ? composerCat.replace(/^works by /i, "").trim()
+    : titleComposer;
   const voicingCat = cats.find((c) => /^for /i.test(c));
   const voicing = voicingCat ? voicingCat.replace(/^for /i, "").trim() : null;
   const images: string[] = (parse.images ?? []) as string[];

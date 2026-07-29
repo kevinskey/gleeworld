@@ -1,10 +1,15 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { LinkIcon } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import DashboardPageShell from '@/components/dashboard/DashboardPageShell';
 import {
   useRepertoireSearch,
   useRepertoireFeatured,
+  useAddToMyMusic,
+  useAddToTenantLibrary,
   type RepertoireItem,
 } from '@/lib/repertoire/api';
 import {
@@ -13,12 +18,14 @@ import {
 } from '@/components/repertoire/RepertoireSearchBar';
 import { RepertoireResultCard } from '@/components/repertoire/RepertoireResultCard';
 import { RepertoireBrowseShelf } from '@/components/repertoire/RepertoireBrowseShelf';
+import { ImportUrlDialog } from '@/components/repertoire/ImportUrlDialog';
 
 const DEFAULTS: RepertoireFilters = { query: '', ensemble: '', voicing: '', source: '' };
 
 export default function RepertoirePage() {
   const [filters, setFilters] = useState<RepertoireFilters>(DEFAULTS);
   const [tab, setTab] = useState<'browse' | 'search'>('browse');
+  const [importOpen, setImportOpen] = useState(false);
 
   const featuredChoral = useRepertoireFeatured('choral', 12);
   const featuredBand = useRepertoireFeatured('band', 12);
@@ -41,10 +48,44 @@ export default function RepertoirePage() {
     { enabled: searchEnabled },
   );
 
-  const onAddToMyMusic = (item: RepertoireItem) =>
-    toast.info(`"${item.title}" — saving to My Music (coming in Phase 3)`);
-  const onAddToTenant = (item: RepertoireItem) =>
-    toast.info(`"${item.title}" — saving to tenant library (coming in Phase 3)`);
+  const addMine = useAddToMyMusic();
+  const addTenant = useAddToTenantLibrary();
+
+  const onAddToMyMusic = (item: RepertoireItem) => {
+    addMine.mutate(item, {
+      onSuccess: (res) => {
+        if (res.alreadyExisted) {
+          toast.info(`"${item.title}" is already in My Music`);
+        } else {
+          toast.success(`"${item.title}" saved to My Music`, {
+            action: {
+              label: 'Open',
+              onClick: () => { window.location.href = '/dashboard/music-library'; },
+            },
+          });
+        }
+      },
+      onError: (err) => toast.error(`Couldn't save "${item.title}": ${err.message}`),
+    });
+  };
+
+  const onAddToTenant = (item: RepertoireItem) => {
+    addTenant.mutate(item, {
+      onSuccess: (res) => {
+        if (res.alreadyExisted) {
+          toast.info(`"${item.title}" is already in your library`);
+        } else {
+          toast.success(`"${item.title}" added to library`, {
+            action: {
+              label: 'Open',
+              onClick: () => { window.location.href = '/dashboard/music-library'; },
+            },
+          });
+        }
+      },
+      onError: (err) => toast.error(`Couldn't add "${item.title}": ${err.message}`),
+    });
+  };
 
   return (
     <DashboardPageShell
@@ -52,10 +93,16 @@ export default function RepertoirePage() {
       subtitle="Browse and search choral & band repertoire across CPDL, IMSLP and more"
     >
       <Tabs value={tab} onValueChange={(v) => setTab(v as 'browse' | 'search')}>
-        <TabsList>
-          <TabsTrigger value="browse">Browse</TabsTrigger>
-          <TabsTrigger value="search">Search</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between gap-2">
+          <TabsList>
+            <TabsTrigger value="browse">Browse</TabsTrigger>
+            <TabsTrigger value="search">Search</TabsTrigger>
+          </TabsList>
+          <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <LinkIcon className="w-4 h-4 mr-1" />
+            Import from URL
+          </Button>
+        </div>
 
         <TabsContent value="browse" className="space-y-6 mt-4">
           <RepertoireBrowseShelf
@@ -76,7 +123,8 @@ export default function RepertoirePage() {
             (featuredChoral.data ?? []).length === 0 &&
             (featuredBand.data ?? []).length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Featured selections will appear once the IMSLP crawler has ingested content. Try the Search tab in the meantime — CPDL's full catalog is already available.
+                Featured selections will appear once the IMSLP crawler has ingested content. Try the Search tab in the meantime — CPDL's full catalog is already available.{' '}
+                <Link to="/dashboard/music-library" className="text-primary hover:underline">Go to Music Library</Link>
               </p>
             )}
         </TabsContent>
@@ -106,6 +154,7 @@ export default function RepertoirePage() {
           )}
         </TabsContent>
       </Tabs>
+      <ImportUrlDialog open={importOpen} onOpenChange={setImportOpen} />
     </DashboardPageShell>
   );
 }

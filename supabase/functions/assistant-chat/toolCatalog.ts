@@ -88,7 +88,7 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'open_page',
-    description: 'Navigate the user to a GleeWorld page. Valid keys: home, calendar, planner, music-library, studio, video, messenger, academy, sight-reading, part-tracks, media-library, songwriting, concert-planner, tour-manager, attendance, users, analytics.',
+    description: 'Navigate the user to a GleeWorld page. Valid keys: home, calendar, planner, music-library, studio, video, messenger, academy, sight-reading, media-library, songwriting, concert-planner, tour-manager, attendance, users, analytics.',
     parameters: {
       type: 'object',
       properties: { key: str('Page key from the list in the description') },

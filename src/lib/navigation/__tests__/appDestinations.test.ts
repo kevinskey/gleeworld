@@ -3,27 +3,27 @@ import { getTabItems, getAppTiles, parseTileLayout, DEFAULT_GRID_ORDER, type Mod
 import type { NavContext } from '../navCatalog';
 
 const allOn: ModuleFlags = {
-  hasViewer: true, hasPartTracks: true, hasStudio: true, hasSightReading: true,
+  hasViewer: true, hasStudio: true, hasSightReading: true,
   hasBoxOffice: true, hasConcertPlanner: true, hasMerch: true, hasFinance: true, hasAcademy: true,
   hasStore: true, hasSongwriting: true, hasPlanner: true,
 };
 
 const allOff: ModuleFlags = {
-  hasViewer: false, hasPartTracks: false, hasStudio: false, hasSightReading: false,
+  hasViewer: false, hasStudio: false, hasSightReading: false,
   hasBoxOffice: false, hasConcertPlanner: false, hasMerch: false, hasFinance: false, hasAcademy: false,
   hasStore: false, hasSongwriting: false, hasPlanner: false,
 };
 
 // Mirrors toModuleFlags's key set so flags and nav agree in tests.
 const FLAG_MODULE: Record<keyof ModuleFlags, string> = {
-  hasViewer: 'viewer', hasPartTracks: 'part_tracks', hasStudio: 'studio',
+  hasViewer: 'viewer', hasStudio: 'studio',
   hasSightReading: 'sight_reading', hasBoxOffice: 'box_office',
   hasConcertPlanner: 'concert_planner', hasMerch: 'merch', hasStore: 'store',
   hasFinance: 'finance', hasAcademy: 'academy', hasSongwriting: 'songwriting', hasPlanner: 'planner',
 };
 const navFor = (flags: ModuleFlags, over: Partial<NavContext> = {}): NavContext => ({
   hasModule: (k) => Object.entries(FLAG_MODULE).some(([f, m]) => m === k && flags[f as keyof ModuleFlags]),
-  isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false,
+  isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false,
   hiddenRoutes: new Set(), ...over,
 });
 
@@ -35,9 +35,8 @@ const FLAGLESS_CORE_ROUTES = new Set(['/dashboard', '/dashboard/messenger', '/da
 // route is module-gated (used only by the sweep invariant test below).
 const ROUTE_FLAG: Record<string, keyof ModuleFlags> = {
   '/dashboard/viewer': 'hasViewer',
-  '/dashboard/part-tracks': 'hasPartTracks',
   '/studio': 'hasStudio',
-  '/dashboard/sight-reading': 'hasSightReading',
+  '/dashboard/reading-music': 'hasSightReading',
   '/dashboard/academy': 'hasAcademy',
 };
 
@@ -121,10 +120,11 @@ describe('getTabItems', () => {
 // Copied here (not imported) so this list only changes when someone
 // deliberately re-verifies it against App.tsx's <Route path="..."> entries.
 const KNOWN_ROUTES = new Set([
-  '/dashboard/viewer', '/dashboard/part-tracks', '/studio',
-  '/dashboard/sight-reading', '/attendance', '/dashboard/academy',
+  '/dashboard/viewer', '/studio',
+  '/dashboard/sight-reading', '/dashboard/reading-music', '/attendance', '/dashboard/academy',
   '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
-  '/store', '/dashboard/people',
+  '/store', '/store/products', '/dashboard/people',
+  '/partner', '/admin/partners',
   '/dashboard/music-library', '/dashboard/repertoire', '/dashboard/media-library', '/dashboard/librarian',
   '/dashboard/office-hours', '/dashboard/practice-recordings', '/video',
   '/dashboard/music-tools', '/dashboard/liturgy', '/tour-manager',
@@ -165,7 +165,7 @@ describe('getAppTiles', () => {
     // librarian) actually resolve and get their routes pinned by this
     // sweep, instead of silently never appearing.
     const adminNav: NavContext = {
-      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true,
+      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true, isPartner: true,
       hiddenRoutes: new Set(),
     };
     for (const role of ['student', 'faculty'] as const) {
@@ -249,15 +249,15 @@ describe('getAppTiles with a custom layout', () => {
 describe('getAppTiles catalog parity', () => {
   it('default primary is byte-identical to the pre-catalog grid for both roles (allOn)', () => {
     // Faculty tabs claim /dashboard/viewer (Music); student tabs claim
-    // /dashboard/viewer AND /studio — so those keys dedupe out of the grid,
-    // exactly as before this change.
+    // /dashboard/viewer AND /studio — so those keys dedupe out of the grid.
+    // With Part Tracks removed, the grid now has more room (8 max, not 8 with tracks).
     expect(getAppTiles('faculty', allOn, navFor(allOn)).primary.map((t) => t.key))
-      .toEqual(['tracks', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
+      .toEqual(['studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
     expect(getAppTiles('student', allOn, navFor(allOn)).primary.map((t) => t.key))
-      .toEqual(['tracks', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
+      .toEqual(['sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
   });
-  it('DEFAULT_GRID_ORDER is the frozen 10-key list', () => {
-    expect(DEFAULT_GRID_ORDER).toEqual(['music', 'tracks', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
+  it('DEFAULT_GRID_ORDER is the frozen 9-key list', () => {
+    expect(DEFAULT_GRID_ORDER).toEqual(['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
   });
   it('sidebar-parity destinations land in overflow, never default primary', () => {
     const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }));
@@ -274,7 +274,7 @@ describe('getAppTiles catalog parity', () => {
     // non-ModuleFlags-gated ones) is a real candidate here, keeping
     // this invariant honest against the full catalog.
     const nav: NavContext = {
-      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true,
+      hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true, canLibrarian: true, isPartner: true,
       hiddenRoutes: new Set(),
     };
     const tabRoutes = new Set(getTabItems('faculty', allOn).map((t) => t.to));
@@ -296,7 +296,7 @@ describe('getAppTiles catalog parity', () => {
   });
   it('custom layouts can pin parity destinations', () => {
     const layout: TileLayout = { v: 1, order: ['people', 'music-library', 'tickets'] };
-    const { primary } = getAppTiles('faculty', allOn, navFor(allOn), layout);
+    const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }), layout);
     expect(primary.map((t) => t.key)).toEqual(['people', 'music-library', 'tickets']);
   });
   it('grid tiles carry their catalog section and grid label/icon overrides', () => {

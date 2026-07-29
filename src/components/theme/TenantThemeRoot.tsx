@@ -68,14 +68,21 @@ export function TenantThemeRoot() {
     },
   });
 
-  const primary = data?.theme?.primaryColor || branding.primary_color || null;
-  const accent = data?.theme?.accentColor || branding.accent_color || null;
+  // Branding is the single source of truth for the palette (matches the merge
+  // order in PublicPageEditor's theme useMemo). The public site's stored theme
+  // may still carry a legacy primaryColor/accentColor from an older code path
+  // — those are the fallback, not the winner. Previously we had this backwards
+  // and Workspace Settings → Branding color changes silently did nothing until
+  // the tenant republished their public site.
+  const primary = branding.primary_color || data?.theme?.primaryColor || null;
+  const accent = branding.accent_color || data?.theme?.accentColor || null;
 
   useEffect(() => {
     const root = document.documentElement;
+    const primaryTriplet = primary ? hexToHslTriplet(primary) : null;
     const accentTriplet = accent ? hexToHslTriplet(accent) : null;
-    const accentFg = accent ? yiqForegroundTriplet(accent) : null;
     const primaryFg = primary ? yiqForegroundTriplet(primary) : null;
+    const accentFg = accent ? yiqForegroundTriplet(accent) : null;
 
     // Tenant-direct vars (consumed by inline styles in public-site blocks,
     // header, footer, etc.)
@@ -84,17 +91,38 @@ export function TenantThemeRoot() {
     if (accent) root.style.setProperty('--site-accent', accent);
     else root.style.removeProperty('--site-accent');
 
-    // shadcn design tokens — when accent is set, route --primary / --accent /
-    // --ring through it so every default Button + outline-hover + focus-ring
-    // tints to the brand. accent-foreground is YIQ-derived.
+    // Button contrast rule: --tint-contrast in index.css reads
+    // --site-accent-contrast when set. We write the YIQ-derived
+    // foreground here whenever --site-accent is present, so any Button
+    // that uses `bg-[var(--tint)] text-[var(--tint-contrast)]` gets a
+    // readable text color on a dark tenant accent — no more
+    // black-on-dark-teal Republish buttons.
+    if (accent && accentFg) {
+      root.style.setProperty('--site-accent-contrast', `hsl(${accentFg})`);
+    } else {
+      root.style.removeProperty('--site-accent-contrast');
+    }
+    if (primary && primaryFg) {
+      root.style.setProperty('--site-primary-contrast', `hsl(${primaryFg})`);
+    } else {
+      root.style.removeProperty('--site-primary-contrast');
+    }
+
+    // shadcn design tokens — route the tenant's PRIMARY color into --primary
+    // and --ring (buttons, focus rings, Command Center card accents that read
+    // `bg-primary` / `text-primary`), and the ACCENT color into --accent. This
+    // matches the natural mental model of the Branding form: primary_color =
+    // the color that tints app chrome. Previously accent was routed into both
+    // slots, so tenants who changed only the primary field saw no update in
+    // the admin shell.
+    if (primaryTriplet) {
+      root.style.setProperty('--primary', primaryTriplet);
+      root.style.setProperty('--ring', primaryTriplet);
+      if (primaryFg) root.style.setProperty('--primary-foreground', primaryFg);
+    }
     if (accentTriplet) {
-      root.style.setProperty('--primary', accentTriplet);
-      root.style.setProperty('--ring', accentTriplet);
       root.style.setProperty('--accent', accentTriplet);
-      if (accentFg) {
-        root.style.setProperty('--primary-foreground', accentFg);
-        root.style.setProperty('--accent-foreground', accentFg);
-      }
+      if (accentFg) root.style.setProperty('--accent-foreground', accentFg);
     }
 
     // Class flag so the CSS override layer (tenant-theme.css) can target

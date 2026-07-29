@@ -1,0 +1,224 @@
+/*
+ * Black Music Scholar — Canvas theme override.
+ *
+ * Landing palette:
+ *   --ink:  #1A1614   (warm near-black, text + dark surfaces)
+ *   --gold: #B08935   (accent — buttons, links, dividers)
+ *   --paper:#FAF6EF   (warm cream page background)
+ *   --paper-2: #F1E9D9 (soft parchment for cards)
+ *
+ * Upload path: Canvas admin → Themes → New Theme → Custom CSS.
+ * (Or /accounts/1/theme_editor if the direct link works.)
+ * ALSO set on the Colors tab:
+ *   Primary          #B08935
+ *   Primary text     #1A1614
+ *   Secondary        #1A1614
+ *   Link             #B08935
+ *   Login body BG    #FAF6EF
+ *   Login body text  #1A1614
+ * ALSO upload:
+ *   Header logo       — the Black Music Scholar wordmark (SVG or PNG, 200×50 max)
+ *   Login logo        — same file or a larger square variant (400×400)
+ *   Favicon           — 32×32 square version of the mark
+ *
+ * The CSS below is defense-in-depth: if the color pickers are ignored on
+ * the login route (they occasionally are on a legacy DB seed), these rules
+ * force the Black Music Scholar look regardless of the account brand
+ * config. Every override targets Canvas / Instructure class names — no
+ * ic-* prefixes were invented.
+ */
+
+/* ────────────── Body + login shell ────────────── */
+
+body.no-headers,
+body.ic-Login__body,
+body.ic-full-screen {
+  background: #FAF6EF !important;
+  color: #1A1614 !important;
+  font-family: 'Cormorant Garamond', 'Playfair Display', 'Georgia',
+               'Times New Roman', serif !important;
+}
+
+/* The Instructure default login has a full-viewport dark navy background —
+   drop it so #FAF6EF above shows through. */
+.ic-Login,
+.ic-Login-wrapper,
+.ic-Login__content,
+#modal-box,
+.ic-Login-container {
+  background: transparent !important;
+  color: #1A1614 !important;
+}
+
+/* Login label + form text stay on-brand */
+.ic-Login label,
+.ic-Login__label,
+.ic-Login__body label,
+.ic-Login__form label,
+.ic-Login-container label {
+  color: #1A1614 !important;
+  font-family: 'Inter', 'Helvetica Neue', system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Card / form column — soft parchment tile centred in the cream field */
+.ic-Login__actions,
+.ic-Login__body {
+  background: #F1E9D9 !important;
+  border-radius: 20px !important;
+  padding: 32px !important;
+  box-shadow: 0 4px 16px rgba(26, 22, 20, 0.08),
+              0 20px 48px -20px rgba(26, 22, 20, 0.16) !important;
+  max-width: 480px !important;
+  margin: 40px auto !important;
+}
+
+/* Inputs — warm off-white so they read against parchment */
+.ic-Login input[type="email"],
+.ic-Login input[type="text"],
+.ic-Login input[type="password"],
+.ic-Login-container input[type="email"],
+.ic-Login-container input[type="text"],
+.ic-Login-container input[type="password"] {
+  background: #FFFDF8 !important;
+  border: 1px solid rgba(26, 22, 20, 0.18) !important;
+  color: #1A1614 !important;
+  border-radius: 10px !important;
+  font-family: 'Inter', 'Helvetica Neue', system-ui, sans-serif !important;
+}
+.ic-Login input:focus,
+.ic-Login-container input:focus {
+  outline: none !important;
+  border-color: #B08935 !important;
+  box-shadow: 0 0 0 3px rgba(176, 137, 53, 0.22) !important;
+}
+
+/* ────────────── Buttons ────────────── */
+
+/* Primary CTAs — "Log In" */
+.ic-Login .Button--login,
+.ic-Login button.Button--primary,
+.ic-Login__actions .Button--login,
+.ic-Login-container .Button--login,
+.ic-Login-container button.Button--primary,
+.ic-Login-container button[type="submit"],
+button.Button.Button--primary {
+  background: #B08935 !important;
+  border: 1px solid #B08935 !important;
+  color: #FFFFFF !important;
+  border-radius: 999px !important;
+  padding: 10px 28px !important;
+  font-family: 'Inter', 'Helvetica Neue', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: none !important;
+  box-shadow: 0 4px 12px -4px rgba(176, 137, 53, 0.5) !important;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease !important;
+}
+.ic-Login .Button--login:hover,
+.ic-Login button.Button--primary:hover,
+.ic-Login-container button.Button--primary:hover,
+.ic-Login-container button[type="submit"]:hover,
+button.Button.Button--primary:hover {
+  background: #9B7729 !important;
+  border-color: #9B7729 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 16px -6px rgba(176, 137, 53, 0.55) !important;
+}
+
+/* Secondary links + text — "Forgot Password?" + "Help" */
+.ic-Login a,
+.ic-Login__actions a,
+.ic-Login-container a,
+.ic-Login-footer a {
+  color: #B08935 !important;
+  text-decoration-color: rgba(176, 137, 53, 0.4) !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+  font-weight: 600 !important;
+}
+.ic-Login a:hover,
+.ic-Login-container a:hover,
+.ic-Login-footer a:hover {
+  color: #1A1614 !important;
+  text-decoration-color: currentColor !important;
+}
+
+/* Checkbox row (Stay signed in) */
+.ic-Login label[for="pseudonym_session_remember_me"],
+.ic-Login input[type="checkbox"] + label {
+  color: #1A1614 !important;
+  font-weight: 500 !important;
+}
+
+/* ────────────── Header logo area on the login card ────────────── */
+
+/* The Canvas dot logo above the form — hide the default and let the
+   uploaded login logo (Colors tab → Login logo) fill the space. If no
+   login logo is uploaded, the h1 fallback below shows a wordmark. */
+.ic-Login #login-logo,
+.ic-Login__logo,
+.ic-Login-header__logo {
+  filter: none !important;
+  opacity: 1 !important;
+  max-width: 240px !important;
+  margin: 0 auto 24px !important;
+  display: block !important;
+}
+
+/* Instructure footer branding — mute it so the page reads as
+   Black Music Scholar first. Don't hide it entirely; that's the LMS
+   attribution and removing it can violate the Instructure ToS. */
+.ic-Login-footer,
+.ic-Login .ic-Login-footer,
+#footer.footer,
+.ic-Login-confirmation__footer {
+  opacity: 0.55 !important;
+  color: #1A1614 !important;
+  padding-top: 24px !important;
+}
+.ic-Login-footer img,
+#footer.footer img {
+  filter: grayscale(1) brightness(0.35) !important;
+  max-height: 16px !important;
+}
+
+/* ────────────── Reset / password / signup screens ────────────── */
+/* Canvas reuses the same shell for password reset + account creation.
+   The rules above cover most of it; a couple of extras here. */
+.ic-Form-control input,
+.ic-Form-control textarea {
+  background: #FFFDF8 !important;
+  border: 1px solid rgba(26, 22, 20, 0.18) !important;
+  color: #1A1614 !important;
+  border-radius: 10px !important;
+}
+
+.ic-Login h1,
+.ic-Login h2,
+.ic-Login-container h1,
+.ic-Login-container h2 {
+  font-family: 'Cormorant Garamond', 'Playfair Display', 'Georgia', serif !important;
+  color: #1A1614 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* ────────────── App-wide (post-login) chrome ────────────── */
+/* The theme editor's Colors tab already re-tints most of this via the
+   brand config, but a few Canvas defaults sneak past. Below is optional —
+   remove this section if the in-app look should stay stock Canvas. */
+
+.ic-app-header {
+  background: #1A1614 !important;
+}
+.ic-app-header__logomark-container .ic-app-header__logomark img {
+  filter: brightness(0) invert(1) !important;
+}
+.Button--primary,
+button.Button.Button--primary {
+  background: #B08935 !important;
+  border-color: #B08935 !important;
+}
+a { color: #B08935; }
+a:hover { color: #1A1614; }

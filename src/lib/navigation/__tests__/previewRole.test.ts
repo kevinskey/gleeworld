@@ -14,6 +14,7 @@ const superAdminCtx: NavContext = {
   isTenantAdmin: true,
   isPlatformAdmin: true,
   canLibrarian: true,
+  isPartner: true,
   hiddenRoutes: new Set<string>(),
 };
 

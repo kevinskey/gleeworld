@@ -1,4 +1,4 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type UseQueryResult, type UseMutationResult } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface RepertoireItem {
@@ -90,6 +90,100 @@ export function useRepertoireFeatured(
       });
       if (error) throw error;
       return (data ?? []) as RepertoireItem[];
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Add to Library — writes a RepertoireItem into the user's My Music library
+// (gw_personal_scores) or the current tenant's shared library (gw_sheet_music).
+// RLS enforces the correct user_id / current_tenant_id() on both tables;
+// the client just INSERTs. Duplicate saves surface as a unique-violation
+// (Postgres 23505) which we translate into a friendly "already saved" outcome.
+
+const UNIQUE_VIOLATION = '23505';
+
+interface AddResult {
+  alreadyExisted: boolean;
+  id: string | null;
+}
+
+async function addToMyMusicImpl(item: RepertoireItem): Promise<AddResult> {
+  const isPD = item.source === 'cpdl';
+  const isExt = !isPD;
+  const externalUrl = item.affiliate_url || item.product_url || item.source_page_url;
+
+  const row = {
+    title: item.title,
+    composer: item.composer,
+    voicing: item.voicing,
+    source: item.source,
+    pd_work_id: isPD ? item.id : null,
+    ext_catalog_item_id: isExt ? item.id : null,
+    storage_path: null as string | null,
+    external_url: externalUrl,
+    thumbnail_path: item.thumbnail_url,
+  };
+
+  const { data, error } = await supabase
+    .from('gw_personal_scores')
+    .insert(row)
+    .select('id')
+    .single();
+
+  if (error) {
+    if (error.code === UNIQUE_VIOLATION) return { alreadyExisted: true, id: null };
+    throw error;
+  }
+  return { alreadyExisted: false, id: data?.id ?? null };
+}
+
+async function addToTenantLibraryImpl(item: RepertoireItem): Promise<AddResult> {
+  const isPD = item.source === 'cpdl';
+  const isExt = !isPD;
+  const externalUrl = item.affiliate_url || item.product_url || item.source_page_url;
+
+  const row = {
+    title: item.title,
+    composer: item.composer,
+    voicing: item.voicing,
+    pd_work_id: isPD ? item.id : null,
+    ext_catalog_item_id: isExt ? item.id : null,
+    pdf_url: externalUrl,
+    thumbnail_url: item.thumbnail_url,
+    audio_preview_url: item.audio_preview_url,
+  };
+
+  const { data, error } = await supabase
+    .from('gw_sheet_music')
+    .insert(row)
+    .select('id')
+    .single();
+
+  if (error) {
+    if (error.code === UNIQUE_VIOLATION) return { alreadyExisted: true, id: null };
+    throw error;
+  }
+  return { alreadyExisted: false, id: data?.id ?? null };
+}
+
+export function useAddToMyMusic(): UseMutationResult<AddResult, Error, RepertoireItem> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: addToMyMusicImpl,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['personal-scores'] });
+      qc.invalidateQueries({ queryKey: ['my-music'] });
+    },
+  });
+}
+
+export function useAddToTenantLibrary(): UseMutationResult<AddResult, Error, RepertoireItem> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: addToTenantLibraryImpl,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sheet-music'] });
     },
   });
 }

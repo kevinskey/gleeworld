@@ -9,11 +9,13 @@ import {
   getAssetUrl, uploadAudioAsset,
   type SessionListItem,
 } from '@/lib/studio/storage';
+import { blankSession, newId } from '@/lib/studio/defaults';
 import { StudioEngine, type EngineState } from '@/lib/studio/engine/engine';
 import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { renderSessionToWav } from '@/lib/studio/engine/mixdown';
-import type { Session, MidiClip } from '@/lib/studio/session';
+import { MASTER_BUS_ID } from '@/lib/studio/session';
+import type { Session, MidiClip, AudioTrack, Accompaniment } from '@/lib/studio/session';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import {
   isNativeStudioAvailable, openNativeStudio, NativeStudio,
@@ -69,10 +71,151 @@ export function useMySessions() {
   });
 }
 
+export interface CreateStudioSessionInput {
+  tenantId: string;
+  ownerUserId: string;
+  title: string;
+  template?: 'empty' | 'satb' | 'custom';
+  /** Pre-mapped accompaniment (non-file kinds: apple_music, youtube, etc.). */
+  accompaniment?: Accompaniment | null;
+  /** Raw File object from the picker. When present, it is uploaded to storage
+   * BEFORE the manifest is written so the manifest carries a real public URL.
+   * Mutually exclusive with `accompaniment` — if both are provided,
+   * `accompanimentFile` takes precedence and `accompaniment` is ignored. */
+  accompanimentFile?: File;
+  customParts?: Array<{ kind: string; label: string; color: string }>;
+}
+
+async function createStudioSessionWithTemplate(input: CreateStudioSessionInput): Promise<Session> {
+  // For empty or no-template, fall back to the existing storage helper.
+  if (!input.template || input.template === 'empty') {
+    return createSession({ tenantId: input.tenantId, ownerUserId: input.ownerUserId, title: input.title });
+  }
+
+  // Build the base session with a caller-supplied id so the storage prefix
+  // is deterministic before we write the manifest.
+  const id = newId();
+  const base = blankSession({ id, ownerUserId: input.ownerUserId, tenantId: input.tenantId, title: input.title });
+
+  // Build template tracks (AudioTrack shape — every required field present).
+  const templateTracks: AudioTrack[] = (() => {
+    if (input.template === 'satb') {
+      const defs = [
+        { id: 't-sop', name: 'Soprano', color: '#fbbf24' },
+        { id: 't-alt', name: 'Alto',    color: '#f97316' },
+        { id: 't-ten', name: 'Tenor',   color: '#3b82f6' },
+        { id: 't-bas', name: 'Bass',    color: '#9333ea' },
+      ];
+      return defs.map((d): AudioTrack => ({
+        id: d.id,
+        kind: 'audio',
+        name: d.name,
+        color: d.color,
+        volume_db: 0,
+        pan: 0,
+        mute: false,
+        solo: false,
+        arm: false,
+        fx: [],
+        clips: [],
+        output: { bus_id: MASTER_BUS_ID },
+        sends: [],
+      }));
+    }
+    if (input.template === 'custom' && input.customParts?.length) {
+      return input.customParts.map((p, i): AudioTrack => ({
+        id: `t-${p.kind}-${i}`,
+        kind: 'audio',
+        name: p.label,
+        color: p.color,
+        volume_db: 0,
+        pan: 0,
+        mute: false,
+        solo: false,
+        arm: false,
+        fx: [],
+        clips: [],
+        output: { bus_id: MASTER_BUS_ID },
+        sends: [],
+      }));
+    }
+    return [];
+  })();
+
+  // Build the storage prefix now so the accompaniment upload path uses it.
+  const prefix = `${input.tenantId}/sessions/${id}`;
+
+  // If a raw File was picked, upload it BEFORE writing the manifest so the
+  // manifest carries a real public URL instead of a '' placeholder.
+  // The accompanimentFile path takes precedence over any pre-mapped accompaniment.
+  let resolvedAccompaniment: Accompaniment | null = input.accompaniment ?? null;
+  if (input.accompanimentFile) {
+    const file = input.accompanimentFile;
+    const ext = file.name.includes('.') ? file.name.split('.').pop() ?? 'bin' : 'bin';
+    const assetPath = `${prefix}/audio/accompaniment-${Date.now()}.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from('studio')
+      .upload(assetPath, file, {
+        contentType: file.type || 'application/octet-stream',
+        upsert: true,
+      });
+    if (uploadErr) throw new Error(`Failed to upload accompaniment file: ${uploadErr.message}`);
+    // Studio bucket is private (holds the manifest + user audio). getPublicUrl
+    // returns a `/object/public/` URL that 403s on private buckets, so audio
+    // never played. Signed URLs bypass RLS via a JWT in the URL and work on
+    // private buckets. 1-year expiry is generous for a session-lifetime
+    // asset; on load, refreshFileAccompanimentUrl re-signs if it detects an
+    // expired URL. Match the same shape in captureFromPlayback.ts.
+    const { data: signedData, error: signErr } = await supabase.storage
+      .from('studio')
+      .createSignedUrl(assetPath, 60 * 60 * 24 * 365);
+    if (signErr || !signedData?.signedUrl) {
+      throw new Error(`Failed to sign accompaniment URL: ${signErr?.message ?? 'no url'}`);
+    }
+    resolvedAccompaniment = {
+      kind: 'file',
+      title: file.name,
+      fileUrl: signedData.signedUrl,
+    };
+  }
+
+  const session: Session = {
+    ...base,
+    tracks: [...base.tracks, ...templateTracks],
+    accompaniment: resolvedAccompaniment,
+  };
+
+  // Write the manifest directly (mirrors storage.createSession internals).
+  const body = new Blob([JSON.stringify(session)], { type: 'application/json' });
+  const { error: manifestErr } = await supabase.storage
+    .from('studio')
+    .upload(`${prefix}/manifest.json`, body, { contentType: 'application/json', upsert: true });
+  if (manifestErr) throw manifestErr;
+
+  // Register the DB index row.
+  const { error: dbErr } = await supabase.from('gw_studio_sessions').insert({
+    id: session.id,
+    tenant_id: input.tenantId,
+    owner_user_id: input.ownerUserId,
+    title: session.title,
+    schema_version: session.schema_version,
+    storage_prefix: prefix,
+    duration_seconds: session.length_seconds,
+    track_count: session.tracks.length,
+    asset_count: 0,
+  });
+  if (dbErr) {
+    // Best-effort cleanup.
+    await supabase.storage.from('studio').remove([`${prefix}/manifest.json`]);
+    throw dbErr;
+  }
+  return session;
+}
+
 export function useCreateStudioSession() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: createSession,
+    mutationFn: createStudioSessionWithTemplate,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['studio-sessions'] }),
   });
 }
@@ -143,6 +286,20 @@ export function useStudioSession(sessionId: string | null) {
     });
   }, [queueSave]);
 
+  // I2: Imperative flush — cancels the debounce timer and writes the current
+  // session to storage immediately. Use after high-value mutations (e.g.
+  // capture-from-playback) where losing the update on a quick reload would
+  // orphan an uploaded asset. Returns the save promise so callers can await.
+  const flushSave = useCallback((): Promise<void> => {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    return session ? saveSession(session).catch(setError) : Promise.resolve();
+  // session ref is intentionally omitted — React setState batches mean the
+  // caller's latest update may not yet be reflected here. Callers that need
+  // the updated value should pass it directly; this flush handles the
+  // "best-effort flush of whatever is current" case.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
+
   // Flush on unmount.
   useEffect(() => () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -150,7 +307,7 @@ export function useStudioSession(sessionId: string | null) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { session, loading, error, update, reload };
+  return { session, loading, error, update, flushSave, reload };
 }
 
 // ── Engine lifecycle bound to a session ──────────────────────────────

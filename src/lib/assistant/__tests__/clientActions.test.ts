@@ -20,7 +20,7 @@ function makeDeps(overrides: Partial<ActionDeps> & { rpc?: any; from?: any } = {
 describe('PAGE_ROUTES', () => {
   it('maps every documented open_page key to a route', () => {
     for (const key of ['home', 'calendar', 'planner', 'music-library', 'studio', 'video',
-      'messenger', 'academy', 'sight-reading', 'part-tracks', 'media-library', 'songwriting',
+      'messenger', 'academy', 'sight-reading', 'media-library', 'songwriting',
       'concert-planner', 'tour-manager', 'attendance', 'users', 'analytics']) {
       expect(PAGE_ROUTES[key], key).toMatch(/^\//);
     }

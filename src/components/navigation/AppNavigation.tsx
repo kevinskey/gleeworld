@@ -73,7 +73,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Music Library", href: "/dashboard/music-library", icon: Music },
       { label: "Concert Planner", href: "/dashboard/concert-planner", icon: CalendarDays },
-      { label: "Part Tracks", href: "/dashboard/part-tracks", icon: Disc3 },
       { label: "Practice Studio", href: "/practice-studio", icon: Mic },
       { label: "Studio", href: "/studio", icon: Disc3 },
       { label: "Video", href: "/video", icon: Film },
