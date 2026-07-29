@@ -14,7 +14,7 @@
 // summary with an explicit "Open full article" escape hatch).
 import { useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { ExternalLink, Newspaper, RefreshCw } from 'lucide-react';
+import { ExternalLink, Newspaper, RefreshCw, Volume2, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -91,6 +91,32 @@ export function HomeNewsRail() {
   // blank the panel on the first frame of the slide-out).
   const [reading, setReading] = useState<NewsItem | null>(null);
   const [readerOpen, setReaderOpen] = useState(false);
+
+  // Text-to-speech state for the "Read" button. Uses the browser's
+  // native SpeechSynthesis so it works offline / cross-tenant with no
+  // backend cost. Interruptible via a second click on the button OR by
+  // closing the sheet; the utterance is cancelled on unmount and any
+  // time the article being read changes.
+  const [speaking, setSpeaking] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const stopReading = () => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    utteranceRef.current = null;
+    setSpeaking(false);
+  };
+  // Cancel speech when the sheet closes, when the current article
+  // changes, or on unmount. Prevents a leftover utterance from
+  // continuing to speak after the reader has been dismissed.
+  useEffect(() => {
+    if (!readerOpen) stopReading();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readerOpen]);
+  useEffect(() => {
+    stopReading();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reading?.link]);
+  useEffect(() => () => stopReading(), []);
 
   // Full-article extraction: the sheet opens instantly on the feed summary,
   // then the server-extracted body streams in underneath when it lands.
@@ -212,9 +238,56 @@ export function HomeNewsRail() {
                   {reading.source}
                   {timeAgo(reading.pubDate) && ` · ${timeAgo(reading.pubDate)}`}
                 </p>
-                <SheetTitle className="text-lg leading-snug">
-                  {decodeEntities(reading.title)}
-                </SheetTitle>
+                <div className="flex items-start justify-between gap-3">
+                  <SheetTitle className="text-lg leading-snug flex-1">
+                    {decodeEntities(reading.title)}
+                  </SheetTitle>
+                  {/* Read-aloud button — the assistant speaks the full
+                      article (title + body). Click again OR close the
+                      sheet to stop. Uses window.speechSynthesis so it
+                      needs no backend and stays interruptible. */}
+                  {typeof window !== 'undefined' && 'speechSynthesis' in window && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={speaking ? 'destructive' : 'default'}
+                      onClick={() => {
+                        if (speaking) { stopReading(); return; }
+                        // Assemble the text: title first, then the full
+                        // article paragraphs if extracted, otherwise the
+                        // feed summary (tags stripped, entities decoded).
+                        const parts: string[] = [decodeEntities(reading.title)];
+                        if (fullArticle?.paragraphs?.length) {
+                          if (fullArticle.byline) parts.push(fullArticle.byline);
+                          parts.push(...fullArticle.paragraphs);
+                        } else if (reading.description) {
+                          parts.push(
+                            decodeEntities(reading.description).replace(/<[^>]+>/g, ''),
+                          );
+                        }
+                        const text = parts.join('. ').trim();
+                        if (!text) return;
+                        window.speechSynthesis.cancel();
+                        const u = new SpeechSynthesisUtterance(text);
+                        u.rate = 1.0;
+                        u.pitch = 1.0;
+                        u.onend = () => { setSpeaking(false); utteranceRef.current = null; };
+                        u.onerror = () => { setSpeaking(false); utteranceRef.current = null; };
+                        utteranceRef.current = u;
+                        setSpeaking(true);
+                        window.speechSynthesis.speak(u);
+                      }}
+                      className="shrink-0 gap-1.5"
+                      aria-label={speaking ? 'Stop reading' : 'Read article aloud'}
+                    >
+                      {speaking ? (
+                        <><Square className="w-3.5 h-3.5" fill="currentColor" /> Stop</>
+                      ) : (
+                        <><Volume2 className="w-3.5 h-3.5" /> Read</>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </SheetHeader>
               {reading.imageUrl && (
                 <img
