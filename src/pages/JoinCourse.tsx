@@ -1,6 +1,8 @@
 // /join/:code — public page. Looks up the course by join_code, shows the
-// student a signup form, then calls gw-invite-student to create their account
-// and auto-enroll them. After signup they're emailed a magic link.
+// student a signup form, then calls gw-course-enroll (the single unified
+// enrollment endpoint used by both this page and CourseOnboarding) to
+// create their account and auto-enroll them. After signup they're emailed
+// a magic link.
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -46,11 +48,11 @@ export default function JoinCourse() {
     if (!course || !email.trim()) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.functions.invoke('gw-invite-student', {
+      const { error } = await supabase.functions.invoke('gw-course-enroll', {
         body: {
+          joinCode: code,
           email: email.trim(),
           fullName: fullName.trim() || undefined,
-          courseId: course.id,
           appOrigin: window.location.origin,
           orgName,
         },

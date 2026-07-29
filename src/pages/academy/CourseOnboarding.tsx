@@ -52,69 +52,37 @@ const CourseOnboarding = () => {
 
   const CourseIcon = course.icon;
 
-  // Directly enroll existing logged-in users
+  // Directly enroll existing logged-in users through the SHARED endpoint
+  // that /join/:code also uses (gw-course-enroll). Consolidating avoids the
+  // two-path drift where this file's direct insert differed from the
+  // invite path on role, enrollment_status, and error handling.
   const handleEnrollExistingUser = async () => {
     if (!user) return;
-    
+
     setEnrolling(true);
     try {
-      // Get course UUID from database using various formats
-      let courseId: string | null = null;
-      
-      // Try exact match with hyphen
-      const { data: courseData } = await supabase
-        .from('gw_courses')
-        .select('id')
-        .eq('course_code', course.courseCode.replace(' ', '-'))
-        .maybeSingle();
-      
-      if (courseData) {
-        courseId = courseData.id;
-      } else {
-        // Try ilike search
-        const { data: altCourseData } = await supabase
-          .from('gw_courses')
-          .select('id')
-          .ilike('course_code', `%${course.courseCode.replace(' ', '%')}%`)
-          .maybeSingle();
-        
-        if (altCourseData) {
-          courseId = altCourseData.id;
-        }
-      }
-      
-      if (!courseId) {
-        toast.error('Course not found in database. Please contact support.');
-        return;
-      }
-      
-      // Insert enrollment record
-      const { error } = await supabase
-        .from('gw_course_enrollments')
-        .insert({
-          course_id: courseId,
-          user_id: user.id,
-          role: 'student',
-          enrollment_status: 'enrolled'
-        });
-      
-      if (error) {
-        if (error.code === '23505') {
-          toast.info('You are already enrolled in this course!');
-        } else {
-          throw error;
-        }
-      } else {
+      const { data, error } = await supabase.functions.invoke('gw-course-enroll', {
+        body: { courseCode: course.courseCode },
+      });
+      if (error) throw error;
+      const result = data as {
+        enrolled?: boolean;
+        alreadyEnrolled?: boolean;
+        courseSlug?: string;
+      } | null;
+
+      if (result?.alreadyEnrolled) {
+        toast.info('You are already enrolled in this course!');
+      } else if (result?.enrolled) {
         toast.success(`Successfully enrolled in ${course.title}!`);
       }
-      
-      // Navigate to the course page
-      const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
+
+      const courseSlug = result?.courseSlug || course.courseCode.toLowerCase().replace(' ', '-');
       navigate(`/academy/${courseSlug}`);
-      
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Enrollment error:', err);
-      toast.error('Failed to enroll. Please try again.');
+      const message = err instanceof Error ? err.message : 'Failed to enroll. Please try again.';
+      toast.error(message);
     } finally {
       setEnrolling(false);
     }
